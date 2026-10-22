@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T19:09:41+00:00",
+  "updated_at_utc": "2026-10-22T19:15:21+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -1650,12 +1650,20 @@
           "line": 2216
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2241 and corresponding July v0.867 registered class Engine/UnObj.cpp:2287; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UBitArray",
@@ -1671,12 +1679,20 @@
           "line": 2584
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2623 and corresponding July v0.867 registered class Engine/UnObj.cpp:2670; existing production typed handler CatalogUE1OriginalUnrealfileBitArrayReader.php and source-defined verifier verify-ue1-original-unrealfile-bit-archives.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:15+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:15.3625134Z",
+        "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515001Z-59a97889-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt"
+      }
     },
     {
       "id": "U86:UBitMatrix",
@@ -1692,12 +1708,20 @@
           "line": 2585
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2624 and corresponding July v0.867 registered class Engine/UnObj.cpp:2671; existing production typed handler CatalogUE1OriginalUnrealfileBitArrayReader.php and source-defined verifier verify-ue1-original-unrealfile-bit-archives.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:15+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:15.3625134Z",
+        "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515001Z-59a97889-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt"
+      }
     },
     {
       "id": "U86:UBounds",
@@ -1714,14 +1738,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "Epic May v0.86x Src/Inc/UnMath.h FBoundingRect::operator<< and July v0.867 FBoundingBox::operator<< are wire-identical: FVector Min and Max 24B plus BYTE IsValid 1B (UnArc.h operator<< BYTE Serialize(&B,1)). UBounds::IMPLEMENT_DB_CLASS and UDatabase Num/Max+records. Existing DatabaseDataReader stride25 is source-correct; verify-ue1-original-unrealfile-mesh-records.php v22/v23 76/76 source fixtures, DEV/PRD named PASS.",
       "remaining": "Source-identical archive layout 25B validated in existing v22/23 fixtures; source native May/July original package oracle still G5 OPEN.",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -1788,12 +1812,20 @@
           "line": 2365
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2390 and corresponding July v0.867 registered class Engine/UnObj.cpp:2437; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UCamera",
@@ -1830,12 +1862,20 @@
           "line": 405
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileClassSchemaReader.php",
+      "test": "verify-ue1-original-unrealfile-class-schemas.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnClass.cpp:405 and corresponding July v0.867 registered class Engine/UnClass.cpp:405; existing production typed handler CatalogUE1OriginalUnrealfileClassSchemaReader.php and source-defined verifier verify-ue1-original-unrealfile-class-schemas.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:15.9045050Z",
+        "test_sha256": "f2cda42c2105751b142c9de9f6b397279539258cc778733211518048f816d87b",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515581Z-161422b8-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
+      }
     },
     {
       "id": "U86:UDatabase",
@@ -1851,12 +1891,20 @@
           "line": 861
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:854 and corresponding July v0.867 registered class Engine/UnObj.cpp:897; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UDependencies",
@@ -1868,12 +1916,20 @@
           "line": 849
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnClass.cpp:849 and corresponding July v0.867 registered class Engine/UnClass.cpp:864; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UEnumDef",
@@ -1889,12 +1945,20 @@
           "line": 2323
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2348 and corresponding July v0.867 registered class Engine/UnObj.cpp:2394; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UFloats",
@@ -1906,12 +1970,20 @@
           "line": 105
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnModel.cpp:105 and corresponding July v0.867 registered class Engine/UnModel.cpp:99; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UFont",
@@ -1923,12 +1995,20 @@
           "line": 517
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "test": "verify-ue1-original-unrealfile-special-headers.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnFont.cpp:517 and corresponding July v0.867 registered class Engine/UnFont.cpp:517; existing production typed handler CatalogUE1OriginalUnrealfileSpecialHeadersReader.php and source-defined verifier verify-ue1-original-unrealfile-special-headers.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:20+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:20.4675090Z",
+        "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191519983Z-bcce0a02-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+      }
     },
     {
       "id": "U86:UInts",
@@ -1944,12 +2024,20 @@
           "line": 2578
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2617 and corresponding July v0.867 registered class Engine/UnObj.cpp:2664; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:ULevel",
@@ -1986,12 +2074,20 @@
           "line": 93
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileLightMeshDataReader.php",
+      "test": "verify-ue1-original-unrealfile-lightmesh-data.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnModel.cpp:93 and corresponding July v0.867 registered class Engine/UnModel.cpp:87; existing production typed handler CatalogUE1OriginalUnrealfileLightMeshDataReader.php and source-defined verifier verify-ue1-original-unrealfile-lightmesh-data.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:17+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:17.4375057Z",
+        "test_sha256": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517124Z-f03078f7-PRD-verify-ue1-original-unrealfile-lightmesh-data.php.txt"
+      }
     },
     {
       "id": "U86:ULinker",
@@ -2115,12 +2211,20 @@
           "line": 23
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnMesh.cpp:23 and corresponding July v0.867 registered class Engine/UnMesh.cpp:23; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-mesh-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U86:UMeshAnimSeqs",
@@ -2132,12 +2236,20 @@
           "line": 22
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnMesh.cpp:22 and corresponding July v0.867 registered class Engine/UnMesh.cpp:22; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-mesh-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U86:UMeshTris",
@@ -2149,12 +2261,20 @@
           "line": 21
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnMesh.cpp:21 and corresponding July v0.867 registered class Engine/UnMesh.cpp:21; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-mesh-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U86:UMeshVertConnects",
@@ -2166,12 +2286,20 @@
           "line": 24
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnMesh.cpp:24 and corresponding July v0.867 registered class Engine/UnMesh.cpp:24; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-mesh-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U86:UMeshVerts",
@@ -2183,12 +2311,20 @@
           "line": 20
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnMesh.cpp:20 and corresponding July v0.867 registered class Engine/UnMesh.cpp:20; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-mesh-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U86:UModel",
@@ -2229,12 +2365,20 @@
           "line": 459
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "test": "verify-ue1-original-unrealfile-audio.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnMusic.cpp:191 and corresponding July v0.867 registered class Engine/UnMusic.cpp:191; existing production typed handler CatalogUE1OriginalUnrealfileAudioReader.php and source-defined verifier verify-ue1-original-unrealfile-audio.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:14+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:14.7775076Z",
+        "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      }
     },
     {
       "id": "U86:UObject",
@@ -2250,12 +2394,20 @@
           "line": 700
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileObjectBaseReader.php",
+      "test": "verify-ue1-original-unrealfile-object-bases.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:693 and corresponding July v0.867 registered class Engine/UnObj.cpp:736; existing production typed handler CatalogUE1OriginalUnrealfileObjectBaseReader.php and source-defined verifier verify-ue1-original-unrealfile-object-bases.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:19.2545065Z",
+        "test_sha256": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191518347Z-e8776f39-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
+      }
     },
     {
       "id": "U86:UPalette",
@@ -2267,12 +2419,20 @@
           "line": 1270
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnTex.cpp:1270 and corresponding July v0.867 registered class Engine/UnTex.cpp:1295; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-mesh-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
+        "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+      }
     },
     {
       "id": "U86:UPlayer",
@@ -2309,12 +2469,20 @@
           "line": 725
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfilePolysDataReader.php",
+      "test": "verify-ue1-original-unrealfile-polys-data.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnFPoly.cpp:725 and corresponding July v0.867 registered class Engine/UnFPoly.cpp:697; existing production typed handler CatalogUE1OriginalUnrealfilePolysDataReader.php and source-defined verifier verify-ue1-original-unrealfile-polys-data.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:19+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:19.7895057Z",
+        "test_sha256": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191519454Z-de39e78a-PRD-verify-ue1-original-unrealfile-polys-data.php.txt"
+      }
     },
     {
       "id": "U86:UPrimitive",
@@ -2376,12 +2544,20 @@
           "line": 21
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnRoute.cpp:21 and corresponding July v0.867 registered class Engine/UnRoute.cpp:21; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UScript",
@@ -2393,12 +2569,20 @@
           "line": 4518
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
+      "test": "verify-ue1-original-unrealfile-expression-token-inventory.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnScript.cpp:4518 and corresponding July v0.867 registered class Engine/UnScript.cpp:5158; existing production typed handler CatalogUE1OriginalUnrealfileScriptExpressionReader.php and source-defined verifier verify-ue1-original-unrealfile-expression-token-inventory.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
+      "updated_at_utc": "2026-10-22T19:15:17+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.8965068Z",
+        "test_sha256": "36299cd933e23a67618b64fc6d5d61cf94372d1f7e9add612fff6e3b9981ec3b",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516640Z-5b26c90c-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt"
+      }
     },
     {
       "id": "U86:USound",
@@ -2410,12 +2594,20 @@
           "line": 220
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "test": "verify-ue1-original-unrealfile-audio.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnSound.cpp:220 and corresponding July v0.867 registered class Engine/UnSound.cpp:220; existing production typed handler CatalogUE1OriginalUnrealfileAudioReader.php and source-defined verifier verify-ue1-original-unrealfile-audio.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:14+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:14.7775076Z",
+        "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      }
     },
     {
       "id": "U86:UStackTree",
@@ -2427,12 +2619,20 @@
           "line": 4560
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileStackTreeDataReader.php",
+      "test": "verify-ue1-original-unrealfile-stacktree-data.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnScript.cpp:4560 and corresponding July v0.867 registered class Engine/UnScript.cpp:5200; existing production typed handler CatalogUE1OriginalUnrealfileStackTreeDataReader.php and source-defined verifier verify-ue1-original-unrealfile-stacktree-data.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
+      "updated_at_utc": "2026-10-22T19:15:21+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:20.9916972Z",
+        "test_sha256": "ff036413645cfa5886be7d865e780be54b31b50e7f0b53bcac133eb4eb1c6151",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191520687Z-53334203-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+      }
     },
     {
       "id": "U86:UTextBuffer",
@@ -2448,12 +2648,20 @@
           "line": 2153
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2178 and corresponding July v0.867 registered class Engine/UnObj.cpp:2224; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UTexture",
@@ -2490,12 +2698,20 @@
           "line": 502
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnTex.cpp:502 and corresponding July v0.867 registered class Engine/UnTex.cpp:519; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UTransBuffer",
@@ -2532,12 +2748,20 @@
           "line": 99
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnModel.cpp:99 and corresponding July v0.867 registered class Engine/UnModel.cpp:93; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U86:UVerts",
@@ -2549,12 +2773,20 @@
           "line": 123
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "test": "verify-ue1-original-unrealfile-special-headers.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnModel.cpp:123 and corresponding July v0.867 registered class Engine/UnModel.cpp:117; existing production typed handler CatalogUE1OriginalUnrealfileSpecialHeadersReader.php and source-defined verifier verify-ue1-original-unrealfile-special-headers.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:20+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:20.4675090Z",
+        "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191519983Z-bcce0a02-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+      }
     },
     {
       "id": "U86:UWords",
@@ -2570,12 +2802,20 @@
           "line": 2577
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "test": "verify-ue1-original-unrealfile-database-records.php",
+      "evidence": "Found original May v0.86x Epic registered class at Engine/UnObj.cpp:2616 and corresponding July v0.867 registered class Engine/UnObj.cpp:2663; existing production typed handler CatalogUE1OriginalUnrealfileDatabaseDataReader.php and source-defined verifier verify-ue1-original-unrealfile-database-records.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
+      "last_verification": {
+        "target": "PRD",
+        "state": "PASS",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
+        "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+      }
     },
     {
       "id": "U97:AActor",
@@ -2692,14 +2932,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -2717,14 +2957,14 @@
       "test": "verify-ue1-original-unrealfile-bit-archives.php",
       "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance",
       "remaining": "Bit RLE source-tested; review whole class/interface methods G2",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:15+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:21:19.9997700Z",
+        "at_utc": "2026-10-22T19:15:15.3625134Z",
         "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
-        "source_sha256": "9cd63d7b0497101b42ec37c1b738b0c1713cf5533978e3c56506bb223db44a8a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T072119840Z-dbc6661a-DEV-verify-ue1-original-unrealfile-bit-archives.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515001Z-59a97889-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt"
       }
     },
     {
@@ -2742,14 +2982,14 @@
       "test": "verify-ue1-original-unrealfile-bit-archives.php",
       "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance",
       "remaining": "Bit matrix source-tested; review inherited/subclass G2",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:15+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:21:19.9997700Z",
+        "at_utc": "2026-10-22T19:15:15.3625134Z",
         "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
-        "source_sha256": "9cd63d7b0497101b42ec37c1b738b0c1713cf5533978e3c56506bb223db44a8a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T072119840Z-dbc6661a-DEV-verify-ue1-original-unrealfile-bit-archives.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515001Z-59a97889-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt"
       }
     },
     {
@@ -2767,14 +3007,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -2842,14 +3082,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -2892,14 +3132,14 @@
       "test": "verify-ue1-original-unrealfile-class-schemas.php",
       "evidence": "PRD historical PASS at 2026-10-21T17:28:19.5542389Z; catalog\\compliance\\evidence\\o06\\20261021T172819350Z-3e563cbb-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt; scoped test, not full class acceptance",
       "remaining": "FProperty descriptors and local classes tested; class-specific source contract reconciliation G2; runtime Preload O10",
-      "updated_at_utc": "2026-10-22T17:37:53+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:37:53.4313805Z",
+        "at_utc": "2026-10-22T19:15:15.9045050Z",
         "test_sha256": "f2cda42c2105751b142c9de9f6b397279539258cc778733211518048f816d87b",
-        "source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T173753123Z-a90d197f-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515581Z-161422b8-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt"
       }
     },
     {
@@ -2917,14 +3157,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -2942,14 +3182,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -2967,14 +3207,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -2992,14 +3232,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -3017,14 +3257,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
       "remaining": "Glyph and source header typed; source branch inventory G2",
-      "updated_at_utc": "2026-10-22T19:05:13+00:00",
+      "updated_at_utc": "2026-10-22T19:15:20+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:05:13.5075700Z",
+        "at_utc": "2026-10-22T19:15:20.4675090Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "6ba1c72a43c782a45bcf2838e26766c05e296900480071b693bb40456c675293",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190513083Z-12852227-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191519983Z-bcce0a02-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {
@@ -3042,14 +3282,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -3092,14 +3332,14 @@
       "test": "verify-ue1-original-unrealfile-lightmesh-data.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:42:39.1452324Z; catalog\\compliance\\evidence\\o06\\20261022T074238920Z-5fd4d772-PRD-verify-ue1-original-unrealfile-lightmesh-data.php.txt; scoped test, not full class acceptance",
       "remaining": "Typed lightmesh data record; light samples O07",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:17+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:42:39.1452324Z",
+        "at_utc": "2026-10-22T19:15:17.4375057Z",
         "test_sha256": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
-        "source_sha256": "5637714ca8bfa38e28b8c4cc55123a58d35d189c47529bd7ac35a27de9e97226",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T074238920Z-5fd4d772-PRD-verify-ue1-original-unrealfile-lightmesh-data.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517124Z-f03078f7-PRD-verify-ue1-original-unrealfile-lightmesh-data.php.txt"
       }
     },
     {
@@ -3217,14 +3457,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3242,14 +3482,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3267,14 +3507,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3292,14 +3532,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3317,14 +3557,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3371,14 +3611,14 @@
       "test": "verify-ue1-original-unrealfile-audio.php",
       "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
       "remaining": "Data-size/header source-tested; payload interpretation O07",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "at_utc": "2026-10-22T19:15:14.7775076Z",
         "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
-        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
       }
     },
     {
@@ -3396,14 +3636,14 @@
       "test": "verify-ue1-original-unrealfile-object-bases.php",
       "evidence": "DEV historical PASS at 2026-10-21T20:57:41.6838818Z; catalog\\compliance\\evidence\\o06\\20261021T205741266Z-38cef92f-DEV-verify-ue1-original-unrealfile-object-bases.php.txt; scoped test, not full class acceptance",
       "remaining": "Base archive structural fields tested; G2 source class inheritance audit",
-      "updated_at_utc": "2026-10-22T17:21:24+00:00",
+      "updated_at_utc": "2026-10-22T19:15:19+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T17:21:24.8312921Z",
+        "at_utc": "2026-10-22T19:15:19.2545065Z",
         "test_sha256": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
-        "source_sha256": "a36fc52eca31008684c6ebdc489dd25fa7d846fbce3a299d070188626f848e9d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T172124224Z-c43127c5-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191518347Z-e8776f39-PRD-verify-ue1-original-unrealfile-object-bases.php.txt"
       }
     },
     {
@@ -3421,14 +3661,14 @@
       "test": "verify-ue1-original-unrealfile-mesh-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.6918324Z; catalog\\compliance\\evidence\\o06\\20261022T090216239Z-8383499e-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T19:09:39+00:00",
+      "updated_at_utc": "2026-10-22T19:15:18+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:09:39.4744001Z",
+        "at_utc": "2026-10-22T19:15:18.1435062Z",
         "test_sha256": "0cae7fee26bb46629a0e4e11c6239b7fb3f30690007f08d0b65d7802d3221e12",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190938990Z-80e5819a-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191517634Z-b3be8277-PRD-verify-ue1-original-unrealfile-mesh-records.php.txt"
       }
     },
     {
@@ -3471,14 +3711,14 @@
       "test": "verify-ue1-original-unrealfile-polys-data.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:50:25.0466134Z; catalog\\compliance\\evidence\\o06\\20261022T075024807Z-1072c7bf-PRD-verify-ue1-original-unrealfile-polys-data.php.txt; scoped test, not full class acceptance",
       "remaining": "FPoly archive source-tested; runtime editor functions not O06",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:19+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:50:25.0466134Z",
+        "at_utc": "2026-10-22T19:15:19.7895057Z",
         "test_sha256": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
-        "source_sha256": "a11511497655399328706aca5bdc513940dc6c0e91cad805d78d8b36ab2318bb",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T075024807Z-1072c7bf-PRD-verify-ue1-original-unrealfile-polys-data.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191519454Z-de39e78a-PRD-verify-ue1-original-unrealfile-polys-data.php.txt"
       }
     },
     {
@@ -3546,14 +3786,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -3571,14 +3811,14 @@
       "test": "verify-ue1-original-unrealfile-expression-token-inventory.php",
       "evidence": "PRD historical PASS at 2026-10-22T08:14:11.2490258Z; catalog\\compliance\\evidence\\o06\\20261022T081411099Z-f6a7cd42-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt; scoped test, not full class acceptance",
       "remaining": "50/50 SerializeExpr switch cases statically mapped; runtime execution O10; variable branches source review G2",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:17+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T08:14:11.2490258Z",
+        "at_utc": "2026-10-22T19:15:16.8965068Z",
         "test_sha256": "36299cd933e23a67618b64fc6d5d61cf94372d1f7e9add612fff6e3b9981ec3b",
-        "source_sha256": "45ae383bb7e8448bc6bb1f2af5c99d1842a9d121846070d7c8c681b70d9e2117",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T081411099Z-f6a7cd42-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516640Z-5b26c90c-PRD-verify-ue1-original-unrealfile-expression-token-inventory.php.txt"
       }
     },
     {
@@ -3596,14 +3836,14 @@
       "test": "verify-ue1-original-unrealfile-audio.php",
       "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
       "remaining": "Sound header/payload range source-tested; audio decode O07",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "at_utc": "2026-10-22T19:15:14.7775076Z",
         "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
-        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
       }
     },
     {
@@ -3621,14 +3861,14 @@
       "test": "verify-ue1-original-unrealfile-stacktree-data.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:57:39.7967064Z; catalog\\compliance\\evidence\\o06\\20261022T075739470Z-3b6a4fd4-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt; scoped test, not full class acceptance",
       "remaining": "FStackNode archive source-tested; linking O10",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:21+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:57:39.7967064Z",
+        "at_utc": "2026-10-22T19:15:20.9916972Z",
         "test_sha256": "ff036413645cfa5886be7d865e780be54b31b50e7f0b53bcac133eb4eb1c6151",
-        "source_sha256": "42df281001c2c6034b8b8e1ba1b29dc3afef0ace290b47f8e59b6cdf72defa1e",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T075739470Z-3b6a4fd4-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191520687Z-53334203-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt"
       }
     },
     {
@@ -3646,14 +3886,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -3696,14 +3936,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -3746,14 +3986,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -3771,14 +4011,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
       "remaining": "Vert pair/native header source-tested; G2 inheritance review",
-      "updated_at_utc": "2026-10-22T19:05:13+00:00",
+      "updated_at_utc": "2026-10-22T19:15:20+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T19:05:13.5075700Z",
+        "at_utc": "2026-10-22T19:15:20.4675090Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "6ba1c72a43c782a45bcf2838e26766c05e296900480071b693bb40456c675293",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T190513083Z-12852227-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191519983Z-bcce0a02-PRD-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {
@@ -3796,14 +4036,14 @@
       "test": "verify-ue1-original-unrealfile-database-records.php",
       "evidence": "PRD historical PASS at 2026-10-22T09:02:16.8847605Z; catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt; scoped test, not full class acceptance",
       "remaining": "Individual source-derived database record types have fixture coverage; final distinct-method and inherited path review G2 remains",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:16+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T09:02:16.8847605Z",
+        "at_utc": "2026-10-22T19:15:16.4325074Z",
         "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
-        "source_sha256": "dcd6c8d09354b366f3c2fda8f120d0e1a51acd030d082b8ac9ff25f90759a88d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T090216725Z-7f4a6857-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191516109Z-0f91f637-PRD-verify-ue1-original-unrealfile-database-records.php.txt"
       }
     },
     {
@@ -3821,14 +4061,14 @@
       "test": "verify-ue1-original-unrealfile-bit-archives.php",
       "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance",
       "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:15+00:00",
       "last_verification": {
-        "target": "DEV",
+        "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T07:21:19.9997700Z",
+        "at_utc": "2026-10-22T19:15:15.3625134Z",
         "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
-        "source_sha256": "9cd63d7b0497101b42ec37c1b738b0c1713cf5533978e3c56506bb223db44a8a",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T072119840Z-dbc6661a-DEV-verify-ue1-original-unrealfile-bit-archives.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191515001Z-59a97889-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt"
       }
     },
     {
@@ -3846,14 +4086,14 @@
       "test": "verify-ue1-original-unrealfile-audio.php",
       "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
       "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "at_utc": "2026-10-22T19:15:14.7775076Z",
         "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
-        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
       }
     },
     {
@@ -3938,14 +4178,14 @@
       "test": "verify-ue1-original-unrealfile-audio.php",
       "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
       "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T09:31:19+00:00",
+      "updated_at_utc": "2026-10-22T19:15:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
-        "at_utc": "2026-10-22T06:43:43.0109772Z",
+        "at_utc": "2026-10-22T19:15:14.7775076Z",
         "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
-        "source_sha256": "8b756787649e93623ad97de73850db0004f5916841953d6a97ba11d0aebc8144",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+        "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
       }
     },
     {
