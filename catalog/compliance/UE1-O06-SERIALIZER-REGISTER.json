@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-22T21:31:06+00:00",
+  "updated_at_utc": "2026-10-22T21:41:44+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4432,12 +4432,20 @@
           "line": 113
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic Serialize source explicitly: Only serialize objects, since this cannot be loaded or saved; Viewports only reference traversal, no saveable native tail.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UConst::Serialize",
@@ -4499,12 +4507,20 @@
           "line": 226
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UEngine::Serialize",
@@ -4516,12 +4532,20 @@
           "line": 166
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UEnum::Serialize",
@@ -4650,12 +4674,20 @@
           "line": 257
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UInput::Serialize",
@@ -4667,12 +4699,20 @@
           "line": 100
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:ULevel::Serialize",
@@ -4859,12 +4899,20 @@
           "line": 300
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UNetDriver::Serialize",
@@ -4876,12 +4924,20 @@
           "line": 69
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UObject::Serialize",
@@ -4993,12 +5049,20 @@
           "line": 24
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UPolys::SerializeData",
@@ -5260,12 +5324,20 @@
           "line": 803
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C98:UVectors::SerializeData",
@@ -5352,12 +5424,20 @@
           "line": 34
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "C227:AEmitterGarbageCollector::Serialize",
@@ -5369,12 +5449,20 @@
           "line": 71
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "EXCLUDED",
+      "reader": "C227 CLASS_Transient actor; no extra saveable file-native payload",
+      "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 EmitterClasses.h CLASS_Transient; recursion gated by Ar.SerializeRefs(), then Super.",
+      "remaining": "Excluded only from on-disk O06 native payload inventory; GC/reference traversal still exists.",
+      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:40:53.2034845Z",
+        "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      }
     },
     {
       "id": "C227:AXBeamEmitter::Serialize",
@@ -5386,12 +5474,20 @@
           "line": 42
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "UObject tagged property handling; no extra file bytes from AXBeamEmitter override; parent hierarchy requires source verification",
+      "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXBeamEmitter Super::Serialize, RenderDataModel gated by Ar.SerializeRefs (GC-only).",
+      "remaining": "CLASS_Abstract AXBeamEmitter may have saveable subclasses; cannot exclude parent/native property semantics without matching class/cooked source and actual engine oracle. C227 lineage unlike C98/T99 and remains version-unproven.",
+      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:40:53.2034845Z",
+        "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      }
     },
     {
       "id": "C227:AXParticleEmitter::Serialize",
@@ -5403,12 +5499,20 @@
           "line": 101
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "UnrealDB tagged actor serialization; C227 save-time filtering not simulated",
+      "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXParticleEmitter when Ar.IsSaving && bIsInternalEmitter temporarily nulls Level/XLevel/HitActor and clears Location/Rotation before Super; PartPtr only reference archives.",
+      "remaining": "Save-time parent UObject property filtering and caller state restoration require executable engine parity before claiming C227 emitter serialization match. Do not exclude saveable AActor-derived classes.",
+      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:40:53.2034845Z",
+        "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      }
     },
     {
       "id": "C227:AXRopeDeco::Serialize",
@@ -5420,12 +5524,20 @@
           "line": 1392
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "PARTIAL",
+      "reader": "UnrealDB tagged actor serialization; C227 physics state mutation not simulated",
+      "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXRopeDeco on Ar.IsSaving invokes RbPhysicsData SaveState, sets Mesh nullptr, Super::Serialize and restores Mesh from RopeMeshPtr; Ar.SerializeRefs separately traverses rope mesh/physics.",
+      "remaining": "C227 actor save-time physics/native state and Mesh property filtering not independently replayed; compiled oracle and genuine package needed. Do not classify as non-saveable.",
+      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:40:53.2034845Z",
+        "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      }
     },
     {
       "id": "C227:UBeamMesh::Serialize",
@@ -5437,12 +5549,20 @@
           "line": 299
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T10:35:15+00:00"
+      "status": "EXCLUDED",
+      "reader": "C227 CLASS_Transient UBeamMesh, explicit UObject-only native serialization",
+      "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 UBeamMesh.h CLASS_Transient; UBeamMesh::Serialize source explicitly serializes nothing from StaticMesh.",
+      "remaining": "Excluded only from O06 native file payload; ordinary UObject tag serialization still applies in memory.",
+      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:40:53.2034845Z",
+        "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      }
     },
     {
       "id": "T99:AActor::Serialize",
@@ -5696,12 +5816,20 @@
           "line": 121
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic Serialize source explicitly: Only serialize objects, since this cannot be loaded or saved; Viewports only reference traversal, no saveable native tail.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UConst::Serialize",
@@ -5738,12 +5866,20 @@
           "line": 165
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UEngine::Serialize",
@@ -5755,12 +5891,20 @@
           "line": 193
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UEnum::Serialize",
@@ -5964,12 +6108,20 @@
           "line": 407
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UInput::Serialize",
@@ -5981,12 +6133,20 @@
           "line": 110
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:ULevel::Serialize",
@@ -6198,12 +6358,20 @@
           "line": 59
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UNetDriver::Serialize",
@@ -6215,12 +6383,20 @@
           "line": 187
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UObject::Serialize",
@@ -6307,12 +6483,20 @@
           "line": 326
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UPalette::Serialize",
@@ -6349,12 +6533,20 @@
           "line": 17
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     },
     {
       "id": "T99:UPolys::Serialize",
@@ -6691,12 +6883,20 @@
           "line": 200
         }
       ],
-      "status": "DISCOVERED",
-      "reader": "",
-      "test": "",
-      "evidence": "",
-      "remaining": "Source-to-reader/test classification not yet completed",
-      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+      "status": "EXCLUDED",
+      "reader": "No file-native reader required for source-proven runtime/transient class",
+      "test": "verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "evidence": "SOURCE_EXCLUSION_DEV_PASS 65/65 checks against 37 Epic C++ files, source manifest sha256 e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3; Epic class source DECLARE_CLASS/DECLARE_ABSTRACT_CLASS explicitly CLASS_Transient; additional Serialize fields are runtime state/reference traversal, not on-disk package native data.",
+      "remaining": "Excluded solely from O06 package-native serializer inventory, NOT from actual GC, config, network, viewport or editor runtime serializer behavior. Epic class flags and explicit source body are the proof.",
+      "updated_at_utc": "2026-10-22T21:39:31+00:00",
+      "last_verification": {
+        "target": "DEV",
+        "state": "PASS",
+        "at_utc": "2026-10-22T21:38:54.4112874Z",
+        "test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+        "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+        "log": "catalog\\compliance\\evidence\\o06\\20261022T213853989Z-f0791ee0-DEV-verify-ue1-o06-classic-runtime-serializer-exclusions.php.txt"
+      }
     }
   ]
 }

@@ -1,0 +1,31 @@
+﻿{
+    "ok": false,
+    "checks": 20,
+    "passed": 0,
+    "failed": [
+        "C98:UClient::Serialize:registered_in_pinned_source",
+        "C98:UEditorEngine::Serialize:registered_in_pinned_source",
+        "C98:UEngine::Serialize:registered_in_pinned_source",
+        "C98:UGameEngine::Serialize:registered_in_pinned_source",
+        "C98:UInput::Serialize:registered_in_pinned_source",
+        "C98:UNetConnection::Serialize:registered_in_pinned_source",
+        "C98:UNetDriver::Serialize:registered_in_pinned_source",
+        "C98:UPlayer::Serialize:registered_in_pinned_source",
+        "C98:UTransBuffer::Serialize:registered_in_pinned_source",
+        "C98:UViewport::Serialize:registered_in_pinned_source",
+        "T99:UClient::Serialize:registered_in_pinned_source",
+        "T99:UEditorEngine::Serialize:registered_in_pinned_source",
+        "T99:UEngine::Serialize:registered_in_pinned_source",
+        "T99:UGameEngine::Serialize:registered_in_pinned_source",
+        "T99:UInput::Serialize:registered_in_pinned_source",
+        "T99:UNetConnection::Serialize:registered_in_pinned_source",
+        "T99:UNetDriver::Serialize:registered_in_pinned_source",
+        "T99:UPackageMap::Serialize:registered_in_pinned_source",
+        "T99:UPlayer::Serialize:registered_in_pinned_source",
+        "T99:UViewport::Serialize:registered_in_pinned_source"
+    ],
+    "source_files": 0,
+    "source_sha256_manifest": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "excluded_symbols": 20,
+    "scope": "Only explicitly CLASS_Transient or UClient source-nonsaveable runtime classes, not package-resident actors"
+}

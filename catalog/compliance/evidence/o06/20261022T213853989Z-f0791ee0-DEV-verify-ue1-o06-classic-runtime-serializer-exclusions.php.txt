@@ -1,0 +1,10 @@
+﻿{
+    "ok": true,
+    "checks": 65,
+    "passed": 65,
+    "failed": [],
+    "source_files": 37,
+    "source_sha256_manifest": "e40566283f28a3b3866dda130cf189fb9a9a8c77641b2e47d6010096b60875c3",
+    "excluded_symbols": 20,
+    "scope": "Only explicitly CLASS_Transient or UClient source-nonsaveable runtime classes, not package-resident actors"
+}

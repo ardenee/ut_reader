@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 36,
+    "passed": 36,
+    "failed": [],
+    "source_files": 6,
+    "source_sha256_manifest": "119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18",
+    "exclusions": [
+        "AEmitterGarbageCollector",
+        "UBeamMesh"
+    ],
+    "saveable_actor_contracts_open": [
+        "AXBeamEmitter",
+        "AXParticleEmitter",
+        "AXRopeDeco"
+    ],
+    "scope": "Only C227 emitter overrides and declarations; saving parent property effects not implemented here"
+}
