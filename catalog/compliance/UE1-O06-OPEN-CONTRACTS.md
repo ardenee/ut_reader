@@ -13,8 +13,8 @@ Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation 
 
 | Source-native class/data | Epic source contract | Acceptance still required |
 |---|---|---|
-| UBspNodes / FBspNode | Src/Inc/UnObj.h, FBspNode operator<< (lines near 692-700) and UBspNodes SerializeHeader (near 748-755) | Decode Num source records in FArchive field order, validate typed indices/flags/plane, corrupt/truncation tests |
-| UBspSurfs / FBspSurf | Src/Inc/UnObj.h, FBspSurf operator<< (near 795-805) | Decode record fields, 1-based texture/brush/actor refs; reject invalid references and record lengths |
+| UBspNodes / FBspNode | Src/Inc/UnObj.h, FBspNode operator<< (near 692-700) | **IMPLEMENTED:** 56-byte archive records, plane/zone mask/flags/indices; source fixtures and bounds tests 20/20 combined with FBspSurf; DEV staging/MySQL PASS; PRD pending |
+| UBspSurfs / FBspSurf | Src/Inc/UnObj.h, FBspSurf operator<< (near 795-805) | **IMPLEMENTED:** 44-byte archive records, typed texture/brush/actor references and signed panning; same 20/20 combined source fixtures; PRD pending |
 | ULightMesh / FLightMeshIndex | Src/Inc/UnObj.h, operator<< (near 929-944) | Decode variable actor references controlled by NumStaticLights+NumDynamicLights (max 16), validate bounds, no runtime light casting claim |
 | UPolys / FPoly | Src/Inc/UnObj.h, operator<< (near 1065-1078) | Decode variable vertex counts and FVector fields, names/object references, and malformed bounds |
 | UStackTree / FStackNode | Src/Inc/UnScript.h, FStackNode declaration (near 274-325), native operator<< implementation | Decode class scope, links, name and union branch and source data order; validate one-based references |
