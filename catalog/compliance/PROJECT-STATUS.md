@@ -17,6 +17,220 @@ Updated: **2026-10-21**. This is the canonical recovery/handover file for this p
 | Latest completed work batch | **Original v22/v23 UPalette FColor four-byte records: 76/76 source-defined checks, 4/4 DEV and 4/4 PRD named tests PASS, 4/4 deployed file hashes match. GitHub HEAD `352868d3`; these are a narrow proven case, NOT a source-wide O06 acceptance.** |
 | Latest verified code checkpoint | **O06 ongoing:** source-defined classic tagged/native readers parse **92/92 SHA-pinned packages, 2,465/2,465 exports, 15,475 property tags** (805 palettes, 1,228 textures, 396 sounds, 22 fonts, 14 packages). Original v9/v10 typed byte ranges verified 20/20; original v22/v23 UObjectBase/ranges 35/35 and FExecStackMain 18/18; genuine negative/CLI cases 9/9. **DEV regressions 45/45**. Original v9/v10 UDatabase/UPalette native fields now decode (12/12); original v22/v23 UClass/FProperty schemas and local native binary instance Int/Bool/UObject/String/Rotation/Float/Vector/Name/Byte values decode (expanded v22/v23 source-defined fixtures; signed `FRotation` fix). 1996 UTexture, UMesh six-section records, UMeshMap, UScript header/stack records, USound, UFont glyphs, UVectors, UVertPool, UBounds, UTerrain and UTextBuffer/UBuffer/UArray/UEnum native fields/records now decoded (geometry 40/40 source-defined tests); remaining 1996 classes and 1997 **external** schemas/class-specific data serializers remain open; local 1997 UClass inheritance order and missing-parent protections pass source-defined 12/12; do NOT mark O06 accepted. See UE1-O06-SERIALIZATION.md. |
 
+<!-- UE1-O06-LIVE-REGISTER-BEGIN -->
+## O06 live source serializer register
+
+**Canonical recovery reference:** this table is updated during discovery, mapping, implementation, tests and deployment, not retrospectively.
+
+Found source entries: **172** (R96=26, U97=49, D97=7, C98=41, T99=49).
+
+**Current per-entry status:** DISCOVERED=172.
+
+**States:** `DISCOVERED` = located in Epic source only; `MAPPED` = source behavior/reader mapped; `PARTIAL` = implementation or tests exist but contract incomplete; `GAP` = confirmed missing implementation; `BLOCKED` = named prerequisite; `EXCLUDED` = proven non-saveable or runtime-only; `DEV_PASS`/`PRD_PASS` = explicit source-scoped named tests passed at that target; `ACCEPTED` = source contract signed off. An entry that has passed a narrow fixture but may have unresolved fields remains PARTIAL.
+
+**Mandatory live workflow:** (1) On discovering a symbol, add it immediately as DISCOVERED with source location. (2) Update to MAPPED/PARTIAL/GAP when the reader/code is inspected, naming remaining work. (3) Record test script, evidence and exact outcome when run; change the same row before starting another task. (4) Commit/push/deploy the updated status with each bounded checkpoint. (5) Never turn a registration or a corpus-only result into serializer acceptance. Never replace an older failure without retaining its journal. The six O06 gates remain fixed even if new rows are discovered.
+
+Machine-readable file: `catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json`. Regenerate/update using `python catalog/bin/sync-ue1-o06-serializers.py` or `--set-status ID STATUS --reader ... --test ... --evidence ... --remaining ...`. Existing statuses survive rescans. Paths below are relative to their corresponding Epic source roots. **These rows are source sightings, not all distinct on-disk requirements.**
+
+### R96: 1996 resource registrations (26)
+
+| Serializer / class | Epic source path:line | State | Reader / test | Outstanding / evidence |
+|---|---|---|---|---|
+| `UActorList` | `Engine/UnActLst.cpp:746` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UArray` | `Engine/UnRes.cpp:2238` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBounds` | `Engine/UnModel.cpp:226` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBspNodes` | `Engine/UnModel.cpp:52` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBspSurfs` | `Engine/UnModel.cpp:89` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBuffer` | `Engine/UnRes.cpp:2643` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UCamera` | `Engine/UnCamera.cpp:82` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClass` | `Engine/UnClass.cpp:436` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEnum` | `Engine/UnRes.cpp:2569` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFont` | `Engine/UnGfx.cpp:1144` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULevel` | `Engine/UnLevel.cpp:478` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULightMesh` | `Engine/UnModel.cpp:139` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMesh` | `Engine/UnMesh.cpp:138` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMeshMap` | `Engine/UnMesh.cpp:214` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UModel` | `Engine/UnModel.cpp:431` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPalette` | `Engine/UnTex.cpp:731` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPlayer` | `Engine/UnServer.cpp:360` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPolys` | `Engine/UnFPoly.cpp:691` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UScript` | `Engine/UnScript.cpp:2781` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `USound` | `Engine/UnSound.cpp:289` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTerrain` | `Engine/UnModel.cpp:279` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTextBuffer` | `Engine/UnRes.cpp:2199` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTexture` | `Engine/UnTex.cpp:354` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTransBuffer` | `Editor/UnEdTran.cpp:1026` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UVectors` | `Engine/UnModel.cpp:163` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UVertPool` | `Engine/UnModel.cpp:202` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+
+### U97: 1997 object class registrations (49)
+
+| Serializer / class | Epic source path:line | State | Reader / test | Outstanding / evidence |
+|---|---|---|---|---|
+| `AActor` | `Engine/UnActor.cpp:17` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ABrush` | `Engine/UnDynBsp.cpp:66` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `AMover` | `Game/UnMover.cpp:18` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `APawn` | `Game/UnPawn.cpp:19` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UArray` | `Engine/UnObj.cpp:2287` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBitArray` | `Engine/UnObj.cpp:2670` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBitMatrix` | `Engine/UnObj.cpp:2671` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBounds` | `Engine/UnModel.cpp:123` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBspNodes` | `Engine/UnModel.cpp:45` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBspSurfs` | `Engine/UnModel.cpp:81` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBuffer` | `Engine/UnObj.cpp:2437` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UCamera` | `Engine/UnCamera.cpp:50` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClass` | `Engine/UnClass.cpp:405` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UDatabase` | `Engine/UnObj.cpp:897` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UDependencies` | `Engine/UnClass.cpp:864` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEnumDef` | `Engine/UnObj.cpp:2394` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFloats` | `Engine/UnModel.cpp:99` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFont` | `Engine/UnFont.cpp:517` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UInts` | `Engine/UnObj.cpp:2664` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULevel` | `Engine/UnLevel.cpp:391` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULightMesh` | `Engine/UnModel.cpp:87` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULinker` | `Engine/UnObj.cpp:2655` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULinkerLoad` | `Engine/UnObj.cpp:2656` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULinkerSave` | `Engine/UnObj.cpp:2657` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMesh` | `Engine/UnMesh.cpp:90` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMeshAnimNotifys` | `Engine/UnMesh.cpp:23` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMeshAnimSeqs` | `Engine/UnMesh.cpp:22` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMeshTris` | `Engine/UnMesh.cpp:21` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMeshVertConnects` | `Engine/UnMesh.cpp:24` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMeshVerts` | `Engine/UnMesh.cpp:20` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UModel` | `Engine/UnModel.cpp:252` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMusic` | `Engine/UnMusic.cpp:191; Engine/UnMusic.cpp:459` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UObject` | `Engine/UnObj.cpp:736` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPalette` | `Engine/UnTex.cpp:1295` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPlayer` | `Engine/UnServer.cpp:307` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPolys` | `Engine/UnFPoly.cpp:697` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPrimitive` | `Engine/UnPrim.cpp:17` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UProperties` | `Engine/UnClass.cpp:832` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UReachSpecs` | `Engine/UnRoute.cpp:21` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UScript` | `Engine/UnScript.cpp:5158` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `USound` | `Engine/UnSound.cpp:220` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UStackTree` | `Engine/UnScript.cpp:5200` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTextBuffer` | `Engine/UnObj.cpp:2224` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTexture` | `Engine/UnTex.cpp:513` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTextureSet` | `Engine/UnTex.cpp:519` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTransBuffer` | `Editor/UnEdTran.cpp:882` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UVectors` | `Engine/UnModel.cpp:93` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UVerts` | `Engine/UnModel.cpp:117` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UWords` | `Engine/UnObj.cpp:2663` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+
+### D97: 1997 custom SerializeData definitions (7)
+
+| Serializer / class | Epic source path:line | State | Reader / test | Outstanding / evidence |
+|---|---|---|---|---|
+| `UBitArray::SerializeData` | `Engine/UnObj.cpp:2686` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMusic::SerializeData` | `Engine/UnMusic.cpp:176` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UObject::SerializeData` | `Engine/UnObj.cpp:729` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UProperties::SerializeData` | `Engine/UnClass.cpp:817` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UScript::SerializeData` | `Engine/UnScript.cpp:5146` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `USound::SerializeData` | `Engine/UnSound.cpp:206` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTransBuffer::SerializeData` | `Editor/UnEdTran.cpp:868` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+
+### C98: 1998 v1.200 archive Serialize definitions (41)
+
+| Serializer / class | Epic source path:line | State | Reader / test | Outstanding / evidence |
+|---|---|---|---|---|
+| `AActor::Serialize` | `Engine/Src/UnActor.cpp:351` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBitArray::Serialize` | `Engine/Src/UnModel.cpp:130` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBoolProperty::Serialize` | `Core/Src/UnProp.cpp:298` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UByteProperty::Serialize` | `Core/Src/UnProp.cpp:208` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClass::Serialize` | `Core/Src/UnClass.cpp:921` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClassProperty::Serialize` | `Core/Src/UnProp.cpp:460` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClient::Serialize` | `Engine/Src/UnCamMgr.cpp:113` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UConst::Serialize` | `Core/Src/UnClass.cpp:1463` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UDatabase::Serialize` | `Engine/Src/UnModel.cpp:34` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEditorEngine::Serialize` | `Editor/Src/UnEditor.cpp:226` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEngine::Serialize` | `Engine/Src/UnEngine.cpp:166` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEnum::Serialize` | `Core/Src/UnObj.cpp:3076` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UField::Serialize` | `Core/Src/UnClass.cpp:236` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFireTexture::Serialize` | `Fire/Src/UnFractal.cpp:4214` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFont::Serialize` | `Engine/Src/UnFont.cpp:19` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFunction::Serialize` | `Core/Src/UnClass.cpp:1358` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UGameEngine::Serialize` | `Engine/Src/UnGame.cpp:257` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UInput::Serialize` | `Engine/Src/UnIn.cpp:100` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULevel::Serialize` | `Engine/Src/UnLevel.cpp:150` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULevelBase::Serialize` | `Engine/Src/UnLevel.cpp:20` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMesh::Serialize` | `Engine/Src/UnMesh.cpp:32` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UModel::Serialize` | `Engine/Src/UnModel.cpp:291` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMusic::Serialize` | `Engine/Src/UnAudio.cpp:467` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UNetConnection::Serialize` | `Engine/Src/UnConn.cpp:300` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UNetDriver::Serialize` | `Engine/Src/UnConn.cpp:69` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UObject::Serialize` | `Core/Src/UnObj.cpp:433` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UObjectProperty::Serialize` | `Core/Src/UnProp.cpp:390` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPackage::Serialize` | `Core/Src/UnObj.cpp:3391` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPalette::Serialize` | `Engine/Src/UnTex.cpp:715` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPlayer::Serialize` | `Engine/Src/UnPlayer.cpp:24` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPrimitive::Serialize` | `Engine/Src/UnPrim.cpp:22` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UProperty::Serialize` | `Core/Src/UnProp.cpp:101` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `USound::Serialize` | `Engine/Src/UnAudio.cpp:16` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UState::Serialize` | `Core/Src/UnClass.cpp:1440` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UStringProperty::Serialize` | `Core/Src/UnProp.cpp:519` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UStruct::Serialize` | `Core/Src/UnClass.cpp:476` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UStructProperty::Serialize` | `Core/Src/UnProp.cpp:577` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTextBuffer::Serialize` | `Core/Src/UnObj.cpp:3033` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTexture::Serialize` | `Engine/Src/UnTex.cpp:270` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTransBuffer::Serialize` | `Editor/Src/UnEdTran.cpp:803` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UViewport::Serialize` | `Engine/Src/UnCamera.cpp:34` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+
+### T99: 1999 UT99 v400 archive Serialize definitions (49)
+
+| Serializer / class | Epic source path:line | State | Reader / test | Outstanding / evidence |
+|---|---|---|---|---|
+| `AActor::Serialize` | `Engine/Src/UnActor.cpp:963` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UArrayProperty::Serialize` | `Core/Src/UnProp.cpp:1099` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBitArray::Serialize` | `Editor/Src/UnVisi.cpp:126` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UBoolProperty::Serialize` | `Core/Src/UnProp.cpp:475` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UByteProperty::Serialize` | `Core/Src/UnProp.cpp:324` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClass::Serialize` | `Core/Src/UnClass.cpp:914` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClassFactoryNew::Serialize` | `Editor/Src/UnEdFact.cpp:99` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClassProperty::Serialize` | `Core/Src/UnProp.cpp:743` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UClient::Serialize` | `Engine/Src/UnCamMgr.cpp:121` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UConst::Serialize` | `Core/Src/UnClass.cpp:1438` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEditorEngine::Serialize` | `Editor/Src/UnEditor.cpp:165` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEngine::Serialize` | `Engine/Src/UnEngine.cpp:193` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UEnum::Serialize` | `Core/Src/UnObj.cpp:3604` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UExporter::Serialize` | `Core/Src/UExporter.cpp:26` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFactory::Serialize` | `Core/Src/UFactory.cpp:28` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UField::Serialize` | `Core/Src/UnClass.cpp:239` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFireTexture::Serialize` | `Fire/Src/UnFractal.cpp:4227` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFixedArrayProperty::Serialize` | `Core/Src/UnProp.cpp:954` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFont::Serialize` | `Engine/Src/UnFont.cpp:19` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UFunction::Serialize` | `Core/Src/UnClass.cpp:1342` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UGameEngine::Serialize` | `Engine/Src/UnGame.cpp:407` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UInput::Serialize` | `Engine/Src/UnIn.cpp:110` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULevel::Serialize` | `Engine/Src/UnLevel.cpp:186` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULevelBase::Serialize` | `Engine/Src/UnLevel.cpp:22` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULevelFactoryNew::Serialize` | `Editor/Src/UnEdFact.cpp:38` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `ULodMesh::Serialize` | `Engine/Src/ULodMesh.cpp:23` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMapProperty::Serialize` | `Core/Src/UnProp.cpp:1282` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMesh::Serialize` | `Engine/Src/UnMesh.cpp:32` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UModel::Serialize` | `Engine/Src/UnModel.cpp:182` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UMusic::Serialize` | `Engine/Src/UnAudio.cpp:518` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UNetConnection::Serialize` | `Engine/Src/UnConn.cpp:59` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UNetDriver::Serialize` | `Engine/Src/UnNetDrv.cpp:187` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UObject::Serialize` | `Core/Src/UnObj.cpp:478` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UObjectProperty::Serialize` | `Core/Src/UnProp.cpp:673` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPackage::Serialize` | `Core/Src/UnObj.cpp:3721` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPackageMap::Serialize` | `Core/Src/UnCoreNet.cpp:326` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPalette::Serialize` | `Engine/Src/UnTex.cpp:611` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPlayer::Serialize` | `Engine/Src/UnPlayer.cpp:17` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UPrimitive::Serialize` | `Engine/Src/UnPrim.cpp:22` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UProperty::Serialize` | `Core/Src/UnProp.cpp:117` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `USound::Serialize` | `Engine/Src/UnAudio.cpp:126` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UState::Serialize` | `Core/Src/UnClass.cpp:712` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UStrProperty::Serialize` | `Core/Src/UnProp.cpp:859` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UStruct::Serialize` | `Core/Src/UnClass.cpp:593` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UStructProperty::Serialize` | `Core/Src/UnProp.cpp:1491` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTextBuffer::Serialize` | `Core/Src/UnObj.cpp:3588` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTexture::Serialize` | `Engine/Src/UnTex.cpp:326` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UTextureFactoryNew::Serialize` | `Editor/Src/UnEdFact.cpp:150` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+| `UViewport::Serialize` | `Engine/Src/UnCamera.cpp:200` | **DISCOVERED** | — | Source-to-reader/test classification not yet completed |
+
+<!-- UE1-O06-LIVE-REGISTER-END -->
+
 ## O06 fixed closure board — source census and remaining gates (2026-10-22)
 
 **Purpose:** Stop open-ended serializer-by-serializer work. This board is the authoritative O06 progress tracker. Older narrative paragraphs describe historical checkpoints, **not** today's remaining-work list. O06 cannot be called complete merely because the currently installed texture/sound/font corpus passes.

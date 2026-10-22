@@ -1,0 +1,2934 @@
+{
+  "schema": 1,
+  "updated_at_utc": "2026-10-22T09:24:05+00:00",
+  "entries": [
+    {
+      "id": "R96:UActorList",
+      "branch": "R96",
+      "symbol": "UActorList",
+      "locations": [
+        {
+          "path": "Engine/UnActLst.cpp",
+          "line": 746
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UArray",
+      "branch": "R96",
+      "symbol": "UArray",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2238
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UBounds",
+      "branch": "R96",
+      "symbol": "UBounds",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 226
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UBspNodes",
+      "branch": "R96",
+      "symbol": "UBspNodes",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 52
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UBspSurfs",
+      "branch": "R96",
+      "symbol": "UBspSurfs",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 89
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UBuffer",
+      "branch": "R96",
+      "symbol": "UBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2643
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UCamera",
+      "branch": "R96",
+      "symbol": "UCamera",
+      "locations": [
+        {
+          "path": "Engine/UnCamera.cpp",
+          "line": 82
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UClass",
+      "branch": "R96",
+      "symbol": "UClass",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 436
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UEnum",
+      "branch": "R96",
+      "symbol": "UEnum",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2569
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UFont",
+      "branch": "R96",
+      "symbol": "UFont",
+      "locations": [
+        {
+          "path": "Engine/UnGfx.cpp",
+          "line": 1144
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:ULevel",
+      "branch": "R96",
+      "symbol": "ULevel",
+      "locations": [
+        {
+          "path": "Engine/UnLevel.cpp",
+          "line": 478
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:ULightMesh",
+      "branch": "R96",
+      "symbol": "ULightMesh",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 139
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UMesh",
+      "branch": "R96",
+      "symbol": "UMesh",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 138
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UMeshMap",
+      "branch": "R96",
+      "symbol": "UMeshMap",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 214
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UModel",
+      "branch": "R96",
+      "symbol": "UModel",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 431
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UPalette",
+      "branch": "R96",
+      "symbol": "UPalette",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 731
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UPlayer",
+      "branch": "R96",
+      "symbol": "UPlayer",
+      "locations": [
+        {
+          "path": "Engine/UnServer.cpp",
+          "line": 360
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UPolys",
+      "branch": "R96",
+      "symbol": "UPolys",
+      "locations": [
+        {
+          "path": "Engine/UnFPoly.cpp",
+          "line": 691
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UScript",
+      "branch": "R96",
+      "symbol": "UScript",
+      "locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 2781
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:USound",
+      "branch": "R96",
+      "symbol": "USound",
+      "locations": [
+        {
+          "path": "Engine/UnSound.cpp",
+          "line": 289
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UTerrain",
+      "branch": "R96",
+      "symbol": "UTerrain",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 279
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UTextBuffer",
+      "branch": "R96",
+      "symbol": "UTextBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2199
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UTexture",
+      "branch": "R96",
+      "symbol": "UTexture",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 354
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UTransBuffer",
+      "branch": "R96",
+      "symbol": "UTransBuffer",
+      "locations": [
+        {
+          "path": "Editor/UnEdTran.cpp",
+          "line": 1026
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UVectors",
+      "branch": "R96",
+      "symbol": "UVectors",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 163
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "R96:UVertPool",
+      "branch": "R96",
+      "symbol": "UVertPool",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 202
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:AActor",
+      "branch": "U97",
+      "symbol": "AActor",
+      "locations": [
+        {
+          "path": "Engine/UnActor.cpp",
+          "line": 17
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:ABrush",
+      "branch": "U97",
+      "symbol": "ABrush",
+      "locations": [
+        {
+          "path": "Engine/UnDynBsp.cpp",
+          "line": 66
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:AMover",
+      "branch": "U97",
+      "symbol": "AMover",
+      "locations": [
+        {
+          "path": "Game/UnMover.cpp",
+          "line": 18
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:APawn",
+      "branch": "U97",
+      "symbol": "APawn",
+      "locations": [
+        {
+          "path": "Game/UnPawn.cpp",
+          "line": 19
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UArray",
+      "branch": "U97",
+      "symbol": "UArray",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2287
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UBitArray",
+      "branch": "U97",
+      "symbol": "UBitArray",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2670
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UBitMatrix",
+      "branch": "U97",
+      "symbol": "UBitMatrix",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2671
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UBounds",
+      "branch": "U97",
+      "symbol": "UBounds",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 123
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UBspNodes",
+      "branch": "U97",
+      "symbol": "UBspNodes",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 45
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UBspSurfs",
+      "branch": "U97",
+      "symbol": "UBspSurfs",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 81
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UBuffer",
+      "branch": "U97",
+      "symbol": "UBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2437
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UCamera",
+      "branch": "U97",
+      "symbol": "UCamera",
+      "locations": [
+        {
+          "path": "Engine/UnCamera.cpp",
+          "line": 50
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UClass",
+      "branch": "U97",
+      "symbol": "UClass",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 405
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UDatabase",
+      "branch": "U97",
+      "symbol": "UDatabase",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 897
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UDependencies",
+      "branch": "U97",
+      "symbol": "UDependencies",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 864
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UEnumDef",
+      "branch": "U97",
+      "symbol": "UEnumDef",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2394
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UFloats",
+      "branch": "U97",
+      "symbol": "UFloats",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 99
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UFont",
+      "branch": "U97",
+      "symbol": "UFont",
+      "locations": [
+        {
+          "path": "Engine/UnFont.cpp",
+          "line": 517
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UInts",
+      "branch": "U97",
+      "symbol": "UInts",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2664
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:ULevel",
+      "branch": "U97",
+      "symbol": "ULevel",
+      "locations": [
+        {
+          "path": "Engine/UnLevel.cpp",
+          "line": 391
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:ULightMesh",
+      "branch": "U97",
+      "symbol": "ULightMesh",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 87
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:ULinker",
+      "branch": "U97",
+      "symbol": "ULinker",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2655
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:ULinkerLoad",
+      "branch": "U97",
+      "symbol": "ULinkerLoad",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2656
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:ULinkerSave",
+      "branch": "U97",
+      "symbol": "ULinkerSave",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2657
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UMesh",
+      "branch": "U97",
+      "symbol": "UMesh",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 90
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UMeshAnimNotifys",
+      "branch": "U97",
+      "symbol": "UMeshAnimNotifys",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 23
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UMeshAnimSeqs",
+      "branch": "U97",
+      "symbol": "UMeshAnimSeqs",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 22
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UMeshTris",
+      "branch": "U97",
+      "symbol": "UMeshTris",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 21
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UMeshVertConnects",
+      "branch": "U97",
+      "symbol": "UMeshVertConnects",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 24
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UMeshVerts",
+      "branch": "U97",
+      "symbol": "UMeshVerts",
+      "locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 20
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UModel",
+      "branch": "U97",
+      "symbol": "UModel",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 252
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UMusic",
+      "branch": "U97",
+      "symbol": "UMusic",
+      "locations": [
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 191
+        },
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 459
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UObject",
+      "branch": "U97",
+      "symbol": "UObject",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 736
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UPalette",
+      "branch": "U97",
+      "symbol": "UPalette",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 1295
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UPlayer",
+      "branch": "U97",
+      "symbol": "UPlayer",
+      "locations": [
+        {
+          "path": "Engine/UnServer.cpp",
+          "line": 307
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UPolys",
+      "branch": "U97",
+      "symbol": "UPolys",
+      "locations": [
+        {
+          "path": "Engine/UnFPoly.cpp",
+          "line": 697
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UPrimitive",
+      "branch": "U97",
+      "symbol": "UPrimitive",
+      "locations": [
+        {
+          "path": "Engine/UnPrim.cpp",
+          "line": 17
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UProperties",
+      "branch": "U97",
+      "symbol": "UProperties",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 832
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UReachSpecs",
+      "branch": "U97",
+      "symbol": "UReachSpecs",
+      "locations": [
+        {
+          "path": "Engine/UnRoute.cpp",
+          "line": 21
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UScript",
+      "branch": "U97",
+      "symbol": "UScript",
+      "locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 5158
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:USound",
+      "branch": "U97",
+      "symbol": "USound",
+      "locations": [
+        {
+          "path": "Engine/UnSound.cpp",
+          "line": 220
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UStackTree",
+      "branch": "U97",
+      "symbol": "UStackTree",
+      "locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 5200
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UTextBuffer",
+      "branch": "U97",
+      "symbol": "UTextBuffer",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2224
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UTexture",
+      "branch": "U97",
+      "symbol": "UTexture",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 513
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UTextureSet",
+      "branch": "U97",
+      "symbol": "UTextureSet",
+      "locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 519
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UTransBuffer",
+      "branch": "U97",
+      "symbol": "UTransBuffer",
+      "locations": [
+        {
+          "path": "Editor/UnEdTran.cpp",
+          "line": 882
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UVectors",
+      "branch": "U97",
+      "symbol": "UVectors",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 93
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UVerts",
+      "branch": "U97",
+      "symbol": "UVerts",
+      "locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 117
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "U97:UWords",
+      "branch": "U97",
+      "symbol": "UWords",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2663
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "D97:UBitArray::SerializeData",
+      "branch": "D97",
+      "symbol": "UBitArray::SerializeData",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2686
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "D97:UMusic::SerializeData",
+      "branch": "D97",
+      "symbol": "UMusic::SerializeData",
+      "locations": [
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 176
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "D97:UObject::SerializeData",
+      "branch": "D97",
+      "symbol": "UObject::SerializeData",
+      "locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 729
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "D97:UProperties::SerializeData",
+      "branch": "D97",
+      "symbol": "UProperties::SerializeData",
+      "locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 817
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "D97:UScript::SerializeData",
+      "branch": "D97",
+      "symbol": "UScript::SerializeData",
+      "locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 5146
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "D97:USound::SerializeData",
+      "branch": "D97",
+      "symbol": "USound::SerializeData",
+      "locations": [
+        {
+          "path": "Engine/UnSound.cpp",
+          "line": 206
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "D97:UTransBuffer::SerializeData",
+      "branch": "D97",
+      "symbol": "UTransBuffer::SerializeData",
+      "locations": [
+        {
+          "path": "Editor/UnEdTran.cpp",
+          "line": 868
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:AActor::Serialize",
+      "branch": "C98",
+      "symbol": "AActor::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnActor.cpp",
+          "line": 351
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UBitArray::Serialize",
+      "branch": "C98",
+      "symbol": "UBitArray::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnModel.cpp",
+          "line": 130
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UBoolProperty::Serialize",
+      "branch": "C98",
+      "symbol": "UBoolProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 298
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UByteProperty::Serialize",
+      "branch": "C98",
+      "symbol": "UByteProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 208
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UClass::Serialize",
+      "branch": "C98",
+      "symbol": "UClass::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 921
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UClassProperty::Serialize",
+      "branch": "C98",
+      "symbol": "UClassProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 460
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UClient::Serialize",
+      "branch": "C98",
+      "symbol": "UClient::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnCamMgr.cpp",
+          "line": 113
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UConst::Serialize",
+      "branch": "C98",
+      "symbol": "UConst::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1463
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UDatabase::Serialize",
+      "branch": "C98",
+      "symbol": "UDatabase::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnModel.cpp",
+          "line": 34
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UEditorEngine::Serialize",
+      "branch": "C98",
+      "symbol": "UEditorEngine::Serialize",
+      "locations": [
+        {
+          "path": "Editor/Src/UnEditor.cpp",
+          "line": 226
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UEngine::Serialize",
+      "branch": "C98",
+      "symbol": "UEngine::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnEngine.cpp",
+          "line": 166
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UEnum::Serialize",
+      "branch": "C98",
+      "symbol": "UEnum::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3076
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UField::Serialize",
+      "branch": "C98",
+      "symbol": "UField::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 236
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UFireTexture::Serialize",
+      "branch": "C98",
+      "symbol": "UFireTexture::Serialize",
+      "locations": [
+        {
+          "path": "Fire/Src/UnFractal.cpp",
+          "line": 4214
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UFont::Serialize",
+      "branch": "C98",
+      "symbol": "UFont::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnFont.cpp",
+          "line": 19
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UFunction::Serialize",
+      "branch": "C98",
+      "symbol": "UFunction::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1358
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UGameEngine::Serialize",
+      "branch": "C98",
+      "symbol": "UGameEngine::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnGame.cpp",
+          "line": 257
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UInput::Serialize",
+      "branch": "C98",
+      "symbol": "UInput::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnIn.cpp",
+          "line": 100
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:ULevel::Serialize",
+      "branch": "C98",
+      "symbol": "ULevel::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnLevel.cpp",
+          "line": 150
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:ULevelBase::Serialize",
+      "branch": "C98",
+      "symbol": "ULevelBase::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnLevel.cpp",
+          "line": 20
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UMesh::Serialize",
+      "branch": "C98",
+      "symbol": "UMesh::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnMesh.cpp",
+          "line": 32
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UModel::Serialize",
+      "branch": "C98",
+      "symbol": "UModel::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnModel.cpp",
+          "line": 291
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UMusic::Serialize",
+      "branch": "C98",
+      "symbol": "UMusic::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnAudio.cpp",
+          "line": 467
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UNetConnection::Serialize",
+      "branch": "C98",
+      "symbol": "UNetConnection::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnConn.cpp",
+          "line": 300
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UNetDriver::Serialize",
+      "branch": "C98",
+      "symbol": "UNetDriver::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnConn.cpp",
+          "line": 69
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UObject::Serialize",
+      "branch": "C98",
+      "symbol": "UObject::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 433
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UObjectProperty::Serialize",
+      "branch": "C98",
+      "symbol": "UObjectProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 390
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UPackage::Serialize",
+      "branch": "C98",
+      "symbol": "UPackage::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3391
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UPalette::Serialize",
+      "branch": "C98",
+      "symbol": "UPalette::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnTex.cpp",
+          "line": 715
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UPlayer::Serialize",
+      "branch": "C98",
+      "symbol": "UPlayer::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnPlayer.cpp",
+          "line": 24
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UPrimitive::Serialize",
+      "branch": "C98",
+      "symbol": "UPrimitive::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnPrim.cpp",
+          "line": 22
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UProperty::Serialize",
+      "branch": "C98",
+      "symbol": "UProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 101
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:USound::Serialize",
+      "branch": "C98",
+      "symbol": "USound::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnAudio.cpp",
+          "line": 16
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UState::Serialize",
+      "branch": "C98",
+      "symbol": "UState::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1440
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UStringProperty::Serialize",
+      "branch": "C98",
+      "symbol": "UStringProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 519
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UStruct::Serialize",
+      "branch": "C98",
+      "symbol": "UStruct::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 476
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UStructProperty::Serialize",
+      "branch": "C98",
+      "symbol": "UStructProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 577
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UTextBuffer::Serialize",
+      "branch": "C98",
+      "symbol": "UTextBuffer::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3033
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UTexture::Serialize",
+      "branch": "C98",
+      "symbol": "UTexture::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnTex.cpp",
+          "line": 270
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UTransBuffer::Serialize",
+      "branch": "C98",
+      "symbol": "UTransBuffer::Serialize",
+      "locations": [
+        {
+          "path": "Editor/Src/UnEdTran.cpp",
+          "line": 803
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "C98:UViewport::Serialize",
+      "branch": "C98",
+      "symbol": "UViewport::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnCamera.cpp",
+          "line": 34
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:AActor::Serialize",
+      "branch": "T99",
+      "symbol": "AActor::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnActor.cpp",
+          "line": 963
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UArrayProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UArrayProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 1099
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UBitArray::Serialize",
+      "branch": "T99",
+      "symbol": "UBitArray::Serialize",
+      "locations": [
+        {
+          "path": "Editor/Src/UnVisi.cpp",
+          "line": 126
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UBoolProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UBoolProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 475
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UByteProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UByteProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 324
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UClass::Serialize",
+      "branch": "T99",
+      "symbol": "UClass::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 914
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UClassFactoryNew::Serialize",
+      "branch": "T99",
+      "symbol": "UClassFactoryNew::Serialize",
+      "locations": [
+        {
+          "path": "Editor/Src/UnEdFact.cpp",
+          "line": 99
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UClassProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UClassProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 743
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UClient::Serialize",
+      "branch": "T99",
+      "symbol": "UClient::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnCamMgr.cpp",
+          "line": 121
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UConst::Serialize",
+      "branch": "T99",
+      "symbol": "UConst::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1438
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UEditorEngine::Serialize",
+      "branch": "T99",
+      "symbol": "UEditorEngine::Serialize",
+      "locations": [
+        {
+          "path": "Editor/Src/UnEditor.cpp",
+          "line": 165
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UEngine::Serialize",
+      "branch": "T99",
+      "symbol": "UEngine::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnEngine.cpp",
+          "line": 193
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UEnum::Serialize",
+      "branch": "T99",
+      "symbol": "UEnum::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3604
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UExporter::Serialize",
+      "branch": "T99",
+      "symbol": "UExporter::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UExporter.cpp",
+          "line": 26
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UFactory::Serialize",
+      "branch": "T99",
+      "symbol": "UFactory::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UFactory.cpp",
+          "line": 28
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UField::Serialize",
+      "branch": "T99",
+      "symbol": "UField::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 239
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UFireTexture::Serialize",
+      "branch": "T99",
+      "symbol": "UFireTexture::Serialize",
+      "locations": [
+        {
+          "path": "Fire/Src/UnFractal.cpp",
+          "line": 4227
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UFixedArrayProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UFixedArrayProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 954
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UFont::Serialize",
+      "branch": "T99",
+      "symbol": "UFont::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnFont.cpp",
+          "line": 19
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UFunction::Serialize",
+      "branch": "T99",
+      "symbol": "UFunction::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1342
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UGameEngine::Serialize",
+      "branch": "T99",
+      "symbol": "UGameEngine::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnGame.cpp",
+          "line": 407
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UInput::Serialize",
+      "branch": "T99",
+      "symbol": "UInput::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnIn.cpp",
+          "line": 110
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:ULevel::Serialize",
+      "branch": "T99",
+      "symbol": "ULevel::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnLevel.cpp",
+          "line": 186
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:ULevelBase::Serialize",
+      "branch": "T99",
+      "symbol": "ULevelBase::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnLevel.cpp",
+          "line": 22
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:ULevelFactoryNew::Serialize",
+      "branch": "T99",
+      "symbol": "ULevelFactoryNew::Serialize",
+      "locations": [
+        {
+          "path": "Editor/Src/UnEdFact.cpp",
+          "line": 38
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:ULodMesh::Serialize",
+      "branch": "T99",
+      "symbol": "ULodMesh::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/ULodMesh.cpp",
+          "line": 23
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UMapProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UMapProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 1282
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UMesh::Serialize",
+      "branch": "T99",
+      "symbol": "UMesh::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnMesh.cpp",
+          "line": 32
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UModel::Serialize",
+      "branch": "T99",
+      "symbol": "UModel::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnModel.cpp",
+          "line": 182
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UMusic::Serialize",
+      "branch": "T99",
+      "symbol": "UMusic::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnAudio.cpp",
+          "line": 518
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UNetConnection::Serialize",
+      "branch": "T99",
+      "symbol": "UNetConnection::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnConn.cpp",
+          "line": 59
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UNetDriver::Serialize",
+      "branch": "T99",
+      "symbol": "UNetDriver::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnNetDrv.cpp",
+          "line": 187
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UObject::Serialize",
+      "branch": "T99",
+      "symbol": "UObject::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 478
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UObjectProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UObjectProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 673
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UPackage::Serialize",
+      "branch": "T99",
+      "symbol": "UPackage::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3721
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UPackageMap::Serialize",
+      "branch": "T99",
+      "symbol": "UPackageMap::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnCoreNet.cpp",
+          "line": 326
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UPalette::Serialize",
+      "branch": "T99",
+      "symbol": "UPalette::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnTex.cpp",
+          "line": 611
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UPlayer::Serialize",
+      "branch": "T99",
+      "symbol": "UPlayer::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnPlayer.cpp",
+          "line": 17
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UPrimitive::Serialize",
+      "branch": "T99",
+      "symbol": "UPrimitive::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnPrim.cpp",
+          "line": 22
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 117
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:USound::Serialize",
+      "branch": "T99",
+      "symbol": "USound::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnAudio.cpp",
+          "line": 126
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UState::Serialize",
+      "branch": "T99",
+      "symbol": "UState::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 712
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UStrProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UStrProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 859
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UStruct::Serialize",
+      "branch": "T99",
+      "symbol": "UStruct::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 593
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UStructProperty::Serialize",
+      "branch": "T99",
+      "symbol": "UStructProperty::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 1491
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UTextBuffer::Serialize",
+      "branch": "T99",
+      "symbol": "UTextBuffer::Serialize",
+      "locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3588
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UTexture::Serialize",
+      "branch": "T99",
+      "symbol": "UTexture::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnTex.cpp",
+          "line": 326
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UTextureFactoryNew::Serialize",
+      "branch": "T99",
+      "symbol": "UTextureFactoryNew::Serialize",
+      "locations": [
+        {
+          "path": "Editor/Src/UnEdFact.cpp",
+          "line": 150
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    },
+    {
+      "id": "T99:UViewport::Serialize",
+      "branch": "T99",
+      "symbol": "UViewport::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Src/UnCamera.cpp",
+          "line": 200
+        }
+      ],
+      "status": "DISCOVERED",
+      "reader": "",
+      "test": "",
+      "evidence": "",
+      "remaining": "Source-to-reader/test classification not yet completed",
+      "updated_at_utc": "2026-10-22T09:24:05+00:00"
+    }
+  ]
+}
