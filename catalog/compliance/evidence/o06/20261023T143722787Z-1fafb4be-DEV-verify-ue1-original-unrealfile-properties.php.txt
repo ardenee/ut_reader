@@ -1,0 +1,5 @@
+﻿
+Fatal error: Uncaught Error: Class "UnrealDbCatalogInfrastructureReadersCatalogUE1OriginalUnrealfilePropertySerializationGate" not found in C:\Temp\UnrealDB\O06\g2-rotation-worktree\catalog\bin\verify-ue1-original-unrealfile-properties.php:70
+Stack trace:
+#0 {main}
+  thrown in C:\Temp\UnrealDB\O06\g2-rotation-worktree\catalog\bin\verify-ue1-original-unrealfile-properties.php on line 70

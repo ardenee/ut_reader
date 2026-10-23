@@ -1,7 +1,7 @@
 {
-  "contract": "t99-native-script-oracle",
-  "stage": "g5-native-proof-complete",
-  "last_action": "G5 incremental real compiled v432 loader oracle: all 88/88 full UTextBuffer UObject identities match genuine Engine.u export map, and final ClipMarker text matches decoded archive after exact Epic exporter CRLF trimming; focus 22/22 DEV PASS in 118ms; prior fixture FAIL remains journaled. No production changes or broad retest.",
-  "next_step": "Do NOT rerun native 30-package sweep. Tackle G2 1997 May/July distinct-version source contracts and seek genuine package oracles; promote individual contracts only when all applicability/source/negative conditions are proven. Keep G5 open.",
-  "updated_at_utc": "2026-10-23T14:06:39+00:00"
+  "contract": "g2-original-1997-rotation-bins",
+  "stage": "isolated-feature-verified",
+  "last_action": "Production May/July per-object and UProperties rotation archive widths corrected and isolated: 30/30 focused DEV source tests PASS; 5/5 affected current DEV PASS with 4 reused or rerun selectively. Feature commit b8ed0b36 pushed on o06/g2-rotation-bins. Shared main concurrently handles a separate bounds contract; its files and journal remain untouched by isolated test runs.",
+  "next_step": "After shared-main bounds commit is complete, cherry-pick only b8ed0b36; integrate exact append-only test events and contract test plan; run affected tests only if source inputs changed; deploy three PHP readers to PRD with SHA-256, never PHP tests on PRD. G2 remains open.",
+  "updated_at_utc": "2026-10-23T14:41:12+00:00"
 }

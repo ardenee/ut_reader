@@ -2,6 +2,24 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g2-original-1997-rotation-bins": {
+      "description": "Original Epic v0.86x May FRotation WORD[3] vs v0.867 July INT[3] in both UObject UClass::SerializeBin per-object headers and UProperties::SerializeData; identical v22/v23 requires explicit source or exact complete data-size inference",
+      "readers": [
+        "CatalogUE1OriginalUnrealfilePropertySerializationGate.php",
+        "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+        "CatalogUE1OriginalUnrealfilePropertiesReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g2-rotation-bin-lineage.php"
+      ],
+      "affected": [
+        "verify-ue1-original-unrealfile-class-schemas.php",
+        "verify-ue1-original-unrealfile-properties.php",
+        "verify-ue1-original-unrealfile-inheritance.php",
+        "verify-ue1-original-unrealfile-external-schemas.php"
+      ],
+      "gate": []
+    },
     "t99-local-inherited-struct": {
       "description": "T99 UStruct::SerializeBin local inherited source field iterator",
       "readers": [

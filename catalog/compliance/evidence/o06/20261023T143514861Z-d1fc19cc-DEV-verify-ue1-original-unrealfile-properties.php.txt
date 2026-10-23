@@ -1,0 +1,6 @@
+﻿
+Fatal error: Uncaught RuntimeException: Original May/July 1997 CPF_Intrinsic file-serialization behavior ambiguous: source lineage required in C:\Temp\UnrealDB\O06\g2-rotation-worktree\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader.php:118
+Stack trace:
+#0 C:\Temp\UnrealDB\O06\g2-rotation-worktree\catalog\bin\verify-ue1-original-unrealfile-properties.php(50): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read('C:\\Users\\arden\\...', true)
+#1 {main}
+  thrown in C:\Temp\UnrealDB\O06\g2-rotation-worktree\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader.php on line 118
