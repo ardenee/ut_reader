@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T16:15:31+00:00",
+  "updated_at_utc": "2026-10-23T16:44:52+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4568,8 +4568,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-const-native.php",
       "evidence": "v1.200 Core/Src/UnClass.cpp:1463-1469 Core/Inc/UnClass.h:470-476; UT99 v400 Core/Src/UnClass.cpp:1438-1444 Core/Inc/UnClass.h:506-513",
-      "remaining": "Native UField SuperField/Next and UConst FString Value now decoded; 15/15 v50/v69 source-synthetic positive/negative cases pass. Genuine UConst object fixture, full G3 classIndex=0 metadata and remaining legacy version gates still need evidence.",
-      "updated_at_utc": "2026-10-22T14:55:15+00:00",
+      "remaining": "Native UField SuperField/Next and UConst FString Value now decoded; 15/15 v50/v69 source-synthetic positive/negative cases pass. Genuine UConst object fixture, full G3 classIndex=0 metadata and remaining legacy version gates still need evidence. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -4835,8 +4835,8 @@
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-23T05:33:01+00:00",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -4885,8 +4885,8 @@
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-23T05:33:01+00:00",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5385,8 +5385,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-textbuffer-native.php",
       "evidence": "Epic v1.200 Core/Src/UnObj.cpp:3033-3038, Core/Inc/UnTemplate.h:416-418",
-      "remaining": "Native Pos/Top and source-versioned ANSI/UTF16 FString implemented; 13/13 source-typed synthetic package cases PASS. Pending a genuine UTextBuffer package or compiled native oracle and inherited UObject version span before full class acceptance.",
-      "updated_at_utc": "2026-10-22T14:55:16+00:00",
+      "remaining": "Native Pos/Top and source-versioned ANSI/UTF16 FString implemented; 13/13 source-typed synthetic package cases PASS. Pending a genuine UTextBuffer package or compiled native oracle and inherited UObject version span before full class acceptance. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -5952,8 +5952,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-const-native.php",
       "evidence": "v1.200 Core/Src/UnClass.cpp:1463-1469 Core/Inc/UnClass.h:470-476; UT99 v400 Core/Src/UnClass.cpp:1438-1444 Core/Inc/UnClass.h:506-513",
-      "remaining": "Native UField SuperField/Next and UConst FString Value now decoded; 15/15 v50/v69 source-synthetic positive/negative cases pass. Genuine UConst object fixture, full G3 classIndex=0 metadata and remaining legacy version gates still need evidence.",
-      "updated_at_utc": "2026-10-22T14:55:15+00:00",
+      "remaining": "Native UField SuperField/Next and UConst FString Value now decoded; 15/15 v50/v69 source-synthetic positive/negative cases pass. Genuine UConst object fixture, full G3 classIndex=0 metadata and remaining legacy version gates still need evidence. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -6052,8 +6052,8 @@
       "reader": "CatalogUE1ClassicEditorSerializerReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-editor-native.php",
       "evidence": "Source-derived UT99 v400 Core and Editor serializer Class reference plus TArray of ANSI/UTF-16 FString formats; DEV synthetic full-package named test 79/79 PASS after final revision, negative paths and version boundary, append-only result journal",
-      "remaining": "Derived UExporter classes and genuine package/native oracle not yet proven",
-      "updated_at_utc": "2026-10-22T21:21:04+00:00",
+      "remaining": "Derived UExporter classes and genuine package/native oracle not yet proven G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6269,8 +6269,8 @@
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-23T05:33:01+00:00",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6294,8 +6294,8 @@
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10.",
-      "updated_at_utc": "2026-10-23T05:33:01+00:00",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6319,8 +6319,8 @@
       "reader": "CatalogUE1ClassicEditorSerializerReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-editor-native.php",
       "evidence": "Source-derived UT99 v400 Core and Editor serializer Two FString fields and 32-bit CloseExistingWindows; DEV synthetic full-package named test 79/79 PASS after final revision, negative paths and version boundary, append-only result journal",
-      "remaining": "Genuine editor-exported object and independent native oracle not yet proven",
-      "updated_at_utc": "2026-10-22T21:21:04+00:00",
+      "remaining": "Genuine editor-exported object and independent native oracle not yet proven G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6869,8 +6869,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-textbuffer-native.php",
       "evidence": "Epic UT99 v400 Core/Src/UnObj.cpp:3588-3593, Core/Src/UnMisc.cpp:173-197",
-      "remaining": "Native Pos/Top and source-versioned ANSI/UTF16 FString implemented; 13/13 source-typed synthetic package cases PASS. Pending a genuine UTextBuffer package or compiled native oracle and inherited UObject version span before full class acceptance.",
-      "updated_at_utc": "2026-10-22T14:55:16+00:00",
+      "remaining": "Native Pos/Top and source-versioned ANSI/UTF16 FString implemented; 13/13 source-typed synthetic package cases PASS. Pending a genuine UTextBuffer package or compiled native oracle and inherited UObject version span before full class acceptance. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
+      "updated_at_utc": "2026-10-23T16:44:52+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",

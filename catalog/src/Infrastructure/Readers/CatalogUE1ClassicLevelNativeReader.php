@@ -61,11 +61,15 @@ final class CatalogUE1ClassicLevelNativeReader
             if($n>0&&!str_ends_with($raw,$terminator)){
                 throw new RuntimeException('ULevel FString lacks final NUL');
             }
+            // UT99 Core/Src/UnMisc.cpp::operator<<(FString&) loads
+            // ANSI bytes through FromAnsi(), not the OS code page.
             $body=$n>0?substr($raw,0,-strlen($terminator)):'';
-            $text=$body===''?'':@iconv($wide?'UTF-16LE':'Windows-1252','UTF-8',$body);
+            $text=$body===''?'':($wide
+                ?@iconv('UTF-16LE','UTF-8',$body)
+                :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($body));
             if($text===false){throw new RuntimeException('ULevel FString invalid encoding');}
             return ['value'=>$text,'offset'=>$offset,'code_units'=>$n,
-                    'encoding'=>$wide?'UTF-16LE':'Windows-1252'];
+                    'encoding'=>$wide?'UTF-16LE':'Epic-FromAnsi-bytewise'];
         };
         $stringArray=static function(string $field)use($count,$str):array {
             $n=$count($field);

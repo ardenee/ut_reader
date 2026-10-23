@@ -67,8 +67,12 @@ final class CatalogUE1ClassicEditorSerializerReader
                 if($count>0&&!str_ends_with($raw,$null)){
                     throw new RuntimeException('UT99 factory FString missing terminator');
                 }
+                // FArchive FString ANSI uses Epic FromAnsi(byte), which is
+                // one-to-one; Windows-1252 remaps C1 archive bytes.
                 $body=$count===0?'':substr($raw,0,-strlen($null));
-                $value=$body===''?'':@iconv($wide?'UTF-16LE':'Windows-1252','UTF-8',$body);
+                $value=$body===''?'':($wide
+                    ?@iconv('UTF-16LE','UTF-8',$body)
+                    :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($body));
                 if($value===false){throw new RuntimeException('UT99 factory FString invalid encoding');}
                 return $value;
             };
@@ -132,7 +136,9 @@ final class CatalogUE1ClassicEditorSerializerReader
             }
             if(count($preview)<16){
                 $body=$charCount===0?'':substr($raw,0,-strlen($null));
-                $decoded=$body===''?'':@iconv($wide?'UTF-16LE':'Windows-1252','UTF-8',$body);
+                $decoded=$body===''?'':($wide
+                    ?@iconv('UTF-16LE','UTF-8',$body)
+                    :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($body));
                 if($decoded===false){
                     throw new RuntimeException('UExporter FString has invalid encoding');
                 }

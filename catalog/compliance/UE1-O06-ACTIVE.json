@@ -1,7 +1,7 @@
 {
-  "contract": "g4-actor-super-serialize",
+  "contract": "g4-classic-ansi-fstring-source-parity",
   "stage": "implemented-pending-verification-no-tests",
-  "last_action": "Epic source implementation phase: G2 May/July FBoundingVolume raw IsValid BYTE correction; G3 shared source-versioned FStateFrame for flagged UClass and ordinary UObject; G4 direct AActor::Serialize Super-only tail accounted without invented on-disk native bytes for 35-69. All source code modified, only syntax lint (not a test suite), fixed gate list updated; zero new test contracts, zero acceptance promotions and no deployment.",
-  "next_step": "Implementation-first continue unresolved EXISTING G2, then G3 and G4 contracts from PROJECT-STATUS fixed gate table; hold tests as separate later milestone. Do not execute corpus or native exporters now. Explicit changes are unverified and must not be deployed to PRD before verification.",
-  "updated_at_utc": "2026-10-23T16:36:39+00:00"
+  "last_action": "Existing G4 Unreal v1.200/UT99 v400 native FString decode corrected: Level FURL/Travel, Const Value, TextBuffer Text, factory LevelTitle/Author and Exporter formats now use shared lossless Epic FromAnsi octet mapper instead of Windows-1252; UTF-16 unchanged. Annotated 10 existing C98/T99 serializer entries in canonical register, SOURCE COUNTS unchanged MAPPED57 PARTIAL197 EXCLUDED38. Only three PHP syntax checks and diff/JSON validity, no functional tests, no new test-plan contracts, no PRD deployment.",
+  "next_step": "Continue implementation-first remaining existing G2/G3/G4 persisted serialization work from fixed PROJECT-STATUS gate list. Do not create native exporter/tests or count this as accepted. Verification, PRD deploy and acceptance occur in later separate phase.",
+  "updated_at_utc": "2026-10-23T16:45:29+00:00"
 }

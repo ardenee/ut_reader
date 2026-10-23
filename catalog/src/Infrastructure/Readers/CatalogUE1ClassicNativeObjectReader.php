@@ -247,12 +247,16 @@ final class CatalogUE1ClassicNativeObjectReader
                     }
                     $chars=substr($raw,0,-strlen($ending));
                 }else{$chars='';}
-                $value=$chars===''?'':@iconv($wide?'UTF-16LE':'Windows-1252','UTF-8',$chars);
+                // Epic FromAnsi maps every archived ANSI byte directly to
+                // its TCHAR codepoint; no host Windows codepage guessing.
+                $value=$chars===''?'':($wide
+                    ?@iconv('UTF-16LE','UTF-8',$chars)
+                    :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($chars));
                 if($value===false){throw new RuntimeException('UConst invalid character encoding');}
                 return array_replace($record,[
                     'status'=>$pos===$limit?'native_const_record_complete':'native_const_has_extension',
                     'super_field_reference'=>$superField,'next_field_reference'=>$nextField,
-                    'value'=>$value,'value_encoding'=>$wide?'UTF-16LE':'Windows-1252',
+                    'value'=>$value,'value_encoding'=>$wide?'UTF-16LE':'Epic-FromAnsi-bytewise',
                     'value_count'=>$count,'value_sha256'=>hash('sha256',$raw),
                     'extension_bytes'=>$limit-$pos,
                 ]);
@@ -297,14 +301,16 @@ final class CatalogUE1ClassicNativeObjectReader
                         $encoded=substr($raw,0,-1);
                     }
                 }else{$encoded='';}
-                $decoded=$encoded===''?'':@iconv($wide?'UTF-16LE':'Windows-1252','UTF-8',$encoded);
+                $decoded=$encoded===''?'':($wide
+                    ?@iconv('UTF-16LE','UTF-8',$encoded)
+                    :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($encoded));
                 if($decoded===false){
                     throw new RuntimeException('Invalid TextBuffer character sequence');
                 }
                 return array_replace($record,[
                     'status'=>$pos===$limit?'native_textbuffer_record_complete':'native_textbuffer_has_extension',
                     'position'=>$textPos,'top'=>$top,'text'=>$decoded,
-                    'text_encoding'=>$wide?'UTF-16LE':'Windows-1252',
+                    'text_encoding'=>$wide?'UTF-16LE':'Epic-FromAnsi-bytewise',
                     'text_character_count'=>$count>0?$count-1:0,
                     'text_raw_bytes'=>$size,'text_raw_offset'=>$textOffset,
                     'text_raw_sha256'=>hash('sha256',$raw),
