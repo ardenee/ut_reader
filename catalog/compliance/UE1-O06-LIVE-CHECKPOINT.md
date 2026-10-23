@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `t99-genuine-serializeexpr`
-- **Stage:** ready-to-release
-- **Last completed action:** Pinned six installed UT99 v68/v69 .u SHA manifest: 58/58 focus PASS, 3194 UClass/11366 default tags, nonzero local NAME_None index proven; 30-package pinned gate 246/246 PASS, 4199 UClass/17700 tags zero decoding exceptions; scoped gate 6/6 PASS with five earlier matches reused.
-- **Resume at:** Commit source/manifest/fixtures and real evidence, push origin/main, deploy only CatalogUE1ClassicScriptArchiveReader.php to PRD via SHA256 without PRD PHP tests.
-- **Active changed at:** 2026-10-23T13:19:26+00:00
+- **Stage:** released-verified
+- **Last completed action:** Commit 7632f398 pushed; genuine UT99 FName NAME_None indexed 3344 source-corrected; 58/58 focus and 246/246 30-package gate, 4199 classes/17700 tags; 1/1 reader SHA256 deployed PRD; no PRD PHP tests.
+- **Resume at:** Assess installed native UT99 ucc.exe as independent oracle from disposable C:\Temp copy, with no writes to game tree; do not conflate runtime smoke with full Epic source parity.
+- **Active changed at:** 2026-10-23T13:22:19+00:00
 - **Latest DEV test states:** PASS 96; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
