@@ -1,0 +1,119 @@
+{
+    "schema":  1,
+    "scope":  "Genuine nontexture compiled UE1 v61 script packages and UT99 v66/v68 sound archives; source and export identity pinned",
+    "expected_total_exports":  15194,
+    "files":  [
+                  {
+                      "path":  "L:/Source/Engine/UE1/Unreal/Scripts/Core.u",
+                      "version":  61,
+                      "bytes":  31427,
+                      "sha256":  "6f48d3e0daf0a9c804f56a4b0842a7dfeca816a73ecc7974b194f764c45c1a48",
+                      "exports":  458
+                  },
+                  {
+                      "path":  "L:/Source/Engine/UE1/Unreal/Scripts/Editor.u",
+                      "version":  61,
+                      "bytes":  80238,
+                      "sha256":  "d428e86d5b0ac88889fd9fc8c4cf36212e8a9a880c940f605978129d9453d71c",
+                      "exports":  90
+                  },
+                  {
+                      "path":  "L:/Source/Engine/UE1/Unreal/Scripts/Engine.u",
+                      "version":  61,
+                      "bytes":  852257,
+                      "sha256":  "6d7c00d5b55a2d00dc5524595d757cebacdceca73aa9d32b66676d2c885e8ce6",
+                      "exports":  3619
+                  },
+                  {
+                      "path":  "L:/Source/Engine/UE1/Unreal/Scripts/Fire.u",
+                      "version":  61,
+                      "bytes":  14832,
+                      "sha256":  "d072d0253046668045687779dfb6575a589bb3c03feb512865dbe416ea5b1b0c",
+                      "exports":  107
+                  },
+                  {
+                      "path":  "L:/Source/Engine/UE1/Unreal/Scripts/IpDrv.u",
+                      "version":  61,
+                      "bytes":  44151,
+                      "sha256":  "8b36ca40096a92600195558143d2e9d85ebe6b5738623e5a9cebf85be8e2b391",
+                      "exports":  258
+                  },
+                  {
+                      "path":  "L:/Source/Engine/UE1/Unreal/Scripts/UNreal.u",
+                      "version":  61,
+                      "bytes":  37714731,
+                      "sha256":  "a1145de5ed67bd7a5457c38cfda70d1ecf61f030c09b78d1089bc51d9d1ea3dd",
+                      "exports":  10233
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\Announcer.uax",
+                      "version":  68,
+                      "bytes":  1416927,
+                      "sha256":  "62f66e0a594362e1037ebabdf3969aefbf094bd99d8a50bd77ea2cae4599dc58",
+                      "exports":  39
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\BossVoice.uax",
+                      "version":  68,
+                      "bytes":  859670,
+                      "sha256":  "f89f692a6124fdd84aab3938b4e2dd363c40318ae5a9a0d6612bb8e3977e89f5",
+                      "exports":  64
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\CountDown.uax",
+                      "version":  66,
+                      "bytes":  637815,
+                      "sha256":  "70d29e6d0cfa87cfcf93fb590e52cd0cafd355b3ebd6561b050329bbf491bcb2",
+                      "exports":  19
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\Female1Voice.uax",
+                      "version":  68,
+                      "bytes":  818431,
+                      "sha256":  "4940ebe2fedef45f5cd09bfec2daad2a3a875ab17787ed566116e582b84acbb1",
+                      "exports":  65
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\Female2Voice.uax",
+                      "version":  68,
+                      "bytes":  774932,
+                      "sha256":  "05a9f328efa49b69328f4cd1c92e0f5a80e67010513f83363c054bc35e2d5d90",
+                      "exports":  69
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\FemaleSounds.uax",
+                      "version":  68,
+                      "bytes":  583567,
+                      "sha256":  "453e1e537c0714dc3d876352029ad2375ef0f03368a509be3cd232e190e11ce9",
+                      "exports":  20
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\LadderSounds.uax",
+                      "version":  66,
+                      "bytes":  247341,
+                      "sha256":  "3b8ec7fc7f6572665470b6a8331e2bf5c867068365251cd86ed942544126b84f",
+                      "exports":  6
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\Male1Voice.uax",
+                      "version":  68,
+                      "bytes":  762855,
+                      "sha256":  "11b79e4b376ee10f2f4dc01234f2cd8d1134fe7f0678614da7285631f044647b",
+                      "exports":  60
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\Male2Voice.uax",
+                      "version":  68,
+                      "bytes":  701131,
+                      "sha256":  "969a85ff0d653983353e190ea7a8cd16abfb5425f45f281bea6cc27e888ac1f6",
+                      "exports":  68
+                  },
+                  {
+                      "path":  "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Sounds\\malesounds.uax",
+                      "version":  68,
+                      "bytes":  597918,
+                      "sha256":  "1cd6cf6d3d7f8a4a39dec1e5ffe8b69d412e9a66de4b7f2635e7b128b119aebf",
+                      "exports":  19
+                  }
+              ]
+}

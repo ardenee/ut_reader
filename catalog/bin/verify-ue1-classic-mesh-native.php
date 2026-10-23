@@ -18,11 +18,13 @@ $prefix=static function(int $v):string{
  return $raw."\0".($v<57?"\0":"").($v<58?"\0":"");
 };
 $box=static fn():string=>pack('g6',1,2,3,4,5,6).chr(1);
-$sphere=static fn(int $v):string=>$v<=61?pack('g3',7,8,9):pack('g4',7,8,9,10);
+$sphere=static fn(int $v,bool $fullLegacy=false):string=>
+    ($v<=61&&!$fullLegacy)?pack('g3',7,8,9):pack('g4',7,8,9,10);
 $body=static function(string $kind,int $ver,array $o=[])use($idx,$prefix,$box,$sphere):string{
  $raw=$prefix($ver);
  $base=512; // $raw already includes the UObject prefix at serialOffset 512.
- $raw.=$box().($ver<=40?pack('g4',7,8,9,10):$sphere($ver));
+ $fullLegacy=($o['legacyFullSphere']??false)===true;
+ $raw.=$box().($ver<=40?pack('g4',7,8,9,10):$sphere($ver,$fullLegacy));
  $array=static function(
   string $field,string $bytes,int $count,int $minimum=1,bool $lazy=false
  )use(&$raw,$base,$idx,$ver,$o):void{
@@ -42,11 +44,11 @@ $body=static function(string $kind,int $ver,array $o=[])use($idx,$prefix,$box,$s
  $anim=$idx(5).$idx(5).pack('V2',0,2).$idx(1).$notify.pack('g',22.5);
  $array('AnimSeqs',$anim,1,15);
  $array('Connects',pack('V2',3,4),1,8,$ver>=62);
- $raw.=$box().$sphere($ver);
+ $raw.=$box().$sphere($ver,$fullLegacy);
  $array('VertLinks',pack('V',12),1,4,$ver>=62);
  $array('Textures',$idx($o['textureRef']??-1),1,1);
  $array('BoundingBoxes',$box(),1,25);
- $array('BoundingSpheres',$sphere($ver),1,$ver<=61?12:16);
+ $array('BoundingSpheres',$sphere($ver,$fullLegacy),1,$ver<=61&&!$fullLegacy?12:16);
  $raw.=pack('V4',20,4,0xff,0x22);
  $raw.=pack('g6',1,2,3,4,5,6);
  $raw.=pack('V5',100,200,300,5,7);
@@ -124,6 +126,24 @@ try{
     $legacy['verts']['lazy_seek_pos']===null
     &&$legacy['mesh_bounding_sphere']['w']===null
     &&!isset($legacy['texture_lod']));
+ foreach([41,50,61] as $ver){
+  [$a]=$parse('Mesh',$ver,$body('Mesh',$ver));
+  [$b]=$parse('Mesh',$ver,$body('Mesh',$ver,['legacyFullSphere'=>true]));
+  $check('legacy_mesh_both_sphere_variants_v'.$ver,
+    $a['status']==='native_mesh_record_complete'
+    &&$a['sphere_wire_layout']==='sphere_xyz_only_12'
+    &&$a['mesh_bounding_sphere']['w']===null
+    &&$b['status']==='native_mesh_record_complete'
+    &&$b['sphere_wire_layout']==='sphere_xyz_radius_16'
+    &&$b['mesh_bounding_sphere']['w']===10.0
+    &&$b['bounding_spheres']['records_preview'][0]['w']===10.0
+    &&$b['source_serialized_base_bytes']===41);
+  $check('legacy_mesh_sphere_extra_length_v'.$ver,
+    strlen($body('Mesh',$ver,['legacyFullSphere'=>true]))===
+      strlen($body('Mesh',$ver))+12);
+  $check('legacy_mesh_wrong_trailer_rejected_v'.$ver,
+    $bad('Mesh',$ver,substr($body('Mesh',$ver,['legacyFullSphere'=>true]),0,-1)));
+ }
  [$modern]=$parse('Mesh',69,$body('Mesh',69));
  $check('v69_lazy_seekpos_and_texturelod',
     $modern['verts']['lazy_seek_pos']===$modern['verts']['end_offset']

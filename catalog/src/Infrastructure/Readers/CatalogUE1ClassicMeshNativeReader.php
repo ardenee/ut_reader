@@ -17,7 +17,8 @@ final class CatalogUE1ClassicMeshNativeReader
     /** @return array<string,mixed> */
     public static function inspect(
         string $kind,CatalogUE1PackageReader $pkg,int $ver,callable $read,
-        callable $compact,callable $uint,int &$position,int $limit
+        callable $compact,callable $uint,int &$position,int $limit,
+        ?callable $seek=null
     ):array{
         if(!in_array($kind,['mesh','lodmesh'],true)){
             throw new RuntimeException('Unsupported UE1 mesh archive class');
@@ -26,8 +27,51 @@ final class CatalogUE1ClassicMeshNativeReader
             return ['status'=>'native_lodmesh_source_version_unverified',
                     'reason'=>'UT99 ULodMesh archive family not pinned below version 62'];
         }
+        if($ver<41||$ver>61||$seek===null){
+            return self::inspectWire(
+                $kind,$pkg,$ver,$read,$compact,$uint,$position,$limit,false);
+        }
+        $start=$position;$candidates=[];$failures=[];
+        foreach([false,true] as $radius){
+            $seek($start);
+            try{
+                $candidate=self::inspectWire(
+                    $kind,$pkg,$ver,$read,$compact,$uint,$position,$limit,$radius);
+                $candidates[]=['data'=>$candidate,'end'=>$position,
+                    'layout'=>$radius?'sphere_xyz_radius_16':'sphere_xyz_only_12'];
+            }catch(RuntimeException $e){$failures[]=$e->getMessage();}
+        }
+        $complete=array_values(array_filter($candidates,
+            static fn(array $c):bool=>
+                ($c['data']['status']??'')==='native_'.$kind.'_record_complete'));
+        if(count($complete)===1){
+            $selected=$complete[0];$seek($selected['end']);
+            return $selected['data']+['sphere_wire_layout'=>$selected['layout']];
+        }
+        if(count($complete)>1||count($candidates)>1){
+            $seek($start);
+            return ['status'=>'native_mesh_sphere_layout_ambiguous',
+                'possible_sphere_wire_layouts'=>array_column(
+                    count($complete)>1?$complete:$candidates,'layout'),
+                'unparsed_bytes'=>$limit-$start];
+        }
+        if(count($candidates)===1){
+            $selected=$candidates[0];$seek($selected['end']);
+            return $selected['data']+['sphere_wire_layout'=>$selected['layout']];
+        }
+        $seek($start);
+        throw new RuntimeException('UE1 mesh has no complete source-scoped sphere layout: '.
+            implode(' / ',$failures));
+    }
+
+    /** @return array<string,mixed> */
+    private static function inspectWire(
+        string $kind,CatalogUE1PackageReader $pkg,int $ver,callable $read,
+        callable $compact,callable $uint,int &$position,int $limit,
+        bool $fullRadius
+    ):array{
         $result=CatalogUE1ClassicPrimitiveNativeReader::readBase(
-            $ver,$read,$position,$limit);
+            $ver,$read,$position,$limit,$fullRadius);
         $i32=static function()use($uint):int{
             $n=$uint();return $n>=0x80000000?$n-0x100000000:$n;
         };
@@ -36,8 +80,8 @@ final class CatalogUE1ClassicMeshNativeReader
         $vector=static fn():array=>['x'=>$f32(),'y'=>$f32(),'z'=>$f32()];
         $box=static fn():array=>['min'=>$vector(),'max'=>$vector(),
             'is_valid'=>ord($read(1))];
-        $sphere=static function()use($vector,$f32,$ver):array{
-            $r=$vector();$r['w']=$ver<=61?null:$f32();return $r;
+        $sphere=static function()use($vector,$f32,$ver,$fullRadius):array{
+            $r=$vector();$r['w']=($ver<=61&&!$fullRadius)?null:$f32();return $r;
         };
         $ref=static function(string $field)use($compact,$pkg):int{
             $n=$compact();
@@ -116,7 +160,7 @@ final class CatalogUE1ClassicMeshNativeReader
         $result['textures']=$array('Textures',static fn():int=>$ref('Texture'),1);
         $result['bounding_boxes']=$array('BoundingBoxes',$box,25);
         $result['bounding_spheres']=$array(
-            'BoundingSpheres',$sphere,$ver<=61?12:16);
+            'BoundingSpheres',$sphere,($ver<=61&&!$fullRadius)?12:16);
         $result['frame_verts']=$i32();$result['anim_frames']=$i32();
         $result['and_flags']=$uint();$result['or_flags']=$uint();
         $result['scale']=$vector();$result['origin']=$vector();

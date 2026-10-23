@@ -137,7 +137,7 @@ final class CatalogUE1ClassicNativeObjectReader
             }
             if($nativeKind==='mesh'||$nativeKind==='lodmesh'){
                 return array_replace($record,CatalogUE1ClassicMeshNativeReader::inspect(
-                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit));
+                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
             }
             if($nativeKind==='bitarray'||$nativeKind==='bitmatrix'){
                 return array_replace($record,CatalogUE1ClassicBitArrayNativeReader::inspect(
@@ -308,8 +308,11 @@ final class CatalogUE1ClassicNativeObjectReader
                     'lazy_seek_pos'=>$seekEnd,'extension_bytes'=>$limit-$pos,
                     'audio_data_decoded'=>false]);
             }
-            if($nativeKind==='font'){
-                // UFont::Serialize: TArray<FFontPage> Pages, INT CharactersPerPage.
+            if($nativeKind==='font'&&$ver>61){
+                // UT99 v400 UFont : UObject; its noninherited native tail
+                // contains TArray<FFontPage> Pages and CharactersPerPage.
+                // Unreal v1.200 UFont : UTexture is decoded below after
+                // its inherited texture mip array, then 256 glyph records.
                 // FFontPage: compact UObject texture index, compact count of
                 // FFontCharacter; each glyph is four native 32-bit integers.
                 $pageCount=$compact();
@@ -369,6 +372,35 @@ final class CatalogUE1ClassicNativeObjectReader
                 $mips[]=['mip_index'=>$mip,'pixel_data_offset'=>$dataOffset,
                     'pixel_data_size'=>$length,'lazy_seek_pos'=>$lazySeekPos,
                     'width'=>$width,'height'=>$height,'bits_u'=>$bitsU,'bits_v'=>$bitsV];
+            }
+            if($nativeKind==='font'&&$ver<=61){
+                // Unreal v1.200 Engine/Src/UnFont.cpp:
+                // UTexture::Serialize(Ar) then Ar << Characters.
+                // Each FFontCharacter has four signed INT32 coordinates.
+                $glyphCount=$compact();
+                if($glyphCount<0||$glyphCount>intdiv($limit-$pos,16)){
+                    throw new RuntimeException('UE1 legacy font glyph count exceeds native bounds');
+                }
+                $glyphOffset=$pos;
+                $glyphBytes=$read($glyphCount*16);
+                $preview=[];
+                for($g=0;$g<min(16,$glyphCount);$g++){
+                    $quad=unpack('V4',substr($glyphBytes,$g*16,16));
+                    $values=[];
+                    foreach($quad as $v){$values[]=$v>=0x80000000?$v-0x100000000:$v;}
+                    $preview[]=['start_u'=>$values[0],'start_v'=>$values[1],
+                        'u_size'=>$values[2],'v_size'=>$values[3]];
+                }
+                return array_replace($record,[
+                    'status'=>$pos===$limit?'native_font_record_complete':'native_font_has_extension',
+                    'archive_family'=>'Unreal-v1200-UTexture-Characters',
+                    'mips'=>$mips,'mip_count'=>$count,
+                    'character_count'=>$glyphCount,
+                    'glyph_data_offset'=>$glyphOffset,
+                    'glyph_data_bytes'=>strlen($glyphBytes),
+                    'glyph_data_sha256'=>hash('sha256',$glyphBytes),
+                    'glyphs_preview'=>$preview,'extension_bytes'=>$limit-$pos,
+                ]);
             }
             $sparks=null;
             if($nativeKind==='firetexture'){
