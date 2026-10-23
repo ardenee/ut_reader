@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-may-july-source-routing-batch`
-- **Stage:** implemented-batch-pending-verification-no-tests
-- **Last completed action:** G2 batch source parity: common production CLI now passes explicit May/July 1997 C++ source lineage to ten existing original serializer paths for scripts, stack trees, BSP, texture, model, mesh, level, UDatabase, UProperties and UObject class-bin property data. The original UDatabase decoder now resolves actual FBoundingRect May versus FBoundingBox July structure identity, preserving Min, Max, raw BYTE IsValid rather than permanently marking source type unverified. Twenty-four EXISTING U86/U97 source registrations annotated; distinct 66 reader labels behind 197 PARTIAL, 57 MAPPED 38 EXCLUDED unchanged. PHP syntax/diff integrity only; no functional tests, PRD deploy or acceptance promotion.
-- **Resume at:** Continue grouped remaining G2/G3/G4 source implementation work, separate existing code corrections from verification-only partial entries, and then one later verification and PRD milestone.
-- **Active changed at:** 2026-10-23T18:32:43+00:00
+- **Contract:** `o06-partial-to-mapped-implementation`
+- **Stage:** implementation-mapping-in-progress-verification-deferred
+- **Last completed action:** Changed O06 status semantics to MAPPED=source-to-PHP production implementation complete; verification is separately DEFERRED G5, not a reason to keep entry PARTIAL. PROMOTED 71 source-evidenced registrations in existing register: 36 original May/July UDatabase subclass operators (18 per branch), 12 original May/July UBitArray UBitMatrix UBspNodes UBspSurfs UMusic USound, and all 23 G1-ACCEPTED original 1996 saveable classes. Each of the 71 mapped entries now has source_mapping metadata and retained evidence; correct counts 197 PARTIAL->126, 57 MAPPED->128, 38 EXCLUDED unchanged. No functional tests, no PRD deployment or G2-G6 acceptance.
+- **Resume at:** Continue processing 126 PARTIAL registrations as concrete source-to-production work, prioritizing remaining U86/U97 19 per branch, then C98/T99 classic paths; promote as soon as source serialization complete, keep G5 verification separately. No repeat testing until mappings completed.
+- **Active changed at:** 2026-10-23T18:43:15+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
