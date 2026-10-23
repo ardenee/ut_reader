@@ -1,7 +1,7 @@
 {
-  "contract": "g2-original-1997-stacknode",
-  "stage": "passed-gate-deployed",
-  "last_action": "Corrected original 1997 staging to forward explicit May/July source_lineage to UStackTree reader; expanded source-backed fixture 56/56 PASS and scoped G2 gate 3/3 PASS DEV; DEV/PRD staged adapter hashes identical",
-  "next_step": "Continue next still-unverified independent serialized UE1 source contract; prioritize genuine runtime-backed G5 evidence, avoid repeating passing G2 stacktree tests unless inputs change. G2-G5 remain open.",
-  "updated_at_utc": "2026-10-23T15:17:04+00:00"
+  "contract": "t99-native-sound-oracle",
+  "stage": "passed-focus-sealed-no-production-change",
+  "last_action": "Independent UT99 v432 native UnrealShare.u LoadPackage exported 262 WAV files (7,225,244 raw bytes) with 0 errors; UnrealDB decoded all 262 full paths and complete native Sound tails, every raw byte SHA256 matched; DEV source-pinned focus PASS, evidence frozen; no production or PRD changes",
+  "next_step": "G5 independent runtime comparison remains IN PROGRESS: extend genuine/native comparisons to persisted property/struct/mesh/level values and historical v9/v22/v23 source families; do not rerun sealed Sound verifier on unchanged inputs; G2-G4 open G6 blocked.",
+  "updated_at_utc": "2026-10-23T15:33:53+00:00"
 }

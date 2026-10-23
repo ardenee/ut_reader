@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T15:15:43+00:00",
+  "updated_at_utc": "2026-10-23T15:31:10+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -6743,8 +6743,8 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-tagged-properties.php",
-      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
-      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
+      "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped source fixture; independent native UT99 v432 UnrealShare.u USoundExporterWAV 262/262 exact UObject full paths and 7225244 raw bytes matched by SHA256; DEV verifier verify-ue1-o06-native-ut99-sound-exports.php PASS 20261023T153110017Z-e725eeae; no blanket source acceptance",
+      "remaining": "Native v432 observation pinned for all 262 v69 UnrealShare Sound exports. v432 not compiled from verified identical v400 sources; untested historical source branches, load-time and in-memory effects remain",
       "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",

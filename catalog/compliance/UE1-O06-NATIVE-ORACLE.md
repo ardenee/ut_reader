@@ -90,3 +90,17 @@ than re-running unrelated passing tests. 292 source sightings are not
 No production PHP code changed in this milestone; no PRD copy or PHP
 test is needed. New tests run on DEV only. Full 30-package regression
 remains separately pinned and gate-only; it was **not rerun** here.
+
+## G5 — real compiled UT99 Sound payload parity (2026-10-23)
+
+**New independent native engine evidence — not full G5 or O06 acceptance.** The disposable UT99 **v432** compiled `ucc.exe` successfully loaded genuine `UnrealShare.u` and ran `batchexport UnrealShare.u Sound wav C:\\Temp\\UnrealDB\\O06\\Native-UCC\\exports\\UnrealShareSounds`, ending with **Success - 0 error(s), 0 warnings**. This yielded **262 distinct native UObject full paths** and 262 original WAV files, totalling **7,225,244 bytes**. Engine v432's compiled source version is not established as byte-identical to the pinned UT99 v400 source.
+
+Epic UT99 v400 `Editor/Src/UnEdExp.cpp::USoundExporterWAV::ExportBinary` calls `Sound->Data.Load()` then `Ar.Serialize(&Sound->Data(0), Sound->Data.Num())`, i.e. emits **original audio bytes without WAV reconstruction**. From the exact same `UnrealShare.u`, UnrealDB's production `CatalogUE1ClassicTaggedPropertyReader` and `CatalogUE1ClassicNativeObjectReader` resolved **262/262** real export outer chains and decoded **262/262 native_sound_record_complete** records. Every physically bounded audio span matched the independent compiled exporter byte-for-byte by SHA-256 and length, **262/262, zero missing paths, zero mismatches**. This is actual on-disk/native behavioral evidence, not synthetic fixtures. The first attempted independent `BotPack.u` load reported a missing `Female2Voice` dependency in the disposable source installation, so that attempted package produced **no acceptance evidence**; only successful `UnrealShare.u` is counted.
+
+Immutable runtime anchors (original bytes remain only under `C:\\Temp\\UnrealDB\\O06\\Native-UCC`):
+- `UnrealShare.u` SHA-256 `d75a7a5a4dbdcbcbfc363eadae810f99dfc4030c203032ed2dc88d255811155d`;
+- `ucc.exe` SHA-256 `90cf7eb27bf1dd56767720b01deb29d3169d9e749f4fda87933e715db390742f`;
+- frozen native export log SHA-256 `38d4da7f9fc4717d5289315690a1c9286ed174eb5412d57a691522f7f24c67d6`;
+- canonical SHA-256 over sorted `lowercase UObject full path TAB byte size TAB WAV SHA256 LF`: `adb13e1895ab3aae967a8b47b803c2fbb9d12c0b9c348849e058e1f48ea09400`.
+
+Production-source-aware, side-effect-free DEV verifier `catalog/bin/verify-ue1-o06-native-ut99-sound-exports.php` checks frozen identities, no native failures, original v400 exporter contract, all source export outer links, true original native audio tail decoding, physical bounds, each of the 262 byte hashes, exact aggregate object/byte count and sealed canonical content digest. **DEV focused acceptance PASS in 313 ms**; journal `20261023T153110017Z-e725eeae`. No PHP change, no PRD execution/deployment, no unnecessary 113MB suite rerun. This advances G5 genuine persisted native audio evidence but **G5 remains IN PROGRESS**: actual loaded in-memory per-property comparison, meshes/levels and separate early 1996/97 compiled oracles remain open. No O06-wide acceptance.

@@ -219,6 +219,16 @@
         "verify-ue1-original-unrealfile-special-headers.php"
       ]
     },
+    "t99-native-sound-oracle": {
+      "description": "Independently compiled UT99 v432 UnrealShare.u 262 USound full-path and exact export byte parity, source v400 raw exporter, sealed package/log/output manifest SHA; no compiled source identity claim",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": ["verify-ue1-o06-native-ut99-sound-exports.php"],
+      "affected": [],
+      "gate": []
+    },
     "ue1-classic-level": {
       "description": "Unreal v1.200 native ULevel and UDatabase base counts",
       "readers": [

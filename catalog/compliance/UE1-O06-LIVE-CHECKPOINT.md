@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-original-1997-stacknode`
-- **Stage:** passed-gate-deployed
-- **Last completed action:** Corrected original 1997 staging to forward explicit May/July source_lineage to UStackTree reader; expanded source-backed fixture 56/56 PASS and scoped G2 gate 3/3 PASS DEV; DEV/PRD staged adapter hashes identical
-- **Resume at:** Continue next still-unverified independent serialized UE1 source contract; prioritize genuine runtime-backed G5 evidence, avoid repeating passing G2 stacktree tests unless inputs change. G2-G5 remain open.
-- **Active changed at:** 2026-10-23T15:17:04+00:00
-- **Latest DEV test states:** PASS 100; FAIL 0; STARTED 0
+- **Contract:** `t99-native-sound-oracle`
+- **Stage:** passed-focus-sealed-no-production-change
+- **Last completed action:** Independent UT99 v432 native UnrealShare.u LoadPackage exported 262 WAV files (7,225,244 raw bytes) with 0 errors; UnrealDB decoded all 262 full paths and complete native Sound tails, every raw byte SHA256 matched; DEV source-pinned focus PASS, evidence frozen; no production or PRD changes
+- **Resume at:** G5 independent runtime comparison remains IN PROGRESS: extend genuine/native comparisons to persisted property/struct/mesh/level values and historical v9/v22/v23 source families; do not rerun sealed Sound verifier on unchanged inputs; G2-G4 open G6 blocked.
+- **Active changed at:** 2026-10-23T15:33:53+00:00
+- **Latest DEV test states:** PASS 101; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-23T15:31:10.6746983Z | verify-ue1-o06-native-ut99-sound-exports.php | PASS | 313 | catalog\compliance\evidence\o06\20261023T153110017Z-e725eeae-DEV-verify-ue1-o06-native-ut99-sound-exports.php.txt |
+| 2026-10-23T15:31:10.0246982Z | verify-ue1-o06-native-ut99-sound-exports.php | STARTED |  | catalog\compliance\evidence\o06\20261023T153110017Z-e725eeae-DEV-verify-ue1-o06-native-ut99-sound-exports.php.txt |
 | 2026-10-23T15:15:43.4249671Z | verify-ue1-o06-g2-stacknode-may-july.php | PASS | 220 | catalog\compliance\evidence\o06\20261023T151542836Z-4be7e371-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
 | 2026-10-23T15:15:42.8449667Z | verify-ue1-o06-g2-stacknode-may-july.php | STARTED |  | catalog\compliance\evidence\o06\20261023T151542836Z-4be7e371-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
 | 2026-10-23T15:15:21.4361604Z | verify-ue1-original-unrealfile-special-headers.php | PASS | 246 | catalog\compliance\evidence\o06\20261023T151520885Z-f9161c10-DEV-verify-ue1-original-unrealfile-special-headers.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-23T14:51:10.2136563Z | verify-ue1-o06-g2-stacknode-may-july.php | STARTED |  | catalog\compliance\evidence\o06\20261023T145110206Z-346cc5b6-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
 | 2026-10-23T14:49:06.1529636Z | verify-ue1-original-unrealfile-stacktree-data.php | FAIL | 72 | catalog\compliance\evidence\o06\20261023T144905734Z-acfa2327-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt |
 | 2026-10-23T14:49:05.7417419Z | verify-ue1-original-unrealfile-stacktree-data.php | STARTED |  | catalog\compliance\evidence\o06\20261023T144905734Z-acfa2327-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt |
-| 2026-10-23T14:43:58.8069646Z | verify-ue1-original-unrealfile-external-schemas.php | PASS | 428 | catalog\compliance\evidence\o06\20261023T144358063Z-1c536d61-DEV-verify-ue1-original-unrealfile-external-schemas.php.txt |
-| 2026-10-23T14:43:58.0632641Z | verify-ue1-original-unrealfile-external-schemas.php | STARTED |  | catalog\compliance\evidence\o06\20261023T144358063Z-1c536d61-DEV-verify-ue1-original-unrealfile-external-schemas.php.txt |
 
 ## Recovery procedure
 
