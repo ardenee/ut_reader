@@ -33,6 +33,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         string $path,CatalogUE1PackageReader $pkg,array $classRecord,array $tags
     ): array {
         $valueArchivePackage=$pkg;
+        $valuePath=$path;
         $classRef=(int)($classRecord['export_index']??-1)+1;
         $current=$classRecord;
         $visited=[];$declarations=[];$inherited=false;$importBlocked=false;
@@ -85,6 +86,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         $referenceBoundsChecked=0;
         $legacyStringUpgrades=0;$legacyStringUnsafe=0;$legacyStringSamples=[];
         $dynamicStringUnsafe=0;$dynamicStringSamples=[];
+        $arrayDecoded=0;$arrayUnverified=0;$arraySamples=[];
         $sourceVersion=(int)($valueArchivePackage->getHeader()['version']??0);
         foreach($tags as $tag){
             $key=strtolower((string)($tag['name']??''));
@@ -217,6 +219,24 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
                 continue;
             }
+            if($sourceVersion>=62&&$tagKind==='arrayproperty'
+               &&$declKind==='arrayproperty'){
+                $decoded=CatalogUE1ClassicArrayValueReader::inspect(
+                    $valuePath,$valueArchivePackage,
+                    (string)$decl['owner_path'],$decl['owner_package'],
+                    $tag,(int)($decl['inner_reference']??0));
+                if($decoded['status']==='array_inner_values_decoded'){
+                    $arrayDecoded++;
+                }else{
+                    $arrayUnverified++;
+                }
+                if(count($arraySamples)<16){
+                    $arraySamples[]=['name'=>$tag['name']]+$decoded;
+                }
+                if($decoded['status']!=='array_inner_values_decoded'){
+                    continue;
+                }
+            }
             if($tagKind==='objectproperty'||$tagKind==='classproperty'){
                 // Epic C98 ULinkerLoad::IndexToObject checks IsValidIndex
                 // on signed import/export indices and errors fatally when
@@ -263,13 +283,14 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
         }
         return [
-            'status'=>$dynamicStringUnsafe>0?'dynamic_fstring_archive_unverified':
+            'status'=>$arrayUnverified>0?'array_property_value_unverified':
+                ($dynamicStringUnsafe>0?'dynamic_fstring_archive_unverified':
                 ($legacyStringUnsafe>0?'legacy_fixed_string_upgrade_unverified':
                 ($mismatchCount>0?'known_incompatible_tags_skipped':
                 ($unknownSkipped>0?'unknown_property_tags_skipped':
                 ($stringBoundUnverified>0?'fixed_string_archive_size_unverified':
                 ($unresolved===0?'all_available_declarations_match':
-                'imported_or_unknown_properties_unverified'))))),
+                'imported_or_unknown_properties_unverified')))))),
             'tag_count'=>count($tags),
             'declaration_type_and_array_index_matches'=>$matched,
             'matches_in_this_class'=>$matchedDirect,
@@ -289,6 +310,9 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             'legacy_string_codepage_verified'=>false,
             'dynamic_fstring_archive_unverified'=>$dynamicStringUnsafe,
             'dynamic_fstring_unverified_samples'=>$dynamicStringSamples,
+            'primitive_array_values_decoded'=>$arrayDecoded,
+            'array_value_unverified'=>$arrayUnverified,
+            'array_value_samples'=>$arraySamples,
             'unresolved_examples'=>$samples,
             'source_declarations_in_this_class'=>$ownFields,
             'source_declarations_in_local_superclasses'=>$parentFields,
@@ -374,6 +398,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     :($structRef<0?($pkg->getImports()[-$structRef-1]??null):null);
                 $fields[$key]=['ref'=>$reference,
                     'kind'=>(string)$data['property_kind'],
+                    'owner_path'=>$path,'owner_package'=>$pkg,
+                    'inner_reference'=>$data['subclass_fields']['inner_reference']??0,
                     'array_dim'=>(int)$data['array_dim'],
                     'property_flags'=>(int)($data['effective_property_flags']??0),
                     'struct_name'=>$structRow['objectNameText']??null,
