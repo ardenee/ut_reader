@@ -115,7 +115,7 @@ final class CatalogUE1ClassicStructArrayValueReader
                     'byteproperty','boolproperty','intproperty',
                     'floatproperty','strproperty','stringproperty',
                     'nameproperty','objectproperty','classproperty',
-                    'structproperty'
+                    'structproperty','arrayproperty','fixedarrayproperty'
                 ],true)){
                     return ['status'=>'struct_member_serializer_unverified',
                         'member_kind'=>$kind];
@@ -137,6 +137,65 @@ final class CatalogUE1ClassicStructArrayValueReader
                     }
                 }
                 $nestedLayout=null;
+                $arrayInner=null;
+                $arrayCount=null;
+                if(in_array($kind,['arrayproperty','fixedarrayproperty'],true)&&!$skip){
+                    // UT99 UArrayProperty / UFixedArrayProperty serialize
+                    // each element through their own Inner declaration.
+                    // Inner must be a real source-linked local property.
+                    $innerRef=(int)($field['subclass_fields']['inner_reference']??0);
+                    if($innerRef<1){
+                        return ['status'=>'struct_array_inner_reference_unavailable'];
+                    }
+                    $innerEx=$pkg->getExports()[$innerRef-1]??null;
+                    if(!is_array($innerEx)
+                        ||(int)($innerEx['outerIndex']??0)!==$ref){
+                        return ['status'=>'struct_array_inner_owner_unverified'];
+                    }
+                    $innerTag=CatalogUE1ClassicTaggedPropertyReader::inspect(
+                        $path,$pkg,$innerRef-1,$sourceFamily);
+                    $inner=CatalogUE1ClassicNativeObjectReader::inspect(
+                        $path,$pkg,$innerRef-1,$innerTag,$sourceFamily);
+                    if(($inner['status']??null)!=='native_property_record_complete'){
+                        return ['status'=>'struct_array_inner_property_unresolved'];
+                    }
+                    $innerKind=(string)($inner['property_kind']??'');
+                    if(!in_array($innerKind,[
+                        'byteproperty','boolproperty','intproperty',
+                        'floatproperty','nameproperty','objectproperty',
+                        'classproperty','strproperty','structproperty'
+                    ],true)){
+                        return ['status'=>'struct_array_inner_serializer_unverified',
+                            'inner_kind'=>$innerKind];
+                    }
+                    $innerStruct=null;
+                    if($innerKind==='structproperty'){
+                        $innerStruct=self::resolve(
+                            $path,$pkg,
+                            (int)($inner['subclass_fields']['struct_reference']??0),
+                            $sourceFamily,$activeStructs);
+                        if(($innerStruct['status']??null)
+                            !=='struct_local_field_layout_resolved'){
+                            return ['status'=>'struct_array_inner_struct_unresolved',
+                                'reason'=>$innerStruct['status']??'unresolved'];
+                        }
+                    }
+                    $arrayInner=[
+                        'name'=>(string)($innerEx['objectNameText']??'Inner'),
+                        'kind'=>$innerKind,
+                        'skip_persistent_archive'=>false,
+                        'nested_layout'=>$innerStruct,
+                        'fixed_string_size'=>null,
+                        'array_inner_layout'=>null,
+                        'fixed_array_count'=>null,
+                    ];
+                    if($kind==='fixedarrayproperty'){
+                        $arrayCount=(int)($field['subclass_fields']['fixed_count']??0);
+                        if($arrayCount<1){
+                            return ['status'=>'struct_fixed_array_count_invalid'];
+                        }
+                    }
+                }
                 if($kind==='structproperty'&&!$skip){
                     $nestedLayout=self::resolve(
                         $path,$pkg,
@@ -155,6 +214,8 @@ final class CatalogUE1ClassicStructArrayValueReader
                     'skip_persistent_archive'=>$skip,
                     'fixed_string_size'=>$stringSize,
                     'nested_layout'=>$nestedLayout,
+                    'array_inner_layout'=>$arrayInner,
+                    'fixed_array_count'=>$arrayCount,
                 ];
                 $ref=(int)($field['next_field_reference']??0);
             }
@@ -208,6 +269,48 @@ final class CatalogUE1ClassicStructArrayValueReader
                             'UE1 struct field UObject linker index invalid');
                     }
                     $v=$ref;
+                }elseif($kind==='arrayproperty'||$kind==='fixedarrayproperty'){
+                    $innerLayout=$field['array_inner_layout']??null;
+                    if(!is_array($innerLayout)){
+                        return ['status'=>'nested_struct_array_inner_unverified'];
+                    }
+                    if($kind==='arrayproperty'){
+                        // Epic UT99 UArrayProperty::SerializeItem archives
+                        // AR_INDEX(n), followed by n Inner->SerializeItem.
+                        $elementCount=CatalogUE1ClassicCompactIndexReader::readAt(
+                            $bytes,$position);
+                    }else{
+                        // UFixedArrayProperty::SerializeItem stores exactly
+                        // Count elements with NO count prefix.
+                        $elementCount=(int)($field['fixed_array_count']??0);
+                    }
+                    if($elementCount===null||$elementCount<0
+                        ||$elementCount>0x7fffffff){
+                        return ['status'=>'nested_struct_array_count_invalid'];
+                    }
+                    // At least one archive byte per supported primitive
+                    // element; zero-size struct elements are handled only
+                    // when the declared field count is tractable.
+                    if($innerLayout['kind']!=='structproperty'
+                        &&$elementCount>strlen($bytes)-$position){
+                        return ['status'=>'nested_struct_array_truncated'];
+                    }
+                    if($elementCount>1000000){
+                        return ['status'=>'nested_struct_array_count_unverified'];
+                    }
+                    $innerLayout['array_dim']=$elementCount;
+                    $child=self::readAt(
+                        $bytes,$position,
+                        ['struct_reference'=>null,'fields'=>[$innerLayout]],
+                        $preview,$valuePackage,$depth+1);
+                    if(($child['status']??null)!=='struct_field_values_decoded'){
+                        return ['status'=>'nested_struct_array_values_unverified',
+                            'reason'=>$child['status']??'unknown'];
+                    }
+                    $v=['source_element_count'=>$elementCount,
+                        'source_archive_count_prefix'=>$kind==='arrayproperty',
+                        'inner_kind'=>$innerLayout['kind'],
+                        'items'=>$child['members']??[]];
                 }elseif($kind==='structproperty'){
                     $nestedLayout=$field['nested_layout']??null;
                     if(!is_array($nestedLayout)
