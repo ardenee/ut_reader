@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `t99-native-music-oracle`
-- **Stage:** passed-focus-sealed-no-production-change
-- **Last completed action:** Compiled UT99 v432 native LoadPackage exported tracker bytes for all 30 genuine installed .umx files without errors; Epic v400 source-pinned UMusic native reader produced 30 complete matching exports across IT XM S3M, 49,460,075/49,460,075 bytes SHA256-identical; frozen 30 artifact+log manifest, canonical aggregate, scoped DEV focus PASS; no production PHP or PRD changes
-- **Resume at:** G5 compare independently compiled native persisted property, struct, model and level values; identify viable native exporters without counting crashing Texture PCX export. Historical G2-G4 still OPEN, G6 BLOCKED, no repeated unchanged 30 music verification.
-- **Active changed at:** 2026-10-23T16:17:36+00:00
+- **Contract:** `g3-class-state-frame`
+- **Stage:** implemented-pending-verification-no-tests
+- **Last completed action:** Implementation-first Epic source parity code: fixed raw May/July FBoundingVolume IsValid BYTE in original Model/Mesh/Primitive source decoder; introduced shared Unreal v1.200 / UT99 v400 version-gated FStateFrame reader and removed UClass flagged-stack unimplemented exit, routing both UClass and ordinary object readers to same state-frame decoder. Syntax lint only. NO tests, NO new test contracts, NO acceptance promotions, NO DEV/PRD deployment.
+- **Resume at:** Continue EXISTING G2/G3/G4 source-listed serialized gaps as code implementation first; when code is complete schedule one separate scoped verification and release phase. Current implementation must remain marked unverified and not be deployed to PRD until verified.
+- **Active changed at:** 2026-10-23T16:33:49+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

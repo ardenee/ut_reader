@@ -38,11 +38,6 @@ final class CatalogUE1ClassicClassMetadataReader
         if ($size <= 0 || $start < 0 || $end > filesize($path)) {
             throw new RuntimeException('Invalid UE1 class export serial bounds');
         }
-        if (((int)$ex['objectFlags'] & 0x02000000) !== 0) {
-            // UObject::Serialize serializes StateFrame before the UField
-            // prefix; not guessed as property data.
-            return ['export_index'=>$index, 'status'=>'class_state_frame_unimplemented'];
-        }
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open UE1 class export');}
         try {
@@ -95,13 +90,22 @@ final class CatalogUE1ClassicClassMetadataReader
             if($version<40){
                 $record['legacy_database']=['count'=>$i32(),'capacity'=>$i32()];
             }
-            if($version<47){
-                $oldClass=$reference('old execution class');
-                $oldNode=$oldClass!==0?$i32():null;
-                $tmpClass=$reference('old execution temp');
-                $probe=bin2hex($read(8));
-                $record['legacy_main_frame']=['old_class'=>$oldClass,'old_node'=>$oldNode,
-                    'temp_reference'=>$tmpClass,'probe_mask_hex'=>$probe];
+            // UObject::Serialize puts the execution-frame archive BEFORE
+            // UField/UStruct/UClass members. The same Epic source branch
+            // applies to flagged class objects and ordinary object exports.
+            $stateFrame=CatalogUE1ClassicStateFrameReader::read(
+                $pkg,$version,(int)$ex['objectFlags'],
+                $read,$compact,$i32,$position
+            );
+            $record['serialized_state_frame']=$stateFrame;
+            if($version<47&&$stateFrame!==null){
+                // Retain the existing legacy view for archive consumers.
+                $record['legacy_main_frame']=[
+                    'old_class'=>$stateFrame['legacy_class_reference'],
+                    'old_node'=>$stateFrame['legacy_node_number'],
+                    'temp_reference'=>$stateFrame['legacy_temp_reference'],
+                    'probe_mask_hex'=>$stateFrame['probe_mask_le_hex'],
+                ];
             }
             if($version<57){$record['legacy_state_name']=$name('StateName');}
             if($version<58){$record['legacy_group_name']=$name('GroupName');}

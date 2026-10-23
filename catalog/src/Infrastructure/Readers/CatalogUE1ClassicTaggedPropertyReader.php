@@ -4,8 +4,10 @@
  *
  * This is a source-strict disk tag and scalar decoder, NOT a replacement
  * for UClass::SerializeTaggedProperties, native Serialize or class-defaults.
- * The caller must explicitly select an export with no RF_HasStack and whose
- * class is not UClass. Bytes following NAME_None are class-native payload.
+ * UClass exports dispatch to the source-defined UClass metadata reader;
+ * ordinary UObject exports decode optional RF_HasStack (and mandatory
+ * pre-v47) frame bytes before their tagged-property envelopes. Bytes
+ * following NAME_None are class-native payload, not guessed tag values.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -14,7 +16,6 @@ use RuntimeException;
 
 final class CatalogUE1ClassicTaggedPropertyReader
 {
-    private const HAS_STACK = 0x02000000;
     private const TYPE_NAMES = [
         1=>'ByteProperty',2=>'IntProperty',3=>'BoolProperty',4=>'FloatProperty',
         5=>'ObjectProperty',6=>'NameProperty',7=>'StringProperty',
@@ -291,33 +292,17 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     'count'=>(int)$database['count'],
                     'capacity'=>(int)$database['capacity']];
             }
-            $stateFrame=null;
-            if ($version<47 || ((int)$export['objectFlags'] & self::HAS_STACK)!==0) {
-                $frameStart=$position;
-                $node=0;$stateNode=0;$oldClass=0;$oldNode=null;
-                if ($version>=51) {
-                    $node=$compact();$stateNode=$compact();
-                } else {
-                    $oldClass=$compact();
-                    if ($oldClass!==0) {$oldNode=(int)unpack('V',$read(4))[1];}
-                }
-                $legacyTmp=$version<52 ? $compact():null;
-                $probeMask=bin2hex($read(8)); // FMainFrame::ProbeMask is QWORD
-                $latentAction=$version>=55?(int)unpack('V',$read(4))[1]:0;
-                $codeOffset=$node!==0 ? $compact():null;
-                $stateFrame=[
-                    'serialized_start'=>$offset+$frameStart,
-                    'serialized_size'=>$position-$frameStart,
-                    'node_reference'=>$node,'state_node_reference'=>$stateNode,
-                    'legacy_class_reference'=>$version<51?$oldClass:null,
-                    'legacy_node_number'=>$oldNode,
-                    'legacy_temp_reference'=>$legacyTmp,
-                    'probe_mask_le_hex'=>$probeMask,
-                    'latent_action'=>$latentAction,
-                    'script_code_offset'=>$codeOffset,
-                    'runtime_frame_constructed'=>false,
-                ];
-            }
+            // UObject::Serialize uses the same version-gated frame archive
+            // for class and ordinary object exports. Keep one decoder.
+            $stateFrame=CatalogUE1ClassicStateFrameReader::read(
+                $package,$version,(int)$export['objectFlags'],
+                $read,$compact,
+                static function()use($read):int{
+                    $v=(int)unpack('V',$read(4))[1];
+                    return $v>=0x80000000?$v-0x100000000:$v;
+                },
+                $position,$offset
+            );
             $tags=self::parseTags($read,$u8,$name,$compact,$version,$offset,$position,$size);
             $tagEnd=$offset+$position;
             $legacyState=null;$legacyGroup=null;

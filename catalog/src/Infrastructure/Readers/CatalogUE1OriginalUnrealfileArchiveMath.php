@@ -23,8 +23,10 @@ final class CatalogUE1OriginalUnrealfileArchiveMath
     public static function bound(string $data,int &$pos):array
     {
         $chunk=self::take($data,$pos,self::BOUND_BYTES);
+        // Both Epic May FBoundingRect and July FBoundingBox archive this
+        // member as a raw BYTE.  Neither FArchive operator imposes a
+        // boolean-range check; preserve every serialized 0..255 value.
         $valid=ord($chunk[24]);
-        if($valid>1)throw new RuntimeException('Original FBoundingVolume IsValid BYTE must be 0 or 1');
         $sphere=array_values(unpack('g4',substr($chunk,25,16)));
         return [
             'min'=>array_values(unpack('g3',substr($chunk,0,12))),
