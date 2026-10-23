@@ -134,7 +134,7 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                     if(!CatalogUE1OriginalUnrealfilePropertySerializationGate::serialized((int)$p['flags'],$effectiveLineage))continue;
                     $type=(int)$p['property_type'];$dim=(int)$p['array_dim'];
                     if($dim<0||$dim>1000000)throw new RuntimeException('Invalid property ArrayDim');
-                    $items=[];$start=$pos;
+                    $items=[];$rawBoolWords=[];$start=$pos;
                     for($j=0;$j<$dim;$j++){
                         $value=null;
                         switch($type){
@@ -142,8 +142,16 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                             case 2:$value=self::signed((int)unpack('V',$read(4))[1]);break;
                             case 3:
                                 $mask=(int)$p['bool_bitmask'];
-                                $value=$mask===1?((int)unpack('V',$read(4))[1]!==0)
-                                    :['bitmask_not_serialized'=>$mask];break;
+                                if($mask===1){
+                                    // Epic FProperty::SerializeProperty
+                                    // persists DWORD, tests BitMask 1.
+                                    $word=(int)unpack('V',$read(4))[1];
+                                    $rawBoolWords[$j]=$word;
+                                    $value=($word&1)!==0;
+                                }else{
+                                    $value=['bitmask_not_serialized'=>$mask];
+                                }
+                                break;
                             case 4:$value=(float)unpack('g',$read(4))[1];break;
                             case 5:
                                 $ref=(int)unpack('V',$read(4))[1];
@@ -182,10 +190,12 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                         }
                         $items[]=$value;
                     }
-                    $values[]=['name'=>$p['name'],'property_type_name'=>$p['property_type_name'],
+                    $row=['name'=>$p['name'],'property_type_name'=>$p['property_type_name'],
                         'array_dim'=>$dim,'values'=>$items,
                         'serialized_byte_count'=>$pos-$start,
                         'original_member_offset'=>$p['memory_offset']];
+                    if($type===3)$row['serialized_boolean_dwords']=$rawBoolWords;
+                    $values[]=$row;
                 }
                 $extra=$len-$pos;
                 if($strict&&$extra!==0)

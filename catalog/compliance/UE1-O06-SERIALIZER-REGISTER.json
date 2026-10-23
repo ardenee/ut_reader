@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T16:51:33+00:00",
+  "updated_at_utc": "2026-10-23T17:01:05+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -1881,8 +1881,8 @@
       "reader": "CatalogUE1OriginalUnrealfileClassSchemaReader.php",
       "test": "verify-ue1-original-unrealfile-class-schemas.php",
       "evidence": "Found original May v0.86x Epic registered class at Engine/UnClass.cpp:405 and corresponding July v0.867 registered class Engine/UnClass.cpp:405; existing production typed handler CatalogUE1OriginalUnrealfileClassSchemaReader.php and source-defined verifier verify-ue1-original-unrealfile-class-schemas.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
-      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
-      "updated_at_utc": "2026-10-23T14:43:56+00:00",
+      "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures. G2 implementation 2026-10-23, verification DEFERRED: Epic May/July UnProp.cpp::FProperty::SerializeProperty archives DWORD for CPT_Bool only for BitMask==1. Original actor and UProperties readers now derive Boolean using word & 1 rather than any-nonzero, and retain original full word in serialized_boolean_dwords. Other BitMask values consume no additional file bytes; no O06 gate promotion.",
+      "updated_at_utc": "2026-10-23T17:01:05+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -2571,8 +2571,8 @@
       "reader": "CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "test": "verify-ue1-original-unrealfile-external-schemas.php",
       "evidence": "May 1997 Src/Engine/UnProp.cpp FProperty::SerializeProperty skips CPF_Transient only, July additionally skips CPF_Intrinsic; both original file version 23. Reader now uses fixed-width-only full UProperties SerializeData bytes to identify exactly one May/July source family, with explicit provenance fallback. External UClass provider native fixture test 42/42, affected DEV 6/6 + PRD 6/6 current source/test hash; no variable-length/equal-width guessing.",
-      "remaining": "Source May/July intrinsic bin now auto-decoded only where fixed-length expected bytes uniquely equal the entire UProperties data segment; in other cases source_1997_property_lineage_required is retained. Broader schema/declared external family and genuine original 1997 package oracle remain G2/G5; runtime class preload/fixup O10.",
-      "updated_at_utc": "2026-10-23T14:43:58+00:00",
+      "remaining": "Source May/July intrinsic bin now auto-decoded only where fixed-length expected bytes uniquely equal the entire UProperties data segment; in other cases source_1997_property_lineage_required is retained. Broader schema/declared external family and genuine original 1997 package oracle remain G2/G5; runtime class preload/fixup O10. G2 implementation 2026-10-23, verification DEFERRED: Epic May/July UnProp.cpp::FProperty::SerializeProperty archives DWORD for CPT_Bool only for BitMask==1. Original actor and UProperties readers now derive Boolean using word & 1 rather than any-nonzero, and retain original full word in serialized_boolean_dwords. Other BitMask values consume no additional file bytes; no O06 gate promotion.",
+      "updated_at_utc": "2026-10-23T17:01:05+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -3202,8 +3202,8 @@
       "reader": "CatalogUE1OriginalUnrealfileClassSchemaReader.php",
       "test": "verify-ue1-original-unrealfile-class-schemas.php",
       "evidence": "PRD historical PASS at 2026-10-21T17:28:19.5542389Z; catalog\\compliance\\evidence\\o06\\20261021T172819350Z-3e563cbb-PRD-verify-ue1-original-unrealfile-class-schemas.php.txt; scoped test, not full class acceptance",
-      "remaining": "FProperty descriptors and local classes tested; class-specific source contract reconciliation G2; runtime Preload O10",
-      "updated_at_utc": "2026-10-23T14:43:56+00:00",
+      "remaining": "FProperty descriptors and local classes tested; class-specific source contract reconciliation G2; runtime Preload O10 G2 implementation 2026-10-23, verification DEFERRED: Epic May/July UnProp.cpp::FProperty::SerializeProperty archives DWORD for CPT_Bool only for BitMask==1. Original actor and UProperties readers now derive Boolean using word & 1 rather than any-nonzero, and retain original full word in serialized_boolean_dwords. Other BitMask values consume no additional file bytes; no O06 gate promotion.",
+      "updated_at_utc": "2026-10-23T17:01:05+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -3857,8 +3857,8 @@
       "reader": "CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "test": "verify-ue1-original-unrealfile-external-schemas.php",
       "evidence": "July v0.867 original FProperty::SerializeProperty filters CPF_Transient|CPF_Intrinsic, unlike May v0.86x (same version 23). UProperties class-bin reader infers source only from complete fixed-width data bytes if unique, or respects explicit family; else remains unresolved. Exact May 4B / July 0B intrinsic Int, malformed 2B, variable FString, same-size Enum branch native tests 42/42; affected DEV 6/6 PRD 6/6.",
-      "remaining": "No invented July default for ambiguous 0x1000 fields; dynamic FString/equal width/native stream extensions require real provenance. G2 source-wide 1997 class map and G5 genuine independent oracle remain open, O10 runtime references excluded.",
-      "updated_at_utc": "2026-10-23T14:43:58+00:00",
+      "remaining": "No invented July default for ambiguous 0x1000 fields; dynamic FString/equal width/native stream extensions require real provenance. G2 source-wide 1997 class map and G5 genuine independent oracle remain open, O10 runtime references excluded. G2 implementation 2026-10-23, verification DEFERRED: Epic May/July UnProp.cpp::FProperty::SerializeProperty archives DWORD for CPT_Bool only for BitMask==1. Original actor and UProperties readers now derive Boolean using word & 1 rather than any-nonzero, and retain original full word in serialized_boolean_dwords. Other BitMask values consume no additional file bytes; no O06 gate promotion.",
+      "updated_at_utc": "2026-10-23T17:01:05+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",

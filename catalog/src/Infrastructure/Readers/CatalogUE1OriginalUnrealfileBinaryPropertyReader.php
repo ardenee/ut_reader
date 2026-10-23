@@ -103,7 +103,7 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                 if(!CatalogUE1OriginalUnrealfilePropertySerializationGate::serialized($flags,$sourceLineage))continue;
                 $dim=(int)$prop['array_dim'];
                 if($dim<0||$dim>1000000)throw new RuntimeException('Invalid property ArrayDim');
-                $items=[];
+                $items=[];$rawBoolWords=[];
                 for($j=0;$j<$dim;$j++){
                     $val=null;
                     switch($type){
@@ -112,8 +112,19 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                             $v=(int)unpack('V',$read(4))[1];
                             $val=$v>=0x80000000?$v-0x100000000:$v;break;
                         case 3:
-                            if((int)$prop['bool_bitmask']===1)$val=(int)unpack('V',$read(4))[1]!==0;
-                            else $val=['not_serialized_nontrivial_bool_bitmask'=>$prop['bool_bitmask']];
+                            if((int)$prop['bool_bitmask']===1){
+                                // Epic May/July UnProp.cpp archives the entire
+                                // DWORD. The property's truth is only bit 0;
+                                // a nonzero word with bit 0 clear is false.
+                                $word=(int)unpack('V',$read(4))[1];
+                                $rawBoolWords[$j]=$word;
+                                $val=($word&1)!==0;
+                            }else{
+                                // Packed Boolean members do not archive a
+                                // second DWORD; their memory cannot be
+                                // resolved without the containing word.
+                                $val=['not_serialized_nontrivial_bool_bitmask'=>$prop['bool_bitmask']];
+                            }
                             break;
                         case 4:$val=unpack('g',$read(4))[1];break;
                         case 5:
@@ -163,9 +174,11 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                     }
                     $items[]=$val;
                 }
-                $values[]=['name'=>$prop['name'],'type'=>$prop['property_type_name'],
+                $row=['name'=>$prop['name'],'type'=>$prop['property_type_name'],
                     'array_dim'=>$dim,'values'=>$items,
                     'property_memory_offset'=>$prop['memory_offset']];
+                if($type===3)$row['serialized_boolean_dwords']=$rawBoolWords;
+                $values[]=$row;
             }
             $left=$hSize-$pos;
             if($strict&&$left!==0)throw new RuntimeException('Original binary object has additional native class header data');

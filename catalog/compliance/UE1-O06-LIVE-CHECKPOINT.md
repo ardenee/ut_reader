@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-original-uscript-memory-archive-size`
+- **Contract:** `g2-original-1997-bool-dword`
 - **Stage:** implemented-pending-verification-no-tests
-- **Last completed action:** Existing G2 source-correct original May and July 1997 UScript reader: per-byte physical archive and native iCode memory counts now separated. For null EX_FinalFunction FStackNodeLink or FStackNodePtr the 8-byte in-memory structure uses only 4 archive bytes; full Num and FileDataSize checked independently; memory-aligned labels, strict stream bounds and May/July semantic ambiguity retained. Updated U86/U97 existing serializer source entries plus corrected original outdated acceptance narrative. PHP lint only, NO functional tests, NO new test contracts, no PRD deploy.
-- **Resume at:** Continue existing G2/G3/G4 serialized source implementation from PROJECT-STATUS. All implementation-only changes from commits ebc36c76 onward remain unverified and are NOT ready for PRD until later separate verification. Do not run source/real corpus tests or native exporters during implementation phase.
-- **Active changed at:** 2026-10-23T16:52:29+00:00
+- **Last completed action:** G2 source implementation: original May v0.86x and July v0.867 FProperty::SerializeProperty CPT_Bool BitMask==1 archives 32-bit DWORD, boolean meaning uses bit 0. Fixed both inline UObject native class property reader and UProperties bin reader to use mask instead of nonzero, retaining each raw serialized 32-bit word; BitMask!=1 remains no extra archive bytes. Existing U86/U97 UClass/UProperties entries annotated PARTIAL, code-only PHP lint, NO functional tests, NO test plan additions, NO PRD deploy.
+- **Resume at:** Continue implementation-only remaining G2 then G3/G4 discrepancies in fixed O06 source tracker. No repeat native exporter tests or broad gate sweeps. Once implementation complete, schedule separate verification and PRD deployment.
+- **Active changed at:** 2026-10-23T17:01:28+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
