@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `t99-native-sound-oracle`
+- **Contract:** `t99-native-music-oracle`
 - **Stage:** passed-focus-sealed-no-production-change
-- **Last completed action:** Independent UT99 v432 native UnrealShare.u LoadPackage exported 262 WAV files (7,225,244 raw bytes) with 0 errors; UnrealDB decoded all 262 full paths and complete native Sound tails, every raw byte SHA256 matched; DEV source-pinned focus PASS, evidence frozen; no production or PRD changes
-- **Resume at:** G5 independent runtime comparison remains IN PROGRESS: extend genuine/native comparisons to persisted property/struct/mesh/level values and historical v9/v22/v23 source families; do not rerun sealed Sound verifier on unchanged inputs; G2-G4 open G6 blocked.
-- **Active changed at:** 2026-10-23T15:33:53+00:00
-- **Latest DEV test states:** PASS 101; FAIL 0; STARTED 0
+- **Last completed action:** Compiled UT99 v432 native LoadPackage exported tracker bytes for all 30 genuine installed .umx files without errors; Epic v400 source-pinned UMusic native reader produced 30 complete matching exports across IT XM S3M, 49,460,075/49,460,075 bytes SHA256-identical; frozen 30 artifact+log manifest, canonical aggregate, scoped DEV focus PASS; no production PHP or PRD changes
+- **Resume at:** G5 compare independently compiled native persisted property, struct, model and level values; identify viable native exporters without counting crashing Texture PCX export. Historical G2-G4 still OPEN, G6 BLOCKED, no repeated unchanged 30 music verification.
+- **Active changed at:** 2026-10-23T16:17:36+00:00
+- **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-23T16:15:31.1963923Z | verify-ue1-o06-native-ut99-music-all.php | PASS | 317 | catalog\compliance\evidence\o06\20261023T161530485Z-7237246f-DEV-verify-ue1-o06-native-ut99-music-all.php.txt |
+| 2026-10-23T16:15:30.4943587Z | verify-ue1-o06-native-ut99-music-all.php | STARTED |  | catalog\compliance\evidence\o06\20261023T161530485Z-7237246f-DEV-verify-ue1-o06-native-ut99-music-all.php.txt |
 | 2026-10-23T15:31:10.6746983Z | verify-ue1-o06-native-ut99-sound-exports.php | PASS | 313 | catalog\compliance\evidence\o06\20261023T153110017Z-e725eeae-DEV-verify-ue1-o06-native-ut99-sound-exports.php.txt |
 | 2026-10-23T15:31:10.0246982Z | verify-ue1-o06-native-ut99-sound-exports.php | STARTED |  | catalog\compliance\evidence\o06\20261023T153110017Z-e725eeae-DEV-verify-ue1-o06-native-ut99-sound-exports.php.txt |
 | 2026-10-23T15:15:43.4249671Z | verify-ue1-o06-g2-stacknode-may-july.php | PASS | 220 | catalog\compliance\evidence\o06\20261023T151542836Z-4be7e371-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-23T14:51:19.5878087Z | verify-ue1-original-unrealfile-stacktree-data.php | STARTED |  | catalog\compliance\evidence\o06\20261023T145119580Z-36cb7fa3-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt |
 | 2026-10-23T14:51:10.8345150Z | verify-ue1-o06-g2-stacknode-may-july.php | PASS | 270 | catalog\compliance\evidence\o06\20261023T145110206Z-346cc5b6-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
 | 2026-10-23T14:51:10.2136563Z | verify-ue1-o06-g2-stacknode-may-july.php | STARTED |  | catalog\compliance\evidence\o06\20261023T145110206Z-346cc5b6-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
-| 2026-10-23T14:49:06.1529636Z | verify-ue1-original-unrealfile-stacktree-data.php | FAIL | 72 | catalog\compliance\evidence\o06\20261023T144905734Z-acfa2327-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt |
-| 2026-10-23T14:49:05.7417419Z | verify-ue1-original-unrealfile-stacktree-data.php | STARTED |  | catalog\compliance\evidence\o06\20261023T144905734Z-acfa2327-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt |
 
 ## Recovery procedure
 

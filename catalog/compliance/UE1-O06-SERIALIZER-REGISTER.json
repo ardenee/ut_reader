@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T15:31:10+00:00",
+  "updated_at_utc": "2026-10-23T16:15:31+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -6443,8 +6443,8 @@
       "status": "PARTIAL",
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-music-native.php",
-      "evidence": "v1.200 Engine/Src/UnAudio.cpp:467-480, Engine/Inc/UnAudio.h:76-83; UT99 v400 Engine/Src/UnAudio.cpp:518-531, Engine/Inc/UnAudio.h:105-113; UT99 Core/Inc/UnTemplate.h::TLazyArray",
-      "remaining": "Epic UMusic::Serialize FileType+byte array and UT99 lazy SeekPos decoded source-typed, 13/13 positive/negative UE1 valid-layout fixtures; no genuine matching UMusic package or compiled engine oracle, source-wide version gates and O07 playback remain unverified.",
+      "evidence": "v1.200 Engine/Src/UnAudio.cpp:467-480, Engine/Inc/UnAudio.h:76-83; UT99 v400 Engine/Src/UnAudio.cpp:518-531, Engine/Inc/UnAudio.h:105-113; UT99 Core/Inc/UnTemplate.h::TLazyArray; independently compiled UT99 v432 native batchexport on 30 genuine .umx, 30/30 complete original UMusic lazy payloads, 49,460,075/49,460,075 bytes exact versus native exported tracker bytes, IT/XM/S3M; DEV PASS verify-ue1-o06-native-ut99-music-all.php at 20261023T161530485Z-7237246f",
+      "remaining": "Genuine v68/v69 .umx native compiled v432 data parity passed 30/30. v432 compiled source is not proven identical to pinned v400; historical v61 and earlier lazy array variants, memory side effects, native playback (O07) and source-wide behavior remain unverified.",
       "updated_at_utc": "2026-10-23T07:41:54+00:00",
       "last_verification": {
         "target": "DEV",

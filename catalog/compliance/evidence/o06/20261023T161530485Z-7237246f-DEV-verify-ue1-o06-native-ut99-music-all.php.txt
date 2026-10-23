@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "native_engine": "UT99 compiled v432",
+    "genuine_package_count": 30,
+    "native_export_count": 30,
+    "matching_payload_count": 30,
+    "matching_payload_bytes": 49460075,
+    "source_file_type_names": [
+        "it",
+        "xm",
+        "s3m"
+    ],
+    "canonical_payload_sha256": "327fbff329e66ede3ded4a9cbf7d9a63b114fca7df7f6ba52fcfd9c11bdc9925",
+    "manifest_sha256": "5f6c9e7e557532c8660713af7892e6dad04b70e7b4c539c2994a0af1744d8fb5",
+    "errors": []
+}
