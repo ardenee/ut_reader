@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T10:56:48+00:00",
+  "updated_at_utc": "2026-10-23T11:39:31+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4369,14 +4369,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:50+00:00",
+      "updated_at_utc": "2026-10-23T11:03:57+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:50.2690172Z",
+        "at_utc": "2026-10-23T11:03:57.1605909Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349900Z-97751bda-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4469,14 +4469,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:50+00:00",
+      "updated_at_utc": "2026-10-23T11:03:57+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:50.2690172Z",
+        "at_utc": "2026-10-23T11:03:57.1605909Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349900Z-97751bda-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4519,14 +4519,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:50+00:00",
+      "updated_at_utc": "2026-10-23T11:03:57+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:50.2690172Z",
+        "at_utc": "2026-10-23T11:03:57.1605909Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349900Z-97751bda-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -4694,14 +4694,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:03:56+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.6731063Z",
+        "at_utc": "2026-10-23T11:03:56.5177687Z",
         "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349330Z-50f8d996-DEV-verify-ue1-classic-struct-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -4736,14 +4736,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Pinned Epic v1200 Engine/Src/UnFont.cpp::UFont::Serialize invokes UTexture::Serialize(Ar) followed by Ar<<Characters; Engine/Inc/UnTex.h UFont:UTexture and FFontCharacter four INT32. Eight authentic v61 font exports (Engine.u and UNreal.u) read all mips+256 glyphs, 4096 glyph bytes and zero extension, 94/94 DEV corpus PASS. Old UT99 Pages layout erroneously used before; now only for >61.",
       "remaining": "Native engine direct compare and earlier historical Font source/version proofs outstanding; v<=61 source-family scope only, glyph rasterization/runtime texture handling not represented.",
-      "updated_at_utc": "2026-10-23T10:54:08+00:00",
+      "updated_at_utc": "2026-10-23T11:04:20+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:54:08.7955637Z",
+        "at_utc": "2026-10-23T11:04:20.5194304Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105400612Z-b1b4d839-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110411963Z-fbbfe208-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -4761,14 +4761,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:03:56+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.6731063Z",
+        "at_utc": "2026-10-23T11:03:56.5177687Z",
         "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349330Z-50f8d996-DEV-verify-ue1-classic-struct-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -4936,14 +4936,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Genuine six v61 compiled UE1 script packages and ten UT99 v66-v68 audio archives SHA-pinned in catalog/compliance/inventory/ue1-o06-genuine-compiled-nontexture.json. DEV full 16-package/15194-export 94/94 PASS incl. 342 true v61 Mesh exports, unique complete 16-byte sphere base/inner bounding sphere/count arrays; previous genuine 331 mesh exceptions corrected. Source C98 UnMesh.cpp order, mesh fixture both 12/16 layouts 38/38 DEV PASS.",
       "remaining": "Compiled native comparison of 16-byte sphere and exact source lineage at v61 unresolved; older archives may use 12-byte branch and are selected only by unique full parse; some 342 meshes have huge packed vertex arrays with 16-entry previews. Native animation remapping/postload not simulated. 513 Class default metadata schemas remain unverified (separate source contracts).",
-      "updated_at_utc": "2026-10-23T10:54:08+00:00",
+      "updated_at_utc": "2026-10-23T11:04:20+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:54:08.7955637Z",
+        "at_utc": "2026-10-23T11:04:20.5194304Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105400612Z-b1b4d839-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110411963Z-fbbfe208-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -5061,14 +5061,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5086,14 +5086,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:50+00:00",
+      "updated_at_utc": "2026-10-23T11:03:57+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:50.2690172Z",
+        "at_utc": "2026-10-23T11:03:57.1605909Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349900Z-97751bda-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5111,14 +5111,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5136,14 +5136,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5236,14 +5236,14 @@
       "test": "verify-ue1-o06-genuine-class-default-declarations.php",
       "evidence": "Pinned Epic C98 Core/Src/UnClass.cpp UStruct::SerializeTaggedProperties warns/skips unknown property, type mismatch, array bounds, struct ItemName mismatch, CPF_Transient|CPF_Intrinsic (Core/Inc/UnObjBas.h 0x2000/0x1000); loader does not abort whole class. Epic C98 Core/Src/UnLinker.h ULinkerLoad::IndexToObject validates signed export/import and ULinkerLoad::operator<<(FName) validates NameMap; invalid indices are fatal. Production class schema reader traverses UClass/UStruct/UProperty native records including imported superclasses, field structs, flags and source-specific compatibility aliases, records skipped tag reasons, preserves unverified fixed string overflow. Genuine immutable v61 script corpus 513 UClass exports / 5344 defaults all matched declaration; 1507 actual FName/object linker index bounds validated (1423 object, 84 FName), negative invalid object and invalid name throw; 527/527 DEV reference verifier PASS run 20261023T084513224Z-cb8434c7. Class default declarations new warnings and flags/struct source conditions PASS run 20261023T084551845Z-ff62aeb2; 97 exact typed struct values, 576 exact fixed string bytes, 11/11 DEV direct regressions PASS. Git commit pending in current checkpoint.",
       "remaining": "Real compiled v61 declarations and imported parent UProperty struct identities, CPF_Intrinsic/CPF_Transient and array bounds verified. Value reference bounds checked in source archive; runtime property offsets, bool bitmask layout and compiled engine value application remain partial.",
-      "updated_at_utc": "2026-10-23T10:53:56+00:00",
+      "updated_at_utc": "2026-10-23T11:04:04+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:56.6504273Z",
+        "at_utc": "2026-10-23T11:04:04.3858916Z",
         "test_sha256": "6b69c5d58756c6a00d1d6acae513a940db7d2fb12bf0f0195836131dfb4c72e0",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105352646Z-d9037b74-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110400284Z-2ce10797-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt"
       }
     },
     {
@@ -5261,14 +5261,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5286,14 +5286,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:03:56+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.6731063Z",
+        "at_utc": "2026-10-23T11:03:56.5177687Z",
         "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349330Z-50f8d996-DEV-verify-ue1-classic-struct-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -5361,14 +5361,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:50+00:00",
+      "updated_at_utc": "2026-10-23T11:03:57+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:50.2690172Z",
+        "at_utc": "2026-10-23T11:03:57.1605909Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349900Z-97751bda-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -5411,14 +5411,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -5699,18 +5699,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicPropertyNativeReader.php + CatalogUE1ClassicStructNativeReader.php + CatalogUE1ClassicArrayValueReader.php + CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicCompactIndexReader.php + CatalogUE1ClassicArrayValueReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
       "test": "verify-ue1-classic-array-struct-members.php",
-      "evidence": "UT99 v400 source C++ Core/Inc/UnClass.h::TFieldIterator<UProperty> iterates each UStruct.Children then Struct=Struct->GetInheritanceSuper(), Field=Struct->Children; Core/Src/UnClass.cpp::UStruct::SerializeBin applies ShouldSerializeValue and ArrayDim for each property, calling SerializeItem. Production CatalogUE1ClassicStructArrayValueReader now traverses actual native-complete local UStruct ancestor export chain after child fields, validates each UField.Next ownership, detects inheritance cycles and returns explicit unverified for imported parent, parses source-typed leaf Int/Float/Byte/Bool/FString. Original v69 full native 8-export parent/child UStruct fixture verify-ue1-classic-array-struct-members.php latest 53/53 DEV PASS 20261023T105443444Z-e8011395, dynamic and fixed arrays source value ordering with real parent fields, parent cycle and imported ancestor negatives. Eleven existing affected DEV regression tests PASS incl genuine 92-file and 16-package corpora; general array fixture 154/154 PASS. Intermediate FAILED fixture expectations preserved in O06 immutable test events. Both UE5 probes untouched, PRD only deployed by SHA, no PRD PHP tests.",
-      "remaining": "Local UT99 UStruct inheritance chain plus local UProperty leaf fields serializes source-derived bytes for dynamic/fixed arrays. Imported parent UStruct, arbitrary nested Struct/Array/Map member serialization, native class memory offsets, runtime object creation and compiled Epic engine parity remain unverified. G2-G6 and O06 not accepted.",
-      "updated_at_utc": "2026-10-23T10:56:47+00:00",
+      "evidence": "UT99 Core/Src/UnClass.cpp::UStruct::SerializeBin uses TFieldIterator<UProperty>: local child then local inherited UStruct members, each member ArrayDim and ShouldSerializeValue. Production CatalogUE1ClassicStructArrayValueReader now uses actual in-package native UStruct/UStructProperty fields and nested FName and UObject/Class property serializers with owning value linker maps, fatal invalid NameMap/ImportMap/ExportMap indices. Shared CatalogUE1ClassicCompactIndexReader used for bounded compact serialization. Local inherited fields from real source order tested; imported parent, arbitrary nested struct and actual C++ memory effects still partial. Full v69 10-export actual .u native fixture verify-ue1-classic-array-struct-members.php 69/69 DEV PASS 20261023T113538495Z-92fc017b. Focus source check and 154/154 array codec DEV PASS, 9 contract gate tests reused matching real 2026-10-23 fingerprints without reexecution. No PRD PHP tests, no compiled UT99 runtime oracle.",
+      "remaining": "Only local, provenance-verified T99 UStruct hierarchy and supported inner byte/int/float/bool/FString/FName/UObject serializers. Unknown imported ancestor, nested custom struct/complex container, runtime memory offsets and compiled-engine parity are open.",
+      "updated_at_utc": "2026-10-23T11:39:31+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:54:43.8356067Z",
-        "test_sha256": "c0558e96ecf235bb66cd65d0ff79be6b15c4ccddc886a28de8efbefbc289e06c",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105443444Z-e8011395-DEV-verify-ue1-classic-array-struct-members.php.txt"
+        "at_utc": "2026-10-23T11:35:39.0288798Z",
+        "test_sha256": "f3664ec208d6a13f188eb481f3efc9f1a3bfab7d252c98914508217e04174e8a",
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T113538495Z-92fc017b-DEV-verify-ue1-classic-array-struct-members.php.txt"
       }
     },
     {
@@ -5753,14 +5753,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "DEV 2026-10-23 new real full-version-69 .u fixture verify-ue1-classic-array-inner-values.php 67/67 PASS (latest run 20261023T100951265Z-78e554cd). UT99 v400 Core/Src/UnProp.cpp::UArrayProperty::SerializeItem loads signed AR_INDEX(n) then loops Inner->SerializeItem; Inner declaration read through actual UArrayProperty.Inner linker ref from original installed native archive. Production CatalogUE1ClassicArrayValueReader reconstructs and validates values for Byte (BYTE), Int (signed INT32), Float (IEEE754), Bool (BYTE nonzero true), FName (compact NameMap index) and UObject (compact signed import/export index) inner serializers; exact byte-count/count, original tag SHA-256, full segment exhaustion, 32-value preview and complete element traversal; invalid inner NameMap/ImportMap/ExportMap indices fatal like Epic linker. Empty arrays, negative counts, truncation, trailing extra bytes, unknown nested Str/Struct kinds explicitly guarded. All 11 affected DEV regression scripts PASS, including authentic 16-package native sweep, 92-file classic corpus, class defaults and malformed archives. No PRD tests.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. Untested genuine late UT99 class default arrays and compiled native engine parity; nested StructProperty, StrProperty, arbitrary subarray, generic MapProperty and value assignment remain unverified, by design.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:35:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.1176125Z",
+        "at_utc": "2026-10-23T11:35:39.8999730Z",
         "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105348658Z-f46d3131-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T113539356Z-f2a03c08-DEV-verify-ue1-classic-array-inner-values.php.txt"
       }
     },
     {
@@ -5828,14 +5828,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "DEV 2026-10-23 new real full-version-69 .u fixture verify-ue1-classic-array-inner-values.php 67/67 PASS (latest run 20261023T100951265Z-78e554cd). UT99 v400 Core/Src/UnProp.cpp::UArrayProperty::SerializeItem loads signed AR_INDEX(n) then loops Inner->SerializeItem; Inner declaration read through actual UArrayProperty.Inner linker ref from original installed native archive. Production CatalogUE1ClassicArrayValueReader reconstructs and validates values for Byte (BYTE), Int (signed INT32), Float (IEEE754), Bool (BYTE nonzero true), FName (compact NameMap index) and UObject (compact signed import/export index) inner serializers; exact byte-count/count, original tag SHA-256, full segment exhaustion, 32-value preview and complete element traversal; invalid inner NameMap/ImportMap/ExportMap indices fatal like Epic linker. Empty arrays, negative counts, truncation, trailing extra bytes, unknown nested Str/Struct kinds explicitly guarded. All 11 affected DEV regression scripts PASS, including authentic 16-package native sweep, 92-file classic corpus, class defaults and malformed archives. No PRD tests.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. Untested genuine late UT99 class default arrays and compiled native engine parity; nested StructProperty, StrProperty, arbitrary subarray, generic MapProperty and value assignment remain unverified, by design.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:35:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.1176125Z",
+        "at_utc": "2026-10-23T11:35:39.8999730Z",
         "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105348658Z-f46d3131-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T113539356Z-f2a03c08-DEV-verify-ue1-classic-array-inner-values.php.txt"
       }
     },
     {
@@ -5853,14 +5853,14 @@
       "test": "verify-ue1-classic-fstring-archive.php",
       "evidence": "Epic T99 v400 Core/Src/UnProp.cpp::UStrProperty::SerializeItem calls FArchive<<FString and Core/Src/UnMisc.cpp::operator<<(FArchive&,FString&) serializes signed compact SaveNum; positive A.Num() means ANSI bytes, negative -A.Num() means UTF-16 Unicode units, and count 1 clears string on native load. Production shared FPropertyTag decoder now preserves exact positive/negative string archive including NUL and raw hex with safe ASCII-only text preview; malformed count/terminal pairs remain opaque, and source-linked class-default StrProperty schema reports dynamic_fstring_archive_unverified instead of a false successful value. New source-anchored full v69 .u native UStrProperty export/tag verifier verify-ue1-classic-fstring-archive.php 59/59 DEV PASS at 20261023T094620237Z-6cd32662: ANSI, Unicode, empty, non-ASCII, 303-byte large tag, invalid truncations, no terminator. Eleven affected existing DEV regression scripts PASS including 92-file corpus and 16 compiled packages. No native wchar/heap/locale simulation or genuine v69 StrProperty instances found.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. Old fixed StringProperty=>UStrProperty handling now source-recognized for v62+; native TCHAR FromAnsi conversion, instance UObject default memory application, historic overlapping v60/v61 source-family and compiled engine parity are outstanding. 1998 old Rotation/Region compatibility alias recognition now source-gated; full nested struct field application, UT99 historic overlapping version provenance and authentic native oracle remain unaccepted. Signed counted ANSI/UTF16 FString tag archive now source-typed and malformed cases flagged; true converted TCHAR content, compiled native engine oracle, genuine UT99 StrProperty script sample, and other nested property semantics remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:52.4520936Z",
+        "at_utc": "2026-10-23T11:03:59.5719379Z",
         "test_sha256": "e0522c195d2b0ea1621bd70dfaa9edd9bd6f34298d6bcbbb73a0d2a45436cdf4",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105352151Z-dc6c26ae-DEV-verify-ue1-classic-fstring-archive.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110359222Z-bf5c5d46-DEV-verify-ue1-classic-fstring-archive.php.txt"
       }
     },
     {
@@ -5903,14 +5903,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:50+00:00",
+      "updated_at_utc": "2026-10-23T11:03:57+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:50.2690172Z",
+        "at_utc": "2026-10-23T11:03:57.1605909Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349900Z-97751bda-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -6103,14 +6103,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:03:56+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.6731063Z",
+        "at_utc": "2026-10-23T11:03:56.5177687Z",
         "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349330Z-50f8d996-DEV-verify-ue1-classic-struct-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -6141,18 +6141,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicPropertyNativeReader.php + CatalogUE1ClassicStructNativeReader.php + CatalogUE1ClassicArrayValueReader.php + CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicCompactIndexReader.php + CatalogUE1ClassicArrayValueReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
       "test": "verify-ue1-classic-array-struct-members.php",
-      "evidence": "UT99 v400 source C++ Core/Inc/UnClass.h::TFieldIterator<UProperty> iterates each UStruct.Children then Struct=Struct->GetInheritanceSuper(), Field=Struct->Children; Core/Src/UnClass.cpp::UStruct::SerializeBin applies ShouldSerializeValue and ArrayDim for each property, calling SerializeItem. Production CatalogUE1ClassicStructArrayValueReader now traverses actual native-complete local UStruct ancestor export chain after child fields, validates each UField.Next ownership, detects inheritance cycles and returns explicit unverified for imported parent, parses source-typed leaf Int/Float/Byte/Bool/FString. Original v69 full native 8-export parent/child UStruct fixture verify-ue1-classic-array-struct-members.php latest 53/53 DEV PASS 20261023T105443444Z-e8011395, dynamic and fixed arrays source value ordering with real parent fields, parent cycle and imported ancestor negatives. Eleven existing affected DEV regression tests PASS incl genuine 92-file and 16-package corpora; general array fixture 154/154 PASS. Intermediate FAILED fixture expectations preserved in O06 immutable test events. Both UE5 probes untouched, PRD only deployed by SHA, no PRD PHP tests.",
-      "remaining": "Local UT99 UStruct inheritance chain plus local UProperty leaf fields serializes source-derived bytes for dynamic/fixed arrays. Imported parent UStruct, arbitrary nested Struct/Array/Map member serialization, native class memory offsets, runtime object creation and compiled Epic engine parity remain unverified. G2-G6 and O06 not accepted.",
-      "updated_at_utc": "2026-10-23T10:56:47+00:00",
+      "evidence": "UT99 Core/Src/UnClass.cpp::UStruct::SerializeBin uses TFieldIterator<UProperty>: local child then local inherited UStruct members, each member ArrayDim and ShouldSerializeValue. Production CatalogUE1ClassicStructArrayValueReader now uses actual in-package native UStruct/UStructProperty fields and nested FName and UObject/Class property serializers with owning value linker maps, fatal invalid NameMap/ImportMap/ExportMap indices. Shared CatalogUE1ClassicCompactIndexReader used for bounded compact serialization. Local inherited fields from real source order tested; imported parent, arbitrary nested struct and actual C++ memory effects still partial. Full v69 10-export actual .u native fixture verify-ue1-classic-array-struct-members.php 69/69 DEV PASS 20261023T113538495Z-92fc017b. Focus source check and 154/154 array codec DEV PASS, 9 contract gate tests reused matching real 2026-10-23 fingerprints without reexecution. No PRD PHP tests, no compiled UT99 runtime oracle.",
+      "remaining": "Only local, provenance-verified T99 UStruct hierarchy and supported inner byte/int/float/bool/FString/FName/UObject serializers. Unknown imported ancestor, nested custom struct/complex container, runtime memory offsets and compiled-engine parity are open.",
+      "updated_at_utc": "2026-10-23T11:39:31+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:54:43.8356067Z",
-        "test_sha256": "c0558e96ecf235bb66cd65d0ff79be6b15c4ccddc886a28de8efbefbc289e06c",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105443444Z-e8011395-DEV-verify-ue1-classic-array-struct-members.php.txt"
+        "at_utc": "2026-10-23T11:35:39.0288798Z",
+        "test_sha256": "f3664ec208d6a13f188eb481f3efc9f1a3bfab7d252c98914508217e04174e8a",
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T113538495Z-92fc017b-DEV-verify-ue1-classic-array-struct-members.php.txt"
       }
     },
     {
@@ -6170,14 +6170,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Epic UT99 v400 Engine/Src/UnFont.cpp shows UFont no UTexture inheritance; Ar<<Pages<<CharactersPerPage and FFontPage texture + glyphs in Engine/Inc/UnTex.h; existing version>=62 pages branch preserved. The genuine corpus shows old C98 alternative cannot be applied to ver61.",
       "remaining": "No genuine v62+ UFont Pages export or compiled UT99 oracle tested; this source contract remains partial. Current 16-package corpus tests 8 v61 fonts, not UT99 font pages.",
-      "updated_at_utc": "2026-10-23T10:54:08+00:00",
+      "updated_at_utc": "2026-10-23T11:04:20+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:54:08.7955637Z",
+        "at_utc": "2026-10-23T11:04:20.5194304Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105400612Z-b1b4d839-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110411963Z-fbbfe208-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -6195,14 +6195,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:03:56+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.6731063Z",
+        "at_utc": "2026-10-23T11:03:56.5177687Z",
         "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349330Z-50f8d996-DEV-verify-ue1-classic-struct-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -6370,14 +6370,14 @@
       "test": "verify-ue1-classic-map-no-data.php",
       "evidence": "Epic UT99 v400 Core/Src/UnProp.cpp::UMapProperty::Serialize archives Key and Value property references; UMapProperty::SerializeItem validates both, but its entire element archive loop is commented out: no map items or bytes persist on file. Production CatalogUE1ClassicClassDefaultSchemaReader checks native child UProperty key/value declarations and requires FPropertyTag serialized_size=0/on_disk_value_bytes=0; unexpected map payload and missing native key/value declarations flagged map_property_value_unverified, not falsely accepted. Dedicated complete v69 .u native 3-export fixture verify-ue1-classic-map-no-data.php 19/19 DEV PASS run 20261023T102107104Z-7a9154d2. Eight affected DEV regression scripts PASS, including authentic 16-package/15,194 export compiled corpus. Memory map contents/compiled engine oracle remain unverified.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. Empty v400 on-disk MapProperty item archive verified, no map memory contents, earlier versions or native engine oracle yet.",
-      "updated_at_utc": "2026-10-23T10:43:09+00:00",
+      "updated_at_utc": "2026-10-23T11:04:00+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:43:08.9046558Z",
+        "at_utc": "2026-10-23T11:04:00.0692550Z",
         "test_sha256": "4fef2676601bfc97c16d7244ce9b992ce4e5af3335c62f25bed600f6ec6e4f29",
-        "source_sha256": "0c989f700728923103c7a66c7557805915aa62748c3ea02dfc1a7e78bcc66fc8",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T104308616Z-dea87ddd-DEV-verify-ue1-classic-map-no-data.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110359775Z-38bb6fa9-DEV-verify-ue1-classic-map-no-data.php.txt"
       }
     },
     {
@@ -6520,14 +6520,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Tagged-properties decoder succeeds on pinned corpus; class-defined binary/defaults and complete source gates not covered",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6545,14 +6545,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "DEV 2026-10-23 new real full-version-69 .u fixture verify-ue1-classic-array-inner-values.php 67/67 PASS (latest run 20261023T100951265Z-78e554cd). UT99 v400 Core/Src/UnProp.cpp::UArrayProperty::SerializeItem loads signed AR_INDEX(n) then loops Inner->SerializeItem; Inner declaration read through actual UArrayProperty.Inner linker ref from original installed native archive. Production CatalogUE1ClassicArrayValueReader reconstructs and validates values for Byte (BYTE), Int (signed INT32), Float (IEEE754), Bool (BYTE nonzero true), FName (compact NameMap index) and UObject (compact signed import/export index) inner serializers; exact byte-count/count, original tag SHA-256, full segment exhaustion, 32-value preview and complete element traversal; invalid inner NameMap/ImportMap/ExportMap indices fatal like Epic linker. Empty arrays, negative counts, truncation, trailing extra bytes, unknown nested Str/Struct kinds explicitly guarded. All 11 affected DEV regression scripts PASS, including authentic 16-package native sweep, 92-file classic corpus, class defaults and malformed archives. No PRD tests.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. Untested genuine late UT99 class default arrays and compiled native engine parity; nested StructProperty, StrProperty, arbitrary subarray, generic MapProperty and value assignment remain unverified, by design.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:35:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.1176125Z",
+        "at_utc": "2026-10-23T11:35:39.8999730Z",
         "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105348658Z-f46d3131-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T113539356Z-f2a03c08-DEV-verify-ue1-classic-array-inner-values.php.txt"
       }
     },
     {
@@ -6570,14 +6570,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6620,14 +6620,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6720,14 +6720,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:50+00:00",
+      "updated_at_utc": "2026-10-23T11:03:57+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:50.2690172Z",
+        "at_utc": "2026-10-23T11:03:57.1605909Z",
         "test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349900Z-97751bda-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
       }
     },
     {
@@ -6745,14 +6745,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {
@@ -6770,14 +6770,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:03:56+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.6731063Z",
+        "at_utc": "2026-10-23T11:03:56.5177687Z",
         "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105349330Z-50f8d996-DEV-verify-ue1-classic-struct-native.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
       }
     },
     {
@@ -6795,14 +6795,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "Epic UT99 v400 Core/Src/UnProp.cpp::UStrProperty::SerializeItem (Ar << FString), UArrayProperty::SerializeItem (AR_INDEX(n), Inner->SerializeItem), UFixedArrayProperty::SerializeItem (exact Count, no prefix), plus Core/Src/UnMisc.cpp::operator<<(FArchive&,FString&) (signed compact ANSI or UTF16 count) are now unified in real production source: CatalogUE1ClassicFStringArchiveReader::decodeAt validates counted segments/terminators and preserves raw bytes; CatalogUE1ClassicTaggedPropertyReader uses it for standalone values; CatalogUE1ClassicArrayValueReader uses exactly the same decoder for nested StrProperty in source-typed dynamic and fixed arrays, with independent per-element sign/count, archive bounds, 32-value preview only after complete traversal. Latest DEV verify-ue1-classic-array-inner-values.php 154/154 PASS (20261023T103029593Z-a545fe94) including source checks and 40-element preview bound; verify-ue1-classic-fstring-archive.php 59/59 PASS with refactored shared reader. 12 other DEV regressions PASS, one unchanged PASS skipped per journal, genuine 92 UE1 and 16 UT99 corpus preserved. Source struct element UStructProperty::SerializeItem calls Struct->SerializeBin; no unsupported name-based Struct decoding fabricated. Native TCHAR codepage, heap allocation and compiled UT99 runtime oracle not verified.",
       "remaining": "On-disk primitives/references and nested dynamic/fixed FString byte streams are source-decoded, but genuine v69 class-default arrays, independently compiled UT99 native oracle, fully linked UProperty runtime offsets, nested UStructProperty.SerializeBin using actual declarations, arbitrary recursive container graphs, native TCHAR conversions and memory application are not verified. No universal UE1 source-family closure claimed.",
-      "updated_at_utc": "2026-10-23T10:53:49+00:00",
+      "updated_at_utc": "2026-10-23T11:35:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:49.1176125Z",
+        "at_utc": "2026-10-23T11:35:39.8999730Z",
         "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105348658Z-f46d3131-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T113539356Z-f2a03c08-DEV-verify-ue1-classic-array-inner-values.php.txt"
       }
     },
     {
@@ -6820,14 +6820,14 @@
       "test": "verify-ue1-classic-fstring-archive.php",
       "evidence": "Epic T99 v400 Core/Src/UnProp.cpp::UStrProperty::SerializeItem calls FArchive<<FString and Core/Src/UnMisc.cpp::operator<<(FArchive&,FString&) serializes signed compact SaveNum; positive A.Num() means ANSI bytes, negative -A.Num() means UTF-16 Unicode units, and count 1 clears string on native load. Production shared FPropertyTag decoder now preserves exact positive/negative string archive including NUL and raw hex with safe ASCII-only text preview; malformed count/terminal pairs remain opaque, and source-linked class-default StrProperty schema reports dynamic_fstring_archive_unverified instead of a false successful value. New source-anchored full v69 .u native UStrProperty export/tag verifier verify-ue1-classic-fstring-archive.php 59/59 DEV PASS at 20261023T094620237Z-6cd32662: ANSI, Unicode, empty, non-ASCII, 303-byte large tag, invalid truncations, no terminator. Eleven affected existing DEV regression scripts PASS including 92-file corpus and 16 compiled packages. No native wchar/heap/locale simulation or genuine v69 StrProperty instances found.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. Old fixed StringProperty=>UStrProperty handling now source-recognized for v62+; native TCHAR FromAnsi conversion, instance UObject default memory application, historic overlapping v60/v61 source-family and compiled engine parity are outstanding. 1998 old Rotation/Region compatibility alias recognition now source-gated; full nested struct field application, UT99 historic overlapping version provenance and authentic native oracle remain unaccepted. Signed counted ANSI/UTF16 FString tag archive now source-typed and malformed cases flagged; true converted TCHAR content, compiled native engine oracle, genuine UT99 StrProperty script sample, and other nested property semantics remain unverified.",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:52.4520936Z",
+        "at_utc": "2026-10-23T11:03:59.5719379Z",
         "test_sha256": "e0522c195d2b0ea1621bd70dfaa9edd9bd6f34298d6bcbbb73a0d2a45436cdf4",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105352151Z-dc6c26ae-DEV-verify-ue1-classic-fstring-archive.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110359222Z-bf5c5d46-DEV-verify-ue1-classic-fstring-archive.php.txt"
       }
     },
     {
@@ -6841,18 +6841,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicPropertyNativeReader.php + CatalogUE1ClassicStructNativeReader.php + CatalogUE1ClassicArrayValueReader.php + CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicCompactIndexReader.php + CatalogUE1ClassicArrayValueReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
       "test": "verify-ue1-classic-array-struct-members.php",
-      "evidence": "UT99 v400 source C++ Core/Inc/UnClass.h::TFieldIterator<UProperty> iterates each UStruct.Children then Struct=Struct->GetInheritanceSuper(), Field=Struct->Children; Core/Src/UnClass.cpp::UStruct::SerializeBin applies ShouldSerializeValue and ArrayDim for each property, calling SerializeItem. Production CatalogUE1ClassicStructArrayValueReader now traverses actual native-complete local UStruct ancestor export chain after child fields, validates each UField.Next ownership, detects inheritance cycles and returns explicit unverified for imported parent, parses source-typed leaf Int/Float/Byte/Bool/FString. Original v69 full native 8-export parent/child UStruct fixture verify-ue1-classic-array-struct-members.php latest 53/53 DEV PASS 20261023T105443444Z-e8011395, dynamic and fixed arrays source value ordering with real parent fields, parent cycle and imported ancestor negatives. Eleven existing affected DEV regression tests PASS incl genuine 92-file and 16-package corpora; general array fixture 154/154 PASS. Intermediate FAILED fixture expectations preserved in O06 immutable test events. Both UE5 probes untouched, PRD only deployed by SHA, no PRD PHP tests.",
-      "remaining": "Local UT99 UStruct inheritance chain plus local UProperty leaf fields serializes source-derived bytes for dynamic/fixed arrays. Imported parent UStruct, arbitrary nested Struct/Array/Map member serialization, native class memory offsets, runtime object creation and compiled Epic engine parity remain unverified. G2-G6 and O06 not accepted.",
-      "updated_at_utc": "2026-10-23T10:56:47+00:00",
+      "evidence": "UT99 Core/Src/UnClass.cpp::UStruct::SerializeBin uses TFieldIterator<UProperty>: local child then local inherited UStruct members, each member ArrayDim and ShouldSerializeValue. Production CatalogUE1ClassicStructArrayValueReader now uses actual in-package native UStruct/UStructProperty fields and nested FName and UObject/Class property serializers with owning value linker maps, fatal invalid NameMap/ImportMap/ExportMap indices. Shared CatalogUE1ClassicCompactIndexReader used for bounded compact serialization. Local inherited fields from real source order tested; imported parent, arbitrary nested struct and actual C++ memory effects still partial. Full v69 10-export actual .u native fixture verify-ue1-classic-array-struct-members.php 69/69 DEV PASS 20261023T113538495Z-92fc017b. Focus source check and 154/154 array codec DEV PASS, 9 contract gate tests reused matching real 2026-10-23 fingerprints without reexecution. No PRD PHP tests, no compiled UT99 runtime oracle.",
+      "remaining": "Only local, provenance-verified T99 UStruct hierarchy and supported inner byte/int/float/bool/FString/FName/UObject serializers. Unknown imported ancestor, nested custom struct/complex container, runtime memory offsets and compiled-engine parity are open.",
+      "updated_at_utc": "2026-10-23T11:39:31+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:54:43.8356067Z",
-        "test_sha256": "c0558e96ecf235bb66cd65d0ff79be6b15c4ccddc886a28de8efbefbc289e06c",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105443444Z-e8011395-DEV-verify-ue1-classic-array-struct-members.php.txt"
+        "at_utc": "2026-10-23T11:35:39.0288798Z",
+        "test_sha256": "f3664ec208d6a13f188eb481f3efc9f1a3bfab7d252c98914508217e04174e8a",
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T113538495Z-92fc017b-DEV-verify-ue1-classic-array-struct-members.php.txt"
       }
     },
     {
@@ -6895,14 +6895,14 @@
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
       "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T10:53:52+00:00",
+      "updated_at_utc": "2026-10-23T11:03:59+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T10:53:51.9452416Z",
+        "at_utc": "2026-10-23T11:03:59.0218071Z",
         "test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-        "source_sha256": "a694b50b5b4583089c28c3ad711151716090c1420b3d0387e280c60306113647",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T105351120Z-107ab3b1-DEV-verify-ue1-classic-tagged-properties.php.txt"
+        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T110358189Z-4ab76a31-DEV-verify-ue1-classic-tagged-properties.php.txt"
       }
     },
     {

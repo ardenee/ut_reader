@@ -1,0 +1,105 @@
+﻿{
+    "ok": true,
+    "checks": 69,
+    "passed": 69,
+    "failed": [],
+    "examples": [
+        {
+            "test": "dynamic_two_native_structs",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "fixed_two_native_structs",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "persistent_transient_float_skipped",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "dynamic_local_inherited_structs",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "fixed_local_inherited_structs",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "inherited_struct_cycle",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_superclass_cycle",
+            "element_count": null
+        },
+        {
+            "test": "inherited_struct_import_unresolved",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_inherited_import_unverified",
+            "element_count": null
+        },
+        {
+            "test": "dynamic_inherited_name_object_fields",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "fixed_inherited_name_object_fields",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "dynamic_struct_member_array_40_preview_bounded",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 1
+        },
+        {
+            "test": "struct_child_field_wrong_owner",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_child_owner_unverified",
+            "element_count": null
+        },
+        {
+            "test": "member_value_truncated",
+            "status": "array_inner_data_unverified",
+            "reason": "nested_struct_fstring_unverified",
+            "element_count": null
+        },
+        {
+            "test": "unresolved_struct_import",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_reference_not_local",
+            "element_count": null
+        },
+        {
+            "test": "unresolved_struct_inheritance",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_native_layout_unverified",
+            "element_count": null
+        },
+        {
+            "test": "field_next_cycle",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_property_chain_invalid",
+            "element_count": null
+        }
+    ],
+    "epic_sha256": {
+        "UnProp.cpp": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+        "UnClass.cpp": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+        "UnType.h": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "UnClass.h": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972"
+    },
+    "remaining": "Local UStruct and local superclass fields serialize in exact TFieldIterator order for primitive/FString members. Imported ancestors, arbitrary nested struct or container members, linked C++ memory offsets, real engine object construction and compiled native runtime parity remain unverified."
+}

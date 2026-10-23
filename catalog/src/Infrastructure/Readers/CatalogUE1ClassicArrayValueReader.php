@@ -118,7 +118,7 @@ final class CatalogUE1ClassicArrayValueReader
         for($i=0;$i<$count;$i++){
             if($width===-3){
                 $decoded=CatalogUE1ClassicStructArrayValueReader::readAt(
-                    $data,$pos,$structLayout,count($values)<32);
+                    $data,$pos,$structLayout,count($values)<32,$valuePkg);
                 if($decoded['status']!=='struct_field_values_decoded'){
                     return self::unverified($kind,$decoded['status']);
                 }
@@ -140,7 +140,7 @@ final class CatalogUE1ClassicArrayValueReader
                 // ULinkerLoad archive's compact name/object indices.
                 // The original tag file supplies their map bounds;
                 // the UProperty declaration may live in another package.
-                $index=self::readCompact($data,$pos);
+                $index=CatalogUE1ClassicCompactIndexReader::readAt($data,$pos);
                 if($index===null){
                     return self::unverified($kind,'invalid_compact_inner_reference');
                 }
@@ -195,22 +195,6 @@ final class CatalogUE1ClassicArrayValueReader
         return ['status'=>'array_inner_data_unverified',
             'inner_property_kind'=>$kind,
             'reason'=>$why,'source_type_verified'=>true];
-    }
-
-    private static function readCompact(string $data,int &$pos):?int
-    {
-        if($pos>=strlen($data)){return null;}
-        $first=ord($data[$pos++]);$n=$first&63;
-        $negative=($first&128)!==0;$more=($first&64)!==0;
-        $shift=6;$bytes=1;
-        while($more){
-            if(++$bytes>5||$pos>=strlen($data)){return null;}
-            $ch=ord($data[$pos++]);
-            $n|=($ch&127)<<$shift;
-            $more=($ch&128)!==0;$shift+=7;
-        }
-        if($n>0x7fffffff){return null;}
-        return $negative?-$n:$n;
     }
 
     private static function signed(int $value):int

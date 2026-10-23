@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
+  "contracts": {
+    "t99-local-inherited-struct": {
+      "description": "T99 UStruct::SerializeBin local inherited source field iterator",
+      "readers": [
+        "CatalogUE1ClassicStructArrayValueReader.php",
+        "CatalogUE1ClassicArrayValueReader.php",
+        "CatalogUE1ClassicCompactIndexReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-array-struct-members.php",
+        "verify-ue1-classic-array-inner-values.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-struct-native.php",
+        "verify-ue1-classic-property-native.php",
+        "verify-ue1-classic-class-metadata.php"
+      ],
+      "gate": [
+        "verify-ue1-o06-genuine-class-default-struct-values.php",
+        "verify-ue1-o06-genuine-compiled-native.php",
+        "verify-ue1-v68-v69-genuine-corpus.php",
+        "verify-ue1-o06-payload-negatives.php"
+      ]
+    },
+    "t99-array-values": {
+      "description": "T99 UArray/UFixedArray field serializer",
+      "readers": [
+        "CatalogUE1ClassicArrayValueReader.php",
+        "CatalogUE1ClassicStructArrayValueReader.php",
+        "CatalogUE1ClassicFStringArchiveReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-array-inner-values.php",
+        "verify-ue1-classic-array-struct-members.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-property-native.php",
+        "verify-ue1-classic-fstring-archive.php"
+      ],
+      "gate": [
+        "verify-ue1-o06-genuine-compiled-native.php",
+        "verify-ue1-o06-payload-negatives.php"
+      ]
+    },
+    "t99-class-default-schema": {
+      "description": "UT99 tagged class defaults, property metadata and imported field graph",
+      "readers": [
+        "CatalogUE1ClassicClassDefaultSchemaReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-genuine-class-default-declarations.php",
+        "verify-ue1-classic-tagged-properties.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-genuine-class-default-references.php",
+        "verify-ue1-o06-genuine-class-default-struct-values.php",
+        "verify-ue1-o06-genuine-class-default-strings.php",
+        "verify-ue1-classic-array-inner-values.php"
+      ],
+      "gate": [
+        "verify-ue1-o06-genuine-compiled-native.php",
+        "verify-ue1-v68-v69-genuine-corpus.php",
+        "verify-ue1-o06-payload-negatives.php"
+      ]
+    },
+    "t99-map-value": {
+      "description": "UT99 UMapProperty::SerializeItem zero-byte archive",
+      "readers": [
+        "CatalogUE1ClassicClassDefaultSchemaReader.php",
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-map-no-data.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-property-native.php",
+        "verify-ue1-classic-class-metadata.php"
+      ],
+      "gate": [
+        "verify-ue1-o06-genuine-compiled-native.php",
+        "verify-ue1-o06-payload-negatives.php"
+      ]
+    },
+    "t99-fstring": {
+      "description": "T99 StrProperty ANSI and Unicode FString item serialization",
+      "readers": [
+        "CatalogUE1ClassicFStringArchiveReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-fstring-archive.php",
+        "verify-ue1-classic-array-inner-values.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-legacy-string-upgrade.php",
+        "verify-ue1-o06-genuine-class-default-strings.php"
+      ],
+      "gate": [
+        "verify-ue1-v68-v69-genuine-corpus.php",
+        "verify-ue1-o06-payload-negatives.php"
+      ]
+    },
+    "ue1-classic-level": {
+      "description": "Unreal v1.200 native ULevel and UDatabase base counts",
+      "readers": [
+        "CatalogUE1ClassicLevelNativeReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-level-native.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-tagged-properties.php",
+        "verify-ue1-classic-model-native.php"
+      ],
+      "gate": [
+        "verify-ue1-o06-genuine-compiled-native.php",
+        "verify-ue1-o06-payload-negatives.php"
+      ]
+    }
+  }
+}

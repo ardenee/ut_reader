@@ -1,0 +1,76 @@
+﻿{
+    "ok": true,
+    "checks": 527,
+    "passed": 527,
+    "failed": [],
+    "totals": {
+        "objects": 1423,
+        "names": 84,
+        "null_objects": 55,
+        "export_objects": 1367,
+        "import_objects": 1,
+        "null_names": 1,
+        "checked": 1507,
+        "classes": 513
+    },
+    "samples": [
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "MenuUp",
+            "kind": "ObjectProperty",
+            "reference": 46
+        },
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "MenuDn",
+            "kind": "ObjectProperty",
+            "reference": 58
+        },
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "CollOn",
+            "kind": "ObjectProperty",
+            "reference": 43
+        },
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "CollOff",
+            "kind": "ObjectProperty",
+            "reference": 41
+        },
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "PlyrOn",
+            "kind": "ObjectProperty",
+            "reference": 31
+        },
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "PlyrOff",
+            "kind": "ObjectProperty",
+            "reference": 18
+        },
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "LiteOn",
+            "kind": "ObjectProperty",
+            "reference": 15
+        },
+        {
+            "file": "Editor.u",
+            "class": "EditorEngine",
+            "property": "Bad",
+            "kind": "ObjectProperty",
+            "reference": 6
+        }
+    ],
+    "epic_linker_source_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+    "remaining": "Bounds/compact reference identity only; actual cross-package imported object resolution, runtime object/class assignability and compiled engine oracle not accepted."
+}

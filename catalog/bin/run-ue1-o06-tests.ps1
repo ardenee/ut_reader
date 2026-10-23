@@ -100,6 +100,15 @@ function Update-LiveSerializerRegister([string]$testName) {
    if($LASTEXITCODE -ne 0){throw "Cannot update live O06 serializer register for $testName"}
  }
 }
+# Human-readable documentation refreshes at EACH START/PASS/FAIL, not
+# only at end-of-batch or commit. The event log remains append-only.
+$checkpointScript=Join-Path $PSScriptRoot 'update-ue1-o06-checkpoint.py'
+function Update-LiveCheckpoint {
+ if(Test-Path -LiteralPath $checkpointScript){
+   & python $checkpointScript | Out-Null
+   if($LASTEXITCODE -ne 0){throw 'Cannot refresh UE1-O06-LIVE-CHECKPOINT.md'}
+ }
+}
 $failed=0;$passed=0;$skipped=0
 foreach($t in $Tests){
  $name=[IO.Path]::GetFileName($t)
@@ -124,6 +133,7 @@ foreach($t in $Tests){
  $history+=([pscustomobject]$begin)
  Update-TestStatus
  Update-LiveSerializerRegister $name
+ Update-LiveCheckpoint
  Write-Output ("START {0} {1}" -f $name,$runId)
  $clock=[Diagnostics.Stopwatch]::StartNew()
  $exit=255
@@ -147,6 +157,7 @@ foreach($t in $Tests){
  $history+=([pscustomobject]$complete)
  Update-TestStatus
  Update-LiveSerializerRegister $name
+ Update-LiveCheckpoint
  Write-Output ("{0} {1} exit={2} duration_ms={3}" -f $state,$name,$exit,$clock.ElapsedMilliseconds)
  if($exit -eq 0){$passed++}else{
    $failed++;Get-Content -LiteralPath $logFile |Select-Object -Last 18

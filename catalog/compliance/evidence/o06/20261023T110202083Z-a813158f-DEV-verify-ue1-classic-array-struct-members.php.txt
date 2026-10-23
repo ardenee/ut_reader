@@ -1,0 +1,7 @@
+﻿
+Fatal error: Uncaught RuntimeException: Fixture table overflow in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-array-struct-members.php:115
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-array-struct-members.php(136): {closure:C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-array-struct-members.php:52}(false, '\x02\n\x00\x00\x00\xFE\xFF\xFF\xFF\x00\x00\xC0?\x02A...', 0, 3, 5, 0, 3, 2, 0, false)
+#1 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-array-struct-members.php(193): {closure:C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-array-struct-members.php:128}('dynamic_two_nat...', false, '\x02\n\x00\x00\x00\xFE\xFF\xFF\xFF\x00\x00\xC0?\x02A...', 'array_inner_val...', 0, 3, 5, 0, Array)
+#2 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-array-struct-members.php on line 115

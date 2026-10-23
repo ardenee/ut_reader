@@ -20,6 +20,8 @@ $check=static function(string $label,bool $ok)use(&$checks,&$fail):void{
 foreach([
  'StructProperty_uses_SerializeBin'=>'Struct->SerializeBin( Ar, (BYTE*)Value );',
  'StructProperty_preloads_struct'=>'Ar.Preload( Struct );',
+ 'NameProperty_serialize'=>'Ar << *(FName*)Value;',
+ 'ObjectProperty_serialize'=>'Ar << *(UObject**)Value;',
 ] as $name=>$needle){
  $check('Epic_'.$name,is_string($propSrc)&&str_contains($propSrc,$needle));
 }
@@ -49,16 +51,18 @@ $compact=static function(int $n):string{
 };
 $build=static function(bool $fixed,string $value,
  int $superRef=0,int $structRef=3,int $nextInt=5,int $floatFlags=0,
- int $memberOuter=3,int $intDim=2,int $parentSuper=0)
+ int $memberOuter=3,int $intDim=2,int $parentSuper=0,
+ bool $refs=false)
  use($compact):string{
  $names=['None',$fixed?'FixedArrayProperty':'ArrayProperty','TestArray',
  'Core','Class','StructProperty','Inner','Struct','LocalStruct',
  'IntProperty','First','FloatProperty','Second','Friendly','Category',
- 'StrProperty','Third','ParentStruct','AncestorMember'];
+ 'StrProperty','Third','ParentStruct','AncestorMember',
+ 'NameProperty','LinkName','ObjectProperty','LinkObject'];
  $nbytes='';
  foreach($names as $name){$nbytes.=$compact(strlen($name)+1).$name."\0".pack('V',0);}
  $imports='';
- foreach([1,5,7,9,11,15] as $nameId){
+ foreach([1,5,7,9,11,15,19,21] as $nameId){
   $imports.=$compact(3).$compact(4).pack('V',0).$compact($nameId);
  }
  $none=$compact(0);
@@ -85,15 +89,19 @@ $build=static function(bool $fixed,string $value,
  if($superRef===7){
   $body[]=$none.$compact($parentSuper).$none.$none.$compact(8)
     .$compact(13).pack('V3',0,0,0);
-  $body[]=$none.$property(0,1,0);
+  $body[]=$none.$property($refs?9:0,1,0);
+  if($refs){
+   $body[]=$none.$property(10,1,0);
+   $body[]=$none.$property(0,1,0).$none;
+  }
  }
  $nameOff=56;$importOff=$nameOff+strlen($nbytes);
  $exportOff=$importOff+strlen($imports);
- $exp='';$offset=512;
+ $exp='';$offset=1024;
  foreach($body as $i=>$bytes){
-  $nameId=[2,6,8,10,12,16,17,18][$i];
-  $classIds=[-1,-2,-3,-4,-5,-6,-3,-4];
-  $objectOwner=$i===7?7:($i===6?0:
+  $nameId=[2,6,8,10,12,16,17,18,20,22][$i];
+  $classIds=[-1,-2,-3,-4,-5,-6,-3,-4,-7,-8];
+  $objectOwner=$i>=7?7:($i===6?0:
     ($i>=3?$memberOuter:($i===1?1:0)));
   $exp.=$compact($classIds[$i]).$none
       .pack('V',$objectOwner).$compact($nameId)
@@ -101,11 +109,11 @@ $build=static function(bool $fixed,string $value,
   $offset+=strlen($bytes);
  }
  $head=pack('V9',0x9e2a83c1,69,0,count($names),$nameOff,
-   count($body),$exportOff,6,$importOff)
+   count($body),$exportOff,8,$importOff)
     .str_repeat("\0",16).pack('V',0);
  $tables=$head.$nbytes.$imports.$exp;
- if(strlen($tables)>512)throw new RuntimeException('Fixture table overflow');
- return $tables.str_repeat("\0",512-strlen($tables)).implode('',$body);
+ if(strlen($tables)>1024)throw new RuntimeException('Fixture table overflow');
+ return $tables.str_repeat("\0",1024-strlen($tables)).implode('',$body);
 };
 $record=static function(int $a,int $b,float $f,string $text)
  use($compact):string{
@@ -120,13 +128,13 @@ $recordNoFloat=static function(int $a,int $b,string $text)
 $run=static function(string $label,bool $fixed,string $value,
  string $expected,int $super=0,int $struct=3,int $next=5,int $flags=0,
  ?array $want=null,int $memberOuter=3,int $intDim=2,
- int $parentSuper=0)
+ int $parentSuper=0,bool $refs=false)
  use($build,$check,&$examples):void{
  $path=tempnam(sys_get_temp_dir(),'o06Struct');
  if($path===false)throw new RuntimeException('Temp file creation failed');
  try{
   file_put_contents($path,$build($fixed,$value,$super,$struct,$next,$flags,
-    $memberOuter,$intDim,$parentSuper));
+    $memberOuter,$intDim,$parentSuper,$refs));
   $pkg=new P($path);
   $check($label.'_package_valid',$pkg->validatePackage()===[]);
   $meta=T::inspect($path,$pkg,0);
@@ -212,6 +220,59 @@ $run('inherited_struct_cycle',false,$compact(0),
  'inner_struct_layout_unverified',7,3,5,0,null,3,2,3);
 $run('inherited_struct_import_unresolved',false,$compact(0),
  'inner_struct_layout_unverified',-1,3);
+$withLinkRefs=static function(array $struct,int $nameIndex,int $objectIndex,
+ string $encoded)use($compact):array{
+ $struct['serialized_bytes']+=strlen($encoded);
+ $struct['members'][]=['name'=>'LinkName','kind'=>'nameproperty',
+     'array_dim'=>1,'values'=>[$nameIndex],'all_values_previewed'=>true];
+ $struct['members'][]=['name'=>'LinkObject','kind'=>'objectproperty',
+     'array_dim'=>1,'values'=>[$objectIndex],'all_values_previewed'=>true];
+ return $struct;
+};
+$refOne=$one.pack('V',123).$compact(20).$compact(-8);
+$refTwo=$two.pack('V',0xfffffffc).$compact(0).$compact(1);
+$run('dynamic_inherited_name_object_fields',false,
+ $compact(2).$refOne.$refTwo,'array_inner_values_decoded',
+ 7,3,5,0,[
+  $withLinkRefs($withParent($member(10,-2,1.5,'A'),123),
+    20,-8,$compact(20).$compact(-8)),
+  $withLinkRefs($withParent($member(-17,42,-3.25,'B'),-4),
+    0,1,$compact(0).$compact(1)),
+ ],3,2,0,true);
+$run('fixed_inherited_name_object_fields',true,$refOne.$refTwo,
+ 'array_inner_values_decoded',7,3,5,0,[
+  $withLinkRefs($withParent($member(10,-2,1.5,'A'),123),
+    20,-8,$compact(20).$compact(-8)),
+  $withLinkRefs($withParent($member(-17,42,-3.25,'B'),-4),
+    0,1,$compact(0).$compact(1)),
+ ],3,2,0,true);
+foreach([
+ 'bad_struct_fname'=>[$compact(23).$compact(0),
+   'UE1 struct field FName linker index invalid'],
+ 'bad_struct_import'=>[$compact(20).$compact(-9),
+   'UE1 struct field UObject linker index invalid'],
+ 'bad_struct_export'=>[$compact(20).$compact(11),
+   'UE1 struct field UObject linker index invalid'],
+] as $label=>[$tail,$why]){
+ $file=tempnam(sys_get_temp_dir(),'o06BadField');
+ if($file===false)throw new RuntimeException('Cannot create negative test');
+ try{
+  $bytes=$compact(1).$one.pack('V',123).$tail;
+  file_put_contents($file,$build(false,$bytes,7,3,5,0,3,2,0,true));
+  $pkg=new P($file);
+  $check($label.'_valid_UE1_export_maps',$pkg->validatePackage()===[]);
+  $meta=T::inspect($file,$pkg,0);
+  $threw=false;
+  try{
+   S::inspect($file,$pkg,
+     ['export_index'=>0,'children_reference'=>1,
+      'super_field_reference'=>0],$meta['tags']);
+  }catch(RuntimeException $e){
+   $threw=str_contains($e->getMessage(),$why);
+  }
+  $check($label.'_fatal_linker_index_check',$threw);
+ }finally{unlink($file);}
+}
 $int40=range(1,40);
 $longStruct=$member(1,2,1.5,'A');
 $longStruct['members'][0]['array_dim']=40;

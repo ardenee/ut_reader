@@ -4,12 +4,14 @@
  * to UStruct::SerializeBin. The latter walks TFieldIterator<UProperty>,
  * applying ShouldSerializeValue and each property's ArrayDim.
  *
- * Only fully resolved LOCAL, non-inherited UStruct definitions are decoded;
- * native UObject memory offsets and inherited or nested structs are not
- * guessed. Supported leaf serializers match actual UProperty types.
+ * Only fully resolved local UStruct and local ancestor definitions are
+ * decoded; native UObject memory offsets and nested structs are not guessed.
+ * Supported leaf serializers use the owning value archive's linker maps.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
+
+use RuntimeException;
 
 final class CatalogUE1ClassicStructArrayValueReader
 {
@@ -74,7 +76,8 @@ final class CatalogUE1ClassicStructArrayValueReader
                 $kind=(string)($field['property_kind']??'');
                 if(!in_array($kind,[
                     'byteproperty','boolproperty','intproperty',
-                    'floatproperty','strproperty'
+                    'floatproperty','strproperty',
+                    'nameproperty','objectproperty','classproperty'
                 ],true)){
                     return ['status'=>'struct_member_serializer_unverified',
                         'member_kind'=>$kind];
@@ -111,7 +114,8 @@ final class CatalogUE1ClassicStructArrayValueReader
      * @return array<string,mixed>
      */
     public static function readAt(
-        string $bytes,int &$position,array $layout,bool $preview
+        string $bytes,int &$position,array $layout,bool $preview,
+        CatalogUE1PackageReader $valuePackage
     ):array {
         $members=[];$start=$position;
         foreach($layout['fields'] as $field){
@@ -119,7 +123,24 @@ final class CatalogUE1ClassicStructArrayValueReader
             $values=[];
             for($i=0;$i<$field['array_dim'];$i++){
                 $kind=$field['kind'];
-                if($kind==='strproperty'){
+                if(in_array($kind,['nameproperty','objectproperty','classproperty'],true)){
+                    $ref=CatalogUE1ClassicCompactIndexReader::readAt(
+                        $bytes,$position);
+                    if($ref===null){
+                        return ['status'=>'nested_struct_compact_reference_truncated'];
+                    }
+                    if($kind==='nameproperty'){
+                        if($ref<0||$ref>=count($valuePackage->getNames())){
+                            throw new RuntimeException(
+                                'UE1 struct field FName linker index invalid');
+                        }
+                    }elseif($ref>count($valuePackage->getExports())
+                        ||-$ref>count($valuePackage->getImports())){
+                        throw new RuntimeException(
+                            'UE1 struct field UObject linker index invalid');
+                    }
+                    $v=$ref;
+                }elseif($kind==='strproperty'){
                     $decoded=CatalogUE1ClassicFStringArchiveReader::decodeAt(
                         $bytes,$position);
                     if($decoded===null){
