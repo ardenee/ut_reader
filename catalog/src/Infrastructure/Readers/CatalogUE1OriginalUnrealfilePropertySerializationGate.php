@@ -102,7 +102,9 @@ final class CatalogUE1OriginalUnrealfilePropertySerializationGate
                     2, 4, 5 => 4, // CPT_Int, Float, Object
                     3 => (int)$p['bool_bitmask'] === 1 ? 4 : 0, // CPT_Bool
                     6 => 2, // CPT_Name, WORD FName index
-                    8, 9 => 12, // FVector, FRotation
+                    8 => 12, // FVector is always three FLOATs
+                    9 => $family === self::MAY ? 6 : 12,
+                    // FRotation archive: May WORD[3], July INT[3]
                     10 => 0, // CPT_EnumDef
                     default => null, // CPT_String is variable-length
                 };
@@ -126,7 +128,17 @@ final class CatalogUE1OriginalUnrealfilePropertySerializationGate
     {
         self::validate($sourceLineage);
         foreach ($properties as $property) {
-            if (self::serialized((int)$property['flags'], $sourceLineage) === null) {
+            $serialized = self::serialized((int)$property['flags'], $sourceLineage);
+            if ($serialized === null) {
+                return true;
+            }
+            // Both forks report Unrealfile v22/v23, but their
+            // FRotation::operator<< writes WORD[3] in May and INT[3]
+            // in July. A normal UObject header may also contain native
+            // members, so its length is not sufficient provenance.
+            if ($sourceLineage === null && $serialized === true
+                && (int)$property['property_type'] === 9
+                && (int)$property['array_dim'] > 0) {
                 return true;
             }
         }

@@ -1,0 +1,7 @@
+﻿
+Fatal error: Uncaught RuntimeException: UClass binary property exceeds serialized object header at relative byte 16 of 26 (request 12) in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader.php:97
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader.php(132): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::{closure:UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read():96}(12)
+#1 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g2-rotation-bin-lineage.php(69): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read('C:/Temp/UnrealD...', true, Array, 'unreal_1997_may')
+#2 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader.php on line 97

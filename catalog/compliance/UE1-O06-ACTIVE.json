@@ -1,7 +1,7 @@
 {
-  "contract": "t99-native-script-oracle",
-  "stage": "g5-native-proof-complete",
-  "last_action": "G5 incremental real compiled v432 loader oracle: all 88/88 full UTextBuffer UObject identities match genuine Engine.u export map, and final ClipMarker text matches decoded archive after exact Epic exporter CRLF trimming; focus 22/22 DEV PASS in 118ms; prior fixture FAIL remains journaled. No production changes or broad retest.",
-  "next_step": "Do NOT rerun native 30-package sweep. Tackle G2 1997 May/July distinct-version source contracts and seek genuine package oracles; promote individual contracts only when all applicability/source/negative conditions are proven. Keep G5 open.",
-  "updated_at_utc": "2026-10-23T14:06:39+00:00"
+  "contract": "g2-original-1997-rotation-bins",
+  "stage": "ready-to-release",
+  "last_action": "Corrected May original v22/v23 per-object UClass::SerializeBin FRotation 6-byte WORD and UProperties separate bin versus July 12-byte signed INT; verified real Epic May/July source, 30/30 focus, 5/5 DEV affected PASS. Three production files byte-identical to independently tested isolated git branch; no unrelated reader changes. G2 gate remains open.",
+  "next_step": "Commit/push verified G2 fix and evidence; deploy exactly 3 source PHP readers DEV to PRD with per-file SHA256. Never run PRD PHP tests; record commit and release in checkpoint.",
+  "updated_at_utc": "2026-10-23T14:48:18+00:00"
 }

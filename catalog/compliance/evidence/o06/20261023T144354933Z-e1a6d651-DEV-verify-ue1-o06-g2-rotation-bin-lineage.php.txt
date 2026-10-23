@@ -1,0 +1,33 @@
+﻿{
+    "ok": true,
+    "checks": 30,
+    "passed": 30,
+    "failed": [],
+    "cases": [
+        {
+            "case": "v22_may",
+            "rotation_bytes": 6,
+            "auto_inferred_source": "unreal_1997_may"
+        },
+        {
+            "case": "v22_july",
+            "rotation_bytes": 12,
+            "auto_inferred_source": "unreal_1997_july"
+        },
+        {
+            "case": "v23_may",
+            "rotation_bytes": 6,
+            "auto_inferred_source": "unreal_1997_may"
+        },
+        {
+            "case": "v23_july",
+            "rotation_bytes": 12,
+            "auto_inferred_source": "unreal_1997_july"
+        }
+    ],
+    "source_sha256": {
+        "unreal_1997_may": "4f9ccd6a4a1fc29a99e1608db524a87ac15b5ec4437d3a37640a7368ba123b19",
+        "unreal_1997_july": "787acbe94803e97417960f083275ed56702e1f104cce8e4435b95be78e687d1b"
+    },
+    "limitations": "G2 original source-authored v22/23 archive fixture, not a real 1997 compiled oracle; native runtime object fields not materialized."
+}

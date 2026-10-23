@@ -65,7 +65,8 @@ try{
         && ($c['full_header_size']??null)===28
         && ($c['this_header_size']??null)===12
         && ($schema['runtime_class_linked']??true)===false);
-    $values=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($tmp,true);
+    $values=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($tmp,true,[],
+            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY);
     $instance=$values['objects'][0]??[];
     $valueRows=$instance['property_values']??[];
     $check("v{$version}_instance_serialized_bin_values",
@@ -120,12 +121,14 @@ try{
     $instanceOff=$f['property_data']+264;
     file_put_contents($tmp,substr_replace($f['bytes'],pack('V',3),$instanceOff+24,4));
     try{
-        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($tmp,true);
+        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($tmp,true,[],
+            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY);
         $reject=false;
     }catch(RuntimeException){$reject=true;}
     $check("v{$version}_invalid_binary_object_reference_rejected",$reject);
     file_put_contents($tmp,substr_replace($f['bytes'],pack('V',3),$instanceOff+16,4));
-    $different=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($tmp,true);
+    $different=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($tmp,true,[],
+            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY);
     $check("v{$version}_changing_serialized_int_changes_only_value",
         ($different['objects'][0]['property_values'][0]['values'][0]??null)===3
         && ($different['objects'][0]['property_values'][1]['values'][0]??null)===true);

@@ -171,6 +171,24 @@
       "affected": [],
       "gate": []
     },
+    "g2-original-1997-rotation-bins": {
+      "description": "Original Epic v0.86x May FRotation WORD[3] vs v0.867 July INT[3] in both UObject UClass::SerializeBin per-object headers and UProperties::SerializeData; identical v22/v23 requires explicit source or exact complete data-size inference",
+      "readers": [
+        "CatalogUE1OriginalUnrealfilePropertySerializationGate.php",
+        "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+        "CatalogUE1OriginalUnrealfilePropertiesReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g2-rotation-bin-lineage.php"
+      ],
+      "affected": [
+        "verify-ue1-original-unrealfile-class-schemas.php",
+        "verify-ue1-original-unrealfile-properties.php",
+        "verify-ue1-original-unrealfile-inheritance.php",
+        "verify-ue1-original-unrealfile-external-schemas.php"
+      ],
+      "gate": []
+    },
     "u97-may-july-bounds-raw-byte": {
       "description": "Original May 1997 FBoundingRect versus July FBoundingBox 25-byte on-disk operator; raw BYTE IsValid is not an archive bool constraint",
       "readers": [
