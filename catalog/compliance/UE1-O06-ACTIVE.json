@@ -1,7 +1,7 @@
 {
   "contract": "g2-original-1997-stacknode",
   "stage": "passed-gate-deployed",
-  "last_action": "Epic May four vs July five FStackNode links and NestType/StackNodeFlags field order corrected; 50/50 source-backed verifier, original stacktree and special-header test PASS on DEV; production reader SHA256 matched DEV and PRD",
-  "next_step": "Continue first genuinely unverified May/July build-selected serialization contract; do not redo passing FStackNode tests without changed inputs. G2-G5 still open, no original compiled engine oracle.",
-  "updated_at_utc": "2026-10-23T14:54:58+00:00"
+  "last_action": "Corrected original 1997 staging to forward explicit May/July source_lineage to UStackTree reader; expanded source-backed fixture 56/56 PASS and scoped G2 gate 3/3 PASS DEV; DEV/PRD staged adapter hashes identical",
+  "next_step": "Continue next still-unverified independent serialized UE1 source contract; prioritize genuine runtime-backed G5 evidence, avoid repeating passing G2 stacktree tests unless inputs change. G2-G5 remain open.",
+  "updated_at_utc": "2026-10-23T15:17:04+00:00"
 }

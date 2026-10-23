@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T14:52:24+00:00",
+  "updated_at_utc": "2026-10-23T15:15:43+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -2022,14 +2022,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "Found original May v0.86x Epic registered class at Engine/UnFont.cpp:517 and corresponding July v0.867 registered class Engine/UnFont.cpp:517; existing production typed handler CatalogUE1OriginalUnrealfileSpecialHeadersReader.php and source-defined verifier verify-ue1-original-unrealfile-special-headers.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
       "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
-      "updated_at_utc": "2026-10-23T14:52:24+00:00",
+      "updated_at_utc": "2026-10-23T15:15:21+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T14:52:24.0243360Z",
+        "at_utc": "2026-10-23T15:15:21.4361604Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T145223257Z-72c45fe9-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T151520885Z-f9161c10-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {
@@ -2676,14 +2676,14 @@
       "test": "verify-ue1-original-unrealfile-stacktree-data.php",
       "evidence": "Found original May v0.86x Epic registered class at Engine/UnScript.cpp:4560 and corresponding July v0.867 registered class Engine/UnScript.cpp:5200; existing production typed handler CatalogUE1OriginalUnrealfileStackTreeDataReader.php and source-defined verifier verify-ue1-original-unrealfile-stacktree-data.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
       "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity. SCRIPT/CLASS SOURCE FAMILY HIGH RISK: May vs July expression opcode/source classes need dedicated source-gated fixtures.",
-      "updated_at_utc": "2026-10-23T14:51:20+00:00",
+      "updated_at_utc": "2026-10-23T15:15:20+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T14:51:20.1061555Z",
+        "at_utc": "2026-10-23T15:15:20.5411593Z",
         "test_sha256": "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
-        "source_sha256": "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T145119580Z-36cb7fa3-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+        "source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T151520102Z-0d4219e4-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt"
       }
     },
     {
@@ -2836,14 +2836,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "Found original May v0.86x Epic registered class at Engine/UnModel.cpp:123 and corresponding July v0.867 registered class Engine/UnModel.cpp:117; existing production typed handler CatalogUE1OriginalUnrealfileSpecialHeadersReader.php and source-defined verifier verify-ue1-original-unrealfile-special-headers.php found. May and July both use original Unrealfile v22/v23; known cross-source disk differences UTexture, ULevel, FRotation, FBoundingVolume, FBspNode and CPF_Intrinsic were separately corrected; no automatic inference of byte parity for this class from name/version alone.",
       "remaining": "CLASS RECONCILED TO HANDLER ONLY, NOT SOURCE-ACCEPTED: verify this class's May v0.86x inherited/native SerializeHeader, SerializeData/record operator and source-specific bytecode or version variants against Epic May source and independent matching package oracle; existing named test can cover July/sample fixtures and must not be overclaimed as complete May parity.",
-      "updated_at_utc": "2026-10-23T14:52:24+00:00",
+      "updated_at_utc": "2026-10-23T15:15:21+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T14:52:24.0243360Z",
+        "at_utc": "2026-10-23T15:15:21.4361604Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T145223257Z-72c45fe9-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T151520885Z-f9161c10-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {
@@ -3333,14 +3333,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
       "remaining": "Glyph and source header typed; source branch inventory G2",
-      "updated_at_utc": "2026-10-23T14:52:24+00:00",
+      "updated_at_utc": "2026-10-23T15:15:21+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T14:52:24.0243360Z",
+        "at_utc": "2026-10-23T15:15:21.4361604Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T145223257Z-72c45fe9-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T151520885Z-f9161c10-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {
@@ -3962,14 +3962,14 @@
       "test": "verify-ue1-original-unrealfile-stacktree-data.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:57:39.7967064Z; catalog\\compliance\\evidence\\o06\\20261022T075739470Z-3b6a4fd4-PRD-verify-ue1-original-unrealfile-stacktree-data.php.txt; scoped test, not full class acceptance",
       "remaining": "FStackNode archive source-tested; linking O10",
-      "updated_at_utc": "2026-10-23T14:51:20+00:00",
+      "updated_at_utc": "2026-10-23T15:15:20+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T14:51:20.1061555Z",
+        "at_utc": "2026-10-23T15:15:20.5411593Z",
         "test_sha256": "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
-        "source_sha256": "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T145119580Z-36cb7fa3-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+        "source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T151520102Z-0d4219e4-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt"
       }
     },
     {
@@ -4117,14 +4117,14 @@
       "test": "verify-ue1-original-unrealfile-special-headers.php",
       "evidence": "PRD historical PASS at 2026-10-22T07:25:34.3693613Z; catalog\\compliance\\evidence\\o06\\20261022T072534021Z-75c965c2-PRD-verify-ue1-original-unrealfile-special-headers.php.txt; scoped test, not full class acceptance",
       "remaining": "Vert pair/native header source-tested; G2 inheritance review",
-      "updated_at_utc": "2026-10-23T14:52:24+00:00",
+      "updated_at_utc": "2026-10-23T15:15:21+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T14:52:24.0243360Z",
+        "at_utc": "2026-10-23T15:15:21.4361604Z",
         "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-        "source_sha256": "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T145223257Z-72c45fe9-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
+        "source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T151520885Z-f9161c10-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
       }
     },
     {

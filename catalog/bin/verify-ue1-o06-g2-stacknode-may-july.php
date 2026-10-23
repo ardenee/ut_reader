@@ -129,6 +129,24 @@ try{
   $check("v{$v}_explicit_empty_tree_source_accepted",
       ($explicit['status']??null)==='native_stacktree_records_decoded'
       &&($explicit['record_count']??null)===0);
+  $identity=['format'=>'early_unrealfile','version'=>$v];
+  $unknown=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode($tmp,$identity);
+  $unknownTree=$unknown['native_metadata']['unrealfile_stacktree_records']['stacktree_records'][0]??[];
+  $check("v{$v}_stage_without_identity_keeps_empty_tree_ambiguous",
+      ($unknownTree['status']??null)==='source_1997_stacktree_lineage_required'
+      &&($unknownTree['source_lineage']??null)===null
+      &&($unknown['parse_complete']??true)===false);
+  foreach([Gate::MAY,Gate::JULY] as $source){
+   $staged=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
+       $tmp,$identity+['source_lineage'=>$source]);
+   $record=$staged['native_metadata']['unrealfile_stacktree_records']['stacktree_records'][0]??[];
+   $check("v{$v}_staging_forwards_".($source===Gate::MAY?'may':'july')."_explicit_empty_tree_lineage",
+       ($record['status']??null)==='native_stacktree_records_decoded'
+       &&($record['source_lineage']??null)===$source
+       &&($record['source_lineage_inferred_from_unique_archive_layout']??true)===false
+       &&($staged['native_metadata']['source_lineage_provenance']??null)==='caller_explicit'
+       &&($staged['parse_complete']??true)===false);
+  }
  }
 }finally{@unlink($tmp);}
 echo json_encode(['ok'=>$fail===[],'checks'=>count($checks),
