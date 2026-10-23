@@ -6,18 +6,25 @@ require_once dirname(__DIR__).'/bootstrap/autoload.php';
 require_once dirname(__DIR__).'/src/Infrastructure/Readers/CatalogLegacyPackageReader.php';
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader as P;
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader as T;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicClassDefaultSchemaReader as Schema;
 $repo=dirname(__DIR__,2);
 $manifest=json_decode((string)file_get_contents(
  $repo.'/catalog/compliance/inventory/ue1-o06-genuine-compiled-nontexture.json'),
  true,512,JSON_THROW_ON_ERROR);
 $source='L:/Source/Games/Unreal/Unreal [v1.200] [1998-05-19]/Engine/Inc/UnMath.h';
 $raw=@file_get_contents($source);
-$checks=[];$failed=[];$samples=[];$stats=['total'=>0,
+$unclass=@file_get_contents('L:/Source/Games/Unreal/Unreal [v1.200] [1998-05-19]/Core/Src/UnClass.cpp');
+$checks=[];$failed=[];$samples=[];$negativeStruct=false;$stats=['total'=>0,
  'vector'=>0,'rotator'=>0,'scale'=>0,'color'=>0,'raw_roundtrip'=>0];
 $check=static function(string $name,bool $ok)use(&$checks,&$failed):void{
  $checks[$name]=$ok;if(!$ok){$failed[]=$name;}
 };
 $check('pinned_epic_math_source_available',is_string($raw));
+$check('pinned_epic_C98_struct_name_mismatch_warning',
+ is_string($unclass)
+ &&str_contains($unclass,'Tag.ItemName!=CastChecked<UStructProperty>(*It)->Struct->GetFName()')
+ &&str_contains($unclass,'Tag.ItemName = "Rotator";')
+ &&str_contains($unclass,'Tag.ItemName = "PointRegion";'));
 if(is_string($raw)){
  foreach(['return Ar << V.X << V.Y << V.Z;',
   'return Ar << R.Pitch << R.Yaw << R.Roll;',
@@ -37,6 +44,23 @@ foreach($manifest['files'] as $spec){
   $metadata=T::inspect($path,$pkg,(int)$ex['index']);
   if(($metadata['status']??'')!=='class_default_tags_structurally_decoded_schema_unverified'){
    continue;
+  }
+  if(!$negativeStruct){
+   $mutated=$metadata['default_property_tags'];
+   foreach($mutated as &$candidate){
+    if($candidate['type']==='StructProperty'){
+     $candidate['struct_name']['text']='WrongStructIdentity';
+     break;
+    }
+   }unset($candidate);
+   if($mutated!==$metadata['default_property_tags']){
+    $report=Schema::inspect($path,$pkg,$metadata,$mutated);
+    $negativeStruct=$report['status']==='known_incompatible_tags_skipped'
+      &&in_array('struct_type_mismatch',
+          array_column($report['incompatible_tag_warning_samples'],'reason'),true)
+      &&$report['known_incompatible_tags_skipped']>=1
+      &&$report['value_payload_semantics_verified']===false;
+   }
   }
   foreach($metadata['default_property_tags'] as $tag){
    if($tag['type']!=='StructProperty'){continue;}
@@ -77,12 +101,13 @@ $check('source_42_FVector',$stats['vector']===42);
 $check('source_49_FRotator',$stats['rotator']===49);
 $check('source_3_FScale',$stats['scale']===3);
 $check('source_3_FColor',$stats['color']===3);
+$check('negative_wrong_struct_name_warned_and_skipped',$negativeStruct);
 $check('all_struct_values_exact_byte_roundtrip',
  $stats['raw_roundtrip']===$stats['total']);
 echo json_encode(['ok'=>$failed===[],
  'passed'=>count($checks)-count($failed),'checks'=>count($checks),
  'failed'=>$failed,'stats'=>$stats,'samples'=>$samples,
  'epic_math_source_sha256'=>is_string($raw)?hash('sha256',$raw):null,
- 'remaining'=>'Raw typed vector/rotator/scale/color source-value roundtrip only; 576 fixed-length strings, transient/class-specific/load-time value semantics and native engine oracle still unresolved.'
+ 'remaining'=>'Typed C98 vector/rotator/scale/color native archive values and declared struct names checked. Actual runtime object value application, arbitrary struct fields and compiled engine oracle remain unverified.'
 ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($failed?1:0);

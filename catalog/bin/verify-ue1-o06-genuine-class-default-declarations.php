@@ -22,17 +22,26 @@ $check=static function(string $name,bool $good)use(&$checkResults,&$failed):void
 $root='L:/Source/Games/Unreal/Unreal [v1.200] [1998-05-19]/Core/Src/';
 $unclass=@file_get_contents($root.'UnClass.cpp');
 $unprop=@file_get_contents($root.'UnProp.cpp');
+$unflags=@file_get_contents(dirname($root).'/Inc/UnObjBas.h');
 $check('source_field_next_and_struct_children',
  is_string($unclass)
  &&str_contains($unclass,'Ar << SuperField << Next;')
  &&str_contains($unclass,'Ar << ScriptText << Children;'));
+$check('source_tag_struct_identity_and_nonserializable_checks',
+ is_string($unclass)
+ &&str_contains($unclass,'Tag.ItemName!=CastChecked<UStructProperty>(*It)->Struct->GetFName()')
+ &&str_contains($unclass,'PropertyFlags & (CPF_Transient | CPF_Intrinsic)')
+ &&str_contains($unclass,'Property %s of %s not found')
+ &&is_string($unflags)
+ &&str_contains($unflags,'CPF_Intrinsic    = 0x00001000')
+ &&str_contains($unflags,'CPF_Transient    = 0x00002000'));
 $check('source_property_arraydim_archive',
  is_string($unprop)
  &&str_contains($unprop,'Ar << ArrayDim << PropertyFlags << Category;'));
 $counts=['classes'=>0,'tags'=>0,'matched'=>0,'direct'=>0,'inherited'=>0,
  'unresolved_imported_or_unknown'=>0,'declaration_complete_classes'=>0,
  'cross_package_superclass_hops'=>0,'class_schema_semantics_accepted'=>0];
-$negativeType=false;$negativeArray=false;
+$negativeType=false;$negativeArray=false;$negativeUnknown=false;
 foreach($manifest['files'] as $spec){
  if(strtolower(pathinfo($spec['path'],PATHINFO_EXTENSION))!=='u')continue;
  $path=$spec['path'];$file=basename($path);
@@ -59,6 +68,8 @@ foreach($manifest['files'] as $spec){
      +$validation['matches_in_local_superclasses']
    &&($validation['value_payload_semantics_verified']??true)===false
    &&($validation['known_incompatible_tags_skipped']??-1)===0
+   &&($validation['known_unknown_property_tags_skipped']??-1)===0
+   &&($validation['fixed_string_archive_bounds_unverified']??-1)===0
    &&($class['defaults_schema_verified']??true)===false);
   $counts['tags']+=$total;$counts['matched']+=$matched;
   $counts['direct']+=$validation['matches_in_this_class'];
@@ -89,6 +100,13 @@ foreach($manifest['files'] as $spec){
    $negativeArray=$diagnostic['status']==='known_incompatible_tags_skipped'
     &&$diagnostic['known_incompatible_tags_skipped']>0
     &&($diagnostic['incompatible_tag_warning_samples'][0]['reason']??'')==='array_index_out_of_bounds'
+    &&$diagnostic['declaration_type_and_array_index_matches']<$matched;
+   $mutated=$class['default_property_tags'];
+   $mutated[0]['name']='UnrealDB_Nonexistent_Declared_Field';
+   $diagnostic=Schema::inspect($path,$pkg,$class,$mutated);
+   $negativeUnknown=$diagnostic['status']==='unknown_property_tags_skipped'
+    &&$diagnostic['known_unknown_property_tags_skipped']>0
+    &&($diagnostic['known_unknown_property_samples'][0]['reason']??'')==='property_not_found_warn_and_skip'
     &&$diagnostic['declaration_type_and_array_index_matches']<$matched;
   }
  }
@@ -151,6 +169,7 @@ $check('all_declared_tags_matched_but_values_unverified',
  &&$counts['class_schema_semantics_accepted']===0);
 $check('negative_tag_type_mismatch_warned_and_skipped',$negativeType);
 $check('negative_array_index_warned_and_skipped',$negativeArray);
+$check('negative_unknown_field_warned_and_skipped',$negativeUnknown);
 echo json_encode(['ok'=>$failed===[],'checks'=>count($checkResults),
  'passed'=>count($checkResults)-count($failed),'failed'=>$failed,
  'counts'=>$counts,'files'=>$fileRows,'unresolved_examples'=>$examples,

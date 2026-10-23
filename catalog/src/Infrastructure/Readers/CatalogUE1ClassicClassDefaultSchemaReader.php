@@ -32,6 +32,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
     public static function inspect(
         string $path,CatalogUE1PackageReader $pkg,array $classRecord,array $tags
     ): array {
+        $valueArchivePackage=$pkg;
         $classRef=(int)($classRecord['export_index']??-1)+1;
         $current=$classRecord;
         $visited=[];$declarations=[];$inherited=false;$importBlocked=false;
@@ -78,16 +79,28 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $classRef=$next;$inherited=true;
         }
         $matched=0;$matchedDirect=0;$matchedInherited=0;$unresolved=0;
+        $unknownSkipped=0;$unknownSamples=[];
         $mismatches=[];$mismatchCount=0;$samples=[];
         $stringBoundUnverified=0;$stringBoundSamples=[];
+        $referenceBoundsChecked=0;
         foreach($tags as $tag){
             $key=strtolower((string)($tag['name']??''));
             $decl=$declarations[$key]??null;
             if($decl===null){
-                $unresolved++;
-                if(count($samples)<8){$samples[]=['name'=>$tag['name'],
-                    'reason'=>$importBlocked?'imported_superclass_unavailable':
-                        'property_not_in_available_class_declarations'];}
+                if($importBlocked){
+                    $unresolved++;
+                    if(count($samples)<8){$samples[]=['name'=>$tag['name'],
+                        'reason'=>'imported_superclass_unavailable'];}
+                }else{
+                    // All class ancestors have been traversed but Epic
+                    // cannot find a corresponding property. C98 loader
+                    // logs a warning and skips the declared tag bytes.
+                    $unknownSkipped++;
+                    if(count($unknownSamples)<8){
+                        $unknownSamples[]=['name'=>$tag['name'],
+                            'reason'=>'property_not_found_warn_and_skip'];
+                    }
+                }
                 continue;
             }
             $tagKind=strtolower((string)($tag['type']??''));
@@ -99,6 +112,18 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $arrayValid=(int)($tag['array_index']??-1)>=0
                 &&(int)($tag['array_index']??-1)<(int)$decl['array_dim'];
             $stringCapacity=$decl['string_size']??null;
+            $structName=$decl['struct_name']??null;
+            $tagStructName=(string)($tag['struct_name']['text']??'');
+            // C98 load-time aliases from UStruct::SerializeTaggedProperties.
+            if(strcasecmp($tagStructName,'Rotation')===0){
+                $tagStructName='Rotator';
+            }elseif(strcasecmp($tagStructName,'Region')===0){
+                $tagStructName='PointRegion';
+            }
+            $structValid=$tagKind!=='structproperty'
+                ||($structName!==null
+                    &&strcasecmp($tagStructName,(string)$structName)===0);
+            $serializable=(((int)($decl['property_flags']??0))&0x00003000)===0;
             $stringLengthValid=$declKind!=='stringproperty'
                 ||($stringCapacity!==null
                     &&(int)($tag['serialized_size']??-1)>=1
@@ -121,6 +146,47 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
                 continue;
             }
+            if(!$structValid||!$serializable){
+                $mismatchCount++;
+                if(count($mismatches)<16){
+                    $mismatches[]=['name'=>$tag['name'],
+                        'reason'=>!$structValid?'struct_type_mismatch':
+                            'transient_or_intrinsic_property_skipped',
+                        'actual_struct'=>$tagStructName,
+                        'declared_struct'=>$structName,
+                        'property_flags'=>$decl['property_flags']??null,
+                        'field_export_ref'=>$decl['ref']];
+                }
+                continue;
+            }
+            if($tagKind==='objectproperty'||$tagKind==='classproperty'){
+                // Epic C98 ULinkerLoad::IndexToObject checks IsValidIndex
+                // on signed import/export indices and errors fatally when
+                // outside the file maps. Check in the ORIGINAL tag package
+                // rather than its potentially external superclass package.
+                $index=$tag['value']??null;
+                if(($tag['value_kind']??'')!=='package_object_index'
+                   ||!is_int($index)
+                   ||($index>0&&$index>count($valueArchivePackage->getExports()))
+                   ||($index<0&&-$index>count($valueArchivePackage->getImports()))){
+                    throw new RuntimeException(
+                        'UE1 class default has invalid linker object reference: '.
+                        (string)$tag['name']);
+                }
+                $referenceBoundsChecked++;
+            }elseif($tagKind==='nameproperty'){
+                // Epic C98 ULinkerLoad<<FName invokes
+                // NameMap.IsValidIndex; invalid name indices are fatal.
+                $index=$tag['value']??null;
+                if(($tag['value_kind']??'')!=='fname_index'
+                   ||!is_int($index)||$index<0
+                   ||$index>=count($valueArchivePackage->getNames())){
+                    throw new RuntimeException(
+                        'UE1 class default has invalid linker FName: '.
+                        (string)$tag['name']);
+                }
+                $referenceBoundsChecked++;
+            }
             if(!$stringLengthValid){
                 // C98 FArchive::String reads at most StringSize-1 bytes;
                 // it does NOT take the generic mismatched-tag warning
@@ -140,19 +206,23 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         }
         return [
             'status'=>$mismatchCount>0?'known_incompatible_tags_skipped':
+                ($unknownSkipped>0?'unknown_property_tags_skipped':
                 ($stringBoundUnverified>0?'fixed_string_archive_size_unverified':
                 ($unresolved===0?'all_available_declarations_match':
-                'imported_or_unknown_properties_unverified')),
+                'imported_or_unknown_properties_unverified'))),
             'tag_count'=>count($tags),
             'declaration_type_and_array_index_matches'=>$matched,
             'matches_in_this_class'=>$matchedDirect,
             'matches_in_local_superclasses'=>$matchedInherited,
             'unresolved_tag_count'=>$unresolved,
             'known_incompatible_tags_skipped'=>$mismatchCount,
+            'known_unknown_property_tags_skipped'=>$unknownSkipped,
+            'known_unknown_property_samples'=>$unknownSamples,
             'fixed_string_archive_bounds_unverified'=>$stringBoundUnverified,
             'fixed_string_archive_bound_samples'=>$stringBoundSamples,
             'incompatible_tag_warning_samples'=>$mismatches,
             'load_policy'=>'warn_and_skip_incompatible_tag_as_epic_source',
+            'value_linker_reference_bounds_checked'=>$referenceBoundsChecked,
             'unresolved_examples'=>$samples,
             'source_declarations_in_this_class'=>$ownFields,
             'source_declarations_in_local_superclasses'=>$parentFields,
@@ -232,9 +302,15 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $data=$field['native'];
             if(($data['status']??'')==='native_property_record_complete'){
                 $key=strtolower((string)$field['name']);
+                $structRef=(int)($data['subclass_fields']['struct_reference']??0);
+                $structRow=$structRef>0
+                    ?($pkg->getExports()[$structRef-1]??null)
+                    :($structRef<0?($pkg->getImports()[-$structRef-1]??null):null);
                 $fields[$key]=['ref'=>$reference,
                     'kind'=>(string)$data['property_kind'],
                     'array_dim'=>(int)$data['array_dim'],
+                    'property_flags'=>(int)($data['effective_property_flags']??0),
+                    'struct_name'=>$structRow['objectNameText']??null,
                     'string_size'=>$data['subclass_fields']['string_size']??null];
             }
             $reference=(int)($data['next_field_reference']??0);
