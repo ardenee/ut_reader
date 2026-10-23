@@ -476,14 +476,34 @@ final class CatalogUE1ClassicNativeObjectReader
             }
             $sparks=null;
             if($nativeKind==='firetexture'){
-                // Fire/Src/UnFractal.cpp::UFireTexture::Serialize:
-                // Super::Serialize then TArray<FSpark>, 8 bytes each.
+                // Both Unreal v1.200 and UT99 v400 Fire/Src/
+                // FractalPrivate.h::FSpark::operator<< archive eight BYTES:
+                // Type, Heat, X, Y, ByteA, ByteB, ByteC, ByteD.
                 $sparkCount=$compact();
                 if($sparkCount<0||$sparkCount>intdiv($limit-$pos,8)){
                     throw new RuntimeException('FireTexture spark array exceeds native export bounds');
                 }
-                $sparks=['count'=>$sparkCount,'serialized_offset'=>$pos,'bytes'=>$sparkCount*8];
-                $seek($pos+$sparkCount*8);
+                $sparkOffset=$pos;
+                $preview=[];$digest=hash_init('sha256');
+                $remaining=$sparkCount;
+                while($remaining>0){
+                    $take=min($remaining,4096);
+                    $bytes=$read($take*8);
+                    hash_update($digest,$bytes);
+                    for($j=0;$j<$take&&count($preview)<16;$j++){
+                        $v=array_values(unpack('C8',substr($bytes,$j*8,8)));
+                        $preview[]=['type'=>$v[0],'heat'=>$v[1],
+                            'x'=>$v[2],'y'=>$v[3],'byte_a'=>$v[4],
+                            'byte_b'=>$v[5],'byte_c'=>$v[6],'byte_d'=>$v[7]];
+                    }
+                    $remaining-=$take;
+                }
+                $sparks=['count'=>$sparkCount,
+                    'serialized_offset'=>$sparkOffset,'bytes'=>$sparkCount*8,
+                    'source_record_bytes'=>8,
+                    'record_fields'=>['Type','Heat','X','Y','ByteA','ByteB','ByteC','ByteD'],
+                    'records_preview'=>$preview,'preview_truncated'=>$sparkCount>16,
+                    'serialized_sha256'=>hash_final($digest)];
             }
             return array_replace($record,['status'=>$pos===$limit?'native_texture_record_complete':'native_texture_has_extension',
                 'mips'=>$mips,'mip_count'=>$count,'sparks'=>$sparks,

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T17:34:55+00:00",
+  "updated_at_utc": "2026-10-23T17:38:36+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4718,8 +4718,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "Source FireTexture/spark structural support exists; no complete distinct-class source fixture proof yet",
-      "remaining": "",
-      "updated_at_utc": "2026-10-22T09:27:26+00:00"
+      "remaining": " G4 source implementation 2026-10-23 (VERIFICATION DEFERRED): Epic Unreal v1.200 and UT99 v400 Fire/Src/FractalPrivate.h FSpark::operator<< serializes eight ordered BYTE members Type, Heat, X, Y, ByteA, ByteB, ByteC, ByteD per TArray element. Production CatalogUE1ClassicNativeObjectReader now decodes these persistent values in bounded batches and returns typed previews and complete archive bytes SHA256 while preserving count/offset/size. Runtime effects, native oracles and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:38:36+00:00"
     },
     {
       "id": "C98:UFont::Serialize",
@@ -6127,8 +6127,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "",
       "evidence": "Source FireTexture/spark structural support exists; no complete distinct-class source fixture proof yet",
-      "remaining": "",
-      "updated_at_utc": "2026-10-22T09:27:26+00:00"
+      "remaining": " G4 source implementation 2026-10-23 (VERIFICATION DEFERRED): Epic Unreal v1.200 and UT99 v400 Fire/Src/FractalPrivate.h FSpark::operator<< serializes eight ordered BYTE members Type, Heat, X, Y, ByteA, ByteB, ByteC, ByteD per TArray element. Production CatalogUE1ClassicNativeObjectReader now decodes these persistent values in bounded batches and returns typed previews and complete archive bytes SHA256 while preserving count/offset/size. Runtime effects, native oracles and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:38:36+00:00"
     },
     {
       "id": "T99:UFixedArrayProperty::Serialize",

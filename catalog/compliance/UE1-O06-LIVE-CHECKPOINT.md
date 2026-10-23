@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g4-ut99-umesh-tri-vertex-bound`
+- **Contract:** `g4-classic-ufiretexture-spark-records`
 - **Stage:** implemented-pending-verification-no-tests
-- **Last completed action:** Existing G4 T99:UMesh::Serialize production source correction: Epic UT99 v400 Engine/Src/UnMesh.cpp UMesh::Serialize checks first triangle iVertex[0] < Verts.Num after deserializing Verts and Tris; existing CatalogUE1ClassicMeshNativeReader now enforces this on >=62 Mesh/ULodMesh only, leaving <=61 Unreal v1.200 source branch unchanged. Annotated existing source register and PROJECT-STATUS. PHP lint and diff-check only; NO functional tests, new test contracts, PRD deploy, or O06 acceptance promotion.
-- **Resume at:** Continue implementing existing G2/G3/G4 pinned Epic C++ serializer differences in production PHP; avoid verification-only tasks. This change and previous implementation-only commits need an eventual separate scoped verification and safe PRD deployment.
-- **Active changed at:** 2026-10-23T17:35:57+00:00
+- **Last completed action:** Implemented source-defined G4 UFireTexture::Sparks in shared CatalogUE1ClassicNativeObjectReader for pinned Unreal v1.200 and UT99 v400: fully consume TArray FSpark 8 ordered BYTE fields Type Heat X Y ByteA ByteB ByteC ByteD, decode typed records with bounded preview plus exact raw archive hash, retain preexisting count/offset/bytes and bounds. Updated existing C98/T99 FireTexture source register records and PROJECT-STATUS; PHP lint and diff check only, no functional tests, no new test contracts, no PRD deploy.
+- **Resume at:** Continue existing G2/G3/G4 unimplemented source serialization fields; code-first. Before O06 acceptance, verify these implementation-only changes independently in later dedicated milestone then deploy SHA-identical PRD; do not repeat already sealed unrelated oracles.
+- **Active changed at:** 2026-10-23T17:38:51+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
