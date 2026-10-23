@@ -1,7 +1,7 @@
 {
-  "contract": "t99-local-inherited-struct",
-  "stage": "released-verified",
-  "last_action": "Commit dd82e611 pushed to origin/main; only 3 runtime reader PHP files deployed to PRD, SHA-256 3/3 matched; DEV working tree clean before release checkpoint",
-  "next_step": "O06 next contract: imported UStruct ancestry and linker source provenance; register a new focused plan before implementation",
-  "updated_at_utc": "2026-10-23T11:44:02+00:00"
+  "contract": "t99-imported-struct-ancestry",
+  "stage": "ready-to-release",
+  "last_action": "Final imported Struct source/classPackage constraints verified; 18/18 focus, 7/7 contract gate pass with one cached, full O06 still open",
+  "next_step": "Commit and push source/fixture/evidence, SHA-verify only changed PHP readers in PRD, update release checkpoint.",
+  "updated_at_utc": "2026-10-23T12:41:36+00:00"
 }

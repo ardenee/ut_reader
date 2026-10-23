@@ -1,0 +1,214 @@
+﻿{
+    "ok": true,
+    "checks": 154,
+    "passed": 154,
+    "failed": [],
+    "samples": [
+        {
+            "test": "byte_three",
+            "class": "ByteProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "int_signed",
+            "class": "IntProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "float_three",
+            "class": "FloatProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "bool_noncanonical",
+            "class": "BoolProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "name_map_refs",
+            "class": "NameProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "object_import_export_refs",
+            "class": "ObjectProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "empty_int_array",
+            "class": "IntProperty",
+            "status": "array_inner_values_decoded",
+            "count": 0,
+            "reason": null
+        },
+        {
+            "test": "fixed_byte_three",
+            "class": "ByteProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_int_signed",
+            "class": "IntProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_bool_noncanonical",
+            "class": "BoolProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_name_refs",
+            "class": "NameProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_object_refs",
+            "class": "ObjectProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_truncated",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "fixed_trailing",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "fixed_unsupported_nested",
+            "class": "StructProperty",
+            "status": "inner_struct_layout_unverified",
+            "count": null,
+            "reason": "struct_reference_none"
+        },
+        {
+            "test": "dynamic_nested_fstring_ansi_unicode_empty",
+            "class": "StrProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_nested_fstring_unicode_ansi_nonascii_empty",
+            "class": "StrProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "dynamic_fstring_long_300_ansi",
+            "class": "StrProperty",
+            "status": "array_inner_values_decoded",
+            "count": 1,
+            "reason": null
+        },
+        {
+            "test": "dynamic_fstring_40_items_preview_bounded",
+            "class": "StrProperty",
+            "status": "array_inner_values_decoded",
+            "count": 40,
+            "reason": null
+        },
+        {
+            "test": "fixed_fstring_40_items_preview_bounded",
+            "class": "StrProperty",
+            "status": "array_inner_values_decoded",
+            "count": 40,
+            "reason": null
+        },
+        {
+            "test": "dynamic_fstring_bad_unicode_length",
+            "class": "StrProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "invalid_nested_source_counted_fstring"
+        },
+        {
+            "test": "dynamic_fstring_bad_missing_terminator",
+            "class": "StrProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "invalid_nested_source_counted_fstring"
+        },
+        {
+            "test": "fixed_fstring_bad_missing_terminator",
+            "class": "StrProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "invalid_nested_source_counted_fstring"
+        },
+        {
+            "test": "fixed_fstring_extra_trailing",
+            "class": "StrProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "invalid_nested_source_counted_fstring"
+        },
+        {
+            "test": "bad_count_truncated",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "bad_count_negative",
+            "class": "IntProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "negative_or_overflow_count"
+        },
+        {
+            "test": "bad_trailing_bytes",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "truncated_compact_reference",
+            "class": "NameProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "invalid_compact_inner_reference"
+        },
+        {
+            "test": "unsupported_nested",
+            "class": "StructProperty",
+            "status": "inner_struct_layout_unverified",
+            "count": null,
+            "reason": "struct_reference_none"
+        }
+    ],
+    "epic_source_sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+    "epic_fstring_source_sha256": "6daaf8be3b1b1d00d0a97105e5bb3723f1fc871adf5197884f1e50ff8fb1cb2d",
+    "remaining": "Source-typed dynamic and fixed array values now include numeric, Bool, FName, UObject and independently counted ANSI/Unicode FString inner serializers. StructProperty, recursive arrays, native heap and TCHAR runtime conversion remain unverified."
+}

@@ -19,25 +19,32 @@ final class CatalogUE1ClassicStructArrayValueReader
     public static function resolve(
         string $path,CatalogUE1PackageReader $pkg,int $structReference
     ):array {
-        if($structReference<=0){
-            return ['status'=>'struct_reference_not_local'];
+        if($structReference===0){
+            return ['status'=>'struct_reference_none'];
         }
-        $ex=$pkg->getExports()[$structReference-1]??null;
-        if(!is_array($ex)){
-            return ['status'=>'struct_reference_not_exported'];
-        }
-        $fields=[];$visited=[];
+        $fields=[];$visited=[];$importHops=0;$packageChain=[$path];
         $current=$structReference;
-        // TFieldIterator<UProperty> iterates this struct's Children,
-        // then GetInheritanceSuper()->Children, and so on.
+        // UT99 TFieldIterator visits Children, then GetInheritanceSuper.
+        // An imported parent must resolve by its full ImportMap outer
+        // identity and real package; never guess from short object name.
         while($current!==0){
             if($current<0){
-                return ['status'=>'struct_inherited_import_unverified'];
+                $resolved=CatalogUE1ClassicStructImportResolver::resolve(
+                    $path,$pkg,$current);
+                if($resolved===null){
+                    return ['status'=>'struct_inherited_import_unverified'];
+                }
+                $path=$resolved['path'];$pkg=$resolved['package'];
+                $current=$resolved['ref'];$packageChain[]=$path;
+                if(++$importHops>32){
+                    return ['status'=>'struct_import_depth_exceeded'];
+                }
             }
-            if(isset($visited[$current])){
+            $visitKey=$path."\0".$current;
+            if(isset($visited[$visitKey])){
                 return ['status'=>'struct_superclass_cycle'];
             }
-            $visited[$current]=true;
+            $visited[$visitKey]=true;
             $currentEx=$pkg->getExports()[$current-1]??null;
             if(!is_array($currentEx)){
                 return ['status'=>'struct_superclass_export_missing'];
@@ -105,6 +112,8 @@ final class CatalogUE1ClassicStructArrayValueReader
             'struct_reference'=>$structReference,
             'fields'=>$fields,
             'source_field_order_verified'=>true,
+            'source_imported_struct_hops'=>$importHops,
+            'source_definition_package_paths'=>$packageChain,
             'runtime_offsets_verified'=>false,
         ];
     }

@@ -105,6 +105,26 @@
         "verify-ue1-o06-payload-negatives.php"
       ]
     },
+    "t99-imported-struct-ancestry": {
+      "description": "UT99 ULinkerLoad import identity and UStruct inherited field iteration across sibling .u files",
+      "readers": [
+        "CatalogUE1ClassicStructArrayValueReader.php",
+        "CatalogUE1ClassicStructImportResolver.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-imported-struct-ancestry.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-array-struct-members.php",
+        "verify-ue1-classic-array-inner-values.php"
+      ],
+      "gate": [
+        "verify-ue1-o06-genuine-class-default-declarations.php",
+        "verify-ue1-o06-genuine-compiled-native.php",
+        "verify-ue1-v68-v69-genuine-corpus.php",
+        "verify-ue1-o06-payload-negatives.php"
+      ]
+    },
     "ue1-classic-level": {
       "description": "Unreal v1.200 native ULevel and UDatabase base counts",
       "readers": [

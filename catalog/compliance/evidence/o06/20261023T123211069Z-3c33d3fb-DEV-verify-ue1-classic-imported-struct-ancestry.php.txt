@@ -1,0 +1,36 @@
+﻿{
+    "ok": false,
+    "checks": 15,
+    "passed": 14,
+    "failed": [
+        "provider_wrong_owner_fail_closed"
+    ],
+    "cases": [
+        {
+            "case": "valid_two_package",
+            "status": "array_inner_values_decoded",
+            "parent_field": 123
+        },
+        {
+            "case": "wrong_import_class",
+            "status": "struct_inherited_import_unverified"
+        },
+        {
+            "case": "wrong_imported_name",
+            "status": "struct_inherited_import_unverified"
+        },
+        {
+            "case": "provider_wrong_owner",
+            "status": "struct_child_owner_unverified"
+        },
+        {
+            "case": "provider_version_unsupported",
+            "status": "struct_inherited_import_unverified"
+        }
+    ],
+    "source_hashes": {
+        "UnClass.h": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "UnLinker.h": "810b2b4c86482272d00bd0460561f8d09bb8f7e72ef478a67faa1e53cadcd9a9"
+    },
+    "remaining": "Only exact sibling ParentCore.u imported native Struct identity / child UStruct on-disk fields. Runtime GetPackageLinker, package manager, native object linker repair, global search and arbitrary engine family remain unverified."
+}

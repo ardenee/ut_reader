@@ -2,36 +2,36 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `t99-local-inherited-struct`
-- **Stage:** released-verified
-- **Last completed action:** Commit dd82e611 pushed to origin/main; only 3 runtime reader PHP files deployed to PRD, SHA-256 3/3 matched; DEV working tree clean before release checkpoint
-- **Resume at:** O06 next contract: imported UStruct ancestry and linker source provenance; register a new focused plan before implementation
-- **Active changed at:** 2026-10-23T11:44:02+00:00
-- **Latest DEV test states:** PASS 93; FAIL 0; STARTED 0
+- **Contract:** `t99-imported-struct-ancestry`
+- **Stage:** ready-to-release
+- **Last completed action:** Final imported Struct source/classPackage constraints verified; 18/18 focus, 7/7 contract gate pass with one cached, full O06 still open
+- **Resume at:** Commit and push source/fixture/evidence, SHA-verify only changed PHP readers in PRD, update release checkpoint.
+- **Active changed at:** 2026-10-23T12:41:36+00:00
+- **Latest DEV test states:** PASS 94; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
-| 2026-10-23T11:35:39.8999730Z | verify-ue1-classic-array-inner-values.php | PASS | 233 | catalog\compliance\evidence\o06\20261023T113539356Z-f2a03c08-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-23T11:35:39.3577737Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261023T113539356Z-f2a03c08-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-23T11:35:39.0288798Z | verify-ue1-classic-array-struct-members.php | PASS | 181 | catalog\compliance\evidence\o06\20261023T113538495Z-92fc017b-DEV-verify-ue1-classic-array-struct-members.php.txt |
-| 2026-10-23T11:35:38.5037361Z | verify-ue1-classic-array-struct-members.php | STARTED |  | catalog\compliance\evidence\o06\20261023T113538495Z-92fc017b-DEV-verify-ue1-classic-array-struct-members.php.txt |
-| 2026-10-23T11:04:21.7143585Z | verify-ue1-o06-payload-negatives.php | PASS | 213 | catalog\compliance\evidence\o06\20261023T110421305Z-d0837c42-DEV-verify-ue1-o06-payload-negatives.php.txt |
-| 2026-10-23T11:04:21.3064696Z | verify-ue1-o06-payload-negatives.php | STARTED |  | catalog\compliance\evidence\o06\20261023T110421305Z-d0837c42-DEV-verify-ue1-o06-payload-negatives.php.txt |
-| 2026-10-23T11:04:21.0961700Z | verify-ue1-v68-v69-genuine-corpus.php | PASS | 186 | catalog\compliance\evidence\o06\20261023T110420727Z-697ca3c8-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
-| 2026-10-23T11:04:20.7288794Z | verify-ue1-v68-v69-genuine-corpus.php | STARTED |  | catalog\compliance\evidence\o06\20261023T110420727Z-697ca3c8-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
-| 2026-10-23T11:04:20.5194304Z | verify-ue1-o06-genuine-compiled-native.php | PASS | 8374 | catalog\compliance\evidence\o06\20261023T110411963Z-fbbfe208-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
-| 2026-10-23T11:04:11.9631900Z | verify-ue1-o06-genuine-compiled-native.php | STARTED |  | catalog\compliance\evidence\o06\20261023T110411963Z-fbbfe208-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
-| 2026-10-23T11:04:11.7618989Z | verify-ue1-o06-genuine-class-default-struct-values.php | PASS | 3319 | catalog\compliance\evidence\o06\20261023T110408263Z-1a8ac4c3-DEV-verify-ue1-o06-genuine-class-default-struct-values.php.txt |
-| 2026-10-23T11:04:08.2639072Z | verify-ue1-o06-genuine-class-default-struct-values.php | STARTED |  | catalog\compliance\evidence\o06\20261023T110408263Z-1a8ac4c3-DEV-verify-ue1-o06-genuine-class-default-struct-values.php.txt |
-| 2026-10-23T11:04:08.0578210Z | verify-ue1-o06-genuine-class-default-references.php | PASS | 3279 | catalog\compliance\evidence\o06\20261023T110404592Z-0468830c-DEV-verify-ue1-o06-genuine-class-default-references.php.txt |
-| 2026-10-23T11:04:04.5922797Z | verify-ue1-o06-genuine-class-default-references.php | STARTED |  | catalog\compliance\evidence\o06\20261023T110404592Z-0468830c-DEV-verify-ue1-o06-genuine-class-default-references.php.txt |
-| 2026-10-23T11:04:04.3858916Z | verify-ue1-o06-genuine-class-default-declarations.php | PASS | 3905 | catalog\compliance\evidence\o06\20261023T110400284Z-2ce10797-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt |
-| 2026-10-23T11:04:00.2856918Z | verify-ue1-o06-genuine-class-default-declarations.php | STARTED |  | catalog\compliance\evidence\o06\20261023T110400284Z-2ce10797-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt |
-| 2026-10-23T11:04:00.0692550Z | verify-ue1-classic-map-no-data.php | PASS | 102 | catalog\compliance\evidence\o06\20261023T110359775Z-38bb6fa9-DEV-verify-ue1-classic-map-no-data.php.txt |
-| 2026-10-23T11:03:59.7751702Z | verify-ue1-classic-map-no-data.php | STARTED |  | catalog\compliance\evidence\o06\20261023T110359775Z-38bb6fa9-DEV-verify-ue1-classic-map-no-data.php.txt |
+| 2026-10-23T12:40:24.3201745Z | verify-ue1-o06-payload-negatives.php | PASS | 209 | catalog\compliance\evidence\o06\20261023T124023809Z-54362be1-DEV-verify-ue1-o06-payload-negatives.php.txt |
+| 2026-10-23T12:40:23.8093910Z | verify-ue1-o06-payload-negatives.php | STARTED |  | catalog\compliance\evidence\o06\20261023T124023809Z-54362be1-DEV-verify-ue1-o06-payload-negatives.php.txt |
+| 2026-10-23T12:40:23.4957786Z | verify-ue1-v68-v69-genuine-corpus.php | PASS | 175 | catalog\compliance\evidence\o06\20261023T124023018Z-39a423b7-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
+| 2026-10-23T12:40:23.0196801Z | verify-ue1-v68-v69-genuine-corpus.php | STARTED |  | catalog\compliance\evidence\o06\20261023T124023018Z-39a423b7-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
+| 2026-10-23T12:40:22.7054137Z | verify-ue1-o06-genuine-compiled-native.php | PASS | 7332 | catalog\compliance\evidence\o06\20261023T124015075Z-5a73b715-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
+| 2026-10-23T12:40:15.0753664Z | verify-ue1-o06-genuine-compiled-native.php | STARTED |  | catalog\compliance\evidence\o06\20261023T124015075Z-5a73b715-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
+| 2026-10-23T12:40:14.7567806Z | verify-ue1-o06-genuine-class-default-declarations.php | PASS | 3420 | catalog\compliance\evidence\o06\20261023T124011039Z-6b33fa05-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt |
+| 2026-10-23T12:40:11.0399372Z | verify-ue1-o06-genuine-class-default-declarations.php | STARTED |  | catalog\compliance\evidence\o06\20261023T124011039Z-6b33fa05-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt |
+| 2026-10-23T12:40:10.6998891Z | verify-ue1-classic-array-inner-values.php | PASS | 189 | catalog\compliance\evidence\o06\20261023T124010205Z-1d84fab0-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-23T12:40:10.2050474Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261023T124010205Z-1d84fab0-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-23T12:40:09.8936959Z | verify-ue1-classic-array-struct-members.php | PASS | 166 | catalog\compliance\evidence\o06\20261023T124009392Z-6c84d2dd-DEV-verify-ue1-classic-array-struct-members.php.txt |
+| 2026-10-23T12:40:09.3999451Z | verify-ue1-classic-array-struct-members.php | STARTED |  | catalog\compliance\evidence\o06\20261023T124009392Z-6c84d2dd-DEV-verify-ue1-classic-array-struct-members.php.txt |
+| 2026-10-23T12:39:55.1564789Z | verify-ue1-classic-imported-struct-ancestry.php | PASS | 121 | catalog\compliance\evidence\o06\20261023T123954692Z-136a0887-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt |
+| 2026-10-23T12:39:54.7000225Z | verify-ue1-classic-imported-struct-ancestry.php | STARTED |  | catalog\compliance\evidence\o06\20261023T123954692Z-136a0887-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt |
+| 2026-10-23T12:35:06.1285543Z | verify-ue1-o06-payload-negatives.php | PASS | 257 | catalog\compliance\evidence\o06\20261023T123505580Z-4f6bec11-DEV-verify-ue1-o06-payload-negatives.php.txt |
+| 2026-10-23T12:35:05.5816730Z | verify-ue1-o06-payload-negatives.php | STARTED |  | catalog\compliance\evidence\o06\20261023T123505580Z-4f6bec11-DEV-verify-ue1-o06-payload-negatives.php.txt |
+| 2026-10-23T12:35:05.2438790Z | verify-ue1-v68-v69-genuine-corpus.php | PASS | 773 | catalog\compliance\evidence\o06\20261023T123504171Z-4bd4a740-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
+| 2026-10-23T12:35:04.1717650Z | verify-ue1-v68-v69-genuine-corpus.php | STARTED |  | catalog\compliance\evidence\o06\20261023T123504171Z-4bd4a740-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
 
 ## Recovery procedure
 

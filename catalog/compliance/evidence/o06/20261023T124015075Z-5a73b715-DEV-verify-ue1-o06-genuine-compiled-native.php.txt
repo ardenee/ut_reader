@@ -1,0 +1,198 @@
+﻿{
+    "ok": true,
+    "checks": 94,
+    "passed": 94,
+    "failed": [],
+    "errors": [],
+    "totals": {
+        "exports": 15194,
+        "native_complete": 14621,
+        "font": 8,
+        "mesh": 342,
+        "sound": 844,
+        "unverified_class_default_schemas": 513,
+        "class_no_script_no_defaults": 60,
+        "tag_count": 9762,
+        "native_tail_bytes": 45515967
+    },
+    "files": [
+        {
+            "file": "Core.u",
+            "version": 61,
+            "exports": 458,
+            "native_complete": 456,
+            "exceptions": 0,
+            "sha256": "6f48d3e0daf0a9c804f56a4b0842a7dfeca816a73ecc7974b194f764c45c1a48"
+        },
+        {
+            "file": "Editor.u",
+            "version": 61,
+            "exports": 90,
+            "native_complete": 89,
+            "exceptions": 0,
+            "sha256": "d428e86d5b0ac88889fd9fc8c4cf36212e8a9a880c940f605978129d9453d71c"
+        },
+        {
+            "file": "Engine.u",
+            "version": 61,
+            "exports": 3619,
+            "native_complete": 3550,
+            "exceptions": 0,
+            "sha256": "6d7c00d5b55a2d00dc5524595d757cebacdceca73aa9d32b66676d2c885e8ce6"
+        },
+        {
+            "file": "Fire.u",
+            "version": 61,
+            "exports": 107,
+            "native_complete": 101,
+            "exceptions": 0,
+            "sha256": "d072d0253046668045687779dfb6575a589bb3c03feb512865dbe416ea5b1b0c"
+        },
+        {
+            "file": "IpDrv.u",
+            "version": 61,
+            "exports": 258,
+            "native_complete": 250,
+            "exceptions": 0,
+            "sha256": "8b36ca40096a92600195558143d2e9d85ebe6b5738623e5a9cebf85be8e2b391"
+        },
+        {
+            "file": "UNreal.u",
+            "version": 61,
+            "exports": 10233,
+            "native_complete": 9746,
+            "exceptions": 0,
+            "sha256": "a1145de5ed67bd7a5457c38cfda70d1ecf61f030c09b78d1089bc51d9d1ea3dd"
+        },
+        {
+            "file": "Announcer.uax",
+            "version": 68,
+            "exports": 39,
+            "native_complete": 39,
+            "exceptions": 0,
+            "sha256": "62f66e0a594362e1037ebabdf3969aefbf094bd99d8a50bd77ea2cae4599dc58"
+        },
+        {
+            "file": "BossVoice.uax",
+            "version": 68,
+            "exports": 64,
+            "native_complete": 64,
+            "exceptions": 0,
+            "sha256": "f89f692a6124fdd84aab3938b4e2dd363c40318ae5a9a0d6612bb8e3977e89f5"
+        },
+        {
+            "file": "CountDown.uax",
+            "version": 66,
+            "exports": 19,
+            "native_complete": 19,
+            "exceptions": 0,
+            "sha256": "70d29e6d0cfa87cfcf93fb590e52cd0cafd355b3ebd6561b050329bbf491bcb2"
+        },
+        {
+            "file": "Female1Voice.uax",
+            "version": 68,
+            "exports": 65,
+            "native_complete": 65,
+            "exceptions": 0,
+            "sha256": "4940ebe2fedef45f5cd09bfec2daad2a3a875ab17787ed566116e582b84acbb1"
+        },
+        {
+            "file": "Female2Voice.uax",
+            "version": 68,
+            "exports": 69,
+            "native_complete": 69,
+            "exceptions": 0,
+            "sha256": "05a9f328efa49b69328f4cd1c92e0f5a80e67010513f83363c054bc35e2d5d90"
+        },
+        {
+            "file": "FemaleSounds.uax",
+            "version": 68,
+            "exports": 20,
+            "native_complete": 20,
+            "exceptions": 0,
+            "sha256": "453e1e537c0714dc3d876352029ad2375ef0f03368a509be3cd232e190e11ce9"
+        },
+        {
+            "file": "LadderSounds.uax",
+            "version": 66,
+            "exports": 6,
+            "native_complete": 6,
+            "exceptions": 0,
+            "sha256": "3b8ec7fc7f6572665470b6a8331e2bf5c867068365251cd86ed942544126b84f"
+        },
+        {
+            "file": "Male1Voice.uax",
+            "version": 68,
+            "exports": 60,
+            "native_complete": 60,
+            "exceptions": 0,
+            "sha256": "11b79e4b376ee10f2f4dc01234f2cd8d1134fe7f0678614da7285631f044647b"
+        },
+        {
+            "file": "Male2Voice.uax",
+            "version": 68,
+            "exports": 68,
+            "native_complete": 68,
+            "exceptions": 0,
+            "sha256": "969a85ff0d653983353e190ea7a8cd16abfb5425f45f281bea6cc27e888ac1f6"
+        },
+        {
+            "file": "malesounds.uax",
+            "version": 68,
+            "exports": 19,
+            "native_complete": 19,
+            "exceptions": 0,
+            "sha256": "1cd6cf6d3d7f8a4a39dec1e5ffe8b69d412e9a66de4b7f2635e7b128b119aebf"
+        }
+    ],
+    "native_statuses": {
+        "native:native_const_record_complete": 10,
+        "native:native_enum_record_complete": 37,
+        "native:native_font_record_complete": 8,
+        "native:native_function_record_complete": 3368,
+        "native:native_mesh_record_complete": 342,
+        "native:native_package_record_complete": 94,
+        "native:native_palette_record_complete": 470,
+        "native:native_property_record_complete": 7723,
+        "native:native_sound_record_complete": 844,
+        "native:native_state_record_complete": 377,
+        "native:native_struct_record_complete": 16,
+        "native:native_textbuffer_record_complete": 573,
+        "native:native_texture_record_complete": 759,
+        "tag:class_default_tags_structurally_decoded_schema_unverified": 513,
+        "tag:class_metadata_no_script_no_defaults_complete": 60,
+        "tag:tag_envelope_decoded": 14621
+    },
+    "class_counts": {
+        "BoolProperty": 895,
+        "ByteProperty": 324,
+        "ClassProperty": 92,
+        "Const": 10,
+        "Enum": 37,
+        "FireTexture": 42,
+        "FloatProperty": 1360,
+        "Font": 8,
+        "Function": 3368,
+        "IntProperty": 931,
+        "Mesh": 342,
+        "NameProperty": 337,
+        "ObjectProperty": 1885,
+        "Package": 94,
+        "Palette": 470,
+        "Sound": 844,
+        "State": 377,
+        "StringProperty": 409,
+        "Struct": 16,
+        "StructProperty": 1490,
+        "TextBuffer": 573,
+        "Texture": 716,
+        "WetTexture": 1
+    },
+    "pinned_epic_source_sha256": {
+        "Src/UnMesh.cpp": "fd10707fadf6d3d51df26f540889db6a22bee30c653cc51a6fad500a411cab49",
+        "Src/UnFont.cpp": "ddfb70cfecef65ff51af7fb2849aa7b3a14249606a3ea4e71636aaa28e419f7f",
+        "Src/UnTex.cpp": "f35a19b71e4c77a24f474f52bedbd2b594afa0e8a769e86a8736c7650e957374",
+        "Inc/UnTex.h": "5169cdc61c5ed23a742534977eb0bd1a8f5f8ebe13b700dafecb9f1af8d5429b"
+    },
+    "remaining": "513 class-default schemas structurally decoded but source/schema unverified; no compiled native oracle"
+}
