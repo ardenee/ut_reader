@@ -26,3 +26,17 @@ All tests ran only on DEV and were journalled in the isolated worktree:
 ## Unresolved scope
 
 G2 acceptance stays OPEN: other original 1997 archive methods require complete source-specific parity and original genuine-file/compiled evidence under G5. These are source-generated fixtures, **not** a 1997 Epic engine runtime oracle. Runtime class constructors, transient-property memory zeroing, C++ pointer fixups and VM execution are not simulated; archive values are not claims about C++ runtime state. The known May-vs-July `CPF_Intrinsic` persisted-byte condition is an independent already corrected discrepancy.
+
+
+## Release — 2026-10-23
+
+- Mainline Git commit: `0339a486` (pushed `origin/main`)
+- Focused original May/July fixture: **30/30 PASS on DEV**
+- Scoped affected tests: **5/5 PASS on DEV**
+- PRD: exactly three modified PHP reader files transferred from DEV to `Z:\Apache24\htdocs\unrealdb`; SHA-256 source equals destination:
+  - `CatalogUE1OriginalUnrealfileBinaryPropertyReader.php`: `f89484ffcdb72b871345c41e5089d97962419600d6171ccef086a800fb52a34a`
+  - `CatalogUE1OriginalUnrealfilePropertiesReader.php`: `1ecdf5e0e9b4a85694d0b45bacc556b3b621f804a956a8cee245279691d5cf8d`
+  - `CatalogUE1OriginalUnrealfilePropertySerializationGate.php`: `a6089d247cf9d697a5cd782faf28cd220120666ddd807c0dc8ba8b62da5e0154`
+- **No PHP tests on PRD.** No broad 30-package corpus retest. Previously recorded failed pre-fix evidence preserved.
+- The previous unrelated G2 raw UBounds fix `0e686650` and its files were preserved; both fixes are on `main`. Further concurrent StackTree work not part of this release.
+- **G2 remains IN PROGRESS, NOT ACCEPTED.**

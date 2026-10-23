@@ -1,7 +1,7 @@
 {
   "contract": "g2-original-1997-rotation-bins",
-  "stage": "ready-to-release",
-  "last_action": "Corrected May original v22/v23 per-object UClass::SerializeBin FRotation 6-byte WORD and UProperties separate bin versus July 12-byte signed INT; verified real Epic May/July source, 30/30 focus, 5/5 DEV affected PASS. Three production files byte-identical to independently tested isolated git branch; no unrelated reader changes. G2 gate remains open.",
-  "next_step": "Commit/push verified G2 fix and evidence; deploy exactly 3 source PHP readers DEV to PRD with per-file SHA256. Never run PRD PHP tests; record commit and release in checkpoint.",
-  "updated_at_utc": "2026-10-23T14:48:18+00:00"
+  "stage": "released-verified",
+  "last_action": "Mainline commit 0339a486 pushed; original May/July FRotation per-object/UProperties 6/12-byte source fix passed 30/30 focused and 5/5 affected DEV; all 3 production PHP files SHA256 matched PRD, zero PRD PHP tests; standalone G2 contract release docs updated. G2 IN PROGRESS.",
+  "next_step": "Advance remaining G2 distinct Epic source contracts and genuine 1997 matching original files; do not rerun unchanged rotation suite. Keep parallel StackTree edits separate and do not conflate proof of one contract with entire O06 G2 acceptance.",
+  "updated_at_utc": "2026-10-23T14:50:46+00:00"
 }
