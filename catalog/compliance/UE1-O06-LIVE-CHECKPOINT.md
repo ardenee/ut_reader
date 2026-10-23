@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `t99-struct-field-iterator-filter`
-- **Stage:** source-test-journaled
-- **Last completed action:** Source UT99 TFieldIterator<UProperty> non-property UField filter implemented; 22/22 focus PASS and contract gate 5/5 PASS, including negative malformed UConst extension. Prior failing pre-fix fixture journal preserved.
-- **Resume at:** Append source-scope docs, lint, commit/push and hash-deploy single production PHP reader; next contract select from remaining G3/G4.
-- **Active changed at:** 2026-10-23T12:52:15+00:00
+- **Stage:** released-verified
+- **Last completed action:** Committed f4e26b64, pushed and SHA deployed single UT99 struct field iterator reader 6A02DDE6...E052; 22/22 focused and 5/5 gate passed; no PRD PHP tests.
+- **Resume at:** Prioritise independent native Epic UT99 runtime oracle and genuine imported UStruct datasets; do not accept nested struct solely from synthetic packages. New source contract must use focused test plan.
+- **Active changed at:** 2026-10-23T12:54:22+00:00
 - **Latest DEV test states:** PASS 94; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
