@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "captured_utc": "2026-10-23T21:25:29+00:00",
+  "compiled_engine_path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.dll",
+  "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "native_method_disassembly_tool": "MSVC dumpbin /exports /disasm /range",
+  "native_methods": {
+    "UAnimation::Serialize": {
+      "export_rva": "0x1FD2",
+      "compiled_method_rva": "0xECEC0",
+      "archive_field_order": [
+        "UObject::Serialize",
+        "RefBones",
+        "Moves",
+        "AnimSeqs"
+      ],
+      "array_offsets": [
+        "0x28",
+        "0x34",
+        "0x40"
+      ],
+      "source_struct_operators": "v432 Engine/Inc/UnSkeletalMesh.h and UnAnim.h",
+      "mapping": "MAPPED"
+    },
+    "USkeletalMesh::Serialize": {
+      "export_rva": "0x341D",
+      "compiled_method_rva": "0xED290",
+      "archive_field_order": [
+        "ULodMesh::Serialize",
+        "ExtWedges",
+        "Points",
+        "RefSkeleton",
+        "BoneWeightIdx",
+        "BoneWeights",
+        "LocalPoints",
+        "SkeletalDepth",
+        "DefaultAnimation",
+        "WeaponBoneIndex",
+        "WeaponAdjust"
+      ],
+      "array_offsets": [
+        "0x1B0",
+        "0x1BC",
+        "0x1C8",
+        "0x1D4",
+        "0x1E0",
+        "0x1EC"
+      ],
+      "trailing_offsets": [
+        "0x22C",
+        "0x230",
+        "0x1F8",
+        "0x1FC..0x22B"
+      ],
+      "source_operator_quirks": [
+        "VJointPos archives XSize twice, not YSize",
+        "FMeshBone omits in-memory Depth"
+      ],
+      "mapping": "MAPPED"
+    },
+    "UFont::Serialize": {
+      "export_rva": "0x242D",
+      "compiled_method_rva": "0x846D0",
+      "version_gate": 69,
+      "v69_extra_fields": [
+        "CharRemap TMap after Pages and CharactersPerPage",
+        "IsRemapped UBOOL"
+      ],
+      "older_version_load_effect": "IsRemapped set to zero without extra archive bytes",
+      "mapping": "MAPPED",
+      "remaining": "G5 genuine native-loaded font values and runtime remap behaviour",
+      "compiled_char_remap_tmap_rva": "0x84D00",
+      "ver69_tmap_wire": "AR_INDEX(pair_count), pair_count*(WORD source_char + WORD replacement_char), DWORD IsRemapped",
+      "compiled_tmap_pair_memory_stride": 8,
+      "compiled_tmap_pair_file_bytes": 4
+    }
+  },
+  "focused_positive_negative_fixtures": {
+    "verify-v432-skeletal-record-operators.php": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\verify-v432-skeletal-record-operators.php",
+      "sha256": "f67e76bd718cb5d42440787283c28d2fb4b77f465ed3af3af2e7fa4ce57a05d5"
+    },
+    "verify-v432-compiled-animation-records.php": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\verify-v432-compiled-animation-records.php",
+      "sha256": "a1840704ad65804610790c51dfd31295ae9160734cd7f60ac822965e7234a7f5"
+    },
+    "verify-v432-compiled-skeletalmesh-order.php": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\verify-v432-compiled-skeletalmesh-order.php",
+      "sha256": "a200f9b9626356db16bf2ae0fb58f030074a244f93a90a0642ceb5cbc9eb98d2"
+    },
+    "verify-v432-compiled-font-remap.php": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\verify-v432-compiled-font-remap.php",
+      "sha256": "9e4aca8ec7482e6ec180fdc002c96978dfc59c9fd10192d5a9cdc738804ef21e"
+    }
+  },
+  "scope_limit": "Compiled archive methods plus inlined source record operators; no genuine v432 skeletal value parity or G5 blanket acceptance",
+  "prd_deployed": false
+}

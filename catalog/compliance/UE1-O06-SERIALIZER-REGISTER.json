@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T20:57:00+00:00",
+  "updated_at_utc": "2026-10-23T21:28:00+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -8067,9 +8067,9 @@
       "status": "MAPPED",
       "reader": "CatalogUE1ClassicNativeObjectReader.php (UT99 UFont : UObject; page texture refs, FFontCharacter arrays, CharactersPerPage)",
       "test": "verify-ue1-o06-genuine-compiled-native.php",
-      "evidence": "Epic UT99 v400 Engine/Src/UnFont.cpp shows UFont no UTexture inheritance; Ar<<Pages<<CharactersPerPage and FFontPage texture + glyphs in Engine/Inc/UnTex.h; existing version>=62 pages branch preserved. The genuine corpus shows old C98 alternative cannot be applied to ver61.; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned T99 Engine/Src/UnFont.cpp:19 on-disk native archive -> native_font_record_complete; typed source-family branch implemented.",
-      "remaining": "No genuine v62+ UFont Pages export or compiled UT99 oracle tested; this source contract remains partial. Current 16-package corpus tests 8 v61 fonts, not UT99 font pages. G4 implementation 2026-10-23 UFont (VERIFICATION DEFERRED): UT99 v400 Engine/Inc/UnTex.h FFontPage serialized Texture UObject reference now package-map-bounded; every FFontCharacter StartU/StartV/USize/VSize source INT32 decoded with full glyph-array SHA256, sampled typed previews, and source UnFont.cpp exact CharactersPerPage 32-bit power-of-two check, original DWORD retained. Font texture preloads/rasterization and native engine acceptance remain open. No functional tests or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23; engine runtime effects and G5 oracle/corpus verification separately deferred. No missing native serialized fields for selected source family.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "evidence": "Epic UT99 v400 Engine/Src/UnFont.cpp shows UFont no UTexture inheritance; Ar<<Pages<<CharactersPerPage and FFontPage texture + glyphs in Engine/Inc/UnTex.h; existing version>=62 pages branch preserved. The genuine corpus shows old C98 alternative cannot be applied to ver61.; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned T99 Engine/Src/UnFont.cpp:19 on-disk native archive -> native_font_record_complete; typed source-family branch implemented. COMPILED_V432_UFONT_DELTA_FOUND 2026-10-23: Engine.dll RVA 0x242D -> 0x846D0; ver>=69 TMap CharRemap then IsRemapped; existing reader omits, re-opened. COMPILED_V432_FONT_REMAP_SOURCE_MAPPED 2026-10-23: Engine.dll SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac; UFont::Serialize RVA 0x846D0, TMap pair RVA 0x84D00, ver69+ compact count + WORD key/WORD value pairs + DWORD IsRemapped; legacy version no archive tail; focused positive-negative fixture PASS.",
+      "remaining": "UT99 v432 complete FILE archive mapped from authentic compiled method and declared TMap pair operator. Source-ver69+ CharRemap and IsRemapped decoded, legacy versions zero IsRemapped without consuming file bytes. G5 full genuine-package native value comparison and font remap loaded runtime memory still OPEN. O06 source-to-code mapping is not G5 acceptance.",
+      "updated_at_utc": "2026-10-23T21:28:00+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -8079,24 +8079,41 @@
         "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       },
       "source_mapping": {
-        "implementation_status": "IMPLEMENTED",
-        "source_branch": "T99",
-        "epic_source": "Engine/Src/UnFont.cpp:19",
-        "source_contract": "Epic UTexture-mip + Characters vs UT99 UObject Pages and CharactersPerPage",
-        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
-        "php_completed_status": "native_font_record_complete",
-        "source_selection": "Epic UE1 engine baseline with explicit UT99 v400 game-source override",
-        "verification_status": "DEFERRED"
+        "implementation_status": "MAPPED_COMPILED_V432_ARCHIVE_METHOD",
+        "game_loader": "UT99 v432 over inherited UT99 v400",
+        "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+        "compiled_font_export_stub_rva": "0x242D",
+        "compiled_font_method_rva": "0x846D0",
+        "compiled_char_remap_tmap_serializer_rva": "0x84D00",
+        "compiled_map_pair_stride_in_memory": 8,
+        "on_disk_map_pair_size": 4,
+        "compiled_version_gate": 69,
+        "version69_archive_order": [
+          "UObject::Serialize",
+          "TArray<FFontPage> Pages",
+          "CharactersPerPage",
+          "TMap<TCHAR,TCHAR> CharRemap",
+          "UBOOL IsRemapped"
+        ],
+        "older_versions": "Pages and CharactersPerPage only; IsRemapped=0 in memory",
+        "php": "CatalogUE1ClassicNativeObjectReader.php -> CatalogUE1ClassicV432NativeDeltaReader::decodeFontRemap",
+        "source_struct_operator": "v432 Core/Inc/UnTemplate.h::TMapBase::operator<<",
+        "source_class": "v432 Engine/Inc/UnTex.h::UFont",
+        "focused_positive_negative_fixture": "C:/Temp/UnrealDB/O06/verify-v432-compiled-font-remap.php",
+        "g5_genuine_font_runtime_values": "OPEN",
+        "prd": "NOT_DEPLOYED"
       },
       "v432_source_review": {
         "selected_game_profile": "ut99-v432",
         "archive_implementation_inherited_from": "ut99-v400",
         "v432_public_header_core_or_engine_implementation": "PRECOMPILED_NO_SRC",
         "v432_declaration_present_in_new_skeletal_headers": false,
-        "v432_source_method_delta_verification": "OPEN_COMPILED_ORACLE",
+        "v432_source_method_delta_verification": "COMPILED_METHOD_SOURCE_ARCHIVE_MAPPED",
         "v432_mapping_scope": "v400-based archive implemented; v432 source may have game-specific additions",
         "v432_native_full_signoff": false
-      }
+      },
+      "implementation_history_before_v432_font_delta": "No genuine v62+ UFont Pages export or compiled UT99 oracle tested; this source contract remains partial. Current 16-package corpus tests 8 v61 fonts, not UT99 font pages. G4 implementation 2026-10-23 UFont (VERIFICATION DEFERRED): UT99 v400 Engine/Inc/UnTex.h FFontPage serialized Texture UObject reference now package-map-bounded; every FFontCharacter StartU/StartV/USize/VSize source INT32 decoded with full glyph-array SHA256, sampled typed previews, and source UnFont.cpp exact CharactersPerPage 32-bit power-of-two check, original DWORD retained. Font texture preloads/rasterization and native engine acceptance remain open. No functional tests or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23; engine runtime effects and G5 oracle/corpus verification separately deferred. No missing native serialized fields for selected source family.",
+      "implementation_history_before_final_closure": "REAL V432 COMPILED SOURCE GAP: installed v432 Engine.dll (SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac) exports UFont::Serialize RVA 0x242D -> native RVA 0x846D0. After inherited UObject, Pages, CharactersPerPage, if Archive.Ver() >= 69 it additionally archives CharRemap (a TMap from v432 Engine/Inc/UnTex.h and Core/Inc/UnTemplate.h) and IsRemapped UBOOL; below 69 sets IsRemapped=0 without file bytes. Production font reader currently stops after CharactersPerPage. Implement exact TMap pair archive and bool, confirm against compiled specialization and genuine v69 UFont data; leave PARTIAL until solved. No ABI assumptions, G5/native and PRD deferred."
     },
     {
       "id": "T99:UFunction::Serialize",
@@ -9499,22 +9516,46 @@
           "source_revision": "UT99 v432 (ENGINE_VERSION=430; package version 69)"
         }
       ],
-      "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicV432NativeDeltaReader.php (v432 source class + raw bounded tail; method body not available)",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php -> CatalogUE1ClassicV432NativeDeltaReader.php",
       "test": "",
-      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown.",
-      "remaining": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown. COMPILED_ENGINE_V432_ARCHIVE_MAPPED 2026-10-23: source SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac, exported stub RVA 0x341D jumps to 0xED290; genuine v432 method field order reconciled with v432 inlined struct operators; source-shaped positive/negative focused fixtures PASS.",
+      "remaining": "Compiled v432 native method order and inlined per-record archives IMPLEMENTED. Actual native loaded-value equality on genuine v432 skeletal/animation package data and object graph remains G5-OPEN; v432 inherited ULodMesh compiled-source equivalence to v400 remains G5-OPEN for USkeletalMesh. No PRD deployment or blanket source-parity acceptance.",
+      "updated_at_utc": "2026-10-23T21:25:29+00:00",
       "source_mapping": {
-        "implementation_status": "PARTIAL_V432_NATIVE_SERIALIZER",
-        "base_engine": "Epic UE1",
-        "predecessor": "UT99 v400",
-        "target": "UT99 v432",
-        "v432_source": "Engine/Inc/UnSkeletalMesh.h:286",
-        "production_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
-        "byte_order_unverified": true,
-        "g5_verification": "OPEN"
-      }
+        "implementation_status": "MAPPED_COMPILED_NATIVE_ARCHIVE_METHOD",
+        "game_source": "UT99-v432",
+        "predecessor": "UT99-v400",
+        "engine_baseline": "Epic UE1 UObject",
+        "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+        "compiled_export_stub_rva": "0x341D",
+        "compiled_native_method_rva": "0xED290",
+        "compiled_assembly_field_order": [
+          "ULodMesh::Serialize",
+          "ExtWedges",
+          "Points",
+          "RefSkeleton",
+          "BoneWeightIdx",
+          "BoneWeights",
+          "LocalPoints",
+          "SkeletalDepth",
+          "DefaultAnimation",
+          "WeaponBoneIndex",
+          "WeaponAdjust"
+        ],
+        "inlined_record_operators": "Engine/Inc/UnSkeletalMesh.h, Engine/Inc/UnAnim.h and Engine/Inc/UnMesh.h",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
+        "complete_file_archive_result": "native_skeletalmesh_record_complete",
+        "focus_fixtures": [
+          "verify-v432-skeletal-record-operators.php",
+          "verify-v432-compiled-animation-records.php",
+          "verify-v432-compiled-skeletalmesh-order.php"
+        ],
+        "g5_full_runtime_acceptance": "OPEN",
+        "v432_inherited_lodmesh_parity": "UNVERIFIED",
+        "prd_deployment": "DEFERRED"
+      },
+      "implementation_history_before_mapping": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations."
     },
     {
       "id": "T99:UAnimation::Serialize",
@@ -9528,22 +9569,39 @@
           "source_revision": "UT99 v432 (ENGINE_VERSION=430; package version 69)"
         }
       ],
-      "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicV432NativeDeltaReader.php (v432 source class + raw bounded tail; method body not available)",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php -> CatalogUE1ClassicV432NativeDeltaReader.php",
       "test": "",
-      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown.",
-      "remaining": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown. COMPILED_ENGINE_V432_ARCHIVE_MAPPED 2026-10-23: source SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac, exported stub RVA 0x1FD2 jumps to 0xECEC0; genuine v432 method field order reconciled with v432 inlined struct operators; source-shaped positive/negative focused fixtures PASS.",
+      "remaining": "Compiled v432 native method order and inlined per-record archives IMPLEMENTED. Actual native loaded-value equality on genuine v432 skeletal/animation package data and object graph remains G5-OPEN; v432 inherited ULodMesh compiled-source equivalence to v400 remains G5-OPEN for USkeletalMesh. No PRD deployment or blanket source-parity acceptance.",
+      "updated_at_utc": "2026-10-23T21:25:29+00:00",
       "source_mapping": {
-        "implementation_status": "PARTIAL_V432_NATIVE_SERIALIZER",
-        "base_engine": "Epic UE1",
-        "predecessor": "UT99 v400",
-        "target": "UT99 v432",
-        "v432_source": "Engine/Inc/UnSkeletalMesh.h:338",
-        "production_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
-        "byte_order_unverified": true,
-        "g5_verification": "OPEN"
-      }
+        "implementation_status": "MAPPED_COMPILED_NATIVE_ARCHIVE_METHOD",
+        "game_source": "UT99-v432",
+        "predecessor": "UT99-v400",
+        "engine_baseline": "Epic UE1 UObject",
+        "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+        "compiled_export_stub_rva": "0x1FD2",
+        "compiled_native_method_rva": "0xECEC0",
+        "compiled_assembly_field_order": [
+          "UObject::Serialize",
+          "RefBones",
+          "Moves",
+          "AnimSeqs"
+        ],
+        "inlined_record_operators": "Engine/Inc/UnSkeletalMesh.h, Engine/Inc/UnAnim.h and Engine/Inc/UnMesh.h",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
+        "complete_file_archive_result": "native_animation_record_complete",
+        "focus_fixtures": [
+          "verify-v432-skeletal-record-operators.php",
+          "verify-v432-compiled-animation-records.php",
+          "verify-v432-compiled-skeletalmesh-order.php"
+        ],
+        "g5_full_runtime_acceptance": "OPEN",
+        "v432_inherited_lodmesh_parity": "NOT_APPLICABLE",
+        "prd_deployment": "DEFERRED"
+      },
+      "implementation_history_before_mapping": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations."
     }
   ]
 }

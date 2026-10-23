@@ -143,9 +143,8 @@
   },
   "native_delta_production_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
   "register_counts_after": {
-    "MAPPED": 254,
-    "EXCLUDED": 38,
-    "PARTIAL": 2
+    "MAPPED": 256,
+    "EXCLUDED": 38
   },
   "existing_T99_source_coverage_note": "All existing T99 methods have v400 archive implementation mapping; v432 compiled-method equivalence not source-proven merely by the available public headers.",
   "public_header_direct_serialize_methods_v432": {
@@ -161,5 +160,16 @@
     "Core/Inc/UnClass.h: UStruct PropertiesAlign in-memory member; persisted form unproven",
     "Engine/Inc/UnSkeletalMesh.h: USkeletalMesh::Serialize native archive order not published",
     "Engine/Inc/UnSkeletalMesh.h: UAnimation::Serialize native archive order not published"
-  ]
+  ],
+  "compiled_native_method_evidence": {
+    "manifest": "catalog/compliance/UE1-UT99-V432-COMPILED-SERIALIZERS.json",
+    "engine_dll_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+    "mapped_compiled_methods": [
+      "USkeletalMesh::Serialize",
+      "UAnimation::Serialize",
+      "UFont::Serialize"
+    ],
+    "source_gap": [],
+    "inherited_v400_native_parity": "OPEN"
+  }
 }

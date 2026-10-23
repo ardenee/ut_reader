@@ -76,15 +76,9 @@ final class CatalogUE1ClassicNativeObjectReader
         if($gameOverride!==null){
             return array_replace($record,$gameOverride);
         }
-        // v432 introduces native skeletal and animation serializers absent
-        // from the v400 source inventory. Their full method bodies are not
-        // published in v432 Core/Engine Src; never call an empty native
-        // tail proof of a completed serializer for these classes.
-        $v432Delta=CatalogUE1ClassicV432NativeDeltaReader::inspect(
-            $path,$className,$start,$nativeLength,$family);
-        if($v432Delta!==null){
-            return array_replace($record,$v432Delta);
-        }
+        // v432 skeletal/animation method order now comes from the
+        // authentic installed compiled Engine.dll, not declarations.
+        // Decode after the common bounded archive callbacks below.
         if($nativeKind==='actor'){
             $actorVersion=(int)($pkg->getHeader()['version']??0);
             if($actorVersion<35||$actorVersion>69){
@@ -108,7 +102,7 @@ final class CatalogUE1ClassicNativeObjectReader
             ]);
         }
         if(!in_array($nativeKind,[
-            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix','vectors','verts','bspsurfs','bspnodes','polys','factory','exporter','levelfactorynew','classfactorynew','texturefactorynew',
+            'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','skeletalmesh','animation','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix','vectors','verts','bspsurfs','bspnodes','polys','factory','exporter','levelfactorynew','classfactorynew','texturefactorynew',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true)){
@@ -158,6 +152,18 @@ final class CatalogUE1ClassicNativeObjectReader
                 return $negative?-$value:$value;
             };
             $ver=(int)($pkg->getHeader()['version']??0);
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                &&$nativeKind==='animation'){
+                return array_replace($record,
+                    CatalogUE1ClassicV432NativeDeltaReader::inspectAnimation(
+                        $pkg,$read,$compact,$int,$pos,$limit));
+            }
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                &&$nativeKind==='skeletalmesh'){
+                return array_replace($record,
+                    CatalogUE1ClassicV432NativeDeltaReader::inspectSkeletalMesh(
+                        $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
+            }
             if(in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)){
                 return array_replace($record,CatalogUE1ClassicPropertyNativeReader::inspect(
                     $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family));
@@ -470,7 +476,9 @@ final class CatalogUE1ClassicNativeObjectReader
                 }
                 $charactersPerPage=$rawCharactersPerPage>=0x80000000
                     ?$rawCharactersPerPage-0x100000000:$rawCharactersPerPage;
-                return array_replace($record,[
+                $fontRemap=CatalogUE1ClassicV432NativeDeltaReader::decodeFontRemap(
+                    $ver,$read,$compact,$int,$pos,$limit);
+                return array_replace($record,$fontRemap,[
                     'status'=>$pos===$limit?'native_font_record_complete':'native_font_has_extension',
                     'page_count'=>$pageCount,'pages'=>$pages,
                     'characters_per_page'=>$charactersPerPage,

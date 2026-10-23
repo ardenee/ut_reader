@@ -149,7 +149,9 @@ final class CatalogUE1ClassicMeshNativeReader
         $result['textures']=$array('Textures',static fn():int=>$ref('Texture'),1);
         $result['bounding_boxes']=$array('BoundingBoxes',$box,25);
         $result['bounding_spheres']=$array(
-            'BoundingSpheres',$sphere,($ver<=61&&!$fullRadius)?12:16);
+            'BoundingSpheres',$sphere,
+            ($sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V432
+                &&$ver<=61)?12:16);
         $result['frame_verts']=$i32();$result['anim_frames']=$i32();
         $result['and_flags']=$uint();$result['or_flags']=$uint();
         $result['scale']=$vector();$result['origin']=$vector();
