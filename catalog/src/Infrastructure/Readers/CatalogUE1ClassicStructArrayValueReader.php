@@ -115,7 +115,8 @@ final class CatalogUE1ClassicStructArrayValueReader
                     'byteproperty','boolproperty','intproperty',
                     'floatproperty','strproperty','stringproperty',
                     'nameproperty','objectproperty','classproperty',
-                    'structproperty','arrayproperty','fixedarrayproperty'
+                    'structproperty','arrayproperty','fixedarrayproperty',
+                    'mapproperty'
                 ],true)){
                     return ['status'=>'struct_member_serializer_unverified',
                         'member_kind'=>$kind];
@@ -139,6 +140,32 @@ final class CatalogUE1ClassicStructArrayValueReader
                 $nestedLayout=null;
                 $arrayInner=null;
                 $arrayCount=null;
+                $mapFieldsVerified=false;
+                if($kind==='mapproperty'&&!$skip){
+                    // UT99 UMapProperty::SerializeItem emits NO values;
+                    // Key and Value must nevertheless be valid UProperty
+                    // descriptors (native checkSlow on both pointers).
+                    $mapFieldsVerified=true;
+                    foreach(['key_reference','value_reference'] as $label){
+                        $childRef=(int)($field['subclass_fields'][$label]??0);
+                        $child=$pkg->getExports()[$childRef-1]??null;
+                        if($childRef<=0||!is_array($child)
+                            ||(int)($child['outerIndex']??0)!==$ref){
+                            $mapFieldsVerified=false;break;
+                        }
+                        $childTag=CatalogUE1ClassicTaggedPropertyReader::inspect(
+                            $path,$pkg,$childRef-1,$sourceFamily);
+                        $childNative=CatalogUE1ClassicNativeObjectReader::inspect(
+                            $path,$pkg,$childRef-1,$childTag,$sourceFamily);
+                        if(($childNative['status']??'')
+                            !=='native_property_record_complete'){
+                            $mapFieldsVerified=false;break;
+                        }
+                    }
+                    if(!$mapFieldsVerified){
+                        return ['status'=>'struct_map_key_value_unresolved'];
+                    }
+                }
                 if(in_array($kind,['arrayproperty','fixedarrayproperty'],true)&&!$skip){
                     // UT99 UArrayProperty / UFixedArrayProperty serialize
                     // each element through their own Inner declaration.
@@ -216,6 +243,7 @@ final class CatalogUE1ClassicStructArrayValueReader
                     'nested_layout'=>$nestedLayout,
                     'array_inner_layout'=>$arrayInner,
                     'fixed_array_count'=>$arrayCount,
+                    'map_fields_verified'=>$mapFieldsVerified,
                 ];
                 $ref=(int)($field['next_field_reference']??0);
             }
@@ -269,6 +297,15 @@ final class CatalogUE1ClassicStructArrayValueReader
                             'UE1 struct field UObject linker index invalid');
                     }
                     $v=$ref;
+                }elseif($kind==='mapproperty'){
+                    // UT99 Core/Src/UnProp.cpp UMapProperty::SerializeItem
+                    // has the entire map-element loop commented out.
+                    // An array of these members occupies zero file bytes.
+                    if(!($field['map_fields_verified']??false)){
+                        return ['status'=>'nested_struct_map_unverified'];
+                    }
+                    $v=['source_map_value_archive_bytes'=>0,
+                        'source_map_element_loop_executed'=>false];
                 }elseif($kind==='arrayproperty'||$kind==='fixedarrayproperty'){
                     $innerLayout=$field['array_inner_layout']??null;
                     if(!is_array($innerLayout)){

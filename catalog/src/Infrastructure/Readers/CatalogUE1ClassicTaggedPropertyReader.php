@@ -83,23 +83,26 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 elseif($type===1&&$tagSize===1){$value=ord($raw);$valueKind='byte';}
                 elseif($type===2&&$tagSize===4){$v=unpack('V',$raw)[1];$value=$v>=0x80000000?$v-0x100000000:$v;$valueKind='int32';}
                 elseif($type===4&&$tagSize===4){$value=unpack('g',$raw)[1];$valueKind='float32';}
-                elseif($type===7&&$version>=40&&$tagSize>=1
-                    &&substr($raw,-1)==="\0"
-                    &&strpos($raw,"\0")===strlen($raw)-1){
-                    // C98 Core/Inc/UnType.h UStringProperty::SerializeItem
-                    // calls Ar.String(char*,StringSize); Core/Src/UnFile.cpp
-                    // archives bytes to first NUL, bounded by StringSize.
-                    // UT99 v400 additionally upgrades these old fixed-string
-                    // tags to UStrProperty on load, ahead of generic tag
-                    // mismatch checks (Core/Src/UnClass.cpp). Preserve ANSI
-                    // byte identity; do not guess the FromAnsi codepage.
-                    $textBytes=substr($raw,0,-1);
-                    $ascii=preg_match('/^[\\x09\\x0A\\x0D\\x20-\\x7E]*$/D',
-                        $textBytes)===1?$textBytes:null;
-                    $value=['raw_ansi_bytes_hex'=>bin2hex($textBytes),
-                        'ascii_text'=>$ascii,'byte_length'=>strlen($textBytes),
-                        'nul_terminated'=>true];
-                    $valueKind='legacy_ansi_cstring_bytes';
+                elseif($type===7){
+                    // Unreal v1.200 FArchive::String stops at NUL OR
+                    // StringSize-1; in the latter case it writes a NUL
+                    // only into memory, with no terminating archive byte.
+                    // Validate the capacity against the resolved
+                    // UStringProperty declaration in the schema reader.
+                    $firstNul=strpos($raw,"\0");
+                    if($firstNul===false||
+                        $firstNul===strlen($raw)-1){
+                        $nulArchived=$firstNul!==false;
+                        $textBytes=$nulArchived?substr($raw,0,-1):$raw;
+                        $ascii=preg_match('/^[\\x09\\x0A\\x0D\\x20-\\x7E]*$/D',
+                            $textBytes)===1?$textBytes:null;
+                        $value=['raw_ansi_bytes_hex'=>bin2hex($textBytes),
+                            'ascii_text'=>$ascii,'byte_length'=>strlen($textBytes),
+                            'nul_terminated'=>$nulArchived,
+                            'nul_inserted_in_memory'=>!$nulArchived,
+                            'source_capacity_requires_property_declaration'=>true];
+                        $valueKind='legacy_ansi_cstring_bytes';
+                    }
                 }
                 elseif($type===13
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V400

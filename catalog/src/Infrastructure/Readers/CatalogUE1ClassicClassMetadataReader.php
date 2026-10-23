@@ -6,9 +6,10 @@
  * and Core/Src/UnClass.cpp:236,476,921,1440,1067;
  * UT99 v400 Core/Src/UnObj.cpp:478 and UnClass.cpp:239,593,712,914,1048.
  *
- * This decodes only the source-defined *complete no-script, empty-default*
- * branch. Non-empty SerializeExpr code or tagged defaults are explicitly
- * incomplete, never silently skipped or called accepted.
+ * Maps Epic's complete on-disk UClass::Serialize chain, including script
+ * expressions and tagged class defaults. Decoding a byte stream is NOT
+ * equivalent to executing native InitClassDefaultObject, linker Preload,
+ * LoadConfig or runtime property assignments.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -162,6 +163,16 @@ final class CatalogUE1ClassicClassMetadataReader
             // UClass::Serialize: old ClassRecordSize only when Ver<=61.
             $record['selected_source_family']=$family;
             $record['old_class_record_size']=$version<=61?$i32():null;
+            // UT99 v400 Core/Src/UnClass.cpp UClass::Serialize sets
+            // RF_Public|RF_Standalone when loading a <=61 archive.
+            // This is a source-defined *load effect*, not file bytes.
+            $legacyUt99=$family===CatalogUE1ClassicSourceFamily::UT99_V400
+                &&$version<=61;
+            $record['source_legacy_class_flags_added']=$legacyUt99
+                ?0x00080004:0;
+            $record['loaded_object_flags_after_uclass_serialize']=
+                $record['loaded_object_flags_after_uobject_serialize']
+                |$record['source_legacy_class_flags_added'];
             $record['class_flags']=$u32();
             $record['class_guid_raw_hex']=strtoupper(bin2hex($read(16)));
             // TArray<FDependency>, FDependency::operator<<:
@@ -187,9 +198,22 @@ final class CatalogUE1ClassicClassMetadataReader
                 $record['class_within_reference']=$reference('ClassWithin');
                 $record['class_config_name']=$name('ClassConfigName');
             }else{
+                // UT99 UClass sets ClassWithin=UObject::StaticClass()
+                // on <=61 loads. That is not an archived linker ref.
                 $record['class_within_reference']=null;
+                $record['class_within_after_load']=$legacyUt99
+                    ?'UObject::StaticClass':null;
                 $record['class_config_name']=['index'=>null,'text'=>'System'];
             }
+            $record['source_postload_defaults_effects']=$family===
+                CatalogUE1ClassicSourceFamily::EPIC_UE1
+                ?['InitProperties','GetDefaultObject::SetClass',
+                   'GetDefaultObject::LoadConfig(Config)',
+                   'GetDefaultObject::LoadConfig(Localized)']
+                :['InitClassDefaultObject',
+                   'GetDefaultObject::LoadConfig',
+                   'GetDefaultObject::LoadLocalized'];
+            $record['runtime_postload_effects_executed']=false;
             $record['defaults_serial_offset']=$position;
             // Epic UClass::Serialize invokes UObject::SerializeTaggedProperties
             // for the class defaults, using precisely the SAME FPropertyTag
@@ -213,6 +237,12 @@ final class CatalogUE1ClassicClassMetadataReader
             }
             $record['default_property_tags']=$defaults['tags'];
             $record['defaults_tag_count']=count($defaults['tags']);
+            // A NAME_None-terminated FPropertyTag archive and all of
+            // UClass's source trailing FArchive fields are consumed.
+            // Value application/linker fixups are separate operations.
+            $record['source_file_archive_complete']=$position===$end;
+            $record['source_file_archive_consumed_bytes']=$position-$start;
+            $record['source_file_archive_trailing_bytes']=$end-$position;
             $record['defaults_schema_verified']=false;
             if($record['defaults_tag_count']>0&&$verifyDefaultDeclarations){
                 $record['default_property_declaration_validation']=
@@ -230,6 +260,9 @@ final class CatalogUE1ClassicClassMetadataReader
                     'script_has_unparsed_expressions'=>false,
                     'unparsed_bytes'=>$end-$position,
                     'extension_bytes'=>$end-$position,
+                    'source_file_serialization_status'=>$position===$end
+                        ?'complete_file_archive_runtime_values_unverified'
+                        :'class_export_contains_unresolved_extension',
                 ]);
             }
             return array_replace($record,[
