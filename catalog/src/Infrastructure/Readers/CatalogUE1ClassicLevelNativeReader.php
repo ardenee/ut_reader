@@ -106,14 +106,39 @@ final class CatalogUE1ClassicLevelNativeReader
         $specs=[];
         for($i=0;$i<$specCount;$i++){
             $distance=$int();$start=$ref('ReachSpec.Start');$end=$ref('ReachSpec.End');
+            $legacyFloatRadius=null;$legacyFloatHeight=null;
             if($ver<54){
-                $radius=$float();$height=$float();$flags=$int();$pruned=null;
+                // Unreal v1.200 Engine/Inc/UnReach.h::FReachSpec::operator<<
+                // archives two FLOAT values, but immediately assigns each
+                // to the runtime INT CollisionRadius/CollisionHeight. A
+                // parsed wire float is NOT the value the engine loads.
+                $legacyFloatRadius=$float();$legacyFloatHeight=$float();
+                // C++ FLOAT -> INT truncates toward zero for finite values
+                // representable as signed INT32. Out-of-range, NaN and
+                // infinity have implementation-dependent native outcomes:
+                // retain the archive FLOAT and do not fabricate a value.
+                $toEpicInt=static fn(float $v):?int=>
+                    is_finite($v)&&$v>=-2147483648.0&&$v<2147483648.0
+                        ?(int)$v:null;
+                $radius=$toEpicInt($legacyFloatRadius);
+                $height=$toEpicInt($legacyFloatHeight);
+                $flags=$int();$pruned=null;
             }else{
                 $radius=$int();$height=$int();$flags=$int();$pruned=ord($read(1));
             }
-            $specs[]=['distance'=>$distance,'start_reference'=>$start,
+            $spec=['distance'=>$distance,'start_reference'=>$start,
                 'end_reference'=>$end,'collision_radius'=>$radius,
                 'collision_height'=>$height,'reach_flags'=>$flags,'pruned'=>$pruned];
+            if($ver<54){
+                // Preserve both source archive values and the actual
+                // post-Deserialize INT values; no invented bPruned byte.
+                $spec['archived_collision_radius_float']=$legacyFloatRadius;
+                $spec['archived_collision_height_float']=$legacyFloatHeight;
+                $spec['legacy_float_to_int_applied']=$radius!==null&&$height!==null;
+                $spec['legacy_float_to_int_unspecified_native_result']=
+                    $radius===null||$height===null;
+            }
+            $specs[]=$spec;
         }
         $result['reach_specs']=$specs;
         $result['time_seconds']=$float();

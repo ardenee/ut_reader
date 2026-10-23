@@ -116,6 +116,15 @@ final class CatalogUE1ClassicPropertyNativeReader
             // UInt/Float/Bool/Name/StrProperty add NO LOAD/SAVE native bytes.
             // UBoolProperty BitMask is serialized only in non-load/save archives.
         }
+        // These two pinned Epic serializers genuinely disagree for
+        // overlapping old package versions: Unreal v1.200 UnProp.cpp
+        // preserves PropertyFlags verbatim, whereas UT99 v400 UnProp.cpp
+        // clears obsolete net flags 0x00080040 after reading version<=61.
+        // Use the original source result for <=61 and UT99 for >=62;
+        // expose the separate UT99 legacy-loader result instead of
+        // silently pretending both engines produce identical flags.
+        $ut99LegacyEffectiveFlags = $version<=61
+            ?($flags & ~0x00080040):$flags;
         return [
             'status' => $position === $limit
                 ? 'native_property_record_complete' : 'native_property_has_extension',
@@ -124,8 +133,14 @@ final class CatalogUE1ClassicPropertyNativeReader
             'next_field_reference' => $nextField,
             'array_dim' => $arrayDim,
             'property_flags' => $flags,
-            'effective_property_flags' => $version <= 61
-                ? ($flags & ~0x00080040) : $flags,
+            'effective_property_flags' => $flags,
+            'effective_property_flags_if_ut99_v400_load' =>
+                $ut99LegacyEffectiveFlags,
+            'property_flag_load_semantics' => $version<=61
+                ? 'Unreal-v1200-preserve-flags'
+                : 'UT99-v400-preserve-flags',
+            'source_dependent_legacy_net_flags' =>
+                $version<=61&&$flags!==$ut99LegacyEffectiveFlags,
             'category_name_index' => $categoryIndex,
             'category_name' => (string)$nameMap[$categoryIndex]['name'],
             'rep_offset' => $repOffset,

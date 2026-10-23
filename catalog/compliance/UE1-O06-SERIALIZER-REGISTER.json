@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T17:18:41+00:00",
+  "updated_at_utc": "2026-10-23T17:28:21+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4835,8 +4835,8 @@
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
       "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
-      "updated_at_utc": "2026-10-23T16:44:52+00:00",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. G4 source implementation (2026-10-23; verification deferred): Unreal v1.200 Engine/Inc/UnReach.h FReachSpec::operator<< loads pre-v54 FLOAT CollisionRadius/Height then assigns them to INT. Production ULevel returns source INT truncation for representable floats while retaining original FLOAT wire values; out-of-range conversions are marked unspecified, not fabricated.",
+      "updated_at_utc": "2026-10-23T17:28:21+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5235,8 +5235,8 @@
       "reader": "CatalogUE1ClassicPropertyNativeReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
       "test": "verify-ue1-o06-genuine-class-default-declarations.php",
       "evidence": "Pinned Epic C98 Core/Src/UnClass.cpp UStruct::SerializeTaggedProperties warns/skips unknown property, type mismatch, array bounds, struct ItemName mismatch, CPF_Transient|CPF_Intrinsic (Core/Inc/UnObjBas.h 0x2000/0x1000); loader does not abort whole class. Epic C98 Core/Src/UnLinker.h ULinkerLoad::IndexToObject validates signed export/import and ULinkerLoad::operator<<(FName) validates NameMap; invalid indices are fatal. Production class schema reader traverses UClass/UStruct/UProperty native records including imported superclasses, field structs, flags and source-specific compatibility aliases, records skipped tag reasons, preserves unverified fixed string overflow. Genuine immutable v61 script corpus 513 UClass exports / 5344 defaults all matched declaration; 1507 actual FName/object linker index bounds validated (1423 object, 84 FName), negative invalid object and invalid name throw; 527/527 DEV reference verifier PASS run 20261023T084513224Z-cb8434c7. Class default declarations new warnings and flags/struct source conditions PASS run 20261023T084551845Z-ff62aeb2; 97 exact typed struct values, 576 exact fixed string bytes, 11/11 DEV direct regressions PASS. Git commit pending in current checkpoint.",
-      "remaining": "Real compiled v61 declarations and imported parent UProperty struct identities, CPF_Intrinsic/CPF_Transient and array bounds verified. Value reference bounds checked in source archive; runtime property offsets, bool bitmask layout and compiled engine value application remain partial.",
-      "updated_at_utc": "2026-10-23T13:11:39+00:00",
+      "remaining": "Real compiled v61 declarations and imported parent UProperty struct identities, CPF_Intrinsic/CPF_Transient and array bounds verified. Value reference bounds checked in source archive; runtime property offsets, bool bitmask layout and compiled engine value application remain partial. G3 source implementation (2026-10-23; verification deferred): Unreal v1.200 Core/Src/UnProp.cpp::UProperty::Serialize does NOT clear PropertyFlags; UT99 v400 UnProp.cpp only clears obsolete 0x00080040 for Ar.Ver()<=61. Production reader now retains original v1.200 flags as effective and separately exposes the UT99 legacy-loader result and source-dependent ambiguity.",
+      "updated_at_utc": "2026-10-23T17:28:21+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",

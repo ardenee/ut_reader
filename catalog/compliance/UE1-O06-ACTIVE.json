@@ -1,7 +1,7 @@
 {
-  "contract": "g4-ut99-ufont-glyph-records",
+  "contract": "g3-g4-original-ue1-legacy-fields",
   "stage": "implemented-pending-verification-no-tests",
-  "last_action": "Existing G4 T99:UFont::Serialize implemented source-defined font page payload fields: UT99 v400 FFontPage.Texture package index bounds checked, every FFontCharacter four signed INT coordinates decoded with bounded preview and whole-array SHA256; UFont::Serialize CharactersPerPage 32-bit bitwise check plus original raw word. Existing source-register G4 item and PROJECT-STATUS implementation queue annotated; no new tests, only PHP lint and git diff check, no PRD deployment or acceptance promotion.",
-  "next_step": "Continue existing G2/G3/G4 source-tracked PHP production implementation. When implementation phase is finished, perform separately scoped verification and then PRD deployment; do not run native export or synthetic test experiments now.",
-  "updated_at_utc": "2026-10-23T17:19:08+00:00"
+  "last_action": "G4 existing C98:ULevel::Serialize pre-v54 FReachSpec archived FLOAT collision values now transformed to Epic Unreal v1.200 loaded INT32 while raw floats retained; out-of-range/NaN native conversion unresolved. G3 existing C98:UProperty::Serialize v35-61 preserves original v1.200 PropertyFlags and separately exposes UT99 v400 <=61 legacy 0x00080040 flag-clear behavior, avoiding silent source-family conflation. Two production PHP files changed, existing source register and project queue updated; syntax and diff checks only; NO functional tests, new test contracts, PRD deploy or acceptance promotion.",
+  "next_step": "Continue source-defined G2/G3/G4 production serializer implementation from existing O06 queue. Keep functional verification and any PRD release as a separate later phase; no new synthetic/native-test tasks.",
+  "updated_at_utc": "2026-10-23T17:28:39+00:00"
 }
