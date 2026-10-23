@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `t99-local-inherited-struct`
-- **Stage:** ready-to-release
-- **Last completed action:** Scoped tests 2/2 PASS; affected 5/5 PASS reused; gate 9/9 PASS reused; workflow 52/52 PASS; source checks and lint clean
-- **Resume at:** Commit approved DEV state, push, SHA-deploy permitted files, record deployment result
-- **Active changed at:** 2026-10-23T11:42:20+00:00
+- **Stage:** released-verified
+- **Last completed action:** Commit dd82e611 pushed to origin/main; only 3 runtime reader PHP files deployed to PRD, SHA-256 3/3 matched; DEV working tree clean before release checkpoint
+- **Resume at:** O06 next contract: imported UStruct ancestry and linker source provenance; register a new focused plan before implementation
+- **Active changed at:** 2026-10-23T11:44:02+00:00
 - **Latest DEV test states:** PASS 93; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
