@@ -44,12 +44,35 @@ final class CatalogUE1ClassicNativeObjectReader
         }
         $nativeKind=strtolower($className);
         $sourceVersion=(int)($pkg->getHeader()['version']??0);
-        $family=CatalogUE1ClassicSourceFamily::select($sourceVersion,$sourceFamily);
+        $family=CatalogUE1ClassicSourceFamily::selectFromHeader(
+            $pkg->getHeader(),$sourceFamily);
         // A game may override only the native method of an otherwise
         // Epic-UE1-serialized object. Resolve the licensee-source delta
         // AFTER the inherited UObject tagged archive is decoded.
+        // The source C++ name has an A prefix, but the package's Class
+        // import is XBeamEmitter / XParticleEmitter / XRopeDeco in Emitter.
+        // A short class name alone is not proof that a different package
+        // declares the same game-native class.
+        $classSourcePackage=null;
+        if($classIndex<0){
+            $classImport=$imports[-$classIndex-1]??null;
+            $outer=(int)($classImport['outerIndex']??0);
+            if($outer<0){
+                $packageImport=$imports[-$outer-1]??null;
+                if(is_array($packageImport)
+                    &&strcasecmp((string)($packageImport['classNameText']??''),'Package')===0
+                    &&(int)($packageImport['outerIndex']??1)===0){
+                    $classSourcePackage=(string)$packageImport['objectNameText'];
+                }
+            }
+        }elseif($classIndex>0){
+            // A locally defined game class can only be tied to its game
+            // package when the package's own source identity is known.
+            $classSourcePackage=(string)pathinfo($path,PATHINFO_FILENAME);
+        }
         $gameOverride=CatalogUE1ClassicGameSourceOverlay::inspectNative(
-            $pkg->getHeader(),$className,$nativeLength,$propertyStream);
+            $pkg->getHeader(),$className,$nativeLength,$propertyStream,
+            $family,$classSourcePackage);
         if($gameOverride!==null){
             return array_replace($record,$gameOverride);
         }

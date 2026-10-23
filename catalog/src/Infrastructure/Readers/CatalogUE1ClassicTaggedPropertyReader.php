@@ -255,7 +255,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
         // in file versions <47, independent of RF_HasStack. In later
         // versions a flagged StateFrame still precedes tagged properties.
         $version=(int)($package->getHeader()['version']??0);
-        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        $family=CatalogUE1ClassicSourceFamily::selectFromHeader(
+            $package->getHeader(),$sourceFamily);
         $epic=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1;
         $names=$package->getNames();
         $len=(int)filesize($path);

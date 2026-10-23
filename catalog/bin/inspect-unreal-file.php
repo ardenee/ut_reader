@@ -374,16 +374,20 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
                 try {
                     $objectReader = new \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader($parsePath);
                     $objectReader->validatePackage();
+                    $header=$objectReader->getHeader();
+                    $selectedGameSource=
+                        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::selectFromHeader(
+                            $header,$ue1SourceFamily);
                     $exportCount = count($objectReader->getExports());
                     $samples = [];
                     $maxPreview = min($exportCount, 32);
                     for ($i = 0; $i < $maxPreview; $i++) {
                         try {
                             $tagged = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader::inspect(
-                                $parsePath, $objectReader, $i, $ue1SourceFamily
+                                $parsePath, $objectReader, $i, $selectedGameSource
                             );
                             $tagged['native_object'] = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicNativeObjectReader::inspect(
-                                $parsePath, $objectReader, $i, $tagged, $ue1SourceFamily
+                                $parsePath, $objectReader, $i, $tagged, $selectedGameSource
                             );
                             $samples[] = $tagged;
                         } catch (Throwable $propertyError) {
@@ -395,9 +399,7 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
                         }
                     }
                     $result['ue1_object_payload_preview'] = $samples;
-                    $result['ue1_selected_source_family'] =
-                        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::select(
-                            (int)($summary['version']??0),$ue1SourceFamily);
+                    $result['ue1_selected_source_family']=$selectedGameSource;
                     // Keep source hierarchy explicit: an inherited
                     // Epic UE1 object archive and an optional game override.
                     // Archive version alone cannot identify a game.
@@ -640,7 +642,7 @@ foreach ($arguments as $argument) {
     }
     if (str_starts_with($argument,'--ue1-source=')) {
         $requested=substr($argument,strlen('--ue1-source='));
-        if (!in_array($requested,['epic-ue1','ut99-v400'],true)) {
+        if (!in_array($requested,['epic-ue1','ut99-v400','unreal-v227'],true)) {
             fwrite(STDERR,'Invalid --ue1-source: '.$requested.PHP_EOL);
             exit(2);
         }
@@ -662,7 +664,7 @@ foreach ($arguments as $argument) {
 if ($paths === []) {
     fwrite(
         STDERR,
-        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v400] [--ue1-original-1997=unreal_1997_may|unreal_1997_july] <file-or-directory> [...]\n"
+        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v400|unreal-v227] [--ue1-original-1997=unreal_1997_may|unreal_1997_july] <file-or-directory> [...]\n"
     );
     exit(2);
 }

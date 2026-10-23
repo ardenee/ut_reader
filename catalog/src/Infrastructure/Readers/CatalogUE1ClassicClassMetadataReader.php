@@ -29,7 +29,8 @@ final class CatalogUE1ClassicClassMetadataReader
             throw new RuntimeException('Not a UE1 UClass export');
         }
         $version = (int)($pkg->getHeader()['version'] ?? 0);
-        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        $family=CatalogUE1ClassicSourceFamily::selectFromHeader(
+            $pkg->getHeader(),$sourceFamily);
         $start = (int)$ex['serialOffset'];
         $size = (int)$ex['serialSize'];
         if ($version < 35 || $version > 69) {

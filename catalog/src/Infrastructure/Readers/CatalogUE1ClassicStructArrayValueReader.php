@@ -18,11 +18,19 @@ final class CatalogUE1ClassicStructArrayValueReader
     /** @return array<string,mixed> */
     public static function resolve(
         string $path,CatalogUE1PackageReader $pkg,int $structReference,
-        ?string $sourceFamily=null
+        ?string $sourceFamily=null,array $activeStructs=[]
     ):array {
         if($structReference===0){
             return ['status'=>'struct_reference_none'];
         }
+        // UStructProperty::SerializeItem recurses through
+        // Struct->SerializeBin. Resolve nested declarations only from
+        // their exact linker references; never create a guessed layout.
+        $activeKey=$path."\0".$structReference;
+        if(isset($activeStructs[$activeKey])||count($activeStructs)>=64){
+            return ['status'=>'recursive_struct_layout_unverified'];
+        }
+        $activeStructs[$activeKey]=true;
         $fields=[];$visited=[];$importHops=0;$nonPropertySkips=0;
         $packageChain=[$path];
         $current=$structReference;
@@ -106,7 +114,8 @@ final class CatalogUE1ClassicStructArrayValueReader
                 if(!in_array($kind,[
                     'byteproperty','boolproperty','intproperty',
                     'floatproperty','strproperty',
-                    'nameproperty','objectproperty','classproperty'
+                    'nameproperty','objectproperty','classproperty',
+                    'structproperty'
                 ],true)){
                     return ['status'=>'struct_member_serializer_unverified',
                         'member_kind'=>$kind];
@@ -116,19 +125,32 @@ final class CatalogUE1ClassicStructArrayValueReader
                     return ['status'=>'struct_member_arraydim_invalid'];
                 }
                 $flags=(int)($field['effective_property_flags']??0);
+                $skip=($flags&0x3000)!==0;
+                $nestedLayout=null;
+                if($kind==='structproperty'&&!$skip){
+                    $nestedLayout=self::resolve(
+                        $path,$pkg,
+                        (int)($field['subclass_fields']['struct_reference']??0),
+                        $sourceFamily,$activeStructs);
+                    if(($nestedLayout['status']??null)
+                        !=='struct_local_field_layout_resolved'){
+                        return ['status'=>'nested_struct_member_layout_unverified',
+                            'member_name'=>(string)($fieldEx['objectNameText']??''),
+                            'reason'=>$nestedLayout['status']??'not_resolved'];
+                    }
+                }
                 $fields[]=[
                     'name'=>(string)($fieldEx['objectNameText']??''),
                     'kind'=>$kind,'array_dim'=>$dim,
-                    'skip_persistent_archive'=>($flags&0x3000)!==0,
+                    'skip_persistent_archive'=>$skip,
+                    'nested_layout'=>$nestedLayout,
                 ];
                 $ref=(int)($field['next_field_reference']??0);
             }
             $current=(int)($native['super_field_reference']??0);
         }
-        if(!array_filter($fields,
-            static fn(array $f):bool=>!$f['skip_persistent_archive'])){
-            return ['status'=>'struct_no_serialized_fields_unverified'];
-        }
+        // A struct whose fields all fail ShouldSerializeValue has a
+        // valid zero-byte archive; this is not an unknown file format.
         return [
             'status'=>'struct_local_field_layout_resolved',
             'struct_reference'=>$structReference,
@@ -147,8 +169,11 @@ final class CatalogUE1ClassicStructArrayValueReader
      */
     public static function readAt(
         string $bytes,int &$position,array $layout,bool $preview,
-        CatalogUE1PackageReader $valuePackage
+        CatalogUE1PackageReader $valuePackage,int $depth=0
     ):array {
+        if($depth>64){
+            return ['status'=>'nested_struct_depth_exceeded'];
+        }
         $members=[];$start=$position;
         foreach($layout['fields'] as $field){
             if($field['skip_persistent_archive']){continue;}
@@ -172,6 +197,21 @@ final class CatalogUE1ClassicStructArrayValueReader
                             'UE1 struct field UObject linker index invalid');
                     }
                     $v=$ref;
+                }elseif($kind==='structproperty'){
+                    $nestedLayout=$field['nested_layout']??null;
+                    if(!is_array($nestedLayout)
+                        ||($nestedLayout['status']??null)
+                            !=='struct_local_field_layout_resolved'){
+                        return ['status'=>'nested_struct_member_layout_unverified'];
+                    }
+                    $nested=self::readAt(
+                        $bytes,$position,$nestedLayout,$preview,
+                        $valuePackage,$depth+1);
+                    if(($nested['status']??null)!=='struct_field_values_decoded'){
+                        return ['status'=>'nested_struct_member_value_unverified',
+                            'reason'=>$nested['status']??'unknown'];
+                    }
+                    $v=$nested;
                 }elseif($kind==='strproperty'){
                     $decoded=CatalogUE1ClassicFStringArchiveReader::decodeAt(
                         $bytes,$position);

@@ -33,8 +33,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         string $path,CatalogUE1PackageReader $pkg,array $classRecord,array $tags,
         ?string $sourceFamily=null
     ): array {
-        $family=CatalogUE1ClassicSourceFamily::select(
-            (int)($pkg->getHeader()['version']??0),$sourceFamily);
+        $family=CatalogUE1ClassicSourceFamily::selectFromHeader(
+            $pkg->getHeader(),$sourceFamily);
         $valueArchivePackage=$pkg;
         $valuePath=$path;
         $classRef=(int)($classRecord['export_index']??-1)+1;
