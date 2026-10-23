@@ -169,8 +169,14 @@ final class CatalogUE1OriginalUnrealfilePropertiesReader
                                     'source_max_length'=>$maxLen];break;
                             case 8:$value=array_values(unpack('g3',$read(12)));break;
                             case 9:
-                                $value=array_map(self::signed(...),
-                                    array_values(unpack('V3',$read(12))));break;
+                                // Source-selected original 1997 FRotation:
+                                // May WORD[3] (6B, zero-extended);
+                                // July INT[3] (12B, signed).
+                                $value=$effectiveLineage===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY
+                                    ?array_values(unpack('v3',$read(6)))
+                                    :array_map(self::signed(...),
+                                        array_values(unpack('V3',$read(12))));
+                                break;
                             case 10:break; // Enum definition stores no instance bytes
                             default:throw new RuntimeException('Unknown UProperties class-defined type '.$type);
                         }

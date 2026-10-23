@@ -127,11 +127,17 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                         case 8:
                             $val=array_values(unpack('g3',$read(12)));break;
                         case 9:
-                            // FRotation uses signed 32-bit ANGLE_TYPE
-                            // (Epic v0.867 UnMath.h/UnPort.h).
-                            $angles=array_values(unpack('V3',$read(12)));
-                            $val=array_map(static fn(int $a):int=>
-                                $a>=0x80000000?$a-0x100000000:$a,$angles);
+                            // May 1997 FRotation::operator<< writes WORD
+                            // Pitch/Yaw/Roll then zero-extends to INT.
+                            // July 1997 writes three signed INTs. Neither
+                            // fork is identifiable from file version alone.
+                            if($sourceLineage===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY){
+                                $val=array_values(unpack('v3',$read(6)));
+                            }else{
+                                $angles=array_values(unpack('V3',$read(12)));
+                                $val=array_map(static fn(int $a):int=>
+                                    $a>=0x80000000?$a-0x100000000:$a,$angles);
+                            }
                             break;
                         case 10:break; // Enum definition stores no instance data.
                         case 7:

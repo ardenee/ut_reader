@@ -4,6 +4,7 @@
 declare(strict_types=1);
 require_once dirname(__DIR__).'/bootstrap/autoload.php';
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader as Props;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate as Gate;
 $checks=[];$bad=[];$check=static function(string $n,bool $ok)use(&$checks,&$bad):void{
  $checks[$n]=$ok;if(!$ok)$bad[]=$n;
 };
@@ -47,7 +48,8 @@ if(!is_string($tmp))throw new RuntimeException('No temp data for native properti
 try{
  foreach([22,23] as $ver){
   $fx=$make($ver);file_put_contents($tmp,$fx['bytes']);
-  $out=Props::read($tmp,true)['properties_objects'][0]??[];
+  $out=Props::read($tmp,true,[],
+     \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY)['properties_objects'][0]??[];
   $values=$out['property_values']??[];
   $check("v{$ver}_native_UClass_bin_stream",
     ($out['status']??null)==='native_UClass_bin_properties_decoded'
@@ -65,7 +67,8 @@ try{
     && ($values[3]['values']??null)===[[-1,2,3]]
     && ($values[4]['values']??null)===[[1.25,-2.0,3.5]]);
   $stage=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(
-     $tmp,['format'=>'early_unrealfile','version'=>$ver]
+     $tmp,['format'=>'early_unrealfile','version'=>$ver,
+       'source_lineage'=>Gate::JULY]
   );
   $s=$stage['native_metadata']['unrealfile_properties_bin']['properties_objects'][0]??[];
   $check("v{$ver}_original_staging_not_runtime",
@@ -73,16 +76,20 @@ try{
     && ($s['serialized_bytes_consumed']??null)===35
     && ($stage['parse_complete']??true)===false);
   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',3),$fx['head']+24,4));
-  try{Props::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Props::read($tmp,true,[],
+     \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY);$reject=false;}catch(RuntimeException){$reject=true;}
   $check("v{$ver}_invalid_class_resmap_rejected",$reject);
   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',3),$fx['head']+28,4));
-  try{Props::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Props::read($tmp,true,[],
+     \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY);$reject=false;}catch(RuntimeException){$reject=true;}
   $check("v{$ver}_invalid_property_bin_rejected",$reject);
   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',34),$fx['table']+66,4));
-  try{Props::read($tmp,true);$reject=false;}catch(RuntimeException){$reject=true;}
+  try{Props::read($tmp,true,[],
+     \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY);$reject=false;}catch(RuntimeException){$reject=true;}
   $check("v{$ver}_truncated_serialized_bin_rejected",$reject);
   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',2),$fx['head']+24,4));
-  $unresolved=Props::read($tmp,false)['properties_objects'][0]??[];
+  $unresolved=Props::read($tmp,false,[],
+     \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY)['properties_objects'][0]??[];
   $check("v{$ver}_unavailable_external_class_not_fabricated",
     ($unresolved['status']??null)==='class_schema_unavailable_or_external'
     && ($unresolved['property_values']??null)===[]);
