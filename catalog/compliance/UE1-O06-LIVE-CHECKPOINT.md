@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `t99-imported-struct-ancestry`
-- **Stage:** ready-to-release
-- **Last completed action:** Final imported Struct source/classPackage constraints verified; 18/18 focus, 7/7 contract gate pass with one cached, full O06 still open
-- **Resume at:** Commit and push source/fixture/evidence, SHA-verify only changed PHP readers in PRD, update release checkpoint.
-- **Active changed at:** 2026-10-23T12:41:36+00:00
+- **Stage:** released-verified
+- **Last completed action:** Imported UStruct contract released commit 10d9593d; 18/18 focus, 7/7 scoped gate; 2/2 PRD PHP source files SHA256 match; no PRD tests.
+- **Resume at:** Next source gap: verify TFieldIterator<UProperty> skips non-property UField children; implement bounded source behavior and focused fixture before wider tests.
+- **Active changed at:** 2026-10-23T12:44:11+00:00
 - **Latest DEV test states:** PASS 94; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

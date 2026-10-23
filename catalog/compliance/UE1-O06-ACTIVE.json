@@ -1,7 +1,7 @@
 {
   "contract": "t99-imported-struct-ancestry",
-  "stage": "ready-to-release",
-  "last_action": "Final imported Struct source/classPackage constraints verified; 18/18 focus, 7/7 contract gate pass with one cached, full O06 still open",
-  "next_step": "Commit and push source/fixture/evidence, SHA-verify only changed PHP readers in PRD, update release checkpoint.",
-  "updated_at_utc": "2026-10-23T12:41:36+00:00"
+  "stage": "released-verified",
+  "last_action": "Imported UStruct contract released commit 10d9593d; 18/18 focus, 7/7 scoped gate; 2/2 PRD PHP source files SHA256 match; no PRD tests.",
+  "next_step": "Next source gap: verify TFieldIterator<UProperty> skips non-property UField children; implement bounded source behavior and focused fixture before wider tests.",
+  "updated_at_utc": "2026-10-23T12:44:11+00:00"
 }
