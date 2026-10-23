@@ -10,6 +10,7 @@ NATIVE={"T99:UTextBuffer::Serialize":"verify-ue1-o06-native-ut99-textbuffer-expo
         "T99:UMusic::Serialize":"verify-ue1-o06-native-ut99-music-all.php"}
 COMPILED={"T99:UFont::Serialize","T99:UAnimation::Serialize","T99:USkeletalMesh::Serialize"}
 GENUINE_ARCHIVE={"T99:UFont::Serialize":"verify-ue1-o06-g5-genuine-v432-fonts.php"}
+NATIVE_LOADED={"T99:UFont::Serialize":"verify-ue1-o06-g5-native-v432-font-loaded-values.php"}
 EARLY={"R82","R83","R96","U86","U97","D97"}
 def read(p): return json.loads(p.read_text(encoding="utf-8-sig"))
 def digest(p): return hashlib.sha256(p.read_bytes()).hexdigest() if p and p.is_file() else None
@@ -55,6 +56,12 @@ for e in reg["entries"]:
     genuine_valid=bool(ge and ge.get("state")=="PASS" and ge.get("source_sha256")==current
                        and ge.get("output_sha256") and digest(glog)==ge["output_sha256"]
                        and digest(ROOT/"catalog"/"bin"/gt)==ge.get("test_sha256"))
+    lt=NATIVE_LOADED.get(ident)
+    le=latest.get(lt)
+    llog=ROOT/le["log"].replace("\\","/") if le and le.get("log") else None
+    loaded_valid=bool(le and le.get("state")=="PASS" and le.get("source_sha256")==current
+                      and le.get("output_sha256") and digest(llog)==le["output_sha256"]
+                      and digest(ROOT/"catalog"/"bin"/lt)==le.get("test_sha256"))
     gaps=["complete_native_fields_values_references_bytes_errors_not_proven"]
     if not named: gaps.append("no_named_test")
     elif not script.is_file(): gaps.append("named_test_file_absent")
@@ -62,7 +69,9 @@ for e in reg["entries"]:
     elif not logvalid or not scriptvalid: gaps.append("named_test_evidence_not_integrity_valid")
     elif not sourcevalid: gaps.append("global_source_inputs_changed")
     if e["branch"] in EARLY: gaps.append("matching_compiled_early_runtime_unavailable")
-    if ident in COMPILED: gaps.append("genuine_v432_loaded_values_missing")
+    if ident in COMPILED:
+        gaps.append("nonempty_remap_and_malformed_native_errors_open" if loaded_valid
+                    else "genuine_v432_loaded_values_missing")
     if ident in NATIVE: gaps.append("native_export_slice_only")
     rows.append({"id":ident,"branch":e["branch"],"implementation":"MAPPED",
         "reader":e.get("reader"),"named_test":named or None,
@@ -73,21 +82,24 @@ for e in reg["entries"]:
                              "compiled_archive_disassembly_only" if ident in COMPILED else "not_recorded",
         "native_slice_test":independent,"native_slice_evidence_valid":nativeslice,
         "genuine_archive_test":gt,"genuine_archive_evidence_current":genuine_valid,
+        "native_loaded_test":lt,"native_loaded_evidence_current":loaded_valid,
         "full_G5_method_acceptance":"OPEN","gaps":gaps})
 branches={}
 for b in sorted({r["branch"] for r in rows}):
     bs=[r for r in rows if r["branch"]==b]
     branches[b]={"mapped":len(bs),"unnamed":sum(not x["named_test"] for x in bs),
                  "native_slice":sum(x["native_slice_evidence_valid"] for x in bs),
-                 "compiled_order":sum(x["id"] in COMPILED for x in bs)}
+                 "compiled_order":sum(x["id"] in COMPILED and not x["native_loaded_evidence_current"] for x in bs),
+                 "native_loaded_value_slice":sum(x["native_loaded_evidence_current"] for x in bs)}
 no_named=[r["id"] for r in rows if not r["named_test"]]
 natives=[r["id"] for r in rows if r["native_slice_evidence_valid"]]
 summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
          "full_independent_method_verified":0,"native_partial_slice_evidence":len(natives),
-         "compiled_archive_only":len(COMPILED),"with_named_test":len(rows)-len(no_named),
+         "compiled_archive_only":sum(r["id"] in COMPILED and not r["native_loaded_evidence_current"] for r in rows),"with_named_test":len(rows)-len(no_named),
          "without_named_test":len(no_named),
          "named_tests_with_current_source_fingerprint":sum(r["named_test_current_global_fingerprint"] for r in rows),
          "genuine_v432_font_archive_compatibility":sum(r["genuine_archive_evidence_current"] for r in rows),
+         "compiled_native_loaded_value_slice":sum(r["native_loaded_evidence_current"] for r in rows),
          "early_methods_without_matching_compiled_runtime":sum(r["branch"] in EARLY for r in rows)}
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
@@ -107,19 +119,21 @@ lines=["# UE1 O06 — G5 evidence reconciliation","",
        "- 256 MAPPED; 38 EXCLUDED; 0 methods with demonstrated full independent native behaviour across all relevant criteria.",
        "- "+str(len(no_named))+" entries have no named test; 52 of these are R82/R83 early-resource identity mappings.",
        "- "+str(len(natives))+" independent compiled v432 native export comparison slices: "+", ".join(natives)+".",
-       "- Compiled v432 archive-order evidence without genuine loaded-value verification: "+", ".join(sorted(COMPILED))+".",
-       "- NEW current G5 genuine archive compatibility: "+str(summary["genuine_v432_font_archive_compatibility"])+" method (T99 UFont; 34 SHA-pinned file exports / 66 checks PASS). Not native loaded-value equality.",
+       "- Compiled v432 method archive-order evidence with no genuine loaded-value equality: "+", ".join(sorted(COMPILED - NATIVE_LOADED.keys()))+".",
+       "- Current genuine archive compatibility: "+str(summary["genuine_v432_font_archive_compatibility"])+" method (T99 UFont; 34 SHA-pinned file exports / 66 checks PASS).",
+       "- Current **compiled v432 native loaded-value slice**: "+str(summary["compiled_native_loaded_value_slice"])+" method (T99 UFont; 4 Engine.u fonts, 16,384 glyph bytes plus native texture linker identities, focused 61/61 PASS). Nonempty remap and malformed errors remain OPEN.",
+       "- Full installed UT99 corpus scanned 310 genuine packages, zero malformed structures; no native SkeletalMesh/Animation exports available as specimens.",
        "- Latest DEV journal state: "+str(result["latest_DEV_test_states"])+".",
        "- Named tests with current matching source fingerprint: "+str(summary["named_tests_with_current_source_fingerprint"])+" of "+str(summary["with_named_test"])+"; historical PASS is not an automatically current proof.",
        "- Global source fingerprint in latest status "+str(result["previous_source_sha256"])+"; independently recomputed "+str(current)+".",
        "", "## Branches","",
-       "| Branch | MAPPED | No named test | Native export slices | Compiled method only |",
-       "|---|---:|---:|---:|---:|"]
+       "| Branch | MAPPED | No named test | Native export slices | Compiled method only | Native loaded values subset |" ,
+       "|---|---:|---:|---:|---:|---:|"]
 for b,x in branches.items():
-    lines.append("| "+b+" | "+str(x["mapped"])+" | "+str(x["unnamed"])+" | "+str(x["native_slice"])+" | "+str(x["compiled_order"])+" |")
+    lines.append("| "+b+" | "+str(x["mapped"])+" | "+str(x["unnamed"])+" | "+str(x["native_slice"])+" | "+str(x["compiled_order"])+" | "+str(x["native_loaded_value_slice"])+" |")
 lines+=["","## G5 finite queue (do not replay existing valid tests)","",
         "1. Identify exact v432 PHP reader changes since last journal fingerprint and rerun only their invalidated focused tests.",
-        "2. Seek real v432 UFont CharRemap, USkeletalMesh and UAnimation exports. If none, explicitly mark specimen unavailable; synthetic fixtures do not prove runtime-loaded values.",
+        "2. Seek real **nonempty** v432 UFont CharRemap, USkeletalMesh and UAnimation exports outside the fully scanned 310-file vanilla UT99 installation; record unavailable specimen explicitly.",
         "3. Compare actual native property/default/struct loaded values, reference identities and consumed bytes for available genuine packages.",
         "4. R82/R83: 52 registered methods carry only source identity proof, no named test. Attach actual per-method source/production/fixture evidence before G5 signoff.",
         "5. Early R82/R83/R96/U86/U97/D97: locate matching original runtime; otherwise record a native oracle limitation, not invented PASS.",

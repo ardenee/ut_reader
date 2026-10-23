@@ -1,0 +1,72 @@
+{
+  "schema": 1,
+  "recorded": "2026-10-23",
+  "source_package": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+  "engine_package_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+  "native_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "native_core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "native_ucc_sha256": "90cf7eb27bf1dd56767720b01deb29d3169d9e749f4fda87933e715db390742f",
+  "compiled_method_rva": "0x846D0",
+  "post_archive_breakpoint_rva": "0x8486B",
+  "native_debugger": "Microsoft CDB x86 10.0.26100.4948",
+  "memory_log": "C:/Temp/UnrealDB/O06/g5-font-native-glyph-cdb.log",
+  "memory_log_sha256": "b73f87acf2b4da0f665830906059eb076f40f60f6e4c2ddd97d8bd51882f5166",
+  "glyph_dump_log": "C:/Temp/UnrealDB/O06/g5-font-write-glyph-cdb.log",
+  "glyph_dump_log_sha256": "8a028871383ac3507cccccc4ad9fadc08dcba3babd0b74228148b960d7837a68",
+  "reference_log": "C:/Temp/UnrealDB/O06/g5-font-reference-cdb.log",
+  "reference_log_sha256": "d06af8f421f4eb91dda6a81e7a1963d4bc12cf90969c3d625fd872291ed38b1e",
+  "native_command": "ucc.exe batchexport Engine.u Font txt C:\\Temp\\UnrealDB\\O06\\G5-font-test under CDB in a disposable System directory",
+  "expected_command_terminal_outcome": "no Font txt exporter; runtime method observations captured before expected exporter error",
+  "font_records": [
+    {
+      "name": "SmallFont",
+      "index": 2634,
+      "texture_reference": 5087,
+      "native_texture_linker_index": 5086,
+      "glyph_filename": "G5-font-glyph1.bin",
+      "glyph_bytes": 4096,
+      "glyph_sha256": "c95f04b26901ea5b7eefc6cb80914587c1450f02ba5d96cbdc1ba8820dca48d8"
+    },
+    {
+      "name": "MedFont",
+      "index": 5088,
+      "texture_reference": 5090,
+      "native_texture_linker_index": 5089,
+      "glyph_filename": "G5-font-glyph2.bin",
+      "glyph_bytes": 4096,
+      "glyph_sha256": "d95e5535d400dd8b3bf9a0535bfaf2271214a75bb13e359b646aa0cf58cdf255"
+    },
+    {
+      "name": "LargeFont",
+      "index": 5091,
+      "texture_reference": 5093,
+      "native_texture_linker_index": 5092,
+      "glyph_filename": "G5-font-glyph3.bin",
+      "glyph_bytes": 4096,
+      "glyph_sha256": "cf43ac4bf45f8bfe592c6a3623e767df6778a168e4ca9445ad3957cbbb4b76ac"
+    },
+    {
+      "name": "BigFont",
+      "index": 5094,
+      "texture_reference": 5096,
+      "native_texture_linker_index": 5095,
+      "glyph_filename": "G5-font-glyph4.bin",
+      "glyph_bytes": 4096,
+      "glyph_sha256": "385551d5a8b0a68255e2ee4c5d96b1efec3b0fae81f148a4a6c7c07c12863b0c"
+    }
+  ],
+  "loaded_field_contract": {
+    "characters_per_page": 256,
+    "pages": 1,
+    "glyphs_per_page": 256,
+    "char_remap_count": 0,
+    "is_remapped": 0,
+    "page_texture_pointer": "nonzero and compiled UObject._LinkerIndex equals serialized texture_reference minus one for all four Engine.u fonts"
+  },
+  "limits": [
+    "All native glyph data and selected counts matched for four actual loaded Engine.u v69 fonts.",
+    "Nonempty remap map, native malformed-input outcome and remaining 30 font exports not independently verified; four Engine.u page texture references ARE linker-index matched.",
+    "Other 30 discovered font exports not independently CDB loaded.",
+    "Compiled Font txt exporter unsupported; command ends with exporter error after successful observed load, not a parser discrepancy."
+  ]
+}

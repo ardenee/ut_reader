@@ -1,0 +1,48 @@
+﻿{
+    "ok": false,
+    "checks": 61,
+    "passed": 59,
+    "errors": [
+        "compiled_font_exporter_unavailable_only_after_object_load",
+        "exact_four_native_full_glyph_array_writes"
+    ],
+    "native_engine": "installed UT99 v432 Engine.dll",
+    "compiled_loader_calls": 4,
+    "matched_fonts": 4,
+    "matched_glyph_bytes": 16384,
+    "references": [
+        {
+            "font": "SmallFont",
+            "font_export": 2634,
+            "texture_reference": 5087,
+            "native_texture_linker_index": 5086,
+            "glyph_bytes": 4096,
+            "glyph_sha256": "c95f04b26901ea5b7eefc6cb80914587c1450f02ba5d96cbdc1ba8820dca48d8"
+        },
+        {
+            "font": "MedFont",
+            "font_export": 5088,
+            "texture_reference": 5090,
+            "native_texture_linker_index": 5089,
+            "glyph_bytes": 4096,
+            "glyph_sha256": "d95e5535d400dd8b3bf9a0535bfaf2271214a75bb13e359b646aa0cf58cdf255"
+        },
+        {
+            "font": "LargeFont",
+            "font_export": 5091,
+            "texture_reference": 5093,
+            "native_texture_linker_index": 5092,
+            "glyph_bytes": 4096,
+            "glyph_sha256": "cf43ac4bf45f8bfe592c6a3623e767df6778a168e4ca9445ad3957cbbb4b76ac"
+        },
+        {
+            "font": "BigFont",
+            "font_export": 5094,
+            "texture_reference": 5096,
+            "native_texture_linker_index": 5095,
+            "glyph_bytes": 4096,
+            "glyph_sha256": "385551d5a8b0a68255e2ee4c5d96b1efec3b0fae81f148a4a6c7c07c12863b0c"
+        }
+    ],
+    "limitations": "Four real v69 loaded fonts, exact glyph memory, selected native counts and export reference identity only. No nonempty CharRemap, native malformed-input exception parity, other font packages or O06-wide acceptance. Native batchexport intentionally lacked a Font txt exporter after load."
+}

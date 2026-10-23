@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-v432-native-font-loaded-values": {
+      "description": "Genuine UT99 v432 Engine.u UFont: 4 CDB post-Serialize loaded glyph arrays, CPP/page/remap, and resolved native texture linker identities; SHA-pinned native logs and blob artifacts",
+      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],
+      "focus": ["verify-ue1-o06-g5-native-v432-font-loaded-values.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-v432-genuine-font-byte-compat": {
       "description": "34 SHA-pinned genuine installed v68/v69 UT99 UFont exports, compiled v432 method archive order, full native byte consumption; no compiled in-memory value oracle",
       "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],
