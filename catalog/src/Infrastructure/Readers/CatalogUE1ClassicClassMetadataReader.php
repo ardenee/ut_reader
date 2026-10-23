@@ -29,6 +29,7 @@ final class CatalogUE1ClassicClassMetadataReader
             throw new RuntimeException('Not a UE1 UClass export');
         }
         $version = (int)($pkg->getHeader()['version'] ?? 0);
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         $start = (int)$ex['serialOffset'];
         $size = (int)$ex['serialSize'];
         if ($version < 35 || $version > 69) {
@@ -129,7 +130,7 @@ final class CatalogUE1ClassicClassMetadataReader
                 // XFER(T), whereas the archive uses compact object/name
                 // references. Exact supported token traversal is required.
                 $script=CatalogUE1ClassicScriptArchiveReader::inspect(
-                    $pkg,$version,$scriptSize,$read,$compact,$position,$sourceFamily);
+                    $pkg,$version,$scriptSize,$read,$compact,$position,$family);
                 $record['script_archive']=$script;
                 if($script['status']!=='script_archive_expressions_decoded'){
                     return array_replace($record,[
@@ -144,6 +145,7 @@ final class CatalogUE1ClassicClassMetadataReader
             $record['label_table_offset']=$u16();
             $record['state_flags']=$u32();
             // UClass::Serialize: old ClassRecordSize only when Ver<=61.
+            $record['selected_source_family']=$family;
             $record['old_class_record_size']=$version<=61?$i32():null;
             $record['class_flags']=$u32();
             $record['class_guid_raw_hex']=strtoupper(bin2hex($read(16)));
@@ -182,7 +184,7 @@ final class CatalogUE1ClassicClassMetadataReader
             $defaults=CatalogUE1ClassicTaggedPropertyReader::inspectClassDefaults(
                 $path,$pkg,$position,$end,$version);
             $position=$defaults['tag_end_offset'];
-            if($version<57){
+            if($version<57 && $family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
                 // Epic Unreal v1.200 Core/Src/UnClass.cpp::UClass::Serialize
                 // archives TWO trailing FName values AFTER the tagged
                 // defaults when Ar.Ver()<57. UT99 v400 removed this
@@ -200,7 +202,7 @@ final class CatalogUE1ClassicClassMetadataReader
             if($record['defaults_tag_count']>0&&$verifyDefaultDeclarations){
                 $record['default_property_declaration_validation']=
                     CatalogUE1ClassicClassDefaultSchemaReader::inspect(
-                        $path,$pkg,$record,$defaults['tags']);
+                        $path,$pkg,$record,$defaults['tags'],$family);
             }
             if($record['defaults_tag_count']>0){
                 return array_replace($record,[

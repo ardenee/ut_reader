@@ -17,7 +17,8 @@ final class CatalogUE1ClassicStructArrayValueReader
 {
     /** @return array<string,mixed> */
     public static function resolve(
-        string $path,CatalogUE1PackageReader $pkg,int $structReference
+        string $path,CatalogUE1PackageReader $pkg,int $structReference,
+        ?string $sourceFamily=null
     ):array {
         if($structReference===0){
             return ['status'=>'struct_reference_none'];
@@ -51,9 +52,9 @@ final class CatalogUE1ClassicStructArrayValueReader
                 return ['status'=>'struct_superclass_export_missing'];
             }
             $meta=CatalogUE1ClassicTaggedPropertyReader::inspect(
-                $path,$pkg,$current-1);
+                $path,$pkg,$current-1,$sourceFamily);
             $native=CatalogUE1ClassicNativeObjectReader::inspect(
-                $path,$pkg,$current-1,$meta);
+                $path,$pkg,$current-1,$meta,$sourceFamily);
             if(strcasecmp((string)($native['class_name']??''),'Struct')!==0
                 ||($native['status']??'')!=='native_struct_record_complete'){
                 return ['status'=>'struct_native_layout_unverified'];
@@ -75,9 +76,9 @@ final class CatalogUE1ClassicStructArrayValueReader
                     return ['status'=>'struct_child_owner_unverified'];
                 }
                 $tag=CatalogUE1ClassicTaggedPropertyReader::inspect(
-                    $path,$pkg,$ref-1);
+                    $path,$pkg,$ref-1,$sourceFamily);
                 $field=CatalogUE1ClassicNativeObjectReader::inspect(
-                    $path,$pkg,$ref-1,$tag);
+                    $path,$pkg,$ref-1,$tag,$sourceFamily);
                 if(($field['status']??'')!=='native_property_record_complete'){
                     // UT99 TFieldIterator<UProperty>::IterateToNext()
                     // walks UField.Next until Field->IsA(UProperty).

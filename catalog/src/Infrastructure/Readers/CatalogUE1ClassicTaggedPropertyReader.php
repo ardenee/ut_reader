@@ -231,7 +231,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
     }
 
     /** @return array<string,mixed> */
-    public static function inspect(string $path, CatalogUE1PackageReader $package, int $exportIndex): array
+    public static function inspect(string $path, CatalogUE1PackageReader $package, int $exportIndex, ?string $sourceFamily=null): array
     {
         $all=$package->getExports();
         if (!isset($all[$exportIndex])) { throw new RuntimeException('Unknown UE1 export index'); }
@@ -243,7 +243,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
             'schema_verified'=>false];
         if ($size <= 0) { return $base+['status'=>'no_serialized_object']; }
         if ((int)$export['classIndex']===0) {
-            return array_replace($base,CatalogUE1ClassicClassMetadataReader::inspect($path,$package,$exportIndex));
+            return array_replace($base,CatalogUE1ClassicClassMetadataReader::inspect(
+                $path,$package,$exportIndex,true,$sourceFamily));
         }
         // Unreal v1.200 UObject::Serialize always serializes MainFrame
         // in file versions <47, independent of RF_HasStack. In later

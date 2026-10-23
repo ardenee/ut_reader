@@ -23,7 +23,8 @@ final class CatalogUE1ClassicArrayValueReader
     public static function inspect(
         string $valuePath,CatalogUE1PackageReader $valuePkg,
         string $declPath,CatalogUE1PackageReader $declPkg,
-        array $tag,int $innerRef,?int $fixedCount=null
+        array $tag,int $innerRef,?int $fixedCount=null,
+        ?string $sourceFamily=null
     ): array {
         if($innerRef<=0){
             return ['status'=>'inner_property_not_local','source_type_verified'=>false];
@@ -32,12 +33,13 @@ final class CatalogUE1ClassicArrayValueReader
         if(!is_array($export)){
             return ['status'=>'inner_property_export_missing','source_type_verified'=>false];
         }
-        $pref=CatalogUE1ClassicTaggedPropertyReader::inspect($declPath,$declPkg,$innerRef-1);
+        $pref=CatalogUE1ClassicTaggedPropertyReader::inspect(
+            $declPath,$declPkg,$innerRef-1,$sourceFamily);
         if(($pref['status']??'')!=='tag_envelope_decoded'){
             return ['status'=>'inner_property_prefix_unverified','source_type_verified'=>false];
         }
         $native=CatalogUE1ClassicNativeObjectReader::inspect(
-            $declPath,$declPkg,$innerRef-1,$pref);
+            $declPath,$declPkg,$innerRef-1,$pref,$sourceFamily);
         if(($native['status']??'')!=='native_property_record_complete'){
             return ['status'=>'inner_property_native_unverified','source_type_verified'=>false];
         }
@@ -58,7 +60,7 @@ final class CatalogUE1ClassicArrayValueReader
         if($kind==='structproperty'){
             $structLayout=CatalogUE1ClassicStructArrayValueReader::resolve(
                 $declPath,$declPkg,
-                (int)($native['subclass_fields']['struct_reference']??0));
+                (int)($native['subclass_fields']['struct_reference']??0),$sourceFamily);
             if($structLayout['status']!=='struct_local_field_layout_resolved'){
                 return ['status'=>'inner_struct_layout_unverified',
                     'reason'=>$structLayout['status'],

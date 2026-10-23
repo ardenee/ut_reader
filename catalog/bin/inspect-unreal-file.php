@@ -214,7 +214,7 @@ function inspect_unreal_full_validate(string $path, array $summary, ?array $corr
 }
 
 /** @return array<string,mixed> */
-function inspect_unreal_file(string $inputPath, bool $full = false): array
+function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1SourceFamily=null): array
 {
     $resolvedPath = realpath($inputPath);
     if ($resolvedPath === false || !is_file($resolvedPath) || !is_readable($resolvedPath)) {
@@ -380,10 +380,10 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                     for ($i = 0; $i < $maxPreview; $i++) {
                         try {
                             $tagged = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader::inspect(
-                                $parsePath, $objectReader, $i
+                                $parsePath, $objectReader, $i, $ue1SourceFamily
                             );
                             $tagged['native_object'] = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicNativeObjectReader::inspect(
-                                $parsePath, $objectReader, $i, $tagged
+                                $parsePath, $objectReader, $i, $tagged, $ue1SourceFamily
                             );
                             $samples[] = $tagged;
                         } catch (Throwable $propertyError) {
@@ -395,6 +395,9 @@ function inspect_unreal_file(string $inputPath, bool $full = false): array
                         }
                     }
                     $result['ue1_object_payload_preview'] = $samples;
+                    $result['ue1_selected_source_family'] =
+                        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::select(
+                            (int)($summary['version']??0),$ue1SourceFamily);
                     $result['ue1_object_payload_preview_limit'] = 32;
                     $result['ue1_object_payload_preview_truncated'] = $exportCount > $maxPreview;
                     $result['ue1_object_payload_scope'] = 'source_tagged_properties_and_known_class_native_records; bulk_bytes_and_runtime_class_defaults_not_certified';
@@ -534,6 +537,10 @@ function inspect_unreal_print_human(array $result): void
     if (array_key_exists('full_validation', $result)) {
         echo 'Full reader validation       : ' . (string)$result['full_validation'] . PHP_EOL;
         echo 'Reader engine                : ' . (string)($result['reader_engine'] ?? '') . PHP_EOL;
+        if (isset($result['ue1_selected_source_family'])) {
+            echo 'UE1 source serializer        : '
+                . (string)$result['ue1_selected_source_family'] . PHP_EOL;
+        }
         if (($result['full_validation'] ?? '') === 'OK') {
             echo 'Names                        : ' . (string)($result['name_count'] ?? 0) . PHP_EOL;
             echo 'Imports                      : ' . (string)($result['import_count'] ?? 0) . PHP_EOL;
@@ -594,6 +601,7 @@ $arguments = array_slice($argv, 1);
 $json = false;
 $full = false;
 $recursive = false;
+$ue1SourceFamily=null;
 $paths = [];
 foreach ($arguments as $argument) {
     if ($argument === '--json') {
@@ -608,13 +616,22 @@ foreach ($arguments as $argument) {
         $recursive = true;
         continue;
     }
+    if (str_starts_with($argument,'--ue1-source=')) {
+        $requested=substr($argument,strlen('--ue1-source='));
+        if (!in_array($requested,['epic-ue1','ut99-v400'],true)) {
+            fwrite(STDERR,'Invalid --ue1-source: '.$requested.PHP_EOL);
+            exit(2);
+        }
+        $ue1SourceFamily=$requested;
+        continue;
+    }
     $paths[] = $argument;
 }
 
 if ($paths === []) {
     fwrite(
         STDERR,
-        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] <file-or-directory> [...]\n"
+        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v400] <file-or-directory> [...]\n"
     );
     exit(2);
 }
@@ -649,7 +666,7 @@ $expandedPaths = array_values($expandedPaths);
 $results = [];
 $failed = false;
 foreach ($expandedPaths as $path) {
-    $result = inspect_unreal_file($path, $full);
+    $result = inspect_unreal_file($path, $full, $ue1SourceFamily);
     $results[] = $result;
     if (isset($result['error']) || ($full && ($result['full_validation'] ?? '') !== 'OK')) {
         $failed = true;

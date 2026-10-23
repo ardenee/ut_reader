@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3g4-epic-ue1-engine-master`
-- **Stage:** implemented-source-hierarchy-batch-unverified
-- **Last completed action:** BATCH production corrections from canonical Epic UE1 Engine Source and scoped UT99 v400 overrides. Removed guessed Model and Mesh sphere/lightmap ambiguity trials. Fixed canonical 16-byte FSphere and old FPlane versus UT99 <=61 12-byte FSphere; source-specific UModel pre-v53 lightmaps and legacy root flag widths; source selection propagated to primitive mesh model palette property function class/script FPoly/BSP readers. Source selector exposes explicit UT99 game override for older packages, baseline Epic UE1 by default. Updated 16 existing register entries and PROJECT-STATUS. All classic PHP syntax and diff integrity passed; no functional tests, new test contracts, PRD deploy or acceptance promotions.
-- **Resume at:** Continue batching remaining existing G2-G4 source-defined implementation changes. Then separate functional verification and safe deployment; propagate explicit game provenance from higher-level callers where known.
-- **Active changed at:** 2026-10-23T18:08:00+00:00
+- **Contract:** `g3-nested-source-family-propagation`
+- **Stage:** implementation-batch-unverified
+- **Last completed action:** Batch of six production files: carried explicit Epic engine or UT99 game source family through CLI full inspection, tagged/class-default UClass, imported superclass fields, cached UField chains and nested array/struct decoding. Corrected UT99 v400 old-version fixed-to-dynamic string/map/array source selection and removed erroneous two-name legacy UClass trailer under UT99. Annotated 17 existing G3 entries, no new contracts; only PHP syntax and diff integrity checks, no functional tests or PRD deploy.
+- **Resume at:** Continue large source-backed G2-G4 production implementation batches. Deferred test/acceptance phase must review new nested and game-provenance paths before any production deployment.
+- **Active changed at:** 2026-10-23T18:21:15+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

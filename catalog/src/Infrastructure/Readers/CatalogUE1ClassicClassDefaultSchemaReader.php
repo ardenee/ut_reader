@@ -30,8 +30,11 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
      * @return array<string,mixed>
      */
     public static function inspect(
-        string $path,CatalogUE1PackageReader $pkg,array $classRecord,array $tags
+        string $path,CatalogUE1PackageReader $pkg,array $classRecord,array $tags,
+        ?string $sourceFamily=null
     ): array {
+        $family=CatalogUE1ClassicSourceFamily::select(
+            (int)($pkg->getHeader()['version']??0),$sourceFamily);
         $valueArchivePackage=$pkg;
         $valuePath=$path;
         $classRef=(int)($classRecord['export_index']??-1)+1;
@@ -45,7 +48,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             }
             $visited[$visitKey]=true;
             $fields=self::fieldChain(
-                $path,$pkg,(int)($current['children_reference']??0));
+                $path,$pkg,(int)($current['children_reference']??0),$family);
             foreach($fields as $name=>$decl){
                 // Child definitions shadow declarations from superclasses.
                 if(!isset($declarations[$name])){
@@ -64,7 +67,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 $path=$resolved['path'];$pkg=$resolved['package'];
                 $classRef=$resolved['ref'];$importedParents++;
                 $current=CatalogUE1ClassicClassMetadataReader::inspect(
-                    $path,$pkg,$classRef-1,false);
+                    $path,$pkg,$classRef-1,false,$family);
                 $inherited=true;
                 continue;
             }
@@ -76,7 +79,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             // Prevent recursive default-schema checking while resolving
             // the local parent; only source-defined UClass header is needed.
             $current=CatalogUE1ClassicClassMetadataReader::inspect(
-                $path,$pkg,$next-1,false);
+                $path,$pkg,$next-1,false,$family);
             $classRef=$next;$inherited=true;
         }
         $matched=0;$matchedDirect=0;$matchedInherited=0;$unresolved=0;
@@ -113,7 +116,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $declKind=(string)$decl['kind'];
             // Epic UClassProperty derives from UObjectProperty; older
             // FPropertyTag encodes it as an object reference type.
-            $legacyStringUpgrade=$sourceVersion>=62
+            $legacyStringUpgrade=$family===CatalogUE1ClassicSourceFamily::UT99_V400
                 &&$tagKind==='stringproperty'&&$declKind==='strproperty';
             $typeValid=$tagKind===$declKind
                 ||($tagKind==='objectproperty'&&$declKind==='classproperty')
@@ -128,7 +131,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             // The UT99 v400 source does NOT have those aliases. Both
             // engines can serialize overlapping archive versions, so
             // this follows the narrowly established source family gate.
-            if($sourceVersion<=61){
+            if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
                 if(strcasecmp($tagStructName,'Rotation')===0){
                     $tagStructName='Rotator';
                 }elseif(strcasecmp($tagStructName,'Region')===0){
@@ -174,7 +177,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
                 continue;
             }
-            if($sourceVersion>=62&&$tagKind==='strproperty'
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V400&&$tagKind==='strproperty'
                &&$declKind==='strproperty'
                &&!in_array($tag['value_kind']??'',[
                  'fstring_ansi_archive','fstring_utf16_archive'],true)){
@@ -220,7 +223,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
                 continue;
             }
-            if($sourceVersion>=62
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V400
                &&in_array($tagKind,['arrayproperty','fixedarrayproperty'],true)
                &&$tagKind===$declKind){
                 $decoded=CatalogUE1ClassicArrayValueReader::inspect(
@@ -228,7 +231,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     (string)$decl['owner_path'],$decl['owner_package'],
                     $tag,(int)($decl['inner_reference']??0),
                     $tagKind==='fixedarrayproperty'?
-                        (int)($decl['fixed_count']??0):null);
+                        (int)($decl['fixed_count']??0):null,$family);
                 if($decoded['status']==='array_inner_values_decoded'){
                     $arrayDecoded++;
                 }else{
@@ -241,7 +244,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     continue;
                 }
             }
-            if($sourceVersion>=62&&$tagKind==='mapproperty'
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V400&&$tagKind==='mapproperty'
                 &&$declKind==='mapproperty'){
                 // UT99 UMapProperty::SerializeItem checks Key/Value but
                 // its entire archive loop is commented out. The native
@@ -433,7 +436,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
 
     /** @return array<string,array{ref:int,kind:string,array_dim:int}> */
     private static function fieldChain(
-        string $path,CatalogUE1PackageReader $pkg,int $reference
+        string $path,CatalogUE1PackageReader $pkg,int $reference,
+        ?string $sourceFamily=null
     ):array {
         $seen=[];$fields=[];
         while($reference>0){
@@ -441,7 +445,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 throw new RuntimeException('UE1 UField.Next cycle or count exceeded');
             }
             $seen[$reference]=true;
-            $field=self::readField($path,$pkg,$reference);
+            $field=self::readField($path,$pkg,$reference,$sourceFamily);
             $data=$field['native'];
             if(($data['status']??'')==='native_property_record_complete'){
                 $key=strtolower((string)$field['name']);
@@ -468,18 +472,20 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
 
     /** @return array<string,mixed> */
     private static function readField(
-        string $path,CatalogUE1PackageReader $pkg,int $ref
+        string $path,CatalogUE1PackageReader $pkg,int $ref,
+        ?string $sourceFamily=null
     ):array {
-        $key=$path."\0".$ref;
+        $key=$path."\0".$ref."\0".($sourceFamily??'engine-default');
         if(isset(self::$fieldCache[$key])){return self::$fieldCache[$key];}
         $ex=$pkg->getExports()[$ref-1]??null;
         if(!is_array($ex)){throw new RuntimeException('Invalid UE1 class field export ref');}
-        $tag=CatalogUE1ClassicTaggedPropertyReader::inspect($path,$pkg,$ref-1);
+        $tag=CatalogUE1ClassicTaggedPropertyReader::inspect(
+            $path,$pkg,$ref-1,$sourceFamily);
         if(($tag['status']??'')!=='tag_envelope_decoded'){
             throw new RuntimeException('Invalid UE1 UField property prefix');
         }
         $native=CatalogUE1ClassicNativeObjectReader::inspect(
-            $path,$pkg,$ref-1,$tag);
+            $path,$pkg,$ref-1,$tag,$sourceFamily);
         return self::$fieldCache[$key]=[
             'name'=>$ex['objectNameText'],'native'=>$native];
     }
