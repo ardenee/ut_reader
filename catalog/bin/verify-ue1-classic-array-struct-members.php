@@ -12,6 +12,7 @@ $base='L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/';
 $propSrc=@file_get_contents($base.'UnProp.cpp');
 $classSrc=@file_get_contents($base.'UnClass.cpp');
 $headerSrc=@file_get_contents(dirname($base).'/Inc/UnType.h');
+$classHeader=@file_get_contents(dirname($base).'/Inc/UnClass.h');
 $checks=[];$fail=[];$examples=[];
 $check=static function(string $label,bool $ok)use(&$checks,&$fail):void{
  $checks[$label]=$ok;if(!$ok)$fail[]=$label;
@@ -30,6 +31,12 @@ foreach([
 ] as $name=>$needle){
  $check('Epic_'.$name,is_string($classSrc)&&str_contains($classSrc,$needle));
 }
+$check('Epic_iterator_traverses_inheritance',
+ is_string($classHeader)
+ &&str_contains($classHeader,'Struct = Struct->GetInheritanceSuper();')
+ &&str_contains($classHeader,'Field = Struct->Children;')
+ &&str_contains($classHeader,
+     'virtual UStruct* GetInheritanceSuper() {return GetSuperStruct();}'));
 $check('Epic_UT99_persistent_skip_flags',is_string($headerSrc)
  &&str_contains($headerSrc,'((PropertyFlags & CPF_Native')
  &&str_contains($headerSrc,'((PropertyFlags & CPF_Transient) && Ar.IsPersistent()'));
@@ -42,12 +49,12 @@ $compact=static function(int $n):string{
 };
 $build=static function(bool $fixed,string $value,
  int $superRef=0,int $structRef=3,int $nextInt=5,int $floatFlags=0,
- int $memberOuter=3,int $intDim=2)
+ int $memberOuter=3,int $intDim=2,int $parentSuper=0)
  use($compact):string{
  $names=['None',$fixed?'FixedArrayProperty':'ArrayProperty','TestArray',
  'Core','Class','StructProperty','Inner','Struct','LocalStruct',
  'IntProperty','First','FloatProperty','Second','Friendly','Category',
- 'StrProperty','Third'];
+ 'StrProperty','Third','ParentStruct','AncestorMember'];
  $nbytes='';
  foreach($names as $name){$nbytes.=$compact(strlen($name)+1).$name."\0".pack('V',0);}
  $imports='';
@@ -75,13 +82,21 @@ $build=static function(bool $fixed,string $value,
   $none.$property(6,1,$floatFlags),
   $none.$property(0,1,0),
  ];
+ if($superRef===7){
+  $body[]=$none.$compact($parentSuper).$none.$none.$compact(8)
+    .$compact(13).pack('V3',0,0,0);
+  $body[]=$none.$property(0,1,0);
+ }
  $nameOff=56;$importOff=$nameOff+strlen($nbytes);
  $exportOff=$importOff+strlen($imports);
  $exp='';$offset=512;
  foreach($body as $i=>$bytes){
-  $nameId=[2,6,8,10,12,16][$i];
-  $exp.=$compact(-($i+1)).$none
-      .pack('V',$i>=3?$memberOuter:($i===1?1:0)).$compact($nameId)
+  $nameId=[2,6,8,10,12,16,17,18][$i];
+  $classIds=[-1,-2,-3,-4,-5,-6,-3,-4];
+  $objectOwner=$i===7?7:($i===6?0:
+    ($i>=3?$memberOuter:($i===1?1:0)));
+  $exp.=$compact($classIds[$i]).$none
+      .pack('V',$objectOwner).$compact($nameId)
       .pack('V',0).$compact(strlen($bytes)).$compact($offset);
   $offset+=strlen($bytes);
  }
@@ -104,13 +119,14 @@ $recordNoFloat=static function(int $a,int $b,string $text)
 };
 $run=static function(string $label,bool $fixed,string $value,
  string $expected,int $super=0,int $struct=3,int $next=5,int $flags=0,
- ?array $want=null,int $memberOuter=3,int $intDim=2)
+ ?array $want=null,int $memberOuter=3,int $intDim=2,
+ int $parentSuper=0)
  use($build,$check,&$examples):void{
  $path=tempnam(sys_get_temp_dir(),'o06Struct');
  if($path===false)throw new RuntimeException('Temp file creation failed');
  try{
   file_put_contents($path,$build($fixed,$value,$super,$struct,$next,$flags,
-    $memberOuter,$intDim));
+    $memberOuter,$intDim,$parentSuper));
   $pkg=new P($path);
   $check($label.'_package_valid',$pkg->validatePackage()===[]);
   $meta=T::inspect($path,$pkg,0);
@@ -176,6 +192,26 @@ $noFloat=$recordNoFloat(10,-2,'A').$recordNoFloat(-17,42,'B');
 $run('persistent_transient_float_skipped',true,$noFloat,
  'array_inner_values_decoded',0,3,5,0x2000,[
  $member(10,-2,0.0,'A',true),$member(-17,42,0.0,'B',true)]);
+$withParent=static function(array $member,int $value):array{
+ $member['serialized_bytes']+=4;
+ $member['members'][]=['name'=>'AncestorMember','kind'=>'intproperty',
+    'array_dim'=>1,'values'=>[$value],'all_values_previewed'=>true];
+ return $member;
+};
+$run('dynamic_local_inherited_structs',false,
+ $compact(2).$one.pack('V',123).$two.pack('V',0xfffffffc),
+ 'array_inner_values_decoded',7,3,5,0,[
+ $withParent($member(10,-2,1.5,'A'),123),
+ $withParent($member(-17,42,-3.25,'B'),-4)]);
+$run('fixed_local_inherited_structs',true,
+ $one.pack('V',123).$two.pack('V',0xfffffffc),
+ 'array_inner_values_decoded',7,3,5,0,[
+ $withParent($member(10,-2,1.5,'A'),123),
+ $withParent($member(-17,42,-3.25,'B'),-4)]);
+$run('inherited_struct_cycle',false,$compact(0),
+ 'inner_struct_layout_unverified',7,3,5,0,null,3,2,3);
+$run('inherited_struct_import_unresolved',false,$compact(0),
+ 'inner_struct_layout_unverified',-1,3);
 $int40=range(1,40);
 $longStruct=$member(1,2,1.5,'A');
 $longStruct['members'][0]['array_dim']=40;
@@ -201,7 +237,8 @@ echo json_encode(['ok'=>$fail===[],'checks'=>count($checks),
  'epic_sha256'=>[
  'UnProp.cpp'=>is_string($propSrc)?hash('sha256',$propSrc):null,
  'UnClass.cpp'=>is_string($classSrc)?hash('sha256',$classSrc):null,
- 'UnType.h'=>is_string($headerSrc)?hash('sha256',$headerSrc):null],
- 'remaining'=>'Only local non-inherited UStruct with full source-resolved primitive/FString member declarations. Inherited or imported UStruct, nested struct member, arbitrary container and compiled UE1 runtime memory are unverified.'
+ 'UnType.h'=>is_string($headerSrc)?hash('sha256',$headerSrc):null,
+ 'UnClass.h'=>is_string($classHeader)?hash('sha256',$classHeader):null],
+ 'remaining'=>'Local UStruct and local superclass fields serialize in exact TFieldIterator order for primitive/FString members. Imported ancestors, arbitrary nested struct or container members, linked C++ memory offsets, real engine object construction and compiled native runtime parity remain unverified.'
 ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($fail?1:0);

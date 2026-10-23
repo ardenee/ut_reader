@@ -24,60 +24,74 @@ final class CatalogUE1ClassicStructArrayValueReader
         if(!is_array($ex)){
             return ['status'=>'struct_reference_not_exported'];
         }
-        $meta=CatalogUE1ClassicTaggedPropertyReader::inspect(
-            $path,$pkg,$structReference-1);
-        $native=CatalogUE1ClassicNativeObjectReader::inspect(
-            $path,$pkg,$structReference-1,$meta);
-        if(strcasecmp((string)($native['class_name']??''),'Struct')!==0
-            ||($native['status']??'')!=='native_struct_record_complete'){
-            return ['status'=>'struct_native_layout_unverified'];
-        }
-        if((int)($native['super_field_reference']??0)!==0){
-            return ['status'=>'struct_superclass_inheritance_unverified'];
-        }
-        $ref=(int)($native['children_reference']??0);
-        $fields=[];$seen=[];
-        while($ref!==0){
-            if($ref<0||isset($seen[$ref])||count($seen)>4096){
-                return ['status'=>'struct_property_chain_invalid'];
+        $fields=[];$visited=[];
+        $current=$structReference;
+        // TFieldIterator<UProperty> iterates this struct's Children,
+        // then GetInheritanceSuper()->Children, and so on.
+        while($current!==0){
+            if($current<0){
+                return ['status'=>'struct_inherited_import_unverified'];
             }
-            $seen[$ref]=true;
-            $fieldEx=$pkg->getExports()[$ref-1]??null;
-            if(!is_array($fieldEx)){
-                return ['status'=>'struct_property_reference_invalid'];
+            if(isset($visited[$current])){
+                return ['status'=>'struct_superclass_cycle'];
             }
-            // TFieldIterator traverses this UStruct's own Children list.
-            // A UField pointing outside its owning UStruct is not a
-            // verified source member, even when its index is in range.
-            if((int)($fieldEx['outerIndex']??0)!==$structReference){
-                return ['status'=>'struct_child_owner_unverified'];
+            $visited[$current]=true;
+            $currentEx=$pkg->getExports()[$current-1]??null;
+            if(!is_array($currentEx)){
+                return ['status'=>'struct_superclass_export_missing'];
             }
-            $tag=CatalogUE1ClassicTaggedPropertyReader::inspect(
-                $path,$pkg,$ref-1);
-            $field=CatalogUE1ClassicNativeObjectReader::inspect(
-                $path,$pkg,$ref-1,$tag);
-            if(($field['status']??'')!=='native_property_record_complete'){
-                return ['status'=>'struct_child_is_not_supported_property'];
+            $meta=CatalogUE1ClassicTaggedPropertyReader::inspect(
+                $path,$pkg,$current-1);
+            $native=CatalogUE1ClassicNativeObjectReader::inspect(
+                $path,$pkg,$current-1,$meta);
+            if(strcasecmp((string)($native['class_name']??''),'Struct')!==0
+                ||($native['status']??'')!=='native_struct_record_complete'){
+                return ['status'=>'struct_native_layout_unverified'];
             }
-            $kind=(string)($field['property_kind']??'');
-            if(!in_array($kind,[
-                'byteproperty','boolproperty','intproperty',
-                'floatproperty','strproperty'
-            ],true)){
-                return ['status'=>'struct_member_serializer_unverified',
-                    'member_kind'=>$kind];
+            $ref=(int)($native['children_reference']??0);
+            $seen=[];
+            while($ref!==0){
+                if($ref<0||isset($seen[$ref])||count($seen)>=count($pkg->getExports())){
+                    return ['status'=>'struct_property_chain_invalid'];
+                }
+                $seen[$ref]=true;
+                $fieldEx=$pkg->getExports()[$ref-1]??null;
+                if(!is_array($fieldEx)){
+                    return ['status'=>'struct_property_reference_invalid'];
+                }
+                // This property's UField.Outer must be exactly the
+                // UStruct whose Children chain we are traversing.
+                if((int)($fieldEx['outerIndex']??0)!==$current){
+                    return ['status'=>'struct_child_owner_unverified'];
+                }
+                $tag=CatalogUE1ClassicTaggedPropertyReader::inspect(
+                    $path,$pkg,$ref-1);
+                $field=CatalogUE1ClassicNativeObjectReader::inspect(
+                    $path,$pkg,$ref-1,$tag);
+                if(($field['status']??'')!=='native_property_record_complete'){
+                    return ['status'=>'struct_child_is_not_supported_property'];
+                }
+                $kind=(string)($field['property_kind']??'');
+                if(!in_array($kind,[
+                    'byteproperty','boolproperty','intproperty',
+                    'floatproperty','strproperty'
+                ],true)){
+                    return ['status'=>'struct_member_serializer_unverified',
+                        'member_kind'=>$kind];
+                }
+                $dim=(int)($field['array_dim']??0);
+                if($dim<1){
+                    return ['status'=>'struct_member_arraydim_invalid'];
+                }
+                $flags=(int)($field['effective_property_flags']??0);
+                $fields[]=[
+                    'name'=>(string)($fieldEx['objectNameText']??''),
+                    'kind'=>$kind,'array_dim'=>$dim,
+                    'skip_persistent_archive'=>($flags&0x3000)!==0,
+                ];
+                $ref=(int)($field['next_field_reference']??0);
             }
-            $dim=(int)($field['array_dim']??0);
-            if($dim<1){
-                return ['status'=>'struct_member_arraydim_invalid'];
-            }
-            $flags=(int)($field['effective_property_flags']??0);
-            $fields[]=[
-                'name'=>(string)($fieldEx['objectNameText']??''),
-                'kind'=>$kind,'array_dim'=>$dim,
-                'skip_persistent_archive'=>($flags&0x3000)!==0,
-            ];
-            $ref=(int)($field['next_field_reference']??0);
+            $current=(int)($native['super_field_reference']??0);
         }
         if(!array_filter($fields,
             static fn(array $f):bool=>!$f['skip_persistent_archive'])){
