@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-original-1997-bool-dword`
+- **Contract:** `g3-c98-uclass-pre57-trailer`
 - **Stage:** implemented-pending-verification-no-tests
-- **Last completed action:** G2 source implementation: original May v0.86x and July v0.867 FProperty::SerializeProperty CPT_Bool BitMask==1 archives 32-bit DWORD, boolean meaning uses bit 0. Fixed both inline UObject native class property reader and UProperties bin reader to use mask instead of nonzero, retaining each raw serialized 32-bit word; BitMask!=1 remains no extra archive bytes. Existing U86/U97 UClass/UProperties entries annotated PARTIAL, code-only PHP lint, NO functional tests, NO test plan additions, NO PRD deploy.
-- **Resume at:** Continue implementation-only remaining G2 then G3/G4 discrepancies in fixed O06 source tracker. No repeat native exporter tests or broad gate sweeps. Once implementation complete, schedule separate verification and PRD deployment.
-- **Active changed at:** 2026-10-23T17:01:28+00:00
+- **Last completed action:** G3 existing C98 UClass::Serialize source gap fixed: Epic v1.200 Core/Src/UnClass.cpp UClass::Serialize for Ar.Ver()<57 archives two FName X/Y after class default tag stream; CatalogUE1ClassicClassMetadataReader now consumes both with package name-map validation before final complete/archive-extent classification. UT99 v400 later source omits those names. C98 existing source-register row and project implementation queue updated; PHP syntax only, no tests or new test contracts, no PRD deploy, not accepted.
+- **Resume at:** Continue existing G2/G3/G4 production serializer changes only, source first. Deferred functional verification and PRD deployment later. Do not run native exporter/corpus regressions or introduce verification-only contracts during implementation.
+- **Active changed at:** 2026-10-23T17:08:37+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

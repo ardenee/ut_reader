@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T17:01:05+00:00",
+  "updated_at_utc": "2026-10-23T17:07:56+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4493,8 +4493,8 @@
       "reader": "CatalogUE1ClassicClassMetadataReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
       "test": "verify-ue1-classic-struct-alias-lineage.php",
       "evidence": "DEV source-specific C98 v1.200 Core/Src/UnClass.cpp remaps old archived StructProperty ItemName Rotation->Rotator and Region->PointRegion before checking property declarations, while T99 v400 Core/Src/UnClass.cpp lacks these aliases. Production CatalogUE1ClassicClassDefaultSchemaReader now gates alias matching to provisionally C98 version<=61, and shared tagged-value parser decodes Rotation 12-byte signed INT32 angles only in that source branch, leaving T99 legacy Rotation raw/opaque for safe skip. Full synthetic v61/v69 valid native StructProperty .u and imported Struct=Rotator test verify-ue1-classic-struct-alias-lineage.php first journaled FAIL 17/19 (typed Rotation missing) then corrected 19/19 PASS run 20261023T093913600Z-04b2f287. 9 affected DEV regressions PASS, including genuine 16 compiled and 92 classic archives. No compiled engine oracle and no PRD tests.",
-      "remaining": "All 5344 genuine v61 class default tagged names/type/array dimensions/struct types/flags checked against real local+imported UProperty declarations. For matching tags 1507 object/FName reference bounds validated with Epic fatal linker semantics and 673 struct/fixed string typed-byte roundtrips; true UObject memory assignment, link-time class assignability, broader source versions and compiled native comparison not accepted. Skipped corrupt tags remain separately visible. 1998 old Rotation/Region compatibility alias recognition now source-gated; full nested struct field application, UT99 historic overlapping version provenance and authentic native oracle remain unaccepted.",
-      "updated_at_utc": "2026-10-23T10:28:58+00:00",
+      "remaining": "All 5344 genuine v61 class default tagged names/type/array dimensions/struct types/flags checked against real local+imported UProperty declarations. For matching tags 1507 object/FName reference bounds validated with Epic fatal linker semantics and 673 struct/fixed string typed-byte roundtrips; true UObject memory assignment, link-time class assignability, broader source versions and compiled native comparison not accepted. Skipped corrupt tags remain separately visible. 1998 old Rotation/Region compatibility alias recognition now source-gated; full nested struct field application, UT99 historic overlapping version provenance and authentic native oracle remain unaccepted. G3 implementation 2026-10-23 (VERIFICATION DEFERRED): Unreal v1.200 Core/Src/UnClass.cpp::UClass::Serialize archives two additional FName X/Y values after class tagged defaults for Ar.Ver()<57; the PHP class metadata reader now consumes and validates those exact trailing source fields, absent in later UT99 v400 source. Source-typed 35-56 only, no functional tests, no gate acceptance or PRD deployment.",
+      "updated_at_utc": "2026-10-23T17:07:56+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",

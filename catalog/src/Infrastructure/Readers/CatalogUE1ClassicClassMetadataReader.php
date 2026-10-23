@@ -182,6 +182,18 @@ final class CatalogUE1ClassicClassMetadataReader
             $defaults=CatalogUE1ClassicTaggedPropertyReader::inspectClassDefaults(
                 $path,$pkg,$position,$end,$version);
             $position=$defaults['tag_end_offset'];
+            if($version<57){
+                // Epic Unreal v1.200 Core/Src/UnClass.cpp::UClass::Serialize
+                // archives TWO trailing FName values AFTER the tagged
+                // defaults when Ar.Ver()<57. UT99 v400 removed this
+                // source branch; these are not unparsed native extensions.
+                $record['legacy_class_trailer_names']=[
+                    $name('UClass legacy trailer X'),
+                    $name('UClass legacy trailer Y'),
+                ];
+            }else{
+                $record['legacy_class_trailer_names']=null;
+            }
             $record['default_property_tags']=$defaults['tags'];
             $record['defaults_tag_count']=count($defaults['tags']);
             $record['defaults_schema_verified']=false;
