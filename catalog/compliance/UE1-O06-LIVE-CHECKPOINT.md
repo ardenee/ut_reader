@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3g4-classic-native-property-editor-batch`
-- **Stage:** mapped-implementation-verification-deferred
-- **Last completed action:** Implemented native UE1 classic reader source corrections and promoted 46 existing C98/T99 registrations from PARTIAL to MAPPED in one batch: 18 native media/font/texture/enum/package/const/text serializers, 17 UProperty native metadata variants, and 11 UBitArray/UField/UPrimitive/editor-factory/exporter serializers. Production changes: source-family UFont layout instead of package-version guess, complete audio/mipmap byte SHA256 streams, UT99 conditional bHasComp CompMips, and v1.200 UPackage RF_Public load outcome. Pinned Epic v1.200 and UT99 v400 source methods matched; partial 83->37, mapped 171->217, excluded 38. PHP lint and diff integrity only, NO native functional test campaign or PRD deployment.
-- **Resume at:** Continue source implementation and mapping for remaining 37 PARTIAL (19 C98, 15 T99, 3 C227), prioritizing shared class/script/model/level/BSP readers, and keep G5 independent verification/production deployment deferred.
-- **Active changed at:** 2026-10-23T19:10:47+00:00
+- **Contract:** `g4-classic-bsp-geometry-mapping`
+- **Stage:** mapped-source-implementation-verification-deferred
+- **Last completed action:** Second classic batch completed: map 12 C98/T99 source serializer methods for UBspNodes UBspSurfs UPolys UVectors UVerts (including C98 generated SerializeData via IMPLEMENT_DB_CLASS). Correct CatalogUE1ClassicDatabaseNativeReader source-family reporting to honor explicit UT99 v400 loader rather than package-only version and propagate family from native object dispatcher. C98/T99 methods grounded in pinned Epic source; O06 register 25 PARTIAL 229 MAPPED 38 EXCLUDED. PHP syntax and git diff checks only, no native oracle tests or PRD deployment.
+- **Resume at:** Continue 25 remaining C98/T99/C227 source paths, especially complex UClass UStruct UState UFunction and ULevel UModel UMesh. Source-defined production differences first, map only when code complete. Verification and PRD deployment separate.
+- **Active changed at:** 2026-10-23T19:15:09+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

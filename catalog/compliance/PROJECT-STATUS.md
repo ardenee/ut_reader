@@ -454,6 +454,10 @@ Five distinct July custom data methods moved to MAPPED using the existing source
 
 **11 further C98/T99 methods MAPPED:** source-defined UBitArray compact RLE, UField Super/Next, UPrimitive native FBox/FSphere; UT99 UExporter, UFactory, UClassFactoryNew, ULevelFactoryNew and UTextureFactoryNew. Every method matched a pinned C++ source implementation and bounded PHP native handler with no remaining unidentified on-disk fields. G5 native/corpus verification is separate. **Updated register: PARTIAL 37, MAPPED 217, EXCLUDED 38.**
 
+### O06 classic BSP/geometry native mapping (2026-10-23)
+
+**12 C98/T99 geometry source methods moved to MAPPED:** BSP nodes/surfaces, FPoly, UVectors and UVerts database records including C98 SerializeData methods. Each C++ method location and native PHP source contract is recorded per row. Production UVectors/UVerts reader now carries explicitly chosen UT99 game-source family for legacy packages instead of treating package version as game provenance. **Current register PARTIAL 25, MAPPED 229, EXCLUDED 38.** G5 native/corpus verification separately deferred.
+
 ### O06 implementation queue — Epic code parity first (2026-10-23)
 
 **No new test contracts or corpus runs are authorised for this implementation batch.** Source-review changes below are code-only; mark `IMPLEMENTED — VERIFICATION DEFERRED`, not `ACCEPTED`. Continue implementing remaining **existing** G2, then G3, then G4 requirements before arranging verification as a separate milestone.

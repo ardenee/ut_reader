@@ -152,7 +152,7 @@ final class CatalogUE1ClassicNativeObjectReader
             if($nativeKind==='vectors'||$nativeKind==='verts'){
                 return array_replace($record,CatalogUE1ClassicDatabaseNativeReader::inspect(
                     $nativeKind,$ver,$read,$compact,$int,$pos,$limit,
-                    $propertyStream['legacy_database']??null));
+                    $propertyStream['legacy_database']??null,$family));
             }
             if($nativeKind==='level'){
                 return array_replace($record,CatalogUE1ClassicLevelNativeReader::inspect(

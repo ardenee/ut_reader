@@ -22,8 +22,10 @@ final class CatalogUE1ClassicDatabaseNativeReader
      */
     public static function inspect(
         string $kind,int $version,callable $read,callable $compact,callable $uint,
-        int &$position,int $limit,?array $legacyDatabase=null
+        int &$position,int $limit,?array $legacyDatabase=null,
+        ?string $sourceFamily=null
     ): array {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         if(!in_array($kind,['vectors','verts'],true)){
             throw new RuntimeException('Not a classic UE1 vector/vertex database');
         }
@@ -67,7 +69,7 @@ final class CatalogUE1ClassicDatabaseNativeReader
             $extra=['num_shared_sides'=>$shared];
         }
         return $db+$extra+[
-            'archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
+            'archive_family'=>$family,'source_family'=>$family,
             'status'=>$position===$limit?'native_'.$kind.'_database_complete':
                 'native_'.$kind.'_database_has_extension',
             'records_preview'=>$preview,

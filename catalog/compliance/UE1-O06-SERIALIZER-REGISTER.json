@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T19:10:11+00:00",
+  "updated_at_utc": "2026-10-23T19:14:36+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -5544,12 +5544,12 @@
           "line": 339
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicBspNodesNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-bspnodes-native.php",
-      "evidence": "Epic v1.200 code-verified native FBspNode FZoneProperties 65/65 synthetic full-package checks DEV PASS; four affected DEV regressions PASS and journaled source/test fingerprints",
-      "remaining": "Full genuine nonempty C98 BSP nodes with matching compiled engine oracle absent; source-only verification; later v62+ UT99 class format not inferred ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "Epic v1.200 code-verified native FBspNode FZoneProperties 65/65 synthetic full-package checks DEV PASS; four affected DEV regressions PASS and journaled source/test fingerprints; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 C98 Engine/Inc/UnObj.h:339 -> CatalogUE1ClassicBspNodesNativeReader.php, native_bspnodes_database_complete.",
+      "remaining": "Full genuine nonempty C98 BSP nodes with matching compiled engine oracle absent; source-only verification; later v62+ UT99 class format not inferred ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5557,6 +5557,15 @@
         "test_sha256": "392973c437ede13c98335c411cd029a3b1c05864d5e964a3f725f12322a042bd",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213016926Z-afe45a2d-DEV-verify-ue1-classic-bspnodes-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Inc/UnObj.h:339",
+        "source_contract": "source-ordered FBspNode entries and zone metadata",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicBspNodesNativeReader.php",
+        "php_completed_status": "native_bspnodes_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -5569,12 +5578,12 @@
           "line": 228
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicBspNodesNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-bspnodes-native.php",
-      "evidence": "Epic v1.200 code-verified native FBspNode FZoneProperties 65/65 synthetic full-package checks DEV PASS; four affected DEV regressions PASS and journaled source/test fingerprints",
-      "remaining": "Full genuine nonempty C98 BSP nodes with matching compiled engine oracle absent; source-only verification; later v62+ UT99 class format not inferred",
-      "updated_at_utc": "2026-10-22T21:30:17+00:00",
+      "evidence": "Epic v1.200 code-verified native FBspNode FZoneProperties 65/65 synthetic full-package checks DEV PASS; four affected DEV regressions PASS and journaled source/test fingerprints; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 C98 Engine/Src/UnModel.cpp:228 -> CatalogUE1ClassicBspNodesNativeReader.php, native_bspnodes_database_complete.",
+      "remaining": "Full genuine nonempty C98 BSP nodes with matching compiled engine oracle absent; source-only verification; later v62+ UT99 class format not inferred | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5582,6 +5591,15 @@
         "test_sha256": "392973c437ede13c98335c411cd029a3b1c05864d5e964a3f725f12322a042bd",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213016926Z-afe45a2d-DEV-verify-ue1-classic-bspnodes-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnModel.cpp:228",
+        "source_contract": "source-ordered FBspNode entries and zone metadata",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicBspNodesNativeReader.php",
+        "php_completed_status": "native_bspnodes_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -5594,12 +5612,12 @@
           "line": 264
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicBspSurfsNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-bspsurfs-native.php",
-      "evidence": "Source-anchored Epic C98 full package fixture 60/60 DEV PASS, 4 related DEV regressions PASS; journaled SHA-tested source and results",
-      "remaining": "Compiled C98 native engine oracle and genuine nonempty FBspSurf package corpus remain unverified; later v62+ source deliberately not inferred",
-      "updated_at_utc": "2026-10-22T21:30:18+00:00",
+      "evidence": "Source-anchored Epic C98 full package fixture 60/60 DEV PASS, 4 related DEV regressions PASS; journaled SHA-tested source and results; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 C98 Engine/Src/UnModel.cpp:264 -> CatalogUE1ClassicBspSurfsNativeReader.php, native_bspsurfs_database_complete.",
+      "remaining": "Compiled C98 native engine oracle and genuine nonempty FBspSurf package corpus remain unverified; later v62+ source deliberately not inferred | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5607,6 +5625,15 @@
         "test_sha256": "d4353b7ca08b3e34c6a6c48105cdefbc9c3a8891ff0cf30faacdd7ed3eb6daa7",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213017703Z-09278223-DEV-verify-ue1-classic-bspsurfs-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnModel.cpp:264",
+        "source_contract": "FBspSurf entries and source-specific flags",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicBspSurfsNativeReader.php",
+        "php_completed_status": "native_bspsurfs_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6438,12 +6465,12 @@
           "line": 669
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicPolysNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-polys-native.php",
-      "evidence": "Epic v1.200 C++ source-order FPoly plus v35/39/40/44/45/50/61 complete package/negative fixture 104/104 DEV PASS; five geometry/negative regressions PASS",
-      "remaining": "Native compiled Epic FPoly oracle and genuine early nonempty UPolys matching package outputs are outstanding; v62+ UT99 FPoly layout not inferred",
-      "updated_at_utc": "2026-10-22T21:30:20+00:00",
+      "evidence": "Epic v1.200 C++ source-order FPoly plus v35/39/40/44/45/50/61 complete package/negative fixture 104/104 DEV PASS; five geometry/negative regressions PASS; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 C98 Engine/Src/UnFPoly.cpp:669 -> CatalogUE1ClassicPolysNativeReader.php, native_polys_database_complete.",
+      "remaining": "Native compiled Epic FPoly oracle and genuine early nonempty UPolys matching package outputs are outstanding; v62+ UT99 FPoly layout not inferred | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6451,6 +6478,15 @@
         "test_sha256": "8415dbeb7191fa31c0962685c1e5bb6ded8c7c17a9f4c62618493065c17aa0bd",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213019261Z-672605d4-DEV-verify-ue1-classic-polys-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnFPoly.cpp:669",
+        "source_contract": "FPoly geometry archive",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPolysNativeReader.php",
+        "php_completed_status": "native_polys_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6785,12 +6821,12 @@
           "line": 270
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicDatabaseNativeReader.php via CatalogUE1ClassicNativeObjectReader.php / CatalogUE1ClassicDatabaseCounts.php",
       "test": "verify-ue1-classic-vectors-verts-native.php",
-      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.",
-      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope.",
-      "updated_at_utc": "2026-10-22T21:30:19+00:00",
+      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 C98 Engine/Src/UnModel.cpp:270 -> CatalogUE1ClassicDatabaseNativeReader.php, native_vectors_database_complete.",
+      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6798,6 +6834,15 @@
         "test_sha256": "05e239c4d221b13618e0063e3690cca7fad4c6f2ba392b40ba92654527b4c665",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213018557Z-d086ae74-DEV-verify-ue1-classic-vectors-verts-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnModel.cpp:270",
+        "source_contract": "UDatabase Num/Max plus FVector records",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicDatabaseNativeReader.php",
+        "php_completed_status": "native_vectors_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6810,12 +6855,12 @@
           "line": 714
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicDatabaseNativeReader.php via CatalogUE1ClassicNativeObjectReader.php / CatalogUE1ClassicDatabaseCounts.php",
       "test": "verify-ue1-classic-vectors-verts-native.php",
-      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.",
-      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope.",
-      "updated_at_utc": "2026-10-22T21:30:19+00:00",
+      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 C98 Engine/Inc/UnObj.h:714 -> CatalogUE1ClassicDatabaseNativeReader.php, native_verts_database_complete.",
+      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6823,6 +6868,15 @@
         "test_sha256": "05e239c4d221b13618e0063e3690cca7fad4c6f2ba392b40ba92654527b4c665",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213018557Z-d086ae74-DEV-verify-ue1-classic-vectors-verts-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Inc/UnObj.h:714",
+        "source_contract": "UDatabase Num/Max and FVert records plus NumSharedSides",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicDatabaseNativeReader.php",
+        "php_completed_status": "native_verts_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6835,12 +6889,12 @@
           "line": 276
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicDatabaseNativeReader.php via CatalogUE1ClassicNativeObjectReader.php / CatalogUE1ClassicDatabaseCounts.php",
       "test": "verify-ue1-classic-vectors-verts-native.php",
-      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.",
-      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope.",
-      "updated_at_utc": "2026-10-22T21:30:19+00:00",
+      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 C98 Engine/Src/UnModel.cpp:276 -> CatalogUE1ClassicDatabaseNativeReader.php, native_verts_database_complete.",
+      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6848,6 +6902,15 @@
         "test_sha256": "05e239c4d221b13618e0063e3690cca7fad4c6f2ba392b40ba92654527b4c665",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213018557Z-d086ae74-DEV-verify-ue1-classic-vectors-verts-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnModel.cpp:276",
+        "source_contract": "UDatabase Num/Max and FVert records plus NumSharedSides",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicDatabaseNativeReader.php",
+        "php_completed_status": "native_verts_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7133,12 +7196,12 @@
           "line": 88
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicBspNodesNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-bspnodes-native.php",
-      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 87/87 PASS. UT99 old-class UBspNodes IsLoading() reads DbNum/DbMax and FBspNode array with 0xe0 transient flags clear, plus zones. Durable evidence journal contains exact test fingerprint.",
-      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 87/87 PASS. UT99 old-class UBspNodes IsLoading() reads DbNum/DbMax and FBspNode array with 0xe0 transient flags clear, plus zones. Durable evidence journal contains exact test fingerprint.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 T99 Engine/Src/UnModel.cpp:88 -> CatalogUE1ClassicBspNodesNativeReader.php, native_bspnodes_database_complete.",
+      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7146,6 +7209,15 @@
         "test_sha256": "392973c437ede13c98335c411cd029a3b1c05864d5e964a3f725f12322a042bd",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213016926Z-afe45a2d-DEV-verify-ue1-classic-bspnodes-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnModel.cpp:88",
+        "source_contract": "source-ordered FBspNode entries and zone metadata",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicBspNodesNativeReader.php",
+        "php_completed_status": "native_bspnodes_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7158,12 +7230,12 @@
           "line": 113
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicBspSurfsNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-bspsurfs-native.php",
-      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 79/79 PASS. UT99 old-class UBspSurfs IsLoading() reads DbNum/DbMax and FBspSurf array with PF_Transient clear; Decals GC-only. Durable evidence journal contains exact test fingerprint.",
-      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 79/79 PASS. UT99 old-class UBspSurfs IsLoading() reads DbNum/DbMax and FBspSurf array with PF_Transient clear; Decals GC-only. Durable evidence journal contains exact test fingerprint.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 T99 Engine/Src/UnModel.cpp:113 -> CatalogUE1ClassicBspSurfsNativeReader.php, native_bspsurfs_database_complete.",
+      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7171,6 +7243,15 @@
         "test_sha256": "d4353b7ca08b3e34c6a6c48105cdefbc9c3a8891ff0cf30faacdd7ed3eb6daa7",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213017703Z-09278223-DEV-verify-ue1-classic-bspsurfs-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnModel.cpp:113",
+        "source_contract": "FBspSurf entries and source-specific flags",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicBspSurfsNativeReader.php",
+        "php_completed_status": "native_bspsurfs_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -8185,12 +8266,12 @@
           "line": 403
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicPolysNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-polys-native.php",
-      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 150/150 PASS. UT99 UPolys nontransaction DbNum/DbMax and FPoly array, PF_Transient load masking. Durable evidence journal contains exact test fingerprint.",
-      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 150/150 PASS. UT99 UPolys nontransaction DbNum/DbMax and FPoly array, PF_Transient load masking. Durable evidence journal contains exact test fingerprint.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 T99 Engine/Inc/UnObj.h:403 -> CatalogUE1ClassicPolysNativeReader.php, native_polys_database_complete.",
+      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -8198,6 +8279,15 @@
         "test_sha256": "8415dbeb7191fa31c0962685c1e5bb6ded8c7c17a9f4c62618493065c17aa0bd",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213019261Z-672605d4-DEV-verify-ue1-classic-polys-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Inc/UnObj.h:403",
+        "source_contract": "FPoly geometry archive",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPolysNativeReader.php",
+        "php_completed_status": "native_polys_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -8541,12 +8631,12 @@
           "line": 135
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicDatabaseNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-vectors-verts-native.php",
-      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 94/94 PASS. UT99 old-class UVectors IsLoading() reads DbNum/DbMax and FVector array. Durable evidence journal contains exact test fingerprint.",
-      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified.",
-      "updated_at_utc": "2026-10-22T21:30:19+00:00",
+      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 94/94 PASS. UT99 old-class UVectors IsLoading() reads DbNum/DbMax and FVector array. Durable evidence journal contains exact test fingerprint.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 T99 Engine/Src/UnModel.cpp:135 -> CatalogUE1ClassicDatabaseNativeReader.php, native_vectors_database_complete.",
+      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -8554,6 +8644,15 @@
         "test_sha256": "05e239c4d221b13618e0063e3690cca7fad4c6f2ba392b40ba92654527b4c665",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213018557Z-d086ae74-DEV-verify-ue1-classic-vectors-verts-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnModel.cpp:135",
+        "source_contract": "UDatabase Num/Max plus FVector records",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicDatabaseNativeReader.php",
+        "php_completed_status": "native_vectors_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -8566,12 +8665,12 @@
           "line": 158
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicDatabaseNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-vectors-verts-native.php",
-      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 94/94 PASS. UT99 old-class UVerts IsLoading() reads DbNum/DbMax and FVert array and compact NumSharedSides. Durable evidence journal contains exact test fingerprint.",
-      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified.",
-      "updated_at_utc": "2026-10-22T21:30:19+00:00",
+      "evidence": "DEV Epic-source assertions and signed/positive/negative full-package fixtures 94/94 PASS. UT99 old-class UVerts IsLoading() reads DbNum/DbMax and FVert array and compact NumSharedSides. Durable evidence journal contains exact test fingerprint.; SOURCE_IMPLEMENTED_GEOMETRY 2026-10-23 T99 Engine/Src/UnModel.cpp:158 -> CatalogUE1ClassicDatabaseNativeReader.php, native_verts_database_complete.",
+      "remaining": "Genuine UT99 legacy database class exports and independent compiled engine comparison unavailable; older package version<=61 ambiguous source ancestry, and IsLoading-only classes are not new-game save serializers; runtime linking/fixups not verified. | SOURCE-TO-PHP MAPPED; native geometry archive handled, G5 genuine corpus/native oracle and O10 linking deferred.",
+      "updated_at_utc": "2026-10-23T19:14:36+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -8579,6 +8678,15 @@
         "test_sha256": "05e239c4d221b13618e0063e3690cca7fad4c6f2ba392b40ba92654527b4c665",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T213018557Z-d086ae74-DEV-verify-ue1-classic-vectors-verts-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnModel.cpp:158",
+        "source_contract": "UDatabase Num/Max and FVert records plus NumSharedSides",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicDatabaseNativeReader.php",
+        "php_completed_status": "native_verts_database_complete",
+        "verification_status": "DEFERRED"
       }
     },
     {
