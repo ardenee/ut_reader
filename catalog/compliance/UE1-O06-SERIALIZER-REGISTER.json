@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T18:53:38+00:00",
+  "updated_at_utc": "2026-10-23T18:57:14+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -5253,12 +5253,12 @@
           "line": 2686
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
       "test": "verify-ue1-original-unrealfile-bit-archives.php",
-      "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance",
-      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T19:15:15+00:00",
+      "evidence": "PRD historical PASS at 2026-10-21T20:14:33.4716309Z; catalog\\compliance\\evidence\\o06\\20261021T201433273Z-d9c463a1-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt; scoped test, not full class acceptance; D97_SOURCE_IMPLEMENTED 2026-10-23 source custom SerializeData maps to existing complete PHP handler.",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting | SOURCE-TO-PHP MAPPED; G5 independent native engine/corpus verification deferred.",
+      "updated_at_utc": "2026-10-23T18:57:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -5266,6 +5266,15 @@
         "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T191515001Z-59a97889-PRD-verify-ue1-original-unrealfile-bit-archives.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "D97",
+        "epic_source": "Engine/UnObj.cpp:2686",
+        "source_contract": "source RLE compressed bits",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileBitArrayReader.php",
+        "php_completed_status": "native_bit_rle_decoded",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -5278,12 +5287,12 @@
           "line": 176
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
       "test": "verify-ue1-original-unrealfile-audio.php",
-      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
-      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T19:15:14+00:00",
+      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance; D97_SOURCE_IMPLEMENTED 2026-10-23 source custom SerializeData maps to existing complete PHP handler.",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting | SOURCE-TO-PHP MAPPED; G5 independent native engine/corpus verification deferred.",
+      "updated_at_utc": "2026-10-23T18:57:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -5291,6 +5300,15 @@
         "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "D97",
+        "epic_source": "Engine/UnMusic.cpp:176",
+        "source_contract": "bounded DataSize bytes",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileAudioReader.php",
+        "php_completed_status": "native_audio_serializer_decoded",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -5320,12 +5338,12 @@
           "line": 817
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "test": "verify-ue1-original-unrealfile-properties.php",
-      "evidence": "PRD historical PASS at 2026-10-21T20:59:05.1812253Z; catalog\\compliance\\evidence\\o06\\20261021T205904995Z-e03a1cb3-PRD-verify-ue1-original-unrealfile-properties.php.txt; scoped test, not full class acceptance",
-      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-23T14:43:57+00:00",
+      "evidence": "PRD historical PASS at 2026-10-21T20:59:05.1812253Z; catalog\\compliance\\evidence\\o06\\20261021T205904995Z-e03a1cb3-PRD-verify-ue1-original-unrealfile-properties.php.txt; scoped test, not full class acceptance; D97_SOURCE_IMPLEMENTED 2026-10-23 source custom SerializeData maps to existing complete PHP handler.",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting | SOURCE-TO-PHP MAPPED; G5 independent native engine/corpus verification deferred.",
+      "updated_at_utc": "2026-10-23T18:57:14+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5333,6 +5351,15 @@
         "test_sha256": "8fe6ed2f26743f1a91f3dc35c124ba0f09b7bde43a1e0014d9ac36828a7caf58",
         "source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T144356511Z-e0df20d1-DEV-verify-ue1-original-unrealfile-properties.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "D97",
+        "epic_source": "Engine/UnClass.cpp:817",
+        "source_contract": "UClass SerializeBin with property schema",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+        "php_completed_status": "native_UClass_bin_properties_decoded",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -5345,12 +5372,12 @@
           "line": 5146
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
       "test": "verify-ue1-original-unrealfile-script-expressions.php",
-      "evidence": "PRD historical PASS at 2026-10-22T08:14:11.4736463Z; catalog\\compliance\\evidence\\o06\\20261022T081411274Z-263d247c-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt; scoped test, not full class acceptance",
-      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T19:51:27+00:00",
+      "evidence": "PRD historical PASS at 2026-10-22T08:14:11.4736463Z; catalog\\compliance\\evidence\\o06\\20261022T081411274Z-263d247c-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt; scoped test, not full class acceptance; D97_SOURCE_IMPLEMENTED 2026-10-23 source custom SerializeData maps to existing complete PHP handler.",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting | SOURCE-TO-PHP MAPPED; G5 independent native engine/corpus verification deferred.",
+      "updated_at_utc": "2026-10-23T18:57:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -5358,6 +5385,15 @@
         "test_sha256": "7b7ae19081c152d1cd6c436bc845158e8cfabbca394a6981db9505c9b927af39",
         "source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T195127416Z-a79646f5-PRD-verify-ue1-original-unrealfile-script-expressions.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "D97",
+        "epic_source": "Engine/UnScript.cpp:5146",
+        "source_contract": "source-defined expression traversal",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
+        "php_completed_status": "native_script_expressions_decoded",
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -5370,12 +5406,12 @@
           "line": 206
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
       "test": "verify-ue1-original-unrealfile-audio.php",
-      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance",
-      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting",
-      "updated_at_utc": "2026-10-22T19:15:14+00:00",
+      "evidence": "PRD historical PASS at 2026-10-22T06:43:43.0109772Z; catalog\\compliance\\evidence\\o06\\20261022T064342876Z-2e4a58fd-PRD-verify-ue1-original-unrealfile-audio.php.txt; scoped test, not full class acceptance; D97_SOURCE_IMPLEMENTED 2026-10-23 source custom SerializeData maps to existing complete PHP handler.",
+      "remaining": "Source-defined custom data routine tested in named fixtures; verify full G2 inherited/version contract before accepting | SOURCE-TO-PHP MAPPED; G5 independent native engine/corpus verification deferred.",
+      "updated_at_utc": "2026-10-23T18:57:14+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -5383,6 +5419,15 @@
         "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
         "source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T191514369Z-0af36479-PRD-verify-ue1-original-unrealfile-audio.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "D97",
+        "epic_source": "Engine/UnSound.cpp:206",
+        "source_contract": "bounded DataSize bytes",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileAudioReader.php",
+        "php_completed_status": "native_audio_serializer_decoded",
+        "verification_status": "DEFERRED"
       }
     },
     {

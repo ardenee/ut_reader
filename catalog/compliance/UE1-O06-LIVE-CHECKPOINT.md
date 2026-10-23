@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-1997-source-mapping-complete`
-- **Stage:** implemented-mapping-verification-deferred
-- **Last completed action:** Mapped all 38 remaining U86/U97 May/July 1997 source registrations: 22 native class/bytecode readers, 14 UObject/UClass/UProperties and actor subclasses, 2 generic UDatabase base. Three production fixes: UStackTree zero-record source-equivalent archive, class-bin object instances with imported root UClass through declared dependency providers, explicit zero-record-data base UDatabase serializer. Current O06 88 PARTIAL 166 MAPPED 38 EXCLUDED; U86 43 mapped 6 excluded, U97 43 mapped 6 excluded. PHP syntax and diff check only. No functional tests or PRD deploy.
-- **Resume at:** Proceed through remaining 88 PARTIAL source registrations in D97 C98 C227 T99, implement Epic-source mismatches and promote completed production handlers. G5 native compatibility and PRD deployment remain separate.
-- **Active changed at:** 2026-10-23T18:54:31+00:00
+- **Contract:** `g2-original-1997-complete`
+- **Stage:** mapped-verification-deferred
+- **Last completed action:** Mapped the five remaining D97 original July custom SerializeData entries (UBitArray, UMusic, UProperties, UScript, USound) from pinned C++ and previously implemented typed PHP native readers. Original 1997 U86/U97/D97 now no PARTIAL registrations. Register totals 83 PARTIAL 171 MAPPED 38 EXCLUDED. Source mapping only; no functional/native tests, no new tests, PRD deploy deferred.
+- **Resume at:** Proceed with remaining C98 T99 and C227 UE1 implementation mapping. Prioritize actual production gaps; keep verification as separate G5.
+- **Active changed at:** 2026-10-23T18:57:28+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

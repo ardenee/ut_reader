@@ -438,6 +438,10 @@ Machine-readable file: `catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json`. Re
 
 **All U86 and U97 registered source entries have an implemented native / inherited source path or source-confirmed exclusion.** Final two base UDatabase entries now mapped from Epic May/July UDatabase::SerializeHeader Num/Max and the source-confirmed empty UDatabase::StandardSerializeData virtual default. The concrete database subclasses supply their own serialized element operators. The shared production reader has a distinct zero-byte base serializer, without fabricating element types. Original UStackTree zero-element archives no longer report a false source-layout ambiguity, and object per-class binary properties now resolve imported root UClass via explicitly declared dependency providers. **Current register PARTIAL 88, MAPPED 166, EXCLUDED 38.** Implementation mapped does not imply runtime engine validation or G5 acceptance; verification remains deferred.
 
+### O06 G2 custom SerializeData inventory mapped (2026-10-23)
+
+Five distinct July custom data methods moved to MAPPED using the existing source-typed UBitArray RLE, UMusic, USound, UScript expression and UProperties class-bin handlers. Epic C++ source symbol, PHP completed status and deferred verification are recorded per method. Together with the original May/July registered class batch, **G2 now has no implementation PARTIAL in U86/U97/D97**. **Register PARTIAL 83, MAPPED 171, EXCLUDED 38.** Independent G5 verification remains open.
+
 ### O06 implementation queue — Epic code parity first (2026-10-23)
 
 **No new test contracts or corpus runs are authorised for this implementation batch.** Source-review changes below are code-only; mark `IMPLEMENTED — VERIFICATION DEFERRED`, not `ACCEPTED`. Continue implementing remaining **existing** G2, then G3, then G4 requirements before arranging verification as a separate milestone.
