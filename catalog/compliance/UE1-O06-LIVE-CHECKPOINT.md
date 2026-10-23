@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-original-1997-complete`
-- **Stage:** mapped-verification-deferred
-- **Last completed action:** Mapped the five remaining D97 original July custom SerializeData entries (UBitArray, UMusic, UProperties, UScript, USound) from pinned C++ and previously implemented typed PHP native readers. Original 1997 U86/U97/D97 now no PARTIAL registrations. Register totals 83 PARTIAL 171 MAPPED 38 EXCLUDED. Source mapping only; no functional/native tests, no new tests, PRD deploy deferred.
-- **Resume at:** Proceed with remaining C98 T99 and C227 UE1 implementation mapping. Prioritize actual production gaps; keep verification as separate G5.
-- **Active changed at:** 2026-10-23T18:57:28+00:00
+- **Contract:** `g3g4-classic-native-property-editor-batch`
+- **Stage:** mapped-implementation-verification-deferred
+- **Last completed action:** Implemented native UE1 classic reader source corrections and promoted 46 existing C98/T99 registrations from PARTIAL to MAPPED in one batch: 18 native media/font/texture/enum/package/const/text serializers, 17 UProperty native metadata variants, and 11 UBitArray/UField/UPrimitive/editor-factory/exporter serializers. Production changes: source-family UFont layout instead of package-version guess, complete audio/mipmap byte SHA256 streams, UT99 conditional bHasComp CompMips, and v1.200 UPackage RF_Public load outcome. Pinned Epic v1.200 and UT99 v400 source methods matched; partial 83->37, mapped 171->217, excluded 38. PHP lint and diff integrity only, NO native functional test campaign or PRD deployment.
+- **Resume at:** Continue source implementation and mapping for remaining 37 PARTIAL (19 C98, 15 T99, 3 C227), prioritizing shared class/script/model/level/BSP readers, and keep G5 independent verification/production deployment deferred.
+- **Active changed at:** 2026-10-23T19:10:47+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

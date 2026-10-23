@@ -442,6 +442,18 @@ Machine-readable file: `catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json`. Re
 
 Five distinct July custom data methods moved to MAPPED using the existing source-typed UBitArray RLE, UMusic, USound, UScript expression and UProperties class-bin handlers. Epic C++ source symbol, PHP completed status and deferred verification are recorded per method. Together with the original May/July registered class batch, **G2 now has no implementation PARTIAL in U86/U97/D97**. **Register PARTIAL 83, MAPPED 171, EXCLUDED 38.** Independent G5 verification remains open.
 
+### O06 classic UE1 / UT99 shared native archive batch (2026-10-23)
+
+**18 C98/T99 native class serializers moved PARTIAL → MAPPED:** UConst / UEnum / UMusic / UPackage / UPalette / USound / UTextBuffer / UTexture / UFont. The source methods were found in the pinned Unreal v1.200 engine and UT99 v400 game source, then linked to exact bounded production native reader completion paths. Implementation fixes included source-family UFont inheritance selection for legacy packages loaded by UT99, complete hashed audio and texture mip archives, conditional UT99 bHasComp CompMips archive, and the original Unreal UPackage::Serialize RF_Public load-side mutation (not file bytes). Version-gated lazy seek offsets are preserved. **Current register: PARTIAL 65, MAPPED 189, EXCLUDED 38.** These are production implementation mappings, not G5 native/corpus verifications; PRD unchanged.
+
+### O06 classic metadata property serializer batch (2026-10-23)
+
+**17 C98/T99 UProperty-derived Serialize methods moved to MAPPED**, including Epic/UT99 UBool, UByte, UObject, UClass and UStruct properties, Unreal fixed UStringProperty, UT99 UArray/FixedArray/Map/StrProperty, and both UProperty bases. Source comparisons confirm the common UField references, ArrayDim, PropertyFlags, Category, conditional CPF_Net RepOffset, and subclass fields are handled by CatalogUE1ClassicPropertyNativeReader and selected source family. UT99 legacy flags are applied independently from Unreal v1.200. This mapping covers native property metadata serialization, not arbitrary runtime item graph reconstruction or G5 tests. **Register now PARTIAL 48, MAPPED 206, EXCLUDED 38.**
+
+### O06 classic shared native/editor mapping batch (2026-10-23)
+
+**11 further C98/T99 methods MAPPED:** source-defined UBitArray compact RLE, UField Super/Next, UPrimitive native FBox/FSphere; UT99 UExporter, UFactory, UClassFactoryNew, ULevelFactoryNew and UTextureFactoryNew. Every method matched a pinned C++ source implementation and bounded PHP native handler with no remaining unidentified on-disk fields. G5 native/corpus verification is separate. **Updated register: PARTIAL 37, MAPPED 217, EXCLUDED 38.**
+
 ### O06 implementation queue — Epic code parity first (2026-10-23)
 
 **No new test contracts or corpus runs are authorised for this implementation batch.** Source-review changes below are code-only; mark `IMPLEMENTED — VERIFICATION DEFERRED`, not `ACCEPTED`. Continue implementing remaining **existing** G2, then G3, then G4 requirements before arranging verification as a separate milestone.

@@ -178,8 +178,19 @@ final class CatalogUE1ClassicNativeObjectReader
                     $nativeKind,$pkg,$ver,$read,$compact,$pos,$limit));
             }
             if($nativeKind==='package'){
+                // Unreal v1.200 Core/Src/UnObj.cpp::UPackage::Serialize
+                // calls UObject::Serialize then SetFlags(RF_Public).
+                // UT99 v400 drops the extra SetFlags operation.
+                // Neither engine archives extra UPackage-native bytes.
+                $serializedFlags=(int)($ex['objectFlags']??0);
+                $epicLegacy=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1;
                 return array_replace($record,[
                     'status'=>$nativeLength===0?'native_package_record_complete':'native_package_unexpected_tail',
+                    'serialized_object_flags'=>$serializedFlags,
+                    'loaded_object_flags_after_package_serialize'=>$epicLegacy
+                        ?($serializedFlags|0x00000004):$serializedFlags,
+                    'source_sets_rf_public'=>$epicLegacy,
+                    'selected_source_family'=>$family,
                     'extension_bytes'=>$nativeLength,
                 ]);
             }
@@ -330,15 +341,28 @@ final class CatalogUE1ClassicNativeObjectReader
                 $seekEnd=$ver>61?$int():null;
                 $dataSize=$compact();
                 if($dataSize<0||$dataSize>$limit-$pos){throw new RuntimeException('Audio byte array exceeds export bounds');}
-                $dataStart=$pos;$seek($pos+$dataSize);
+                $dataStart=$pos;$audioHash=hash_init('sha256');
+                $audioPreview='';
+                $audioRemaining=$dataSize;
+                while($audioRemaining>0){
+                    $part=$read(min(65536,$audioRemaining));
+                    hash_update($audioHash,$part);
+                    if(strlen($audioPreview)<64){
+                        $audioPreview.=substr($part,0,64-strlen($audioPreview));
+                    }
+                    $audioRemaining-=strlen($part);
+                }
                 if($seekEnd!==null&&$seekEnd!==$pos){throw new RuntimeException('Audio lazy SeekPos mismatch');}
                 return array_replace($record,['status'=>$pos===$limit?('native_'.$nativeKind.'_record_complete'):('native_'.$nativeKind.'_has_extension'),
                     'file_type_name'=>(string)$names[$nameIndex]['name'],
                     'audio_data_offset'=>$dataStart,'audio_data_bytes'=>$dataSize,
+                    'audio_data_sha256'=>hash_final($audioHash),
+                    'audio_data_preview_hex'=>strtoupper(bin2hex($audioPreview)),
+                    'selected_source_family'=>$family,
                     'lazy_seek_pos'=>$seekEnd,'extension_bytes'=>$limit-$pos,
-                    'audio_data_decoded'=>false]);
+                    'audio_data_decoded'=>true,'audio_data_interpreted'=>false]);
             }
-            if($nativeKind==='font'&&$ver>61){
+            if($nativeKind==='font'&&$family===CatalogUE1ClassicSourceFamily::UT99_V400){
                 // UT99 v400 UFont : UObject; its noninherited native tail
                 // contains TArray<FFontPage> Pages and CharactersPerPage.
                 // Unreal v1.200 UFont : UTexture is decoded below after
@@ -452,24 +476,61 @@ final class CatalogUE1ClassicNativeObjectReader
                     'extension_bytes'=>$limit-$pos,
                 ]);
             }
-            $count=$compact();
-            if($count<0||$count>1024){throw new RuntimeException('Invalid texture mip count');}
-            $mips=[];
-            for($mip=0;$mip<$count;$mip++){
-                $lazySeekPos=$ver>61?$int():null;
-                $length=$compact();
-                if($length<0||$length>$limit-$pos){throw new RuntimeException('Texture mip byte count outside export bounds');}
-                $dataOffset=$pos;
-                $seek($pos+$length);
-                if($lazySeekPos!==null){
-                    if($lazySeekPos!==$pos){throw new RuntimeException('Lazy mip SeekPos and serialized data length disagree');}
+            // Unreal v1.200 UTexture::Serialize archives Mips only.
+            // UT99 v400 UnTex.cpp::UTexture::Serialize additionally archives
+            // CompMips iff its source-defined tagged Bool bHasComp is true.
+            // Texture.uc defaultproperties leaves bHasComp false.
+            $readMipArray=static function(string $label)use(
+                $compact,$int,$byte,$read,$ver,$limit,&$pos):array{
+                $count=$compact();
+                if($count<0||$count>1024){
+                    throw new RuntimeException($label.' has invalid mip count');
                 }
-                $width=$int();$height=$int();$bitsU=$byte();$bitsV=$byte();
-                $mips[]=['mip_index'=>$mip,'pixel_data_offset'=>$dataOffset,
-                    'pixel_data_size'=>$length,'lazy_seek_pos'=>$lazySeekPos,
-                    'width'=>$width,'height'=>$height,'bits_u'=>$bitsU,'bits_v'=>$bitsV];
+                $items=[];
+                for($mip=0;$mip<$count;$mip++){
+                    $lazySeekPos=$ver>61?$int():null;
+                    $length=$compact();
+                    if($length<0||$length>$limit-$pos){
+                        throw new RuntimeException($label.' mip exceeds native bounds');
+                    }
+                    $offset=$pos;$remaining=$length;
+                    $digest=hash_init('sha256');$preview='';
+                    while($remaining>0){
+                        $part=$read(min(65536,$remaining));
+                        hash_update($digest,$part);
+                        if(strlen($preview)<32){
+                            $preview.=substr($part,0,32-strlen($preview));
+                        }
+                        $remaining-=strlen($part);
+                    }
+                    if($lazySeekPos!==null&&$lazySeekPos!==$pos){
+                        throw new RuntimeException($label.' lazy SeekPos mismatch');
+                    }
+                    $width=$int();$height=$int();$bitsU=$byte();$bitsV=$byte();
+                    $items[]=['mip_index'=>$mip,'pixel_data_offset'=>$offset,
+                        'pixel_data_size'=>$length,'lazy_seek_pos'=>$lazySeekPos,
+                        'pixel_data_sha256'=>hash_final($digest),
+                        'pixel_data_preview_hex'=>strtoupper(bin2hex($preview)),
+                        'width'=>$width,'height'=>$height,
+                        'bits_u'=>$bitsU,'bits_v'=>$bitsV];
+                }
+                return $items;
+            };
+            $mips=$readMipArray('Mips');
+            $count=count($mips);
+            $compMips=null;$bHasComp=false;
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V400){
+                foreach(($propertyStream['tags']??[]) as $tag){
+                    if(strcasecmp((string)($tag['name']??''),'bHasComp')===0
+                        &&($tag['type']??null)==='BoolProperty'){
+                        $bHasComp=(bool)($tag['bool_value']??false);
+                    }
+                }
+                if($bHasComp){
+                    $compMips=$readMipArray('CompMips');
+                }
             }
-            if($nativeKind==='font'&&$ver<=61){
+            if($nativeKind==='font'&&$family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
                 // Unreal v1.200 Engine/Src/UnFont.cpp:
                 // UTexture::Serialize(Ar) then Ar << Characters.
                 // Each FFontCharacter has four signed INT32 coordinates.
@@ -530,9 +591,14 @@ final class CatalogUE1ClassicNativeObjectReader
                     'serialized_sha256'=>hash_final($digest)];
             }
             return array_replace($record,['status'=>$pos===$limit?'native_texture_record_complete':'native_texture_has_extension',
-                'mips'=>$mips,'mip_count'=>$count,'sparks'=>$sparks,
+                'mips'=>$mips,'mip_count'=>$count,
+                'compressed_mips'=>$compMips,
+                'compressed_mip_count'=>$compMips===null?null:count($compMips),
+                'source_b_has_comp'=>$bHasComp,'sparks'=>$sparks,
                 'extension_bytes'=>$limit-$pos,
-                'pixel_payload_decoded'=>false]);
+                'pixel_payload_decoded'=>true,
+                'pixel_format_interpreted'=>false,
+                'selected_source_family'=>$family]);
         }finally{fclose($fp);}
     }
 }
