@@ -86,9 +86,12 @@ final class CatalogUE1ClassicClassMetadataReader
             $record=[
                 'export_index'=>$index,'class_name'=>'Class',
                 'source_version'=>$version,'class_metadata_serial_offset'=>$start,
+                'loaded_object_flags_after_uobject_serialize'=>
+                    ((int)$ex['objectFlags']|0x40000000),
+                'source_sets_rf_debug_serialize'=>true,
                 'execution_performed'=>false,'runtime_refs_resolved'=>false,
             ];
-            if($version<40){
+            if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1&&$version<40){
                 $record['legacy_database']=['count'=>$i32(),'capacity'=>$i32()];
             }
             // UObject::Serialize puts the execution-frame archive BEFORE
@@ -96,10 +99,11 @@ final class CatalogUE1ClassicClassMetadataReader
             // applies to flagged class objects and ordinary object exports.
             $stateFrame=CatalogUE1ClassicStateFrameReader::read(
                 $pkg,$version,(int)$ex['objectFlags'],
-                $read,$compact,$i32,$position
+                $read,$compact,$i32,$position,0,$family
             );
             $record['serialized_state_frame']=$stateFrame;
-            if($version<47&&$stateFrame!==null){
+            if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1
+                &&$version<47&&$stateFrame!==null){
                 // Retain the existing legacy view for archive consumers.
                 $record['legacy_main_frame']=[
                     'old_class'=>$stateFrame['legacy_class_reference'],
@@ -108,8 +112,18 @@ final class CatalogUE1ClassicClassMetadataReader
                     'probe_mask_hex'=>$stateFrame['probe_mask_le_hex'],
                 ];
             }
-            if($version<57){$record['legacy_state_name']=$name('StateName');}
-            if($version<58){$record['legacy_group_name']=$name('GroupName');}
+            if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1&&$version<57){
+                $record['legacy_state_name']=$name('StateName');
+                $record['legacy_state_name_after_load']=$record['legacy_state_name'];
+                if(strcasecmp($record['legacy_state_name']['text'],'PlaySound')===0){
+                    $record['legacy_state_name_after_load']=[
+                        'index'=>null,'text'=>'PlaySoundEffect',
+                        'source_renamed_from'=>'PlaySound'];
+                }
+            }
+            if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1&&$version<58){
+                $record['legacy_group_name']=$name('GroupName');
+            }
             // UObject skips SerializeTaggedProperties when Class == UClass.
             $record['super_field_reference']=$reference('UField.SuperField');
             $record['next_field_reference']=$reference('UField.Next');
@@ -203,10 +217,15 @@ final class CatalogUE1ClassicClassMetadataReader
                 $record['default_property_declaration_validation']=
                     CatalogUE1ClassicClassDefaultSchemaReader::inspect(
                         $path,$pkg,$record,$defaults['tags'],$family);
+                $validation=$record['default_property_declaration_validation'];
+                $record['defaults_schema_verified']=
+                    ($validation['status']??null)==='all_available_declarations_match';
             }
             if($record['defaults_tag_count']>0){
                 return array_replace($record,[
-                    'status'=>'class_default_tags_structurally_decoded_schema_unverified',
+                    'status'=>$record['defaults_schema_verified']
+                        ?'class_default_tags_schema_checked_values_unverified'
+                        :'class_default_tags_structurally_decoded_schema_unverified',
                     'script_has_unparsed_expressions'=>false,
                     'unparsed_bytes'=>$end-$position,
                     'extension_bytes'=>$end-$position,

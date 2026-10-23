@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3g4-level-model-mesh-database`
-- **Stage:** implemented-mapped-verification-deferred
-- **Last completed action:** Third classic O06 batch: 12 more C98/T99 serializers source-mapped: ULevel/ULevelBase and generated C98 SerializeData, UModel, UMesh, UT99 ULodMesh, C98 base UDatabase. Production corrections: count source-family overrides in CatalogUE1ClassicDatabaseCounts and BSP/Polys/Vector/Level native readers; UT99 ULevelBase always archives URL regardless old version, unlike v1.200 >=59 gate; selected family recorded rather than guessed. Existing source archive handlers matched pinned Epic source, no tests. Register now 13 PARTIAL, 241 MAPPED, 38 EXCLUDED. 10 classic UObject/UClass/UStruct/UState/UFunction and 3 C227 game overrides still partial because source bytecode contingencies or game-specific save filtering unresolved. No PRD deployment.
-- **Resume at:** Implement the remaining 13 PARTIAL. For classic UStruct/UClass recursive bytecode, close actual missing Epic token paths before mapping; C227 emitter/rope game-source save-time overrides must match game code. Then perform later G5 independent native/corpus validation and safe PRD deployment.
-- **Active changed at:** 2026-10-23T19:22:23+00:00
+- **Contract:** `g3-classic-uobject-script-source-completion`
+- **Stage:** implemented-source-mapped-verification-deferred
+- **Last completed action:** O06 batch implemented 4 PHP production reader corrections: UT99 vs original UE1 source-selected UObject database/count and old state/group gates, original pre47 MainFrame vs UT99 RF_HasStack-only StateFrame (two node refs and latent action even on old archives), loaded RF_DebugSerialize and Unreal v1.200 PlaySound -> PlaySoundEffect, and source ScriptSize-bounded full known SerializeExpr token grammar replacing fake 16MB/100k/1m caps. UClass default schema now reports matched declarations distinctly from opaque values. Compared pinned Epic v1.200 and UT99 v400 SerializeExpr case tokens, none missing. Promoted 8 C98/T99 UObject, UStruct, UState, UFunction file-archive methods to MAPPED; register now 5 PARTIAL 249 MAPPED 38 EXCLUDED. Remaining: C98/T99 UClass defaults values and 3 C227 save-time game emitter/rope overrides. PHP syntax and diff integrity only, no functional tests or PRD deployment.
+- **Resume at:** Continue actual code for 5 remaining PARTIAL: resolve C98/T99 UClass typed default-value semantics and UE1 v227 AXBeamEmitter, AXParticleEmitter, AXRopeDeco game-specific serialization in applicable parser/write paths. Keep G5 independently verified native/corpus parity and PRD deployment deferred.
+- **Active changed at:** 2026-10-23T19:37:39+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

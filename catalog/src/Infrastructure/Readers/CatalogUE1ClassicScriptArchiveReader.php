@@ -26,8 +26,11 @@ final class CatalogUE1ClassicScriptArchiveReader
         ?string $sourceFamily=null
     ): array {
         $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
-        if ($scriptSize < 0 || $scriptSize > 16000000) {
-            throw new RuntimeException('UE1 ScriptSize outside source-supported bounds');
+        // Epic's source archives ScriptSize as a signed INT. Never impose
+        // a synthetic maximum such as 16 MB: the decoder is bounded by
+        // the actual FArchive and in-memory ScriptSize budget below.
+        if ($scriptSize < 0) {
+            throw new RuntimeException('UE1 negative ScriptSize');
         }
         $start = $position;
         $iCode = 0;
@@ -87,7 +90,7 @@ final class CatalogUE1ClassicScriptArchiveReader
             &$lastToken, &$lastTokenArchiveOffset
         ): ?array {
             if ($unsupported !== null) { return null; }
-            if ($depth > 128 || ++$count > 1000000) {
+            if ($depth > 128 || ++$count > $scriptSize) {
                 throw new RuntimeException('UE1 SerializeExpr recursion or operation bound exceeded');
             }
             $begin = $position;
@@ -109,15 +112,15 @@ final class CatalogUE1ClassicScriptArchiveReader
                     $child();
                 }
             };
-            $params = static function() use (&$expression, &$node, &$unsupported, $depth): void {
-                for ($i = 0; $i < 100000 && $unsupported === null; $i++) {
+            $params = static function() use (&$expression, &$node, &$unsupported, $depth, $scriptSize): void {
+                for ($i = 0; $i < $scriptSize && $unsupported === null; $i++) {
                     $nested = $expression($depth + 1);
                     if ($nested === null) { return; }
                     if (count($node['children']) < 24) { $node['children'][] = $nested; }
                     if ($nested['token'] === 0x16) { return; }
                 }
                 if ($unsupported === null) {
-                    throw new RuntimeException('UE1 SerializeExpr missing EndFunctionParms');
+                    throw new RuntimeException('UE1 SerializeExpr missing EndFunctionParms within ScriptSize');
                 }
             };
 
@@ -168,7 +171,7 @@ final class CatalogUE1ClassicScriptArchiveReader
                             throw new RuntimeException('UE1 EX_LabelTable requires memory alignment');
                         }
                         $labels = [];
-                        for ($i = 0; $i < 100000; $i++) {
+                        for ($i = 0; $i < $scriptSize; $i++) {
                             $entry = ['name' => $fname(), 'code_offset' => $dword()];
                             if ($i < 32) { $labels[] = $entry; }
                             // Epic compares the resolved global FName against
@@ -179,7 +182,7 @@ final class CatalogUE1ClassicScriptArchiveReader
                                 break;
                             }
                         }
-                        if ($i >= 100000) {
+                        if ($i >= $scriptSize) {
                             throw new RuntimeException('UE1 EX_LabelTable missing NAME_None terminator');
                         }
                         $node['value'] = $labels;
@@ -213,13 +216,13 @@ final class CatalogUE1ClassicScriptArchiveReader
                             $children(2);
                         } else {
                             $paramsInfo = [];
-                            for ($i = 0; $i < 100000; $i++) {
+                            for ($i = 0; $i < $scriptSize; $i++) {
                                 $size = $byte();
                                 if ($size === 0) { break; }
                                 $outParm = $byte();
                                 if ($i < 32) { $paramsInfo[] = ['size' => $size, 'out' => $outParm]; }
                             }
-                            if ($i >= 100000) {
+                            if ($i >= $scriptSize) {
                                 throw new RuntimeException('UE1 BeginFunction params unterminated');
                             }
                             $node['value'] = $paramsInfo;
@@ -243,12 +246,12 @@ final class CatalogUE1ClassicScriptArchiveReader
                         break;
                     case 0x1f: // ANSI constant, zero terminated.
                         $text = '';
-                        for ($i = 0; $i < 1000000; $i++) {
+                        for ($i = 0; $i < $scriptSize; $i++) {
                             $char = $byte();
                             if ($char === 0) { break; }
                             $text .= chr($char);
                         }
-                        if ($i >= 1000000) {
+                        if ($i >= $scriptSize) {
                             throw new RuntimeException('UE1 ANSI script string missing NUL');
                         }
                         $node['value'] = $text;
@@ -282,7 +285,7 @@ final class CatalogUE1ClassicScriptArchiveReader
                             break;
                         }
                         $w = [];
-                        for ($i = 0; $i < 1000000; $i++) {
+                        for ($i = 0; $i < $scriptSize; $i++) {
                             $part = $word();
                             // Epic UT99 v400 UnClass.cpp: XFER(_WORD) then
                             // while (Script(iCode-1)): tests the HIGH byte of
@@ -291,7 +294,7 @@ final class CatalogUE1ClassicScriptArchiveReader
                             if ($i < 512) { $w[] = $part; }
                             if (($part >> 8) === 0) { break; }
                         }
-                        if ($i >= 1000000) {
+                        if ($i >= $scriptSize) {
                             throw new RuntimeException('UE1 Unicode script constant unterminated');
                         }
                         $node['value'] = $w;

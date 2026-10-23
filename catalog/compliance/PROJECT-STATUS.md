@@ -466,6 +466,10 @@ Five distinct July custom data methods moved to MAPPED using the existing source
 
 Epic Unreal v1.200 UDatabase::Serialize is now MAPPED to the source-versioned DbNum/DbMax reader and existing virtual derived SerializeData native readers. No extra generic element data is asserted. Source-only implementation mapping; C++ runtime Realloc is not an archive byte operation. **Register PARTIAL 13, MAPPED 241, EXCLUDED 38.**
 
+### O06 classic source-selected UObject and script hierarchy (2026-10-23)
+
+**Eight C98/T99 method entries MAPPED:** UObject, UStruct, UState, UFunction, four per source branch. Production corrections remove UT99's false pre-40 UObject database, mandatory pre-47 FMainFrame and old state/group archives; UT99 always follows RF_HasStack and the two-node/ProbeMask/LatentAction FStateFrame layout, whereas Unreal v1.200 keeps its historical version gates. Loaded RF_DebugSerialize and v1.200 PlaySound to PlaySoundEffect state effects are surfaced without changing archived bytes. Classic SerializeExpr handler token cases have been compared against all case labels in pinned 1998 and UT99 source; none missing. Arbitrary 16 MB/100k/1m limits replaced with source ScriptSize-budgeted traversal, retaining file bounds. UClass remains PARTIAL because some class-default tagged value semantics are still opaque even when declarations match; reporting now distinguishes declaration validation from actual value semantics. Runtime VM, object pointer linking, compiled G5/native comparison remain separately deferred. **Register PARTIAL 5, MAPPED 249, EXCLUDED 38.**
+
 ### O06 implementation queue — Epic code parity first (2026-10-23)
 
 **No new test contracts or corpus runs are authorised for this implementation batch.** Source-review changes below are code-only; mark `IMPLEMENTED — VERIFICATION DEFERRED`, not `ACCEPTED`. Continue implementing remaining **existing** G2, then G3, then G4 requirements before arranging verification as a separate milestone.

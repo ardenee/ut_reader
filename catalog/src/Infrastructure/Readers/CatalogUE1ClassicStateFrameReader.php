@@ -38,10 +38,14 @@ final class CatalogUE1ClassicStateFrameReader
     public static function read(
         CatalogUE1PackageReader $pkg,int $version,int $objectFlags,
         callable $read,callable $compact,callable $i32,
-        int &$position,int $archiveBase=0
+        int &$position,int $archiveBase=0,?string $sourceFamily=null
     ):?array{
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        $ut99=$family===CatalogUE1ClassicSourceFamily::UT99_V400;
         $hasStack=($objectFlags & self::RF_HAS_STACK)!==0;
-        if(!$hasStack&&$version>=47)return null;
+        // UT99 always checks RF_HasStack. Unreal v1.200 also loads
+        // temporary MainFrames for file versions below 47.
+        if(!$hasStack&&($ut99||$version>=47))return null;
 
         $start=$position;
         $validate=static function(int $ref,string $member)use($pkg):int{
@@ -52,16 +56,16 @@ final class CatalogUE1ClassicStateFrameReader
             return $ref;
         };
         $node=0;$stateNode=0;$oldClass=null;$oldNode=null;
-        if($version>=51){
+        if($ut99||$version>=51){
             $node=$validate($compact(),'Node');
             $stateNode=$validate($compact(),'StateNode');
         }else{
             $oldClass=$validate($compact(),'OldClass');
             if($oldClass!==0)$oldNode=$i32();
         }
-        $temp=$version<52?$validate($compact(),'TempClass'):null;
+        $temp=!$ut99&&$version<52?$validate($compact(),'TempClass'):null;
         $probeMask=bin2hex($read(8));
-        $latent=$version>=55?$i32():0;
+        $latent=$ut99||$version>=55?$i32():0;
         $codeOffset=$node!==0?$compact():null;
         if($codeOffset!==null&&$codeOffset< -1){
             throw new RuntimeException('Invalid UE1 execution-frame script code offset');
@@ -79,7 +83,8 @@ final class CatalogUE1ClassicStateFrameReader
             'latent_action'=>$latent,
             'script_code_offset'=>$codeOffset,
             'has_stack_object_flag'=>$hasStack,
-            'temporary_legacy_frame_discarded_on_load'=>!$hasStack&&$version<47,
+            'selected_source_family'=>$family,
+            'temporary_legacy_frame_discarded_on_load'=>!$ut99&&!$hasStack&&$version<47,
             'runtime_frame_constructed'=>false,
             'runtime_node_preloaded'=>false,
             'runtime_script_code_pointer_resolved'=>false,

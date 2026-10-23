@@ -250,6 +250,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
         // in file versions <47, independent of RF_HasStack. In later
         // versions a flagged StateFrame still precedes tagged properties.
         $version=(int)($package->getHeader()['version']??0);
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        $epic=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1;
         $names=$package->getNames();
         $len=(int)filesize($path);
         if ($offset<0 || $size>$len-$offset) { throw new RuntimeException('UE1 payload outside physical file'); }
@@ -285,7 +287,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 return ['index'=>$index,'text'=>(string)($entry['name']??$entry['text']??'')];
             };
             $legacyDatabase=null;
-            if ($version<40) {
+            if ($epic&&$version<40) {
                 // Unreal v1.200 UObject::Serialize oldver: Ar << GObj.TempNum
                 // << GObj.TempMax before the MainFrame bytes.
                 $database=unpack('Vcount/Vcapacity',$read(8));
@@ -302,19 +304,34 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $v=(int)unpack('V',$read(4))[1];
                     return $v>=0x80000000?$v-0x100000000:$v;
                 },
-                $position,$offset
+                $position,$offset,$family
             );
             $tags=self::parseTags($read,$u8,$name,$compact,$version,$offset,$position,$size);
             $tagEnd=$offset+$position;
             $legacyState=null;$legacyGroup=null;
-            if($version<57){$legacyState=$name();}
-            if($version<58){$legacyGroup=$name();}
+            if($epic&&$version<57){$legacyState=$name();}
+            if($epic&&$version<58){$legacyGroup=$name();}
+            // Unreal v1.200 maps old PlaySound to PlaySoundEffect after
+            // FName deserialization. Preserve both the archived name and
+            // Epic's post-load effective name without rewriting raw bytes.
+            $loadedState=$legacyState;
+            if($epic&&$legacyState!==null
+                &&strcasecmp($legacyState['text'],'PlaySound')===0){
+                $loadedState=['index'=>null,'text'=>'PlaySoundEffect',
+                    'source_renamed_from'=>'PlaySound'];
+            }
             return array_replace($base,['status'=>'tag_envelope_decoded','tags'=>$tags,
                 'serialized_state_frame'=>$stateFrame,
                 'legacy_database'=>$legacyDatabase,
                 'tag_end_offset'=>$tagEnd,
-                'legacy_state_name'=>$legacyState,'legacy_group_name'=>$legacyGroup,
+                'legacy_state_name'=>$legacyState,
+                'legacy_state_name_after_load'=>$loadedState,
+                'legacy_group_name'=>$legacyGroup,
+                'loaded_object_flags_after_uobject_serialize'=>
+                    ((int)$export['objectFlags']|0x40000000),
+                'source_sets_rf_debug_serialize'=>true,
                 'native_tail_bytes'=>$size-$position,
+                'selected_source_family'=>$family,
                 'schema_verified'=>false]);
         }finally{fclose($fp);}
     }
