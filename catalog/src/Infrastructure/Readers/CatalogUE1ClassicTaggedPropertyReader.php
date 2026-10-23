@@ -98,6 +98,64 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         'nul_terminated'=>true];
                     $valueKind='legacy_ansi_cstring_bytes';
                 }
+                elseif($type===13&&$version>=62&&$tagSize>=1){
+                    // UT99 v400 Core/Src/UnMisc.cpp::operator<<(FString&):
+                    // signed AR_INDEX(A.Num()). Positive is ANSI bytes;
+                    // negative is -A.Num() 16-bit Unicode units. The count
+                    // includes a terminal NUL. Preserve both encodings.
+                    $cursor=0;
+                    $first=ord($raw[$cursor++]);
+                    $negative=($first&128)!==0;
+                    $n=$first&63;$more=($first&64)!==0;
+                    $shift=6;$length=1;$valid=true;
+                    while($more){
+                        if(++$length>5||$cursor>=strlen($raw)){
+                            $valid=false;break;
+                        }
+                        $b=ord($raw[$cursor++]);
+                        $n|=($b&127)<<$shift;
+                        $more=($b&128)!==0;$shift+=7;
+                    }
+                    if($valid&&$n<=0x7fffffff){
+                        $serializedCount=$negative?-$n:$n;
+                        $payload=substr($raw,$cursor);
+                        $expected=$negative?$n*2:$n;
+                        $lastOk=$n===0
+                            ||($negative?substr($payload,-2)==="\0\0":
+                                substr($payload,-1)==="\0");
+                        if($expected===strlen($payload)&&$lastOk){
+                            $content=$n===0?'':substr($payload,0,-($negative?2:1));
+                            $ascii=null;
+                            if($n===0){$ascii='';}
+                            elseif(!$negative){
+                                $ascii=preg_match(
+                                    '/^[\\x09\\x0A\\x0D\\x20-\\x7E]*$/D',
+                                    $content)===1?$content:null;
+                            }else{
+                                $ascii='';
+                                for($i=0;$i<strlen($content);$i+=2){
+                                    if(ord($content[$i+1])!==0
+                                       ||!preg_match('/^[\\x09\\x0A\\x0D\\x20-\\x7E]$/D',
+                                           $content[$i])){
+                                        $ascii=null;break;
+                                    }
+                                    $ascii.=$content[$i];
+                                }
+                            }
+                            $value=[
+                                'signed_character_count'=>$serializedCount,
+                                'archive_encoding'=>$negative?'unicode_16bit_le':'ansi_8bit',
+                                'serialized_character_bytes_hex'=>bin2hex($payload),
+                                'ascii_text'=>$ascii,
+                                'nul_terminated'=>$n>0,
+                                'empty_on_native_load'=>$n<=1,
+                                'runtime_locale_conversion_verified'=>false,
+                            ];
+                            $valueKind=$negative?'fstring_utf16_archive':
+                                'fstring_ansi_archive';
+                        }
+                    }
+                }
                 elseif($type===10&&is_array($struct)){
                     $bytes=array_values(unpack('C*',$raw)?:[]);
                     $structName=strtolower($struct['text']);
