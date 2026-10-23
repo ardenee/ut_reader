@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-classic-uobject-script-source-completion`
-- **Stage:** implemented-source-mapped-verification-deferred
-- **Last completed action:** O06 batch implemented 4 PHP production reader corrections: UT99 vs original UE1 source-selected UObject database/count and old state/group gates, original pre47 MainFrame vs UT99 RF_HasStack-only StateFrame (two node refs and latent action even on old archives), loaded RF_DebugSerialize and Unreal v1.200 PlaySound -> PlaySoundEffect, and source ScriptSize-bounded full known SerializeExpr token grammar replacing fake 16MB/100k/1m caps. UClass default schema now reports matched declarations distinctly from opaque values. Compared pinned Epic v1.200 and UT99 v400 SerializeExpr case tokens, none missing. Promoted 8 C98/T99 UObject, UStruct, UState, UFunction file-archive methods to MAPPED; register now 5 PARTIAL 249 MAPPED 38 EXCLUDED. Remaining: C98/T99 UClass defaults values and 3 C227 save-time game emitter/rope overrides. PHP syntax and diff integrity only, no functional tests or PRD deployment.
-- **Resume at:** Continue actual code for 5 remaining PARTIAL: resolve C98/T99 UClass typed default-value semantics and UE1 v227 AXBeamEmitter, AXParticleEmitter, AXRopeDeco game-specific serialization in applicable parser/write paths. Keep G5 independently verified native/corpus parity and PRD deployment deferred.
-- **Active changed at:** 2026-10-23T19:37:39+00:00
+- **Contract:** `g3g4-ue1-game-overlays-and-class-default-structs`
+- **Stage:** implemented-read-source-mapping-verification-deferred
+- **Last completed action:** Built explicit Epic UE1 base -> game-source overlays in CatalogUE1ClassicSourceFamily::sourceLayers and separate v1.227 emitter native override; only select Unreal v227 override for package version 69 WITH licensee 227. AXBeamEmitter, AXParticleEmitter, AXRopeDeco game methods call inherited UE1 tagged actor archive; extra SerializeRefs and save-time mutations are source described, not incorrectly decoded as file bytes. Map 3 C227 source read contracts from pinned code. UClass remaining C98/T99: extended existing class defaults with UT99-v400 source family into compact dynamic FString and UMap nested children, decoded opaque struct default values with existing source-defined UStruct::SerializeBin field-order reader, SHA256 and exact byte consumption, retained unresolved imported/nested cases. Register 2 PARTIAL 252 MAPPED 38 EXCLUDED. Eight modified PHP syntactically valid, diff integrity only, no native runtime oracle, tests, or PRD deployment.
+- **Resume at:** Only two implementation PARTIAL: C98 and T99 UClass::Serialize complex class-default value semantics, especially unresolved inherited/imported structs, native item types and source value assignment. Finish supported typed declarations; then separately execute native G5 verification and safe PRD deployment. No inflated acceptance.
+- **Active changed at:** 2026-10-23T19:58:22+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

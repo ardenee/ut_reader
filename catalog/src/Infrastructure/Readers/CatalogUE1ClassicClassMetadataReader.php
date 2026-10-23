@@ -196,7 +196,7 @@ final class CatalogUE1ClassicClassMetadataReader
             // decode here; accurate value semantics still require the class
             // property schema, not merely the encoded tag type.
             $defaults=CatalogUE1ClassicTaggedPropertyReader::inspectClassDefaults(
-                $path,$pkg,$position,$end,$version);
+                $path,$pkg,$position,$end,$version,$family);
             $position=$defaults['tag_end_offset'];
             if($version<57 && $family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
                 // Epic Unreal v1.200 Core/Src/UnClass.cpp::UClass::Serialize

@@ -58,7 +58,8 @@ echo json_encode(['ok'=>$failed===[], 'checks'=>count($checks),
  'source_files'=>count($hashes),
  'source_sha256_manifest'=>hash('sha256',json_encode($hashes,JSON_UNESCAPED_SLASHES)),
  'exclusions'=>['AEmitterGarbageCollector','UBeamMesh'],
- 'saveable_actor_contracts_open'=>['AXBeamEmitter','AXParticleEmitter','AXRopeDeco'],
- 'scope'=>'Only C227 emitter overrides and declarations; saving parent property effects not implemented here'
+ 'read_side_source_overlays_mapped'=>['AXBeamEmitter','AXParticleEmitter','AXRopeDeco'],
+ 'save_time_runtime_mutation_oracles_deferred'=>['AXParticleEmitter','AXRopeDeco'],
+ 'scope'=>'C227 emitter source identity and read-side overlay mapping; no runtime engine oracle or save-time execution'
 ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($failed?1:0);

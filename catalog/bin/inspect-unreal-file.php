@@ -398,6 +398,18 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
                     $result['ue1_selected_source_family'] =
                         \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::select(
                             (int)($summary['version']??0),$ue1SourceFamily);
+                    // Keep source hierarchy explicit: an inherited
+                    // Epic UE1 object archive and an optional game override.
+                    // Archive version alone cannot identify a game.
+                    $header=$objectReader->getHeader();
+                    $sourceLayers=
+                        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::sourceLayers(
+                            (int)($header['version']??0),
+                            (int)($header['licenseeVersion']??0),
+                            $ue1SourceFamily);
+                    $result['ue1_source_layers']=$sourceLayers;
+                    $result['ue1_engine_source_base']=$sourceLayers['engine_base'];
+                    $result['ue1_game_source_override']=$sourceLayers['game_source_overlay'];
                     $result['ue1_object_payload_preview_limit'] = 32;
                     $result['ue1_object_payload_preview_truncated'] = $exportCount > $maxPreview;
                     $result['ue1_object_payload_scope'] = 'source_tagged_properties_and_known_class_native_records; bulk_bytes_and_runtime_class_defaults_not_certified';

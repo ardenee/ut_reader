@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T19:36:43+00:00",
+  "updated_at_utc": "2026-10-23T19:49:48+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -7091,12 +7091,12 @@
           "line": 42
         }
       ],
-      "status": "PARTIAL",
-      "reader": "UObject tagged property handling; no extra file bytes from AXBeamEmitter override; parent hierarchy requires source verification",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicGameSourceOverlay.php (over CatalogUE1ClassicTaggedPropertyReader.php)",
       "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
-      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXBeamEmitter Super::Serialize, RenderDataModel gated by Ar.SerializeRefs (GC-only).",
-      "remaining": "CLASS_Abstract AXBeamEmitter may have saveable subclasses; cannot exclude parent/native property semantics without matching class/cooked source and actual engine oracle. C227 lineage unlike C98/T99 and remains version-unproven.",
-      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXBeamEmitter Super::Serialize, RenderDataModel gated by Ar.SerializeRefs (GC-only).; SOURCE_IMPLEMENTED_UNREAL227_READ_OVERLAY 2026-10-23: Emitter/Src/BeamEmitter.cpp source Super::Serialize, game-specific native method, licensee-227 overlay preserving parent UE1 tagged archive; prior register description: UObject tagged property handling; no extra file bytes from AXBeamEmitter override; parent hierarchy requires source verification",
+      "remaining": "CLASS_Abstract AXBeamEmitter may have saveable subclasses; cannot exclude parent/native property semantics without matching class/cooked source and actual engine oracle. C227 lineage unlike C98/T99 and remains version-unproven. | READ-SIDE SOURCE-TO-PHP MAPPED. Save-time state mutations are identified but not executed by this read-only parser; on-disk tags already reflect the writer's mutation. Compiled native game/original inheritance parity G5 remain DEFERRED, no PRD deployment.",
+      "updated_at_utc": "2026-10-23T19:49:48+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7104,6 +7104,19 @@
         "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED_READ_PATH",
+        "source_branch": "C227",
+        "engine_baseline": "UE1 UObject tagged archive below source-specific game overlay",
+        "game_overlay_qualifier": "package version 69 AND licensee version 227",
+        "game_source": "Emitter/Src/BeamEmitter.cpp:42",
+        "game_archive_override": "Super::Serialize inherited actor tags; RenderDataModel only on SerializeRefs",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicGameSourceOverlay.php",
+        "php_dispatch": "CatalogUE1ClassicNativeObjectReader::inspect",
+        "serializes_extra_native_file_bytes": false,
+        "save_time_mutations_replayed": false,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7116,12 +7129,12 @@
           "line": 101
         }
       ],
-      "status": "PARTIAL",
-      "reader": "UnrealDB tagged actor serialization; C227 save-time filtering not simulated",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicGameSourceOverlay.php (over CatalogUE1ClassicTaggedPropertyReader.php)",
       "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
-      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXParticleEmitter when Ar.IsSaving && bIsInternalEmitter temporarily nulls Level/XLevel/HitActor and clears Location/Rotation before Super; PartPtr only reference archives.",
-      "remaining": "Save-time parent UObject property filtering and caller state restoration require executable engine parity before claiming C227 emitter serialization match. Do not exclude saveable AActor-derived classes.",
-      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXParticleEmitter when Ar.IsSaving && bIsInternalEmitter temporarily nulls Level/XLevel/HitActor and clears Location/Rotation before Super; PartPtr only reference archives.; SOURCE_IMPLEMENTED_UNREAL227_READ_OVERLAY 2026-10-23: Emitter/Src/AXEmitter.cpp source Super::Serialize, game-specific native method, licensee-227 overlay preserving parent UE1 tagged archive; prior register description: UnrealDB tagged actor serialization; C227 save-time filtering not simulated",
+      "remaining": "Save-time parent UObject property filtering and caller state restoration require executable engine parity before claiming C227 emitter serialization match. Do not exclude saveable AActor-derived classes. | READ-SIDE SOURCE-TO-PHP MAPPED. Save-time state mutations are identified but not executed by this read-only parser; on-disk tags already reflect the writer's mutation. Compiled native game/original inheritance parity G5 remain DEFERRED, no PRD deployment.",
+      "updated_at_utc": "2026-10-23T19:49:48+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7129,6 +7142,19 @@
         "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED_READ_PATH",
+        "source_branch": "C227",
+        "engine_baseline": "UE1 UObject tagged archive below source-specific game overlay",
+        "game_overlay_qualifier": "package version 69 AND licensee version 227",
+        "game_source": "Emitter/Src/AXEmitter.cpp:101",
+        "game_archive_override": "When saving internal emitters zero Location/Rotation, null Level/XLevel/HitActor before Super; no extra native bytes",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicGameSourceOverlay.php",
+        "php_dispatch": "CatalogUE1ClassicNativeObjectReader::inspect",
+        "serializes_extra_native_file_bytes": false,
+        "save_time_mutations_replayed": false,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7141,12 +7167,12 @@
           "line": 1392
         }
       ],
-      "status": "PARTIAL",
-      "reader": "UnrealDB tagged actor serialization; C227 physics state mutation not simulated",
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicGameSourceOverlay.php (over CatalogUE1ClassicTaggedPropertyReader.php)",
       "test": "verify-ue1-o06-c227-emitter-serialize-contracts.php",
-      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXRopeDeco on Ar.IsSaving invokes RbPhysicsData SaveState, sets Mesh nullptr, Super::Serialize and restores Mesh from RopeMeshPtr; Ar.SerializeRefs separately traverses rope mesh/physics.",
-      "remaining": "C227 actor save-time physics/native state and Mesh property filtering not independently replayed; compiled oracle and genuine package needed. Do not classify as non-saveable.",
-      "updated_at_utc": "2026-10-22T21:41:44+00:00",
+      "evidence": "DEV pinned C227 Emitter source-check verifier 36/36 PASS; 6 distinct source files SHA-256 manifest 119ab7b37492b8fec8c1e31b8088b4cc2b3ae4035b63535d50660f30fde49a18; journal run 20261022T214052888Z-95d390c6 AXRopeDeco on Ar.IsSaving invokes RbPhysicsData SaveState, sets Mesh nullptr, Super::Serialize and restores Mesh from RopeMeshPtr; Ar.SerializeRefs separately traverses rope mesh/physics.; SOURCE_IMPLEMENTED_UNREAL227_READ_OVERLAY 2026-10-23: Emitter/Src/EmitterPhysX.cpp source Super::Serialize, game-specific native method, licensee-227 overlay preserving parent UE1 tagged archive; prior register description: UnrealDB tagged actor serialization; C227 physics state mutation not simulated",
+      "remaining": "C227 actor save-time physics/native state and Mesh property filtering not independently replayed; compiled oracle and genuine package needed. Do not classify as non-saveable. | READ-SIDE SOURCE-TO-PHP MAPPED. Save-time state mutations are identified but not executed by this read-only parser; on-disk tags already reflect the writer's mutation. Compiled native game/original inheritance parity G5 remain DEFERRED, no PRD deployment.",
+      "updated_at_utc": "2026-10-23T19:49:48+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7154,6 +7180,19 @@
         "test_sha256": "bd57285034fd1eb72f764dad43004cab40053a3a85f4a41c1e7df761f6538d2b",
         "source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
         "log": "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED_READ_PATH",
+        "source_branch": "C227",
+        "engine_baseline": "UE1 UObject tagged archive below source-specific game overlay",
+        "game_overlay_qualifier": "package version 69 AND licensee version 227",
+        "game_source": "Emitter/Src/EmitterPhysX.cpp:1392",
+        "game_archive_override": "SaveState then null Mesh before Super, restore Mesh from RopeMeshPtr; refs-only physics/rope traversal",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicGameSourceOverlay.php",
+        "php_dispatch": "CatalogUE1ClassicNativeObjectReader::inspect",
+        "serializes_extra_native_file_bytes": false,
+        "save_time_mutations_replayed": false,
+        "verification_status": "DEFERRED"
       }
     },
     {

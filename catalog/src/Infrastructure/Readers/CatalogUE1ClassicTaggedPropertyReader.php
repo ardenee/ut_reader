@@ -32,8 +32,10 @@ final class CatalogUE1ClassicTaggedPropertyReader
      */
     private static function parseTags(
         callable $read, callable $u8, callable $name, callable $compact,
-        int $version, int $offset, int &$position, int $archiveLimit
+        int $version, int $offset, int &$position, int $archiveLimit,
+        ?string $sourceFamily=null
     ): array {
+            $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
             $tags=[];$end=false;
             // Epic's FPropertyTag reader reads until NAME_None; it has no
             // fixed 20,000-tag limit. Bound traversal by the actual bytes
@@ -99,7 +101,9 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         'nul_terminated'=>true];
                     $valueKind='legacy_ansi_cstring_bytes';
                 }
-                elseif($type===13&&$version>=62&&$tagSize>=1){
+                elseif($type===13
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V400
+                    &&$tagSize>=1){
                     // Use the same bounded source codec as nested UT99
                     // UArrayProperty/UStrProperty value serialization.
                     $cursor=0;
@@ -180,7 +184,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
      * @return array<string,mixed>
      */
     public static function inspectClassDefaults(
-        string $path,CatalogUE1PackageReader $package,int $start,int $end,int $version
+        string $path,CatalogUE1PackageReader $package,int $start,int $end,int $version,
+        ?string $sourceFamily=null
     ): array {
         $length=filesize($path);
         if($start<0||$end<=$start||$end>$length){
@@ -224,7 +229,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 }
                 return ['index'=>$id,'text'=>(string)$names[$id]['name']];
             };
-            $tags=self::parseTags($read,$u8,$name,$compact,$version,$start,$position,$size);
+            $tags=self::parseTags($read,$u8,$name,$compact,$version,$start,$position,$size,$sourceFamily);
             return ['tags'=>$tags,'tag_end_offset'=>$start+$position,
                 'schema_verified'=>false,'source_archive_mode'=>'UClass-defaults'];
         }finally{fclose($fp);}
@@ -306,7 +311,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 },
                 $position,$offset,$family
             );
-            $tags=self::parseTags($read,$u8,$name,$compact,$version,$offset,$position,$size);
+            $tags=self::parseTags($read,$u8,$name,$compact,$version,$offset,$position,$size,$family);
             $tagEnd=$offset+$position;
             $legacyState=null;$legacyGroup=null;
             if($epic&&$version<57){$legacyState=$name();}

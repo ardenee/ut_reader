@@ -90,6 +90,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         $legacyStringUpgrades=0;$legacyStringUnsafe=0;$legacyStringSamples=[];
         $dynamicStringUnsafe=0;$dynamicStringSamples=[];
         $arrayDecoded=0;$arrayUnverified=0;$arraySamples=[];
+        $structDecoded=0;$structUnverified=0;$structSamples=[];
         $mapNoArchiveBytes=0;$mapValueUnverified=0;$mapSamples=[];
         $sourceVersion=(int)($valueArchivePackage->getHeader()['version']??0);
         foreach($tags as $tag){
@@ -258,7 +259,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     foreach([$keyRef,$valueRef] as $childRef){
                         $child=self::readField(
                             (string)$decl['owner_path'],$decl['owner_package'],
-                            $childRef);
+                            $childRef,$family);
                         if(($child['native']['status']??'')
                             !=='native_property_record_complete'){
                             $validChildren=false;break;
@@ -331,11 +332,73 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
                 continue;
             }
+            if($tagKind==='structproperty'&&$declKind==='structproperty'
+                &&($tag['value_kind']??'opaque')==='opaque'){
+                // Epic UStructProperty::SerializeItem delegates to the
+                // property declaration's Struct->SerializeBin. Reuse the
+                // existing native field-order decoder used for array
+                // elements instead of treating all UClass structs opaque.
+                $layout=CatalogUE1ClassicStructArrayValueReader::resolve(
+                    (string)$decl['owner_path'],$decl['owner_package'],
+                    (int)($decl['struct_reference']??0),$family);
+                $decoded=['status'=>$layout['status']];
+                if($layout['status']==='struct_local_field_layout_resolved'){
+                    $length=(int)($tag['serialized_size']??-1);
+                    $offset=(int)($tag['value_offset']??-1);
+                    $fileLength=filesize($valuePath);
+                    if($length>=0&&$offset>=0&&$fileLength!==false
+                        &&$offset<=$fileLength-$length){
+                        $fp=fopen($valuePath,'rb');
+                        if($fp===false){
+                            throw new RuntimeException('Cannot open UE1 struct default');
+                        }
+                        try{
+                            if(fseek($fp,$offset)!==0){
+                                throw new RuntimeException('Cannot seek UE1 struct default');
+                            }
+                            $bytes='';
+                            while(strlen($bytes)<$length){
+                                $part=fread($fp,$length-strlen($bytes));
+                                if(!is_string($part)||$part===''){
+                                    throw new RuntimeException('Truncated UE1 struct default');
+                                }
+                                $bytes.=$part;
+                            }
+                        }finally{fclose($fp);}
+                        if($length>0
+                            &&($tag['value_sha256']??null)!==hash('sha256',$bytes)){
+                            throw new RuntimeException('UE1 struct default changed after tag parse');
+                        }
+                        $cursor=0;
+                        $decoded=CatalogUE1ClassicStructArrayValueReader::readAt(
+                            $bytes,$cursor,$layout,true,$valueArchivePackage);
+                        if($decoded['status']==='struct_field_values_decoded'
+                            &&$cursor!==$length){
+                            $decoded=['status'=>'struct_unconsumed_archive_bytes',
+                                'decoded_bytes'=>$cursor,'declared_bytes'=>$length];
+                        }
+                    }else{
+                        $decoded=['status'=>'struct_default_outside_archive'];
+                    }
+                }
+                if($decoded['status']==='struct_field_values_decoded'){
+                    $structDecoded++;
+                }else{
+                    $structUnverified++;
+                }
+                if(count($structSamples)<16){
+                    $structSamples[]=['name'=>$tag['name']]+$decoded;
+                }
+                if($decoded['status']!=='struct_field_values_decoded'){
+                    continue;
+                }
+            }
             $matched++;
             if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
         }
         return [
             'status'=>$mapValueUnverified>0?'map_property_value_unverified':
+                ($structUnverified>0?'struct_property_value_unverified':
                 ($arrayUnverified>0?'array_property_value_unverified':
                 ($dynamicStringUnsafe>0?'dynamic_fstring_archive_unverified':
                 ($legacyStringUnsafe>0?'legacy_fixed_string_upgrade_unverified':
@@ -343,7 +406,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 ($unknownSkipped>0?'unknown_property_tags_skipped':
                 ($stringBoundUnverified>0?'fixed_string_archive_size_unverified':
                 ($unresolved===0?'all_available_declarations_match':
-                'imported_or_unknown_properties_unverified'))))))),
+                'imported_or_unknown_properties_unverified')))))))),
             'tag_count'=>count($tags),
             'declaration_type_and_array_index_matches'=>$matched,
             'matches_in_this_class'=>$matchedDirect,
@@ -363,6 +426,9 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             'legacy_string_codepage_verified'=>false,
             'dynamic_fstring_archive_unverified'=>$dynamicStringUnsafe,
             'dynamic_fstring_unverified_samples'=>$dynamicStringSamples,
+            'source_struct_field_values_decoded'=>$structDecoded,
+            'source_struct_field_values_unverified'=>$structUnverified,
+            'source_struct_field_value_samples'=>$structSamples,
             'primitive_array_values_decoded'=>$arrayDecoded,
             'array_value_unverified'=>$arrayUnverified,
             'array_value_samples'=>$arraySamples,
@@ -463,6 +529,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     'array_dim'=>(int)$data['array_dim'],
                     'property_flags'=>(int)($data['effective_property_flags']??0),
                     'struct_name'=>$structRow['objectNameText']??null,
+                    'struct_reference'=>$structRef,
                     'string_size'=>$data['subclass_fields']['string_size']??null];
             }
             $reference=(int)($data['next_field_reference']??0);

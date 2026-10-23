@@ -45,6 +45,14 @@ final class CatalogUE1ClassicNativeObjectReader
         $nativeKind=strtolower($className);
         $sourceVersion=(int)($pkg->getHeader()['version']??0);
         $family=CatalogUE1ClassicSourceFamily::select($sourceVersion,$sourceFamily);
+        // A game may override only the native method of an otherwise
+        // Epic-UE1-serialized object. Resolve the licensee-source delta
+        // AFTER the inherited UObject tagged archive is decoded.
+        $gameOverride=CatalogUE1ClassicGameSourceOverlay::inspectNative(
+            $pkg->getHeader(),$className,$nativeLength,$propertyStream);
+        if($gameOverride!==null){
+            return array_replace($record,$gameOverride);
+        }
         if($nativeKind==='actor'){
             $actorVersion=(int)($pkg->getHeader()['version']??0);
             if($actorVersion<35||$actorVersion>69){
