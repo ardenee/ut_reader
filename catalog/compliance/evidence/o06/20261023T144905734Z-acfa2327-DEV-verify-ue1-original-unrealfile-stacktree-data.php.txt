@@ -1,0 +1,6 @@
+﻿
+Fatal error: Uncaught RuntimeException: UStackTree does not match the requested/known original source layout: FStackNode Class exceeds ResMap; Truncated source FStackNode archive in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackTreeDataReader.php:72
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-original-unrealfile-stacktree-data.php(40): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackTreeDataReader::read('C:\\Users\\arden\\...', true)
+#1 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackTreeDataReader.php on line 72

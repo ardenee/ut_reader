@@ -1,7 +1,7 @@
 {
-  "contract": "g2-original-1997-rotation-bins",
-  "stage": "released-verified",
-  "last_action": "Mainline commit 0339a486 pushed; original May/July FRotation per-object/UProperties 6/12-byte source fix passed 30/30 focused and 5/5 affected DEV; all 3 production PHP files SHA256 matched PRD, zero PRD PHP tests; standalone G2 contract release docs updated. G2 IN PROGRESS.",
-  "next_step": "Advance remaining G2 distinct Epic source contracts and genuine 1997 matching original files; do not rerun unchanged rotation suite. Keep parallel StackTree edits separate and do not conflate proof of one contract with entire O06 G2 acceptance.",
-  "updated_at_utc": "2026-10-23T14:50:46+00:00"
+  "contract": "g2-original-1997-stacknode",
+  "stage": "passed-gate-deployed",
+  "last_action": "Epic May four vs July five FStackNode links and NestType/StackNodeFlags field order corrected; 50/50 source-backed verifier, original stacktree and special-header test PASS on DEV; production reader SHA256 matched DEV and PRD",
+  "next_step": "Continue first genuinely unverified May/July build-selected serialization contract; do not redo passing FStackNode tests without changed inputs. G2-G5 still open, no original compiled engine oracle.",
+  "updated_at_utc": "2026-10-23T14:54:58+00:00"
 }

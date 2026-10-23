@@ -204,6 +204,21 @@
         "verify-ue1-original-unrealfile-mesh-records.php"
       ]
     },
+    "g2-original-1997-stacknode": {
+      "description": "May 1997 FStackNode four FStackNodeLink fields versus July five FStackNodePtr fields; Epic NestType precedes StackNodeFlags; source inferred only by unique complete physical archive",
+      "readers": [
+        "CatalogUE1OriginalUnrealfileStackTreeDataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g2-stacknode-may-july.php"
+      ],
+      "affected": [
+        "verify-ue1-original-unrealfile-stacktree-data.php"
+      ],
+      "gate": [
+        "verify-ue1-original-unrealfile-special-headers.php"
+      ]
+    },
     "ue1-classic-level": {
       "description": "Unreal v1.200 native ULevel and UDatabase base counts",
       "readers": [

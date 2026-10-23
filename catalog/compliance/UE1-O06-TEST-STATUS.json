@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T14:43:58.8179965Z",
-    "head_commit":  "0e686650",
+    "updated_at_utc":  "2026-10-23T14:52:24.0468752Z",
+    "head_commit":  "d583dd27",
     "current_target":  "DEV",
-    "current_source_sha256":  "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+    "current_source_sha256":  "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -447,6 +447,18 @@
                       "run_id":  "20261022T160516056Z-4695e90f",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261022T160516056Z-4695e90f-DEV-verify-ue1-o06-g2-shared-transient.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g2-stacknode-may-july.php",
+                      "test":  "verify-ue1-o06-g2-stacknode-may-july.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T14:51:10.8345150Z",
+                      "source_sha256":  "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
+                      "test_sha256":  "c7aa5a842b1a0b93b46c91ad782ef1a1ddf5c7bb552bc4716c2314b57acc0b1f",
+                      "run_id":  "20261023T145110206Z-346cc5b6",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T145110206Z-346cc5b6-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-class-default-declarations.php",
@@ -1137,12 +1149,12 @@
                       "test":  "verify-ue1-original-unrealfile-special-headers.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T19:14:44.4727618Z",
-                      "source_sha256":  "87499a0d7c9cad53ca331f89cef7a2a6a109fa94d97cfe1cbddd1a080d885f25",
+                      "event_at_utc":  "2026-10-23T14:52:24.0243360Z",
+                      "source_sha256":  "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
                       "test_sha256":  "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
-                      "run_id":  "20261022T191444048Z-5f7961c8",
+                      "run_id":  "20261023T145223257Z-72c45fe9",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T191444048Z-5f7961c8-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T145223257Z-72c45fe9-DEV-verify-ue1-original-unrealfile-special-headers.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-stack-prefix.php",
@@ -1161,12 +1173,12 @@
                       "test":  "verify-ue1-original-unrealfile-stacktree-data.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T19:40:25.5577952Z",
-                      "source_sha256":  "c8b56130e56cfd1b10e94991719a687ccc36993cc2636d92e89f9cf3ead5a67c",
-                      "test_sha256":  "ff036413645cfa5886be7d865e780be54b31b50e7f0b53bcac133eb4eb1c6151",
-                      "run_id":  "20261022T194025268Z-c173c50a",
+                      "event_at_utc":  "2026-10-23T14:51:20.1061555Z",
+                      "source_sha256":  "0e2ed1fb3e4c032fe2c1ea8ff47690565df5880154afa3e98e0ac18f2086c9e5",
+                      "test_sha256":  "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
+                      "run_id":  "20261023T145119580Z-36cb7fa3",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T194025268Z-c173c50a-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T145119580Z-36cb7fa3-DEV-verify-ue1-original-unrealfile-stacktree-data.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-unrealfile-texture.php",

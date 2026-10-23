@@ -15,11 +15,11 @@ $make=static function(int $v):array{
  $native=pack('V3',2,2,1);
  $nodeA=pack('V2',1,7).pack('V4',0,0,0,0)
    .pack('v5',3,0xffff,0xfffe,5,10)
-   .pack('C4',1,$v===22?1:2,0,3)
+   .pack('C4',$v===22?1:2,1,0,3)
    .pack('V4',1,0,2,0);
  $nodeB=pack('V5',0,0,0,0,0)
    .pack('v5',4,2,3,6,7)
-   .pack('C4',1,3,2,3)
+   .pack('C4',3,1,2,3)
    .pack('v5',11,12,13,14,15);
  if(strlen($nodeA)!==54||strlen($nodeB)!==44)
      throw new RuntimeException('Source stack node fixture lengths differ');
