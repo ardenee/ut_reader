@@ -1,0 +1,41 @@
+﻿{
+    "ok": true,
+    "checks": 17,
+    "passed": 17,
+    "failed": [],
+    "samples": [
+        {
+            "value_hex": "4c6567616379",
+            "flags": 0,
+            "tag_kind": "legacy_ansi_cstring_bytes",
+            "status": "all_available_declarations_match",
+            "upgrade_count": 1
+        },
+        {
+            "value_hex": "e9",
+            "flags": 0,
+            "tag_kind": "legacy_ansi_cstring_bytes",
+            "status": "all_available_declarations_match",
+            "upgrade_count": 1
+        },
+        {
+            "value_hex": "4172636869766564",
+            "flags": 8192,
+            "tag_kind": "legacy_ansi_cstring_bytes",
+            "status": "all_available_declarations_match",
+            "upgrade_count": 1
+        },
+        {
+            "value_hex": "42726f6b656e",
+            "flags": 0,
+            "tag_kind": "opaque",
+            "status": "legacy_fixed_string_upgrade_unverified",
+            "upgrade_count": 0
+        }
+    ],
+    "source_sha256": {
+        "T99": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+        "C98": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+    },
+    "remaining": "This detects the actual archived ANSI legacy upgrade and source branch ordering. Does not simulate TCHAR locale conversion, FString heap storage, or compiled engine execution."
+}

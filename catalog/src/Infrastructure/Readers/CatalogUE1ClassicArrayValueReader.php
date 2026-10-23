@@ -4,7 +4,9 @@
  * Inner->SerializeItem. Source-scoped primitive inner serializers only.
  *
  * Does not emulate allocation, object creation or arbitrary nested struct
- * serialization. Unsupported inner classes explicitly stay unverified.
+ * serialization. Source-verified nested FString byte streams retain their
+ * original ANSI/Unicode byte identity; runtime character conversion remains
+ * unverified. Unsupported inner classes stay explicitly unverified.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -43,6 +45,7 @@ final class CatalogUE1ClassicArrayValueReader
             'byteproperty','boolproperty'=>1,
             'intproperty','floatproperty'=>4,
             'nameproperty','objectproperty','classproperty'=>-1,
+            'strproperty'=>-2,
             default=>0,
         };
         if($width===0){
@@ -100,7 +103,19 @@ final class CatalogUE1ClassicArrayValueReader
         }
         $values=[];
         for($i=0;$i<$count;$i++){
-            if($width<0){
+            if($width===-2){
+                // UT99 UStrProperty::SerializeItem delegates to FString's
+                // signed-count archive. Each element has its OWN count
+                // and may independently choose ANSI or Unicode.
+                $decoded=CatalogUE1ClassicFStringArchiveReader::decodeAt(
+                    $data,$pos);
+                if($decoded===null){
+                    return self::unverified(
+                        $kind,'invalid_nested_source_counted_fstring');
+                }
+                $value=$decoded['value']+
+                    ['archive_value_kind'=>$decoded['value_kind']];
+            }elseif($width<0){
                 // UNameProperty and UObjectProperty use the owning
                 // ULinkerLoad archive's compact name/object indices.
                 // The original tag file supplies their map bounds;

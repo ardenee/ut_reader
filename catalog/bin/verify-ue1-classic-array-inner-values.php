@@ -10,6 +10,7 @@ use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicClassDefaultSchemaR
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicNativeObjectReader as N;
 $src='L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnProp.cpp';
 $source=@file_get_contents($src);
+$stringSource=@file_get_contents(dirname($src).'/UnMisc.cpp');
 $checks=[];$failed=[];$samples=[];
 $check=static function(string $label,bool $ok)use(&$checks,&$failed):void{
  $checks[$label]=$ok;if(!$ok)$failed[]=$label;
@@ -28,8 +29,18 @@ foreach([
  'UBoolProperty'=>'if( B ) *(BITFIELD*)Value |=  BitMask;',
  'UNameProperty'=>'Ar << *(FName*)Value;',
  'UObjectProperty'=>'Ar << *(UObject**)Value;',
+ 'UStrProperty'=>'Ar << *(FString*)Value;',
 ] as $what=>$expr){
  $check('Epic_'.$what,is_string($source)&&str_contains($source,$expr));
+}
+foreach([
+ 'signed_AR_INDEX_FString_count'=>'INT SaveNum = appIsPureAnsi(*A) ? A.Num() : -A.Num();',
+ 'FString_compact_count'=>'Ar << AR_INDEX(SaveNum);',
+ 'FString_ANSI_character_read'=>'A(i)=FromAnsi(ACh);',
+ 'FString_Unicode_character_read'=>'A(i)=FromUnicode(UCh);',
+] as $symbol=>$expected){
+ $check('Epic_UnMisc_'.$symbol,is_string($stringSource)
+     &&str_contains($stringSource,$expected));
 }
 $compact=static function(int $n):string{
  $negative=$n<0;$n=abs($n);$first=($n&63)|($negative?128:0);$n>>=6;
@@ -54,7 +65,7 @@ $build=static function(int $version,string $innerClass,string $value,
  if($fixed){$arrayNative.=pack('V',$fixedCount);}
  $arrayBody=$tag.$arrayNative;
  $innerNative=$compact(0).$compact(0).pack('V2',1,0).$compact(3);
- if(in_array($innerClass,['ByteProperty','ObjectProperty'],true)){
+ if(in_array($innerClass,['ByteProperty','ObjectProperty','StructProperty'],true)){
   $innerNative.=$compact(0);
  }
  $innerBody=$compact(0).$innerNative;
@@ -109,10 +120,10 @@ $run=static function(string $label,string $innerClass,string $bytes,
       :$report['status']==='all_available_declarations_match'));
   if($want!==null){
    $check($label.'_exact_inner_values',
-     $sample['preview_first_32']===$want
+     $sample['preview_first_32']===array_slice($want,0,32)
      &&$sample['element_count']===count($want)
      &&$sample['serialized_sha256']===hash('sha256',$bytes)
-     &&$sample['all_values_previewed']===true
+     &&$sample['all_values_previewed']===(count($want)<=32)
     &&$sample['array_serialization_family']===
         ($fixed?'fixed_declared_count':'dynamic_counted')
     &&$sample['count_compact_bytes']===($fixed?0:1));
@@ -152,8 +163,52 @@ $run('fixed_truncated','ByteProperty',chr(3),
   'array_inner_data_unverified',null,true);
 $run('fixed_trailing','ByteProperty',chr(3).chr(2).chr(1).chr(0),
   'array_inner_data_unverified',null,true);
-$run('fixed_unsupported_nested','StrProperty','',
+$run('fixed_unsupported_nested','StructProperty','',
   'inner_serializer_not_yet_implemented',null,true);
+$strVal=static function(int $count,string $payload,?string $ascii):array{
+ return ['signed_character_count'=>$count,
+  'archive_encoding'=>$count<0?'unicode_16bit_le':'ansi_8bit',
+  'serialized_character_bytes_hex'=>bin2hex($payload),
+  'ascii_text'=>$ascii,'nul_terminated'=>$count!==0,
+  'empty_on_native_load'=>abs($count)<=1,
+  'runtime_locale_conversion_verified'=>false,
+  'archive_value_kind'=>$count<0?'fstring_utf16_archive':'fstring_ansi_archive'];
+};
+$run('dynamic_nested_fstring_ansi_unicode_empty','StrProperty',
+ $compact(3).$compact(3)."Hi\0"
+ .$compact(-2).pack('v2',0x03a9,0).$compact(0),
+ 'array_inner_values_decoded',[
+  $strVal(3,"Hi\0",'Hi'),
+  $strVal(-2,pack('v2',0x03a9,0),null),
+  $strVal(0,'','')]);
+$run('fixed_nested_fstring_unicode_ansi_nonascii_empty','StrProperty',
+ $compact(-3).pack('v3',65,66,0)
+ .$compact(2)."\xe9\0".$compact(1)."\0",
+ 'array_inner_values_decoded',[
+  $strVal(-3,pack('v3',65,66,0),'AB'),
+  $strVal(2,"\xe9\0",null),
+  $strVal(1,"\0",'')],true);
+$run('dynamic_fstring_long_300_ansi','StrProperty',
+ $compact(1).$compact(301).str_repeat('A',300)."\0",
+ 'array_inner_values_decoded',[
+  $strVal(301,str_repeat('A',300)."\0",str_repeat('A',300))]);
+$run('dynamic_fstring_40_items_preview_bounded','StrProperty',
+ $compact(40).str_repeat($compact(2)."A\0",40),
+ 'array_inner_values_decoded',
+ array_fill(0,40,$strVal(2,"A\0",'A')));
+$run('fixed_fstring_40_items_preview_bounded','StrProperty',
+ str_repeat($compact(2)."A\0",40),
+ 'array_inner_values_decoded',
+ array_fill(0,40,$strVal(2,"A\0",'A')),true,40);
+$run('dynamic_fstring_bad_unicode_length','StrProperty',
+ $compact(2).$compact(2)."A\0".$compact(-2).pack('v',65),
+ 'array_inner_data_unverified');
+$run('dynamic_fstring_bad_missing_terminator','StrProperty',
+ $compact(1).$compact(2)."AB",'array_inner_data_unverified');
+$run('fixed_fstring_bad_missing_terminator','StrProperty',
+ $compact(2)."AB",'array_inner_data_unverified',null,true);
+$run('fixed_fstring_extra_trailing','StrProperty',
+ $compact(1)."\0".chr(0xFE),'array_inner_data_unverified',null,true);
 $run('bad_count_truncated','ByteProperty',$compact(5).chr(4),
   'array_inner_data_unverified');
 $run('bad_count_negative','IntProperty',$compact(-1),
@@ -162,7 +217,7 @@ $run('bad_trailing_bytes','ByteProperty',$compact(1).chr(9).chr(10),
   'array_inner_data_unverified');
 $run('truncated_compact_reference','NameProperty',$compact(1).chr(0x40),
   'array_inner_data_unverified');
-$run('unsupported_nested','StrProperty',$compact(0),
+$run('unsupported_nested','StructProperty',$compact(0),
   'inner_serializer_not_yet_implemented');
 foreach([
  'invalid_name_reference'=>['NameProperty',$compact(1).$compact(7),
@@ -189,6 +244,7 @@ foreach([
 echo json_encode(['ok'=>$failed===[],'checks'=>count($checks),
  'passed'=>count($checks)-count($failed),'failed'=>$failed,
  'samples'=>$samples,'epic_source_sha256'=>is_string($source)?hash('sha256',$source):null,
- 'remaining'=>'Primitive byte/int/float/bool UArrayProperty inner serializers only. Object/Name/Str/Struct/nested arrays and native heap effects remain unverified.'
+ 'epic_fstring_source_sha256'=>is_string($stringSource)?hash('sha256',$stringSource):null,
+ 'remaining'=>'Source-typed dynamic and fixed array values now include numeric, Bool, FName, UObject and independently counted ANSI/Unicode FString inner serializers. StructProperty, recursive arrays, native heap and TCHAR runtime conversion remain unverified.'
 ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($failed?1:0);
