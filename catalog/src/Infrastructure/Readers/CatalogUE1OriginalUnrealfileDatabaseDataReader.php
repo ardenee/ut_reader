@@ -136,11 +136,16 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                                 $items[]=['r'=>$values[0],'g'=>$values[1],
                                     'b'=>$values[2],'remap_index'=>$values[3]];break;
                             case 'bounding_boxes':
+                                // May 1997 FBoundingRect and July 1997 FBoundingBox
+                                // both archive Min, Max and a raw BYTE IsValid.
+                                // Epic does not enforce a 0/1 constraint during
+                                // operator<<; retain the precise value on disk.
                                 $vectors=array_values(unpack('g6',substr($v,0,24)));
                                 $valid=ord($v[24]);
-                                if($valid>1)throw new RuntimeException('FBoundingBox IsValid must be 0 or 1');
                                 $items[]=['min'=>array_slice($vectors,0,3),
-                                    'max'=>array_slice($vectors,3,3),'is_valid'=>$valid];break;
+                                    'max'=>array_slice($vectors,3,3),
+                                    'is_valid'=>$valid,'is_valid_raw_byte'=>$valid,
+                                    'source_record_type_lineage_unverified'=>true];break;
                             case 'reach_specs':
                                 // UnPath.h FReachSpec::operator<<: distance,
                                 // Goal/Start/End, 4 float extents, flags.

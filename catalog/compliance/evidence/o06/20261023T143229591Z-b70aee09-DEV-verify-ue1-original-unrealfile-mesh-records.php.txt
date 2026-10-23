@@ -1,0 +1,9 @@
+﻿{
+    "ok": false,
+    "passed": 74,
+    "total": 76,
+    "failures": [
+        "v22_Bounds_invalid_bbox_flag_rejected",
+        "v23_Bounds_invalid_bbox_flag_rejected"
+    ]
+}

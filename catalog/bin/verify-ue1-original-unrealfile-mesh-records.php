@@ -79,9 +79,14 @@ try{
    $check($prefix.'_invalid_name_reference_rejected',$rejected);
   }
   if($class==='Bounds'){
+   // May FBoundingRect and July FBoundingBox serialize IsValid as BYTE,
+   // without rejecting a non-boolean value during archive loading.
    file_put_contents($tmp,substr_replace($f['bytes'],chr(2),$f['data']+24,1));
-   try{DB::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
-   $check($prefix.'_invalid_bbox_flag_rejected',$rejected);
+   try{$parsed=DB::read($tmp,true)['database_records'][0]['record_values'][0]??[];}
+   catch(RuntimeException){$parsed=[];}
+   $check($prefix.'_bbox_flag_raw_byte_two_preserved',
+      ($parsed['is_valid']??null)===2
+      && ($parsed['is_valid_raw_byte']??null)===2);
   }
  }
 }finally{@unlink($tmp);}

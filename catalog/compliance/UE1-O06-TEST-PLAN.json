@@ -171,6 +171,21 @@
       "affected": [],
       "gate": []
     },
+    "u97-may-july-bounds-raw-byte": {
+      "description": "Original May 1997 FBoundingRect versus July FBoundingBox 25-byte on-disk operator; raw BYTE IsValid is not an archive bool constraint",
+      "readers": [
+        "CatalogUE1OriginalUnrealfileDatabaseDataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-1997-bounds-raw-byte.php"
+      ],
+      "affected": [
+        "verify-ue1-original-unrealfile-database-records.php"
+      ],
+      "gate": [
+        "verify-ue1-original-unrealfile-mesh-records.php"
+      ]
+    },
     "ue1-classic-level": {
       "description": "Unreal v1.200 native ULevel and UDatabase base counts",
       "readers": [
