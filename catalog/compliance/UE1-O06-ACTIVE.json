@@ -1,7 +1,7 @@
 {
-  "contract": "g3-c98-uclass-pre57-trailer",
+  "contract": "g4-ut99-ufont-glyph-records",
   "stage": "implemented-pending-verification-no-tests",
-  "last_action": "G3 existing C98 UClass::Serialize source gap fixed: Epic v1.200 Core/Src/UnClass.cpp UClass::Serialize for Ar.Ver()<57 archives two FName X/Y after class default tag stream; CatalogUE1ClassicClassMetadataReader now consumes both with package name-map validation before final complete/archive-extent classification. UT99 v400 later source omits those names. C98 existing source-register row and project implementation queue updated; PHP syntax only, no tests or new test contracts, no PRD deploy, not accepted.",
-  "next_step": "Continue existing G2/G3/G4 production serializer changes only, source first. Deferred functional verification and PRD deployment later. Do not run native exporter/corpus regressions or introduce verification-only contracts during implementation.",
-  "updated_at_utc": "2026-10-23T17:08:37+00:00"
+  "last_action": "Existing G4 T99:UFont::Serialize implemented source-defined font page payload fields: UT99 v400 FFontPage.Texture package index bounds checked, every FFontCharacter four signed INT coordinates decoded with bounded preview and whole-array SHA256; UFont::Serialize CharactersPerPage 32-bit bitwise check plus original raw word. Existing source-register G4 item and PROJECT-STATUS implementation queue annotated; no new tests, only PHP lint and git diff check, no PRD deployment or acceptance promotion.",
+  "next_step": "Continue existing G2/G3/G4 source-tracked PHP production implementation. When implementation phase is finished, perform separately scoped verification and then PRD deployment; do not run native export or synthetic test experiments now.",
+  "updated_at_utc": "2026-10-23T17:19:08+00:00"
 }

@@ -353,19 +353,63 @@ final class CatalogUE1ClassicNativeObjectReader
                 }
                 $pages=[];
                 for($i=0;$i<$pageCount;$i++){
-                    $textureIndex=$compact();$glyphCount=$compact();
+                    // Engine/Inc/UnTex.h::FFontPage::operator<< serializes
+                    // a real UTexture* linker reference, not an arbitrary
+                    // compact integer. A bad import/export index is fatal
+                    // to Epic's FArchive object-pointer resolution.
+                    $textureIndex=$compact();
+                    if(($textureIndex<0&&-$textureIndex>count($pkg->getImports()))
+                        ||($textureIndex>0&&$textureIndex>count($pkg->getExports()))){
+                        throw new RuntimeException('FFontPage Texture outside package object map');
+                    }
+                    $glyphCount=$compact();
                     if($glyphCount<0||$glyphCount>intdiv($limit-$pos,16)){
                         throw new RuntimeException('Invalid font glyph array bounds');
                     }
-                    $glyphOffset=$pos;$seek($pos+16*$glyphCount);
+                    // Engine/Inc/UnTex.h::FFontCharacter::operator<< archives
+                    // four signed INTs: StartU, StartV, USize, VSize. Decode
+                    // these actual persisted coordinates, keeping a bounded
+                    // preview and a hash of EVERY serialized glyph.
+                    $glyphOffset=$pos;$remainingGlyphs=$glyphCount;
+                    $glyphsPreview=[];$glyphHash=hash_init('sha256');
+                    while($remainingGlyphs>0){
+                        $batchCount=min(4096,$remainingGlyphs);
+                        $batch=$read($batchCount*16);
+                        hash_update($glyphHash,$batch);
+                        $previewCount=min($batchCount,max(0,16-count($glyphsPreview)));
+                        for($g=0;$g<$previewCount;$g++){
+                            $quad=array_values(unpack('V4',substr($batch,$g*16,16)));
+                            $signed=array_map(static fn(int $n):int=>
+                                $n>=0x80000000?$n-0x100000000:$n,$quad);
+                            $glyphsPreview[]=[
+                                'start_u'=>$signed[0],'start_v'=>$signed[1],
+                                'u_size'=>$signed[2],'v_size'=>$signed[3]];
+                        }
+                        $remainingGlyphs-=$batchCount;
+                    }
                     $pages[]=['page'=>$i,'texture_reference'=>$textureIndex,
-                        'glyph_count'=>$glyphCount,'glyph_data_offset'=>$glyphOffset];
+                        'glyph_count'=>$glyphCount,'glyph_data_offset'=>$glyphOffset,
+                        'glyph_data_bytes'=>$glyphCount*16,
+                        'glyph_data_sha256'=>hash_final($glyphHash),
+                        'glyphs_preview'=>$glyphsPreview,
+                        'glyphs_preview_truncated'=>$glyphCount>16];
                 }
-                $charactersPerPage=$int();
+                // Epic UnFont.cpp: check(!(CharactersPerPage &
+                // (CharactersPerPage-1))); compare the original 32-bit
+                // archive word with native INT bitwise semantics.
+                $rawCharactersPerPage=$int();
+                if(($rawCharactersPerPage&
+                    (($rawCharactersPerPage-1)&0xffffffff))!==0){
+                    throw new RuntimeException('UFont CharactersPerPage is not a power of two');
+                }
+                $charactersPerPage=$rawCharactersPerPage>=0x80000000
+                    ?$rawCharactersPerPage-0x100000000:$rawCharactersPerPage;
                 return array_replace($record,[
                     'status'=>$pos===$limit?'native_font_record_complete':'native_font_has_extension',
                     'page_count'=>$pageCount,'pages'=>$pages,
                     'characters_per_page'=>$charactersPerPage,
+                    'characters_per_page_raw_dword'=>$rawCharactersPerPage,
+                    'runtime_font_pages_loaded'=>false,
                     'extension_bytes'=>$limit-$pos]);
             }
             if($nativeKind==='palette'){

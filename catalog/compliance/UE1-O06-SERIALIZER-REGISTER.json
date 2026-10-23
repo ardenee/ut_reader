@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T17:07:56+00:00",
+  "updated_at_utc": "2026-10-23T17:18:41+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -6169,8 +6169,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php (UT99 UFont : UObject; page texture refs, FFontCharacter arrays, CharactersPerPage)",
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Epic UT99 v400 Engine/Src/UnFont.cpp shows UFont no UTexture inheritance; Ar<<Pages<<CharactersPerPage and FFontPage texture + glyphs in Engine/Inc/UnTex.h; existing version>=62 pages branch preserved. The genuine corpus shows old C98 alternative cannot be applied to ver61.",
-      "remaining": "No genuine v62+ UFont Pages export or compiled UT99 oracle tested; this source contract remains partial. Current 16-package corpus tests 8 v61 fonts, not UT99 font pages.",
-      "updated_at_utc": "2026-10-23T13:11:34+00:00",
+      "remaining": "No genuine v62+ UFont Pages export or compiled UT99 oracle tested; this source contract remains partial. Current 16-package corpus tests 8 v61 fonts, not UT99 font pages. G4 implementation 2026-10-23 UFont (VERIFICATION DEFERRED): UT99 v400 Engine/Inc/UnTex.h FFontPage serialized Texture UObject reference now package-map-bounded; every FFontCharacter StartU/StartV/USize/VSize source INT32 decoded with full glyph-array SHA256, sampled typed previews, and source UnFont.cpp exact CharactersPerPage 32-bit power-of-two check, original DWORD retained. Font texture preloads/rasterization and native engine acceptance remain open. No functional tests or PRD deploy.",
+      "updated_at_utc": "2026-10-23T17:18:41+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
