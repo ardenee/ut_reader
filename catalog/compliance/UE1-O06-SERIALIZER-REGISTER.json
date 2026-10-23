@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T12:41:35+00:00",
+  "updated_at_utc": "2026-10-23T12:52:14+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4736,14 +4736,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Pinned Epic v1200 Engine/Src/UnFont.cpp::UFont::Serialize invokes UTexture::Serialize(Ar) followed by Ar<<Characters; Engine/Inc/UnTex.h UFont:UTexture and FFontCharacter four INT32. Eight authentic v61 font exports (Engine.u and UNreal.u) read all mips+256 glyphs, 4096 glyph bytes and zero extension, 94/94 DEV corpus PASS. Old UT99 Pages layout erroneously used before; now only for >61.",
       "remaining": "Native engine direct compare and earlier historical Font source/version proofs outstanding; v<=61 source-family scope only, glyph rasterization/runtime texture handling not represented.",
-      "updated_at_utc": "2026-10-23T12:40:22+00:00",
+      "updated_at_utc": "2026-10-23T12:50:41+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:22.7054137Z",
+        "at_utc": "2026-10-23T12:50:41.3063176Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124015075Z-5a73b715-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -4936,14 +4936,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Genuine six v61 compiled UE1 script packages and ten UT99 v66-v68 audio archives SHA-pinned in catalog/compliance/inventory/ue1-o06-genuine-compiled-nontexture.json. DEV full 16-package/15194-export 94/94 PASS incl. 342 true v61 Mesh exports, unique complete 16-byte sphere base/inner bounding sphere/count arrays; previous genuine 331 mesh exceptions corrected. Source C98 UnMesh.cpp order, mesh fixture both 12/16 layouts 38/38 DEV PASS.",
       "remaining": "Compiled native comparison of 16-byte sphere and exact source lineage at v61 unresolved; older archives may use 12-byte branch and are selected only by unique full parse; some 342 meshes have huge packed vertex arrays with 16-entry previews. Native animation remapping/postload not simulated. 513 Class default metadata schemas remain unverified (separate source contracts).",
-      "updated_at_utc": "2026-10-23T12:40:22+00:00",
+      "updated_at_utc": "2026-10-23T12:50:41+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:22.7054137Z",
+        "at_utc": "2026-10-23T12:50:41.3063176Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124015075Z-5a73b715-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -5699,18 +5699,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicArrayValueReader.php",
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicArrayValueReader.php",
       "test": "verify-ue1-classic-imported-struct-ancestry.php",
-      "evidence": "Pinned UT99 v400 TFieldIterator<UProperty> walks local child and imported parent structures in source order. VerifyImport/GetImportFullName use native Core class identity and import outer chain. Production CatalogUE1ClassicStructImportResolver validates native Core ClassPackage, signed Struct FPackageIndex and root Package import, exact sibling Package.u, unique matching native Struct export class/owner, valid v62..69 provider and real native property fields. CatalogUE1ClassicStructArrayValueReader now resolves local plus imported source and direct imported StructProperty.Struct with value-package linker maps. Two genuine-shaped but SYNTHETIC .u packages verify-ue1-classic-imported-struct-ancestry.php 18/18 DEV PASS, 20261023T123954692Z-136a0887, including forged ClassPackage fail-closed. Latest affected+contract gate 7/7 DEV PASS at 20261023T124023809Z (6 executed, 1 cached PASS), genuine compiled-package and v68/69 corpus regressions preserved. NO compiled Epic runtime oracle or all-family acceptance.",
-      "remaining": "T99 v62..69 exact sibling .u qualified UStruct identity supported. Imported packages beyond direct sibling, arbitrary nested namespace/property kinds, native ULinkerLoad package manager and GC fixups, overlapping source families, compiled Epic runtime oracle and O06 full acceptance gates remain OPEN.",
-      "updated_at_utc": "2026-10-23T12:41:35+00:00",
+      "evidence": "Epic UT99 v400 Core/Inc/UnClass.h::TFieldIterator<UProperty>::IterateToNext walks UField.Next, checks Field->IsA(UProperty::StaticClass), then GetInheritanceSuper()->Children; non-UProperty child UField records contribute ZERO field-value archive bytes. Production CatalogUE1ClassicStructArrayValueReader now skips only native-complete verified Const/Enum/Field/Struct/State/Function UField subclasses, follows actual validated Next and owner, excludes skipped children from ArrayDim and bytes, counts source_non_property_field_skips, and fails closed on native extension/unsupported subclass. New genuine-shaped two-package v69 fixture with real UConst::Serialize UField.Next and FString is now verify-ue1-classic-imported-struct-ancestry.php 22/22 DEV PASS 20261023T125013420Z-27372288, with rejected UConst extension; real previous test failed on UConst and preserved journal. New source-fingerprint gate 5/5 DEV PASS at 20261023T125042476Z-a88a3ccc, 4 executed and 1 immutable PASS reused. Imported package resolver and original two-package 18 tests preserved. Native runtime engine oracle not performed.",
+      "remaining": "T99 source-verified UProperty-only iterator through qualified local/imported UStruct, including native-complete UConst/Enum/Field/Struct/State/Function skips and signed value archive fields. Real C++ allocation, unknown extension field, arbitrary imported package manager, non-sibling packages, source family overlaps, compiled engine runtime oracle and O06 G2-G6 remain unverified.",
+      "updated_at_utc": "2026-10-23T12:52:14+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:39:55.1564789Z",
-        "test_sha256": "5a98ca1c6e2878a3e2306b1d9cc2b9868581310a05931df35efc6afc405ae463",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T123954692Z-136a0887-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt"
+        "at_utc": "2026-10-23T12:50:13.9135740Z",
+        "test_sha256": "81c0baa38935b0fa108e73335ae86e6a07af841f442fc62e86b6e92c27912b90",
+        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T125013420Z-27372288-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt"
       }
     },
     {
@@ -6141,18 +6141,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicArrayValueReader.php",
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicArrayValueReader.php",
       "test": "verify-ue1-classic-imported-struct-ancestry.php",
-      "evidence": "Pinned UT99 v400 TFieldIterator<UProperty> walks local child and imported parent structures in source order. VerifyImport/GetImportFullName use native Core class identity and import outer chain. Production CatalogUE1ClassicStructImportResolver validates native Core ClassPackage, signed Struct FPackageIndex and root Package import, exact sibling Package.u, unique matching native Struct export class/owner, valid v62..69 provider and real native property fields. CatalogUE1ClassicStructArrayValueReader now resolves local plus imported source and direct imported StructProperty.Struct with value-package linker maps. Two genuine-shaped but SYNTHETIC .u packages verify-ue1-classic-imported-struct-ancestry.php 18/18 DEV PASS, 20261023T123954692Z-136a0887, including forged ClassPackage fail-closed. Latest affected+contract gate 7/7 DEV PASS at 20261023T124023809Z (6 executed, 1 cached PASS), genuine compiled-package and v68/69 corpus regressions preserved. NO compiled Epic runtime oracle or all-family acceptance.",
-      "remaining": "T99 v62..69 exact sibling .u qualified UStruct identity supported. Imported packages beyond direct sibling, arbitrary nested namespace/property kinds, native ULinkerLoad package manager and GC fixups, overlapping source families, compiled Epic runtime oracle and O06 full acceptance gates remain OPEN.",
-      "updated_at_utc": "2026-10-23T12:41:35+00:00",
+      "evidence": "Epic UT99 v400 Core/Inc/UnClass.h::TFieldIterator<UProperty>::IterateToNext walks UField.Next, checks Field->IsA(UProperty::StaticClass), then GetInheritanceSuper()->Children; non-UProperty child UField records contribute ZERO field-value archive bytes. Production CatalogUE1ClassicStructArrayValueReader now skips only native-complete verified Const/Enum/Field/Struct/State/Function UField subclasses, follows actual validated Next and owner, excludes skipped children from ArrayDim and bytes, counts source_non_property_field_skips, and fails closed on native extension/unsupported subclass. New genuine-shaped two-package v69 fixture with real UConst::Serialize UField.Next and FString is now verify-ue1-classic-imported-struct-ancestry.php 22/22 DEV PASS 20261023T125013420Z-27372288, with rejected UConst extension; real previous test failed on UConst and preserved journal. New source-fingerprint gate 5/5 DEV PASS at 20261023T125042476Z-a88a3ccc, 4 executed and 1 immutable PASS reused. Imported package resolver and original two-package 18 tests preserved. Native runtime engine oracle not performed.",
+      "remaining": "T99 source-verified UProperty-only iterator through qualified local/imported UStruct, including native-complete UConst/Enum/Field/Struct/State/Function skips and signed value archive fields. Real C++ allocation, unknown extension field, arbitrary imported package manager, non-sibling packages, source family overlaps, compiled engine runtime oracle and O06 G2-G6 remain unverified.",
+      "updated_at_utc": "2026-10-23T12:52:14+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:39:55.1564789Z",
-        "test_sha256": "5a98ca1c6e2878a3e2306b1d9cc2b9868581310a05931df35efc6afc405ae463",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T123954692Z-136a0887-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt"
+        "at_utc": "2026-10-23T12:50:13.9135740Z",
+        "test_sha256": "81c0baa38935b0fa108e73335ae86e6a07af841f442fc62e86b6e92c27912b90",
+        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T125013420Z-27372288-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt"
       }
     },
     {
@@ -6170,14 +6170,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Epic UT99 v400 Engine/Src/UnFont.cpp shows UFont no UTexture inheritance; Ar<<Pages<<CharactersPerPage and FFontPage texture + glyphs in Engine/Inc/UnTex.h; existing version>=62 pages branch preserved. The genuine corpus shows old C98 alternative cannot be applied to ver61.",
       "remaining": "No genuine v62+ UFont Pages export or compiled UT99 oracle tested; this source contract remains partial. Current 16-package corpus tests 8 v61 fonts, not UT99 font pages.",
-      "updated_at_utc": "2026-10-23T12:40:22+00:00",
+      "updated_at_utc": "2026-10-23T12:50:41+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:22.7054137Z",
+        "at_utc": "2026-10-23T12:50:41.3063176Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124015075Z-5a73b715-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -6841,18 +6841,18 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicArrayValueReader.php",
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicArrayValueReader.php",
       "test": "verify-ue1-classic-imported-struct-ancestry.php",
-      "evidence": "Pinned UT99 v400 TFieldIterator<UProperty> walks local child and imported parent structures in source order. VerifyImport/GetImportFullName use native Core class identity and import outer chain. Production CatalogUE1ClassicStructImportResolver validates native Core ClassPackage, signed Struct FPackageIndex and root Package import, exact sibling Package.u, unique matching native Struct export class/owner, valid v62..69 provider and real native property fields. CatalogUE1ClassicStructArrayValueReader now resolves local plus imported source and direct imported StructProperty.Struct with value-package linker maps. Two genuine-shaped but SYNTHETIC .u packages verify-ue1-classic-imported-struct-ancestry.php 18/18 DEV PASS, 20261023T123954692Z-136a0887, including forged ClassPackage fail-closed. Latest affected+contract gate 7/7 DEV PASS at 20261023T124023809Z (6 executed, 1 cached PASS), genuine compiled-package and v68/69 corpus regressions preserved. NO compiled Epic runtime oracle or all-family acceptance.",
-      "remaining": "T99 v62..69 exact sibling .u qualified UStruct identity supported. Imported packages beyond direct sibling, arbitrary nested namespace/property kinds, native ULinkerLoad package manager and GC fixups, overlapping source families, compiled Epic runtime oracle and O06 full acceptance gates remain OPEN.",
-      "updated_at_utc": "2026-10-23T12:41:35+00:00",
+      "evidence": "Epic UT99 v400 Core/Inc/UnClass.h::TFieldIterator<UProperty>::IterateToNext walks UField.Next, checks Field->IsA(UProperty::StaticClass), then GetInheritanceSuper()->Children; non-UProperty child UField records contribute ZERO field-value archive bytes. Production CatalogUE1ClassicStructArrayValueReader now skips only native-complete verified Const/Enum/Field/Struct/State/Function UField subclasses, follows actual validated Next and owner, excludes skipped children from ArrayDim and bytes, counts source_non_property_field_skips, and fails closed on native extension/unsupported subclass. New genuine-shaped two-package v69 fixture with real UConst::Serialize UField.Next and FString is now verify-ue1-classic-imported-struct-ancestry.php 22/22 DEV PASS 20261023T125013420Z-27372288, with rejected UConst extension; real previous test failed on UConst and preserved journal. New source-fingerprint gate 5/5 DEV PASS at 20261023T125042476Z-a88a3ccc, 4 executed and 1 immutable PASS reused. Imported package resolver and original two-package 18 tests preserved. Native runtime engine oracle not performed.",
+      "remaining": "T99 source-verified UProperty-only iterator through qualified local/imported UStruct, including native-complete UConst/Enum/Field/Struct/State/Function skips and signed value archive fields. Real C++ allocation, unknown extension field, arbitrary imported package manager, non-sibling packages, source family overlaps, compiled engine runtime oracle and O06 G2-G6 remain unverified.",
+      "updated_at_utc": "2026-10-23T12:52:14+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:39:55.1564789Z",
-        "test_sha256": "5a98ca1c6e2878a3e2306b1d9cc2b9868581310a05931df35efc6afc405ae463",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T123954692Z-136a0887-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt"
+        "at_utc": "2026-10-23T12:50:13.9135740Z",
+        "test_sha256": "81c0baa38935b0fa108e73335ae86e6a07af841f442fc62e86b6e92c27912b90",
+        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T125013420Z-27372288-DEV-verify-ue1-classic-imported-struct-ancestry.php.txt"
       }
     },
     {

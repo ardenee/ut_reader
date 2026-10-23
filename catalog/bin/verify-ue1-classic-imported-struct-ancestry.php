@@ -17,6 +17,9 @@ $checks=[];$failed=[];$cases=[];
 $check=static function(string $name,bool $ok)use(&$checks,&$failed):void{
  $checks[$name]=$ok;if(!$ok)$failed[]=$name;
 };
+$check('Epic_TFieldIterator_skips_non_property_UField',
+ is_string($class)&&str_contains($class,'Field->IsA(T::StaticClass())')
+ &&str_contains($class,'Field = Field->Next;'));
 $check('Epic_TFieldIterator_visits_inherited_definitions',
  is_string($class)&&str_contains($class,'Struct = Struct->GetInheritanceSuper();')
  &&str_contains($class,'Field = Struct->Children;'));
@@ -36,15 +39,16 @@ $names=['None','ArrayProperty','TestArray','Core','Class',
  'StructProperty','Inner','Struct','LocalStruct','IntProperty','First',
  'FloatProperty','Second','Friendly','Category','StrProperty','Third',
  'ParentStruct','AncestorMember','NameProperty','LinkName',
- 'ObjectProperty','LinkObject','ParentCore','ParentType','Package'];
+ 'ObjectProperty','LinkObject','ParentCore','ParentType','Package','Const','Literal'];
 $build=static function(bool $provider,string $value='',int $importKind=7,
  int $providerVersion=69,int $providerOwner=1,int $parentName=24,
- int $superRef=-8,int $innerStructRef=3,int $importClassPackage=3)
+ int $superRef=-8,int $innerStructRef=3,int $importClassPackage=3,
+ bool $nonPropertyChild=false,bool $badConstExtension=false)
  use($names,$c):string{
  $ns='';
  foreach($names as $name){$ns.=$c(strlen($name)+1).$name."\0".pack('V',0);}
  $imports='';
- $classIds=$provider?[7,9]:[1,5,7,9,11,15];
+ $classIds=$provider?($nonPropertyChild?[7,9,26]:[7,9]):[1,5,7,9,11,15];
  foreach($classIds as $nameId){
   $imports.=$c(3).$c(4).pack('V',0).$c($nameId);
  }
@@ -59,11 +63,19 @@ $build=static function(bool $provider,string $value='',int $importKind=7,
  };
  if($provider){
   $body=[
-   $none.$none.$none.$none.$c(2).$c(13).pack('V3',0,0,0),
+   $none.$none.$none.$none.$c($nonPropertyChild?3:2).$c(13).pack('V3',0,0,0),
    $none.$property(0,1)
   ];
   $exportNames=[24,18];$exportClasses=[-1,-2];
   $owners=[0,$providerOwner];
+  if($nonPropertyChild){
+   // UConst::Serialize saves native UField.Next=2 followed by a real
+   // ANSI FString. TFieldIterator<UProperty> must skip UConst and
+   // continue to the referenced IntProperty export.
+   $body[]=$none.$c(0).$c(2).$c(2)."K\0"
+     .($badConstExtension?"\xff":"");
+   $exportNames[]=27;$exportClasses[]=-3;$owners[]=1;
+  }
  }else{
   if(strlen($value)>255){throw new RuntimeException('Test input too large');}
   $tag=$c(2).chr(0x59).chr(strlen($value)).$value.$none;
@@ -173,6 +185,51 @@ try{
    &&($direct['preview_first_32'][1]['members'][0]['values']??null)===[-6]);
  $cases[]=['case'=>'direct_imported_UStructProperty','status'=>$direct['status']??null];
  $make($provider,$child);
+ // A UConst is a valid UField on the UStruct.Children chain, but it is
+ // not a UProperty. Epic TFieldIterator<UProperty> skips it and
+ // continues through UConst.Next to the inherited IntProperty.
+ $caseDir=$root.'/nonproperty_child';
+ if(!mkdir($caseDir)){throw new RuntimeException('Cannot make non-property scenario');}
+ $parent=$caseDir.'/ParentCore.u';$consumer=$caseDir.'/ChildArray.u';
+ try{
+  $make($build(true,'',7,69,1,24,-8,3,3,true),$child);
+  $mixedPkg=new P($consumer);
+  $mixed=Struct::resolve($consumer,$mixedPkg,3);
+  $check('source_iterator_filters_native_UConst_child',
+    ($mixed['status']??'')==='struct_local_field_layout_resolved'
+    &&($mixed['source_non_property_field_skips']??0)===1
+    &&array_column($mixed['fields']??[],'name')===
+      ['First','Second','Third','AncestorMember']);
+  [$mixedPkg,$mixedReport]=$read();
+  $check('source_iterator_skipped_const_has_zero_value_archive_bytes',
+    $mixedReport['primitive_array_values_decoded']===1
+    &&$mixedReport['array_value_unverified']===0
+    &&($mixedReport['array_value_samples'][0]['status']??'')===
+      'array_inner_values_decoded');
+  $cases[]=['case'=>'source_skips_real_native_UConst',
+    'status'=>$mixed['status']??null];
+ }finally{
+  foreach([$parent,$consumer] as $f){if(is_file($f)){unlink($f);}}
+  rmdir($caseDir);
+ }
+ $parent=$root.'/ParentCore.u';$consumer=$root.'/ChildArray.u';
+ // A UConst with unknown serialized extension cannot be proven to
+ // represent an entirely decoded native UField. Do not skip it.
+ $caseDir=$root.'/nonproperty_const_extension';
+ if(!mkdir($caseDir)){throw new RuntimeException('Cannot make const-negative scenario');}
+ $parent=$caseDir.'/ParentCore.u';$consumer=$caseDir.'/ChildArray.u';
+ try{
+  $make($build(true,'',7,69,1,24,-8,3,3,true,true),$child);
+  $badNative=Struct::resolve($consumer,new P($consumer),3);
+  $check('unknown_nonproperty_extension_fails_closed',
+    ($badNative['status']??'')==='struct_child_is_not_supported_property');
+  $cases[]=['case'=>'unsupported_nonproperty_extension',
+    'status'=>$badNative['status']??null];
+ }finally{
+  foreach([$parent,$consumer] as $f){if(is_file($f)){unlink($f);}}
+  rmdir($caseDir);
+ }
+ $parent=$root.'/ParentCore.u';$consumer=$root.'/ChildArray.u';
  // Without the exact imported package, never accept a reconstructed struct.
  rename($parent,$root.'/MissingCore.u');
  [$pkg,$report]=$read();

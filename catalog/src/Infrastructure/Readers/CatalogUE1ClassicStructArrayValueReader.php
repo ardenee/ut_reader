@@ -22,7 +22,8 @@ final class CatalogUE1ClassicStructArrayValueReader
         if($structReference===0){
             return ['status'=>'struct_reference_none'];
         }
-        $fields=[];$visited=[];$importHops=0;$packageChain=[$path];
+        $fields=[];$visited=[];$importHops=0;$nonPropertySkips=0;
+        $packageChain=[$path];
         $current=$structReference;
         // UT99 TFieldIterator visits Children, then GetInheritanceSuper.
         // An imported parent must resolve by its full ImportMap outer
@@ -78,7 +79,27 @@ final class CatalogUE1ClassicStructArrayValueReader
                 $field=CatalogUE1ClassicNativeObjectReader::inspect(
                     $path,$pkg,$ref-1,$tag);
                 if(($field['status']??'')!=='native_property_record_complete'){
-                    return ['status'=>'struct_child_is_not_supported_property'];
+                    // UT99 TFieldIterator<UProperty>::IterateToNext()
+                    // walks UField.Next until Field->IsA(UProperty).
+                    // Non-property native UFields are skipped, never
+                    // mistaken for on-disk value fields. Their complete
+                    // native UField::Serialize prefix proves Next.
+                    $nonPropertyStatuses=[
+                        'const'=>'native_const_record_complete',
+                        'enum'=>'native_enum_record_complete',
+                        'field'=>'native_field_record_complete',
+                        'struct'=>'native_struct_record_complete',
+                        'state'=>'native_state_record_complete',
+                        'function'=>'native_function_record_complete',
+                    ];
+                    $fieldClass=strtolower((string)($field['class_name']??''));
+                    if(($nonPropertyStatuses[$fieldClass]??null)
+                        !==($field['status']??null)){
+                        return ['status'=>'struct_child_is_not_supported_property'];
+                    }
+                    $nonPropertySkips++;
+                    $ref=(int)($field['next_field_reference']??0);
+                    continue;
                 }
                 $kind=(string)($field['property_kind']??'');
                 if(!in_array($kind,[
@@ -113,6 +134,7 @@ final class CatalogUE1ClassicStructArrayValueReader
             'fields'=>$fields,
             'source_field_order_verified'=>true,
             'source_imported_struct_hops'=>$importHops,
+            'source_non_property_field_skips'=>$nonPropertySkips,
             'source_definition_package_paths'=>$packageChain,
             'runtime_offsets_verified'=>false,
         ];

@@ -1,7 +1,7 @@
 {
-  "contract": "t99-imported-struct-ancestry",
-  "stage": "released-verified",
-  "last_action": "Imported UStruct contract released commit 10d9593d; 18/18 focus, 7/7 scoped gate; 2/2 PRD PHP source files SHA256 match; no PRD tests.",
-  "next_step": "Next source gap: verify TFieldIterator<UProperty> skips non-property UField children; implement bounded source behavior and focused fixture before wider tests.",
-  "updated_at_utc": "2026-10-23T12:44:11+00:00"
+  "contract": "t99-struct-field-iterator-filter",
+  "stage": "source-test-journaled",
+  "last_action": "Source UT99 TFieldIterator<UProperty> non-property UField filter implemented; 22/22 focus PASS and contract gate 5/5 PASS, including negative malformed UConst extension. Prior failing pre-fix fixture journal preserved.",
+  "next_step": "Append source-scope docs, lint, commit/push and hash-deploy single production PHP reader; next contract select from remaining G3/G4.",
+  "updated_at_utc": "2026-10-23T12:52:15+00:00"
 }
