@@ -75,6 +75,8 @@ def gate_statuses():
             gates[0]["status"] = "ACCEPTED"
         elif re.search(r"\bBLOCKED\b", statement, re.I):
             gates[int(stage[1])-1]["status"] = "BLOCKED"
+        elif re.search(r"\bIN PROGRESS\b|\bPARTIAL\b", statement, re.I):
+            gates[int(stage[1])-1]["status"] = "IN PROGRESS"
         elif re.search(r"\bACCEPTED\b", statement, re.I) and not re.search(
             r"NOT ACCEPTED|PARTIAL|OPEN", statement, re.I):
             gates[int(stage[1])-1]["status"] = "ACCEPTED"

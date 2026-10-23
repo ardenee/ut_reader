@@ -8,7 +8,7 @@ native Unreal oracle, or replacement for Epic source.
 
 ## What appears
 
-- O06 operation status (NOT ACCEPTED until formal source-wide closure).
+- O06 operation status (NOT ACCEPTED until formal source-wide closure). G1 displays ACCEPTED, G2–G5 display IN PROGRESS, and G6 displays BLOCKED; this makes incremental gate work visible without falsely moving PARTIAL source sightings to MAPPED.
 - Source-register totals, G1–G6 acceptance status and outstanding source contracts.
 - Active source contract, last completed action, exact next recovery action.
 - Current DEV test states, recent STARTED/PASS/FAIL event history.
