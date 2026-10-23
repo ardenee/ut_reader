@@ -1,0 +1,57 @@
+
+/* UnrealDB status extension. Prefixed to leave original Graphify styles intact. */
+.o06-board{border:1px solid #326277;background:linear-gradient(148deg,#122d42,#101a2c 55%,#11253a);border-radius:18px;padding:22px;margin:25px 0 34px;box-shadow:0 12px 42px #0003}
+.o06-board h2{margin:4px 0 6px;font-size:clamp(22px,2.6vw,30px);letter-spacing:-.03em}
+.o06-board h3{margin:0 0 12px;font-size:17px;letter-spacing:-.01em}
+.o06-board h4{font-size:12px;color:#adc3d5;margin:16px 0 5px;text-transform:uppercase;letter-spacing:.08em}
+.o06-board p{margin:0 0 8px}
+.o06-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.o06-heading p,.o06-meta,.o06-foot,.o06-footer,.o06-message{font-size:12px;color:#a5bbcf}
+.o06-eyebrow{text-transform:uppercase;letter-spacing:.13em;font-weight:750;color:#48d8ca;font-size:11px}
+.o06-controls,.o06-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px}
+.o06-controls{justify-content:flex-end}
+.o06-board button,.o06-board .o06-link{background:#184353;border:1px solid #427989;color:#e4fcff;padding:8px 12px;font-size:12px;border-radius:8px;cursor:pointer;text-decoration:none;white-space:nowrap;font-weight:650}
+.o06-board button:hover,.o06-board .o06-link:hover{background:#246078}
+.o06-board button:disabled{opacity:.5;cursor:not-allowed}
+.o06-pill{font-size:11px;font-weight:750;border-radius:7px;padding:4px 8px;display:inline-block;letter-spacing:.02em}
+.o06-warn{background:#503a24;border:1px solid #866234;color:#ffdaad}
+.o06-pass{background:#143e39;border:1px solid #32756a;color:#aaf3d8}
+.o06-open{background:#233b50;border:1px solid #4b6178;color:#d1dfea}
+.o06-fail{background:#4e2a32;border:1px solid #97515e;color:#ffd4db}
+.o06-message{margin:12px 0;min-height:18px}
+.o06-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:13px 0}
+.o06-metric{background:#15283c;border:1px solid #2c485d;border-radius:12px;padding:12px 14px}
+.o06-metric strong{display:block;font-size:25px;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1.25}
+.o06-metric span{display:block;color:#acc0d3;font-size:11px;margin-top:5px}
+.o06-gates{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0 18px}
+.o06-gate{display:flex;align-items:center;gap:6px;background:#0f2134;border:1px solid #284257;border-radius:8px;padding:6px 9px;font-size:12px}
+.o06-gate strong{font-variant-numeric:tabular-nums}
+.o06-columns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.o06-panel{background:#112136;border:1px solid #2b435b;border-radius:12px;padding:18px;min-width:0}
+.o06-panel p{color:#ccd7e6;font-size:13px;overflow-wrap:anywhere}
+.o06-contract-title{font-size:18px;font-weight:700;overflow-wrap:anywhere;margin:0 0 4px}
+.o06-foot{margin-top:11px!important;color:#a3b6c9!important}
+.o06-commits{display:grid;gap:8px;margin-top:13px}
+.o06-commit{display:grid;grid-template-columns:76px 1fr;gap:10px;font-size:12px;color:#c6d5e3}
+.o06-commit a{color:#7fddd7;text-decoration:none}
+.o06-commit a:hover{text-decoration:underline}
+.o06-inline-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.o06-table-wrap{overflow-x:auto;max-height:350px;overflow-y:auto;border:1px solid #2a4156;border-radius:8px}
+.o06-table{border-collapse:collapse;width:100%;font-size:12px;table-layout:auto}
+.o06-table th,.o06-table td{padding:9px 10px;text-align:left;border-bottom:1px solid #233c50;vertical-align:top;overflow-wrap:anywhere}
+.o06-table th{color:#bed5e3;position:sticky;top:0;background:#19354a;z-index:1;font-size:11px;white-space:nowrap}
+.o06-table tr:nth-child(2n){background:#1a2d400f}
+.o06-table td{color:#d1e0ed}
+.o06-table td .o06-meta{display:block;margin-top:3px}
+.o06-board select,.o06-board input{width:100%;min-width:0;background:#0b1a2b;border:1px solid #3a556b;color:#e0f0fa;border-radius:8px;padding:9px;font-size:12px}
+.o06-label{display:block;margin:13px 0 5px;color:#b4c9d8;font-size:12px}
+.o06-actions{margin-top:12px}
+.o06-command{white-space:pre-wrap;overflow-wrap:anywhere;background:#081929;padding:12px;border:1px solid #2f4d64;border-radius:8px;color:#b6e6dd;font-size:11px;margin:12px 0 4px}
+.o06-filter{display:grid;grid-template-columns:minmax(200px,2fr) minmax(130px,1fr);gap:10px;margin:8px 0 12px}
+.o06-contract-panel .o06-table-wrap{max-height:435px}
+.o06-contract-panel .o06-table th:nth-child(1){min-width:155px}
+.o06-contract-panel .o06-table th:nth-child(4){min-width:235px}
+.o06-contract-panel .o06-actions{justify-content:space-between}
+.o06-footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:17px}
+@media(max-width:940px){.o06-columns{grid-template-columns:1fr}.o06-heading{flex-direction:column}.o06-controls{justify-content:flex-start}}
+@media(max-width:680px){.o06-board{padding:15px}.o06-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.o06-filter{grid-template-columns:1fr}.o06-commit{grid-template-columns:65px 1fr}}

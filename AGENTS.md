@@ -12,3 +12,4 @@ Read [.agents/skills/unrealdb-epic-parity/SKILL.md](.agents/skills/unrealdb-epic
 - Verify actual native semantics where feasible. Track missing compiled or genuine-file oracles as OPEN; never label incomplete work ACCEPTED.
 - Do not interrupt existing uncommitted work, delete test evidence, rewrite append-only journals, or erase failed runs. Check status/git diff before editing.
 - Avoid cloud proxies, telemetry or external upload of Epic source without explicit approval. Graphify is optional **navigation**, not format evidence.
+- Graphify's optional DEV-local **read-only** O06 dashboard is available at http://127.0.0.1:8765/. Its implementation and safe installer are versioned in `catalog/tools/graphify-dashboard`. Never expose private source verification data over the LAN without explicit user approval.

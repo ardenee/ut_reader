@@ -4,6 +4,8 @@ Updated: **2026-10-23**. This is the canonical recovery/handover file for this p
 
 **Live O06 recovery:** [UE1-O06-LIVE-CHECKPOINT.md](UE1-O06-LIVE-CHECKPOINT.md) refreshes after every DEV test STARTED/PASS/FAIL and records the active source contract and next action. Use [UE1-O06-TEST-PLAN.json](UE1-O06-TEST-PLAN.json) for focused/affected/gate scopes and [AGENTS.md](../../AGENTS.md) for the mandatory workflow.
 
+**DEV live Graphify verification UI (2026-10-23):** [http://127.0.0.1:8765/](http://127.0.0.1:8765/) now displays O06 source contracts, test history, active checkpoint, source gates, Git commits and last recorded deployment, with read-only search/filter and copyable scoped verification commands. Source: [versioned Graphify extension](../tools/graphify-dashboard/README.md). 24/24 temporary-local HTTP smoke tests PASS; live 292 source entries/93 DEV test states/6 acceptance gates, G1 accepted only. No PRD or Epic source changes. The UI is NOT an acceptance oracle.
+
 ## Current checkpoint
 
 | Item | State |

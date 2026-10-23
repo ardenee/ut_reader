@@ -1,0 +1,263 @@
+#!/usr/bin/env python3
+"""Generate an offline local Graphify project dashboard. Never uploads graphs."""
+import json
+import os
+import re
+import html
+from datetime import datetime, timezone
+from pathlib import Path
+import importlib.util
+
+ROOT = Path(__file__).resolve().parent
+MASTER_SPEC=importlib.util.spec_from_file_location('graphify_masters',ROOT/'Project-Masters.py')
+MASTER_LIB=importlib.util.module_from_spec(MASTER_SPEC)
+MASTER_SPEC.loader.exec_module(MASTER_LIB)
+OUTPUT = ROOT / "index.html"
+STATUS_HTML = (ROOT / "UnrealDB-Dashboard.html").read_text(encoding="utf-8")
+STATUS_CSS = (ROOT / "UnrealDB-Dashboard.css").read_text(encoding="utf-8")
+STATUS_JS = (ROOT / "UnrealDB-Dashboard.js").read_text(encoding="utf-8")
+
+def entries():
+    projects=[]
+    for directory in sorted(ROOT.iterdir()):
+        if not directory.is_dir(): continue
+        graph=directory/"graphify-out"/"graph.json"
+        if not graph.is_file(): continue
+        meta_path=directory/"project.json"
+        try:
+            meta=json.loads(meta_path.read_text(encoding="utf-8-sig")) if meta_path.exists() else {}
+            data=json.loads(graph.read_text(encoding="utf-8"))
+            nodes=len(data.get("nodes", []))
+            edges=len(data.get("links", data.get("edges", [])))
+            communities=len({str(x.get("community")) for x in data.get("nodes", []) if x.get("community") is not None})
+            stat=graph.stat()
+            projects.append({
+                "id":directory.name,
+                "name":str(meta.get("name") or directory.name),
+                "family":str(meta.get("family") or ("UE1" if "ue1" in directory.name.lower() else "Other")),
+                "master":str(meta.get("master") or "unrealdb"),
+                "version":str(meta.get("version") or ""),
+                "source":str(meta.get("source") or ""),
+                "detail":str(meta.get("detail") or ""),
+                "nodes":nodes, "edges":edges, "communities":communities,
+                "size":stat.st_size,
+                "date":datetime.fromtimestamp(stat.st_mtime, tz=timezone.utc).isoformat(timespec="seconds"),
+                "visual":(directory/"graphify-out"/"graph.html").exists(),
+                "graph_path":str(graph),
+            })
+        except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
+            print(f"SKIPPED {directory.name}: {exc}")
+    return projects
+
+STYLE=r"""
+:root{color-scheme:dark;--bg:#0b1020;--panel:#121c2d;--line:#273b52;--text:#e7f2ff;--dim:#a2b4ca;--accent:#42d8c7}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse 70% 45% at 90% 0,#113f4b 0,transparent 80%),var(--bg);font:15px/1.5 system-ui,"Segoe UI",sans-serif;color:var(--text);min-height:100vh}
+main{max-width:1320px;margin:auto;padding:44px 28px 80px}.top{display:flex;justify-content:space-between;gap:24px;align-items:start}
+.brand{font-size:13px;letter-spacing:.19em;text-transform:uppercase;color:var(--accent);font-weight:750}
+h1{font-size:clamp(32px,4.8vw,56px);letter-spacing:-.045em;margin:6px 0 10px;line-height:1.12}
+.lead{color:var(--dim);max-width:760px;margin:0}.stamp{border:1px solid var(--line);background:#112436;padding:9px 13px;border-radius:9px;color:var(--dim);white-space:nowrap;font-size:12px}
+.summary{margin:34px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.stat{background:#142338ad;border:1px solid var(--line);padding:18px 20px;border-radius:12px}.stat b{display:block;font-size:27px;letter-spacing:-.03em}.stat span{color:var(--dim);font-size:12px}
+.master-panel{display:flex;gap:13px;align-items:end;flex-wrap:wrap;margin:22px 0 16px;background:#132b40;border:1px solid #396579;border-radius:12px;padding:16px}.master-panel label{display:block;color:var(--dim);font-size:12px;margin-bottom:5px}.master-panel select{min-width:220px}.master-panel form{display:flex;gap:8px;flex:1;flex-wrap:wrap}.master-panel form input{min-width:170px;flex:1}.master-panel form button{padding:10px 15px;background:#1b776e;color:white;border:1px solid #328c86;border-radius:9px;cursor:pointer}.master-panel p{color:var(--accent);font-size:12px;margin:0;width:100%}
+.viewer-panel{background:#142338ad;border:1px solid var(--line);border-radius:12px;padding:17px 19px;margin-bottom:22px}.viewer-panel h2{margin:0 0 7px;font-size:19px}.viewer-panel p{color:var(--dim);font-size:12px;margin:6px 0}.viewer-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}.viewer-row input[type=range]{flex:1;min-width:190px;padding:0;accent-color:var(--accent);cursor:pointer}.viewer-row output{min-width:90px;font-size:19px;font-weight:700;font-variant-numeric:tabular-nums}.viewer-row button{padding:10px 18px;background:#1b776e;border:1px solid #3daca4;border-radius:9px;color:white;font:inherit;cursor:pointer}.viewer-row button:disabled{opacity:.45;cursor:wait}.viewer-panel .message{color:var(--accent);margin:9px 0 0}.add-panel{background:#142338ad;border:1px solid var(--line);border-radius:12px;padding:17px 19px;margin-bottom:22px}.add-panel h2{margin:0 0 10px;font-size:19px}.add-panel form{display:flex;gap:9px;flex-wrap:wrap}.add-panel input{flex:2;min-width:240px}.add-panel input[name="name"]{flex:1;min-width:170px}.add-panel button{background:#1b776e;border:1px solid #3daca4;border-radius:9px;color:white;padding:10px 18px;cursor:pointer;font:inherit}.add-panel p{font-size:12px;color:var(--dim);margin:8px 0 0}.add-panel .message{margin:9px 0;color:var(--accent)}
+.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap}input,select{background:var(--panel);border:1px solid #34465b;border-radius:10px;color:var(--text);padding:12px 14px;font:inherit}
+input{flex:1;min-width:220px}select{min-width:150px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:15px}
+.card{background:linear-gradient(143deg,#192c43,#111a2a);border:1px solid var(--line);border-radius:15px;padding:21px;display:flex;flex-direction:column;gap:12px}
+.card:hover{border-color:#328d91}.tag{display:inline-block;padding:3px 8px;background:#183c41;color:#94e7de;border-radius:5px;font-size:11px;font-weight:700}
+.card h2{font-size:21px;margin:6px 0 0;letter-spacing:-.02em}.detail{font-size:13px;color:var(--dim);min-height:19px}
+.metrics{display:flex;gap:19px;flex-wrap:wrap}.metrics div{display:flex;flex-direction:column}.metrics strong{font-size:19px}.metrics small{color:var(--dim);font-size:11px}
+.path{border-top:1px solid var(--line);padding-top:13px;overflow-wrap:anywhere;color:var(--dim);font-size:12px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:7px}
+.actions a,.actions button,.copy{border:1px solid #376d76;background:#183d46;color:#c5fff4;padding:9px 13px;border-radius:8px;text-decoration:none;cursor:pointer;font-weight:650;font:inherit;font-size:12px}
+.actions a:hover,.actions button:hover,.copy:hover{background:#235961}
+.actions .outline{background:transparent;color:var(--dim);border-color:var(--line)}
+footer{margin-top:36px;color:var(--dim);font-size:12px;line-height:1.6}
+code{background:#1a2a3d;border-radius:4px;padding:1px 4px}#none{display:none;color:var(--dim);padding:28px;border:1px dashed var(--line);border-radius:12px}
+#drawer{display:none;margin-top:20px;background:#14263c;border:1px solid #376d76;padding:20px;border-radius:12px}
+#drawer pre{white-space:pre-wrap;overflow-wrap:anywhere;color:#e5eaff}#drawer .copy{float:right}
+@media(max-width:760px){main{padding:30px 16px}.summary{grid-template-columns:repeat(2,minmax(0,1fr))}.top{display:block}.stamp{display:inline-block;margin-top:18px}}
+"""
+
+HTML=r"""<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Graphify · Local Projects</title><style>__STYLE__</style></head>
+<body><main><header class="top"><div><div class="brand">Graphify · Local Intelligence</div><h1>Source Graph Library</h1>
+<p class="lead">Explore local code relationships by engine and project. Code-only indexes run on DEV; no cloud service or account required. New indexes automatically appear here when built using the index script.</p></div>
+<div class="stamp">Updated __STAMP__</div></header>
+<section class="master-panel"><div><label for="master-project">Master project</label><select id="master-project" aria-label="Select master project"></select></div><form id="new-master"><input id="new-master-name" placeholder="New master project name" required maxlength="80" aria-label="New master project name"><button type="submit">Create master</button></form><p id="master-message" role="status"></p></section>
+<section class="viewer-panel" aria-label="HTML viewer node limit"><h2>HTML viewer node limit</h2>
+<div class="viewer-row"><label for="viewer-limit">Nodes displayed before community condensation</label><input type="range" id="viewer-limit" min="2000" max="10000" step="500" value="10000" aria-label="HTML viewer maximum nodes"><output id="viewer-value" for="viewer-limit">10,000</output><button id="apply-viewer" type="button">Apply to HTML viewers</button></div>
+<p>2,000–10,000 nodes. Larger graphs are condensed in the browser only. Full graph.json, original symbols, relationships and MCP queries are never limited or renamed.</p>
+<p class="message" id="viewer-status" role="status"></p></section>
+<section class="summary" id="summary" aria-label="Graph totals"></section>
+<section class="add-panel"><h2>Add child project to selected master</h2><form id="new-project"><input id="source-folder" name="folder" required placeholder="Folder on DEV, e.g. L:\Source\Engine\UE1" aria-label="Folder to index"><input name="name" id="project-name" placeholder="Project name (optional)" aria-label="Optional project name"><button type="submit" id="start-index">Add &amp; scan</button></form><p id="server-help">Scanning requires the local dashboard service at <a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a>. Indexes are created on DEV, not uploaded.</p><p class="message" id="scan-status" role="status"></p></section>
+<div class="toolbar"><input id="filter" type="search" placeholder="Search project, version, source…" aria-label="Search graphs">
+<select id="family" aria-label="Filter engine"><option value="">All categories</option></select>
+<select id="order" aria-label="Sort graphs"><option value="family">Group by engine</option><option value="newest">Most recently indexed</option><option value="nodes">Largest graph first</option><option value="name">Name A–Z</option></select></div>
+<div class="cards" id="cards"></div><div id="none">No indexed projects match those filters.</div>
+<section id="drawer"><button class="copy" id="copy">Copy command</button><h2>Refresh index</h2><p>Run this command in PowerShell on DEV. Browsers do not have permission to execute local programs.</p><pre id="command"></pre></section>
+<footer>All graphs are stored under <code>C:\Users\arden\Graphify</code>. The HTML views aggregate large graphs; use CLI/MCP for full symbol-level queries.
+Data comes from the last local extraction and may be stale. Graph relationships help discovery but do not prove Epic serialization equivalence.
+<strong>The optional local scanner listens only on DEV loopback (127.0.0.1), not the LAN or Internet.</strong></footer></main>
+<script>
+const projects=__DATA__;
+const masters=__MASTERS__;
+const masterParam=new URLSearchParams(location.search).get("master");
+let chosenMaster=masters.some(m=>m.id===masterParam)?masterParam:(masters.length?masters[0].id:"unrealdb");
+const $=id=>document.getElementById(id), fmt=x=>Number(x).toLocaleString('en-IE');
+let trackedJob=null;
+const localService=location.protocol==='http:' && ['localhost','127.0.0.1'].includes(location.hostname);
+if(localService){
+ $('server-help').textContent='Folder paths are checked and indexed only on DEV. The source is not uploaded.';
+}
+const viewerSlider=$('viewer-limit'), viewerValue=$('viewer-value'), viewerApply=$('apply-viewer');
+viewerSlider.addEventListener('input',()=>{viewerValue.textContent=fmt(viewerSlider.value)});
+viewerApply.disabled=!localService;
+if(!localService)$('viewer-status').textContent='Open the local dashboard at http://127.0.0.1:8765/ to apply changes.';
+async function viewerState(){
+ if(!localService)return;
+ const r=await fetch('/api/viewer',{cache:'no-store'});
+ if(!r.ok)throw new Error('Viewer settings unavailable');
+ return r.json();
+}
+async function pollViewer(){
+ try{
+  const state=await viewerState();
+  if(state.viewer.state==='STARTED'){
+   viewerApply.disabled=true;
+   $('viewer-status').textContent='Updating local HTML views to '+fmt(state.node_limit)+' nodes. Indexed source graph and MCP queries are unchanged.';
+   setTimeout(pollViewer,2500);return;
+  }
+  viewerApply.disabled=false;
+  if(state.viewer.state==='PASS'){
+   $('viewer-status').textContent='HTML viewer update complete. Refresh an open graph to see the result.';
+  }else if(state.viewer.state==='FAIL'){
+   $('viewer-status').textContent='HTML update failed. See C:\\Users\\arden\\Graphify\\viewer-refresh.log.';
+  }else{
+   $('viewer-status').textContent='Current HTML limit: '+fmt(state.node_limit)+' nodes.';
+  }
+ }catch(e){viewerApply.disabled=false;$('viewer-status').textContent='Viewer service unavailable: '+e.message}
+}
+viewerApply.onclick=async()=>{
+ if(!localService||typeof LOCAL_GRAPHIFY_TOKEN==='undefined')return;
+ const limit=Number(viewerSlider.value);
+ viewerApply.disabled=true;
+ $('viewer-status').textContent='Applying '+fmt(limit)+'-node HTML viewer limit...';
+ try{
+  const resp=await fetch('/api/viewer',{method:'POST',
+   headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},
+   body:JSON.stringify({node_limit:limit})});
+  const result=await resp.json();
+  if(!resp.ok)throw new Error(result.error||'HTML viewer setting rejected');
+  pollViewer();
+ }catch(e){viewerApply.disabled=false;$('viewer-status').textContent='Not applied: '+e.message}
+};
+if(localService)viewerState().then(state=>{
+ viewerSlider.value=state.node_limit;viewerValue.textContent=fmt(state.node_limit);
+ pollViewer();
+}).catch(e=>{$('viewer-status').textContent=e.message});
+$('new-project').onsubmit=async event=>{
+ event.preventDefault();
+ if(!localService||typeof LOCAL_GRAPHIFY_TOKEN==='undefined'){
+  $('scan-status').textContent='Open http://127.0.0.1:8765/ on DEV to add and scan projects.';
+  return;
+ }
+ const folder=$('source-folder').value.trim();
+ const name=$('project-name').value.trim();
+ const master=chosenMaster;
+ $('start-index').disabled=true;
+ $('scan-status').textContent='Submitting source folder...';
+ try{
+  const response=await fetch('/api/add',{method:'POST',headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},body:JSON.stringify({folder,name,master})});
+  const result=await response.json();
+  if(!response.ok)throw new Error(result.error||'Cannot start index');
+  trackedJob=result.id;
+  $('scan-status').textContent='Scanning '+result.source+' (ID: '+result.id+'). The dashboard will update when finished.';
+  pollJob();
+ }catch(error){
+  $('scan-status').textContent='Index not started: '+error.message;
+  $('start-index').disabled=false;
+ }
+};
+async function pollJob(){
+ if(!trackedJob)return;
+ try{
+  const response=await fetch('/api/status',{cache:'no-store'});
+  if(!response.ok)throw new Error('Service unavailable');
+  const result=await response.json();
+  const job=result.jobs[trackedJob];
+  if(job&&job.state==='PASS'){location.reload();return;}
+  if(job&&job.state==='FAIL'){$('scan-status').textContent='Index failed: see C:\\Users\\arden\\Graphify\\'+trackedJob+'\\scan.log';$('start-index').disabled=false;trackedJob=null;return;}
+  $('scan-status').textContent='Indexing '+trackedJob+'... Check back here for completion.';
+  setTimeout(pollJob,2500);
+ }catch(error){$('scan-status').textContent='Scanner disconnected: '+error.message;$('start-index').disabled=false;trackedJob=null;}
+}
+function el(tag,cls,text){const v=document.createElement(tag);if(cls)v.className=cls;if(text!==undefined)v.textContent=text;return v}
+let lastCommand='';
+function command(p){
+ let source=p.source||'<SOURCE DIRECTORY>';
+ return "& 'C:/Users/arden/Graphify/Index-Code.ps1' -Name '"+p.id.replace(/'/g,"''")+"' -Source '"+source.replace(/'/g,"''")+"' -Workers 4";
+}
+function showCommand(p){lastCommand=command(p);$('command').textContent=lastCommand;$('drawer').style.display='block';$('drawer').scrollIntoView({behavior:'smooth',block:'nearest'})}
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(lastCommand);$('copy').textContent='Copied'}catch(e){$('copy').textContent='Select command above to copy'}};
+const masterSelect=$('master-project');
+for(const m of masters){let op=el('option',null,m.name);op.value=m.id;masterSelect.append(op)}
+masterSelect.value=chosenMaster;
+masterSelect.onchange=()=>{chosenMaster=masterSelect.value;history.replaceState(null,"","/?master="+encodeURIComponent(chosenMaster));draw()};
+$('new-master').onsubmit=async event=>{
+ event.preventDefault();
+ if(!localService||typeof LOCAL_GRAPHIFY_TOKEN==='undefined'){
+  $('master-message').textContent='Open http://127.0.0.1:8765/ on DEV to create master projects.';return;
+ }
+ const name=$('new-master-name').value.trim();
+ try{
+  const response=await fetch('/api/masters',{method:'POST',headers:{'Content-Type':'application/json','X-Graphify-Token':LOCAL_GRAPHIFY_TOKEN},body:JSON.stringify({name})});
+  const obj=await response.json();
+  if(!response.ok)throw new Error(obj.error||'Could not create master');
+  location.href="/?master="+encodeURIComponent(obj.id);
+ }catch(err){$('master-message').textContent=err.message}
+};
+const families=[...new Set(projects.map(p=>p.family))].sort();
+for(const f of families){const o=el('option',null,f);o.value=f;$('family').append(o)}
+function updateTotals(){
+ const selected=projects.filter(p=>p.master===chosenMaster);
+ const totals=[['Child projects',selected.length],['Source nodes',selected.reduce((a,p)=>a+p.nodes,0)],['Relationships',selected.reduce((a,p)=>a+p.edges,0)],['Graph JSON size',((selected.reduce((a,p)=>a+p.size,0))/1048576).toFixed(1)+' MiB']];
+ $('summary').replaceChildren();
+ totals.forEach(([name,value])=>{let stat=el('div','stat');stat.append(el('b',null,typeof value==='number'?fmt(value):value),el('span',null,name));$('summary').append(stat)});
+}
+function draw(){
+ const q=$('filter').value.toLowerCase().trim(),fam=$('family').value,sort=$('order').value;
+ let rows=projects.filter(p=>p.master===chosenMaster&&(!fam||p.family===fam)&&[p.name,p.version,p.source,p.id,p.detail].join(' ').toLowerCase().includes(q));
+ updateTotals();
+ rows.sort((a,b)=>sort==='newest'?b.date.localeCompare(a.date):sort==='nodes'?b.nodes-a.nodes:sort==='name'?a.name.localeCompare(b.name):a.family.localeCompare(b.family)||a.name.localeCompare(b.name));
+ $('cards').replaceChildren();$('none').style.display=rows.length?'none':'block';
+ for(const p of rows){
+  let card=el('article','card'),heading=el('div');
+  heading.append(el('span','tag',p.family+(p.version?' · '+p.version:'')),el('h2',null,p.name));
+  card.append(heading,el('div','detail',p.detail||'Local code graph'));
+  let metrics=el('div','metrics');
+  [['Nodes',p.nodes],['Edges',p.edges],['Communities',p.communities],['JSON MiB',(p.size/1048576).toFixed(1)]].forEach(([k,v])=>{let m=el('div');m.append(el('strong',null,typeof v==='number'?fmt(v):v),el('small',null,k));metrics.append(m)});card.append(metrics);
+  card.append(el('div','path','Source: '+(p.source||'Source path not configured')));
+  let acts=el('div','actions');
+  const link=el('a',null,p.visual?'Open interactive graph':'HTML not generated');
+  link.href=encodeURIComponent(p.id)+'/graphify-out/graph.html';
+  if(!p.visual){link.removeAttribute('href');link.className='outline'}
+  let cli=el('button','outline','Refresh command');cli.onclick=()=>showCommand(p);
+  acts.append(link,cli);card.append(acts);$('cards').append(card);
+ }
+}
+['filter','family','order'].forEach(k=>$(k).addEventListener(k==='filter'?'input':'change',draw));draw();
+</script></body></html>"""
+
+def main():
+    data=entries()
+    output=HTML.replace("__STYLE__",STYLE + "\n" + STATUS_CSS).replace("__STAMP__",html.escape(datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")))
+    output=output.replace("</header>", "</header>\n" + STATUS_HTML, 1)
+    output=output.replace("</script></body></html>", "\n" + STATUS_JS + "\n</script></body></html>", 1)
+    output=output.replace("__DATA__",json.dumps(data,ensure_ascii=False).replace("</","<\\/"))
+    output=output.replace("__MASTERS__",json.dumps(MASTER_LIB.read_masters(),ensure_ascii=False).replace("</","<\\/"))
+    OUTPUT.write_text(output,encoding="utf-8")
+    print(f"DASHBOARD_UPDATED path={OUTPUT} graphs={len(data)} nodes={sum(p['nodes'] for p in data)}")
+    for project in data:print("  ",project["id"],project["nodes"],project["edges"],project["visual"])
+if __name__=="__main__":main()

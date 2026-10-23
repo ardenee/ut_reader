@@ -1,7 +1,15 @@
 # Graphify on DEV — local code intelligence pilot
 
-Updated: 2026-10-22. Owner machine: `game-amd` (`192.168.0.51`).
+Updated: 2026-10-23. Owner machine: `game-amd` (`192.168.0.51`).
 Status: **INSTALLED AND VERIFIED**. This is an OPTIONAL development/search tool. Epic source remains the sole Unreal format behavioral authority. Graphify may omit macro-expanded paths, conditional code, and custom archive semantics; never treat a graph link as proof of file compatibility.
+
+## UnrealDB live verification dashboard (2026-10-23)
+
+The existing Graphify dashboard at **http://127.0.0.1:8765/** on DEV now includes a read-only **UnrealDB Development Verification** section above the code graph library. It reads the active O06 contract, last recorded deployment, Git commits, all **292 source-contract records**, current per-test DEV statuses, recent append-only test events and the G1–G6 acceptance states directly from the UnrealDB repository. Contract search, status filtering, pagination and scoped focus/affected/gate **Copy DEV command** controls are available. Browser controls do **not** execute PHP tests, write evidence, change state or deploy.
+
+The live API is **GET /api/unrealdb**, through local `UnrealDB-Status.py` and the existing loopback-only Graphify server. Refresh occurs every 20 seconds while visible; 8-second shared read cache. O06 must remain NOT ACCEPTED until real Epic parity evidence closes the gates. Neither passing synthetic tests nor graph relationships certify source-compliant runtime behavior. Deployment status is explicitly the **last recorded** SHA-256 match, not a fresh PRD integrity scan. Only DEV's local browser can access the service; port **8765 remains bound to 127.0.0.1**, with the original Graphify Origin/Host checks. Existing `/api/viewer`, project scans and all original graphs remain intact.
+
+The new files and modified Graphify server/builder are versioned separately in [catalog/tools/graphify-dashboard](../tools/graphify-dashboard/README.md), with a safe reinstall script that backs up local changes to `C:\Temp`. The feature survives future Graphify dashboard regeneration. **Smoke test: 24/24 on temporary port 8876**, confirming live data, source counts, graph/viewer/API compatibility, forbidden POST, forbidden Host and blocked arbitrary path. Python and Node.js syntax checks PASS. Live server restarted and its new API returned HTTP 200 with 292 source records, 197 PARTIAL and 93 current DEV PASS test states. No PRD files changed; no UE5 probe changes; test scripts under `C:\Temp`, not the Graphify folder.
 
 ## Local installation
 
@@ -10,7 +18,7 @@ Status: **INSTALLED AND VERIFIED**. This is an OPTIONAL development/search tool.
 - Installed extras: `mcp`, `sql` (`tree_sitter_sql`).
 - Executables: `C:\Users\arden\.local\bin\graphify.exe` and `graphify-mcp.exe`.
 - User PATH includes `C:\Users\arden\.local\bin` (new terminal windows inherit it).
-- No running service, open listening port, or Desktop Commander replacement. MCP tested on-demand using local **stdio**, not exposed to the network.
+- No Graphify CLI/MCP network service or Desktop Commander replacement; MCP uses local **stdio**. The separately configured Graphify web dashboard **does** run on loopback-only 127.0.0.1:8765 and is not exposed to the LAN.
 - Refresh helper: `C:\Users\arden\Graphify\Index-Code.ps1`.
 - End-to-end MCP test: `C:\Users\arden\Graphify\Test-MCP.py`.
 - All generated indexes, including metadata and rendered HTML, live **outside the Git checkout** under `C:\Users\arden\Graphify\`, not PRD.

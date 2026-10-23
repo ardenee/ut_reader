@@ -1,0 +1,79 @@
+<section class="o06-board" id="o06-dashboard" aria-label="UnrealDB development verification">
+  <div class="o06-heading">
+    <div>
+      <div class="o06-eyebrow">UnrealDB / Epic source parity</div>
+      <h2>Development verification</h2>
+      <p>Live DEV evidence and contract status. Passing tests alone do not establish Epic engine parity.</p>
+    </div>
+    <div class="o06-controls">
+      <span class="o06-pill o06-warn" id="o06-acceptance">O06 · NOT ACCEPTED</span>
+      <button type="button" id="o06-refresh">Refresh status</button>
+      <a href="unrealdb/graphify-out/graph.html" class="o06-link">Open source graph ↗</a>
+    </div>
+  </div>
+  <p class="o06-message" id="o06-message" role="status" aria-live="polite">Loading local evidence…</p>
+  <div class="o06-metrics" id="o06-metrics" aria-label="Source and test totals"></div>
+  <div class="o06-gates" id="o06-gates" aria-label="O06 acceptance gates"></div>
+  <div class="o06-columns">
+    <article class="o06-panel" aria-labelledby="o06-now-title">
+      <h3 id="o06-now-title">Active contract</h3>
+      <div class="o06-contract-title" id="o06-current-contract">—</div>
+      <div class="o06-meta" id="o06-stage">—</div>
+      <h4>Last recorded action</h4>
+      <p id="o06-action">—</p>
+      <h4>Resume at</h4>
+      <p id="o06-next">—</p>
+      <div class="o06-foot" id="o06-checkpoint-time"></div>
+    </article>
+    <article class="o06-panel" aria-labelledby="o06-release-title">
+      <h3 id="o06-release-title">Version control & deployment</h3>
+      <div id="o06-git-status" class="o06-meta">—</div>
+      <div id="o06-commits" class="o06-commits"></div>
+      <h4>Last recorded PRD deployment</h4>
+      <p id="o06-release">—</p>
+      <div class="o06-foot">Recorded release evidence, not a fresh PRD integrity check.</div>
+    </article>
+  </div>
+  <div class="o06-columns">
+    <article class="o06-panel" aria-labelledby="o06-tests-title">
+      <div class="o06-inline-title"><h3 id="o06-tests-title">Recent DEV tests</h3><span id="o06-test-info" class="o06-meta"></span></div>
+      <div class="o06-table-wrap">
+        <table class="o06-table"><thead><tr><th>Test</th><th>Result</th><th>Time (UTC)</th></tr></thead>
+          <tbody id="o06-events"></tbody></table>
+      </div>
+      <p class="o06-foot">Failed attempts remain in the append-only journal; cached PASS results do not represent fresh executions.</p>
+    </article>
+    <article class="o06-panel" aria-labelledby="o06-plans-title">
+      <h3 id="o06-plans-title">Verification plans</h3>
+      <p class="o06-foot">Choose a registered contract and tier to generate a DEV command. This dashboard does not execute tests.</p>
+      <label class="o06-label" for="o06-plan">Source contract</label>
+      <select id="o06-plan"></select>
+      <label class="o06-label" for="o06-tier">Test scope</label>
+      <select id="o06-tier"><option value="focus">Focused</option><option value="affected">Affected regressions</option><option value="gate">Contract gate</option></select>
+      <div class="o06-actions"><button id="o06-copy" type="button">Copy DEV command</button><span id="o06-plan-count" class="o06-meta"></span></div>
+      <pre class="o06-command" id="o06-command"></pre>
+      <p id="o06-copy-result" class="o06-foot" role="status"></p>
+    </article>
+  </div>
+  <article class="o06-panel o06-contract-panel" aria-labelledby="o06-list-title">
+    <div class="o06-inline-title"><h3 id="o06-list-title">Epic serializer contracts</h3><span id="o06-contract-count" class="o06-meta"></span></div>
+    <div class="o06-filter">
+      <input type="search" id="o06-search" placeholder="Filter class, reader, source or remaining work…" aria-label="Filter serializer contracts">
+      <select id="o06-status-filter" aria-label="Filter contract status">
+        <option value="">All statuses</option><option value="PARTIAL">Partial</option>
+        <option value="MAPPED">Mapped</option><option value="EXCLUDED">Excluded</option>
+        <option value="DISCOVERED">Discovered</option><option value="GAP">Gap</option>
+      </select>
+    </div>
+    <div class="o06-table-wrap">
+      <table class="o06-table"><thead><tr><th>Epic symbol</th><th>Status</th><th>Reader / test</th><th>Remaining verification</th></tr></thead>
+        <tbody id="o06-contract-list"></tbody></table>
+    </div>
+    <div class="o06-actions"><button id="o06-more" type="button">Show more contracts</button>
+      <a class="o06-link" href="https://github.com/ardenee/ut_reader/tree/main/catalog/compliance">Project evidence on GitHub ↗</a></div>
+  </article>
+  <div class="o06-footer">
+    <span id="o06-updated"></span>
+    <span>Read-only · Source: DEV UnrealDB journals and Git · Graph index refreshed separately.</span>
+  </div>
+</section>
