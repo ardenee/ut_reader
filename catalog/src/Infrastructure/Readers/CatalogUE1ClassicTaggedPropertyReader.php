@@ -105,7 +105,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     }
                 }
                 elseif($type===13
-                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V400
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
                     &&$tagSize>=1){
                     // Use the same bounded source codec as nested UT99
                     // UArrayProperty/UStrProperty value serialization.

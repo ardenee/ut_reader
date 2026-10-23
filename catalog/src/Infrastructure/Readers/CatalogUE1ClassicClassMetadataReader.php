@@ -166,7 +166,7 @@ final class CatalogUE1ClassicClassMetadataReader
             // UT99 v400 Core/Src/UnClass.cpp UClass::Serialize sets
             // RF_Public|RF_Standalone when loading a <=61 archive.
             // This is a source-defined *load effect*, not file bytes.
-            $legacyUt99=$family===CatalogUE1ClassicSourceFamily::UT99_V400
+            $legacyUt99=$family===CatalogUE1ClassicSourceFamily::UT99_V432
                 &&$version<=61;
             $record['source_legacy_class_flags_added']=$legacyUt99
                 ?0x00080004:0;

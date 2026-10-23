@@ -38,7 +38,7 @@ final class CatalogUE1ClassicScriptArchiveReader
         $unsupported = null;
         $preview = [];
         $lastToken = null; $lastTokenArchiveOffset = null;
-        $ut99 = $family===CatalogUE1ClassicSourceFamily::UT99_V400;
+        $ut99 = $family===CatalogUE1ClassicSourceFamily::UT99_V432;
 
         $mem = static function(int $n) use (
             &$iCode, $scriptSize, &$lastToken, &$lastTokenArchiveOffset, &$position

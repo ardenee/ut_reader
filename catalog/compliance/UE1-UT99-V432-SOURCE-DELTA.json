@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "audit_date": "2026-10-23",
+  "source_target": "ut99-v432",
+  "source_predecessor": "ut99-v400",
+  "source_policy": "one UT99 loader: v400 inherited method bodies, v432 public header updates and compiled library oracles",
+  "v400_root": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]",
+  "v432_root": "L:\\Source\\Games\\UT99\\Unreal Tournament v432",
+  "header_comparison": {
+    "Core/Inc": {
+      "v432_header_count": 49,
+      "unchanged_count": 15,
+      "changed": [
+        "Core.h",
+        "FCodec.h",
+        "FConfigCacheIni.h",
+        "FFeedbackContextWindows.h",
+        "FFileManagerAnsi.h",
+        "FFileManagerGeneric.h",
+        "FFileManagerLinux.h",
+        "FFileManagerWindows.h",
+        "FMallocWindows.h",
+        "FOutputDeviceFile.h",
+        "UExporter.h",
+        "UFactory.h",
+        "UnArc.h",
+        "UnCache.h",
+        "UnCId.h",
+        "UnClass.h",
+        "UnCoreNet.h",
+        "UnCorObj.h",
+        "UnFile.h",
+        "UnGnuG.h",
+        "UnMath.h",
+        "UnMem.h",
+        "UnObjBas.h",
+        "UnObjVer.h",
+        "UnScript.h",
+        "UnTemplate.h",
+        "UnType.h",
+        "UnVcWin32.h"
+      ],
+      "added": [
+        "FFileManagerArc.h",
+        "FFileManagerPSX2.h",
+        "FFileManagerPSX2CD.h",
+        "UnCoreNative.h",
+        "UnLinker.h",
+        "UnMsg.h"
+      ],
+      "changed_count": 28,
+      "added_count": 6
+    },
+    "Engine/Inc": {
+      "v432_header_count": 58,
+      "unchanged_count": 10,
+      "changed": [
+        "AActor.h",
+        "AGameReplicationInfo.h",
+        "AInventory.h",
+        "AMover.h",
+        "APawn.h",
+        "APlayerPawn.h",
+        "APlayerReplicationInfo.h",
+        "AZoneInfo.h",
+        "Engine.h",
+        "EngineClasses.h",
+        "UnActor.h",
+        "UnAudio.h",
+        "UnBunch.h",
+        "UnCamera.h",
+        "UnChan.h",
+        "UnCon.h",
+        "UnConn.h",
+        "UnDemoPenLev.h",
+        "UnDemoRec.h",
+        "UnEngine.h",
+        "UnEngineWin.h",
+        "UnGame.h",
+        "UnIn.h",
+        "UnLevel.h",
+        "UnMesh.h",
+        "UnModel.h",
+        "UnNet.h",
+        "UnNetDrv.h",
+        "UnObj.h",
+        "UnPenLev.h",
+        "UnPlayer.h",
+        "UnPrim.h",
+        "UnRender.h",
+        "UnRenderIterator.h",
+        "UnRenDev.h",
+        "UnScrTex.h",
+        "UnTex.h"
+      ],
+      "added": [
+        "AAmmo.h",
+        "ACarcass.h",
+        "ALevelInfo.h",
+        "APickup.h",
+        "AWeapon.h",
+        "ENCVAG.H",
+        "UnAnim.h",
+        "UnDownload.h",
+        "UnEngineNative.h",
+        "UnRenderIteratorSupport.h",
+        "UnSkeletalMesh.h"
+      ],
+      "changed_count": 37,
+      "added_count": 11
+    }
+  },
+  "build_version": {
+    "v400": {
+      "ENGINE_VERSION": 400,
+      "PACKAGE_FILE_VERSION": 68,
+      "PACKAGE_MIN_VERSION": 60
+    },
+    "v432": {
+      "ENGINE_VERSION": 430,
+      "PACKAGE_FILE_VERSION": 69,
+      "PACKAGE_MIN_VERSION": 60
+    }
+  },
+  "added_serialization_obligations": [
+    "T99:USkeletalMesh::Serialize",
+    "T99:UAnimation::Serialize"
+  ],
+  "new_v432_source_contracts": {
+    "USkeletalMesh": "Engine/Inc/UnSkeletalMesh.h : ULodMesh subclass; native Serialize method body not in public Src",
+    "UAnimation": "Engine/Inc/UnSkeletalMesh.h : UObject subclass; native Serialize method body not in public Src",
+    "FMeshExtWedge": "Engine/Inc/UnMesh.h : WORD vertex, WORD flags, two FLOAT32 texture coords = 12-byte record",
+    "FMeshAnimSeq": "Moved from Engine/Inc/UnMesh.h into UnAnim.h; same source FArchive field order",
+    "UStruct.PropertiesAlign": "Core/Inc/UnClass.h adds in-memory PropertiesAlign; no evidence that UClass::Serialize archives this field",
+    "UFont.CharRemap.IsRemapped": "Engine/Inc/UnTex.h has new runtime fields; UFont::Serialize v432 method not shipped; file delta unverified"
+  },
+  "library_source_limitation": {
+    "core_src_in_public_v432": false,
+    "engine_src_in_public_v432": false,
+    "v432_prebuilt_core": "Core/Lib/Core.lib",
+    "v432_prebuilt_engine": "Engine/Lib/Engine.lib",
+    "method_body_parity": "Not inferable from class/header declarations; compiled native comparison required"
+  },
+  "native_delta_production_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
+  "register_counts_after": {
+    "MAPPED": 254,
+    "EXCLUDED": 38,
+    "PARTIAL": 2
+  },
+  "existing_T99_source_coverage_note": "All existing T99 methods have v400 archive implementation mapping; v432 compiled-method equivalence not source-proven merely by the available public headers.",
+  "public_header_direct_serialize_methods_v432": {
+    "UBspNodes": "Engine/Inc/UnModel.h: Super then DbNum/DbMax, FBspNode elements, AR_INDEX NumZones, FZoneProperties",
+    "UBspSurfs": "Engine/Inc/UnModel.h: Super then DbNum/DbMax, FBspSurf elements on load",
+    "UVectors": "Engine/Inc/UnModel.h: Super then DbNum/DbMax, FVector elements on load",
+    "UVerts": "Engine/Inc/UnModel.h: Super then DbNum/DbMax, FVert elements, AR_INDEX NumSharedSides",
+    "FMeshAnimSeq": "Engine/Inc/UnAnim.h: Name,Group,StartFrame,NumFrames,Notifys,Rate; moved unchanged from v400 UnMesh.h",
+    "FMeshExtWedge": "Engine/Inc/UnMesh.h: WORD iVertex, WORD Flags, FLOAT U, FLOAT V"
+  },
+  "unverified_header_only_serialization_changes": [
+    "Engine/Inc/UnTex.h: UFont CharRemap and IsRemapped runtime members; v432 UFont::Serialize not published",
+    "Core/Inc/UnClass.h: UStruct PropertiesAlign in-memory member; persisted form unproven",
+    "Engine/Inc/UnSkeletalMesh.h: USkeletalMesh::Serialize native archive order not published",
+    "Engine/Inc/UnSkeletalMesh.h: UAnimation::Serialize native archive order not published"
+  ]
+}

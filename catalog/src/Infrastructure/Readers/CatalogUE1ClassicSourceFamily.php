@@ -5,7 +5,7 @@
  * Archive version is NEVER a game identifier. In particular, Unreal
  * v1.227 (package 69, licensee 227) is not Unreal Tournament 99.
  * A later UE1 archive without established lineage is left unresolved,
- * rather than silently selecting the UT99 v400 source.
+ * rather than silently selecting the UT99 v432 source.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -15,7 +15,10 @@ use InvalidArgumentException;
 final class CatalogUE1ClassicSourceFamily
 {
     public const EPIC_UE1='epic-ue1';
-    public const UT99_V400='ut99-v400';
+    public const UT99_V432='ut99-v432';
+    // Historical v400 selection is a deprecated CLI alias for the
+    // updated UT99 loader, never a second selectable source profile.
+    public const LEGACY_UT99_V400='ut99-v400';
     public const UNREAL_V227='unreal-v227';
 
     /**
@@ -25,12 +28,13 @@ final class CatalogUE1ClassicSourceFamily
      * absolute limits on the engine's attempted loading.
      *
      * Unreal v1.200  : Core/Inc/UnObjVer.h (34..61)
-     * UT99 v400      : Core/Inc/UnObjVer.h (60..68)
+     * UT99 v432      : Core/Inc/UnObjVer.h (60..69)
+     * UT99 v400      : inherited implementation baseline (60..68), not a separate profile
      * Unreal v1.227  : Core/Inc/UnObjVer.h (60..69)
      */
     public const GAME_VERSION_GATES=[
         self::EPIC_UE1=>['minimum'=>34,'maximum'=>61],
-        self::UT99_V400=>['minimum'=>60,'maximum'=>68],
+        self::UT99_V432=>['minimum'=>60,'maximum'=>69],
         self::UNREAL_V227=>['minimum'=>60,'maximum'=>69],
     ];
 
@@ -56,6 +60,9 @@ final class CatalogUE1ClassicSourceFamily
      */
     public static function select(int $version,?string $sourceFamily=null):string
     {
+        if($sourceFamily===self::LEGACY_UT99_V400){
+            $sourceFamily=self::UT99_V432;
+        }
         if($sourceFamily!==null&&!array_key_exists(
             $sourceFamily,self::GAME_VERSION_GATES)){
             throw new InvalidArgumentException('Unknown UE1 game/source family');
@@ -86,9 +93,10 @@ final class CatalogUE1ClassicSourceFamily
      * Source-version diagnostic for known loader selection.
      *
      * This does NOT attempt to emulate GUI YesNo or run a game loader.
-     * Only the two pinned v1.200 and UT99 sources include the inspected
-     * CheckVersion below-minimum user warning; the partial v1.227 tree
-     * has no replacement Core/Src for asserting its runtime prompt.
+     * Unreal v1.200 CheckVersion is source-inspected. The public v432
+     * Core/Engine serializer implementation is precompiled, so UT99 v400
+     * checks are historical evidence, NOT proof of v432's exact prompt.
+     * Unreal v1.227 Core/Src is likewise unavailable.
      */
     public static function loaderVersionDiagnostic(
         int $version,string $selectedSource
@@ -99,7 +107,10 @@ final class CatalogUE1ClassicSourceFamily
         $gate=self::GAME_VERSION_GATES[$selectedSource];
         $below=$version<$gate['minimum'];
         $above=$version>$gate['maximum'];
-        $verified=($selectedSource!==self::UNREAL_V227);
+        $verified=($selectedSource===self::EPIC_UE1);
+        $warningUnknown=$selectedSource===self::UT99_V432
+            ?'v432_linker_implementation_unavailable_v400_warns'
+            :'v227_linker_implementation_unavailable';
         return [
             'source_profile'=>$selectedSource,
             'archive_version'=>$version,
@@ -110,10 +121,11 @@ final class CatalogUE1ClassicSourceFamily
             'above_source_save_version'=>$above,
             'epic_linker_version_action'=>$below
                 ?($verified?'warn_user_and_allow_continue_or_abort'
-                           :'minimum_warning_behavior_unverified_for_v227')
+                           :$warningUnknown)
                 :($verified?'no_version_rejection_in_inspected_linker_check'
-                           :'v227_linker_implementation_unavailable'),
+                           :$warningUnknown),
             'source_linker_check_available'=>$verified,
+            'ut99_source_inheritance'=>'UT99 v400 Core/Src baseline; v432 prebuilt Core.lib overrides require native oracle',
             'runtime_load_success_verified'=>false,
         ];
     }
@@ -127,6 +139,9 @@ final class CatalogUE1ClassicSourceFamily
     public static function selectFromHeader(
         array $header,?string $sourceFamily=null
     ):string{
+        if($sourceFamily===self::LEGACY_UT99_V400){
+            $sourceFamily=self::UT99_V432;
+        }
         $version=(int)($header['version']??0);
         $licensee=(int)($header['licenseeVersion']??($header['licensee']??0));
         if($version===69&&$licensee===227){
@@ -157,10 +172,10 @@ final class CatalogUE1ClassicSourceFamily
         $v227=$selected===self::UNREAL_V227;
         return [
             'engine_base'=>'epic-ue1',
-            'engine_archive_implementation_source'=>
-                $selected===self::UT99_V400?self::UT99_V400:self::EPIC_UE1,
+            'engine_archive_implementation_source'=>$selected===self::UT99_V432
+                ?self::LEGACY_UT99_V400:self::EPIC_UE1,
             'game_source_overlay'=>$v227?self::UNREAL_V227:
-                ($selected===self::UT99_V400?self::UT99_V400:null),
+                ($selected===self::UT99_V432?self::UT99_V432:null),
             'source_profile'=>$selected,
             'eligible_profiles'=>self::eligibleProfiles($version),
             'loader_version_diagnostic'=>
@@ -171,11 +186,12 @@ final class CatalogUE1ClassicSourceFamily
                     ?'confirmed_69_227_unreal_header'
                     :'sole_version_eligible_profile_not_producer_identity'),
             'game_identity_inferred_from_version_only'=>false,
-            'full_game_core_source_available'=>!$v227,
+            'full_game_core_source_available'=>$selected===self::EPIC_UE1,
             'source_completeness'=>$v227
-                ?'UE1 engine baseline + v227 game emitter overrides; '.
-                 'v227 replacement Core/Src unavailable, core delta parity open'
-                :'pinned source available; native comparison deferred',
+                ?'UE1 base + Unreal v227 emitter overrides; replacement Core/Src unavailable'
+                :($selected===self::UT99_V432
+                    ?'UT99 v400 inherited Core/Src plus v432 headers and Core.lib/Engine.lib; absent v432 method bodies need native oracle'
+                    :'Pinned Unreal v1.200 source available; native comparison deferred'),
         ];
     }
 }

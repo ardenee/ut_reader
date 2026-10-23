@@ -52,7 +52,7 @@ final class CatalogUE1ClassicGeometryRecordReader
         return [
             'plane'=>$plane,'zone_mask_le_hex'=>$mask,
             'node_flags'=>$flags,
-            'node_flags_after_epic_load'=>$family===CatalogUE1ClassicSourceFamily::UT99_V400
+            'node_flags_after_epic_load'=>$family===CatalogUE1ClassicSourceFamily::UT99_V432
                 ?($flags&~0xE0):$flags,
             'indices'=>$indices,'zones'=>[$back,$front],
             'num_vertices'=>$numVertices,'leaves'=>[$leaf0,$leaf1],
@@ -84,7 +84,7 @@ final class CatalogUE1ClassicGeometryRecordReader
         return [
             'texture_reference'=>$texture,
             'poly_flags'=>$flags,
-            'poly_flags_after_epic_load'=>$family===CatalogUE1ClassicSourceFamily::UT99_V400
+            'poly_flags_after_epic_load'=>$family===CatalogUE1ClassicSourceFamily::UT99_V432
                 ?($flags&~0x10000000):$flags,
             'indices'=>$indices,'pan_u'=>$panU,'pan_v'=>$panV,
             'actor_reference'=>$actor,

@@ -134,14 +134,14 @@ final class CatalogUE1ClassicPropertyNativeReader
             'next_field_reference' => $nextField,
             'array_dim' => $arrayDim,
             'property_flags' => $flags,
-            'effective_property_flags' => $family===CatalogUE1ClassicSourceFamily::UT99_V400
+            'effective_property_flags' => $family===CatalogUE1ClassicSourceFamily::UT99_V432
                 ?$ut99LegacyEffectiveFlags:$flags,
             'selected_source_family'=>$family,
             'effective_property_flags_if_ut99_v400_load' =>
                 $ut99LegacyEffectiveFlags,
-            'property_flag_load_semantics' => $family===CatalogUE1ClassicSourceFamily::UT99_V400&&$version<=61
+            'property_flag_load_semantics' => $family===CatalogUE1ClassicSourceFamily::UT99_V432&&$version<=61
                 ? 'UT99-v400-old-loader-clears-obsolete-net-flags'
-                : ($family===CatalogUE1ClassicSourceFamily::UT99_V400
+                : ($family===CatalogUE1ClassicSourceFamily::UT99_V432
                     ?'UT99-v400-preserve-flags':'Epic-UE1-preserve-flags'),
             'source_dependent_legacy_net_flags' =>
                 $version<=61&&$flags!==$ut99LegacyEffectiveFlags,

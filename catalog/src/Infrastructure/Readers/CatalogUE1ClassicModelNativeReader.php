@@ -40,7 +40,7 @@ final class CatalogUE1ClassicModelNativeReader
         // FSphere for old archives and modern FLightMapIndex fields.
         // Neither on-disk contents nor successful trial parses establish
         // game lineage; selection belongs to the source-calling layer.
-        $modern=$family===CatalogUE1ClassicSourceFamily::UT99_V400;
+        $modern=$family===CatalogUE1ClassicSourceFamily::UT99_V432;
         $parsed=self::inspectWire(
             $pkg,$version,$read,$compact,$u32,$position,$limit,
             $family,!$modern);
@@ -189,7 +189,7 @@ final class CatalogUE1ClassicModelNativeReader
             $model['legacy_leaf_zone_reference']=$ref('LeafZone');
             $model['legacy_leaf_leaf_reference']=$ref('LeafLeaf');
         }
-        if($sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V400){
+        if($sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V432){
             // UT99 UnModel.cpp archives RootOutside and Linked as
             // INT values at ALL file versions, even <=43.
             $model['root_outside']=$i32();

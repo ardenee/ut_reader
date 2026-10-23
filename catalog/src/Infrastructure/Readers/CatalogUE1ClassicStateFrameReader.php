@@ -41,7 +41,7 @@ final class CatalogUE1ClassicStateFrameReader
         int &$position,int $archiveBase=0,?string $sourceFamily=null
     ):?array{
         $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
-        $ut99=$family===CatalogUE1ClassicSourceFamily::UT99_V400;
+        $ut99=$family===CatalogUE1ClassicSourceFamily::UT99_V432;
         $hasStack=($objectFlags & self::RF_HAS_STACK)!==0;
         // UT99 always checks RF_HasStack. Unreal v1.200 also loads
         // temporary MainFrames for file versions below 47.

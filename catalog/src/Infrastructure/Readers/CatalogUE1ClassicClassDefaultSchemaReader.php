@@ -117,7 +117,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $declKind=(string)$decl['kind'];
             // Epic UClassProperty derives from UObjectProperty; older
             // FPropertyTag encodes it as an object reference type.
-            $legacyStringUpgrade=$family===CatalogUE1ClassicSourceFamily::UT99_V400
+            $legacyStringUpgrade=$family===CatalogUE1ClassicSourceFamily::UT99_V432
                 &&$tagKind==='stringproperty'&&$declKind==='strproperty';
             $typeValid=$tagKind===$declKind
                 ||($tagKind==='objectproperty'&&$declKind==='classproperty')
@@ -178,7 +178,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
                 continue;
             }
-            if($family===CatalogUE1ClassicSourceFamily::UT99_V400&&$tagKind==='strproperty'
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432&&$tagKind==='strproperty'
                &&$declKind==='strproperty'
                &&!in_array($tag['value_kind']??'',[
                  'fstring_ansi_archive','fstring_utf16_archive'],true)){
@@ -224,7 +224,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
                 continue;
             }
-            if($family===CatalogUE1ClassicSourceFamily::UT99_V400
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432
                &&in_array($tagKind,['arrayproperty','fixedarrayproperty'],true)
                &&$tagKind===$declKind){
                 $decoded=CatalogUE1ClassicArrayValueReader::inspect(
@@ -245,7 +245,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     continue;
                 }
             }
-            if($family===CatalogUE1ClassicSourceFamily::UT99_V400&&$tagKind==='mapproperty'
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432&&$tagKind==='mapproperty'
                 &&$declKind==='mapproperty'){
                 // UT99 UMapProperty::SerializeItem checks Key/Value but
                 // its entire archive loop is commented out. The native

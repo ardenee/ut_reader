@@ -13,7 +13,7 @@
 Epic source baseline: `L:\Source\Engine\UE1\Source` and pinned Epic engine revisions for historical package versions. Unreal/Unreal Gold, UT99 and licensee forks are separate **game/engine-fork overlays**, not aliases.
 
 - **Unreal v1.227:** game source `L:\Source\Games\Unreal\Unreal [v1.227]`; confirmed version **69** and licensee version **227**. This combination identifies the Unreal v1.227 loader; it never selects UT99. Its emitter C++ overrides use UnrealScript archive class identities `XBeamEmitter`, `XParticleEmitter`, `XRopeDeco` (C++ `AXBeamEmitter`, etc.). On load, the inherited UE1 tagged-property stream is decoded before those game methods. The available v1.227 tree does **not** include complete replacement `Core/Src`; unmatched core changes remain unverified rather than borrowed from UT99.
-- **UT99 v400:** select `ut99-v400` only from known UT99 loader provenance, not from package version 62–69. UT99 can load older packages: the game loader's selected serializers still apply to the old on-disk version's compatibility branches.
+- **UT99 v432 (canonical):** select `ut99-v432` using established UT99 loader provenance. The v400 Core/Engine C++ Serialize implementations are the **inherited source baseline**; the public v432 headers and compiled libraries supersede v400 where different. Do not interpret a shared package version (including 69) as game identity. The CLI accepts the former `ut99-v400` spelling only as a deprecated alias mapping to v432.
 - **Earlier Unreal:** UE1 engine source defines the common legacy archive. May and July 1997 original sources add source-specific serializers; they can share package version 23 and therefore require their own source selection. Historic runtime/load effects are tracked separately.
 - **Source selection:** `CatalogUE1ClassicSourceFamily::selectFromHeader` respects the documented Unreal v1.227 version/licensee signature. `select` does not infer UT99 from later package versions. Top-level tagged, class, native and CLI readers select once and propagate the source profile into nested field, inherited class, array, struct and bytecode readers. `CatalogUE1ClassicGameSourceOverlay` applies the three Unreal v1.227 actor overrides after their inherited tagged archive.
 
@@ -24,15 +24,15 @@ The pinned game sources declare inclusive minimum and maximum **complete-backwar
 | Game loader source profile | PACKAGE_MIN_VERSION | PACKAGE_FILE_VERSION | UnrealDB source ID |
 |---|---:|---:|---|
 | Unreal v1.200 | 34 | 61 | epic-ue1 |
-| Unreal Tournament v400 | 60 | 68 | ut99-v400 |
+| Unreal Tournament v432 public source (ENGINE_VERSION 430) | 60 | 69 | ut99-v432 |
 | Unreal v1.227 | 60 | 69 | unreal-v227 |
 
 CatalogUE1ClassicSourceFamily::GAME_VERSION_GATES and eligibleProfiles($fileVersion) provide source-defined **priority and declared compatibility** for candidate selection. A known loader chosen explicitly may attempt an out-of-range package: the actual Epic loader below-minimum check prompts for confirmation and does not unconditionally reject. The reader preserves that source selection and exposes loaderVersionDiagnostic rather than claiming the file will load.
 
 - v34–59: Unreal v1.200 source eligible.
 - v60–61: all three sources eligible, not auto-identified.
-- v62–68: UT99 v400 and Unreal v1.227 eligible, not auto-identified.
-- v69: Unreal v1.227 is the only source in this pinned selection set; version alone still does not prove the producing game. The 69/227 header pair is positive evidence for that Unreal loader.
+- v62-69: UT99 v432 and Unreal v1.227 eligible, not auto-identified.
+- v69: UT99 v432 and Unreal v1.227 are BOTH candidate loaders. The 69/227 header pair is positive evidence of the Unreal v1.227 source, whereas 69/licensee 0 alone is not universal proof of UT99.
 - Outside these ranges: none of these source profiles claims complete compatibility. Earlier original UE1 v22–23 sources are handled separately; other game branches need their own source-backed rules.
 
 **Crucial source distinction:** The actual ULinkerLoad::LoadSummary check in both Unreal v1.200 and UT99 v400 *prompts* on files older than PACKAGE_MIN_VERSION and may continue. The eligibility gates deliberately reflect complete-compatibility support, **not an assertion that the engine refuses every out-of-range file**. A newer file is not rejected by that particular minimum-version check, either, but may fail in subsequent parsing or linking.
@@ -44,6 +44,14 @@ The CLI reports all preferred in-range profiles, plus a source-defined warning d
 The inspected pinned Unreal v1.200 and UT99 v400 Core/Src/UnLinker.h checks Summary.FileVersion below PACKAGE_MIN_VERSION, then uses GWarn->YesNof(OldVersion) and aborts only when the user answers no. It does not check FileVersion above PACKAGE_FILE_VERSION at that point. UnrealDB no longer treats either source constant as a hard exclusion when an explicit loader profile is supplied. A selected loader above its own saver version is a speculative attempted load (not proof of successful compatibility). The version 69/227 Unreal header identity check remains independent. The partial v1.227 source tree lacks the relevant linker implementation, so no v1.227 confirmation prompt is invented. sourceLayers and CLI expose the distinction.
 
 Epic Unreal v1.200 Core/Inc/UnType.h UStringProperty::SerializeItem calls FArchive::String(Value,StringSize) from Core/Src/UnFile.cpp. This reads one byte at a time, stopping at an on-disk NUL or at StringSize-1 bytes, then writes a NUL in memory without consuming an additional file byte. CatalogUE1ClassicStructArrayValueReader now implements this exact bounded original-engine string operation for nested UClass default structs and struct-array fields; it does not mistake fixed CHAR arrays for UT99 FString archives. These are code changes, not native-runtime G5 acceptance.
+
+### UT99 v432 supersedes v400; inherited implementation and delta audit
+
+The single target UT99 loader is `ut99-v432`, not two separate profiles. Public source folder `L:\Source\Games\UT99\Unreal Tournament v432` defines `ENGINE_VERSION=430`, `PACKAGE_FILE_VERSION=69`, `PACKAGE_MIN_VERSION=60` and licensee default 0 in `Core/Inc/UnObjVer.h`. The folder label v432 and compiled source macro 430 differ; do not silently call the latter 432. UT99 v400 source has package version 68 and provides the older complete Core/Engine native serializer method bodies. The public v432 tree omits Core/Src and Engine/Src; it has precompiled Core.lib/Engine.lib and declaration headers. **No absent v432 method may be pronounced identical to v400 purely from matching class member declarations.**
+
+Machine-readable source delta: `catalog/compliance/UE1-UT99-V432-SOURCE-DELTA.json`. The v432 release has 28 changed and 6 added Core headers, and 37 changed and 11 added Engine headers compared with v400. The v432 `Engine/Inc/UnModel.h` inline Serialize methods for UBspNodes, UBspSurfs, UVectors and UVerts provide **direct v432 source evidence** for their database count and record archive operations. The v432 `Engine/Inc/UnAnim.h` retains FMeshAnimSeq/FMeshAnimNotify archive operators moved from v400 UnMesh.h; the wire order remains the same. The v432 `Engine/Inc/UnMesh.h` additionally declares a 12-byte FMeshExtWedge (two WORD plus two FLOAT) archive record; the typed record decoder exists in CatalogUE1ClassicV432NativeDeltaReader.
+
+New v432 `USkeletalMesh::Serialize` and `UAnimation::Serialize` are **registered PARTIAL source methods**, not falsely MAPPED: no v432 public Core/Engine native method bodies specify their native archive order. Read-side inspection preserves bounded raw native bytes and SHA-256 and explicitly reports source-order uncertainty. v432 `UFont` adds `CharRemap/IsRemapped` and `UStruct` adds `PropertiesAlign`; neither header alone proves extra persisted fields. These require direct compiled oracle or recovered licensed exact source rather than guesswork. Existing source-mapped UT99 methods retain their v400 inherited baseline while v432 native-method equivalence is marked pending; **G5 is not accepted**.
 
 ## Future UE2 / UE2.5 / UE3 / UE4 / UE5 work
 

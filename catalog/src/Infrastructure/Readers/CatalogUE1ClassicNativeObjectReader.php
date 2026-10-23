@@ -76,6 +76,15 @@ final class CatalogUE1ClassicNativeObjectReader
         if($gameOverride!==null){
             return array_replace($record,$gameOverride);
         }
+        // v432 introduces native skeletal and animation serializers absent
+        // from the v400 source inventory. Their full method bodies are not
+        // published in v432 Core/Engine Src; never call an empty native
+        // tail proof of a completed serializer for these classes.
+        $v432Delta=CatalogUE1ClassicV432NativeDeltaReader::inspect(
+            $path,$className,$start,$nativeLength,$family);
+        if($v432Delta!==null){
+            return array_replace($record,$v432Delta);
+        }
         if($nativeKind==='actor'){
             $actorVersion=(int)($pkg->getHeader()['version']??0);
             if($actorVersion<35||$actorVersion>69){
@@ -393,7 +402,7 @@ final class CatalogUE1ClassicNativeObjectReader
                     'lazy_seek_pos'=>$seekEnd,'extension_bytes'=>$limit-$pos,
                     'audio_data_decoded'=>true,'audio_data_interpreted'=>false]);
             }
-            if($nativeKind==='font'&&$family===CatalogUE1ClassicSourceFamily::UT99_V400){
+            if($nativeKind==='font'&&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
                 // UT99 v400 UFont : UObject; its noninherited native tail
                 // contains TArray<FFontPage> Pages and CharactersPerPage.
                 // Unreal v1.200 UFont : UTexture is decoded below after
@@ -481,7 +490,7 @@ final class CatalogUE1ClassicNativeObjectReader
                 // for files <66, including old files loaded by UT99.
                 // Package version <=61 alone cannot identify the loader.
                 $ut99AlphaReset=$ver<66;
-                $loadedAlphaReset=$family===CatalogUE1ClassicSourceFamily::UT99_V400&&$ut99AlphaReset;
+                $loadedAlphaReset=$family===CatalogUE1ClassicSourceFamily::UT99_V432&&$ut99AlphaReset;
                 $preview=[];
                 for($i=0;$i<min(16,$count);$i++){
                     $quad=array_values(unpack('C4',substr($colors,$i*4,4)));
@@ -550,7 +559,7 @@ final class CatalogUE1ClassicNativeObjectReader
             $mips=$readMipArray('Mips');
             $count=count($mips);
             $compMips=null;$bHasComp=false;
-            if($family===CatalogUE1ClassicSourceFamily::UT99_V400){
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432){
                 foreach(($propertyStream['tags']??[]) as $tag){
                     if(strcasecmp((string)($tag['name']??''),'bHasComp')===0
                         &&($tag['type']??null)==='BoolProperty'){

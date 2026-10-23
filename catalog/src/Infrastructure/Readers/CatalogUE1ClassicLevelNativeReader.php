@@ -97,7 +97,7 @@ final class CatalogUE1ClassicLevelNativeReader
         $actors=[];
         for($i=0;$i<$database['count'];$i++){$actors[]=$ref('Actors');}
         $result['actor_database']=$database+['actors'=>$actors];
-        if($family===CatalogUE1ClassicSourceFamily::UT99_V400||$ver>=59){
+        if($family===CatalogUE1ClassicSourceFamily::UT99_V432||$ver>=59){
             $result['url']=$url();
         }else{
             $result['url']=null;

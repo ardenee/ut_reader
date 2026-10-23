@@ -79,7 +79,7 @@ final class CatalogUE1ClassicPolysNativeReader
             if($version<45){$legacy=[ord($read(1)),ord($read(1))];}
             // Unreal-v1200 FPoly clears masked when translucent+masked.
             // UT99-v400 instead clears PF_Transient/PF_Highlighted.
-            $after=$family===CatalogUE1ClassicSourceFamily::UT99_V400
+            $after=$family===CatalogUE1ClassicSourceFamily::UT99_V432
                 ? ($flags&~0x10000000)
                 : ((($flags&0x6)===0x6) ? ($flags&~0x2) : $flags);
             if(count($preview)<16){

@@ -24,7 +24,7 @@ final class CatalogUE1ClassicMeshNativeReader
             throw new RuntimeException('Unsupported UE1 mesh archive class');
         }
         $family=CatalogUE1ClassicSourceFamily::select($ver,$sourceFamily);
-        if($kind==='lodmesh'&&$family!==CatalogUE1ClassicSourceFamily::UT99_V400){
+        if($kind==='lodmesh'&&$family!==CatalogUE1ClassicSourceFamily::UT99_V432){
             return ['status'=>'native_lodmesh_game_override_not_selected',
                 'reason'=>'ULodMesh serializer is defined in UT99 game source'];
         }
@@ -54,7 +54,7 @@ final class CatalogUE1ClassicMeshNativeReader
             'is_valid'=>ord($read(1))];
         $sphere=static function()use($vector,$f32,$ver,$sourceFamily):array{
             $r=$vector();
-            $ut99=$sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V400;
+            $ut99=$sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V432;
             $r['w']=($ut99&&$ver<=61)?null:$f32();
             return $r;
         };

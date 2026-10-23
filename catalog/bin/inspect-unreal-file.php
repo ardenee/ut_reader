@@ -652,7 +652,7 @@ foreach ($arguments as $argument) {
     }
     if (str_starts_with($argument,'--ue1-source=')) {
         $requested=substr($argument,strlen('--ue1-source='));
-        if (!in_array($requested,['epic-ue1','ut99-v400','unreal-v227'],true)) {
+        if (!in_array($requested,['epic-ue1','ut99-v432','ut99-v400','unreal-v227'],true)) {
             fwrite(STDERR,'Invalid --ue1-source: '.$requested.PHP_EOL);
             exit(2);
         }
@@ -674,7 +674,7 @@ foreach ($arguments as $argument) {
 if ($paths === []) {
     fwrite(
         STDERR,
-        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v400|unreal-v227] [--ue1-original-1997=unreal_1997_may|unreal_1997_july] <file-or-directory> [...]\n"
+        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v432|unreal-v227] [--ue1-original-1997=unreal_1997_may|unreal_1997_july] <file-or-directory> [...]\n"
     );
     exit(2);
 }

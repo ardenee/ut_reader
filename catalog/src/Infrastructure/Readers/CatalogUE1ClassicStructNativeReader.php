@@ -115,7 +115,7 @@ final class CatalogUE1ClassicStructNativeReader
         // NumParms/ParmsSize/ReturnValueOffset before recomputing
         // from the linked Children UProperty chain. Unreal v1.200
         // instead leaves the three archived values in memory.
-        $ut99=$family===CatalogUE1ClassicSourceFamily::UT99_V400;
+        $ut99=$family===CatalogUE1ClassicSourceFamily::UT99_V432;
         $record['loaded_parms_size']=$ut99?null:$record['legacy_parms_size'];
         $record['loaded_num_parms']=$ut99?null:$record['legacy_num_parms'];
         $record['loaded_return_value_offset']=$ut99?null:$record['legacy_return_value_offset'];
