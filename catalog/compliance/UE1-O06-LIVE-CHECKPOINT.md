@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-class-state-frame`
+- **Contract:** `g4-actor-super-serialize`
 - **Stage:** implemented-pending-verification-no-tests
-- **Last completed action:** Implementation-first Epic source parity code: fixed raw May/July FBoundingVolume IsValid BYTE in original Model/Mesh/Primitive source decoder; introduced shared Unreal v1.200 / UT99 v400 version-gated FStateFrame reader and removed UClass flagged-stack unimplemented exit, routing both UClass and ordinary object readers to same state-frame decoder. Syntax lint only. NO tests, NO new test contracts, NO acceptance promotions, NO DEV/PRD deployment.
-- **Resume at:** Continue EXISTING G2/G3/G4 source-listed serialized gaps as code implementation first; when code is complete schedule one separate scoped verification and release phase. Current implementation must remain marked unverified and not be deployed to PRD until verified.
-- **Active changed at:** 2026-10-23T16:33:49+00:00
+- **Last completed action:** Epic source implementation phase: G2 May/July FBoundingVolume raw IsValid BYTE correction; G3 shared source-versioned FStateFrame for flagged UClass and ordinary UObject; G4 direct AActor::Serialize Super-only tail accounted without invented on-disk native bytes for 35-69. All source code modified, only syntax lint (not a test suite), fixed gate list updated; zero new test contracts, zero acceptance promotions and no deployment.
+- **Resume at:** Implementation-first continue unresolved EXISTING G2, then G3 and G4 contracts from PROJECT-STATUS fixed gate table; hold tests as separate later milestone. Do not execute corpus or native exporters now. Explicit changes are unverified and must not be deployed to PRD before verification.
+- **Active changed at:** 2026-10-23T16:36:39+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

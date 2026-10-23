@@ -43,6 +43,28 @@ final class CatalogUE1ClassicNativeObjectReader
             throw new RuntimeException('Native UE1 payload outside file');
         }
         $nativeKind=strtolower($className);
+        if($nativeKind==='actor'){
+            $actorVersion=(int)($pkg->getHeader()['version']??0);
+            if($actorVersion<35||$actorVersion>69){
+                return array_replace($record,[
+                    'status'=>'native_actor_source_version_unverified',
+                    'extension_bytes'=>$nativeLength,
+                ]);
+            }
+            // Epic Unreal v1.200 Engine/Src/UnActor.cpp:351 and UT99
+            // v400 Engine/Src/UnActor.cpp:963: AActor::Serialize archives
+            // Super::Serialize only. The v1.200 InitialState/Group
+            // assignments are runtime copies of already-read legacy
+            // UObject state/group names, NOT extra serialized bytes.
+            return array_replace($record,[
+                'status'=>$nativeLength===0
+                    ?'native_actor_super_only_complete'
+                    :'native_actor_unexpected_native_tail',
+                'extension_bytes'=>$nativeLength,
+                'serialized_native_tail_bytes'=>0,
+                'runtime_actor_state_applied'=>false,
+            ]);
+        }
         if(!in_array($nativeKind,[
             'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix','vectors','verts','bspsurfs','bspnodes','polys','factory','exporter','levelfactorynew','classfactorynew','texturefactorynew',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
