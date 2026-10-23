@@ -1,0 +1,27 @@
+﻿{
+    "ok": true,
+    "checks": 14,
+    "passed": 14,
+    "failed": [],
+    "samples": [
+        {
+            "version": 61,
+            "tag_count": 20001,
+            "archive_bytes": 120007,
+            "first_value": 0,
+            "last_value": 20000
+        },
+        {
+            "version": 69,
+            "tag_count": 20001,
+            "archive_bytes": 120007,
+            "first_value": 0,
+            "last_value": 20000
+        }
+    ],
+    "epic_source_sha256": {
+        "C98": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+        "T99": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    "remaining": "Counts/bounds in C98/T99 FPropertyTag archives; property schema and compiled runtime parity remain separate O06 contracts."
+}
