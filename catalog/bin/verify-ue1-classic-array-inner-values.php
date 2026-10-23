@@ -18,6 +18,10 @@ foreach([
  'UArrayProperty::SerializeItem'=>'void UArrayProperty::SerializeItem( FArchive& Ar, void* Value ) const',
  'UArrayProperty_count'=>'Ar << AR_INDEX(n);',
  'UArrayProperty_inner'=>'Inner->SerializeItem( Ar, p+i*c );',
+ 'UFixedArrayProperty::SerializeItem'=>'void UFixedArrayProperty::SerializeItem( FArchive& Ar, void* Value ) const',
+ 'UFixedArrayProperty_no_prefix'=>'for( INT i=0; i<Count; i++ )',
+ 'UFixedArrayProperty_inner'=>'Inner->SerializeItem( Ar, (BYTE*)Value + i*Inner->ElementSize );',
+ 'UFixedArrayProperty_stored_count'=>'Ar << Inner << Count;',
  'UByteProperty'=>'Ar << *(BYTE*)Value;',
  'UIntProperty'=>'Ar << *(INT*)Value;',
  'UFloatProperty'=>'Ar << *(FLOAT*)Value;',
@@ -33,9 +37,10 @@ $compact=static function(int $n):string{
  $s=chr($first|64);do{$b=$n&127;$n>>=7;$s.=chr($b|($n?128:0));}while($n);
  return $s;
 };
-$build=static function(int $version,string $innerClass,string $value)
+$build=static function(int $version,string $innerClass,string $value,
+ bool $fixed=false,int $fixedCount=3)
  use($compact):string{
- $names=['None','ArrayProperty','TestArray','Core','Class',
+ $names=['None',$fixed?'FixedArrayProperty':'ArrayProperty','TestArray','Core','Class',
          $innerClass,'Inner'];
  $namesBin='';
  foreach($names as $n){$namesBin.=$compact(strlen($n)+1).$n."\0".pack('V',0);}
@@ -43,9 +48,10 @@ $build=static function(int $version,string $innerClass,string $value)
  $import2=$compact(3).$compact(4).pack('V',0).$compact(5);
  $imports=$import1.$import2;
  $size=strlen($value);
- $tag=$compact(2).($size<=255?chr(0x59).chr($size):
-   chr(0x69).pack('v',$size)).$value.$compact(0);
+ $tag=$compact(2).($size<=255?chr($fixed?0x5f:0x59).chr($size):
+   chr($fixed?0x6f:0x69).pack('v',$size)).$value.$compact(0);
  $arrayNative=$compact(0).$compact(2).pack('V2',1,0).$compact(3).$compact(2);
+ if($fixed){$arrayNative.=pack('V',$fixedCount);}
  $arrayBody=$tag.$arrayNative;
  $innerNative=$compact(0).$compact(0).pack('V2',1,0).$compact(3);
  if(in_array($innerClass,['ByteProperty','ObjectProperty'],true)){
@@ -68,25 +74,26 @@ $build=static function(int $version,string $innerClass,string $value)
  return $tables.str_repeat("\0",512-strlen($tables)).$arrayBody.$innerBody;
 };
 $run=static function(string $label,string $innerClass,string $bytes,
- string $expectStatus,?array $want=null)
+ string $expectStatus,?array $want=null,bool $fixed=false,int $fixedCount=3)
  use($build,$check,&$samples):void{
  $file=tempnam(sys_get_temp_dir(),'O06Array');
  if($file===false)throw new RuntimeException('Failed to create test file');
  try{
-  file_put_contents($file,$build(69,$innerClass,$bytes));
+  file_put_contents($file,$build(69,$innerClass,$bytes,$fixed,$fixedCount));
   $pkg=new P($file);
   $check($label.'_valid_UE1_package',$pkg->validatePackage()===[]);
   $tag=T::inspect($file,$pkg,0);
   $check($label.'_source_tag_record',
     $tag['status']==='tag_envelope_decoded'
-    &&$tag['tags'][0]['type']==='ArrayProperty'
+    &&$tag['tags'][0]['type']===($fixed?'FixedArrayProperty':'ArrayProperty')
     &&$tag['tags'][0]['serialized_size']===strlen($bytes));
   $outer=N::inspect($file,$pkg,0,$tag);
   $innerTag=T::inspect($file,$pkg,1);
   $inner=N::inspect($file,$pkg,1,$innerTag);
   $check($label.'_source_native_parent_inner',
     $outer['status']==='native_property_record_complete'
-    &&$outer['property_kind']==='arrayproperty'
+    &&$outer['property_kind']===($fixed?'fixedarrayproperty':'arrayproperty')
+    &&(!$fixed||$outer['subclass_fields']['fixed_count']===$fixedCount)
     &&$outer['subclass_fields']['inner_reference']===2
     &&$inner['status']==='native_property_record_complete');
   $fakeClass=['export_index'=>0,'children_reference'=>1,'super_field_reference'=>0];
@@ -105,7 +112,10 @@ $run=static function(string $label,string $innerClass,string $bytes,
      $sample['preview_first_32']===$want
      &&$sample['element_count']===count($want)
      &&$sample['serialized_sha256']===hash('sha256',$bytes)
-     &&$sample['all_values_previewed']===true);
+     &&$sample['all_values_previewed']===true
+    &&$sample['array_serialization_family']===
+        ($fixed?'fixed_declared_count':'dynamic_counted')
+    &&$sample['count_compact_bytes']===($fixed?0:1));
   }
   $samples[]=['test'=>$label,'class'=>$innerClass,'status'=>$status,
     'count'=>$sample['element_count']??null,
@@ -127,6 +137,23 @@ $run('object_import_export_refs','ObjectProperty',
   'array_inner_values_decoded',[0,-2,1]);
 $run('empty_int_array','IntProperty',$compact(0),
   'array_inner_values_decoded',[]);
+$run('fixed_byte_three','ByteProperty',chr(3).chr(254).chr(0),
+  'array_inner_values_decoded',[3,254,0],true);
+$run('fixed_int_signed','IntProperty',pack('V3',100,0xfffffffe,0),
+  'array_inner_values_decoded',[100,-2,0],true);
+$run('fixed_bool_noncanonical','BoolProperty',chr(1).chr(0).chr(255),
+  'array_inner_values_decoded',[true,false,true],true);
+$run('fixed_name_refs','NameProperty',$compact(2).$compact(6).$compact(0),
+  'array_inner_values_decoded',[2,6,0],true);
+$run('fixed_object_refs','ObjectProperty',
+  $compact(0).$compact(-2).$compact(1),
+  'array_inner_values_decoded',[0,-2,1],true);
+$run('fixed_truncated','ByteProperty',chr(3),
+  'array_inner_data_unverified',null,true);
+$run('fixed_trailing','ByteProperty',chr(3).chr(2).chr(1).chr(0),
+  'array_inner_data_unverified',null,true);
+$run('fixed_unsupported_nested','StrProperty','',
+  'inner_serializer_not_yet_implemented',null,true);
 $run('bad_count_truncated','ByteProperty',$compact(5).chr(4),
   'array_inner_data_unverified');
 $run('bad_count_negative','IntProperty',$compact(-1),

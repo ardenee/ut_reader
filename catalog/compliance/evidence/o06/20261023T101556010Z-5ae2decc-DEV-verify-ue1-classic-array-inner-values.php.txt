@@ -1,0 +1,150 @@
+﻿{
+    "ok": true,
+    "checks": 108,
+    "passed": 108,
+    "failed": [],
+    "samples": [
+        {
+            "test": "byte_three",
+            "class": "ByteProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "int_signed",
+            "class": "IntProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "float_three",
+            "class": "FloatProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "bool_noncanonical",
+            "class": "BoolProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "name_map_refs",
+            "class": "NameProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "object_import_export_refs",
+            "class": "ObjectProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "empty_int_array",
+            "class": "IntProperty",
+            "status": "array_inner_values_decoded",
+            "count": 0,
+            "reason": null
+        },
+        {
+            "test": "fixed_byte_three",
+            "class": "ByteProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_int_signed",
+            "class": "IntProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_bool_noncanonical",
+            "class": "BoolProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_name_refs",
+            "class": "NameProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_object_refs",
+            "class": "ObjectProperty",
+            "status": "array_inner_values_decoded",
+            "count": 3,
+            "reason": null
+        },
+        {
+            "test": "fixed_truncated",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "fixed_trailing",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "fixed_unsupported_nested",
+            "class": "StrProperty",
+            "status": "inner_serializer_not_yet_implemented",
+            "count": null,
+            "reason": null
+        },
+        {
+            "test": "bad_count_truncated",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "bad_count_negative",
+            "class": "IntProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "negative_or_overflow_count"
+        },
+        {
+            "test": "bad_trailing_bytes",
+            "class": "ByteProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "count_and_inner_serialized_bytes_disagree"
+        },
+        {
+            "test": "truncated_compact_reference",
+            "class": "NameProperty",
+            "status": "array_inner_data_unverified",
+            "count": null,
+            "reason": "invalid_compact_inner_reference"
+        },
+        {
+            "test": "unsupported_nested",
+            "class": "StrProperty",
+            "status": "inner_serializer_not_yet_implemented",
+            "count": null,
+            "reason": null
+        }
+    ],
+    "epic_source_sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+    "remaining": "Primitive byte/int/float/bool UArrayProperty inner serializers only. Object/Name/Str/Struct/nested arrays and native heap effects remain unverified."
+}

@@ -20,7 +20,7 @@ final class CatalogUE1ClassicArrayValueReader
     public static function inspect(
         string $valuePath,CatalogUE1PackageReader $valuePkg,
         string $declPath,CatalogUE1PackageReader $declPkg,
-        array $tag,int $innerRef
+        array $tag,int $innerRef,?int $fixedCount=null
     ): array {
         if($innerRef<=0){
             return ['status'=>'inner_property_not_local','source_type_verified'=>false];
@@ -52,7 +52,7 @@ final class CatalogUE1ClassicArrayValueReader
         $size=(int)($tag['serialized_size']??-1);
         $start=(int)($tag['value_offset']??-1);
         $len=filesize($valuePath);
-        if($size<1||$start<0||$len===false||$start>$len-$size){
+        if($size<($fixedCount===null?1:0)||$start<0||$len===false||$start>$len-$size){
             throw new RuntimeException('UE1 array tag outside source archive bounds');
         }
         $fp=fopen($valuePath,'rb');
@@ -68,19 +68,29 @@ final class CatalogUE1ClassicArrayValueReader
            &&hash('sha256',$data)!==$tag['value_sha256']){
             throw new RuntimeException('UE1 array data changed since tag parsing');
         }
-        $pos=0;$head=ord($data[$pos++]);
-        $negative=($head&128)!==0;$count=$head&63;
-        $more=($head&64)!==0;$shift=6;$bytes=1;
-        while($more){
-            if(++$bytes>5||$pos>=strlen($data)){
-                return self::unverified($kind,'compact_count_invalid');
+        $pos=0;
+        if($fixedCount!==null){
+            // T99 UFixedArrayProperty::SerializeItem loops exactly Count
+            // elements, without an AR_INDEX(n) prefix.
+            $count=$fixedCount;$bytes=0;
+            if($count<1||$count>0x7fffffff){
+                return self::unverified($kind,'invalid_declared_fixed_count');
             }
-            $ch=ord($data[$pos++]);
-            $count|=($ch&127)<<$shift;
-            $more=($ch&128)!==0;$shift+=7;
-        }
-        if($negative||$count>0x7fffffff){
-            return self::unverified($kind,'negative_or_overflow_count');
+        }else{
+            $head=ord($data[$pos++]);
+            $negative=($head&128)!==0;$count=$head&63;
+            $more=($head&64)!==0;$shift=6;$bytes=1;
+            while($more){
+                if(++$bytes>5||$pos>=strlen($data)){
+                    return self::unverified($kind,'compact_count_invalid');
+                }
+                $ch=ord($data[$pos++]);
+                $count|=($ch&127)<<$shift;
+                $more=($ch&128)!==0;$shift+=7;
+            }
+            if($negative||$count>0x7fffffff){
+                return self::unverified($kind,'negative_or_overflow_count');
+            }
         }
         // The source loop consumes exactly n inner serialized items.
         // Avoid huge allocations and mismatch between n and Tag.Size.
@@ -132,6 +142,8 @@ final class CatalogUE1ClassicArrayValueReader
             'inner_property_kind'=>$kind,
             'source_type_verified'=>true,
             'element_count'=>$count,
+            'array_serialization_family'=>$fixedCount===null?
+                'dynamic_counted':'fixed_declared_count',
             'element_width_bytes'=>$width>0?$width:null,
             'count_compact_bytes'=>$bytes,
             'serialized_bytes'=>$size,

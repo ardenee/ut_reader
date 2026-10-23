@@ -219,12 +219,15 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
                 continue;
             }
-            if($sourceVersion>=62&&$tagKind==='arrayproperty'
-               &&$declKind==='arrayproperty'){
+            if($sourceVersion>=62
+               &&in_array($tagKind,['arrayproperty','fixedarrayproperty'],true)
+               &&$tagKind===$declKind){
                 $decoded=CatalogUE1ClassicArrayValueReader::inspect(
                     $valuePath,$valueArchivePackage,
                     (string)$decl['owner_path'],$decl['owner_package'],
-                    $tag,(int)($decl['inner_reference']??0));
+                    $tag,(int)($decl['inner_reference']??0),
+                    $tagKind==='fixedarrayproperty'?
+                        (int)($decl['fixed_count']??0):null);
                 if($decoded['status']==='array_inner_values_decoded'){
                     $arrayDecoded++;
                 }else{
@@ -400,6 +403,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     'kind'=>(string)$data['property_kind'],
                     'owner_path'=>$path,'owner_package'=>$pkg,
                     'inner_reference'=>$data['subclass_fields']['inner_reference']??0,
+                    'fixed_count'=>$data['subclass_fields']['fixed_count']??null,
                     'array_dim'=>(int)$data['array_dim'],
                     'property_flags'=>(int)($data['effective_property_flags']??0),
                     'struct_name'=>$structRow['objectNameText']??null,
