@@ -207,6 +207,15 @@ final class CatalogUE1ClassicMeshNativeReader
             $result['lod_z_displace']=$f32();
             $result['remap_anim_verts']=$array('RemapAnimVerts',$u16,2);
             $result['old_frame_verts']=$i32();
+            // UT99 v400 ULodMesh::Serialize uses RemapAnimVerts(v) for
+            // every v < FrameVerts whenever its array is nonempty.
+            // FArray::operator() bounds-checks that source index.
+            if($result['remap_anim_verts']['count']>0
+                &&$result['remap_anim_verts']['count']<$result['frame_verts']){
+                throw new RuntimeException(
+                    'UT99 ULodMesh animation remap shorter than FrameVerts');
+            }
+            $result['runtime_remap_array_index_validated']=true;
             // Load-time vertex permutations and the discarded temporary
             // RemapAnimVerts list are O10 runtime behavior, not extra bytes.
             $result['runtime_vertex_remap_executed']=false;

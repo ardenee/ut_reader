@@ -419,12 +419,33 @@ final class CatalogUE1ClassicNativeObjectReader
                 }
                 $colorOffset=$pos;
                 $colors=$read($count*4);
+                // Unreal v1.200 Engine/Src/UnTex.cpp::UPalette::Serialize
+                // preserves archived alpha. UT99 v400 resets A to 255
+                // for files <66, including old files loaded by UT99.
+                // Package version <=61 alone cannot identify the loader.
+                $ut99AlphaReset=$ver<66;
+                $loadedAlphaReset=$ver>=62&&$ut99AlphaReset;
+                $preview=[];
+                for($i=0;$i<min(16,$count);$i++){
+                    $quad=array_values(unpack('C4',substr($colors,$i*4,4)));
+                    $preview[]=[
+                        'serialized_color_bytes'=>$quad,
+                        'serialized_alpha'=>$quad[3],
+                        'alpha_on_selected_source_load'=>
+                            $loadedAlphaReset?255:$quad[3],
+                        'alpha_if_ut99_v400_load'=>$ut99AlphaReset?255:$quad[3],
+                    ];
+                }
                 return array_replace($record,[
                     'status'=>$pos===$limit?'native_palette_record_complete':'native_palette_has_extension',
                     'color_count'=>$count,'color_data_offset'=>$colorOffset,
                     'color_data_bytes'=>strlen($colors),
                     'color_bytes_sha256'=>hash('sha256',$colors),
-                    'alpha_reset_to_255_at_load'=>$ver<66,
+                    'color_preview'=>$preview,
+                    'color_preview_truncated'=>$count>16,
+                    'alpha_reset_to_255_at_load'=>$loadedAlphaReset,
+                    'alpha_reset_if_ut99_v400_load'=>$ut99AlphaReset,
+                    'alpha_loader_semantics_source_dependent'=>$ver<=61,
                     'extension_bytes'=>$limit-$pos,
                 ]);
             }

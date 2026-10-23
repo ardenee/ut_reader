@@ -108,6 +108,19 @@ final class CatalogUE1ClassicStructNativeReader
         $record['legacy_return_value_offset']=$legacy?$u16():null;
         $record['function_flags']=$u32();
         $record['rep_offset']=($record['function_flags']&0x40)!==0?$u16():null;
+        // UT99 v400 Core/Src/UnClass.cpp::UFunction::Serialize always
+        // discards the archived old ABI fields on LOAD, resetting
+        // NumParms/ParmsSize/ReturnValueOffset before recomputing
+        // from the linked Children UProperty chain. Unreal v1.200
+        // instead leaves the three archived values in memory.
+        $ut99=$version>=62;
+        $record['loaded_parms_size']=$ut99?null:$record['legacy_parms_size'];
+        $record['loaded_num_parms']=$ut99?null:$record['legacy_num_parms'];
+        $record['loaded_return_value_offset']=$ut99?null:$record['legacy_return_value_offset'];
+        $record['ut99_function_recomputed_from_children']=$ut99;
+        $record['ut99_function_precompute_initial_values']=$ut99
+            ?['parms_size'=>0,'num_parms'=>0,'return_value_offset'=>65535]:null;
+        $record['runtime_function_param_chain_linked']=false;
         return array_replace($record,[
             'status'=>$position===$limit?'native_function_record_complete':'native_function_has_extension',
             'extension_bytes'=>$limit-$position,

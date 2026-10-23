@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T17:38:36+00:00",
+  "updated_at_utc": "2026-10-23T17:52:12+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4760,8 +4760,8 @@
       "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions",
-      "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06.",
-      "updated_at_utc": "2026-10-23T11:03:56+00:00",
+      "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 implementation batch: v1.200 archived parameter ABI retained rather than replaced by later engine; source-level implementation only, functional verification and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:52:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -4960,8 +4960,8 @@
       "reader": "CatalogUE1ClassicModelNativeReader.php, CatalogUE1ClassicPrimitiveNativeReader.php and CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-o06-genuine-entry-v61.php",
       "evidence": "Genuine UE1 map L:\\Source\\Engine\\UE1\\Engine\\Maps\\Entry.unr version 61 sha256 2958f568f300dc2f282bb498dc74a3c3a6c4151eee9a71ff8dcacbc8626521e8: 31 exports, 77 UObject tags, three UModel native exports (10,11,22), all 16-byte radius sphere, 18/18 cross-export BSP object reference class checks, DEV genuine verifier 90/90 PASS run 20261023T053420531Z-89ca9618 (earlier FAIL retained). Synthetic v35-69 UModel 63/63 PASS including both 12/16 sphere variants at v41/50/61; 5 affected DEV scripts PASS. No PRD PHP tests.",
-      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only.",
-      "updated_at_utc": "2026-10-23T08:46:13+00:00",
+      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only. G4 implementation batch: v1.200 pre-v53 versioned LightMapIndex format independently decoded, no guessed engine lineage; source-level implementation only, functional verification and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:52:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5135,8 +5135,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
-      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T11:03:59+00:00",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus G4 implementation batch: v1.200 palette alpha preserved, bytewise source colors available; source-level implementation only, functional verification and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:52:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6194,8 +6194,8 @@
       "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicStructNativeReader.php",
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions",
-      "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06.",
-      "updated_at_utc": "2026-10-23T11:03:56+00:00",
+      "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 implementation batch: UT99 recomputes parameter ABI from child fields after reset; wire and unresolved runtime distinction retained; source-level implementation only, functional verification and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:52:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6344,8 +6344,8 @@
       "reader": "CatalogUE1ClassicMeshNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "test": "verify-ue1-classic-mesh-native.php",
       "evidence": "Epic v1.200 Engine/Src/UnMesh.cpp:32-46, Engine/Inc/UnMesh.h; UT99 v400 Engine/Src/UnMesh.cpp:32-52, Engine/Src/ULodMesh.cpp:23-48, Engine/Inc/UnMesh.h, Core/Inc/UnTemplate.h TLazyArray:887-923; 29/29 source-defined UE1 package fixture checks.",
-      "remaining": "Source-ordered UPrimitive inheritance + nonempty Mesh Verts/Tris/AnimSeqs+Notifys/Connects, mesh Bounds/Sphere, VertLinks, Texture refs, BoundingBoxes/Spheres, flags/scale/rot/editor fields, v65 float/v66+ TextureLOD, UT99 absolute lazy SeekPos; LodMesh extra CollapsePoint/FaceLevel/Faces/Wedges/Materials/SpecialFaces/LOD scalars/Remap arrays. 29/29 v35/50/61/62/65/66/69 source fixtures. Genuine real meshes/native engine oracle and all source/branch versions not accepted; arrays over 16 entries only return a typed preview (all entries are still traversed and bounds checked); runtime vertex remapping and LOD rendering are excluded O10/O07.",
-      "updated_at_utc": "2026-10-23T07:37:51+00:00",
+      "remaining": "Source-ordered UPrimitive inheritance + nonempty Mesh Verts/Tris/AnimSeqs+Notifys/Connects, mesh Bounds/Sphere, VertLinks, Texture refs, BoundingBoxes/Spheres, flags/scale/rot/editor fields, v65 float/v66+ TextureLOD, UT99 absolute lazy SeekPos; LodMesh extra CollapsePoint/FaceLevel/Faces/Wedges/Materials/SpecialFaces/LOD scalars/Remap arrays. 29/29 v35/50/61/62/65/66/69 source fixtures. Genuine real meshes/native engine oracle and all source/branch versions not accepted; arrays over 16 entries only return a typed preview (all entries are still traversed and bounds checked); runtime vertex remapping and LOD rendering are excluded O10/O07. G4 implementation batch: source RemapAnimVerts(v) index bounds enforced when remap nonempty; source-level implementation only, functional verification and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:52:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6419,8 +6419,8 @@
       "reader": "CatalogUE1ClassicModelNativeReader.php, CatalogUE1ClassicPrimitiveNativeReader.php and CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-o06-genuine-entry-v61.php",
       "evidence": "Genuine UE1 map L:\\Source\\Engine\\UE1\\Engine\\Maps\\Entry.unr version 61 sha256 2958f568f300dc2f282bb498dc74a3c3a6c4151eee9a71ff8dcacbc8626521e8: 31 exports, 77 UObject tags, three UModel native exports (10,11,22), all 16-byte radius sphere, 18/18 cross-export BSP object reference class checks, DEV genuine verifier 90/90 PASS run 20261023T053420531Z-89ca9618 (earlier FAIL retained). Synthetic v35-69 UModel 63/63 PASS including both 12/16 sphere variants at v41/50/61; 5 affected DEV scripts PASS. No PRD PHP tests.",
-      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only.",
-      "updated_at_utc": "2026-10-23T08:46:13+00:00",
+      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only. G4 implementation batch: UT99 v400 modern LightMapIndex can load older file versions; uniquely complete source alternatives required; source-level implementation only, functional verification and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:52:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6619,8 +6619,8 @@
       "reader": "CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-tagged-properties.php",
       "evidence": "PRD historical PASS at 2026-10-21T16:05:16.3071623Z; catalog\\compliance\\evidence\\o06\\20261021T160515641Z-af18800f-PRD-verify-ue1-classic-tagged-properties.php.txt; scoped test, not full class acceptance",
-      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus",
-      "updated_at_utc": "2026-10-23T11:03:59+00:00",
+      "remaining": "Current pinned 92-package corpus passes; additional source branches/version-specific cases are not covered by corpus G4 implementation batch: UT99 v400 old-file alpha reset separated from v1.200 behavior; source-level implementation only, functional verification and PRD deployment deferred.",
+      "updated_at_utc": "2026-10-23T17:52:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",

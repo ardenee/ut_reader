@@ -33,45 +33,64 @@ final class CatalogUE1ClassicModelNativeReader
         callable $compact,callable $u32,int &$position,int $limit,
         ?callable $seek=null
     ):array{
-        if($version<41||$version>61||$seek===null){
+        if($version>61||$seek===null){
             return self::inspectWire(
-                $pkg,$version,$read,$compact,$u32,$position,$limit,false);
+                $pkg,$version,$read,$compact,$u32,$position,$limit,false,false);
         }
-        $start=$position;$candidates=[];$failures=[];
-        foreach([false,true] as $fullRadius){
+        $start=$position;$candidates=[];$failures=[];$seenLayouts=[];
+        $sphereLayouts=$version>=41?[false,true]:[false];
+        $lightMapLayouts=$version<=52?[true,false]:[false];
+        foreach($sphereLayouts as $fullRadius){
+          foreach($lightMapLayouts as $legacyLightMap){
             $seek($start);
             try{
                 $parsed=self::inspectWire(
-                    $pkg,$version,$read,$compact,$u32,$position,$limit,$fullRadius);
-                $candidates[]=[
-                    'data'=>$parsed,'end'=>$position,
-                    'wire'=>$fullRadius?'sphere_with_radius_16':'sphere_vector_only_12',
-                ];
+                    $pkg,$version,$read,$compact,$u32,$position,$limit,
+                    $fullRadius,$legacyLightMap);
+                // With no LightMap entries, both source operators emit
+                // precisely the same bytes: do not invent ambiguity.
+                $wireEquivalent=$parsed['model']['light_map']===[];
+                $layoutKey=($fullRadius?'full':'short').':'
+                    .($wireEquivalent?'empty':($legacyLightMap?'old':'new'));
+                if(!isset($seenLayouts[$layoutKey])){
+                    $seenLayouts[$layoutKey]=true;
+                    $candidates[]=[
+                        'data'=>$parsed,'end'=>$position,
+                        'wire'=>$fullRadius?'sphere_with_radius_16':'sphere_vector_only_12',
+                        'light_map_wire'=>$wireEquivalent?'wire-equivalent-empty':
+                            ($legacyLightMap?'Unreal-v1200-legacy-lightmap':'UT99-v400-lightmap'),
+                    ];
+                }
             }catch(RuntimeException $ex){
                 $failures[]=$ex->getMessage();
             }
+          }
         }
         $complete=array_values(array_filter($candidates,
             static fn(array $item):bool=>
                 ($item['data']['status']??'')==='native_model_record_complete'));
         if(count($complete)===1){
             $chosen=$complete[0];$seek($chosen['end']);
-            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire']];
+            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire'],
+                'light_map_wire_layout'=>$chosen['light_map_wire']];
         }
         if(count($complete)>1){
             $seek($start);
-            return ['status'=>'native_model_sphere_layout_ambiguous',
-                'possible_sphere_wire_layouts'=>array_column($complete,'wire'),
+            return ['status'=>'native_model_source_wire_layout_ambiguous',
+                'source_layout_candidates'=>array_map(static fn(array $c):array=>
+                    ['sphere'=>$c['wire'],'light_map'=>$c['light_map_wire']],$complete),
                 'unparsed_bytes'=>$limit-$start];
         }
         if(count($candidates)===1){
             $chosen=$candidates[0];$seek($chosen['end']);
-            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire']];
+            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire'],
+                'light_map_wire_layout'=>$chosen['light_map_wire']];
         }
         if(count($candidates)>1){
             $seek($start);
-            return ['status'=>'native_model_sphere_layout_ambiguous',
-                'possible_sphere_wire_layouts'=>array_column($candidates,'wire'),
+            return ['status'=>'native_model_source_wire_layout_ambiguous',
+                'source_layout_candidates'=>array_map(static fn(array $c):array=>
+                    ['sphere'=>$c['wire'],'light_map'=>$c['light_map_wire']],$candidates),
                 'unparsed_bytes'=>$limit-$start];
         }
         $seek($start);
@@ -83,7 +102,7 @@ final class CatalogUE1ClassicModelNativeReader
     private static function inspectWire(
         CatalogUE1PackageReader $pkg,int $version,callable $read,
         callable $compact,callable $u32,int &$position,int $limit,
-        bool $fullRadius
+        bool $fullRadius,bool $sourceLegacyLightMap
     ):array{
         $result=CatalogUE1ClassicPrimitiveNativeReader::readBase(
             $version,$read,$position,$limit,$fullRadius);
@@ -181,9 +200,9 @@ final class CatalogUE1ClassicModelNativeReader
             $model['polys_reference']=$ref('Polys');
         }
         $model['light_map']=$readMany('LightMap',static function()use(
-            $i32,$f32,$vector,$compact,$read,$version):array{
+            $i32,$f32,$vector,$compact,$read,$version,$sourceLegacyLightMap):array{
             $r=['data_offset'=>$i32()];
-            if($version<=37){
+            if($sourceLegacyLightMap&&$version<=37){
                 $r['pan_x']=$f32();$r['pan_y']=$f32();
                 $r['u_clamp']=$compact();$r['v_clamp']=$compact();
                 $spacing=$i32();$r['u_scale']=$spacing;$r['v_scale']=$spacing;
@@ -192,7 +211,7 @@ final class CatalogUE1ClassicModelNativeReader
             }else{
                 $r['pan']=$vector();
                 $r['u_clamp']=$compact();$r['v_clamp']=$compact();
-                if($version<53){
+                if($sourceLegacyLightMap&&$version<53){
                     $scale=$f32();$r['u_scale']=$scale;$r['v_scale']=$scale;
                 }else{
                     $r['u_scale']=$f32();$r['v_scale']=$f32();

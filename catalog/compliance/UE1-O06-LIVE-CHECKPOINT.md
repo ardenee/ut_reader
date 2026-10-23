@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g4-classic-ufiretexture-spark-records`
-- **Stage:** implemented-pending-verification-no-tests
-- **Last completed action:** Implemented source-defined G4 UFireTexture::Sparks in shared CatalogUE1ClassicNativeObjectReader for pinned Unreal v1.200 and UT99 v400: fully consume TArray FSpark 8 ordered BYTE fields Type Heat X Y ByteA ByteB ByteC ByteD, decode typed records with bounded preview plus exact raw archive hash, retain preexisting count/offset/bytes and bounds. Updated existing C98/T99 FireTexture source register records and PROJECT-STATUS; PHP lint and diff check only, no functional tests, no new test contracts, no PRD deploy.
-- **Resume at:** Continue existing G2/G3/G4 unimplemented source serialization fields; code-first. Before O06 acceptance, verify these implementation-only changes independently in later dedicated milestone then deploy SHA-identical PRD; do not repeat already sealed unrelated oracles.
-- **Active changed at:** 2026-10-23T17:38:51+00:00
+- **Contract:** `g3g4-batch-source-legacy-parity`
+- **Stage:** implemented-batch-pending-verification-no-tests
+- **Last completed action:** Implemented 4 existing G3/G4 production gaps in one batch: classic palette alpha, function ABI runtime state, source-specific legacy UModel light-map archive, and ULodMesh remap bounds. Seven existing register entries updated. Syntax and diff integrity checks only. No functional tests, new test contracts, or PRD deployment.
+- **Resume at:** Continue batching remaining G2-G4 production implementation differences, then one separate verification and release phase.
+- **Active changed at:** 2026-10-23T17:52:43+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
