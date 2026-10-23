@@ -80,13 +80,16 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 elseif($type===1&&$tagSize===1){$value=ord($raw);$valueKind='byte';}
                 elseif($type===2&&$tagSize===4){$v=unpack('V',$raw)[1];$value=$v>=0x80000000?$v-0x100000000:$v;$valueKind='int32';}
                 elseif($type===4&&$tagSize===4){$value=unpack('g',$raw)[1];$valueKind='float32';}
-                elseif($type===7&&$version>=40&&$version<=61&&$tagSize>=1
+                elseif($type===7&&$version>=40&&$tagSize>=1
                     &&substr($raw,-1)==="\0"
                     &&strpos($raw,"\0")===strlen($raw)-1){
                     // C98 Core/Inc/UnType.h UStringProperty::SerializeItem
                     // calls Ar.String(char*,StringSize); Core/Src/UnFile.cpp
                     // archives bytes to first NUL, bounded by StringSize.
-                    // This is an ANSI byte sequence; do not guess codepage.
+                    // UT99 v400 additionally upgrades these old fixed-string
+                    // tags to UStrProperty on load, ahead of generic tag
+                    // mismatch checks (Core/Src/UnClass.cpp). Preserve ANSI
+                    // byte identity; do not guess the FromAnsi codepage.
                     $textBytes=substr($raw,0,-1);
                     $ascii=preg_match('/^[\\x09\\x0A\\x0D\\x20-\\x7E]*$/D',
                         $textBytes)===1?$textBytes:null;

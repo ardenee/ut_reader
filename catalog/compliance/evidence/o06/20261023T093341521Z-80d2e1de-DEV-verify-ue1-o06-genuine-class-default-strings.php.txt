@@ -1,0 +1,71 @@
+﻿{
+    "ok": true,
+    "checks": 589,
+    "passed": 589,
+    "failed": [],
+    "strings": 576,
+    "raw_byte_roundtrips": 576,
+    "source_sha256": {
+        "UnFile.cpp": "28501f39289459447b6b186371b9fef9d5bc01b84f87f29475cce5ca06e1f2ac",
+        "UnType.h": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "UnProp.cpp": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b"
+    },
+    "samples": [
+        {
+            "package": "Engine.u",
+            "class": "LevelInfo",
+            "property": "Title",
+            "value": {
+                "raw_ansi_bytes_hex": "556e7469746c6564",
+                "ascii_text": "Untitled",
+                "byte_length": 8,
+                "nul_terminated": true
+            }
+        },
+        {
+            "package": "Engine.u",
+            "class": "Inventory",
+            "property": "PickupMessage",
+            "value": {
+                "raw_ansi_bytes_hex": "536e616767656420616e206974656d",
+                "ascii_text": "Snagged an item",
+                "byte_length": 15,
+                "nul_terminated": true
+            }
+        },
+        {
+            "package": "Engine.u",
+            "class": "Inventory",
+            "property": "M_Activated",
+            "value": {
+                "raw_ansi_bytes_hex": "20616374697661746564",
+                "ascii_text": " activated",
+                "byte_length": 10,
+                "nul_terminated": true
+            }
+        },
+        {
+            "package": "Engine.u",
+            "class": "Inventory",
+            "property": "M_Selected",
+            "value": {
+                "raw_ansi_bytes_hex": "2073656c6563746564",
+                "ascii_text": " selected",
+                "byte_length": 9,
+                "nul_terminated": true
+            }
+        },
+        {
+            "package": "Engine.u",
+            "class": "Inventory",
+            "property": "M_Deactivated",
+            "value": {
+                "raw_ansi_bytes_hex": "206465616374697661746564",
+                "ascii_text": " deactivated",
+                "byte_length": 12,
+                "nul_terminated": true
+            }
+        }
+    ],
+    "remaining": "No guessed ANSI codepage; property slot allocation, native FArchive::String on malformations, and compiled Epic oracle still open."
+}

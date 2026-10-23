@@ -83,6 +83,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         $mismatches=[];$mismatchCount=0;$samples=[];
         $stringBoundUnverified=0;$stringBoundSamples=[];
         $referenceBoundsChecked=0;
+        $legacyStringUpgrades=0;$legacyStringUnsafe=0;$legacyStringSamples=[];
+        $sourceVersion=(int)($valueArchivePackage->getHeader()['version']??0);
         foreach($tags as $tag){
             $key=strtolower((string)($tag['name']??''));
             $decl=$declarations[$key]??null;
@@ -107,8 +109,11 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $declKind=(string)$decl['kind'];
             // Epic UClassProperty derives from UObjectProperty; older
             // FPropertyTag encodes it as an object reference type.
+            $legacyStringUpgrade=$sourceVersion>=62
+                &&$tagKind==='stringproperty'&&$declKind==='strproperty';
             $typeValid=$tagKind===$declKind
-                ||($tagKind==='objectproperty'&&$declKind==='classproperty');
+                ||($tagKind==='objectproperty'&&$declKind==='classproperty')
+                ||$legacyStringUpgrade;
             $arrayValid=(int)($tag['array_index']??-1)>=0
                 &&(int)($tag['array_index']??-1)<(int)$decl['array_dim'];
             $stringCapacity=$decl['string_size']??null;
@@ -128,6 +133,37 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 ||($stringCapacity!==null
                     &&(int)($tag['serialized_size']??-1)>=1
                     &&(int)$tag['serialized_size']<(int)$stringCapacity);
+            if($legacyStringUpgrade){
+                // UT99 v400 Core/Src/UnClass.cpp: old UStringProperty
+                // tag is upgraded to UStrProperty before the normal type,
+                // array-bounds and ShouldSerializeValue checks.
+                // Never call the generic mismatch/skip branch here.
+                $length=(int)($tag['serialized_size']??0);
+                $validBytes=($tag['value_kind']??'')==='legacy_ansi_cstring_bytes'
+                    &&is_array($tag['value']??null)
+                    &&($tag['value']['nul_terminated']??false)===true
+                    &&$length>=1&&$length<=254;
+                if(!$validBytes||!$arrayValid){
+                    // A malformed/unbounded input cannot be described as
+                    // a safe "warn and skip": Epic reaches a separate,
+                    // unchecked legacy-value conversion branch.
+                    $legacyStringUnsafe++;
+                    if(count($legacyStringSamples)<12){
+                        $legacyStringSamples[]=['name'=>$tag['name'],
+                            'reason'=>!$arrayValid?
+                                'legacy_upgrade_array_bounds_unchecked_by_source':
+                                'legacy_upgrade_ansi_stream_unverified',
+                            'serialized_size'=>$length,
+                            'array_index'=>$tag['array_index'],
+                            'declared_array_dim'=>$decl['array_dim']];
+                    }
+                    continue;
+                }
+                $legacyStringUpgrades++;
+                $matched++;
+                if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
+                continue;
+            }
             if(!$typeValid||!$arrayValid){
                 // C98 Core/Src/UnClass.cpp UStruct::SerializeTaggedProperties:
                 // an incompatible known property emits NAME_Warning; its
@@ -205,11 +241,12 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
         }
         return [
-            'status'=>$mismatchCount>0?'known_incompatible_tags_skipped':
+            'status'=>$legacyStringUnsafe>0?'legacy_fixed_string_upgrade_unverified':
+                ($mismatchCount>0?'known_incompatible_tags_skipped':
                 ($unknownSkipped>0?'unknown_property_tags_skipped':
                 ($stringBoundUnverified>0?'fixed_string_archive_size_unverified':
                 ($unresolved===0?'all_available_declarations_match':
-                'imported_or_unknown_properties_unverified'))),
+                'imported_or_unknown_properties_unverified')))),
             'tag_count'=>count($tags),
             'declaration_type_and_array_index_matches'=>$matched,
             'matches_in_this_class'=>$matchedDirect,
@@ -223,6 +260,10 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             'incompatible_tag_warning_samples'=>$mismatches,
             'load_policy'=>'warn_and_skip_incompatible_tag_as_epic_source',
             'value_linker_reference_bounds_checked'=>$referenceBoundsChecked,
+            'legacy_fixed_string_to_dynamic_upgrades'=>$legacyStringUpgrades,
+            'legacy_fixed_string_upgrade_unverified'=>$legacyStringUnsafe,
+            'legacy_fixed_string_upgrade_samples'=>$legacyStringSamples,
+            'legacy_string_codepage_verified'=>false,
             'unresolved_examples'=>$samples,
             'source_declarations_in_this_class'=>$ownFields,
             'source_declarations_in_local_superclasses'=>$parentFields,
