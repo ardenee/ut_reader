@@ -119,11 +119,17 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $stringCapacity=$decl['string_size']??null;
             $structName=$decl['struct_name']??null;
             $tagStructName=(string)($tag['struct_name']['text']??'');
-            // C98 load-time aliases from UStruct::SerializeTaggedProperties.
-            if(strcasecmp($tagStructName,'Rotation')===0){
-                $tagStructName='Rotator';
-            }elseif(strcasecmp($tagStructName,'Region')===0){
-                $tagStructName='PointRegion';
+            // C98 v1.200 has oldver Rotation->Rotator and
+            // Region->PointRegion aliases before comparing struct names.
+            // The UT99 v400 source does NOT have those aliases. Both
+            // engines can serialize overlapping archive versions, so
+            // this follows the narrowly established source family gate.
+            if($sourceVersion<=61){
+                if(strcasecmp($tagStructName,'Rotation')===0){
+                    $tagStructName='Rotator';
+                }elseif(strcasecmp($tagStructName,'Region')===0){
+                    $tagStructName='PointRegion';
+                }
             }
             $structValid=$tagKind!=='structproperty'
                 ||($structName!==null

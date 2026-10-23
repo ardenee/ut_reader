@@ -113,7 +113,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         $f=array_values(unpack('g3',$raw));
                         $value=['x'=>$f[0],'y'=>$f[1],'z'=>$f[2]];
                         $valueKind='fvector_float32_xyz';
-                    }elseif($structName==='rotator'&&$tagSize===12){
+                    }elseif(($structName==='rotator'||
+                        ($version<=61&&$structName==='rotation'))&&$tagSize===12){
                         // FRotator::operator<< archives three INT32 angles.
                         $v=array_values(unpack('V3',$raw));
                         $signed=static fn(int $x):int=>$x>=0x80000000

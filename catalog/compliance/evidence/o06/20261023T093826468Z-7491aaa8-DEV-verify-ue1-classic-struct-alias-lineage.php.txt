@@ -1,0 +1,44 @@
+﻿{
+    "ok": false,
+    "checks": 19,
+    "passed": 17,
+    "failed": [
+        "source_struct_tag_decoded_v61_old",
+        "source_struct_tag_decoded_v69_old"
+    ],
+    "samples": [
+        {
+            "version": 61,
+            "tag": "Rotation",
+            "declared": "Rotator",
+            "schema_status": "all_available_declarations_match",
+            "recognized": 1
+        },
+        {
+            "version": 61,
+            "tag": "Rotator",
+            "declared": "Rotator",
+            "schema_status": "all_available_declarations_match",
+            "recognized": 1
+        },
+        {
+            "version": 69,
+            "tag": "Rotation",
+            "declared": "Rotator",
+            "schema_status": "known_incompatible_tags_skipped",
+            "recognized": 0
+        },
+        {
+            "version": 69,
+            "tag": "Rotator",
+            "declared": "Rotator",
+            "schema_status": "all_available_declarations_match",
+            "recognized": 1
+        }
+    ],
+    "source_sha256": {
+        "C98": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+        "T99": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    "remaining": "This proves source-version-specific native struct-name compatibility; cross-overlapping source lineage v60/61 and compiled loader parity remain unverified."
+}
