@@ -1,0 +1,9 @@
+﻿{
+    "ok": true,
+    "genuine_ut99_packages": 27,
+    "exports_examined": 1335,
+    "genuine_provider_resolutions": 75,
+    "wrong_class_rejections": 75,
+    "private_export_rejections": 74,
+    "failures": []
+}

@@ -21,6 +21,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
 {
     /** @var array<string,array<string,mixed>> */
     private static array $fieldCache=[];
+    /** @var array<string,CatalogUE1PackageReader> */
+    private static array $packageCache=[];
 
     /**
      * @param array<string,mixed> $classRecord
@@ -33,12 +35,13 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         $classRef=(int)($classRecord['export_index']??-1)+1;
         $current=$classRecord;
         $visited=[];$declarations=[];$inherited=false;$importBlocked=false;
-        $ownFields=0;$parentFields=0;
+        $ownFields=0;$parentFields=0;$importedParents=0;
         while($classRef>0){
-            if(isset($visited[$classRef])||count($visited)>=128){
+            $visitKey=$path."\0".$classRef;
+            if(isset($visited[$visitKey])||count($visited)>=128){
                 throw new RuntimeException('UE1 UClass inheritance cycle or depth overflow');
             }
-            $visited[$classRef]=true;
+            $visited[$visitKey]=true;
             $fields=self::fieldChain(
                 $path,$pkg,(int)($current['children_reference']??0));
             foreach($fields as $name=>$decl){
@@ -50,7 +53,19 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
             }
             $next=(int)($current['super_field_reference']??0);
-            if($next<0){$importBlocked=true;break;}
+            if($next<0){
+                // Resolve only an actual imported UClass whose outer is
+                // a genuine root Package import, in a sibling .u file.
+                // No cross-package guessing by class name alone.
+                $resolved=self::importedParent($path,$pkg,$next);
+                if($resolved===null){$importBlocked=true;break;}
+                $path=$resolved['path'];$pkg=$resolved['package'];
+                $classRef=$resolved['ref'];$importedParents++;
+                $current=CatalogUE1ClassicClassMetadataReader::inspect(
+                    $path,$pkg,$classRef-1,false);
+                $inherited=true;
+                continue;
+            }
             if($next===0){break;}
             $export=$pkg->getExports()[$next-1]??null;
             if(!is_array($export)||(int)$export['classIndex']!==0){
@@ -112,9 +127,65 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             'source_declarations_in_this_class'=>$ownFields,
             'source_declarations_in_local_superclasses'=>$parentFields,
             'has_unavailable_imported_superclass'=>$importBlocked,
+            'source_imported_superclasses_resolved'=>$importedParents,
             'value_payload_semantics_verified'=>false,
             'runtime_property_offsets_verified'=>false,
         ];
+    }
+
+    /**
+     * Resolve a superclass ONLY by its package import chain:
+     * Class import (e.g. Pawn) -> outer root Package (Engine) ->
+     * existing sibling Engine.u with one matching exported UClass.
+     * A missing file, nested outer, duplicate class or bad package is
+     * unresolved; no global cross-package name search or hardcoded paths.
+     *
+     * @return array{path:string,package:CatalogUE1PackageReader,ref:int}|null
+     */
+    private static function importedParent(
+        string $path,CatalogUE1PackageReader $pkg,int $reference
+    ):?array {
+        $imports=$pkg->getImports();
+        $class=$imports[-$reference-1]??null;
+        if(!is_array($class)
+            ||strcasecmp((string)($class['classNameText']??''),'Class')!==0){
+            return null;
+        }
+        $outer=(int)($class['outerIndex']??0);
+        if($outer>=0){return null;}
+        $packageImport=$imports[-$outer-1]??null;
+        if(!is_array($packageImport)
+            ||strcasecmp((string)($packageImport['classNameText']??''),'Package')!==0
+            ||(int)($packageImport['outerIndex']??-1)!==0){
+            return null;
+        }
+        $packageName=(string)($packageImport['objectNameText']??'');
+        if(!preg_match('/^[A-Za-z][A-Za-z0-9_]{0,127}$/D',$packageName)){
+            return null;
+        }
+        $candidate=dirname($path).DIRECTORY_SEPARATOR.$packageName.'.u';
+        if(!is_file($candidate)){return null;}
+        $candidate=realpath($candidate);
+        if($candidate===false){return null;}
+        if(!isset(self::$packageCache[$candidate])){
+            try {
+                $linked=new CatalogUE1PackageReader($candidate);
+                if($linked->validatePackage()!==[]){return null;}
+                self::$packageCache[$candidate]=$linked;
+            }catch(RuntimeException){return null;}
+        }
+        $linked=self::$packageCache[$candidate];
+        $className=(string)($class['objectNameText']??'');
+        $match=0;
+        foreach($linked->getExports() as $export){
+            if((int)($export['classIndex']??-1)===0
+               &&strcasecmp((string)$export['objectNameText'],$className)===0){
+                if($match!==0){return null;}
+                $match=(int)$export['index']+1;
+            }
+        }
+        return $match===0?null:[
+            'path'=>$candidate,'package'=>$linked,'ref'=>$match];
     }
 
     /** @return array<string,array{ref:int,kind:string,array_dim:int}> */

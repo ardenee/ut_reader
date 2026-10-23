@@ -1,0 +1,15 @@
+﻿{
+    "ok": true,
+    "total": 92,
+    "passed": 92,
+    "failed": 0,
+    "by_source": {
+        "unrealgold": 65,
+        "ut99": 27
+    },
+    "negative_checks": {
+        "ue2_only_magic": true,
+        "out_of_file_name_offset": true
+    },
+    "failures": []
+}
