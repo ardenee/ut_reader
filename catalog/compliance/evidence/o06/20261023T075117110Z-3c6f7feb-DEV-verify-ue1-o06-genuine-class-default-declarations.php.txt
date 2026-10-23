@@ -1,0 +1,133 @@
+﻿{
+    "ok": true,
+    "checks": 1042,
+    "passed": 1042,
+    "failed": [],
+    "counts": {
+        "classes": 513,
+        "tags": 5344,
+        "matched": 1689,
+        "direct": 861,
+        "inherited": 828,
+        "unresolved_imported_or_unknown": 3655,
+        "declaration_complete_classes": 70,
+        "class_schema_semantics_accepted": 0
+    },
+    "files": [
+        {
+            "file": "Core.u",
+            "classes_with_defaults": 0,
+            "default_property_tags": 0,
+            "declaration_matched": 0
+        },
+        {
+            "file": "Editor.u",
+            "classes_with_defaults": 1,
+            "default_property_tags": 10,
+            "declaration_matched": 10
+        },
+        {
+            "file": "Engine.u",
+            "classes_with_defaults": 59,
+            "default_property_tags": 476,
+            "declaration_matched": 476
+        },
+        {
+            "file": "Fire.u",
+            "classes_with_defaults": 0,
+            "default_property_tags": 0,
+            "declaration_matched": 0
+        },
+        {
+            "file": "IpDrv.u",
+            "classes_with_defaults": 3,
+            "default_property_tags": 7,
+            "declaration_matched": 5
+        },
+        {
+            "file": "UNreal.u",
+            "classes_with_defaults": 450,
+            "default_property_tags": 4851,
+            "declaration_matched": 1198
+        }
+    ],
+    "unresolved_examples": [
+        {
+            "file": "IpDrv.u",
+            "class": "TcpLink",
+            "unresolved": 1,
+            "sample": {
+                "name": "bAlwaysTick",
+                "reason": "imported_superclass_unavailable"
+            }
+        },
+        {
+            "file": "IpDrv.u",
+            "class": "UdpLink",
+            "unresolved": 1,
+            "sample": {
+                "name": "bAlwaysTick",
+                "reason": "imported_superclass_unavailable"
+            }
+        },
+        {
+            "file": "UNreal.u",
+            "class": "ScriptedPawn",
+            "unresolved": 6,
+            "sample": {
+                "name": "bFixedStart",
+                "reason": "imported_superclass_unavailable"
+            }
+        },
+        {
+            "file": "UNreal.u",
+            "class": "DeathMatchGame",
+            "unresolved": 9,
+            "sample": {
+                "name": "bNoMonsters",
+                "reason": "imported_superclass_unavailable"
+            }
+        },
+        {
+            "file": "UNreal.u",
+            "class": "AlarmPoint",
+            "unresolved": 2,
+            "sample": {
+                "name": "bDirectional",
+                "reason": "imported_superclass_unavailable"
+            }
+        },
+        {
+            "file": "UNreal.u",
+            "class": "CreatureCarcass",
+            "unresolved": 6,
+            "sample": {
+                "name": "flies",
+                "reason": "imported_superclass_unavailable"
+            }
+        },
+        {
+            "file": "UNreal.u",
+            "class": "Krall",
+            "unresolved": 22,
+            "sample": {
+                "name": "MeleeRange",
+                "reason": "imported_superclass_unavailable"
+            }
+        },
+        {
+            "file": "UNreal.u",
+            "class": "CreatureChunks",
+            "unresolved": 10,
+            "sample": {
+                "name": "RemoteRole",
+                "reason": "imported_superclass_unavailable"
+            }
+        }
+    ],
+    "source_sha256": {
+        "UnClass.cpp": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+        "UnProp.cpp": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b"
+    },
+    "remaining": "Imported superclass packages must be resolved before class defaults can have full declaration matching; original value payload semantics remain unverified."
+}

@@ -18,7 +18,10 @@ use RuntimeException;
 final class CatalogUE1ClassicClassMetadataReader
 {
     /** @return array<string,mixed> */
-    public static function inspect(string $path, CatalogUE1PackageReader $pkg, int $index): array
+    public static function inspect(
+        string $path, CatalogUE1PackageReader $pkg, int $index,
+        bool $verifyDefaultDeclarations=true
+    ): array
     {
         $exports = $pkg->getExports();
         $ex = $exports[$index] ?? null;
@@ -178,6 +181,11 @@ final class CatalogUE1ClassicClassMetadataReader
             $record['default_property_tags']=$defaults['tags'];
             $record['defaults_tag_count']=count($defaults['tags']);
             $record['defaults_schema_verified']=false;
+            if($record['defaults_tag_count']>0&&$verifyDefaultDeclarations){
+                $record['default_property_declaration_validation']=
+                    CatalogUE1ClassicClassDefaultSchemaReader::inspect(
+                        $path,$pkg,$record,$defaults['tags']);
+            }
             if($record['defaults_tag_count']>0){
                 return array_replace($record,[
                     'status'=>'class_default_tags_structurally_decoded_schema_unverified',
