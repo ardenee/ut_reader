@@ -142,6 +142,24 @@
         "verify-ue1-o06-payload-negatives.php"
       ]
     },
+    "t99-genuine-serializeexpr": {
+      "description": "Genuine installed UT99 v68/v69 UClass ScriptSize/SerializeExpr source parity and bounded token decoding",
+      "readers": [
+        "CatalogUE1ClassicScriptArchiveReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-genuine-ut99-script-archive.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-genuine-compiled-native.php",
+        "verify-ue1-o06-genuine-class-default-declarations.php"
+      ],
+      "gate": [
+        "verify-ue1-v68-v69-genuine-corpus.php",
+        "verify-ue1-o06-payload-negatives.php",
+        "verify-ue1-o06-genuine-ut99-full-scripts.php"
+      ]
+    },
     "ue1-classic-level": {
       "description": "Unreal v1.200 native ULevel and UDatabase base counts",
       "readers": [

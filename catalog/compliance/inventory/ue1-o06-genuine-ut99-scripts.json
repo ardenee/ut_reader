@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "description": "Pinned installed genuine UT99 UE1 v68/v69 .u script packages, source-family-specific engine/archive corpus, for UT99 v400 SerializeExpr parity. System binaries are installed game files; not an independently instrumented runtime oracle.",
+  "source_root": "H:/Epic Games/UnrealTournament/System",
+  "epic_source": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+  "expected": {
+    "files": 6,
+    "exports": 0,
+    "classes": 3194,
+    "tag_count": 11366,
+    "zero_class_parse_exceptions": true
+  },
+  "files": [
+    {
+      "name": "Core.u",
+      "bytes": 59214,
+      "version": 69,
+      "class_exports": 7,
+      "tag_count": 16,
+      "sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70"
+    },
+    {
+      "name": "Engine.u",
+      "bytes": 1149560,
+      "version": 69,
+      "class_exports": 131,
+      "tag_count": 608,
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+    },
+    {
+      "name": "UWindow.u",
+      "bytes": 650600,
+      "version": 69,
+      "class_exports": 101,
+      "tag_count": 149,
+      "sha256": "0a4e185da507717170c46cd2689f260293fa732f37992ca33199255b9322c3a2"
+    },
+    {
+      "name": "UTMenu.u",
+      "bytes": 4723939,
+      "version": 69,
+      "class_exports": 303,
+      "tag_count": 599,
+      "sha256": "d2350634d009b8c0b76157612201eb8c57b4f80bf012bd6fb104e7b9f927fde5"
+    },
+    {
+      "name": "UnrealShare.u",
+      "bytes": 22124694,
+      "version": 68,
+      "class_exports": 360,
+      "tag_count": 3491,
+      "sha256": "d75a7a5a4dbdcbcbfc363eadae810f99dfc4030c203032ed2dc88d255811155d"
+    },
+    {
+      "name": "BotPack.u",
+      "bytes": 39009630,
+      "version": 69,
+      "class_exports": 2292,
+      "tag_count": 6503,
+      "sha256": "101127c7025bdbfd1a0d6fc5856ed93784e7f1da653b9b108c7ed3638acd20c7"
+    }
+  ]
+}

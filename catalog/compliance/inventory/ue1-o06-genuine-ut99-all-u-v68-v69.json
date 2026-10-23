@@ -1,0 +1,254 @@
+{
+  "schema": 1,
+  "source_root": "H:/Epic Games/UnrealTournament/System",
+  "description": "SHA-pinned installed UT99 v68/v69 genuine compiled script packages, including game/mod packages. Validates UE1 UClass archive parsing, NOT actual Epic runtime bytecode execution.",
+  "epic_source": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+  "expected": {
+    "files": 30,
+    "class_exports": 4199,
+    "default_tags": 17700,
+    "exceptions": 0
+  },
+  "files": [
+    {
+      "name": "BotPack.u",
+      "bytes": 39009630,
+      "sha256": "101127c7025bdbfd1a0d6fc5856ed93784e7f1da653b9b108c7ed3638acd20c7",
+      "archive_version": 69,
+      "class_exports": 2292,
+      "tag_count": 6503
+    },
+    {
+      "name": "ChaosUT.u",
+      "bytes": 855918,
+      "sha256": "2580ef10fb09911b4f7b6b68f9de6ab3b9311a81a7e8937c399373b487a92d32",
+      "archive_version": 69,
+      "class_exports": 112,
+      "tag_count": 1814
+    },
+    {
+      "name": "ChaosUTMedia1.u",
+      "bytes": 13267018,
+      "sha256": "b0870f279e01e5842f5877b2fb2ef12a71ea8f764fca04e2f44c34dda66c4fdc",
+      "archive_version": 69,
+      "class_exports": 1,
+      "tag_count": 1
+    },
+    {
+      "name": "ChaosUTMedia2.u",
+      "bytes": 3157597,
+      "sha256": "d49bbc2ae9a0fe54aed4a82abc0a779b95cccbc8ba70e49bd1bb3bf2acc2f189",
+      "archive_version": 69,
+      "class_exports": 1,
+      "tag_count": 0
+    },
+    {
+      "name": "ChaosUTMiscMuts.u",
+      "bytes": 4172,
+      "sha256": "5224e1d3989e343afc0e0d14b230f2cd07733a7a9bae967ebdd9e7e5dc040ea7",
+      "archive_version": 69,
+      "class_exports": 3,
+      "tag_count": 3
+    },
+    {
+      "name": "ChaosUTRHUD.u",
+      "bytes": 12481,
+      "sha256": "d927a76126726af04ef488737af2e8cd3e54be6b786570d17cda9117847d894d",
+      "archive_version": 69,
+      "class_exports": 3,
+      "tag_count": 1
+    },
+    {
+      "name": "Core.u",
+      "bytes": 59214,
+      "sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70",
+      "archive_version": 69,
+      "class_exports": 7,
+      "tag_count": 16
+    },
+    {
+      "name": "Editor.u",
+      "bytes": 126132,
+      "sha256": "f7b013b598cf6b5de220f73ae4eb95d64af6a7c3d493aee32bd18122dc77213d",
+      "archive_version": 69,
+      "class_exports": 26,
+      "tag_count": 86
+    },
+    {
+      "name": "Engine.u",
+      "bytes": 1149560,
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "archive_version": 69,
+      "class_exports": 131,
+      "tag_count": 608
+    },
+    {
+      "name": "Fire.u",
+      "bytes": 15230,
+      "sha256": "62fa5b7e13e80707e67496dd413fbfcf91b393ddc5224e06fd89ba7a18ada038",
+      "archive_version": 69,
+      "class_exports": 6,
+      "tag_count": 0
+    },
+    {
+      "name": "IpDrv.u",
+      "bytes": 20268,
+      "sha256": "ff63e89f3af51381db11a8785a2cc273295e43e3837e43a9e50b54d145f44d99",
+      "archive_version": 69,
+      "class_exports": 5,
+      "tag_count": 9
+    },
+    {
+      "name": "IpServer.u",
+      "bytes": 32144,
+      "sha256": "0968c68d66ec3d0a65fadcd39b21c7157121632dee78f1528bd825d5c57917e3",
+      "archive_version": 69,
+      "class_exports": 6,
+      "tag_count": 7
+    },
+    {
+      "name": "RocketArena.u",
+      "bytes": 657699,
+      "sha256": "4cd6cefc2a3e30b3a5a977d0dff05268f837acb301dd80af5581783ce1806965",
+      "archive_version": 69,
+      "class_exports": 125,
+      "tag_count": 785
+    },
+    {
+      "name": "RocketArenaMedia.u",
+      "bytes": 1621586,
+      "sha256": "296c6efe6d97f77034dd05e04c4abef60a8e7ed185dbdbaa645d9b918b1ca3f7",
+      "archive_version": 69,
+      "class_exports": 3,
+      "tag_count": 0
+    },
+    {
+      "name": "RocketArenaMultiMesh.u",
+      "bytes": 61182,
+      "sha256": "2fd6a1df1771c02576ccac8910c0a5852212c6de65a0f3d713174dafdc538ffa",
+      "archive_version": 69,
+      "class_exports": 13,
+      "tag_count": 206
+    },
+    {
+      "name": "UBrowser.u",
+      "bytes": 329481,
+      "sha256": "e0cf54f341037f8a12a38b59ea6a6b178b923de49bcc358127a57f970562d4cc",
+      "archive_version": 69,
+      "class_exports": 96,
+      "tag_count": 226
+    },
+    {
+      "name": "UMenu.u",
+      "bytes": 1901635,
+      "sha256": "38271d8a600e45668234d5a43a8bef60c281af2e5d4d9d6182cdc9b58cffaa4f",
+      "archive_version": 69,
+      "class_exports": 312,
+      "tag_count": 1073
+    },
+    {
+      "name": "UTBrowser.u",
+      "bytes": 13851,
+      "sha256": "574ee833c869c6b387e829bc9609c17ba805f2f0fa6fb18651a1c90976ed20ca",
+      "archive_version": 69,
+      "class_exports": 8,
+      "tag_count": 16
+    },
+    {
+      "name": "UTChaosMap.u",
+      "bytes": 1574716,
+      "sha256": "bfea98987f9ec59201c37d850feb42e19498756e9792bc23c626c297264b70eb",
+      "archive_version": 69,
+      "class_exports": 11,
+      "tag_count": 76
+    },
+    {
+      "name": "UTMenu.u",
+      "bytes": 4723939,
+      "sha256": "d2350634d009b8c0b76157612201eb8c57b4f80bf012bd6fb104e7b9f927fde5",
+      "archive_version": 69,
+      "class_exports": 303,
+      "tag_count": 599
+    },
+    {
+      "name": "UTServerAdmin.u",
+      "bytes": 105353,
+      "sha256": "2ea6c8be63b774c65207557b0c02ee66d751a763962c778bc6c380782b4ab4ec",
+      "archive_version": 69,
+      "class_exports": 4,
+      "tag_count": 31
+    },
+    {
+      "name": "UWeb.u",
+      "bytes": 28392,
+      "sha256": "2f8fae70947d6d70547c0607f8af341f4f1533383f8fcc9a32293cc4d1acd27b",
+      "archive_version": 69,
+      "class_exports": 9,
+      "tag_count": 5
+    },
+    {
+      "name": "UWindow.u",
+      "bytes": 650600,
+      "sha256": "0a4e185da507717170c46cd2689f260293fa732f37992ca33199255b9322c3a2",
+      "archive_version": 69,
+      "class_exports": 101,
+      "tag_count": 149
+    },
+    {
+      "name": "UnrealI.u",
+      "bytes": 18549361,
+      "sha256": "6aa7d8af348f83981caf5a2a0a7a2073edbae9776aad0625b70d67424546580c",
+      "archive_version": 68,
+      "class_exports": 146,
+      "tag_count": 1540
+    },
+    {
+      "name": "UnrealShare.u",
+      "bytes": 22124694,
+      "sha256": "d75a7a5a4dbdcbcbfc363eadae810f99dfc4030c203032ed2dc88d255811155d",
+      "archive_version": 68,
+      "class_exports": 360,
+      "tag_count": 3491
+    },
+    {
+      "name": "de.u",
+      "bytes": 72169,
+      "sha256": "335e2298c977e4a513d2d1bc76007e0c1a17bdeff5b1a54bee13cd814168d616",
+      "archive_version": 69,
+      "class_exports": 16,
+      "tag_count": 40
+    },
+    {
+      "name": "epiccustommodels.u",
+      "bytes": 2408852,
+      "sha256": "debb0ece16ef8ad33d48a59cda7a3a1ab9b173b2cdf261e4a158683c484842a9",
+      "archive_version": 69,
+      "class_exports": 4,
+      "tag_count": 0
+    },
+    {
+      "name": "multimesh.u",
+      "bytes": 76527,
+      "sha256": "abb2b7ebbd2f8c150ec5de56ae363e09e6a8c520fbcc23c763e72bd15cb5b8c8",
+      "archive_version": 69,
+      "class_exports": 21,
+      "tag_count": 275
+    },
+    {
+      "name": "relics.u",
+      "bytes": 455350,
+      "sha256": "dc443796733c36b3ff88857e1ed5dcc24f1e12c530c86879cb5901da59762870",
+      "archive_version": 69,
+      "class_exports": 73,
+      "tag_count": 137
+    },
+    {
+      "name": "relicsbindings.u",
+      "bytes": 582,
+      "sha256": "2b7f9cb5232956b433f072a5a76ddf47a46ac991c69cd01b3a2260248b684ef0",
+      "archive_version": 69,
+      "class_exports": 1,
+      "tag_count": 3
+    }
+  ]
+}

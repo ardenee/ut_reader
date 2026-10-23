@@ -1,7 +1,7 @@
 {
-  "contract": "t99-struct-field-iterator-filter",
-  "stage": "released-verified",
-  "last_action": "Committed f4e26b64, pushed and SHA deployed single UT99 struct field iterator reader 6A02DDE6...E052; 22/22 focused and 5/5 gate passed; no PRD PHP tests.",
-  "next_step": "Prioritise independent native Epic UT99 runtime oracle and genuine imported UStruct datasets; do not accept nested struct solely from synthetic packages. New source contract must use focused test plan.",
-  "updated_at_utc": "2026-10-23T12:54:22+00:00"
+  "contract": "t99-genuine-serializeexpr",
+  "stage": "ready-to-release",
+  "last_action": "Pinned six installed UT99 v68/v69 .u SHA manifest: 58/58 focus PASS, 3194 UClass/11366 default tags, nonzero local NAME_None index proven; 30-package pinned gate 246/246 PASS, 4199 UClass/17700 tags zero decoding exceptions; scoped gate 6/6 PASS with five earlier matches reused.",
+  "next_step": "Commit source/manifest/fixtures and real evidence, push origin/main, deploy only CatalogUE1ClassicScriptArchiveReader.php to PRD via SHA256 without PRD PHP tests.",
+  "updated_at_utc": "2026-10-23T13:19:26+00:00"
 }

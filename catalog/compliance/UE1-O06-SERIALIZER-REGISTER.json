@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T12:52:14+00:00",
+  "updated_at_utc": "2026-10-23T13:17:45+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -4736,14 +4736,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Pinned Epic v1200 Engine/Src/UnFont.cpp::UFont::Serialize invokes UTexture::Serialize(Ar) followed by Ar<<Characters; Engine/Inc/UnTex.h UFont:UTexture and FFontCharacter four INT32. Eight authentic v61 font exports (Engine.u and UNreal.u) read all mips+256 glyphs, 4096 glyph bytes and zero extension, 94/94 DEV corpus PASS. Old UT99 Pages layout erroneously used before; now only for >61.",
       "remaining": "Native engine direct compare and earlier historical Font source/version proofs outstanding; v<=61 source-family scope only, glyph rasterization/runtime texture handling not represented.",
-      "updated_at_utc": "2026-10-23T12:50:41+00:00",
+      "updated_at_utc": "2026-10-23T13:11:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:50:41.3063176Z",
+        "at_utc": "2026-10-23T13:11:34.7406269Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -4936,14 +4936,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Genuine six v61 compiled UE1 script packages and ten UT99 v66-v68 audio archives SHA-pinned in catalog/compliance/inventory/ue1-o06-genuine-compiled-nontexture.json. DEV full 16-package/15194-export 94/94 PASS incl. 342 true v61 Mesh exports, unique complete 16-byte sphere base/inner bounding sphere/count arrays; previous genuine 331 mesh exceptions corrected. Source C98 UnMesh.cpp order, mesh fixture both 12/16 layouts 38/38 DEV PASS.",
       "remaining": "Compiled native comparison of 16-byte sphere and exact source lineage at v61 unresolved; older archives may use 12-byte branch and are selected only by unique full parse; some 342 meshes have huge packed vertex arrays with 16-entry previews. Native animation remapping/postload not simulated. 513 Class default metadata schemas remain unverified (separate source contracts).",
-      "updated_at_utc": "2026-10-23T12:50:41+00:00",
+      "updated_at_utc": "2026-10-23T13:11:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:50:41.3063176Z",
+        "at_utc": "2026-10-23T13:11:34.7406269Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -5236,14 +5236,14 @@
       "test": "verify-ue1-o06-genuine-class-default-declarations.php",
       "evidence": "Pinned Epic C98 Core/Src/UnClass.cpp UStruct::SerializeTaggedProperties warns/skips unknown property, type mismatch, array bounds, struct ItemName mismatch, CPF_Transient|CPF_Intrinsic (Core/Inc/UnObjBas.h 0x2000/0x1000); loader does not abort whole class. Epic C98 Core/Src/UnLinker.h ULinkerLoad::IndexToObject validates signed export/import and ULinkerLoad::operator<<(FName) validates NameMap; invalid indices are fatal. Production class schema reader traverses UClass/UStruct/UProperty native records including imported superclasses, field structs, flags and source-specific compatibility aliases, records skipped tag reasons, preserves unverified fixed string overflow. Genuine immutable v61 script corpus 513 UClass exports / 5344 defaults all matched declaration; 1507 actual FName/object linker index bounds validated (1423 object, 84 FName), negative invalid object and invalid name throw; 527/527 DEV reference verifier PASS run 20261023T084513224Z-cb8434c7. Class default declarations new warnings and flags/struct source conditions PASS run 20261023T084551845Z-ff62aeb2; 97 exact typed struct values, 576 exact fixed string bytes, 11/11 DEV direct regressions PASS. Git commit pending in current checkpoint.",
       "remaining": "Real compiled v61 declarations and imported parent UProperty struct identities, CPF_Intrinsic/CPF_Transient and array bounds verified. Value reference bounds checked in source archive; runtime property offsets, bool bitmask layout and compiled engine value application remain partial.",
-      "updated_at_utc": "2026-10-23T12:40:14+00:00",
+      "updated_at_utc": "2026-10-23T13:11:39+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:14.7567806Z",
+        "at_utc": "2026-10-23T13:11:38.8837312Z",
         "test_sha256": "6b69c5d58756c6a00d1d6acae513a940db7d2fb12bf0f0195836131dfb4c72e0",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124011039Z-6b33fa05-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt"
+        "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T131135091Z-4ec33b3c-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt"
       }
     },
     {
@@ -5849,11 +5849,11 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicClassMetadataReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
-      "test": "verify-ue1-classic-fstring-archive.php",
-      "evidence": "Epic T99 v400 Core/Src/UnProp.cpp::UStrProperty::SerializeItem calls FArchive<<FString and Core/Src/UnMisc.cpp::operator<<(FArchive&,FString&) serializes signed compact SaveNum; positive A.Num() means ANSI bytes, negative -A.Num() means UTF-16 Unicode units, and count 1 clears string on native load. Production shared FPropertyTag decoder now preserves exact positive/negative string archive including NUL and raw hex with safe ASCII-only text preview; malformed count/terminal pairs remain opaque, and source-linked class-default StrProperty schema reports dynamic_fstring_archive_unverified instead of a false successful value. New source-anchored full v69 .u native UStrProperty export/tag verifier verify-ue1-classic-fstring-archive.php 59/59 DEV PASS at 20261023T094620237Z-6cd32662: ANSI, Unicode, empty, non-ASCII, 303-byte large tag, invalid truncations, no terminator. Eleven affected existing DEV regression scripts PASS including 92-file corpus and 16 compiled packages. No native wchar/heap/locale simulation or genuine v69 StrProperty instances found.",
-      "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. Old fixed StringProperty=>UStrProperty handling now source-recognized for v62+; native TCHAR FromAnsi conversion, instance UObject default memory application, historic overlapping v60/v61 source-family and compiled engine parity are outstanding. 1998 old Rotation/Region compatibility alias recognition now source-gated; full nested struct field application, UT99 historic overlapping version provenance and authentic native oracle remain unaccepted. Signed counted ANSI/UTF16 FString tag archive now source-typed and malformed cases flagged; true converted TCHAR content, compiled native engine oracle, genuine UT99 StrProperty script sample, and other nested property semantics remain unverified.",
-      "updated_at_utc": "2026-10-23T11:03:59+00:00",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php + CatalogUE1ClassicClassMetadataReader.php",
+      "test": "verify-ue1-o06-genuine-ut99-script-archive.php",
+      "evidence": "Epic UT99 v400 Core/Src/UnClass.cpp::UStruct::SerializeExpr EX_LabelTable serializes FLabelEntry and stops when resolved E->Name==NAME_None, NOT when package-local compact FName NameMap index is 0. SHA-pinned genuine installed Engine.u at byte 318020 stores Begin then terminal NAME_None via local name index 3344 (NameMap index 0 also None). Existing reader checked index===0 and overran real 72-byte script; fixed to compare resolved FName name. Six pinned installed .u v68/69 class archives 3194/3194 and 11366 tags, 58/58 focused checks PASS DEV, 20261023T131028993Z-00f114c6. Expanded 30 unchanged installed .u (113065333 bytes, 50250 exports) 4199/4199 UClass and 17700 default tags 0 errors, pinned 246/246 DEV PASS 20261023T131616365Z-482253ed; 5 affected/gate tests PASS reused (4 executed in prior selected gate, no unnecessary reruns). All genuine script archive source hits, but NOT actual compiled native engine runtime execution; O06 acceptance remains OPEN.",
+      "remaining": "Source-scope only: UT99 v400 semantic NAME_None terminator and pinned installed v68/69 archive parser. Differences between v400 source and installed later binaries, bytecode native VM execution, linker runtime object fixups, source build-selection G2 and other O06 G3-G6 gates remain unverified.",
+      "updated_at_utc": "2026-10-23T13:17:45+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6170,14 +6170,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Epic UT99 v400 Engine/Src/UnFont.cpp shows UFont no UTexture inheritance; Ar<<Pages<<CharactersPerPage and FFontPage texture + glyphs in Engine/Inc/UnTex.h; existing version>=62 pages branch preserved. The genuine corpus shows old C98 alternative cannot be applied to ver61.",
       "remaining": "No genuine v62+ UFont Pages export or compiled UT99 oracle tested; this source contract remains partial. Current 16-package corpus tests 8 v61 fonts, not UT99 font pages.",
-      "updated_at_utc": "2026-10-23T12:50:41+00:00",
+      "updated_at_utc": "2026-10-23T13:11:34+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:50:41.3063176Z",
+        "at_utc": "2026-10-23T13:11:34.7406269Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
+        "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       }
     },
     {
@@ -6816,11 +6816,11 @@
         }
       ],
       "status": "PARTIAL",
-      "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicStructNativeReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
-      "test": "verify-ue1-classic-fstring-archive.php",
-      "evidence": "Epic T99 v400 Core/Src/UnProp.cpp::UStrProperty::SerializeItem calls FArchive<<FString and Core/Src/UnMisc.cpp::operator<<(FArchive&,FString&) serializes signed compact SaveNum; positive A.Num() means ANSI bytes, negative -A.Num() means UTF-16 Unicode units, and count 1 clears string on native load. Production shared FPropertyTag decoder now preserves exact positive/negative string archive including NUL and raw hex with safe ASCII-only text preview; malformed count/terminal pairs remain opaque, and source-linked class-default StrProperty schema reports dynamic_fstring_archive_unverified instead of a false successful value. New source-anchored full v69 .u native UStrProperty export/tag verifier verify-ue1-classic-fstring-archive.php 59/59 DEV PASS at 20261023T094620237Z-6cd32662: ANSI, Unicode, empty, non-ASCII, 303-byte large tag, invalid truncations, no terminator. Eleven affected existing DEV regression scripts PASS including 92-file corpus and 16 compiled packages. No native wchar/heap/locale simulation or genuine v69 StrProperty instances found.",
-      "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. Old fixed StringProperty=>UStrProperty handling now source-recognized for v62+; native TCHAR FromAnsi conversion, instance UObject default memory application, historic overlapping v60/v61 source-family and compiled engine parity are outstanding. 1998 old Rotation/Region compatibility alias recognition now source-gated; full nested struct field application, UT99 historic overlapping version provenance and authentic native oracle remain unaccepted. Signed counted ANSI/UTF16 FString tag archive now source-typed and malformed cases flagged; true converted TCHAR content, compiled native engine oracle, genuine UT99 StrProperty script sample, and other nested property semantics remain unverified.",
-      "updated_at_utc": "2026-10-23T11:03:59+00:00",
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php + CatalogUE1ClassicClassMetadataReader.php",
+      "test": "verify-ue1-o06-genuine-ut99-script-archive.php",
+      "evidence": "Epic UT99 v400 Core/Src/UnClass.cpp::UStruct::SerializeExpr EX_LabelTable serializes FLabelEntry and stops when resolved E->Name==NAME_None, NOT when package-local compact FName NameMap index is 0. SHA-pinned genuine installed Engine.u at byte 318020 stores Begin then terminal NAME_None via local name index 3344 (NameMap index 0 also None). Existing reader checked index===0 and overran real 72-byte script; fixed to compare resolved FName name. Six pinned installed .u v68/69 class archives 3194/3194 and 11366 tags, 58/58 focused checks PASS DEV, 20261023T131028993Z-00f114c6. Expanded 30 unchanged installed .u (113065333 bytes, 50250 exports) 4199/4199 UClass and 17700 default tags 0 errors, pinned 246/246 DEV PASS 20261023T131616365Z-482253ed; 5 affected/gate tests PASS reused (4 executed in prior selected gate, no unnecessary reruns). All genuine script archive source hits, but NOT actual compiled native engine runtime execution; O06 acceptance remains OPEN.",
+      "remaining": "Source-scope only: UT99 v400 semantic NAME_None terminator and pinned installed v68/69 archive parser. Differences between v400 source and installed later binaries, bytecode native VM execution, linker runtime object fixups, source build-selection G2 and other O06 G3-G6 gates remain unverified.",
+      "updated_at_utc": "2026-10-23T13:17:45+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",

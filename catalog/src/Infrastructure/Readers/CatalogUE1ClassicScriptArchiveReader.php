@@ -32,12 +32,22 @@ final class CatalogUE1ClassicScriptArchiveReader
         $count = 0;
         $unsupported = null;
         $preview = [];
+        $lastToken = null; $lastTokenArchiveOffset = null;
         $ut99 = $version >= 62;
 
-        $mem = static function(int $n) use (&$iCode, $scriptSize): void {
+        $mem = static function(int $n) use (
+            &$iCode, $scriptSize, &$lastToken, &$lastTokenArchiveOffset, &$position
+        ): void {
             $iCode += $n;
             if ($iCode > $scriptSize) {
-                throw new RuntimeException('UE1 SerializeExpr exceeded decoded script-memory ScriptSize');
+                throw new RuntimeException(sprintf(
+                    'UE1 SerializeExpr exceeded decoded script-memory ScriptSize '
+                    .'(memory=%d/%d, token=%s, token_archive=%s, archive=%d)',
+                    $iCode, $scriptSize,
+                    $lastToken === null ? 'none' : sprintf('0x%02X', $lastToken),
+                    $lastTokenArchiveOffset === null ? 'none' : (string)$lastTokenArchiveOffset,
+                    $position
+                ));
             }
         };
         $byte = static function() use ($read, $mem): int {
@@ -71,7 +81,8 @@ final class CatalogUE1ClassicScriptArchiveReader
         $expression = null;
         $expression = static function(int $depth) use (
             &$expression, &$iCode, &$count, &$unsupported, $scriptSize,
-            &$position, $ut99, $byte, $word, $dword, $ref, $fname, $read, $mem
+            &$position, $ut99, $byte, $word, $dword, $ref, $fname, $read, $mem,
+            &$lastToken, &$lastTokenArchiveOffset
         ): ?array {
             if ($unsupported !== null) { return null; }
             if ($depth > 128 || ++$count > 1000000) {
@@ -80,6 +91,7 @@ final class CatalogUE1ClassicScriptArchiveReader
             $begin = $position;
             $memBegin = $iCode;
             $token = $byte();
+            $lastToken = $token; $lastTokenArchiveOffset = $begin;
             $node = ['token' => $token, 'memory_offset' => $memBegin,
                 'archive_offset' => $begin, 'value' => null, 'children' => []];
 
@@ -157,7 +169,13 @@ final class CatalogUE1ClassicScriptArchiveReader
                         for ($i = 0; $i < 100000; $i++) {
                             $entry = ['name' => $fname(), 'code_offset' => $dword()];
                             if ($i < 32) { $labels[] = $entry; }
-                            if ($entry['name']['index'] === 0) { break; }
+                            // Epic compares the resolved global FName against
+                            // NAME_None, not the package-local NameMap slot.
+                            // Genuine UT99 Engine.u has a terminal None at
+                            // local index 3344, while index 0 is also None.
+                            if (strcasecmp($entry['name']['name'], 'None') === 0) {
+                                break;
+                            }
                         }
                         if ($i >= 100000) {
                             throw new RuntimeException('UE1 EX_LabelTable missing NAME_None terminator');
