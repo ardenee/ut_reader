@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T08:46:58+00:00",
+  "updated_at_utc": "2026-10-23T09:15:43+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -1543,7 +1543,8 @@
       "locations": [
         {
           "path": "Engine/UnActor.cpp",
-          "line": 17
+          "line": 17,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1568,7 +1569,8 @@
       "locations": [
         {
           "path": "Engine/UnDynBsp.cpp",
-          "line": 66
+          "line": 66,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1643,11 +1645,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2241
+          "line": 2241,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2216
+          "line": 2216,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -1672,11 +1676,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2623
+          "line": 2623,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2584
+          "line": 2584,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -1701,11 +1707,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2624
+          "line": 2624,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2585
+          "line": 2585,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -1730,7 +1738,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 129
+          "line": 129,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1755,7 +1764,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 51
+          "line": 51,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1780,7 +1790,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 87
+          "line": 87,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1805,11 +1816,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2390
+          "line": 2390,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2365
+          "line": 2365,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -1834,7 +1847,8 @@
       "locations": [
         {
           "path": "Engine/UnCamera.cpp",
-          "line": 51
+          "line": 51,
+          "build_selected": true
         }
       ],
       "status": "EXCLUDED",
@@ -1859,7 +1873,8 @@
       "locations": [
         {
           "path": "Engine/UnClass.cpp",
-          "line": 405
+          "line": 405,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1884,11 +1899,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 854
+          "line": 854,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 861
+          "line": 861,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -1913,7 +1930,8 @@
       "locations": [
         {
           "path": "Engine/UnClass.cpp",
-          "line": 849
+          "line": 849,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1938,11 +1956,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2348
+          "line": 2348,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2323
+          "line": 2323,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -1967,7 +1987,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 105
+          "line": 105,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -1992,7 +2013,8 @@
       "locations": [
         {
           "path": "Engine/UnFont.cpp",
-          "line": 517
+          "line": 517,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2017,11 +2039,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2617
+          "line": 2617,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2578
+          "line": 2578,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -2046,7 +2070,8 @@
       "locations": [
         {
           "path": "Engine/UnLevel.cpp",
-          "line": 375
+          "line": 375,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2071,7 +2096,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 93
+          "line": 93,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2096,11 +2122,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2608
+          "line": 2608,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2569
+          "line": 2569,
+          "build_selected": false
         }
       ],
       "status": "EXCLUDED",
@@ -2125,11 +2153,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2609
+          "line": 2609,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2570
+          "line": 2570,
+          "build_selected": false
         }
       ],
       "status": "EXCLUDED",
@@ -2154,11 +2184,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2610
+          "line": 2610,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2571
+          "line": 2571,
+          "build_selected": false
         }
       ],
       "status": "EXCLUDED",
@@ -2183,7 +2215,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 91
+          "line": 91,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2208,7 +2241,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 23
+          "line": 23,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2233,7 +2267,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 22
+          "line": 22,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2258,7 +2293,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 21
+          "line": 21,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2283,7 +2319,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 24
+          "line": 24,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2308,7 +2345,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 20
+          "line": 20,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2333,7 +2371,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 261
+          "line": 261,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2358,11 +2397,13 @@
       "locations": [
         {
           "path": "Engine/UnMusic.cpp",
-          "line": 191
+          "line": 191,
+          "build_selected": true
         },
         {
           "path": "Engine/UnMusic.cpp",
-          "line": 459
+          "line": 459,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2387,11 +2428,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 693
+          "line": 693,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 700
+          "line": 700,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -2416,7 +2459,8 @@
       "locations": [
         {
           "path": "Engine/UnTex.cpp",
-          "line": 1270
+          "line": 1270,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2441,7 +2485,8 @@
       "locations": [
         {
           "path": "Engine/UnServer.cpp",
-          "line": 308
+          "line": 308,
+          "build_selected": true
         }
       ],
       "status": "EXCLUDED",
@@ -2466,7 +2511,8 @@
       "locations": [
         {
           "path": "Engine/UnFPoly.cpp",
-          "line": 725
+          "line": 725,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2491,7 +2537,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 17
+          "line": 17,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2516,7 +2563,8 @@
       "locations": [
         {
           "path": "Engine/UnClass.cpp",
-          "line": 817
+          "line": 817,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2541,7 +2589,8 @@
       "locations": [
         {
           "path": "Engine/UnRoute.cpp",
-          "line": 21
+          "line": 21,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2566,7 +2615,8 @@
       "locations": [
         {
           "path": "Engine/UnScript.cpp",
-          "line": 4518
+          "line": 4518,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2591,7 +2641,8 @@
       "locations": [
         {
           "path": "Engine/UnSound.cpp",
-          "line": 220
+          "line": 220,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2616,7 +2667,8 @@
       "locations": [
         {
           "path": "Engine/UnScript.cpp",
-          "line": 4560
+          "line": 4560,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2641,11 +2693,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2178
+          "line": 2178,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2153
+          "line": 2153,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -2670,7 +2724,8 @@
       "locations": [
         {
           "path": "Engine/UnTex.cpp",
-          "line": 496
+          "line": 496,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2695,7 +2750,8 @@
       "locations": [
         {
           "path": "Engine/UnTex.cpp",
-          "line": 502
+          "line": 502,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2745,7 +2801,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 99
+          "line": 99,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2770,7 +2827,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 123
+          "line": 123,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2795,11 +2853,13 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2616
+          "line": 2616,
+          "build_selected": true
         },
         {
           "path": "Engine/UnRes.cpp",
-          "line": 2577
+          "line": 2577,
+          "build_selected": false
         }
       ],
       "status": "PARTIAL",
@@ -2824,7 +2884,8 @@
       "locations": [
         {
           "path": "Engine/UnActor.cpp",
-          "line": 17
+          "line": 17,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2849,7 +2910,8 @@
       "locations": [
         {
           "path": "Engine/UnDynBsp.cpp",
-          "line": 66
+          "line": 66,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2924,7 +2986,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2287
+          "line": 2287,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2949,7 +3012,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2670
+          "line": 2670,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2974,7 +3038,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2671
+          "line": 2671,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -2999,7 +3064,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 123
+          "line": 123,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3024,7 +3090,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 45
+          "line": 45,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3049,7 +3116,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 81
+          "line": 81,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3074,7 +3142,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2437
+          "line": 2437,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3099,7 +3168,8 @@
       "locations": [
         {
           "path": "Engine/UnCamera.cpp",
-          "line": 50
+          "line": 50,
+          "build_selected": true
         }
       ],
       "status": "EXCLUDED",
@@ -3124,7 +3194,8 @@
       "locations": [
         {
           "path": "Engine/UnClass.cpp",
-          "line": 405
+          "line": 405,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3149,7 +3220,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 897
+          "line": 897,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3174,7 +3246,8 @@
       "locations": [
         {
           "path": "Engine/UnClass.cpp",
-          "line": 864
+          "line": 864,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3199,7 +3272,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2394
+          "line": 2394,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3224,7 +3298,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 99
+          "line": 99,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3249,7 +3324,8 @@
       "locations": [
         {
           "path": "Engine/UnFont.cpp",
-          "line": 517
+          "line": 517,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3274,7 +3350,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2664
+          "line": 2664,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3299,7 +3376,8 @@
       "locations": [
         {
           "path": "Engine/UnLevel.cpp",
-          "line": 391
+          "line": 391,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3324,7 +3402,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 87
+          "line": 87,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3349,7 +3428,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2655
+          "line": 2655,
+          "build_selected": true
         }
       ],
       "status": "EXCLUDED",
@@ -3374,7 +3454,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2656
+          "line": 2656,
+          "build_selected": true
         }
       ],
       "status": "EXCLUDED",
@@ -3399,7 +3480,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2657
+          "line": 2657,
+          "build_selected": true
         }
       ],
       "status": "EXCLUDED",
@@ -3424,7 +3506,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 90
+          "line": 90,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3449,7 +3532,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 23
+          "line": 23,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3474,7 +3558,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 22
+          "line": 22,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3499,7 +3584,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 21
+          "line": 21,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3524,7 +3610,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 24
+          "line": 24,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3549,7 +3636,8 @@
       "locations": [
         {
           "path": "Engine/UnMesh.cpp",
-          "line": 20
+          "line": 20,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3574,7 +3662,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 252
+          "line": 252,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3599,11 +3688,13 @@
       "locations": [
         {
           "path": "Engine/UnMusic.cpp",
-          "line": 191
+          "line": 191,
+          "build_selected": true
         },
         {
           "path": "Engine/UnMusic.cpp",
-          "line": 459
+          "line": 459,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3628,7 +3719,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 736
+          "line": 736,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3653,7 +3745,8 @@
       "locations": [
         {
           "path": "Engine/UnTex.cpp",
-          "line": 1295
+          "line": 1295,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3678,7 +3771,8 @@
       "locations": [
         {
           "path": "Engine/UnServer.cpp",
-          "line": 307
+          "line": 307,
+          "build_selected": true
         }
       ],
       "status": "EXCLUDED",
@@ -3703,7 +3797,8 @@
       "locations": [
         {
           "path": "Engine/UnFPoly.cpp",
-          "line": 697
+          "line": 697,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3728,7 +3823,8 @@
       "locations": [
         {
           "path": "Engine/UnPrim.cpp",
-          "line": 17
+          "line": 17,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3753,7 +3849,8 @@
       "locations": [
         {
           "path": "Engine/UnClass.cpp",
-          "line": 832
+          "line": 832,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3778,7 +3875,8 @@
       "locations": [
         {
           "path": "Engine/UnRoute.cpp",
-          "line": 21
+          "line": 21,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3803,7 +3901,8 @@
       "locations": [
         {
           "path": "Engine/UnScript.cpp",
-          "line": 5158
+          "line": 5158,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3828,7 +3927,8 @@
       "locations": [
         {
           "path": "Engine/UnSound.cpp",
-          "line": 220
+          "line": 220,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3853,7 +3953,8 @@
       "locations": [
         {
           "path": "Engine/UnScript.cpp",
-          "line": 5200
+          "line": 5200,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3878,7 +3979,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2224
+          "line": 2224,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3903,7 +4005,8 @@
       "locations": [
         {
           "path": "Engine/UnTex.cpp",
-          "line": 513
+          "line": 513,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3928,7 +4031,8 @@
       "locations": [
         {
           "path": "Engine/UnTex.cpp",
-          "line": 519
+          "line": 519,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -3978,7 +4082,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 93
+          "line": 93,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -4003,7 +4108,8 @@
       "locations": [
         {
           "path": "Engine/UnModel.cpp",
-          "line": 117
+          "line": 117,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",
@@ -4028,7 +4134,8 @@
       "locations": [
         {
           "path": "Engine/UnObj.cpp",
-          "line": 2663
+          "line": 2663,
+          "build_selected": true
         }
       ],
       "status": "PARTIAL",

@@ -32,6 +32,22 @@ def find_symbols():
     found={}
     for branch,root in ROOTS.items():
         if not root.is_dir(): raise RuntimeError("Source root unavailable: "+str(root))
+        # 1997 May has two divergent UObject implementations in UnObj.cpp
+        # and UnRes.cpp. Engine.dsp builds ONLY UnObj.cpp. Preserve the
+        # unbuilt source sightings, but never present them as equal Epic
+        # executable authority.
+        engine_selected=None
+        if branch in ("U86","U97"):
+            project=root/"Engine"/"Engine.dsp"
+            if not project.is_file():
+                raise RuntimeError("Missing 1997 build authority: "+str(project))
+            dsp=project.read_bytes().decode("latin-1")
+            engine_selected={
+                n.casefold() for n in re.findall(
+                    r"^\s*SOURCE=\.[\\/]([^\r\n]+\.cpp)\s*$",dsp,re.M|re.I)
+            }
+            if "unobj.cpp" not in engine_selected:
+                raise RuntimeError("1997 build does not select UnObj.cpp")
         for file in sorted(root.rglob("*.cpp")):
             try: lines=file.read_bytes().decode("latin-1").splitlines()
             except OSError: continue
@@ -59,6 +75,8 @@ def find_symbols():
                 if sym is None: continue
                 key=branch+":"+sym
                 pos={"path":file.relative_to(root).as_posix(),"line":lineno}
+                if engine_selected is not None and file.parent==root/"Engine":
+                    pos["build_selected"]=file.name.casefold() in engine_selected
                 if key not in found:
                     found[key]={"id":key,"branch":branch,"symbol":sym,"locations":[],
                     "status":"DISCOVERED","reader":"","test":"","evidence":"",
@@ -104,7 +122,11 @@ def render(entries):
         "| Serializer / class | Epic source path:line | Acceptance status | Latest named test | Reader / test | Remaining work / evidence |",
         "|---|---|---|---|---|---|"]
         for e in rows:
-            source="; ".join(x["path"]+":"+str(x["line"]) for x in e["locations"])
+            source="; ".join(
+                x["path"]+":"+str(x["line"])+
+                (" [UNBUILT - not serializer authority]"
+                 if x.get("build_selected") is False else "")
+                for x in e["locations"])
             targets="; ".join(v for v in (e.get("reader",""),e.get("test","")) if v) or "—"
             reason="; ".join(v for v in (e.get("remaining",""),e.get("evidence","")) if v) or "—"
             verify=e.get("last_verification")

@@ -1,0 +1,48 @@
+﻿{
+    "ok": true,
+    "checks": 31,
+    "passed": 31,
+    "failed": [],
+    "build_selected": {
+        "may": {
+            "root": "L:/Source/Games/Unreal/Unreal [v0.86x] [1997-05-25]/Src/Engine",
+            "engine_cpp_count": 45,
+            "unobj_selected": true,
+            "unres_selected": false
+        },
+        "july": {
+            "root": "L:/Source/Games/Unreal/Unreal [v0.867] [1997-07-25]/Src/Engine",
+            "engine_cpp_count": 46,
+            "unobj_selected": true,
+            "unres_selected": false
+        }
+    },
+    "source_hash_sha256": {
+        "may": {
+            "Engine.dsp": "a6af540ba870c311ad28f9620627af245f20abb99c72046b7c0e22c57c8d74fd",
+            "UnObj.cpp": "ad0f42f85f6e2f074b429ec890337d1aac9bb0f51ff73221dfa5bf9f917f52ff",
+            "UnRes.cpp": "55e1d0d8b8f59a9700364b02a2227bcc6e6f7703afcda7040379f78f205a0dae"
+        },
+        "july": {
+            "Engine.dsp": "180bfccabb25ded64e351f98c9620c571dfbd39ca42d7f27518d58c32e8ff3b7",
+            "UnObj.cpp": "bbd4f3ca569e6aa38f9979e97a2bcfe7d4ce8c14cd200392e1cd08466fcf5b33"
+        }
+    },
+    "unbuilt_obsolete_source_sightings": [
+        "U86:UArray",
+        "U86:UBitArray",
+        "U86:UBitMatrix",
+        "U86:UBuffer",
+        "U86:UDatabase",
+        "U86:UEnumDef",
+        "U86:UInts",
+        "U86:ULinker",
+        "U86:ULinkerLoad",
+        "U86:ULinkerSave",
+        "U86:UObject",
+        "U86:UTextBuffer",
+        "U86:UWords"
+    ],
+    "required_policy": "Trust only build-selected UnObj.cpp and Engine.dsp for May UObject archive semantics; do not use duplicate unbuilt UnRes.cpp when asserting parity.",
+    "remaining": "A verified compiler source selection is not a compiled engine oracle or full G2 source acceptance."
+}

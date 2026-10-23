@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T08:46:14.4785097Z",
-    "head_commit":  "5278b492",
+    "updated_at_utc":  "2026-10-23T09:15:43.5920431Z",
+    "head_commit":  "17e42c09",
     "current_target":  "DEV",
     "current_source_sha256":  "2a9522482529d8328fac8355d459950f42b03d0c58dc43d2468555672ae3a7fb",
     "tests":  [
@@ -255,6 +255,18 @@
                       "run_id":  "20261021T155844524Z-9a3e39d1",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261021T155844524Z-9a3e39d1-verify-ue1-o05-acceptance.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-1997-build-selected-source.php",
+                      "test":  "verify-ue1-o06-1997-build-selected-source.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T09:15:43.5809977Z",
+                      "source_sha256":  "2a9522482529d8328fac8355d459950f42b03d0c58dc43d2468555672ae3a7fb",
+                      "test_sha256":  "e39ff9cb6f41680a98daa7e8c6af938e277f21be2bf55be77ed31a903cb45ee4",
+                      "run_id":  "20261023T091543288Z-16d96666",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T091543288Z-16d96666-DEV-verify-ue1-o06-1997-build-selected-source.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-c227-emitter-serialize-contracts.php",
