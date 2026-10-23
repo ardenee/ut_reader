@@ -1,0 +1,56 @@
+﻿{
+    "ok": true,
+    "checks": 31,
+    "passed": 31,
+    "failed": [],
+    "examples": [
+        {
+            "test": "dynamic_two_native_structs",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "fixed_two_native_structs",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "persistent_transient_float_skipped",
+            "status": "array_inner_values_decoded",
+            "reason": null,
+            "element_count": 2
+        },
+        {
+            "test": "member_value_truncated",
+            "status": "array_inner_data_unverified",
+            "reason": "nested_struct_fstring_unverified",
+            "element_count": null
+        },
+        {
+            "test": "unresolved_struct_import",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_reference_not_local",
+            "element_count": null
+        },
+        {
+            "test": "unresolved_struct_inheritance",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_superclass_inheritance_unverified",
+            "element_count": null
+        },
+        {
+            "test": "field_next_cycle",
+            "status": "inner_struct_layout_unverified",
+            "reason": "struct_property_chain_invalid",
+            "element_count": null
+        }
+    ],
+    "epic_sha256": {
+        "UnProp.cpp": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+        "UnClass.cpp": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+        "UnType.h": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65"
+    },
+    "remaining": "Only local non-inherited UStruct with full source-resolved primitive/FString member declarations. Inherited or imported UStruct, nested struct member, arbitrary container and compiled UE1 runtime memory are unverified."
+}

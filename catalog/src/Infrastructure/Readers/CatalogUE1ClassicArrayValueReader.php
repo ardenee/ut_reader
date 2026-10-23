@@ -1,7 +1,8 @@
 <?php
 /**
  * UT99 v400 UArrayProperty::SerializeItem: AR_INDEX(n), then each
- * Inner->SerializeItem. Source-scoped primitive inner serializers only.
+ * Inner->SerializeItem. Source-scoped leaf serializers and strictly
+ * resolved local UStruct::SerializeBin field-order decoding only.
  *
  * Does not emulate allocation, object creation or arbitrary nested struct
  * serialization. Source-verified nested FString byte streams retain their
@@ -46,11 +47,23 @@ final class CatalogUE1ClassicArrayValueReader
             'intproperty','floatproperty'=>4,
             'nameproperty','objectproperty','classproperty'=>-1,
             'strproperty'=>-2,
+            'structproperty'=>-3,
             default=>0,
         };
         if($width===0){
             return ['status'=>'inner_serializer_not_yet_implemented',
                 'inner_property_kind'=>$kind,'source_type_verified'=>true];
+        }
+        $structLayout=null;
+        if($kind==='structproperty'){
+            $structLayout=CatalogUE1ClassicStructArrayValueReader::resolve(
+                $declPath,$declPkg,
+                (int)($native['subclass_fields']['struct_reference']??0));
+            if($structLayout['status']!=='struct_local_field_layout_resolved'){
+                return ['status'=>'inner_struct_layout_unverified',
+                    'reason'=>$structLayout['status'],
+                    'source_type_verified'=>true];
+            }
         }
         $size=(int)($tag['serialized_size']??-1);
         $start=(int)($tag['value_offset']??-1);
@@ -103,7 +116,14 @@ final class CatalogUE1ClassicArrayValueReader
         }
         $values=[];
         for($i=0;$i<$count;$i++){
-            if($width===-2){
+            if($width===-3){
+                $decoded=CatalogUE1ClassicStructArrayValueReader::readAt(
+                    $data,$pos,$structLayout,count($values)<32);
+                if($decoded['status']!=='struct_field_values_decoded'){
+                    return self::unverified($kind,$decoded['status']);
+                }
+                $value=$decoded;
+            }elseif($width===-2){
                 // UT99 UStrProperty::SerializeItem delegates to FString's
                 // signed-count archive. Each element has its OWN count
                 // and may independently choose ANSI or Unicode.

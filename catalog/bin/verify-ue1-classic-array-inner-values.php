@@ -164,7 +164,7 @@ $run('fixed_truncated','ByteProperty',chr(3),
 $run('fixed_trailing','ByteProperty',chr(3).chr(2).chr(1).chr(0),
   'array_inner_data_unverified',null,true);
 $run('fixed_unsupported_nested','StructProperty','',
-  'inner_serializer_not_yet_implemented',null,true);
+  'inner_struct_layout_unverified',null,true);
 $strVal=static function(int $count,string $payload,?string $ascii):array{
  return ['signed_character_count'=>$count,
   'archive_encoding'=>$count<0?'unicode_16bit_le':'ansi_8bit',
@@ -218,7 +218,7 @@ $run('bad_trailing_bytes','ByteProperty',$compact(1).chr(9).chr(10),
 $run('truncated_compact_reference','NameProperty',$compact(1).chr(0x40),
   'array_inner_data_unverified');
 $run('unsupported_nested','StructProperty',$compact(0),
-  'inner_serializer_not_yet_implemented');
+  'inner_struct_layout_unverified');
 foreach([
  'invalid_name_reference'=>['NameProperty',$compact(1).$compact(7),
    'UE1 array inner FName linker index invalid'],
