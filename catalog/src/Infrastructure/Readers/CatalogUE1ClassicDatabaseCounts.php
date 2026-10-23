@@ -15,9 +15,12 @@ final class CatalogUE1ClassicDatabaseCounts
      *  @return array{count:int,capacity:int,counts_in_uobject_prefix:bool}
      */
     public static function read(
-        int $version, callable $signedInt, ?array $legacy, int $remaining
+        int $version, callable $signedInt, ?array $legacy, int $remaining,
+        ?string $sourceFamily=null
     ): array {
-        if($version<40){
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        $inPrefix=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1&&$version<40;
+        if($inPrefix){
             if($legacy===null || !isset($legacy['count'],$legacy['capacity'])){
                 throw new RuntimeException('UE1 database legacy UObject counts unavailable');
             }
@@ -31,6 +34,6 @@ final class CatalogUE1ClassicDatabaseCounts
         if($num<0 || $max<$num || $num>$remaining){
             throw new RuntimeException('UE1 database Num/Max invalid or outside export SerialSize');
         }
-        return ['count'=>$num,'capacity'=>$max,'counts_in_uobject_prefix'=>$version<40];
+        return ['count'=>$num,'capacity'=>$max,'counts_in_uobject_prefix'=>$inPrefix];
     }
 }

@@ -458,6 +458,14 @@ Five distinct July custom data methods moved to MAPPED using the existing source
 
 **12 C98/T99 geometry source methods moved to MAPPED:** BSP nodes/surfaces, FPoly, UVectors and UVerts database records including C98 SerializeData methods. Each C++ method location and native PHP source contract is recorded per row. Production UVectors/UVerts reader now carries explicitly chosen UT99 game-source family for legacy packages instead of treating package version as game provenance. **Current register PARTIAL 25, MAPPED 229, EXCLUDED 38.** G5 native/corpus verification separately deferred.
 
+### O06 classic level/model/mesh source mapping (2026-10-23)
+
+**11 C98/T99 native hierarchy methods moved to MAPPED:** ULevel and ULevelBase (including C98 generated SerializeData), UModel, UMesh and UT99 ULodMesh. Source-method locations and source-ordered binary archive readers recorded per entry. Production shared database count handling now follows selected Epic/UT99 source for older packages; UT99 ULevelBase URL no longer gated by Unreal v1.200 package version. Native actor fixups, mesh remapping, PostLoad, runtime memory and compiled G5 oracle separately deferred. **Register PARTIAL 14, MAPPED 240, EXCLUDED 38.**
+
+### O06 Unreal classic UDatabase base mapping (2026-10-23)
+
+Epic Unreal v1.200 UDatabase::Serialize is now MAPPED to the source-versioned DbNum/DbMax reader and existing virtual derived SerializeData native readers. No extra generic element data is asserted. Source-only implementation mapping; C++ runtime Realloc is not an archive byte operation. **Register PARTIAL 13, MAPPED 241, EXCLUDED 38.**
+
 ### O06 implementation queue — Epic code parity first (2026-10-23)
 
 **No new test contracts or corpus runs are authorised for this implementation batch.** Source-review changes below are code-only; mark `IMPLEMENTED — VERIFICATION DEFERRED`, not `ACCEPTED`. Continue implementing remaining **existing** G2, then G3, then G4 requirements before arranging verification as a separate milestone.

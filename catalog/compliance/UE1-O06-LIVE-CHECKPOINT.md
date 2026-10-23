@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g4-classic-bsp-geometry-mapping`
-- **Stage:** mapped-source-implementation-verification-deferred
-- **Last completed action:** Second classic batch completed: map 12 C98/T99 source serializer methods for UBspNodes UBspSurfs UPolys UVectors UVerts (including C98 generated SerializeData via IMPLEMENT_DB_CLASS). Correct CatalogUE1ClassicDatabaseNativeReader source-family reporting to honor explicit UT99 v400 loader rather than package-only version and propagate family from native object dispatcher. C98/T99 methods grounded in pinned Epic source; O06 register 25 PARTIAL 229 MAPPED 38 EXCLUDED. PHP syntax and git diff checks only, no native oracle tests or PRD deployment.
-- **Resume at:** Continue 25 remaining C98/T99/C227 source paths, especially complex UClass UStruct UState UFunction and ULevel UModel UMesh. Source-defined production differences first, map only when code complete. Verification and PRD deployment separate.
-- **Active changed at:** 2026-10-23T19:15:09+00:00
+- **Contract:** `g3g4-level-model-mesh-database`
+- **Stage:** implemented-mapped-verification-deferred
+- **Last completed action:** Third classic O06 batch: 12 more C98/T99 serializers source-mapped: ULevel/ULevelBase and generated C98 SerializeData, UModel, UMesh, UT99 ULodMesh, C98 base UDatabase. Production corrections: count source-family overrides in CatalogUE1ClassicDatabaseCounts and BSP/Polys/Vector/Level native readers; UT99 ULevelBase always archives URL regardless old version, unlike v1.200 >=59 gate; selected family recorded rather than guessed. Existing source archive handlers matched pinned Epic source, no tests. Register now 13 PARTIAL, 241 MAPPED, 38 EXCLUDED. 10 classic UObject/UClass/UStruct/UState/UFunction and 3 C227 game overrides still partial because source bytecode contingencies or game-specific save filtering unresolved. No PRD deployment.
+- **Resume at:** Implement the remaining 13 PARTIAL. For classic UStruct/UClass recursive bytecode, close actual missing Epic token paths before mapping; C227 emitter/rope game-source save-time overrides must match game code. Then perform later G5 independent native/corpus validation and safe PRD deployment.
+- **Active changed at:** 2026-10-23T19:22:23+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

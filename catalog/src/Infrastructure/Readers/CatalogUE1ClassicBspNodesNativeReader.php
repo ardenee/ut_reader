@@ -26,7 +26,7 @@ final class CatalogUE1ClassicBspNodesNativeReader
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
         $db=CatalogUE1ClassicDatabaseCounts::read(
-            $version,$signed,$legacyDatabase,$limit-$pos);
+            $version,$signed,$legacyDatabase,$limit-$pos,$family);
         // FBspNode: Plane(16), ZoneMask(8), Flags(1),
         // seven AR_INDEX (>=7), three BYTE(3), two INT32(8) = 43.
         // UBspNodes always adds >=1 byte for NumZones after the records.

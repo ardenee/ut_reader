@@ -20,7 +20,7 @@ final class CatalogUE1ClassicBspSurfsNativeReader
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
         $db=CatalogUE1ClassicDatabaseCounts::read(
-            $version,$int,$legacyDatabase,$limit-$pos);
+            $version,$int,$legacyDatabase,$limit-$pos,$family);
         // FBspSurf: object ref + DWORD flags + six compact indices
         // + SWORD PanU/V + object ref, at least 16 bytes per record.
         if($db['count']>intdiv($limit-$pos,16)){

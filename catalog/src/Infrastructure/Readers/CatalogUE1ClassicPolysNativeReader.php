@@ -53,7 +53,7 @@ final class CatalogUE1ClassicPolysNativeReader
             return [(float)$v[1],(float)$v[2],(float)$v[3]];
         };
         $db=CatalogUE1ClassicDatabaseCounts::read(
-            $version,$int,$legacyDatabase,$limit-$pos);
+            $version,$int,$legacyDatabase,$limit-$pos,$family);
         $min=$version<45?64:62;
         if($db['count']>intdiv($limit-$pos,$min)){
             throw new RuntimeException('UPolys serialized count exceeds object bounds');

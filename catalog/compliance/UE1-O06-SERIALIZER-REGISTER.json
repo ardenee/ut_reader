@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T19:14:36+00:00",
+  "updated_at_utc": "2026-10-23T19:21:46+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -5803,12 +5803,12 @@
           "line": 34
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
-      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Verified inherited UDatabase actor SerializeData only through ULevel for relevant versions; other concrete database subclasses and genuine compiled engine/corpus are outside this fixture.",
-      "updated_at_utc": "2026-10-23T05:33:01+00:00",
+      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal; SOURCE_IMPLEMENTED_DB_BASE 2026-10-23: Epic v1.200 UnModel.cpp UDatabase::Serialize count gates and virtual SerializeData dispatched to typed native readers.",
+      "remaining": "Verified inherited UDatabase actor SerializeData only through ULevel for relevant versions; other concrete database subclasses and genuine compiled engine/corpus are outside this fixture. | FILE SERIALIZATION MAPPED: native memory Realloc and postload independent from persisted file fields; G5 verification deferred.",
+      "updated_at_utc": "2026-10-23T19:21:46+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -5816,6 +5816,16 @@
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
         "source_sha256": "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T053300810Z-3f8a9b34-DEV-verify-ue1-classic-level-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnModel.cpp:34",
+        "source_contract": "UObject archive, inherited v<40 TempNum/TempMax or v>=40 DbNum/DbMax, virtual subclass SerializeData",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicDatabaseCounts.php",
+        "concrete_handlers": "CatalogUE1ClassicDatabaseNativeReader, CatalogUE1ClassicLevelNativeReader, CatalogUE1ClassicBspNodesNativeReader, CatalogUE1ClassicBspSurfsNativeReader, CatalogUE1ClassicPolysNativeReader",
+        "verification_status": "DEFERRED",
+        "runtime_realloc_executed": false
       }
     },
     {
@@ -6074,12 +6084,12 @@
           "line": 150
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
-      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. G4 source implementation (2026-10-23; verification deferred): Unreal v1.200 Engine/Inc/UnReach.h FReachSpec::operator<< loads pre-v54 FLOAT CollisionRadius/Height then assigns them to INT. Production ULevel returns source INT truncation for representable floats while retaining original FLOAT wire values; out-of-range conversions are marked unspecified, not fabricated.",
-      "updated_at_utc": "2026-10-23T17:28:21+00:00",
+      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 C98 Engine/Src/UnLevel.cpp:150 -> CatalogUE1ClassicLevelNativeReader.php complete native archive path.",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. G4 source implementation (2026-10-23; verification deferred): Unreal v1.200 Engine/Inc/UnReach.h FReachSpec::operator<< loads pre-v54 FLOAT CollisionRadius/Height then assigns them to INT. Production ULevel returns source INT truncation for representable floats while retaining original FLOAT wire values; out-of-range conversions are marked unspecified, not fabricated. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6087,6 +6097,16 @@
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
         "source_sha256": "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T053300810Z-3f8a9b34-DEV-verify-ue1-classic-level-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnLevel.cpp:150",
+        "source_contract": "ULevelBase native actor database + URL + FReachSpec, model, time, travel fields",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicLevelNativeReader.php",
+        "php_completed_status": "native_level_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6099,12 +6119,12 @@
           "line": 221
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php / CatalogUE1ClassicDatabaseCounts.php",
       "test": "verify-ue1-classic-level-native.php",
-      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.",
-      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope.",
-      "updated_at_utc": "2026-10-23T05:33:01+00:00",
+      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 C98 Engine/Src/UnLevel.cpp:221 -> CatalogUE1ClassicLevelNativeReader.php complete native archive path.",
+      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6112,6 +6132,16 @@
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
         "source_sha256": "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T053300810Z-3f8a9b34-DEV-verify-ue1-classic-level-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnLevel.cpp:221",
+        "source_contract": "ULevelBase native actor database + URL + FReachSpec, model, time, travel fields",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicLevelNativeReader.php",
+        "php_completed_status": "native_level_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6124,12 +6154,12 @@
           "line": 20
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
-      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
-      "updated_at_utc": "2026-10-23T16:44:52+00:00",
+      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 C98 Engine/Src/UnLevel.cpp:20 -> CatalogUE1ClassicLevelNativeReader.php complete native archive path.",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6137,6 +6167,16 @@
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
         "source_sha256": "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T053300810Z-3f8a9b34-DEV-verify-ue1-classic-level-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnLevel.cpp:20",
+        "source_contract": "UDatabase actor refs, source versioned level URL and runtime-only GC refs",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicLevelNativeReader.php",
+        "php_completed_status": "native_level_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6149,12 +6189,12 @@
           "line": 50
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php / CatalogUE1ClassicDatabaseCounts.php",
       "test": "verify-ue1-classic-level-native.php",
-      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.",
-      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope.",
-      "updated_at_utc": "2026-10-23T05:33:01+00:00",
+      "evidence": "Epic v1.200 source-defined on-disk macro implementation; DEV named full-package fixtures PASS (Vectors/Verts 71/71, ULevel 50/50). Source assertions included. Source/test hash and last run in append-only O06 test journal.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 C98 Engine/Src/UnLevel.cpp:50 -> CatalogUE1ClassicLevelNativeReader.php complete native archive path.",
+      "remaining": "Genuine C98 v35-v61 native export and compiled engine oracle not yet demonstrated; other subclasses and independently versioned source families not covered; runtime pointer fixups out of scope. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6162,6 +6202,16 @@
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
         "source_sha256": "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T053300810Z-3f8a9b34-DEV-verify-ue1-classic-level-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnLevel.cpp:50",
+        "source_contract": "UDatabase actor refs, source versioned level URL and runtime-only GC refs",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicLevelNativeReader.php",
+        "php_completed_status": "native_level_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6174,12 +6224,12 @@
           "line": 32
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicMeshNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-o06-genuine-compiled-native.php",
-      "evidence": "Genuine six v61 compiled UE1 script packages and ten UT99 v66-v68 audio archives SHA-pinned in catalog/compliance/inventory/ue1-o06-genuine-compiled-nontexture.json. DEV full 16-package/15194-export 94/94 PASS incl. 342 true v61 Mesh exports, unique complete 16-byte sphere base/inner bounding sphere/count arrays; previous genuine 331 mesh exceptions corrected. Source C98 UnMesh.cpp order, mesh fixture both 12/16 layouts 38/38 DEV PASS.",
-      "remaining": "Compiled native comparison of 16-byte sphere and exact source lineage at v61 unresolved; older archives may use 12-byte branch and are selected only by unique full parse; some 342 meshes have huge packed vertex arrays with 16-entry previews. Native animation remapping/postload not simulated. 513 Class default metadata schemas remain unverified (separate source contracts). ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "Genuine six v61 compiled UE1 script packages and ten UT99 v66-v68 audio archives SHA-pinned in catalog/compliance/inventory/ue1-o06-genuine-compiled-nontexture.json. DEV full 16-package/15194-export 94/94 PASS incl. 342 true v61 Mesh exports, unique complete 16-byte sphere base/inner bounding sphere/count arrays; previous genuine 331 mesh exceptions corrected. Source C98 UnMesh.cpp order, mesh fixture both 12/16 layouts 38/38 DEV PASS.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 C98 Engine/Src/UnMesh.cpp:32 -> CatalogUE1ClassicMeshNativeReader.php complete native archive path.",
+      "remaining": "Compiled native comparison of 16-byte sphere and exact source lineage at v61 unresolved; older archives may use 12-byte branch and are selected only by unique full parse; some 342 meshes have huge packed vertex arrays with 16-entry previews. Native animation remapping/postload not simulated. 513 Class default metadata schemas remain unverified (separate source contracts). ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6187,6 +6237,16 @@
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
         "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnMesh.cpp:32",
+        "source_contract": "UPrimitive base plus source mesh arrays, lazy payloads, bounds, links and scales",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php",
+        "php_completed_status": "native_mesh_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -6199,12 +6259,12 @@
           "line": 291
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicModelNativeReader.php, CatalogUE1ClassicPrimitiveNativeReader.php and CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-o06-genuine-entry-v61.php",
-      "evidence": "Genuine UE1 map L:\\Source\\Engine\\UE1\\Engine\\Maps\\Entry.unr version 61 sha256 2958f568f300dc2f282bb498dc74a3c3a6c4151eee9a71ff8dcacbc8626521e8: 31 exports, 77 UObject tags, three UModel native exports (10,11,22), all 16-byte radius sphere, 18/18 cross-export BSP object reference class checks, DEV genuine verifier 90/90 PASS run 20261023T053420531Z-89ca9618 (earlier FAIL retained). Synthetic v35-69 UModel 63/63 PASS including both 12/16 sphere variants at v41/50/61; 5 affected DEV scripts PASS. No PRD PHP tests.",
-      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only. G4 implementation batch: v1.200 pre-v53 versioned LightMapIndex format independently decoded, no guessed engine lineage; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "Genuine UE1 map L:\\Source\\Engine\\UE1\\Engine\\Maps\\Entry.unr version 61 sha256 2958f568f300dc2f282bb498dc74a3c3a6c4151eee9a71ff8dcacbc8626521e8: 31 exports, 77 UObject tags, three UModel native exports (10,11,22), all 16-byte radius sphere, 18/18 cross-export BSP object reference class checks, DEV genuine verifier 90/90 PASS run 20261023T053420531Z-89ca9618 (earlier FAIL retained). Synthetic v35-69 UModel 63/63 PASS including both 12/16 sphere variants at v41/50/61; 5 affected DEV scripts PASS. No PRD PHP tests.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 C98 Engine/Src/UnModel.cpp:291 -> CatalogUE1ClassicModelNativeReader.php complete native archive path.",
+      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only. G4 implementation batch: v1.200 pre-v53 versioned LightMapIndex format independently decoded, no guessed engine lineage; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -6212,6 +6272,16 @@
         "test_sha256": "7347e46366cd92edd248801549611bb101bc4ac1b9b179b6732be96390d4600c",
         "source_sha256": "2a9522482529d8328fac8355d459950f42b03d0c58dc43d2468555672ae3a7fb",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T084613124Z-b87ce691-DEV-verify-ue1-o06-genuine-entry-v61.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "C98",
+        "epic_source": "Engine/Src/UnModel.cpp:291",
+        "source_contract": "UPrimitive base plus versioned model arrays, BSP records and lightmap source format",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicModelNativeReader.php",
+        "php_completed_status": "native_model_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7805,12 +7875,12 @@
           "line": 186
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
-      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
-      "updated_at_utc": "2026-10-23T16:44:52+00:00",
+      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 T99 Engine/Src/UnLevel.cpp:186 -> CatalogUE1ClassicLevelNativeReader.php complete native archive path.",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7818,6 +7888,16 @@
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
         "source_sha256": "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T053300810Z-3f8a9b34-DEV-verify-ue1-classic-level-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnLevel.cpp:186",
+        "source_contract": "ULevelBase native actor database + URL + FReachSpec, model, time, travel fields",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicLevelNativeReader.php",
+        "php_completed_status": "native_level_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7830,12 +7910,12 @@
           "line": 22
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicLevelNativeReader.php via CatalogUE1ClassicNativeObjectReader.php and CatalogUE1ClassicTaggedPropertyReader.php",
       "test": "verify-ue1-classic-level-native.php",
-      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal",
-      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion.",
-      "updated_at_utc": "2026-10-23T16:44:52+00:00",
+      "evidence": "DEV source-anchored full-package v35/39/40/41/50/53/54/58/59/60/61/62/63/64/69 regression 50/50 PASS including 6 direct Epic C++ contract checks and malformed actor bounds, 4 affected named DEV regressions PASS; evidence in append-only journal; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 T99 Engine/Src/UnLevel.cpp:22 -> CatalogUE1ClassicLevelNativeReader.php complete native archive path.",
+      "remaining": "Source-defined native actor database, URL, reach specs, model, time, 16 text refs and travel data handled; source overlap v60/v61 shares on-disk actor layout, but genuine matching levels and native executable parity still open; runtime fixups O10. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7843,6 +7923,16 @@
         "test_sha256": "605c82cf808ee09b8f985a9b3675056972d5c8d45c8226de3e469c62607d2a48",
         "source_sha256": "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T053300810Z-3f8a9b34-DEV-verify-ue1-classic-level-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnLevel.cpp:22",
+        "source_contract": "UDatabase actor refs, source versioned level URL and runtime-only GC refs",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicLevelNativeReader.php",
+        "php_completed_status": "native_level_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7889,12 +7979,12 @@
           "line": 23
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicMeshNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "test": "verify-ue1-classic-mesh-native.php",
-      "evidence": "Epic v1.200 Engine/Src/UnMesh.cpp:32-46, Engine/Inc/UnMesh.h; UT99 v400 Engine/Src/UnMesh.cpp:32-52, Engine/Src/ULodMesh.cpp:23-48, Engine/Inc/UnMesh.h, Core/Inc/UnTemplate.h TLazyArray:887-923; 29/29 source-defined UE1 package fixture checks.",
-      "remaining": "Source-ordered UPrimitive inheritance + nonempty Mesh Verts/Tris/AnimSeqs+Notifys/Connects, mesh Bounds/Sphere, VertLinks, Texture refs, BoundingBoxes/Spheres, flags/scale/rot/editor fields, v65 float/v66+ TextureLOD, UT99 absolute lazy SeekPos; LodMesh extra CollapsePoint/FaceLevel/Faces/Wedges/Materials/SpecialFaces/LOD scalars/Remap arrays. 29/29 v35/50/61/62/65/66/69 source fixtures. Genuine real meshes/native engine oracle and all source/branch versions not accepted; arrays over 16 entries only return a typed preview (all entries are still traversed and bounds checked); runtime vertex remapping and LOD rendering are excluded O10/O07. G4 implementation batch: source RemapAnimVerts(v) index bounds enforced when remap nonempty; source-level implementation only, functional verification and PRD deployment deferred.",
-      "updated_at_utc": "2026-10-23T17:52:12+00:00",
+      "evidence": "Epic v1.200 Engine/Src/UnMesh.cpp:32-46, Engine/Inc/UnMesh.h; UT99 v400 Engine/Src/UnMesh.cpp:32-52, Engine/Src/ULodMesh.cpp:23-48, Engine/Inc/UnMesh.h, Core/Inc/UnTemplate.h TLazyArray:887-923; 29/29 source-defined UE1 package fixture checks.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 T99 Engine/Src/ULodMesh.cpp:23 -> CatalogUE1ClassicMeshNativeReader.php complete native archive path.",
+      "remaining": "Source-ordered UPrimitive inheritance + nonempty Mesh Verts/Tris/AnimSeqs+Notifys/Connects, mesh Bounds/Sphere, VertLinks, Texture refs, BoundingBoxes/Spheres, flags/scale/rot/editor fields, v65 float/v66+ TextureLOD, UT99 absolute lazy SeekPos; LodMesh extra CollapsePoint/FaceLevel/Faces/Wedges/Materials/SpecialFaces/LOD scalars/Remap arrays. 29/29 v35/50/61/62/65/66/69 source fixtures. Genuine real meshes/native engine oracle and all source/branch versions not accepted; arrays over 16 entries only return a typed preview (all entries are still traversed and bounds checked); runtime vertex remapping and LOD rendering are excluded O10/O07. G4 implementation batch: source RemapAnimVerts(v) index bounds enforced when remap nonempty; source-level implementation only, functional verification and PRD deployment deferred. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7902,6 +7992,16 @@
         "test_sha256": "3722fe692b8330b3e900d9aebc4181ac14ce6255d7c0bbf25b6e28ca6581fb56",
         "source_sha256": "557ce439d98b6ca71318f6ac3659c1325fcee3b6651573f3bf41ebe453d22531",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T073750881Z-0248b17f-DEV-verify-ue1-classic-mesh-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/ULodMesh.cpp:23",
+        "source_contract": "UMesh archive plus collapsed face/wedge/material and LOD/remap archive fields",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php",
+        "php_completed_status": "native_lodmesh_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7950,12 +8050,12 @@
           "line": 32
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicMeshNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-mesh-native.php",
-      "evidence": "DEV full-package v35/50/61 and v62/65/66/69 synthetic archive verifier 38/38 PASS after adding 12-byte/16-byte old mesh variants; C98 genuine compiled 342 mesh examples 94/94 corpus PASS. UT99 source v400 Ar<<Verts/Tris/AnimSeqs etc.",
-      "remaining": "Independent native UT99>=62 real Mesh package with nonempty lazy array and compiled engine oracle missing; source-version family and runtime animation/LOD behaviors remain outstanding. G4 source implementation 2026-10-23 (VERIFICATION DEFERRED): UT99 v400 Engine/Src/UnMesh.cpp::UMesh::Serialize asserts Tris(0).iVertex[0] < Verts.Num() when Tris.Num()>0. Production source-versioned >=62 UMesh and ULodMesh reader now checks the actual decoded first triangle reference against serialized Verts count, while <=61 Unreal v1.200 remains untouched because it lacks this assertion. No new test, gate acceptance or PRD deploy. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "DEV full-package v35/50/61 and v62/65/66/69 synthetic archive verifier 38/38 PASS after adding 12-byte/16-byte old mesh variants; C98 genuine compiled 342 mesh examples 94/94 corpus PASS. UT99 source v400 Ar<<Verts/Tris/AnimSeqs etc.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 T99 Engine/Src/UnMesh.cpp:32 -> CatalogUE1ClassicMeshNativeReader.php complete native archive path.",
+      "remaining": "Independent native UT99>=62 real Mesh package with nonempty lazy array and compiled engine oracle missing; source-version family and runtime animation/LOD behaviors remain outstanding. G4 source implementation 2026-10-23 (VERIFICATION DEFERRED): UT99 v400 Engine/Src/UnMesh.cpp::UMesh::Serialize asserts Tris(0).iVertex[0] < Verts.Num() when Tris.Num()>0. Production source-versioned >=62 UMesh and ULodMesh reader now checks the actual decoded first triangle reference against serialized Verts count, while <=61 Unreal v1.200 remains untouched because it lacks this assertion. No new test, gate acceptance or PRD deploy. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7963,6 +8063,16 @@
         "test_sha256": "3722fe692b8330b3e900d9aebc4181ac14ce6255d7c0bbf25b6e28ca6581fb56",
         "source_sha256": "557ce439d98b6ca71318f6ac3659c1325fcee3b6651573f3bf41ebe453d22531",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T073750881Z-0248b17f-DEV-verify-ue1-classic-mesh-native.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnMesh.cpp:32",
+        "source_contract": "UPrimitive base plus source mesh arrays, lazy payloads, bounds, links and scales",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php",
+        "php_completed_status": "native_mesh_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {
@@ -7975,12 +8085,12 @@
           "line": 182
         }
       ],
-      "status": "PARTIAL",
+      "status": "MAPPED",
       "reader": "CatalogUE1ClassicModelNativeReader.php, CatalogUE1ClassicPrimitiveNativeReader.php and CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-o06-genuine-entry-v61.php",
-      "evidence": "Genuine UE1 map L:\\Source\\Engine\\UE1\\Engine\\Maps\\Entry.unr version 61 sha256 2958f568f300dc2f282bb498dc74a3c3a6c4151eee9a71ff8dcacbc8626521e8: 31 exports, 77 UObject tags, three UModel native exports (10,11,22), all 16-byte radius sphere, 18/18 cross-export BSP object reference class checks, DEV genuine verifier 90/90 PASS run 20261023T053420531Z-89ca9618 (earlier FAIL retained). Synthetic v35-69 UModel 63/63 PASS including both 12/16 sphere variants at v41/50/61; 5 affected DEV scripts PASS. No PRD PHP tests.",
-      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only. G4 implementation batch: UT99 v400 modern LightMapIndex can load older file versions; uniquely complete source alternatives required; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions.",
-      "updated_at_utc": "2026-10-23T18:07:24+00:00",
+      "evidence": "Genuine UE1 map L:\\Source\\Engine\\UE1\\Engine\\Maps\\Entry.unr version 61 sha256 2958f568f300dc2f282bb498dc74a3c3a6c4151eee9a71ff8dcacbc8626521e8: 31 exports, 77 UObject tags, three UModel native exports (10,11,22), all 16-byte radius sphere, 18/18 cross-export BSP object reference class checks, DEV genuine verifier 90/90 PASS run 20261023T053420531Z-89ca9618 (earlier FAIL retained). Synthetic v35-69 UModel 63/63 PASS including both 12/16 sphere variants at v41/50/61; 5 affected DEV scripts PASS. No PRD PHP tests.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 T99 Engine/Src/UnModel.cpp:182 -> CatalogUE1ClassicModelNativeReader.php complete native archive path.",
+      "remaining": "Actual v61 source lineage ambiguous: pinned UT99 v400 FSphere operator reads FVector-only (12B) at Ver<=61, but this genuine map has 16B sphere; select only a uniquely complete archive, otherwise explicitly report ambiguity. Full native engine differential oracle and broader authentic classic map corpus still required; runtime PostLoad and non-file behavior are O10. Partial evidence only. G4 implementation batch: UT99 v400 modern LightMapIndex can load older file versions; uniquely complete source alternatives required; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
+      "updated_at_utc": "2026-10-23T19:20:12+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
@@ -7988,6 +8098,16 @@
         "test_sha256": "7347e46366cd92edd248801549611bb101bc4ac1b9b179b6732be96390d4600c",
         "source_sha256": "2a9522482529d8328fac8355d459950f42b03d0c58dc43d2468555672ae3a7fb",
         "log": "catalog\\compliance\\evidence\\o06\\20261023T084613124Z-b87ce691-DEV-verify-ue1-o06-genuine-entry-v61.php.txt"
+      },
+      "source_mapping": {
+        "implementation_status": "IMPLEMENTED",
+        "source_branch": "T99",
+        "epic_source": "Engine/Src/UnModel.cpp:182",
+        "source_contract": "UPrimitive base plus versioned model arrays, BSP records and lightmap source format",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicModelNativeReader.php",
+        "php_completed_status": "native_model_record_complete",
+        "source_family_selected_before_decode": true,
+        "verification_status": "DEFERRED"
       }
     },
     {

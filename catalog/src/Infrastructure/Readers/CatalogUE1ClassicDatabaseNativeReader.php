@@ -37,7 +37,7 @@ final class CatalogUE1ClassicDatabaseNativeReader
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
         $db=CatalogUE1ClassicDatabaseCounts::read(
-            $version,$int,$legacyDatabase,$limit-$position);
+            $version,$int,$legacyDatabase,$limit-$position,$family);
         $n=$db['count'];
         $minimum=$kind==='vectors'?12:2;
         $suffix=$kind==='verts'?1:0;

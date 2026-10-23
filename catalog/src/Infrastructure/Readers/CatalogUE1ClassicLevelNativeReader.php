@@ -26,8 +26,9 @@ final class CatalogUE1ClassicLevelNativeReader
     public static function inspect(
         CatalogUE1PackageReader $pkg,int $ver,callable $read,
         callable $compact,callable $uint,int &$position,int $limit,
-        ?array $legacyDatabase=null
+        ?array $legacyDatabase=null,?string $sourceFamily=null
     ): array {
+        $family=CatalogUE1ClassicSourceFamily::select($ver,$sourceFamily);
         $int=static function()use($uint):int {
             $v=$uint(); return $v>=0x80000000?$v-0x100000000:$v;
         };
@@ -83,8 +84,8 @@ final class CatalogUE1ClassicLevelNativeReader
                     'portal'=>$str(),'options'=>$stringArray('FURL.Op'),
                     'port'=>$int(),'valid'=>$int()];
         };
-        $result=['archive_family'=>$ver<60?'Unreal-v1200':
-                   ($ver<=61?'Unreal-v1200-and-UT99-v400-common-actor-wire':'UT99-v400'),
+        $result=['archive_family'=>$family,
+                 'legacy_actor_database_wire_equivalent'=>$ver>=60&&$ver<=61,
                  'actors_runtime_fixed_up'=>false];
         // Epic v1.200 ULevelBase inherits UDatabase. UDatabase::Serialize
         // reads TempNum/TempMax from the UObject prefix for versions <40,
@@ -92,11 +93,11 @@ final class CatalogUE1ClassicLevelNativeReader
         // Epic UT99 ULevelBase serializes the same count/capacity + actors
         // for every supported non-transaction package archive (>=60).
         $database=CatalogUE1ClassicDatabaseCounts::read(
-            $ver,$int,$legacyDatabase,$limit-$position);
+            $ver,$int,$legacyDatabase,$limit-$position,$family);
         $actors=[];
         for($i=0;$i<$database['count'];$i++){$actors[]=$ref('Actors');}
         $result['actor_database']=$database+['actors'=>$actors];
-        if($ver>=59){
+        if($family===CatalogUE1ClassicSourceFamily::UT99_V400||$ver>=59){
             $result['url']=$url();
         }else{
             $result['url']=null;
