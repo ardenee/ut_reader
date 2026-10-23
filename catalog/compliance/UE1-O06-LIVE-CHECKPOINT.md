@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `o06-partial-to-mapped-implementation`
-- **Stage:** implementation-mapping-in-progress-verification-deferred
-- **Last completed action:** Changed O06 status semantics to MAPPED=source-to-PHP production implementation complete; verification is separately DEFERRED G5, not a reason to keep entry PARTIAL. PROMOTED 71 source-evidenced registrations in existing register: 36 original May/July UDatabase subclass operators (18 per branch), 12 original May/July UBitArray UBitMatrix UBspNodes UBspSurfs UMusic USound, and all 23 G1-ACCEPTED original 1996 saveable classes. Each of the 71 mapped entries now has source_mapping metadata and retained evidence; correct counts 197 PARTIAL->126, 57 MAPPED->128, 38 EXCLUDED unchanged. No functional tests, no PRD deployment or G2-G6 acceptance.
-- **Resume at:** Continue processing 126 PARTIAL registrations as concrete source-to-production work, prioritizing remaining U86/U97 19 per branch, then C98/T99 classic paths; promote as soon as source serialization complete, keep G5 verification separately. No repeat testing until mappings completed.
-- **Active changed at:** 2026-10-23T18:43:15+00:00
+- **Contract:** `g2-1997-source-mapping-complete`
+- **Stage:** implemented-mapping-verification-deferred
+- **Last completed action:** Mapped all 38 remaining U86/U97 May/July 1997 source registrations: 22 native class/bytecode readers, 14 UObject/UClass/UProperties and actor subclasses, 2 generic UDatabase base. Three production fixes: UStackTree zero-record source-equivalent archive, class-bin object instances with imported root UClass through declared dependency providers, explicit zero-record-data base UDatabase serializer. Current O06 88 PARTIAL 166 MAPPED 38 EXCLUDED; U86 43 mapped 6 excluded, U97 43 mapped 6 excluded. PHP syntax and diff check only. No functional tests or PRD deploy.
+- **Resume at:** Proceed through remaining 88 PARTIAL source registrations in D97 C98 C227 T99, implement Epic-source mismatches and promote completed production handlers. G5 native compatibility and PRD deployment remain separate.
+- **Active changed at:** 2026-10-23T18:54:31+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

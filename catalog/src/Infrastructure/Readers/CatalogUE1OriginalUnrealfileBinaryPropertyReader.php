@@ -41,7 +41,33 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                 'class_name'=>$o['class_name'],'property_values'=>[],
                 'runtime_object_constructed'=>false];
             $matches=$byName[$key]??[];
-            if(count($matches)!==1){
+            $externalClass=null;
+            // Epic loads imported UClass definitions before serializing
+            // instance properties; resolve a unique imported class using
+            // only the caller's declared dependency providers.
+            if($matches===[]&&$declaredDependencyProviders!==[]){
+                $imports=[];
+                foreach($objects as $candidate){
+                    if($candidate['kind']==='import'
+                        &&strcasecmp((string)$candidate['class_name'],'Class')===0
+                        &&strcasecmp((string)$candidate['name'],(string)$o['class_name'])===0){
+                        $imports[]=(int)$candidate['index'];
+                    }
+                }
+                if(count($imports)===1){
+                    $resolution=CatalogUE1OriginalUnrealfileExternalSchemaResolver::resolve(
+                        $path,$imports[0],$declaredDependencyProviders);
+                    if(($resolution['status']??null)==='resolved'){
+                        $externalClass=$resolution;
+                        $entry['imported_class_object_index']=$imports[0];
+                    }else{
+                        $entry['external_schema_status']=$resolution['status'];
+                    }
+                }elseif(count($imports)>1){
+                    $entry['external_schema_status']='ambiguous_imported_UClass_records';
+                }
+            }
+            if(count($matches)!==1&&$externalClass===null){
                 $entry['status']='source_UClass_schema_unavailable_or_ambiguous';
                 $results[]=$entry;continue;
             }
@@ -50,8 +76,15 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
                 $entry['status']='incomplete_native_stack_prefix';
                 $results[]=$entry;continue;
             }
-            $all=[];$visited=[];$class=$matches[0];$missingParent=false;$externalSources=[];
-            while(true){
+            $all=[];$visited=[];$class=$matches[0]??null;$missingParent=false;$externalSources=[];
+            if($externalClass!==null){
+                // The resolver supplies current-class then parent-class
+                // property descriptors in Epic's source-defined order.
+                foreach($externalClass['property_descriptors'] as $prop){
+                    if((int)$prop['bin']===1)$all[]=$prop;
+                }
+                $externalSources=$externalClass['sources'];
+            }else while(true){
                 $classId=(int)$class['object_index'];
                 if(isset($visited[$classId]))throw new RuntimeException('Cyclic original UClass ancestry');
                 $visited[$classId]=true;
@@ -186,7 +219,8 @@ final class CatalogUE1OriginalUnrealfileBinaryPropertyReader
             $entry['external_property_schema_sources']=$externalSources;
             $entry['source_lineage']=$sourceLineage;
             $entry['runtime_external_classes_loaded']=false;
-            $entry['class_schema_object_index']=$matches[0]['object_index'];
+            $entry['class_schema_object_index']=$matches[0]['object_index']??null;
+            $entry['source_UClass_schema_imported']=$externalClass!==null;
             $entry['consumed_class_member_bytes']=$pos-(int)$stack['serialized_prefix_bytes'];
             $entry['remaining_class_member_bytes']=$left;
             $entry['status']=$left===0?'native_binary_properties_decoded':'native_binary_properties_with_extension';

@@ -18,6 +18,10 @@ use RuntimeException;
 final class CatalogUE1OriginalUnrealfileDatabaseDataReader
 {
     private const CLASSES=[
+        // Epic May/July UnObj.cpp::UDatabase::StandardSerializeData
+        // is empty. The base persists Num/Max but no record bytes;
+        // typed subclasses override this virtual source operation.
+        'database'=>['Database',0,'source_base_no_record_data'],
         'buffer'=>['Buffer',1,'bytes'],
         'textbuffer'=>['TextBuffer',1,'text_bytes'],
         'words'=>['Words',2,'words'],
@@ -76,8 +80,12 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                 $num=(int)$words[1];$max=(int)$words[2];
                 if($num>$max||$num>10000000||$max>10000000)
                     throw new RuntimeException('Invalid original UDatabase active/capacity pair');
-                if($num>intdiv(PHP_INT_MAX,$stride)||$num*$stride!==(int)$o['file_data_size'])
+                if($stride===0){
+                    if((int)$o['file_data_size']!==0)
+                        throw new RuntimeException('Epic base UDatabase persists no record data');
+                }elseif($num>intdiv(PHP_INT_MAX,$stride)||$num*$stride!==(int)$o['file_data_size']){
                     throw new RuntimeException('Original UDatabase Num records disagree with serialized data length');
+                }
                 $extraHeader=$remaining-$required;
                 if($strict&&$extraHeader!==0)
                     throw new RuntimeException('Original primitive database has unexplained class-specific header members');
@@ -195,6 +203,7 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                     'source_was_explicitly_selected'=>$sourceLineage!==null,
                     'status'=>$extraHeader===0?'native_database_records_decoded':'native_database_with_unconsumed_header',
                     'active_count'=>$num,'capacity'=>$max,'serialized_record_bytes'=>$stride,
+                    'base_standard_serialize_data_empty'=>$key==='database',
                     'serialized_data_bytes'=>$byteCount,'encoding'=>$encoding,
                     'text_edit_position'=>$key==='textbuffer'?$signed((int)$words[3]):null,
                     'text_top_position'=>$key==='textbuffer'?$signed((int)$words[4]):null,

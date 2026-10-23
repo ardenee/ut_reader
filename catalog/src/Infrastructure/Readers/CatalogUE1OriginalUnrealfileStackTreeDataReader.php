@@ -54,6 +54,25 @@ final class CatalogUE1OriginalUnrealfileStackTreeDataReader
                     if(!is_string($part)||$part==='')throw new RuntimeException('Truncated UStackTree archive');
                     $raw.=$part;
                 }
+                // Both Epic versions serialize zero FStackNode elements
+                // to an empty data archive when Num==0. A missing game
+                // lineage cannot change the meaning of an empty array.
+                if($n===0 && $length===0){
+                    $rows[]=array_merge($partial,[
+                        'status'=>'native_stacktree_records_decoded',
+                        'record_count'=>0,
+                        'record_capacity'=>(int)$h['record_capacity'],
+                        'class_ref_raw_one_based'=>(int)$h['class_raw_one_based_ref'],
+                        'serialized_data_bytes'=>0,
+                        'records'=>[],
+                        'source_lineage'=>$sourceLineage,
+                        'source_lineage_wire_equivalent'=>true,
+                        'source_lineage_inferred_from_unique_archive_layout'=>false,
+                        'source_compiled_runtime_oracle_verified'=>false,
+                        'runtime_stack_linked'=>false,
+                    ]);
+                    continue;
+                }
                 $families=$sourceLineage===null
                     ? [CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY,
                        CatalogUE1OriginalUnrealfilePropertySerializationGate::JULY]
