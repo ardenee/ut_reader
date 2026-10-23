@@ -152,6 +152,20 @@ final class CatalogUE1ClassicMeshNativeReader
         $modern=$ver>=62;
         $result['verts']=$array('Verts',$meshVert,4,$modern);
         $result['tris']=$array('Tris',$tri,20,$modern);
+        // UT99 v400 Engine/Src/UnMesh.cpp::UMesh::Serialize checks
+        // Tris(0).iVertex[0] < Verts.Num() when any triangle exists.
+        // Unreal v1.200 does not have this assertion, so do not reject
+        // historical files using a later engine's validation rule.
+        if($modern && $result['tris']['count']>0){
+            $firstVertex=$result['tris']['records_preview'][0]['vertices'][0];
+            if($firstVertex >= $result['verts']['count']){
+                throw new RuntimeException(
+                    'UT99 UMesh first triangle vertex exceeds Epic Verts.Num()');
+            }
+            $result['first_triangle_vertex_validated_by_ut99_source']=true;
+        }else{
+            $result['first_triangle_vertex_validated_by_ut99_source']=false;
+        }
         $result['animation_sequences']=$array('AnimSeqs',$animSeq,15);
         $result['connects']=$array('Connects',$connect,8,$modern);
         $result['mesh_bounding_box']=$box();

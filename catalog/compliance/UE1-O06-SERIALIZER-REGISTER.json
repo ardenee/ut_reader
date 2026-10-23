@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T17:28:21+00:00",
+  "updated_at_utc": "2026-10-23T17:34:55+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -6394,8 +6394,8 @@
       "reader": "CatalogUE1ClassicMeshNativeReader.php via CatalogUE1ClassicNativeObjectReader.php",
       "test": "verify-ue1-classic-mesh-native.php",
       "evidence": "DEV full-package v35/50/61 and v62/65/66/69 synthetic archive verifier 38/38 PASS after adding 12-byte/16-byte old mesh variants; C98 genuine compiled 342 mesh examples 94/94 corpus PASS. UT99 source v400 Ar<<Verts/Tris/AnimSeqs etc.",
-      "remaining": "Independent native UT99>=62 real Mesh package with nonempty lazy array and compiled engine oracle missing; source-version family and runtime animation/LOD behaviors remain outstanding.",
-      "updated_at_utc": "2026-10-23T07:42:35+00:00",
+      "remaining": "Independent native UT99>=62 real Mesh package with nonempty lazy array and compiled engine oracle missing; source-version family and runtime animation/LOD behaviors remain outstanding. G4 source implementation 2026-10-23 (VERIFICATION DEFERRED): UT99 v400 Engine/Src/UnMesh.cpp::UMesh::Serialize asserts Tris(0).iVertex[0] < Verts.Num() when Tris.Num()>0. Production source-versioned >=62 UMesh and ULodMesh reader now checks the actual decoded first triangle reference against serialized Verts count, while <=61 Unreal v1.200 remains untouched because it lacks this assertion. No new test, gate acceptance or PRD deploy.",
+      "updated_at_utc": "2026-10-23T17:34:55+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
