@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g4-classic-ansi-fstring-source-parity`
+- **Contract:** `g2-original-uscript-memory-archive-size`
 - **Stage:** implemented-pending-verification-no-tests
-- **Last completed action:** Existing G4 Unreal v1.200/UT99 v400 native FString decode corrected: Level FURL/Travel, Const Value, TextBuffer Text, factory LevelTitle/Author and Exporter formats now use shared lossless Epic FromAnsi octet mapper instead of Windows-1252; UTF-16 unchanged. Annotated 10 existing C98/T99 serializer entries in canonical register, SOURCE COUNTS unchanged MAPPED57 PARTIAL197 EXCLUDED38. Only three PHP syntax checks and diff/JSON validity, no functional tests, no new test-plan contracts, no PRD deployment.
-- **Resume at:** Continue implementation-first remaining existing G2/G3/G4 persisted serialization work from fixed PROJECT-STATUS gate list. Do not create native exporter/tests or count this as accepted. Verification, PRD deploy and acceptance occur in later separate phase.
-- **Active changed at:** 2026-10-23T16:45:29+00:00
+- **Last completed action:** Existing G2 source-correct original May and July 1997 UScript reader: per-byte physical archive and native iCode memory counts now separated. For null EX_FinalFunction FStackNodeLink or FStackNodePtr the 8-byte in-memory structure uses only 4 archive bytes; full Num and FileDataSize checked independently; memory-aligned labels, strict stream bounds and May/July semantic ambiguity retained. Updated U86/U97 existing serializer source entries plus corrected original outdated acceptance narrative. PHP lint only, NO functional tests, NO new test contracts, no PRD deploy.
+- **Resume at:** Continue existing G2/G3/G4 serialized source implementation from PROJECT-STATUS. All implementation-only changes from commits ebc36c76 onward remain unverified and are NOT ready for PRD until later separate verification. Do not run source/real corpus tests or native exporters during implementation phase.
+- **Active changed at:** 2026-10-23T16:52:29+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

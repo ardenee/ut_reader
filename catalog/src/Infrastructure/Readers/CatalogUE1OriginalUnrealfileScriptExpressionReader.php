@@ -49,12 +49,10 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 $length=(int)$o['file_data_size'];
                 if($length<0||$length>16000000)
                     throw new RuntimeException('UScript serialized expression stream exceeds bound');
-                // Epic UScript::SerializeData advances iCode until Num, and
-                // every on-disk token/archive field occupies its native
-                // serialized width. An unrelated byte range cannot be
-                // silently promoted to a complete expression stream.
-                if($num!==$length)
-                    throw new RuntimeException('UScript serialized byte count differs from Num');
+                // Epic SerializeData advances its *in-memory* iCode until
+                // Num. A nullable FStackNodeLink/FStackNodePtr uses 8 bytes
+                // in memory but archives only the 4-byte null Class ref.
+                // FileDataSize counts physical archive bytes independently.
                 $bytes=self::slice($fp,(int)$o['file_data_offset'],$length);
                 $families=$sourceLineage===null
                     ?[CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY,
@@ -62,7 +60,7 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                     :[$sourceLineage];
                 $success=[];$errors=[];
                 foreach($families as $family){
-                    try{$success[$family]=self::parseStream($bytes,$objectCount,$nameCount,$family);}
+                    try{$success[$family]=self::parseStream($bytes,$num,$objectCount,$nameCount,$family);}
                     catch(RuntimeException $e){$errors[$family]=$e;}
                 }
                 if($success===[]){
@@ -95,6 +93,8 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                     'status'=>'native_script_expressions_decoded',
                     'script_memory_num_bytes'=>$num,
                     'script_memory_max_bytes'=>$max,
+                    'script_memory_bytes_consumed'=>$ctx['memoryPos'],
+                    'memory_archive_byte_delta'=>$ctx['memoryPos']-$ctx['pos'],
                     'serialized_byte_count'=>$length,
                     'class_reference_raw'=>$classRef,
                     'expression_count'=>count($nodes),'parsed_token_count'=>$ctx['nodes'],
@@ -113,15 +113,20 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
             'bytecode_executed'=>false];
     }
     /** @return array{nodes:array<int,array<string,mixed>>,context:array<string,mixed>} */
-    private static function parseStream(string $bytes,int $objectCount,int $nameCount,string $family):array
+    private static function parseStream(string $bytes,int $num,int $objectCount,int $nameCount,string $family):array
     {
-        $c=['bytes'=>$bytes,'pos'=>0,'steps'=>0,'objectCount'=>$objectCount,
+        $c=['bytes'=>$bytes,'pos'=>0,'memoryPos'=>0,'memorySize'=>$num,
+            'steps'=>0,'objectCount'=>$objectCount,
             'nameCount'=>$nameCount,'nodes'=>0,'sourceLineage'=>$family];
         $nodes=[];
-        while($c['pos']<strlen($bytes)){
+        // Epic UnScript.cpp::UScript::SerializeData loops on memory iCode,
+        // NOT the number of archive bytes consumed by its FArchive calls.
+        while($c['memoryPos']<$num){
             $nodes[]=self::expression($c,0);
             if($c['nodes']>1000000)throw new RuntimeException('Script token traversal exceeds node limit');
         }
+        if($c['memoryPos']!==$num||$c['pos']!==strlen($bytes))
+            throw new RuntimeException('UScript source code-memory Num or physical archive length mismatch');
         return ['nodes'=>$nodes,'context'=>$c];
     }
 
@@ -129,7 +134,8 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
     private static function expression(array &$c,int $depth):array
     {
         if($depth>128)throw new RuntimeException('UScript recursive expression depth over 128');
-        $start=$c['pos'];$token=self::byte($c);$c['nodes']++;
+        $start=$c['pos'];$codeStart=$c['memoryPos'];
+        $token=self::byte($c);$c['nodes']++;
         $children=[];$fields=[];
         $next=static function()use(&$c,$depth):array{
             return self::expression($c,$depth+1);
@@ -202,6 +208,14 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 // archive contract (Class then optional iNode).
                 $fields['stack_node_index']=$fields['class_reference_raw']===0
                     ?null:self::int($c);
+                if($fields['class_reference_raw']===0){
+                    // Both Epic x86 FStackNodeLink and FStackNodePtr have
+                    // Class*:4 + iNode:4 in Script memory. Their operator<<
+                    // omits iNode only on disk when Class is NULL.
+                    $c['memoryPos']+=4;
+                    if($c['memoryPos']>$c['memorySize'])
+                        throw new RuntimeException('Null final-function link overruns Script Num memory');
+                }
                 $children=$untilEnd();break;
             case 0x1d:$fields['int_constant']=self::int($c);break;
             case 0x1e:$fields['float_constant']=self::float($c);break;
@@ -251,8 +265,8 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 $fields['case_offset']=self::word($c);
                 if($fields['case_offset']!==0xffff)$children[]=$next();break;
             case 0x0c:
-                if(($start+1)%4!==0)
-                    throw new RuntimeException('Original UScript label table is not aligned to a 4-byte code offset');
+                if(($codeStart+1)%4!==0)
+                    throw new RuntimeException('Original UScript label table is not aligned to its in-memory iCode');
                 $labels=[];
                 for($i=0;$i<100000;$i++){
                     $label=self::nameRef($c);$code=self::word($c);
@@ -285,6 +299,7 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
                 throw new RuntimeException(sprintf('Original script serializer invalid/unsupported expression token 0x%02X',$token));
         }
         return ['token'=>$token,'offset'=>$start,'serialized_length'=>$c['pos']-$start,
+            'memory_offset'=>$codeStart,'memory_length'=>$c['memoryPos']-$codeStart,
             'fields'=>$fields,'children'=>$children];
     }
     /** @param array<string,mixed> $c */
@@ -292,7 +307,10 @@ final class CatalogUE1OriginalUnrealfileScriptExpressionReader
     {
         if($len<0||$len>strlen($c['bytes'])-$c['pos'])
             throw new RuntimeException('Truncated original UScript expression stream');
-        $raw=substr($c['bytes'],$c['pos'],$len);$c['pos']+=$len;return $raw;
+        if($len>$c['memorySize']-$c['memoryPos'])
+            throw new RuntimeException('Original UScript expression exceeds in-memory Num');
+        $raw=substr($c['bytes'],$c['pos'],$len);
+        $c['pos']+=$len;$c['memoryPos']+=$len;return $raw;
     }
     private static function byte(array &$c):int{return ord(self::exact($c,1));}
     private static function word(array &$c):int{return (int)unpack('v',self::exact($c,2))[1];}

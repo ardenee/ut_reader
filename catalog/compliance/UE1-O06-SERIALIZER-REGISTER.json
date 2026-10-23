@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T16:44:52+00:00",
+  "updated_at_utc": "2026-10-23T16:51:33+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -2623,8 +2623,8 @@
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
       "test": "verify-ue1-original-unrealfile-script-may-july.php",
       "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 34/34 incl explicit May/July staging propagation and invalid provenance rejection, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
-      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted. Production original staging now carries only caller-explicit source lineage across eligible 1997 native readers; unknown source still returns ambiguous when not uniquely parseable.",
-      "updated_at_utc": "2026-10-22T19:52:11+00:00",
+      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted. Production original staging now carries only caller-explicit source lineage across eligible 1997 native readers; unknown source still returns ambiguous when not uniquely parseable. G2 source implementation 2026-10-23, VERIFICATION DEFERRED: May/July UScript::SerializeData uses in-memory iCode Num, whereas FileDataSize is archive bytes. EX_FinalFunction null FStackNodeLink/FStackNodePtr consumes 8 memory bytes but archives only four; production now checks both bounded counters, uses memory-aligned EX_LabelTable and reports dual offsets. No new test or gate acceptance.",
+      "updated_at_utc": "2026-10-23T16:51:33+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
@@ -3909,8 +3909,8 @@
       "reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
       "test": "verify-ue1-original-unrealfile-script-may-july.php",
       "evidence": "Epic v0.86x May Src/Engine/UnScript.cpp:4260 SerializeExpr, Src/Inc/UnScript.h conversion range EX_MinConversion=0x30 EX_MaxConversion=0x53, FRotationConst WORD3=6B, no iterator tokens. July v0.867 Src/Engine/UnScript.cpp:4894 and Inc/UnScript.h conversion 0x38..0x59, EX_Iterator/Pop/Next=0x2f/30/31, FRotationConst INT3=12B. Both original Unrealfile v22/23. Production UScript reader parses exact source-specific streams with optional caller lineage; when unspecified it tests both and does NOT invent meaning for syntactically valid ambiguous casts (0x40 May NameToBool vs July BoolToByte), with semantic conversion_name tied to actual source opcode. Ambiguous staging reports source_1997_script_lineage_required, no fabricated expression_tree. New native package verifier 34/34 incl explicit May/July staging propagation and invalid provenance rejection, existing July native 24/24 and two-source source inventory 68/68 (all 33 symbolic conversion names source-checked in BOTH May/July C++ enum tables).",
-      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted. Production original staging now carries only caller-explicit source lineage across eligible 1997 native readers; unknown source still returns ambiguous when not uniquely parseable.",
-      "updated_at_utc": "2026-10-22T19:52:11+00:00",
+      "remaining": "May and July v22/v23 UScript source-typed bytecode conversion/iterator/rotation branches implemented, with source ambiguity protected. Need genuine independent Epic package/engine oracle per source, wider archive branch corpus, instance identity/fixup excluded to O10. Not source-wide accepted. Production original staging now carries only caller-explicit source lineage across eligible 1997 native readers; unknown source still returns ambiguous when not uniquely parseable. G2 source implementation 2026-10-23, VERIFICATION DEFERRED: May/July UScript::SerializeData uses in-memory iCode Num, whereas FileDataSize is archive bytes. EX_FinalFunction null FStackNodeLink/FStackNodePtr consumes 8 memory bytes but archives only four; production now checks both bounded counters, uses memory-aligned EX_LabelTable and reports dual offsets. No new test or gate acceptance.",
+      "updated_at_utc": "2026-10-23T16:51:33+00:00",
       "last_verification": {
         "target": "PRD",
         "state": "PASS",
