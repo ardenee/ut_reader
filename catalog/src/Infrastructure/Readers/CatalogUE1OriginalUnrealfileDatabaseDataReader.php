@@ -40,8 +40,9 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
     ];
 
     /** @return array<string,mixed> */
-    public static function read(string $path,bool $strict=false):array
+    public static function read(string $path,bool $strict=false,?string $sourceLineage=null):array
     {
+        CatalogUE1OriginalUnrealfilePropertySerializationGate::validate($sourceLineage);
         $meta=CatalogUE1OriginalUnrealfileObjectBaseReader::read($path);
         $stacks=CatalogUE1OriginalUnrealfileStackReader::read($path,false)['stack_prefixes'];
         $stackBy=[];
@@ -145,7 +146,11 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                                 $items[]=['min'=>array_slice($vectors,0,3),
                                     'max'=>array_slice($vectors,3,3),
                                     'is_valid'=>$valid,'is_valid_raw_byte'=>$valid,
-                                    'source_record_type_lineage_unverified'=>true];break;
+                                    'epic_record_type'=>$sourceLineage===null?null:
+                                        ($sourceLineage===CatalogUE1OriginalUnrealfilePropertySerializationGate::MAY
+                                            ?'FBoundingRect':'FBoundingBox'),
+                                    'epic_operator_fields'=>['Min','Max','IsValid'],
+                                    'epic_is_valid_archive_type'=>'BYTE'];break;
                             case 'reach_specs':
                                 // UnPath.h FReachSpec::operator<<: distance,
                                 // Goal/Start/End, 4 float extents, flags.
@@ -186,6 +191,8 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                 $results[]=[
                     'object_index'=>(int)$o['index'],
                     'object_name'=>$o['name'],'native_class'=>'U'.$kind,
+                    'source_lineage'=>$sourceLineage,
+                    'source_was_explicitly_selected'=>$sourceLineage!==null,
                     'status'=>$extraHeader===0?'native_database_records_decoded':'native_database_with_unconsumed_header',
                     'active_count'=>$num,'capacity'=>$max,'serialized_record_bytes'=>$stride,
                     'serialized_data_bytes'=>$byteCount,'encoding'=>$encoding,
@@ -197,7 +204,9 @@ final class CatalogUE1OriginalUnrealfileDatabaseDataReader
                 ];
             }
         }finally{fclose($fp);}
-        return ['source_family'=>'early_unrealfile','database_records'=>$results,
+        return ['source_family'=>'early_unrealfile',
+            'source_lineage'=>$sourceLineage,
+            'database_records'=>$results,
             'class_specific_primitive_data_decoded'=>true,
             'runtime_references_resolved'=>false,
             'other_class_serializers_decoded'=>false];

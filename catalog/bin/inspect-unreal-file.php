@@ -214,7 +214,7 @@ function inspect_unreal_full_validate(string $path, array $summary, ?array $corr
 }
 
 /** @return array<string,mixed> */
-function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1SourceFamily=null): array
+function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1SourceFamily=null, ?string $ue1Original1997Lineage=null): array
 {
     $resolvedPath = realpath($inputPath);
     if ($resolvedPath === false || !is_file($resolvedPath) || !is_readable($resolvedPath)) {
@@ -418,35 +418,39 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
                         $externalDiscovery = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileExternalSchemaResolver::discoverSiblingProviders($parsePath);
                         $result['original_unrealfile_external_class_discovery'] = $externalDiscovery['diagnostics'];
                         $result['original_unrealfile_script_expressions'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read($parsePath, false, $ue1Original1997Lineage);
+                        $result['original_unrealfile_selected_source_lineage']=$ue1Original1997Lineage;
                         $result['original_unrealfile_properties_bin'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read($parsePath, false, $externalDiscovery['providers']);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePropertiesReader::read(
+                                $parsePath,false,$externalDiscovery['providers'],$ue1Original1997Lineage);
                         $result['original_unrealfile_bit_archive'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBitArrayReader::read($parsePath, false);
                         $result['original_unrealfile_audio_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileAudioReader::read($parsePath, false);
                         $result['original_unrealfile_stacktree_records'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackTreeDataReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileStackTreeDataReader::read($parsePath, false, $ue1Original1997Lineage);
                         $result['original_unrealfile_polygon_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfilePolysDataReader::read($parsePath, false);
                         $result['original_unrealfile_lightmesh_records'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLightMeshDataReader::read($parsePath, false);
                         $result['original_unrealfile_bsp_records'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBspRecordsReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBspRecordsReader::read($parsePath, false, $ue1Original1997Lineage);
                         $result['original_unrealfile_special_headers'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileSpecialHeadersReader::read($parsePath, false);
                         $result['original_unrealfile_texture_headers'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileTextureHeaderReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileTextureHeaderReader::read($parsePath, false, $ue1Original1997Lineage);
                         $result['original_unrealfile_model_headers'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileModelHeaderReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileModelHeaderReader::read($parsePath, false, $ue1Original1997Lineage);
                         $result['original_unrealfile_mesh_headers'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileMeshHeaderReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileMeshHeaderReader::read($parsePath, false, $ue1Original1997Lineage);
                         $result['original_unrealfile_level_records'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLevelReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileLevelReader::read($parsePath, false, $ue1Original1997Lineage);
                         $result['original_unrealfile_database_records'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader::read($parsePath, false);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileDatabaseDataReader::read(
+                                $parsePath,false,$ue1Original1997Lineage);
                         $result['original_unrealfile_binary_properties'] =
-                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read($parsePath, false, $externalDiscovery['providers']);
+                            \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileBinaryPropertyReader::read(
+                                $parsePath,false,$externalDiscovery['providers'],$ue1Original1997Lineage);
                         $result['original_unrealfile_class_schemas'] =
                             \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileClassSchemaReader::read($parsePath, false);
                         $result['original_unrealfile_stack_prefixes'] =
@@ -531,6 +535,11 @@ function inspect_unreal_print_human(array $result): void
     echo 'Package version              : ' . var_export($result['package_version'] ?? null, true) . PHP_EOL;
     echo 'Licensee version             : ' . var_export($result['licensee_version'] ?? null, true) . PHP_EOL;
     echo 'Engine hint                  : ' . (string)($result['engine_hint'] ?? 'UNKNOWN') . PHP_EOL;
+    if (isset($result['original_unrealfile_selected_source_lineage'])
+        &&$result['original_unrealfile_selected_source_lineage']!==null) {
+        echo 'Original UE1 1997 source      : '
+            . (string)$result['original_unrealfile_selected_source_lineage'] . PHP_EOL;
+    }
     if (!empty($result['package_tag_variant'])) {
         echo 'Package tag variant          : ' . (string)$result['package_tag_variant'] . PHP_EOL;
     }
@@ -602,6 +611,7 @@ $json = false;
 $full = false;
 $recursive = false;
 $ue1SourceFamily=null;
+$ue1Original1997Lineage=null;
 $paths = [];
 foreach ($arguments as $argument) {
     if ($argument === '--json') {
@@ -625,13 +635,22 @@ foreach ($arguments as $argument) {
         $ue1SourceFamily=$requested;
         continue;
     }
+    if (str_starts_with($argument,'--ue1-original-1997=')) {
+        $requested=substr($argument,strlen('--ue1-original-1997='));
+        if (!in_array($requested,['unreal_1997_may','unreal_1997_july'],true)) {
+            fwrite(STDERR,'Invalid --ue1-original-1997: '.$requested.PHP_EOL);
+            exit(2);
+        }
+        $ue1Original1997Lineage=$requested;
+        continue;
+    }
     $paths[] = $argument;
 }
 
 if ($paths === []) {
     fwrite(
         STDERR,
-        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v400] <file-or-directory> [...]\n"
+        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v400] [--ue1-original-1997=unreal_1997_may|unreal_1997_july] <file-or-directory> [...]\n"
     );
     exit(2);
 }
@@ -666,7 +685,7 @@ $expandedPaths = array_values($expandedPaths);
 $results = [];
 $failed = false;
 foreach ($expandedPaths as $path) {
-    $result = inspect_unreal_file($path, $full, $ue1SourceFamily);
+    $result = inspect_unreal_file($path, $full, $ue1SourceFamily, $ue1Original1997Lineage);
     $results[] = $result;
     if (isset($result['error']) || ($full && ($result['full_validation'] ?? '') !== 'OK')) {
         $failed = true;

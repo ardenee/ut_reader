@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-nested-source-family-propagation`
-- **Stage:** implementation-batch-unverified
-- **Last completed action:** Batch of six production files: carried explicit Epic engine or UT99 game source family through CLI full inspection, tagged/class-default UClass, imported superclass fields, cached UField chains and nested array/struct decoding. Corrected UT99 v400 old-version fixed-to-dynamic string/map/array source selection and removed erroneous two-name legacy UClass trailer under UT99. Annotated 17 existing G3 entries, no new contracts; only PHP syntax and diff integrity checks, no functional tests or PRD deploy.
-- **Resume at:** Continue large source-backed G2-G4 production implementation batches. Deferred test/acceptance phase must review new nested and game-provenance paths before any production deployment.
-- **Active changed at:** 2026-10-23T18:21:15+00:00
+- **Contract:** `g2-may-july-source-routing-batch`
+- **Stage:** implemented-batch-pending-verification-no-tests
+- **Last completed action:** G2 batch source parity: common production CLI now passes explicit May/July 1997 C++ source lineage to ten existing original serializer paths for scripts, stack trees, BSP, texture, model, mesh, level, UDatabase, UProperties and UObject class-bin property data. The original UDatabase decoder now resolves actual FBoundingRect May versus FBoundingBox July structure identity, preserving Min, Max, raw BYTE IsValid rather than permanently marking source type unverified. Twenty-four EXISTING U86/U97 source registrations annotated; distinct 66 reader labels behind 197 PARTIAL, 57 MAPPED 38 EXCLUDED unchanged. PHP syntax/diff integrity only; no functional tests, PRD deploy or acceptance promotion.
+- **Resume at:** Continue grouped remaining G2/G3/G4 source implementation work, separate existing code corrections from verification-only partial entries, and then one later verification and PRD milestone.
+- **Active changed at:** 2026-10-23T18:32:43+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
