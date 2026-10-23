@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T13:16:28.7005154Z",
-    "head_commit":  "5cd54890",
+    "updated_at_utc":  "2026-10-23T14:02:45.6932925Z",
+    "head_commit":  "46887ece",
     "current_target":  "DEV",
     "current_source_sha256":  "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
     "tests":  [
@@ -519,6 +519,18 @@
                       "run_id":  "20261023T131028993Z-00f114c6",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T131028993Z-00f114c6-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-native-ut99-textbuffer-exports.php",
+                      "test":  "verify-ue1-o06-native-ut99-textbuffer-exports.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T14:02:45.6752612Z",
+                      "source_sha256":  "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
+                      "test_sha256":  "d6e4ebfe4018a7b9609398c0017936f443cb4eef3959a0e3b2f694f19eb6b697",
+                      "run_id":  "20261023T140245209Z-f6af8cbd",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T140245209Z-f6af8cbd-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-original-saveability.php",

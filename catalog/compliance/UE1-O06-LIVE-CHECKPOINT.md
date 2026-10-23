@@ -2,18 +2,24 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `t99-genuine-serializeexpr`
-- **Stage:** released-verified
-- **Last completed action:** Commit 7632f398 pushed; genuine UT99 FName NAME_None indexed 3344 source-corrected; 58/58 focus and 246/246 30-package gate, 4199 classes/17700 tags; 1/1 reader SHA256 deployed PRD; no PRD PHP tests.
-- **Resume at:** Assess installed native UT99 ucc.exe as independent oracle from disposable C:\Temp copy, with no writes to game tree; do not conflate runtime smoke with full Epic source parity.
-- **Active changed at:** 2026-10-23T13:22:19+00:00
-- **Latest DEV test states:** PASS 96; FAIL 0; STARTED 0
+- **Contract:** `t99-native-script-oracle`
+- **Stage:** g5-native-proof-complete
+- **Last completed action:** G5 incremental real compiled v432 loader oracle: all 88/88 full UTextBuffer UObject identities match genuine Engine.u export map, and final ClipMarker text matches decoded archive after exact Epic exporter CRLF trimming; focus 22/22 DEV PASS in 118ms; prior fixture FAIL remains journaled. No production changes or broad retest.
+- **Resume at:** Do NOT rerun native 30-package sweep. Tackle G2 1997 May/July distinct-version source contracts and seek genuine package oracles; promote individual contracts only when all applicability/source/negative conditions are proven. Keep G5 open.
+- **Active changed at:** 2026-10-23T14:06:39+00:00
+- **Latest DEV test states:** PASS 97; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-23T14:02:45.6752612Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | PASS | 118 | catalog\compliance\evidence\o06\20261023T140245209Z-f6af8cbd-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
+| 2026-10-23T14:02:45.2179622Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | STARTED |  | catalog\compliance\evidence\o06\20261023T140245209Z-f6af8cbd-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
+| 2026-10-23T13:55:39.9111989Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | PASS | 113 | catalog\compliance\evidence\o06\20261023T135539464Z-3f58549e-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
+| 2026-10-23T13:55:39.4716372Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | STARTED |  | catalog\compliance\evidence\o06\20261023T135539464Z-3f58549e-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
+| 2026-10-23T13:55:06.2071819Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | FAIL | 121 | catalog\compliance\evidence\o06\20261023T135505746Z-5e41bf08-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
+| 2026-10-23T13:55:05.7547074Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | STARTED |  | catalog\compliance\evidence\o06\20261023T135505746Z-5e41bf08-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
 | 2026-10-23T13:16:28.6810071Z | verify-ue1-o06-genuine-ut99-full-scripts.php | PASS | 11984 | catalog\compliance\evidence\o06\20261023T131616365Z-482253ed-DEV-verify-ue1-o06-genuine-ut99-full-scripts.php.txt |
 | 2026-10-23T13:16:16.3729686Z | verify-ue1-o06-genuine-ut99-full-scripts.php | STARTED |  | catalog\compliance\evidence\o06\20261023T131616365Z-482253ed-DEV-verify-ue1-o06-genuine-ut99-full-scripts.php.txt |
 | 2026-10-23T13:11:40.5268553Z | verify-ue1-o06-payload-negatives.php | PASS | 199 | catalog\compliance\evidence\o06\20261023T131140023Z-8536e26d-DEV-verify-ue1-o06-payload-negatives.php.txt |
@@ -26,12 +32,6 @@
 | 2026-10-23T13:11:26.7328825Z | verify-ue1-o06-genuine-compiled-native.php | STARTED |  | catalog\compliance\evidence\o06\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
 | 2026-10-23T13:10:36.6592494Z | verify-ue1-o06-genuine-ut99-script-archive.php | PASS | 7314 | catalog\compliance\evidence\o06\20261023T131028993Z-00f114c6-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
 | 2026-10-23T13:10:29.0004234Z | verify-ue1-o06-genuine-ut99-script-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261023T131028993Z-00f114c6-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
-| 2026-10-23T12:50:42.9714944Z | verify-ue1-o06-payload-negatives.php | PASS | 194 | catalog\compliance\evidence\o06\20261023T125042476Z-a88a3ccc-DEV-verify-ue1-o06-payload-negatives.php.txt |
-| 2026-10-23T12:50:42.4778674Z | verify-ue1-o06-payload-negatives.php | STARTED |  | catalog\compliance\evidence\o06\20261023T125042476Z-a88a3ccc-DEV-verify-ue1-o06-payload-negatives.php.txt |
-| 2026-10-23T12:50:42.1274302Z | verify-ue1-v68-v69-genuine-corpus.php | PASS | 187 | catalog\compliance\evidence\o06\20261023T125041636Z-4a4254c0-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
-| 2026-10-23T12:50:41.6362907Z | verify-ue1-v68-v69-genuine-corpus.php | STARTED |  | catalog\compliance\evidence\o06\20261023T125041636Z-4a4254c0-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt |
-| 2026-10-23T12:50:41.3063176Z | verify-ue1-o06-genuine-compiled-native.php | PASS | 7537 | catalog\compliance\evidence\o06\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
-| 2026-10-23T12:50:33.4735768Z | verify-ue1-o06-genuine-compiled-native.php | STARTED |  | catalog\compliance\evidence\o06\20261023T125033473Z-c3483900-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
 
 ## Recovery procedure
 

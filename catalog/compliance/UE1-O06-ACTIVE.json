@@ -1,7 +1,7 @@
 {
-  "contract": "t99-genuine-serializeexpr",
-  "stage": "released-verified",
-  "last_action": "Commit 7632f398 pushed; genuine UT99 FName NAME_None indexed 3344 source-corrected; 58/58 focus and 246/246 30-package gate, 4199 classes/17700 tags; 1/1 reader SHA256 deployed PRD; no PRD PHP tests.",
-  "next_step": "Assess installed native UT99 ucc.exe as independent oracle from disposable C:\\Temp copy, with no writes to game tree; do not conflate runtime smoke with full Epic source parity.",
-  "updated_at_utc": "2026-10-23T13:22:19+00:00"
+  "contract": "t99-native-script-oracle",
+  "stage": "g5-native-proof-complete",
+  "last_action": "G5 incremental real compiled v432 loader oracle: all 88/88 full UTextBuffer UObject identities match genuine Engine.u export map, and final ClipMarker text matches decoded archive after exact Epic exporter CRLF trimming; focus 22/22 DEV PASS in 118ms; prior fixture FAIL remains journaled. No production changes or broad retest.",
+  "next_step": "Do NOT rerun native 30-package sweep. Tackle G2 1997 May/July distinct-version source contracts and seek genuine package oracles; promote individual contracts only when all applicability/source/negative conditions are proven. Keep G5 open.",
+  "updated_at_utc": "2026-10-23T14:06:39+00:00"
 }

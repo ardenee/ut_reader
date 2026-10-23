@@ -160,6 +160,17 @@
         "verify-ue1-o06-genuine-ut99-full-scripts.php"
       ]
     },
+    "t99-native-script-oracle": {
+      "description": "Independent installed UT99 v432 compiled LoadPackage TextBuffer enumerator full UObject path parity with Engine.u ExportMap; sealed log and exe DLL SHA, separate from full O06 acceptance",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-native-ut99-textbuffer-exports.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
     "ue1-classic-level": {
       "description": "Unreal v1.200 native ULevel and UDatabase base counts",
       "readers": [
