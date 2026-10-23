@@ -1,0 +1,45 @@
+﻿{
+    "ok": true,
+    "checks": 19,
+    "passed": 19,
+    "failed": [],
+    "examples": [
+        {
+            "test": "source_zero_bytes",
+            "native_key": 2,
+            "native_value": 3,
+            "tag_bytes": 0,
+            "map_source_status": "map_source_no_persisted_entries"
+        },
+        {
+            "test": "unexpected_value_byte",
+            "native_key": 2,
+            "native_value": 3,
+            "tag_bytes": 1,
+            "map_source_status": "map_source_payload_unverified"
+        },
+        {
+            "test": "unexpected_four_bytes",
+            "native_key": 2,
+            "native_value": 3,
+            "tag_bytes": 4,
+            "map_source_status": "map_source_payload_unverified"
+        },
+        {
+            "test": "missing_key_property",
+            "native_key": 0,
+            "native_value": 3,
+            "tag_bytes": 0,
+            "map_source_status": "map_source_payload_unverified"
+        },
+        {
+            "test": "missing_value_property",
+            "native_key": 2,
+            "native_value": 0,
+            "tag_bytes": 0,
+            "map_source_status": "map_source_payload_unverified"
+        }
+    ],
+    "epic_source_sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+    "remaining": "UT99 map serializer encodes no map entries. Runtime in-memory map contents and other version families are not verified."
+}

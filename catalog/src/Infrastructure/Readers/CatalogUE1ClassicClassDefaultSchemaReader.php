@@ -87,6 +87,7 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
         $legacyStringUpgrades=0;$legacyStringUnsafe=0;$legacyStringSamples=[];
         $dynamicStringUnsafe=0;$dynamicStringSamples=[];
         $arrayDecoded=0;$arrayUnverified=0;$arraySamples=[];
+        $mapNoArchiveBytes=0;$mapValueUnverified=0;$mapSamples=[];
         $sourceVersion=(int)($valueArchivePackage->getHeader()['version']??0);
         foreach($tags as $tag){
             $key=strtolower((string)($tag['name']??''));
@@ -240,6 +241,51 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     continue;
                 }
             }
+            if($sourceVersion>=62&&$tagKind==='mapproperty'
+                &&$declKind==='mapproperty'){
+                // UT99 UMapProperty::SerializeItem checks Key/Value but
+                // its entire archive loop is commented out. The native
+                // UMapProperty::Serialize does persist Key and Value
+                // UProperty identities. Confirm both declarations, then
+                // accept ONLY zero-byte values as source-representable.
+                $keyRef=(int)($decl['key_reference']??0);
+                $valueRef=(int)($decl['value_reference']??0);
+                $validChildren=$keyRef>0&&$valueRef>0;
+                if($validChildren){
+                    foreach([$keyRef,$valueRef] as $childRef){
+                        $child=self::readField(
+                            (string)$decl['owner_path'],$decl['owner_package'],
+                            $childRef);
+                        if(($child['native']['status']??'')
+                            !=='native_property_record_complete'){
+                            $validChildren=false;break;
+                        }
+                    }
+                }
+                $emptyValue=(int)($tag['serialized_size']??-1)===0
+                    &&(int)($tag['on_disk_value_bytes']??-1)===0;
+                if(!$validChildren||!$emptyValue){
+                    $mapValueUnverified++;
+                    if(count($mapSamples)<12){
+                        $mapSamples[]=['name'=>$tag['name'],
+                            'status'=>'map_source_payload_unverified',
+                            'reason'=>!$validChildren?
+                                'key_or_value_declaration_unresolved':
+                                'unexpected_map_value_bytes',
+                            'serialized_size'=>$tag['serialized_size']??null];
+                    }
+                    continue;
+                }
+                $mapNoArchiveBytes++;
+                if(count($mapSamples)<12){
+                    $mapSamples[]=['name'=>$tag['name'],
+                        'status'=>'map_source_no_persisted_entries',
+                        'serialized_size'=>0,
+                        'key_property_ref'=>$keyRef,
+                        'value_property_ref'=>$valueRef,
+                        'runtime_map_contents_verified'=>false];
+                }
+            }
             if($tagKind==='objectproperty'||$tagKind==='classproperty'){
                 // Epic C98 ULinkerLoad::IndexToObject checks IsValidIndex
                 // on signed import/export indices and errors fatally when
@@ -286,14 +332,15 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
         }
         return [
-            'status'=>$arrayUnverified>0?'array_property_value_unverified':
+            'status'=>$mapValueUnverified>0?'map_property_value_unverified':
+                ($arrayUnverified>0?'array_property_value_unverified':
                 ($dynamicStringUnsafe>0?'dynamic_fstring_archive_unverified':
                 ($legacyStringUnsafe>0?'legacy_fixed_string_upgrade_unverified':
                 ($mismatchCount>0?'known_incompatible_tags_skipped':
                 ($unknownSkipped>0?'unknown_property_tags_skipped':
                 ($stringBoundUnverified>0?'fixed_string_archive_size_unverified':
                 ($unresolved===0?'all_available_declarations_match':
-                'imported_or_unknown_properties_unverified')))))),
+                'imported_or_unknown_properties_unverified'))))))),
             'tag_count'=>count($tags),
             'declaration_type_and_array_index_matches'=>$matched,
             'matches_in_this_class'=>$matchedDirect,
@@ -316,6 +363,9 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             'primitive_array_values_decoded'=>$arrayDecoded,
             'array_value_unverified'=>$arrayUnverified,
             'array_value_samples'=>$arraySamples,
+            'map_property_source_no_archive_bytes'=>$mapNoArchiveBytes,
+            'map_property_value_unverified'=>$mapValueUnverified,
+            'map_property_samples'=>$mapSamples,
             'unresolved_examples'=>$samples,
             'source_declarations_in_this_class'=>$ownFields,
             'source_declarations_in_local_superclasses'=>$parentFields,
@@ -404,6 +454,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                     'owner_path'=>$path,'owner_package'=>$pkg,
                     'inner_reference'=>$data['subclass_fields']['inner_reference']??0,
                     'fixed_count'=>$data['subclass_fields']['fixed_count']??null,
+                    'key_reference'=>$data['subclass_fields']['key_reference']??0,
+                    'value_reference'=>$data['subclass_fields']['value_reference']??0,
                     'array_dim'=>(int)$data['array_dim'],
                     'property_flags'=>(int)($data['effective_property_flags']??0),
                     'struct_name'=>$structRow['objectNameText']??null,
