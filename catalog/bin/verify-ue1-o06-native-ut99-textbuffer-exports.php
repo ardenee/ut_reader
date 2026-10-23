@@ -93,9 +93,9 @@ $check('local_ClipMarker_UTextBuffer_unique_export',is_int($targetIndex)&&$targe
 $nativeValue=null;$decodedText=null;
 if(is_int($targetIndex)&&$targetIndex>=0){
  $prop=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader::inspect(
-     "$src/Engine.u",$package,$targetIndex);
+     "$src/Engine.u",$package,$targetIndex,'ut99-v432');
  $nativeValue=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicNativeObjectReader::inspect(
-     "$src/Engine.u",$package,$targetIndex,$prop);
+     "$src/Engine.u",$package,$targetIndex,$prop,'ut99-v432');
  $decodedText=(string)($nativeValue['text']??'');
 }
 $check('production_UTextBuffer_record_complete',

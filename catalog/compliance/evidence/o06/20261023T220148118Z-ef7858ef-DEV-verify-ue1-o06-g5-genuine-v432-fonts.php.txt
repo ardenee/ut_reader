@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 66,
+    "passed": 66,
+    "failed": [],
+    "file_count": 6,
+    "font_complete": 34,
+    "v69_with_empty_remap": 9,
+    "v68_legacy": 25,
+    "exceptions": 0,
+    "errors": [],
+    "limits": "Actual compiled method/archive evidence plus genuine on-disk fields; NOT compiled native in-memory loaded-value or reference equality."
+}

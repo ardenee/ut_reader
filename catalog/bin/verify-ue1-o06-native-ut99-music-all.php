@@ -82,8 +82,8 @@ foreach($manifest as $entry){
         if($outer!==0)throw new RuntimeException('Imported/invalid music outer');
         array_unshift($segments,$stem);$sourcePath=implode('.',$segments);
         $check(strcasecmp($sourcePath,$fullPath)===0,"{$name}_exact_native_outer_path");
-        $prop=Props::inspect($file,$pkg,$idx);
-        $native=Native::inspect($file,$pkg,$idx,$prop);
+        $prop=Props::inspect($file,$pkg,$idx,'ut99-v432');
+        $native=Native::inspect($file,$pkg,$idx,$prop,'ut99-v432');
         $check(($native['status']??null)==='native_music_record_complete',"{$name}_complete_UMusic_archive");
         $len=(int)($native['audio_data_bytes']??-1);
         $offset=(int)($native['audio_data_offset']??-1);

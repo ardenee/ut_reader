@@ -1,0 +1,22 @@
+﻿{
+    "ok": true,
+    "checks": 22,
+    "passed": 22,
+    "failed": [],
+    "native_engine": "UT99 v432 installed DLLs/ucc.exe",
+    "native_command": "ucc batchexport Engine.u TextBuffer txt C:\\Temp\\UnrealDB\\O06\\Native-UCC\\exports\\EngineTextBuffer",
+    "log_sha256": "4c1a0139fd9cf56dbac332295e1fbdfd4a7025f2125ae089b48dbbacf908184e",
+    "package_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+    "native_exported_count": 88,
+    "php_exported_count": 88,
+    "matched_full_paths": 88,
+    "missing": [],
+    "extra": [],
+    "example_native_paths": [
+        "Engine.Palette.ScriptText",
+        "Engine.Bitmap.ScriptText",
+        "Engine.Texture.ScriptText",
+        "Engine.ZoneTrigger.ScriptText"
+    ],
+    "limitations": "Independent compiled v432 LoadPackage and UObject TextBuffer enumeration; no engine UClass property-value oracle, no compiled v400 equivalence, no full O06 acceptance."
+}

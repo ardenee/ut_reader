@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T16:15:31.2183574Z",
-    "head_commit":  "969bf3d1",
+    "updated_at_utc":  "2026-10-23T22:04:11.4234964Z",
+    "head_commit":  "3a890ffb",
     "current_target":  "DEV",
-    "current_source_sha256":  "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+    "current_source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -461,6 +461,18 @@
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T151542836Z-4be7e371-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt"
                   },
                   {
+                      "key":  "DEV:verify-ue1-o06-g5-genuine-v432-fonts.php",
+                      "test":  "verify-ue1-o06-g5-genuine-v432-fonts.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T22:01:48.9168921Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "c8556b66104c9b59b64b4dc4d431c45600c04a73106e5484ec4728e996401f90",
+                      "run_id":  "20261023T220148118Z-ef7858ef",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T220148118Z-ef7858ef-DEV-verify-ue1-o06-g5-genuine-v432-fonts.php.txt"
+                  },
+                  {
                       "key":  "DEV:verify-ue1-o06-genuine-class-default-declarations.php",
                       "test":  "verify-ue1-o06-genuine-class-default-declarations.php",
                       "target":  "DEV",
@@ -561,36 +573,36 @@
                       "test":  "verify-ue1-o06-native-ut99-music-all.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T16:15:31.1963923Z",
-                      "source_sha256":  "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
-                      "test_sha256":  "abe9aa3151d70afae0d9d92606c20c6b69010787b6df1dd396e567fbbe9e4fe9",
-                      "run_id":  "20261023T161530485Z-7237246f",
+                      "event_at_utc":  "2026-10-23T22:04:03.6221007Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "fbeca0dae1b07595f77539f7eb6b9da0d84367f85a54e76036cf79ee34e50778",
+                      "run_id":  "20261023T220402575Z-9b74373b",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T161530485Z-7237246f-DEV-verify-ue1-o06-native-ut99-music-all.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T220402575Z-9b74373b-DEV-verify-ue1-o06-native-ut99-music-all.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-native-ut99-sound-exports.php",
                       "test":  "verify-ue1-o06-native-ut99-sound-exports.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T15:31:10.6746983Z",
-                      "source_sha256":  "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
-                      "test_sha256":  "ea7fca5031b2034b45828999d89eb92f1bb2a1cc33648440edaf2987fd1ee22b",
-                      "run_id":  "20261023T153110017Z-e725eeae",
+                      "event_at_utc":  "2026-10-23T22:04:08.2561456Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "3e851f6f3cfa1d6d6107b2a476147ca6c3df21f47529c8762c098d929a38379e",
+                      "run_id":  "20261023T220406111Z-8a4ddd8f",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T153110017Z-e725eeae-DEV-verify-ue1-o06-native-ut99-sound-exports.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T220406111Z-8a4ddd8f-DEV-verify-ue1-o06-native-ut99-sound-exports.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-native-ut99-textbuffer-exports.php",
                       "test":  "verify-ue1-o06-native-ut99-textbuffer-exports.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T14:02:45.6752612Z",
-                      "source_sha256":  "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
-                      "test_sha256":  "d6e4ebfe4018a7b9609398c0017936f443cb4eef3959a0e3b2f694f19eb6b697",
-                      "run_id":  "20261023T140245209Z-f6af8cbd",
+                      "event_at_utc":  "2026-10-23T22:04:11.4055272Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "73ab5641a4f36e76291ae66c9a4d0634490b49e60f383f9fb5a10f669af6f022",
+                      "run_id":  "20261023T220410769Z-3845d89f",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T140245209Z-f6af8cbd-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T220410769Z-3845d89f-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-original-saveability.php",

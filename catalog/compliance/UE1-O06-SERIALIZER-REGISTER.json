@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-23T21:28:00+00:00",
+  "updated_at_utc": "2026-10-23T22:04:11+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -7263,6 +7263,52 @@
       }
     },
     {
+      "id": "T99:UAnimation::Serialize",
+      "branch": "T99",
+      "symbol": "UAnimation::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Inc/UnSkeletalMesh.h",
+          "line": 338,
+          "v432_root": "L:\\Source\\Games\\UT99\\Unreal Tournament v432",
+          "source_revision": "UT99 v432 (ENGINE_VERSION=430; package version 69)"
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php -> CatalogUE1ClassicV432NativeDeltaReader.php",
+      "test": "",
+      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown. COMPILED_ENGINE_V432_ARCHIVE_MAPPED 2026-10-23: source SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac, exported stub RVA 0x1FD2 jumps to 0xECEC0; genuine v432 method field order reconciled with v432 inlined struct operators; source-shaped positive/negative focused fixtures PASS.",
+      "remaining": "Compiled v432 native method order and inlined per-record archives IMPLEMENTED. Actual native loaded-value equality on genuine v432 skeletal/animation package data and object graph remains G5-OPEN; v432 inherited ULodMesh compiled-source equivalence to v400 remains G5-OPEN for USkeletalMesh. No PRD deployment or blanket source-parity acceptance.",
+      "updated_at_utc": "2026-10-23T21:25:29+00:00",
+      "source_mapping": {
+        "implementation_status": "MAPPED_COMPILED_NATIVE_ARCHIVE_METHOD",
+        "game_source": "UT99-v432",
+        "predecessor": "UT99-v400",
+        "engine_baseline": "Epic UE1 UObject",
+        "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+        "compiled_export_stub_rva": "0x1FD2",
+        "compiled_native_method_rva": "0xECEC0",
+        "compiled_assembly_field_order": [
+          "UObject::Serialize",
+          "RefBones",
+          "Moves",
+          "AnimSeqs"
+        ],
+        "inlined_record_operators": "Engine/Inc/UnSkeletalMesh.h, Engine/Inc/UnAnim.h and Engine/Inc/UnMesh.h",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
+        "complete_file_archive_result": "native_animation_record_complete",
+        "focus_fixtures": [
+          "verify-v432-skeletal-record-operators.php",
+          "verify-v432-compiled-animation-records.php",
+          "verify-v432-compiled-skeletalmesh-order.php"
+        ],
+        "g5_full_runtime_acceptance": "OPEN",
+        "v432_inherited_lodmesh_parity": "NOT_APPLICABLE",
+        "prd_deployment": "DEFERRED"
+      },
+      "implementation_history_before_mapping": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations."
+    },
+    {
       "id": "T99:UArrayProperty::Serialize",
       "branch": "T99",
       "symbol": "UArrayProperty::Serialize",
@@ -9028,6 +9074,59 @@
       }
     },
     {
+      "id": "T99:USkeletalMesh::Serialize",
+      "branch": "T99",
+      "symbol": "USkeletalMesh::Serialize",
+      "locations": [
+        {
+          "path": "Engine/Inc/UnSkeletalMesh.h",
+          "line": 286,
+          "v432_root": "L:\\Source\\Games\\UT99\\Unreal Tournament v432",
+          "source_revision": "UT99 v432 (ENGINE_VERSION=430; package version 69)"
+        }
+      ],
+      "status": "MAPPED",
+      "reader": "CatalogUE1ClassicNativeObjectReader.php -> CatalogUE1ClassicV432NativeDeltaReader.php",
+      "test": "",
+      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown. COMPILED_ENGINE_V432_ARCHIVE_MAPPED 2026-10-23: source SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac, exported stub RVA 0x341D jumps to 0xED290; genuine v432 method field order reconciled with v432 inlined struct operators; source-shaped positive/negative focused fixtures PASS.",
+      "remaining": "Compiled v432 native method order and inlined per-record archives IMPLEMENTED. Actual native loaded-value equality on genuine v432 skeletal/animation package data and object graph remains G5-OPEN; v432 inherited ULodMesh compiled-source equivalence to v400 remains G5-OPEN for USkeletalMesh. No PRD deployment or blanket source-parity acceptance.",
+      "updated_at_utc": "2026-10-23T21:25:29+00:00",
+      "source_mapping": {
+        "implementation_status": "MAPPED_COMPILED_NATIVE_ARCHIVE_METHOD",
+        "game_source": "UT99-v432",
+        "predecessor": "UT99-v400",
+        "engine_baseline": "Epic UE1 UObject",
+        "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+        "compiled_export_stub_rva": "0x341D",
+        "compiled_native_method_rva": "0xED290",
+        "compiled_assembly_field_order": [
+          "ULodMesh::Serialize",
+          "ExtWedges",
+          "Points",
+          "RefSkeleton",
+          "BoneWeightIdx",
+          "BoneWeights",
+          "LocalPoints",
+          "SkeletalDepth",
+          "DefaultAnimation",
+          "WeaponBoneIndex",
+          "WeaponAdjust"
+        ],
+        "inlined_record_operators": "Engine/Inc/UnSkeletalMesh.h, Engine/Inc/UnAnim.h and Engine/Inc/UnMesh.h",
+        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
+        "complete_file_archive_result": "native_skeletalmesh_record_complete",
+        "focus_fixtures": [
+          "verify-v432-skeletal-record-operators.php",
+          "verify-v432-compiled-animation-records.php",
+          "verify-v432-compiled-skeletalmesh-order.php"
+        ],
+        "g5_full_runtime_acceptance": "OPEN",
+        "v432_inherited_lodmesh_parity": "UNVERIFIED",
+        "prd_deployment": "DEFERRED"
+      },
+      "implementation_history_before_mapping": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations."
+    },
+    {
       "id": "T99:USound::Serialize",
       "branch": "T99",
       "symbol": "USound::Serialize",
@@ -9503,105 +9602,6 @@
         "v432_mapping_scope": "v400-based archive implemented; v432 source may have game-specific additions",
         "v432_native_full_signoff": false
       }
-    },
-    {
-      "id": "T99:USkeletalMesh::Serialize",
-      "branch": "T99",
-      "symbol": "USkeletalMesh::Serialize",
-      "locations": [
-        {
-          "path": "Engine/Inc/UnSkeletalMesh.h",
-          "line": 286,
-          "v432_root": "L:\\Source\\Games\\UT99\\Unreal Tournament v432",
-          "source_revision": "UT99 v432 (ENGINE_VERSION=430; package version 69)"
-        }
-      ],
-      "status": "MAPPED",
-      "reader": "CatalogUE1ClassicNativeObjectReader.php -> CatalogUE1ClassicV432NativeDeltaReader.php",
-      "test": "",
-      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown. COMPILED_ENGINE_V432_ARCHIVE_MAPPED 2026-10-23: source SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac, exported stub RVA 0x341D jumps to 0xED290; genuine v432 method field order reconciled with v432 inlined struct operators; source-shaped positive/negative focused fixtures PASS.",
-      "remaining": "Compiled v432 native method order and inlined per-record archives IMPLEMENTED. Actual native loaded-value equality on genuine v432 skeletal/animation package data and object graph remains G5-OPEN; v432 inherited ULodMesh compiled-source equivalence to v400 remains G5-OPEN for USkeletalMesh. No PRD deployment or blanket source-parity acceptance.",
-      "updated_at_utc": "2026-10-23T21:25:29+00:00",
-      "source_mapping": {
-        "implementation_status": "MAPPED_COMPILED_NATIVE_ARCHIVE_METHOD",
-        "game_source": "UT99-v432",
-        "predecessor": "UT99-v400",
-        "engine_baseline": "Epic UE1 UObject",
-        "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
-        "compiled_export_stub_rva": "0x341D",
-        "compiled_native_method_rva": "0xED290",
-        "compiled_assembly_field_order": [
-          "ULodMesh::Serialize",
-          "ExtWedges",
-          "Points",
-          "RefSkeleton",
-          "BoneWeightIdx",
-          "BoneWeights",
-          "LocalPoints",
-          "SkeletalDepth",
-          "DefaultAnimation",
-          "WeaponBoneIndex",
-          "WeaponAdjust"
-        ],
-        "inlined_record_operators": "Engine/Inc/UnSkeletalMesh.h, Engine/Inc/UnAnim.h and Engine/Inc/UnMesh.h",
-        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
-        "complete_file_archive_result": "native_skeletalmesh_record_complete",
-        "focus_fixtures": [
-          "verify-v432-skeletal-record-operators.php",
-          "verify-v432-compiled-animation-records.php",
-          "verify-v432-compiled-skeletalmesh-order.php"
-        ],
-        "g5_full_runtime_acceptance": "OPEN",
-        "v432_inherited_lodmesh_parity": "UNVERIFIED",
-        "prd_deployment": "DEFERRED"
-      },
-      "implementation_history_before_mapping": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations."
-    },
-    {
-      "id": "T99:UAnimation::Serialize",
-      "branch": "T99",
-      "symbol": "UAnimation::Serialize",
-      "locations": [
-        {
-          "path": "Engine/Inc/UnSkeletalMesh.h",
-          "line": 338,
-          "v432_root": "L:\\Source\\Games\\UT99\\Unreal Tournament v432",
-          "source_revision": "UT99 v432 (ENGINE_VERSION=430; package version 69)"
-        }
-      ],
-      "status": "MAPPED",
-      "reader": "CatalogUE1ClassicNativeObjectReader.php -> CatalogUE1ClassicV432NativeDeltaReader.php",
-      "test": "",
-      "evidence": "v432 public source class declaration and Serialize(FArchive&) method; Core/Engine compiled libraries contain unavailable implementations. FMeshExtWedge in UnMesh.h implemented as typed 12-byte archive record but full USkeletalMesh field order unknown. COMPILED_ENGINE_V432_ARCHIVE_MAPPED 2026-10-23: source SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac, exported stub RVA 0x1FD2 jumps to 0xECEC0; genuine v432 method field order reconciled with v432 inlined struct operators; source-shaped positive/negative focused fixtures PASS.",
-      "remaining": "Compiled v432 native method order and inlined per-record archives IMPLEMENTED. Actual native loaded-value equality on genuine v432 skeletal/animation package data and object graph remains G5-OPEN; v432 inherited ULodMesh compiled-source equivalence to v400 remains G5-OPEN for USkeletalMesh. No PRD deployment or blanket source-parity acceptance.",
-      "updated_at_utc": "2026-10-23T21:25:29+00:00",
-      "source_mapping": {
-        "implementation_status": "MAPPED_COMPILED_NATIVE_ARCHIVE_METHOD",
-        "game_source": "UT99-v432",
-        "predecessor": "UT99-v400",
-        "engine_baseline": "Epic UE1 UObject",
-        "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
-        "compiled_export_stub_rva": "0x1FD2",
-        "compiled_native_method_rva": "0xECEC0",
-        "compiled_assembly_field_order": [
-          "UObject::Serialize",
-          "RefBones",
-          "Moves",
-          "AnimSeqs"
-        ],
-        "inlined_record_operators": "Engine/Inc/UnSkeletalMesh.h, Engine/Inc/UnAnim.h and Engine/Inc/UnMesh.h",
-        "php_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
-        "complete_file_archive_result": "native_animation_record_complete",
-        "focus_fixtures": [
-          "verify-v432-skeletal-record-operators.php",
-          "verify-v432-compiled-animation-records.php",
-          "verify-v432-compiled-skeletalmesh-order.php"
-        ],
-        "g5_full_runtime_acceptance": "OPEN",
-        "v432_inherited_lodmesh_parity": "NOT_APPLICABLE",
-        "prd_deployment": "DEFERRED"
-      },
-      "implementation_history_before_mapping": "Obtain compiled v432 native method evidence or full licensed Engine/Src; implement exact inherited plus new native archive field sequence, typed nested bones/motion tracks as applicable, independently verify against genuine v432 package. Never infer serialization sequence from declarations."
     }
   ]
 }

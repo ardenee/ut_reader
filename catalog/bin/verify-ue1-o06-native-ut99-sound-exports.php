@@ -50,8 +50,8 @@ foreach($ex as $e) {
  array_unshift($segments,'UnrealShare');
  $path=implode('.',$segments);$key=strtolower($path);
  try{
-  $props=Props::inspect($file,$package,$idx);
-  $obj=Native::inspect($file,$package,$idx,$props);
+  $props=Props::inspect($file,$package,$idx,'ut99-v432');
+  $obj=Native::inspect($file,$package,$idx,$props,'ut99-v432');
   $st=$obj['status']??'no status';$statuses[$st]=($statuses[$st]??0)+1;
   if($st!=='native_sound_record_complete'){$failed[]="$path incomplete native sound";continue;}
   if(!isset($native[$key])){$failed[]="$path not native";continue;}

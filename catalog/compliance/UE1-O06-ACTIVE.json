@@ -1,7 +1,7 @@
 {
-  "contract": "rea-ghidra-compiled-v432-analyzer-installed",
-  "stage": "source-file-mapped-rea-ghidra-verified-g5-open",
-  "last_action": "Installed official rea-agents 6.7.0 npm global and SHA256 verified official Ghidra 12.1.4 on DEV; configured Codex REA MCP and global skill without altering unrelated config, created UnrealDB source-parity scoped skill and reusable REA PowerShell launcher under C:\\Temp\\UnrealDB\\O06\\tools. REA doctor Ghidra 12.1.4 x86 PE readiness healthy 10 checks. First inspect of disposable installed UT99 v432 Engine.dll SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac succeeded and native Ghidra decompile of UAnimation::Serialize at 0x103ECEC0 recovered UObject::Serialize then archive calls to this+0x28/+0x34/+0x40 matching earlier RefBones Moves AnimSeqs source mapping. Evidence ID ev_3a0aa70a7ee584a6701c4b7569ca849f3ccfce05d6b8a7288a0ebae5c39b796b. Raw evidence stays C:\\Temp, method provenance and REA setup added to catalog/compliance. O06 register unchanged 256 MAPPED 0 PARTIAL 38 EXCLUDED; G5 genuine loaded values still OPEN and PRD untouched.",
-  "next_step": "Use REA+Ghidra scoped native decompilation on Core.dll and Engine.dll to check v432 differences in inherited v400 Serialize methods one by one, source/compiled-priority per AGENTS.md. Confirm genuine package runtime-loaded value comparisons in G5 before accepting full UE1 parity; no broad repeat tests or PRD changes absent accepted release gate.",
-  "updated_at_utc": "2026-10-23T21:44:55+00:00"
+  "contract": "g5-acceptance-evidence-ledger",
+  "stage": "current-native-slices-pass-full-method-open",
+  "last_action": "Reconciled 256 MAPPED 38 EXCLUDED: 197 named tests 59 unnamed; current-scope PASS 34/34 genuine v68-v69 UFonts in 6 SHA-pinned packages (66 checks), 3 compiled UT99 export evidence slices revalidated sound 262 music 30 TextBuffer 88; prior test-provenance error failed then corrected (journal preserved). Full independent methods still 0; production PHP unchanged; no PRD deploy.",
+  "next_step": "G5 acceptance queue: obtain genuine v432 nonempty Font CharRemap native loaded values; locate skeletal/animation genuine packages or mark specimen unavailable; evaluate changed source files against per-contract tests, then G5 class/default, early-family native oracle limits, and malformed boundary native comparisons without repeating unchanged PASS",
+  "updated_at_utc": "2026-10-23T22:05:08+00:00"
 }
