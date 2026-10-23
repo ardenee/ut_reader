@@ -47,7 +47,20 @@ final class CatalogUE1ClassicNativeObjectReader
             'texture','palette','sound','music','font','package','primitive','model','level','mesh','lodmesh','firetexture','wettexture','scriptedtexture','textbuffer','enum','const','bitarray','bitmatrix','vectors','verts','bspsurfs','bspnodes','polys','factory','exporter','levelfactorynew','classfactorynew','texturefactorynew',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
-        ],true)){return $record;}
+        ],true)){
+            // This is a byte-level statement, not an assertion that every
+            // runtime Class::Serialize side effect has been implemented.
+            // The tagged UObject envelope already consumed this export
+            // in full, so there is no unknown native payload to decode.
+            if($nativeLength===0){
+                return array_replace($record,[
+                    'status'=>'tag_envelope_complete_no_native_tail',
+                    'extension_bytes'=>0,
+                    'class_runtime_serializer_verified'=>false,
+                ]);
+            }
+            return $record;
+        }
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open native UE1 payload');}
         try{

@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T05:34:20.8463531Z",
-    "head_commit":  "70e39eca",
+    "updated_at_utc":  "2026-10-23T05:41:17.6316528Z",
+    "head_commit":  "e62fa6d2",
     "current_target":  "DEV",
-    "current_source_sha256":  "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
+    "current_source_sha256":  "6cb3ef0a8dedff1480c765c892afcfaa95cade5b93ca76ec100df4e1933583e5",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-bitarray-native.php",
@@ -189,12 +189,12 @@
                       "test":  "verify-ue1-classic-tagged-properties.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T05:33:02.2286635Z",
-                      "source_sha256":  "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
+                      "event_at_utc":  "2026-10-23T05:41:17.0146531Z",
+                      "source_sha256":  "6cb3ef0a8dedff1480c765c892afcfaa95cade5b93ca76ec100df4e1933583e5",
                       "test_sha256":  "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-                      "run_id":  "20261023T053301430Z-4abb323c",
+                      "run_id":  "20261023T054116230Z-4378b1cb",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T053301430Z-4abb323c-DEV-verify-ue1-classic-tagged-properties.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T054116230Z-4378b1cb-DEV-verify-ue1-classic-tagged-properties.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-textbuffer-native.php",
@@ -297,12 +297,12 @@
                       "test":  "verify-ue1-o06-genuine-entry-v61.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T05:34:20.8293256Z",
-                      "source_sha256":  "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
-                      "test_sha256":  "48ff90b581cd9d548b9d6857b51746b8cfa1d6af07ea3d271fed91a45a246721",
-                      "run_id":  "20261023T053420531Z-89ca9618",
+                      "event_at_utc":  "2026-10-23T05:41:16.0336795Z",
+                      "source_sha256":  "6cb3ef0a8dedff1480c765c892afcfaa95cade5b93ca76ec100df4e1933583e5",
+                      "test_sha256":  "7347e46366cd92edd248801549611bb101bc4ac1b9b179b6732be96390d4600c",
+                      "run_id":  "20261023T054115735Z-a7ab1c65",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T053420531Z-89ca9618-DEV-verify-ue1-o06-genuine-entry-v61.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T054115735Z-a7ab1c65-DEV-verify-ue1-o06-genuine-entry-v61.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-original-saveability.php",
@@ -321,12 +321,12 @@
                       "test":  "verify-ue1-o06-payload-negatives.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T05:33:02.7776625Z",
-                      "source_sha256":  "cdaf1db63f3d66aaa85d32d6ba6e70a022e37a879fb153df260a45cc77bc6e4d",
+                      "event_at_utc":  "2026-10-23T05:41:17.6216612Z",
+                      "source_sha256":  "6cb3ef0a8dedff1480c765c892afcfaa95cade5b93ca76ec100df4e1933583e5",
                       "test_sha256":  "be58ffc16478d4eb446eed331b121ac178e171fae65195daa20baa9a6987edee",
-                      "run_id":  "20261023T053302410Z-0dd0e2b0",
+                      "run_id":  "20261023T054117217Z-a9b132f6",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T053302410Z-0dd0e2b0-DEV-verify-ue1-o06-payload-negatives.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T054117217Z-a9b132f6-DEV-verify-ue1-o06-payload-negatives.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-1996-actor-abi.php",

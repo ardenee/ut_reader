@@ -66,7 +66,9 @@ foreach($exports as $ex){
   }
   if(($tag['native_tail_bytes']??0)===0){
    $check('tag_only_export_'.$i.'_no_unexplained_native_bytes',
-     $status==='class_specific_serializer_unimplemented'
+     ($status==='tag_envelope_complete_no_native_tail'
+     &&($native['extension_bytes']??-1)===0
+     &&($native['class_runtime_serializer_verified']??null)===false)
        ||$status==='class_metadata_decoded_in_class_reader');
   }
  }catch(Throwable $e){
@@ -78,6 +80,24 @@ foreach($exports as $ex){
 $check('genuine_three_model_exports',$models===3);
 $check('genuine_twenty_other_specialized_native_exports',$specialComplete===20);
 $check('genuine_tag_stream_not_empty',$totalTags>40);
+$srcRoot='L:/Source/Games/Unreal/Unreal [v1.200] [1998-05-19]/Engine/';
+$actorSource=@file_get_contents($srcRoot.'Src/UnActor.cpp');
+$actorHdr=@file_get_contents($srcRoot.'Inc/EngineClasses.h');
+$actorPos=is_string($actorSource)
+  ?strpos($actorSource,'void AActor::Serialize( FArchive& Ar )'):false;
+$actorSerialize=$actorPos===false?'':substr($actorSource,$actorPos,450);
+$check('epic_v1200_actor_v61_only_super_serializer',is_string($actorSource)
+  &&str_contains($actorSerialize,'Super::Serialize( Ar );')
+  &&str_contains($actorSerialize,'if( Ar.Ver()<57 )')
+  &&str_contains($actorSerialize,'if( Ar.Ver()<58 )')
+  &&!str_contains($actorSerialize,'Ar <<'));
+$check('epic_v1200_genuine_actor_class_declarations',is_string($actorHdr)
+  &&str_contains($actorHdr,'DECLARE_CLASS(ABrush,AActor,0)')
+  &&str_contains($actorHdr,'DECLARE_CLASS(ACamera,APlayerPawn,0|CLASS_Config)')
+  &&str_contains($actorHdr,'DECLARE_CLASS(ALevelInfo,AZoneInfo,0)')
+  &&str_contains($actorHdr,'DECLARE_CLASS(APlayerStart,ANavigationPoint,0)'));
+$check('genuine_eight_tagged_only_exports',($nativeStatuses['tag_envelope_complete_no_native_tail']??0)===8
+  &&!isset($nativeStatuses['class_specific_serializer_unimplemented']));
 ksort($classes);ksort($nativeStatuses);
 echo json_encode([
  'ok'=>$failed===[],'checks'=>count($checks),
