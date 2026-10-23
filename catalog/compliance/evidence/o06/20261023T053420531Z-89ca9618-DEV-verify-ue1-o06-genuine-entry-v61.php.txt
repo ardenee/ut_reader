@@ -1,0 +1,38 @@
+﻿{
+    "ok": true,
+    "checks": 90,
+    "passed": 90,
+    "failed": [],
+    "failures": [],
+    "version": 61,
+    "package_sha256": "2958f568f300dc2f282bb498dc74a3c3a6c4151eee9a71ff8dcacbc8626521e8",
+    "exports": 31,
+    "tag_count": 77,
+    "native_tail_bytes": 2721,
+    "class_counts": {
+        "Brush": 2,
+        "BspNodes": 3,
+        "BspSurfs": 3,
+        "Camera": 4,
+        "Level": 1,
+        "LevelInfo": 1,
+        "Model": 3,
+        "PlayerStart": 1,
+        "Polys": 3,
+        "TextBuffer": 1,
+        "Vectors": 6,
+        "Verts": 3
+    },
+    "native_statuses": {
+        "class_specific_serializer_unimplemented": 8,
+        "native_bspnodes_database_complete": 3,
+        "native_bspsurfs_database_complete": 3,
+        "native_level_record_complete": 1,
+        "native_model_record_complete": 3,
+        "native_polys_database_complete": 3,
+        "native_textbuffer_record_complete": 1,
+        "native_vectors_database_complete": 6,
+        "native_verts_database_complete": 3
+    },
+    "scope": "Genuine version 61 package in local UE1 Engine/Maps; no synthetic package construction"
+}

@@ -1,0 +1,42 @@
+﻿{
+    "ok": true,
+    "passed": 29,
+    "total": 29,
+    "failed": [],
+    "checks": {
+        "source_mesh_v35": true,
+        "source_mesh_v50": true,
+        "source_mesh_v61": true,
+        "source_mesh_v62": true,
+        "source_mesh_v65": true,
+        "source_mesh_v66": true,
+        "source_mesh_v69": true,
+        "v61_old_inline_mesh_arrays": true,
+        "v69_lazy_seekpos_and_texturelod": true,
+        "v65_single_legacy_float": true,
+        "v66_TextureLOD_array": true,
+        "all_zero_arrays_mesh_v35": true,
+        "all_zero_arrays_mesh_v61": true,
+        "all_zero_arrays_mesh_v69": true,
+        "large_vertex_array_streamed_without_drop": true,
+        "v69_lod_inherited_mesh": true,
+        "v69_lod_faces_wedges_materials": true,
+        "v69_lod_all_zero_arrays_source_order": true,
+        "v69_lod_scalars_remap": true,
+        "lod_pre62_unverified_not_invented": true,
+        "mesh_extension_not_complete": true,
+        "lod_extension_not_complete": true,
+        "reject_invalid_lazy_seekpos": true,
+        "reject_negative_anim_count": true,
+        "reject_oversize_tri_count": true,
+        "reject_invalid_texture_ref": true,
+        "reject_bad_lod_face_count": true,
+        "reject_truncated_lod_scalars": true,
+        "reject_truncated_legacy_mesh": true
+    },
+    "source": [
+        "Unreal v1.200 Engine/Src/UnMesh.cpp:32-46, Engine/Inc/UnMesh.h FMeshVert/Tri/AnimSeq/Connect",
+        "UT99 v400 Engine/Src/UnMesh.cpp:32-52, Engine/Inc/UnMesh.h",
+        "UT99 v400 Engine/Src/ULodMesh.cpp:23-48, Core/Inc/UnTemplate.h TLazyArray::operator<<"
+    ]
+}

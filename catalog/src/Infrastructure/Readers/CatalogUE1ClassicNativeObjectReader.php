@@ -95,7 +95,7 @@ final class CatalogUE1ClassicNativeObjectReader
             }
             if($nativeKind==='model'){
                 return array_replace($record,CatalogUE1ClassicModelNativeReader::inspect(
-                    $pkg,$ver,$read,$compact,$int,$pos,$limit));
+                    $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
             }
             if($nativeKind==='polys'){
                 return array_replace($record,CatalogUE1ClassicPolysNativeReader::inspect(

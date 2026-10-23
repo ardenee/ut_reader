@@ -15,8 +15,14 @@ final class CatalogUE1ClassicPrimitiveNativeReader
      * @return array<string,mixed>
      * The caller owns $position and $limit. Derived UModel and UMesh
      * serializers can reuse the exact same field-order prefix.
+     * The optional radius override applies ONLY to an old model's
+     * independently trial-parsed alternative sphere layout, never as
+     * an unconditional change to a standalone UPrimitive archive.
      */
-    public static function readBase(int $version,callable $read,int &$position,int $limit):array
+    public static function readBase(
+        int $version,callable $read,int &$position,int $limit,
+        bool $radiusForLegacySphere=false
+    ):array
     {
         $f32=static function()use($read):float{
             return (float)unpack('gvalue',$read(4))['value'];
@@ -29,7 +35,7 @@ final class CatalogUE1ClassicPrimitiveNativeReader
             $oldPlane=['x'=>$sphere['x'],'y'=>$sphere['y'],
                 'z'=>$sphere['z'],'w'=>$f32()];
             $sphere=['x'=>0.0,'y'=>0.0,'z'=>0.0,'w'=>0.0];
-        }elseif($version>61){
+        }elseif($version>61||$radiusForLegacySphere){
             $sphere['w']=$f32();
         }else{
             $sphere['w']=null; // v41-v61 legacy FVector-only FSphere
@@ -37,7 +43,7 @@ final class CatalogUE1ClassicPrimitiveNativeReader
         return [
             'bounding_box'=>$box,'bounding_sphere'=>$sphere,
             'old_legacy_plane'=>$oldPlane,
-            'source_serialized_base_bytes'=>$version<=40||$version>61?41:37,
+            'source_serialized_base_bytes'=>($version<=40||$version>61||$radiusForLegacySphere)?41:37,
             'runtime_sphere_radius_linked'=>false,
         ];
     }

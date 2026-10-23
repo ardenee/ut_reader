@@ -32,8 +32,9 @@ $build=static function(int $ver,string $native)use($idx):string{
  if(strlen($table)>512)throw new RuntimeException('Fixture table > payload start');
  return $table.str_repeat("\0",512-strlen($table)).$bytes;
 };
-$primitive=static fn(int $ver):string=>pack('g6',0,0,0,100,100,100).chr(1)
-    .($ver>40&&$ver<=61?pack('g3',1,2,3):pack('g4',1,2,3,4));
+$primitive=static fn(int $ver,bool $legacyRadius=false):string=>
+    pack('g6',0,0,0,100,100,100).chr(1)
+    .($ver>40&&$ver<=61&&!$legacyRadius?pack('g3',1,2,3):pack('g4',1,2,3,4));
 $lightmap=static function(int $ver)use($idx):string{
  $out=pack('V',123);
  if($ver<=37){
@@ -64,7 +65,7 @@ $zone=static function(int $actor=-1)use($idx):string{
     .hex2bin('0011223344556677');
 };
 $model=static function(int $ver,array $options=[])use($idx,$primitive,$lightmap,$bspNode,$bspSurf,$bspVert,$zone):string{
- $bytes=$primitive($ver);
+ $bytes=$primitive($ver,(bool)($options['legacyRadius']??false));
  if($ver<=61){
    foreach($options['refs']??[0,0,0,0,0,-1] as $r){$bytes.=$idx($r);}
  }else{
@@ -139,6 +140,23 @@ try{
        &&$m['leaves'][0]['visible_zones_hex']==='1020304050607080'
        &&$m['leaf_hulls']===[5,-9]
        &&$m['lights']===[-1]);
+ }
+ foreach([41,50,61] as $ver){
+   [$short]=$parse($ver,$model($ver));
+   $check('legacy_12_byte_sphere_v'.$ver,
+     $short['status']==='native_model_record_complete'
+     &&$short['sphere_wire_layout']==='sphere_vector_only_12'
+     &&$short['bounding_sphere']['w']===null
+     &&$short['model']['polys_reference']===-1);
+   [$full]=$parse($ver,$model($ver,['legacyRadius'=>true]));
+   $check('legacy_16_byte_sphere_v'.$ver,
+     $full['status']==='native_model_record_complete'
+     &&$full['sphere_wire_layout']==='sphere_with_radius_16'
+     &&$full['bounding_sphere']['w']===4.0
+     &&$full['model']['polys_reference']===-1
+     &&$full['model']['light_map'][0]['data_offset']===123);
+   $check('legacy_sphere_layout_encoded_byte_length_v'.$ver,
+     strlen($model($ver,['legacyRadius'=>true]))===strlen($model($ver))+4);
  }
  [$r]=$parse(35,$model(35));
  $check('v35_LightMap_old_serializer',

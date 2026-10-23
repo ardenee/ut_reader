@@ -18,13 +18,75 @@ use RuntimeException;
 
 final class CatalogUE1ClassicModelNativeReader
 {
-    /** @return array<string,mixed> */
+    /**
+     * Source-scoped old-sphere version compatibility. Actual UE1 v61 map
+     * exports may persist a 16-byte sphere while the UT99 v400 source's
+     * <=61 legacy operator reads only the FVector(12) bytes. Package
+     * version alone cannot distinguish this: test complete archive
+     * consumption under both layouts, refuse to pretend uniqueness
+     * when both completely decode. No source revision is invented.
+     *
+     * @return array<string,mixed>
+     */
     public static function inspect(
         CatalogUE1PackageReader $pkg,int $version,callable $read,
-        callable $compact,callable $u32,int &$position,int $limit
+        callable $compact,callable $u32,int &$position,int $limit,
+        ?callable $seek=null
+    ):array{
+        if($version<41||$version>61||$seek===null){
+            return self::inspectWire(
+                $pkg,$version,$read,$compact,$u32,$position,$limit,false);
+        }
+        $start=$position;$candidates=[];$failures=[];
+        foreach([false,true] as $fullRadius){
+            $seek($start);
+            try{
+                $parsed=self::inspectWire(
+                    $pkg,$version,$read,$compact,$u32,$position,$limit,$fullRadius);
+                $candidates[]=[
+                    'data'=>$parsed,'end'=>$position,
+                    'wire'=>$fullRadius?'sphere_with_radius_16':'sphere_vector_only_12',
+                ];
+            }catch(RuntimeException $ex){
+                $failures[]=$ex->getMessage();
+            }
+        }
+        $complete=array_values(array_filter($candidates,
+            static fn(array $item):bool=>
+                ($item['data']['status']??'')==='native_model_record_complete'));
+        if(count($complete)===1){
+            $chosen=$complete[0];$seek($chosen['end']);
+            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire']];
+        }
+        if(count($complete)>1){
+            $seek($start);
+            return ['status'=>'native_model_sphere_layout_ambiguous',
+                'possible_sphere_wire_layouts'=>array_column($complete,'wire'),
+                'unparsed_bytes'=>$limit-$start];
+        }
+        if(count($candidates)===1){
+            $chosen=$candidates[0];$seek($chosen['end']);
+            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire']];
+        }
+        if(count($candidates)>1){
+            $seek($start);
+            return ['status'=>'native_model_sphere_layout_ambiguous',
+                'possible_sphere_wire_layouts'=>array_column($candidates,'wire'),
+                'unparsed_bytes'=>$limit-$start];
+        }
+        $seek($start);
+        throw new RuntimeException('No source-compatible native UModel sphere layout: '.
+            implode(' / ',$failures));
+    }
+
+    /** @return array<string,mixed> */
+    private static function inspectWire(
+        CatalogUE1PackageReader $pkg,int $version,callable $read,
+        callable $compact,callable $u32,int &$position,int $limit,
+        bool $fullRadius
     ):array{
         $result=CatalogUE1ClassicPrimitiveNativeReader::readBase(
-            $version,$read,$position,$limit);
+            $version,$read,$position,$limit,$fullRadius);
         $i32=static function()use($u32):int{
             $v=$u32();return $v>=0x80000000?$v-0x100000000:$v;
         };
