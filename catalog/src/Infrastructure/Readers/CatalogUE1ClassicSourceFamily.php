@@ -19,39 +19,66 @@ final class CatalogUE1ClassicSourceFamily
     public const UNREAL_V227='unreal-v227';
 
     /**
-     * Identify a selected *archive source implementation*, not a
-     * package's engine generation. Caller-proven game lineage overrides
-     * the Epic UE1 engine baseline only where source exists.
+     * PACKAGE_MIN_VERSION and PACKAGE_FILE_VERSION in the pinned
+     * build-selected game engine source. Inclusive complete-backwards-
+     * compatibility gates, NOT conclusive game identities, and not
+     * absolute limits on the engine's attempted loading.
      *
-     * Versions > 61 cannot prove UT99 identity. Requiring provenance
-     * prevents plausible but incorrect decoded fields from being exposed.
+     * Unreal v1.200  : Core/Inc/UnObjVer.h (34..61)
+     * UT99 v400      : Core/Inc/UnObjVer.h (60..68)
+     * Unreal v1.227  : Core/Inc/UnObjVer.h (60..69)
+     */
+    public const GAME_VERSION_GATES=[
+        self::EPIC_UE1=>['minimum'=>34,'maximum'=>61],
+        self::UT99_V400=>['minimum'=>60,'maximum'=>68],
+        self::UNREAL_V227=>['minimum'=>60,'maximum'=>69],
+    ];
+
+    /** @return list<string> */
+    public static function eligibleProfiles(int $version):array
+    {
+        $profiles=[];
+        foreach(self::GAME_VERSION_GATES as $family=>$gate){
+            if($version>=$gate['minimum']&&$version<=$gate['maximum']){
+                $profiles[]=$family;
+            }
+        }
+        return $profiles;
+    }
+
+    /**
+     * Validate a source choice against its version gate. A successful
+     * gate never proves what game produced a file.
      */
     public static function select(int $version,?string $sourceFamily=null):string
     {
-        if($sourceFamily!==null&&!in_array($sourceFamily,[
-            self::EPIC_UE1,self::UT99_V400,self::UNREAL_V227
-        ],true)){
+        if($sourceFamily!==null&&!array_key_exists(
+            $sourceFamily,self::GAME_VERSION_GATES)){
             throw new InvalidArgumentException('Unknown UE1 game/source family');
         }
-        if($sourceFamily===self::UNREAL_V227){
-            // An Unreal v1.227 loader may also open older UE1 package
-            // versions. The explicit game selection describes the loader
-            // source, not necessarily the file's original producer.
-            if($version<34||$version>69){
-                throw new InvalidArgumentException(
-                    'Archive version is outside the supported Unreal v1.227 loader range');
+        $eligible=self::eligibleProfiles($version);
+        if($sourceFamily!==null){
+            if(!in_array($sourceFamily,$eligible,true)){
+                $gate=self::GAME_VERSION_GATES[$sourceFamily];
+                throw new InvalidArgumentException(sprintf(
+                    'UE1 source %s is outside its %d-%d complete-compatibility gate for package version %d',
+                    $sourceFamily,$gate['minimum'],$gate['maximum'],$version));
             }
-            return self::UNREAL_V227;
+            return $sourceFamily;
         }
-        if($sourceFamily===self::UT99_V400){
-            return self::UT99_V400;
+        if(count($eligible)===1){
+            // Selecting a sole eligible *known source profile* does NOT
+            // establish that the game created this package.
+            return $eligible[0];
         }
-        if($version>61){
-            throw new InvalidArgumentException(
-                'UE1 archive version alone does not identify the game. '.
-                'Supply an established source lineage; do not assume UT99.');
+        if($eligible===[]){
+            throw new InvalidArgumentException(sprintf(
+                'No source profile covers UE1 package version %d within configured compatibility gates',
+                $version));
         }
-        return self::EPIC_UE1;
+        throw new InvalidArgumentException(sprintf(
+            'UE1 package version %d has overlapping source profiles [%s]; select known loader provenance or compare candidates',
+            $version,implode(', ',$eligible)));
     }
 
     /**
@@ -68,14 +95,14 @@ final class CatalogUE1ClassicSourceFamily
         if($version===69&&$licensee===227){
             if($sourceFamily!==null&&$sourceFamily!==self::UNREAL_V227){
                 throw new InvalidArgumentException(
-                    'This package identifies Unreal v1.227, not the requested game source');
+                    'Header identifies Unreal v1.227 (69/227), conflicting with requested game source');
             }
-            return self::UNREAL_V227;
+            return self::select($version,self::UNREAL_V227);
         }
         if($sourceFamily===self::UNREAL_V227&&$version===69
             &&$licensee!==0&&$licensee!==227){
             throw new InvalidArgumentException(
-                'Conflicting explicit Unreal v1.227 source and package licensee identity');
+                'Conflicting Unreal v1.227 selection and package licensee version');
         }
         return self::select($version,$sourceFamily);
     }
@@ -98,6 +125,12 @@ final class CatalogUE1ClassicSourceFamily
             'game_source_overlay'=>$v227?self::UNREAL_V227:
                 ($selected===self::UT99_V400?self::UT99_V400:null),
             'source_profile'=>$selected,
+            'eligible_profiles'=>self::eligibleProfiles($version),
+            'source_profile_selection_basis'=>$sourceFamily!==null
+                ?'explicit_loader_provenance'
+                :($version===69&&$licenseeVersion===227
+                    ?'confirmed_69_227_unreal_header'
+                    :'sole_version_eligible_profile_not_producer_identity'),
             'game_identity_inferred_from_version_only'=>false,
             'full_game_core_source_available'=>!$v227,
             'source_completeness'=>$v227

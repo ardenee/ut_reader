@@ -486,6 +486,10 @@ The two remaining C98/T99 UClass::Serialize mappings still have real value-seman
 
 Cross-generation architectural contract: specs/engine-game-source-precedence.md (also linked in AGENTS.md). It is required for UE2/2.5, UE3, UE4 and UE5 going forward, not a claim that those readers have been fully changed now.
 
+### O06 game-source version eligibility gates (2026-10-23)
+
+Implemented source-defined loader-version gates in CatalogUE1ClassicSourceFamily: Unreal v1.200 34-61, UT99 v400 60-68, Unreal v1.227 60-69, inclusive. Explicit source choice outside its complete-backward-compatibility range is rejected. The CLI presents eligible candidates; overlapping v60-61 (three) and v62-68 (two) do not silently select a game. v69 has only the pinned Unreal v1.227 profile, but version alone is not proof of the producing game, unlike source-proven version/licensee 69/227. Confirmed three local Core/Inc/UnObjVer.h sources and Unreal/UT99 Core/Src/UnLinker.h: older-than-minimum invokes a Yes/No warning rather than unconditional rejection. Strict gates describe complete compatibility rather than every package the engine may attempt to load. O06 register remains 252 MAPPED, 2 PARTIAL, 38 EXCLUDED; no native/corpus tests or PRD deploy.
+
 ### O06 implementation queue — Epic code parity first (2026-10-23)
 
 **No new test contracts or corpus runs are authorised for this implementation batch.** Source-review changes below are code-only; mark `IMPLEMENTED — VERIFICATION DEFERRED`, not `ACCEPTED`. Continue implementing remaining **existing** G2, then G3, then G4 requirements before arranging verification as a separate milestone.

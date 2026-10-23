@@ -375,9 +375,12 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
                     $objectReader = new \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader($parsePath);
                     $objectReader->validatePackage();
                     $header=$objectReader->getHeader();
-                    $selectedGameSource=
-                        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::selectFromHeader(
-                            $header,$ue1SourceFamily);
+                    $selector=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::class;
+                    $result['ue1_game_source_version_gates']=$selector::GAME_VERSION_GATES;
+                    $result['ue1_game_source_eligible_profiles']=$selector::eligibleProfiles(
+                        (int)($header['version']??0));
+                    $selectedGameSource=$selector::selectFromHeader(
+                        $header,$ue1SourceFamily);
                     $exportCount = count($objectReader->getExports());
                     $samples = [];
                     $maxPreview = min($exportCount, 32);
@@ -560,6 +563,10 @@ function inspect_unreal_print_human(array $result): void
     if (array_key_exists('full_validation', $result)) {
         echo 'Full reader validation       : ' . (string)$result['full_validation'] . PHP_EOL;
         echo 'Reader engine                : ' . (string)($result['reader_engine'] ?? '') . PHP_EOL;
+        if (isset($result['ue1_game_source_eligible_profiles'])) {
+            echo 'UE1 version-eligible readers : '
+                . implode(', ',$result['ue1_game_source_eligible_profiles']) . PHP_EOL;
+        }
         if (isset($result['ue1_selected_source_family'])) {
             echo 'UE1 source serializer        : '
                 . (string)$result['ue1_selected_source_family'] . PHP_EOL;

@@ -17,6 +17,28 @@ Epic source baseline: `L:\Source\Engine\UE1\Source` and pinned Epic engine revis
 - **Earlier Unreal:** UE1 engine source defines the common legacy archive. May and July 1997 original sources add source-specific serializers; they can share package version 23 and therefore require their own source selection. Historic runtime/load effects are tracked separately.
 - **Source selection:** `CatalogUE1ClassicSourceFamily::selectFromHeader` respects the documented Unreal v1.227 version/licensee signature. `select` does not infer UT99 from later package versions. Top-level tagged, class, native and CLI readers select once and propagate the source profile into nested field, inherited class, array, struct and bytecode readers. `CatalogUE1ClassicGameSourceOverlay` applies the three Unreal v1.227 actor overrides after their inherited tagged archive.
 
+## UE1 source-profile version eligibility (implementation 2026-10-23)
+
+The pinned game sources declare inclusive minimum and maximum **complete-backward-compatibility** versions from Core/Inc/UnObjVer.h:
+
+| Game loader source profile | PACKAGE_MIN_VERSION | PACKAGE_FILE_VERSION | UnrealDB source ID |
+|---|---:|---:|---|
+| Unreal v1.200 | 34 | 61 | epic-ue1 |
+| Unreal Tournament v400 | 60 | 68 | ut99-v400 |
+| Unreal v1.227 | 60 | 69 | unreal-v227 |
+
+CatalogUE1ClassicSourceFamily::GAME_VERSION_GATES and eligibleProfiles($fileVersion) enforce these ranges for source-profile **eligibility**, including explicit --ue1-source choices.
+
+- v34–59: Unreal v1.200 source eligible.
+- v60–61: all three sources eligible, not auto-identified.
+- v62–68: UT99 v400 and Unreal v1.227 eligible, not auto-identified.
+- v69: Unreal v1.227 is the only source in this pinned selection set; version alone still does not prove the producing game. The 69/227 header pair is positive evidence for that Unreal loader.
+- Outside these ranges: none of these source profiles claims complete compatibility. Earlier original UE1 v22–23 sources are handled separately; other game branches need their own source-backed rules.
+
+**Crucial source distinction:** The actual ULinkerLoad::LoadSummary check in both Unreal v1.200 and UT99 v400 *prompts* on files older than PACKAGE_MIN_VERSION and may continue. The eligibility gates deliberately reflect complete-compatibility support, **not an assertion that the engine refuses every out-of-range file**. A newer file is not rejected by that particular minimum-version check, either, but may fail in subsequent parsing or linking.
+
+The CLI reports all eligible profiles before selecting. If multiple sources are eligible and no loader provenance is provided, it reports ambiguity rather than silently interpreting a file using the wrong game. A future candidate probe must compare complete structural outcomes and surface ambiguity when multiple sources succeed; successful tagged-property parsing alone does not identify a game. Game source is layered over the Epic UE1 engine serializer, never substituted for it.
+
 ## Future UE2 / UE2.5 / UE3 / UE4 / UE5 work
 
 For every code review or new reader, keep a `base_engine_source`, `selected_engine_revision`, `game_loader_source` and `override_source` conceptually separate. Determine version and licensee gates from the specific code branch. Never apply the behavior of Unreal II to UT2003, UT2004 to UE2.5, UT3 to generic UE3, or a custom UE4/UE5 game fork to a generic engine file without a verified inheritance/override relation. The same applies to cooked package loaders, object index resolution, script data, compression, redirects and dependency/linker fixups.

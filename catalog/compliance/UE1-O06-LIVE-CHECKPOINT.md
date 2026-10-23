@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3g4-source-provenance-engine-first-game-overrides`
-- **Stage:** implemented-not-native-verified
-- **Last completed action:** Corrected critical UE1 core/game provenance bug: removed version>=62 -> UT99 inference from source selector; automatic Unreal v1.227 only from source-verified version 69 and licensee 227; UT99 v400 now requires explicit or external established loader provenance, unknown >=62 is source-unresolved. Pass selected source through CLI, classic UObject, UClass, native, tagged and nested/default readers. Fixed v227 archive class names from wrong C++ AX* to actual UnrealScript XBeamEmitter XParticleEmitter XRopeDeco, with Emitter source package ClassIndex identity and proper game loader context (including older compatible packages). Engine base always UE1, game overlays after inherited UObject. Implemented recursive UStructProperty::SerializeItem through UStruct::SerializeBin for nested typed class defaults/array structs and zero-byte empty layouts; unresolved/cyclic still explicit. Wrote binding architecture rule for UE1-UE5 in AGENTS and specs/engine-game-source-precedence.md. Keep two C98/T99 UClass PARTIAL, register 252 mapped 2 partial 38 excluded. PHP syntax+git diff only; no functional tests or PRD deploy.
-- **Resume at:** Finish two remaining C98 and T99 UClass::Serialize implementation gaps from actual Epic source (unsupported default property kinds, imported declarations and source-typed values), then separately native G5/corpus verification and safe PRD deployment. Apply engine->game code composition consistently for future UE2-UE5 work.
-- **Active changed at:** 2026-10-23T20:14:50+00:00
+- **Contract:** `ue1-game-loader-version-eligibility`
+- **Stage:** implemented-version-gates-verification-deferred
+- **Last completed action:** Added exact UE1 source-profile complete-compatibility gates from pinned game source Core/Inc/UnObjVer.h: Unreal v1.200 epic-ue1 34-61; UT99 v400 ut99-v400 60-68; Unreal v1.227 unreal-v227 60-69. Common selector eligibleProfiles rejects explicit out-of-range source choices, returns a sole candidate as source-only but never game producer identity, and refuses to silently choose between overlapping 60-61 or 62-68 profiles without provenance. Unreal 69/227 confirmed source pair still recognized. CLI emits all version-eligible sources and gate metadata, status/spec updated. Unreal v1.200 and UT99 compiled source linker reads versions below PACKAGE_MIN_VERSION with YesNo user override; ranges are guaranteed backward compatibility, not unconditional engine rejection. O06 remains 252 MAPPED 2 PARTIAL 38 EXCLUDED. Lightweight PHP lint/diff integrity only; native/corpus G5 and PRD deployment deferred.
+- **Resume at:** Finish remaining C98/T99 UClass default archive codecs, then separated native G5/corpus verification. If automated candidate interpretation is added for overlapping versions, use complete bounded structural comparison with explicit ambiguity not first parse success.
+- **Active changed at:** 2026-10-23T20:24:31+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
