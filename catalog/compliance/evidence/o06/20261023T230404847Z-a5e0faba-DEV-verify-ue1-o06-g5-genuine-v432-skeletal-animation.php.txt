@@ -1,0 +1,26 @@
+﻿{
+    "ok": false,
+    "checks": 65,
+    "passed": 54,
+    "errors": [
+        "native_loaded_export_table.u-12",
+        "native_loaded_export_table.u-24",
+        "native_loaded_export_table.u-23",
+        "native_loaded_export_EcoTerror.u-0",
+        "native_loaded_export_EcoTerror.u-6",
+        "native_loaded_export_d00d.u-4",
+        "native_loaded_export_d00d.u-11",
+        "native_loaded_export_d00d.u-7",
+        "required_loaded_skeletal_count",
+        "required_loaded_animation_count",
+        "required_loaded_default_animation_references"
+    ],
+    "genuine_exports_decoded": 10,
+    "native_loaded_value_slices": {
+        "SkeletalMesh": 0,
+        "Animation": 0
+    },
+    "native_positive_animation_refs_checked": 0,
+    "covered": [],
+    "limits": "Three genuine v69 UT99 packages, 8 native object loaded-count/reference slices; whole arrays, native errors, and SFCharacter4 remain open. No O06 full-method signoff."
+}

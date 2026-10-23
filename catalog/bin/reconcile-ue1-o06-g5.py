@@ -11,6 +11,9 @@ NATIVE={"T99:UTextBuffer::Serialize":"verify-ue1-o06-native-ut99-textbuffer-expo
 COMPILED={"T99:UFont::Serialize","T99:UAnimation::Serialize","T99:USkeletalMesh::Serialize"}
 GENUINE_ARCHIVE={"T99:UFont::Serialize":"verify-ue1-o06-g5-genuine-v432-fonts.php"}
 NATIVE_LOADED={"T99:UFont::Serialize":"verify-ue1-o06-g5-native-v432-font-loaded-values.php"}
+NATIVE_LOADED_EXTRA={"T99:UFont::Serialize":"verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php",
+                     "T99:USkeletalMesh::Serialize":"verify-ue1-o06-g5-genuine-v432-skeletal-animation.php",
+                     "T99:UAnimation::Serialize":"verify-ue1-o06-g5-genuine-v432-skeletal-animation.php"}
 EARLY={"R82","R83","R96","U86","U97","D97"}
 def read(p): return json.loads(p.read_text(encoding="utf-8-sig"))
 def digest(p): return hashlib.sha256(p.read_bytes()).hexdigest() if p and p.is_file() else None
@@ -59,9 +62,16 @@ for e in reg["entries"]:
     lt=NATIVE_LOADED.get(ident)
     le=latest.get(lt)
     llog=ROOT/le["log"].replace("\\","/") if le and le.get("log") else None
-    loaded_valid=bool(le and le.get("state")=="PASS" and le.get("source_sha256")==current
-                      and le.get("output_sha256") and digest(llog)==le["output_sha256"]
-                      and digest(ROOT/"catalog"/"bin"/lt)==le.get("test_sha256"))
+    loaded_primary=bool(le and le.get("state")=="PASS" and le.get("source_sha256")==current
+                        and le.get("output_sha256") and digest(llog)==le["output_sha256"]
+                        and digest(ROOT/"catalog"/"bin"/lt)==le.get("test_sha256"))
+    extra=NATIVE_LOADED_EXTRA.get(ident)
+    xe=latest.get(extra)
+    xlog=ROOT/xe["log"].replace("\\","/") if xe and xe.get("log") else None
+    loaded_extra=bool(xe and xe.get("state")=="PASS" and xe.get("source_sha256")==current
+                      and xe.get("output_sha256") and digest(xlog)==xe["output_sha256"]
+                      and digest(ROOT/"catalog"/"bin"/extra)==xe.get("test_sha256"))
+    loaded_valid=(loaded_primary and loaded_extra) if ident=="T99:UFont::Serialize" else (loaded_primary or loaded_extra)
     gaps=["complete_native_fields_values_references_bytes_errors_not_proven"]
     if not named: gaps.append("no_named_test")
     elif not script.is_file(): gaps.append("named_test_file_absent")
@@ -70,8 +80,11 @@ for e in reg["entries"]:
     elif not sourcevalid: gaps.append("global_source_inputs_changed")
     if e["branch"] in EARLY: gaps.append("matching_compiled_early_runtime_unavailable")
     if ident in COMPILED:
-        gaps.append("nonempty_remap_and_malformed_native_errors_open" if loaded_valid
-                    else "genuine_v432_loaded_values_missing")
+        if not loaded_valid: gaps.append("genuine_v432_loaded_values_missing")
+        elif ident=="T99:UFont::Serialize":
+            gaps.extend(["controlled_malformed_CharRemap_native_consumes_4_bytes_past_serial_extent_PHP_rejects_early",
+                         "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"])
+        else: gaps.append("native_full_array_elements_and_malformed_errors_not_proven")
     if ident in NATIVE: gaps.append("native_export_slice_only")
     rows.append({"id":ident,"branch":e["branch"],"implementation":"MAPPED",
         "reader":e.get("reader"),"named_test":named or None,
@@ -79,10 +92,12 @@ for e in reg["entries"]:
         "named_test_log_valid":logvalid,"named_test_script_valid":scriptvalid,
         "named_test_current_global_fingerprint":sourcevalid,
         "independent_oracle":"compiled_native_export_slice" if ident in NATIVE else
+                             "compiled_native_loaded_values_subset" if loaded_valid else
                              "compiled_archive_disassembly_only" if ident in COMPILED else "not_recorded",
         "native_slice_test":independent,"native_slice_evidence_valid":nativeslice,
         "genuine_archive_test":gt,"genuine_archive_evidence_current":genuine_valid,
-        "native_loaded_test":lt,"native_loaded_evidence_current":loaded_valid,
+        "native_loaded_test":lt,"native_loaded_extra_test":extra,
+        "native_loaded_evidence_current":loaded_valid,"native_loaded_additional_valid":loaded_extra,
         "full_G5_method_acceptance":"OPEN","gaps":gaps})
 branches={}
 for b in sorted({r["branch"] for r in rows}):
@@ -119,9 +134,9 @@ lines=["# UE1 O06 — G5 evidence reconciliation","",
        "- 256 MAPPED; 38 EXCLUDED; 0 methods with demonstrated full independent native behaviour across all relevant criteria.",
        "- "+str(len(no_named))+" entries have no named test; 52 of these are R82/R83 early-resource identity mappings.",
        "- "+str(len(natives))+" independent compiled v432 native export comparison slices: "+", ".join(natives)+".",
-       "- Compiled v432 method archive-order evidence with no genuine loaded-value equality: "+", ".join(sorted(COMPILED - NATIVE_LOADED.keys()))+".",
+       "- Compiled v432 method archive-order evidence with no genuine loaded-value evidence: "+", ".join(sorted(r["id"] for r in rows if r["id"] in COMPILED and not r["native_loaded_evidence_current"]))+".",
        "- Current genuine archive compatibility: "+str(summary["genuine_v432_font_archive_compatibility"])+" method (T99 UFont; 34 SHA-pinned file exports / 66 checks PASS).",
-       "- Current **compiled v432 native loaded-value slice**: "+str(summary["compiled_native_loaded_value_slice"])+" method (T99 UFont; 4 Engine.u fonts, 16,384 glyph bytes plus native texture linker identities, focused 61/61 PASS). Nonempty remap and malformed errors remain OPEN.",
+       "- Current **compiled v432 genuine native loaded-value subsets**: "+str(summary["compiled_native_loaded_value_slice"])+" methods (T99 UFont, USkeletalMesh, UAnimation); 4 Engine.u fonts 16,384 glyph bytes + 4 texture reference identities 61/61 PASS; PRD 62 genuine v69 nonempty fonts across two UWindowFonts.utx variants 255/1183 map entries each and both full native map-value hashes (467/467 PASS); PRD 8 skeletal/animation native loaded exports and 3 linked default animation identities (151/151 PASS). Full-method errors and arrays still OPEN.",
        "- Full installed UT99 corpus scanned 310 genuine packages, zero malformed structures; no native SkeletalMesh/Animation exports available as specimens.",
        "- Latest DEV journal state: "+str(result["latest_DEV_test_states"])+".",
        "- Named tests with current matching source fingerprint: "+str(summary["named_tests_with_current_source_fingerprint"])+" of "+str(summary["with_named_test"])+"; historical PASS is not an automatically current proof.",
@@ -133,7 +148,7 @@ for b,x in branches.items():
     lines.append("| "+b+" | "+str(x["mapped"])+" | "+str(x["unnamed"])+" | "+str(x["native_slice"])+" | "+str(x["compiled_order"])+" | "+str(x["native_loaded_value_slice"])+" |")
 lines+=["","## G5 finite queue (do not replay existing valid tests)","",
         "1. Identify exact v432 PHP reader changes since last journal fingerprint and rerun only their invalidated focused tests.",
-        "2. Seek real **nonempty** v432 UFont CharRemap, USkeletalMesh and UAnimation exports outside the fully scanned 310-file vanilla UT99 installation; record unavailable specimen explicitly.",
+        "2. **FOUND** 121 nonempty genuine v69 UFont exports in named PRD corpus and 10 genuine v69 skeletal/animation exports. 62 UFonts + 8 skeletal/animation source exports now have compiled loaded-value subsets. Next extend native full-field/array comparisons; unblock two SFCharacter4 native exports with dependencies only if they add evidence.",
         "3. Compare actual native property/default/struct loaded values, reference identities and consumed bytes for available genuine packages.",
         "4. R82/R83: 52 registered methods carry only source identity proof, no named test. Attach actual per-method source/production/fixture evidence before G5 signoff.",
         "5. Early R82/R83/R96/U86/U97/D97: locate matching original runtime; otherwise record a native oracle limitation, not invented PASS.",

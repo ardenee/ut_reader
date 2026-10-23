@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T22:41:38.3279154Z",
-    "head_commit":  "b0817688",
+    "updated_at_utc":  "2026-10-23T23:09:33.7262035Z",
+    "head_commit":  "65bf7aed",
     "current_target":  "DEV",
     "current_source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
     "tests":  [
@@ -471,6 +471,30 @@
                       "run_id":  "20261023T220148118Z-ef7858ef",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T220148118Z-ef7858ef-DEV-verify-ue1-o06-g5-genuine-v432-fonts.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php",
+                      "test":  "verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T23:09:33.7072367Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "67d11593cfad1c99ac32769dd6a739b885c3286c666e87250ac4836b976a1004",
+                      "run_id":  "20261023T230933123Z-cf294e12",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T230933123Z-cf294e12-DEV-verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-genuine-v432-skeletal-animation.php",
+                      "test":  "verify-ue1-o06-g5-genuine-v432-skeletal-animation.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T23:04:36.2245925Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "1adb92e652bed7fac81cba1ee585abcf0ca18c21ae9f0640121cfac6acbff48e",
+                      "run_id":  "20261023T230435525Z-504a1849",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T230435525Z-504a1849-DEV-verify-ue1-o06-g5-genuine-v432-skeletal-animation.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-native-v432-font-loaded-values.php",

@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "recorded": "2026-10-23",
+  "classification": "UNMODIFIED_REAL_UT99_PRD_V69_FONTS_COMPILED_NATIVE_LOADED_VALUES",
+  "read_only_prd_source": "//192.168.0.55/l$/unrealdb/games/ut99/verified",
+  "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "native_method": "Engine.dll UFont::Serialize RVA 0x846D0, CDB post-archive 0x8486B",
+  "source_profile": "ut99-v432",
+  "cases": [
+    {
+      "original": "UWindowFonts.utx",
+      "stored": "95f54a9eb01494b0bfef4790f119e7c7.utx",
+      "local": "C:/Temp/UnrealDB/O06/G5-real-UWindowFonts-255.utx",
+      "package_sha256": "2e0490a7d7b20b6fc577b08d2f85c313b5cf1dd8381ff1c98d382da0ed8309f6",
+      "log": "C:/Temp/UnrealDB/O06/g5-real-nonempty-uWindowFont-verified-cdb.log",
+      "log_sha256": "3fba74af9a9983b9fc9b305955c63b59c2532ca395fae5409bc4cac00ddcf8e9",
+      "map": "C:/Temp/UnrealDB/O06/G5-real-UWindowFont-map255.bin",
+      "map_sha256": "a43647fbe6933ef77d7323a02c6daf8e207e8a41519cabaacc59449c465aab67",
+      "font_count": 29,
+      "first_export_index": 43,
+      "first_font": "Tahoma10",
+      "expected_remap_count": 255,
+      "expected_cpp": 256,
+      "expected_glyphs": 256,
+      "expected_source_map_wire_sha256": "d95ae785042a201da78f7a42f8b87ee83ce89aeb06bac3f03f9003a1b69d7bb9"
+    },
+    {
+      "original": "UWindowFonts.utx",
+      "stored": "3571769ce7bcaf49b9848f12323adde1.utx",
+      "local": "C:/Temp/UnrealDB/O06/Native-UCC/Textures/UWindowFonts.utx",
+      "package_sha256": "67187424ee70b54f07c6a49cabc6738e41ff5cdf26f29d591df5de230280a9c7",
+      "log": "C:/Temp/UnrealDB/O06/g5-real-nonempty-uWindowFont-1183-cdb.log",
+      "log_sha256": "5ec6ba1de83c01a9d27ec09fd2c8663e8832efd458b3b7961418b37b946722be",
+      "map": "C:/Temp/UnrealDB/O06/G5-real-UWindowFont-map1183.bin",
+      "map_sha256": "dbed406e468a8f61b76c12acc90f8dee0f921df49e6b06a041f1605bcccbe497",
+      "font_count": 33,
+      "first_export_index": 43,
+      "first_font": "Tahoma10",
+      "expected_remap_count": 1183,
+      "expected_cpp": 2048,
+      "expected_glyphs": 2048,
+      "expected_source_map_wire_sha256": "16f0b88145019132e3926c32a72c066b327327d8ba79e6db18c13f9591a7e09a"
+    }
+  ],
+  "scope_limits": [
+    "62 distinct genuinely archived font exports in two unmodified PRD files; 255/1183-entry real nonempty maps loaded and all native header/flag fields compared.",
+    "Two full native TMap 8-byte-per-pair raw arrays captured, 255 and 1183 entries; 4-byte serialized pairs from each match all data in source order by independent SHA.",
+    "Other sampled 59 nonempty original files not all independently loaded; only 62 of 121 discovered have compiled runtime evidence here.",
+    "Full individual glyph-array memory equality is covered for four Engine.u genuine fonts in prior G5, but not for all 62 UWindowFonts here.",
+    "Native malformed-input byte-consumption differs for controlled truncated remap count, still OPEN. No O06 whole-method signoff.",
+    "PRD not written, canonical source not modified; Unreal v1.227 69/227 headers rejected with UT99 selector despite catalog label."
+  ]
+}

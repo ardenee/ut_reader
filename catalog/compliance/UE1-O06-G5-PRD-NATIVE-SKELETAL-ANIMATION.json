@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "date": "2026-10-23",
+  "classification": "AUTHENTIC_SHA_PINNED_UT99_CATALOG_FILES_PARTIAL_NATIVE_RUNTIME_VALUES",
+  "prd_corpus": "//192.168.0.55/l$/unrealdb/games/ut99/verified (READ_ONLY_FROM_DEV)",
+  "file_original_names": "PRD file-identity-20260930-124933-60b220.csv",
+  "source_loader": "compiled installed UT99 v432 Engine.dll and ucc.exe on disposable DEV copied native System",
+  "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "post_serializer_rva": {
+    "animation": "0xECF21",
+    "skeletal": "0xED415"
+  },
+  "objects_observed": {
+    "skeletal": 5,
+    "animation": 3,
+    "all_authentic_decoded": {
+      "skeletal": 6,
+      "animation": 4
+    }
+  },
+  "packages": [
+    {
+      "original": "table.u",
+      "stored": "00a9f59043e94e8879c722c6e521f252.u",
+      "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+      "cdb_sha256": "4e7c5c6c7b27cdd53b876bbf05fc72530778880b684e43536b09a2a54a2eeffe",
+      "reference_sha256": "d88b366792d00dc377aeacc959d53494b82cd1cd8b3a59ec3994753940dece25",
+      "skeletal_exports": [
+        12,
+        24
+      ],
+      "animation_exports": [
+        23
+      ],
+      "path": "C:/Temp/UnrealDB/O06/00a9f59043e94e8879c722c6e521f252.u",
+      "cdb_log": "C:/Temp/UnrealDB/O06/g5-real-skeletal-animation-table-cdb.log",
+      "reference_log": "C:/Temp/UnrealDB/O06/g5-real-skeletal-table-references.log"
+    },
+    {
+      "original": "EcoTerror.u",
+      "stored": "0484bd0af82de2031dd5991c13c2648f.u",
+      "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+      "cdb_sha256": "f66220e93cd5c8d4515389ff1ce9cdb4d2ecf707f150d771ff29e6d60315c13a",
+      "reference_sha256": "6e03d456d73cc6fca10282228e4d9d37ca71c9ced8ed9f7ad21b118b55e0f88d",
+      "skeletal_exports": [
+        0
+      ],
+      "animation_exports": [
+        6
+      ],
+      "path": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+      "cdb_log": "C:/Temp/UnrealDB/O06/g5-real-skeletal-animation-EcoTerror-cdb.log",
+      "reference_log": "C:/Temp/UnrealDB/O06/g5-real-skeletal-EcoTerror-references.log"
+    },
+    {
+      "original": "d00d.u",
+      "stored": "04d58f820f84f91b627d53f237226208.u",
+      "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+      "cdb_sha256": "040927301f326074a64431c8e1219969c6c5e5e91b667dab88804274c693f0be",
+      "reference_sha256": "8ee47fbe184f0f21581a6cb3973b357d3c9fd384ee4fe0e1ab9101a4821d3cf0",
+      "skeletal_exports": [
+        4,
+        11
+      ],
+      "animation_exports": [
+        7
+      ],
+      "path": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+      "cdb_log": "C:/Temp/UnrealDB/O06/g5-real-skeletal-animation-d00d-cdb.log",
+      "reference_log": "C:/Temp/UnrealDB/O06/g5-real-skeletal-d00d-references.log"
+    },
+    {
+      "original": "SFCharacter4.u",
+      "stored": "0211977c6483eeb1ce7f92074ef0e8a6.u",
+      "sha256": "a7c96f9d99e79070c4405133f7a63d82f70b1ff4696dc4f4cc07a744ed12190b",
+      "native_oracle": "BLOCKED_DEPENDENCY_CHAIN_AT_k_ChimpTex",
+      "skeletal_exports": [
+        79
+      ],
+      "animation_exports": [
+        78
+      ],
+      "path": "C:/Temp/UnrealDB/O06/0211977c6483eeb1ce7f92074ef0e8a6.u",
+      "cdb_log": null,
+      "reference_log": null
+    }
+  ],
+  "limitations": [
+    "Original UT99-verified packages are third-party v69 packages, not build-certified to have been cooked by v432. Compiled v432 loads three without serialization error; source selected for comparison is v432.",
+    "Compiled engine CDB observations compare real loaded primitive fields, array counts and three positive default animation object references, not each array element or full malformed-input behaviour.",
+    "SFCharacter4.u decoded structurally by PHP, but runtime dependency chain currently blocked at k_ChimpTex; do not count its two exports as native-loaded.",
+    "CDB may observe additional dependency-package objects with overlapping export indices; match only original-file export types and names from the selected source package; do not count extraneous objects.",
+    "No PRD writes, PRD PHP, canonical Epic file changes or production code changes."
+  ]
+}

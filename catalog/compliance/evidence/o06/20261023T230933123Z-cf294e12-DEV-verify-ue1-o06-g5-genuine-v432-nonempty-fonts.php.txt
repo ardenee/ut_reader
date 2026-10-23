@@ -1,0 +1,28 @@
+﻿{
+    "ok": true,
+    "checks": 467,
+    "passed": 467,
+    "errors": [],
+    "genuine_native_font_exports": 62,
+    "total_loaded_TMap_entries_across_all_fonts": 46434,
+    "full_TMap_bytewise_values_verified_for_first_font_of_each_case": 2,
+    "cases": [
+        {
+            "original": "UWindowFonts.utx",
+            "SHA256": "2e0490a7d7b20b6fc577b08d2f85c313b5cf1dd8381ff1c98d382da0ed8309f6",
+            "native_font_calls": 29,
+            "font_exports_verified": 29,
+            "map_pairs_per_font": 255,
+            "full_first_TMap_native_archive_sha256": "d95ae785042a201da78f7a42f8b87ee83ce89aeb06bac3f03f9003a1b69d7bb9"
+        },
+        {
+            "original": "UWindowFonts.utx",
+            "SHA256": "67187424ee70b54f07c6a49cabc6738e41ff5cdf26f29d591df5de230280a9c7",
+            "native_font_calls": 33,
+            "font_exports_verified": 33,
+            "map_pairs_per_font": 1183,
+            "full_first_TMap_native_archive_sha256": "16f0b88145019132e3926c32a72c066b327327d8ba79e6db18c13f9591a7e09a"
+        }
+    ],
+    "limitations": "Real v69 native loaded count/flag/CPP/page and two whole 255/1183 map arrays verified. Source-name provenance selected explicitly. Other 59 nonempty original fonts not individually CDB loaded; malformed boundary byte consumption still differs; O06 full method open."
+}

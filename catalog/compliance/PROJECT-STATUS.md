@@ -1,6 +1,6 @@
 # UnrealDB — master source-compatibility status and recovery point
 
-Updated: **2026-10-23**. This is the canonical recovery/handover file for this project; use it instead of depending on any chat history. The project aims at real production behaviour, not expanding audit counts. **For O06 resume, use the live serializer register directly below (not the older narrative history).**
+Updated: **2026-10-24**. This is the canonical recovery/handover file for this project; use it instead of depending on any chat history. The project aims at real production behaviour, not expanding audit counts. **For O06 resume, use the live serializer register directly below (not the older narrative history).**
 
 **Live O06 recovery:** [UE1-O06-LIVE-CHECKPOINT.md](UE1-O06-LIVE-CHECKPOINT.md) refreshes after every DEV test STARTED/PASS/FAIL and records the active source contract and next action. Use [UE1-O06-TEST-PLAN.json](UE1-O06-TEST-PLAN.json) for focused/affected/gate scopes and [AGENTS.md](../../AGENTS.md) for the mandatory workflow.
 
@@ -21,7 +21,7 @@ Updated: **2026-10-23**. This is the canonical recovery/handover file for this p
 | Deployment | `Z:\Apache24\htdocs\unrealdb` on DEV is PRD `Lelly-pc` |
 | GitHub | `https://github.com/ardenee/ut_reader` |
 | Active engine / operation | **UE1 / O06 — 294 source entries, 294 classified, 234 with latest test outcome; statuses EXCLUDED=38, MAPPED=256. Six fixed gates remain OPEN; see live table below.** |
-| Latest serializer status event | named test verify-ue1-o06-g5-native-v432-font-loaded-values.php DEV -> PASS at 2026-10-23T22:41:38.3089216Z; source-linked entries=0 |
+| Latest serializer status event | named test verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php DEV -> PASS at 2026-10-23T23:09:33.7072367Z; source-linked entries=0 |
 | Latest DEV verification event | Compiled UT99 v432 LoadPackage TextBuffer identity/text comparison, `verify-ue1-o06-native-ut99-textbuffer-exports.php`: **22/22 PASS** (2026-10-23 14:02 UTC); **G5 IN PROGRESS**. No serializer status promoted without full applicable source-contract proof. |
 | O06 `PARTIAL` interpretation | **NOT COMPLETE.** A named DEV/PRD test PASS covers only that test's defined bytes/branches. The `Remaining work / evidence` column identifies outstanding source review, code or tests. Promote to `ACCEPTED` only after full applicable Epic-source contract acceptance. |
 | O01 status | **ACCEPTED — 6/6 fixed identification/dispatch criteria passed**. Original structural metadata O02 is also accepted; type-specific object/payload parsing belongs to O06/O07. |

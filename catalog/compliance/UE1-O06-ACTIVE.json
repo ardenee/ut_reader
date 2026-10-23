@@ -1,7 +1,7 @@
 {
-  "contract": "g5-v432-native-font-loaded-values",
-  "stage": "independently-verified-native-loaded-slice-pass",
-  "last_action": "Compiled real v432 UFont::Serialize post-archive actual native load: 4/4 genuine Engine.u fonts, 16,384/16,384 raw memory glyph bytes SHA match, native CharacterPerPage/page/glyph/remap fields equal PHP, 4/4 actual page texture UObject linker identities equal PHP serialized refs; focused evidence verifier 61/61 PASS run 20261023T224137762Z-0af749c6. Full UT99 install 310 package scan no skeletal/animation specimens; 2 native verifier harness errors remain in append-only journal but production PHP unchanged.",
-  "next_step": "G5 next: genuine nonempty UFont CharRemap and malformed-native input oracles, skeletal/animation genuine packages outside installed 310 corpus, then prioritized real class/default/native values; do not replay current valid PASS or mark full UFont/O06 accepted. Commit evidence only; PRD not touched.",
-  "updated_at_utc": "2026-10-23T22:43:48+00:00"
+  "contract": "g5-prd-ue1-genuine-loaded-values",
+  "stage": "genuine-prd-corpus-native-parity-subsets-pass",
+  "last_action": "Read-only original-name PRD corpus 85,329 UE1 package-extension files found; real v69 SkeletalMesh six plus Animation four exports structurally completely decoded; compiled v432 loaded five skeletal plus three animation objects with 151/151 SHA-pinned native count and linker reference checks PASS; authentic v69 UWindowFonts 62 real remapped fonts across 255 and 1183 entries, 46,434 native loaded entries, two complete map dumps source-byte SHA identical, 467/467 checks PASS; native PDB/RVA debug logs pinned and failed test harness run retained. Unmodified game files, no production PHP changes, PRD read-only.",
+  "next_step": "G5 OPEN: malformed font native consumed-four-extra-byte vs PHP defensive early reject, complete native SkeletalMesh/Animation array-element comparisons, SFCharacter4 missing k_ChimpTex native dependency, source-family correctness and early runtime oracle limitations. Do not replay current passing checks; per-method full acceptance remains 0. Commit/push evidence only.",
+  "updated_at_utc": "2026-10-23T23:12:35+00:00"
 }

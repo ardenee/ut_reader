@@ -2,6 +2,20 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-prd-ue1-native-real-nonempty-font": {
+      "description": "Read-only PRD corpus genuine UWindowFonts.utx v69: compiled UT99 v432 native-loaded 29+33 Fonts with nonempty 255/1183 maps, actual in-memory mapping keys and values SHA matching original wire bytes",
+      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php"],
+      "affected": [],
+      "gate": []
+    },
+    "g5-prd-ue1-genuine-skeletal-animation": {
+      "description": "SHA-pinned unmodified UT99 PRD corpus: 10 genuine v69 SkeletalMesh/Animation native records and compiled v432 loaded array counts/reference parity for 8 source exports in three dependency-resolved packages; SFCharacter4 native load blocked",
+      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-genuine-v432-skeletal-animation.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-v432-native-font-loaded-values": {
       "description": "Genuine UT99 v432 Engine.u UFont: 4 CDB post-Serialize loaded glyph arrays, CPP/page/remap, and resolved native texture linker identities; SHA-pinned native logs and blob artifacts",
       "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],

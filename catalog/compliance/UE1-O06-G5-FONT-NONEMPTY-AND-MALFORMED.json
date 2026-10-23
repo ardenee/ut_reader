@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "provenance": "CONTROLLED_MUTATION_OF_SHA_PINNED_GENUINE_UT99_ENGINE_U_NOT_GENUINE_NONEMPTY_GAME_SPECIMEN",
+  "recorded": "2026-10-23",
+  "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "pristine": "C:/Temp/UnrealDB/O06/G5-Engine-pristine-copy.u",
+  "pristine_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+  "fixture": "C:/Temp/UnrealDB/O06/G5-Engine-four-remaps.u",
+  "fixture_sha256": "8a8e335009e685914c9a3f619929579e88667b6af6b4fb818f5f30679ab0278d",
+  "malformed": "C:/Temp/UnrealDB/O06/G5-Engine-one-remap-malformed.u",
+  "malformed_sha256": "2d64a26d180af6aeb211764f81e04ebfceab6ac717abe7a1eeabac58d7ef2e55",
+  "valid_cdb_log": "C:/Temp/UnrealDB/O06/g5-native-four-remaps-extended-cdb.log",
+  "valid_cdb_log_sha256": "33cb6979b3c0c29b395b67b848455db51aa47ef08a898e69547054da1796a988",
+  "valid_cdb_stdout": "C:/Temp/UnrealDB/O06/g5-native-four-remaps-extended-stdout.txt",
+  "valid_cdb_stdout_sha256": "2b59842105d976543d8d74586062d7fd971e46c73a1cd729a657459a4d25c555",
+  "valid_glyph_dump": "C:/Temp/UnrealDB/O06/G5-valid-glyph255.bin",
+  "valid_glyph_dump_sha256": "6120a70922aece4d43e803fa1593e62e4f38119a38a21c24b81b8a9feac62e65",
+  "valid_map_dump": "C:/Temp/UnrealDB/O06/G5-valid-four-pairs.bin",
+  "valid_map_dump_sha256": "6a76a33988a764a6912fc1e41b0f5e6808fe1ae7eca14719d60f05e53e615a83",
+  "malformed_native_log": "C:/Temp/UnrealDB/O06/g5-native-malformed-font-one-remap.txt",
+  "malformed_native_log_sha256": "a2292a2d389c99ee9b31d8a31b27ea8a52592d740c6b21788e345679a587268c",
+  "font_index": 2634,
+  "font_object": "SmallFont",
+  "page_texture_reference": 5087,
+  "native_texture_linker_index": 5086,
+  "expected_glyphs": 255,
+  "expected_characters_per_page": 256,
+  "expected_pairs": [
+    [
+      65,
+      97
+    ],
+    [
+      66,
+      98
+    ],
+    [
+      67,
+      99
+    ],
+    [
+      68,
+      100
+    ]
+  ],
+  "expected_is_remapped": 1,
+  "mutation_offsets": {
+    "glyph_count": 154073,
+    "cpp_overwritten_last_glyph": 158155,
+    "remap_count": 158159,
+    "remap_pairs": 158160,
+    "is_remapped": 158176,
+    "malformed_remap_count": 158175
+  },
+  "native_malformed_serial_size": "Font Engine.SmallFont: Serial size mismatch: Got 4116, Expected 4112",
+  "php_malformed_error": "UT99 v432 font CharRemap pairs exceed native bounds",
+  "notes": [
+    "The original v69 package 4x UFont loaded full bytes and reference identity were separately verified on unmodified source.",
+    "Valid synthetic fixture changes one glyph count 256->255, reuses freed 16 bytes for four remap pairs, keeps export size and all subsequent offsets unchanged.",
+    "CDB observed 4 TMap entries in memory, IsRemapped=1 and 255 loaded glyph records, and dumped 4080+32 native memory bytes identical to UnrealDB decode.",
+    "Malformed controlled one-byte count mutation is rejected by both implementations, but native crosses the exported SerialSize by four bytes and PHP proactively rejects within export bounds. This is an observed error-handling/byte-consumption divergence, not an Epic error-handling PASS.",
+    "No modified Epic source, installed game packages or compiled DLL; disposable Native-UCC Engine.u restored to pristine hash."
+  ]
+}
