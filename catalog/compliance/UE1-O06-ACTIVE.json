@@ -1,7 +1,7 @@
 {
-  "contract": "g5-prd-ue1-genuine-loaded-values",
-  "stage": "genuine-prd-corpus-native-parity-subsets-pass",
-  "last_action": "Read-only original-name PRD corpus 85,329 UE1 package-extension files found; real v69 SkeletalMesh six plus Animation four exports structurally completely decoded; compiled v432 loaded five skeletal plus three animation objects with 151/151 SHA-pinned native count and linker reference checks PASS; authentic v69 UWindowFonts 62 real remapped fonts across 255 and 1183 entries, 46,434 native loaded entries, two complete map dumps source-byte SHA identical, 467/467 checks PASS; native PDB/RVA debug logs pinned and failed test harness run retained. Unmodified game files, no production PHP changes, PRD read-only.",
-  "next_step": "G5 OPEN: malformed font native consumed-four-extra-byte vs PHP defensive early reject, complete native SkeletalMesh/Animation array-element comparisons, SFCharacter4 missing k_ChimpTex native dependency, source-family correctness and early runtime oracle limitations. Do not replay current passing checks; per-method full acceptance remains 0. Commit/push evidence only.",
-  "updated_at_utc": "2026-10-23T23:12:35+00:00"
+  "contract": "g5-native-skeletal-vector-array-elements",
+  "stage": "genuine-native-full-array-subsets-961-checks-pass",
+  "last_action": "Using untouched PRD genuine v69 table.u, EcoTerror.u, d00d.u on DEV compiled original UT99 v432 Engine.dll: 5 skeletal exports all source-native BoneWeightIdx + BoneWeights 42,032/42,032 bytes match, 3 animation exports all 143 FNamedBone native full memory entries (1,716 bytes) match including native global FName::Names Unicode text, Flags and ParentIndex, focused 733/733 PASS run 20261023T232906204Z-00faa6bc; 10 full Points/LocalPoints arrays 18,813 FVector records 225,756/225,756 bytes match, separate 228/228 PASS run 20261023T233107304Z-bfeaef38. Combined new 961/961 native full element partial subset checks 269,504 exact bytes. Frozen manifests, original package and CDB logs hash-pinned; no production PHP changes, PRD read-only.",
+  "next_step": "G5 remains OPEN: compiled native RefSkeleton FMeshBone (including v432 VJointPos XSize twice bug and name table), inherited ULodMesh and animation Moves/AnimSeqs nested elements; malformed errors and missing SFCharacter4 original deps. Do not rerun valid focus checks; use new direct specimen/native field comparisons and log per test. Commit new evidence; no PRD deployment.",
+  "updated_at_utc": "2026-10-23T23:33:17+00:00"
 }

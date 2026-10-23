@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T23:09:33.7262035Z",
-    "head_commit":  "65bf7aed",
+    "updated_at_utc":  "2026-10-23T23:31:07.9201607Z",
+    "head_commit":  "5ae4a9b3",
     "current_target":  "DEV",
     "current_source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
     "tests":  [
@@ -507,6 +507,30 @@
                       "run_id":  "20261023T224137762Z-0af749c6",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T224137762Z-0af749c6-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
+                      "test":  "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T23:29:06.8683989Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "17f8fb8356d0e57327549d82fcb7dc31f8d62629713219ea90fb1ccc3294dc17",
+                      "run_id":  "20261023T232906204Z-00faa6bc",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T232906204Z-00faa6bc-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-real-skeletal-vector-arrays.php",
+                      "test":  "verify-ue1-o06-g5-real-skeletal-vector-arrays.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T23:31:07.9021961Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "88c081a046ff331242a1ba2e79700e9a0de144c51e8e2f494b4d57e9bfca7121",
+                      "run_id":  "20261023T233107304Z-bfeaef38",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T233107304Z-bfeaef38-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-class-default-declarations.php",

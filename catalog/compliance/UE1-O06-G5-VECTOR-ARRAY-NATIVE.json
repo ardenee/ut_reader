@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "recorded": "2026-10-24",
+  "classification": "REAL_UT99_69_COMPILED_V432_COMPLETE_SKELETAL_VECTOR_ARRAY_ELEMENT_PARITY",
+  "sha256_engine": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "native_engine": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+  "source_profile": "ut99-v432",
+  "compiled_serializer_post_archive_rva": "0xED415",
+  "source_pointer_offsets": {
+    "Points": "0x1BC",
+    "LocalPoints": "0x1EC"
+  },
+  "component_contract": "FVector three float32 values, exactly 12 bytes in archive and native TArray backing buffer",
+  "expected_total_bytes": 225756,
+  "packages": [
+    {
+      "original": "table.u",
+      "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+      "local_path": "C:/Temp/UnrealDB/O06/00a9f59043e94e8879c722c6e521f252.u",
+      "log": "C:/Temp/UnrealDB/O06/g5-native-vectors-table.log",
+      "log_sha256": "2130c89d0b328ca923a0b8345d03ee14037be5c976fa94c70b158ba370f2c244",
+      "meshes": [
+        {
+          "export_index": 12,
+          "points": {
+            "count": 3562,
+            "bytes": 42744,
+            "sha256": "fddf9514594b50893d03825abf940bcf2c6178bfaf3e1003c6318d713c5f4693",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel12-points.bin"
+          },
+          "local_points": {
+            "count": 3562,
+            "bytes": 42744,
+            "sha256": "49a372a1a859bbe4eb66fc1f95215fb1a871f111c84d60458c4102edc0986cc3",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel12-localpoints.bin"
+          }
+        },
+        {
+          "export_index": 24,
+          "points": {
+            "count": 3562,
+            "bytes": 42744,
+            "sha256": "fddf9514594b50893d03825abf940bcf2c6178bfaf3e1003c6318d713c5f4693",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel24-points.bin"
+          },
+          "local_points": {
+            "count": 3562,
+            "bytes": 42744,
+            "sha256": "49a372a1a859bbe4eb66fc1f95215fb1a871f111c84d60458c4102edc0986cc3",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel24-localpoints.bin"
+          }
+        }
+      ]
+    },
+    {
+      "original": "EcoTerror.u",
+      "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+      "local_path": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+      "log": "C:/Temp/UnrealDB/O06/g5-native-vectors-EcoTerror.log",
+      "log_sha256": "702eac0b57c62e66f05adf2a43605de365fbbff530855034ea98e1c3d40b1cfc",
+      "meshes": [
+        {
+          "export_index": 0,
+          "points": {
+            "count": 431,
+            "bytes": 5172,
+            "sha256": "d8d6f8878f95081261c78b883adb116d237e040362244cbbccd29687566c64b4",
+            "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-skel0-points.bin"
+          },
+          "local_points": {
+            "count": 496,
+            "bytes": 5952,
+            "sha256": "55e3ca3c15b1b76b8d2b78cfb04c0f406180adbd67971b1ad403c03a0fc57113",
+            "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-skel0-localpoints.bin"
+          }
+        }
+      ]
+    },
+    {
+      "original": "d00d.u",
+      "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+      "local_path": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+      "log": "C:/Temp/UnrealDB/O06/g5-native-vectors-d00d.log",
+      "log_sha256": "8d04e369add78810dfec7b17f87606addc1f1052b8397cbe19e7ff02c5e5e46a",
+      "meshes": [
+        {
+          "export_index": 4,
+          "points": {
+            "count": 612,
+            "bytes": 7344,
+            "sha256": "6da6e170b2ab14d47c9685044099702b4b574b8be8beb6174587f9997dcdc58d",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel4-points.bin"
+          },
+          "local_points": {
+            "count": 1171,
+            "bytes": 14052,
+            "sha256": "a06d7ef93d3c4bdc1815985cbfcab9c23ebb71680c21c02f3c31bc9fb8014d83",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel4-localpoints.bin"
+          }
+        },
+        {
+          "export_index": 11,
+          "points": {
+            "count": 612,
+            "bytes": 7344,
+            "sha256": "eb3068896a347de87229a29cd2a0e115ba6caf1a420b91862b146a8f61d67e1d",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel11-points.bin"
+          },
+          "local_points": {
+            "count": 1243,
+            "bytes": 14916,
+            "sha256": "6c7a2dbdced60ee2fac580707605e54cc3a562dd711a434ae8147735e3898807",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel11-localpoints.bin"
+          }
+        }
+      ]
+    }
+  ],
+  "limits": [
+    "Partial G5 method slice: inherited LodMesh, RefSkeleton and animation nested tracks not covered by this test.",
+    "Source file originals read-only from PRD and SHA-pinned copied on DEV; source-family explicit UT99 v432; compiled engine was real v432.",
+    "CDB dump captures all 10 complete runtime FVector arrays for genuine five skeletal exports."
+  ]
+}

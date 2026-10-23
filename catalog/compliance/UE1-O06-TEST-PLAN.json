@@ -2,6 +2,20 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-native-skeletal-vector-array-elements": {
+      "description": "Real original PRD UT99 v69: compiled v432 native-loaded complete Points and LocalPoints arrays for five genuine USkeletalMesh objects; 10 full float32 FVector arrays SHA-pinned from debugger, all 225756 bytes and production field previews",
+      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-real-skeletal-vector-arrays.php"],
+      "affected": [],
+      "gate": []
+    },
+    "g5-native-skeletal-animation-array-elements": {
+      "description": "Genuine PRD UT99 v69 5 skeletal meshes and 3 animations loaded by compiled v432 Engine: full 42,032-byte bone weight/influence arrays and all 143 native FNamedBone name/flags/parent records, SHA-pinned CDB memory and runtime FName table",
+      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-prd-ue1-native-real-nonempty-font": {
       "description": "Read-only PRD corpus genuine UWindowFonts.utx v69: compiled UT99 v432 native-loaded 29+33 Fonts with nonempty 255/1183 maps, actual in-memory mapping keys and values SHA matching original wire bytes",
       "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],

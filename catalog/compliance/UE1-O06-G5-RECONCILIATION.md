@@ -1,38 +1,39 @@
 # UE1 O06 — G5 evidence reconciliation
 
-Evidence inventory, not O06 acceptance. Generated 2026-10-23T23:10:46.361825+00:00; Git 65bf7aed.
+Evidence inventory, not O06 acceptance. Generated 2026-10-23T23:33:17.775362+00:00; Git 5ae4a9b3.
 
 ## Counts
 
 - 256 MAPPED; 38 EXCLUDED; 0 methods with demonstrated full independent native behaviour across all relevant criteria.
 - 59 entries have no named test; 52 of these are R82/R83 early-resource identity mappings.
 - 3 independent compiled v432 native export comparison slices: T99:UMusic::Serialize, T99:USound::Serialize, T99:UTextBuffer::Serialize.
-- Compiled v432 method archive-order evidence with no genuine loaded-value evidence: .
+- Compiled v432 method archive-order evidence with no genuine loaded-value evidence: none.
 - Current genuine archive compatibility: 1 method (T99 UFont; 34 SHA-pinned file exports / 66 checks PASS).
-- Current **compiled v432 genuine native loaded-value subsets**: 3 methods (T99 UFont, USkeletalMesh, UAnimation); 4 Engine.u fonts 16,384 glyph bytes + 4 texture reference identities 61/61 PASS; PRD 62 genuine v69 nonempty fonts across two UWindowFonts.utx variants 255/1183 map entries each and both full native map-value hashes (467/467 PASS); PRD 8 skeletal/animation native loaded exports and 3 linked default animation identities (151/151 PASS). Full-method errors and arrays still OPEN.
-- Full installed UT99 corpus scanned 310 genuine packages, zero malformed structures; no native SkeletalMesh/Animation exports available as specimens.
-- Latest DEV journal state: {'PASS': 106}.
+- Current **compiled v432 genuine native loaded-value subsets**: 3 methods (T99 UFont, USkeletalMesh, UAnimation); 4 Engine.u fonts 16,384 glyph bytes + 4 texture reference identities 61/61 PASS; PRD 62 genuine v69 nonempty fonts across two UWindowFonts.utx variants 255/1183 map entries each and both full native map-value hashes (467/467 PASS); PRD 8 skeletal/animation native loaded exports and 3 linked default animation identities (151/151 PASS). Other unverified fields/arrays and malformed errors remain OPEN.
+- NEW **full native array-element subsets**: 2 compiled v432 methods (T99 USkeletalMesh, UAnimation): genuine 5 skeletal objects 42,032 bytes of complete bone index/weights and 225,756 bytes of complete Points/LocalPoints, plus 143 animation ref bones full native name-table-resolved FName/flags/parent semantic records (1,716 bytes). Total 269,504 bytes, focused 733/733 + 228/228 PASS, no repeated tests.
+- Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded).
+- Latest DEV journal state: {'PASS': 108}.
 - Named tests with current matching source fingerprint: 0 of 197; historical PASS is not an automatically current proof.
 - Global source fingerprint in latest status c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce; independently recomputed c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce.
 
 ## Branches
 
-| Branch | MAPPED | No named test | Native export slices | Compiled method only | Native loaded values subset |
+| Branch | MAPPED | No named test | Native export slices | Compiled method only | Native loaded values subset | Full array element subset |
 |---|---:|---:|---:|---:|---:|
-| C227 | 3 | 0 | 0 | 0 | 0 |
-| C98 | 40 | 2 | 0 | 0 | 0 |
-| D97 | 6 | 1 | 0 | 0 | 0 |
-| R82 | 26 | 26 | 0 | 0 | 0 |
-| R83 | 26 | 26 | 0 | 0 | 0 |
-| R96 | 23 | 0 | 0 | 0 | 0 |
-| T99 | 46 | 4 | 3 | 0 | 3 |
-| U86 | 43 | 0 | 0 | 0 | 0 |
-| U97 | 43 | 0 | 0 | 0 | 0 |
+| C227 | 3 | 0 | 0 | 0 | 0 | 0 |
+| C98 | 40 | 2 | 0 | 0 | 0 | 0 |
+| D97 | 6 | 1 | 0 | 0 | 0 | 0 |
+| R82 | 26 | 26 | 0 | 0 | 0 | 0 |
+| R83 | 26 | 26 | 0 | 0 | 0 | 0 |
+| R96 | 23 | 0 | 0 | 0 | 0 | 0 |
+| T99 | 46 | 4 | 3 | 0 | 3 | 2 |
+| U86 | 43 | 0 | 0 | 0 | 0 | 0 |
+| U97 | 43 | 0 | 0 | 0 | 0 | 0 |
 
 ## G5 finite queue (do not replay existing valid tests)
 
 1. Identify exact v432 PHP reader changes since last journal fingerprint and rerun only their invalidated focused tests.
-2. **FOUND** 121 nonempty genuine v69 UFont exports in named PRD corpus and 10 genuine v69 skeletal/animation exports. 62 UFonts + 8 skeletal/animation source exports now have compiled loaded-value subsets. Next extend native full-field/array comparisons; unblock two SFCharacter4 native exports with dependencies only if they add evidence.
+2. New full native-element subset pass: all bone influence/index arrays, Points/LocalPoints and named FNamedBone elements on 5+3 genuine objects. Next remaining USkeletalMesh RefSkeleton and inherited LodMesh, UAnimation nested Moves/AnimSeqs; SFCharacter4 two additional objects remain dependency blocked.
 3. Compare actual native property/default/struct loaded values, reference identities and consumed bytes for available genuine packages.
 4. R82/R83: 52 registered methods carry only source identity proof, no named test. Attach actual per-method source/production/fixture evidence before G5 signoff.
 5. Early R82/R83/R96/U86/U97/D97: locate matching original runtime; otherwise record a native oracle limitation, not invented PASS.

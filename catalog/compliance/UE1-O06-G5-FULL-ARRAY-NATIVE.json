@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "classification": "REAL_UNMODIFIED_UT99_v69_CDB_COMPILED_v432_FULL_ARRAY_ELEMENT_PARITY",
+  "collected": "2026-10-24",
+  "source_provenance": "UT99 source v432; source struct layout UnSkeletalMesh.h; binary Engine.dll SHA pinned; PRD verified game corpus read-only; actual original packages copied to DEV",
+  "engine_dll": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+  "engine_dll_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "cdb_native_method_rvas": {
+    "USkeletalMesh": "0xED415",
+    "UAnimation": "0xECF21"
+  },
+  "cdb_member_offsets": {
+    "skeletal_weight_index_array": "0x1D4",
+    "skeletal_weight_array": "0x1E0",
+    "animation_ref_bones": "0x28",
+    "name_global_table": "Core FName::Names / 0x10295D30"
+  },
+  "reference_source": "catalog/compliance/UE1-O06-G5-PRD-NATIVE-SKELETAL-ANIMATION.json",
+  "packages": [
+    {
+      "original_name": "table.u",
+      "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+      "package_path": "C:/Temp/UnrealDB/O06/00a9f59043e94e8879c722c6e521f252.u",
+      "native_array_log": "C:/Temp/UnrealDB/O06/g5-native-full-arrays-table-complete.log",
+      "native_array_log_sha256": "277e8dad7c91ce956fd80106df1ac505bf0578de0e6fd5f03fa32fdef7491825",
+      "native_fname_log": "C:/Temp/UnrealDB/O06/g5-native-fname-table.log",
+      "native_fname_log_sha256": "27c9bcb97d17de6482894db7a9d6304a4507201f8d259d3284a25b468eacbc9c",
+      "meshes": [
+        {
+          "export_index": 12,
+          "bone_weight_indices": {
+            "count": 47,
+            "bytes": 376,
+            "sha256": "2ffb7f1505f9e4adc7a26b7802958a1104d7b9f5e1dd6ab0ece701a3833d7d89",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel12-indices.bin"
+          },
+          "bone_weights": {
+            "count": 3562,
+            "bytes": 14248,
+            "sha256": "3720ef56a12ccca436e3ff2073890f24347ca9eeef19434aeb53099026d2f729",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel12-weights.bin"
+          }
+        },
+        {
+          "export_index": 24,
+          "bone_weight_indices": {
+            "count": 47,
+            "bytes": 376,
+            "sha256": "2ffb7f1505f9e4adc7a26b7802958a1104d7b9f5e1dd6ab0ece701a3833d7d89",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel24-indices.bin"
+          },
+          "bone_weights": {
+            "count": 3562,
+            "bytes": 14248,
+            "sha256": "3720ef56a12ccca436e3ff2073890f24347ca9eeef19434aeb53099026d2f729",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-skel24-weights.bin"
+          }
+        }
+      ],
+      "animations": [
+        {
+          "export_index": 23,
+          "ref_bones": {
+            "count": 48,
+            "bytes": 576,
+            "sha256": "ebc3a6f7add2b97f58b8613c29c600e4b6c3beb0ba608f898cc7c539e6cfd677",
+            "path": "C:/Temp/UnrealDB/O06/G5-table-anim23-refbones.bin"
+          }
+        }
+      ]
+    },
+    {
+      "original_name": "EcoTerror.u",
+      "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+      "package_path": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+      "native_array_log": "C:/Temp/UnrealDB/O06/g5-native-full-arrays-EcoTerror-complete.log",
+      "native_array_log_sha256": "e37d7407865ab4e5dded628e2972e8dbf9d49d5ae14b70c3ad1d7fda2fa33bef",
+      "native_fname_log": "C:/Temp/UnrealDB/O06/g5-native-fname-EcoTerror.log",
+      "native_fname_log_sha256": "b2b85cc609db98581f97a2c3545540ac67abab1994911bf751d6a805023274d6",
+      "meshes": [
+        {
+          "export_index": 0,
+          "bone_weight_indices": {
+            "count": 47,
+            "bytes": 376,
+            "sha256": "32a6e89a394a64beff1dc54f297d2643191ee75ad594bc741edd7e0c2095764f",
+            "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-skel0-indices.bin"
+          },
+          "bone_weights": {
+            "count": 496,
+            "bytes": 1984,
+            "sha256": "c72f1919699f6857349fdfc22047100e17130ea5a8696d60444b493ce98019e5",
+            "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-skel0-weights.bin"
+          }
+        }
+      ],
+      "animations": [
+        {
+          "export_index": 6,
+          "ref_bones": {
+            "count": 47,
+            "bytes": 564,
+            "sha256": "a61b50f4bfa78aaa4bcc5a154d180b259c024fbce5e0e0fa3df1ad27efa4e271",
+            "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-anim6-refbones.bin"
+          }
+        }
+      ]
+    },
+    {
+      "original_name": "d00d.u",
+      "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+      "package_path": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+      "native_array_log": "C:/Temp/UnrealDB/O06/g5-native-full-arrays-d00d-complete.log",
+      "native_array_log_sha256": "d2bed11bfaff6e0854bfd36c77e91d2ccdbce942f052f6a32c8489a26b6d0116",
+      "native_fname_log": "C:/Temp/UnrealDB/O06/g5-native-fname-d00d.log",
+      "native_fname_log_sha256": "b4e0f62ffd8a5fa162950147c965fa700d46c7fe4127cd3c5b1d63cd217fa50f",
+      "meshes": [
+        {
+          "export_index": 4,
+          "bone_weight_indices": {
+            "count": 48,
+            "bytes": 384,
+            "sha256": "039562e668015ca2f0b7315c7b36b27bd3735eec291784045a16b7559aaa290b",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel4-indices.bin"
+          },
+          "bone_weights": {
+            "count": 1171,
+            "bytes": 4684,
+            "sha256": "7e696c976f84c63985a74eadee4499a48e4e4ba27d72774078b3573209ca82d0",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel4-weights.bin"
+          }
+        },
+        {
+          "export_index": 11,
+          "bone_weight_indices": {
+            "count": 48,
+            "bytes": 384,
+            "sha256": "01a17974a0e6f5ffccff99dc1510e797a897012647db17c2747286ace9aacd99",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel11-indices.bin"
+          },
+          "bone_weights": {
+            "count": 1243,
+            "bytes": 4972,
+            "sha256": "e6699292d85e6333ac98cf665921acd8c2a5a56a623cbf69574251bd5c628c50",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel11-weights.bin"
+          }
+        }
+      ],
+      "animations": [
+        {
+          "export_index": 7,
+          "ref_bones": {
+            "count": 48,
+            "bytes": 576,
+            "sha256": "8ac1c03b2b325e4c124028e17bb7cde9b741ffae7fc976d3683de60196ce3aa2",
+            "path": "C:/Temp/UnrealDB/O06/G5-d00d-anim7-refbones.bin"
+          }
+        }
+      ]
+    }
+  ],
+  "acceptance_scope": "Full binary raw loaded VBoneInfIndex (8B), VBoneInfluence (4B), and full semantic FNamedBone (runtime name-table lookup, flags, parent) for 5 skeletal + 3 animation exports, not whole methods. 3 source packages with compiled native oracle.",
+  "remaining": [
+    "Other skeletal arrays: Points, RefSkeleton, LocalPoints, ExtWedges, inherited ULodMesh",
+    "Animation moves/AnimSeqs nested elements",
+    "Native malformed exceptions and byte-consumption paths",
+    "SFCharacter4 original two exports native dependency-blocked",
+    "Early UE1 source family runtime oracles"
+  ]
+}
