@@ -19,12 +19,13 @@ final class CatalogUE1ClassicPolysNativeReader
     public static function inspect(
         CatalogUE1PackageReader $pkg,int $version,
         callable $read,callable $compact,callable $uint,
-        int &$pos,int $limit,?array $legacyDatabase=null
+        int &$pos,int $limit,?array $legacyDatabase=null,
+        ?string $sourceFamily=null
     ): array {
         // UT99 v400 package loading takes its nontransactional path.
         // The compact FPoly element grammar is identical, but the flag
         // cleanup after read differs by the source family selected here.
-        $sourceFamily=$version>61?'UT99-v400':'Unreal-v1200';
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         $int=static function()use($uint):int{
             $v=$uint();return $v>=0x80000000?$v-0x100000000:$v;
         };
@@ -78,7 +79,8 @@ final class CatalogUE1ClassicPolysNativeReader
             if($version<45){$legacy=[ord($read(1)),ord($read(1))];}
             // Unreal-v1200 FPoly clears masked when translucent+masked.
             // UT99-v400 instead clears PF_Transient/PF_Highlighted.
-            $after=$version>61 ? ($flags&~0x10000000)
+            $after=$family===CatalogUE1ClassicSourceFamily::UT99_V400
+                ? ($flags&~0x10000000)
                 : ((($flags&0x6)===0x6) ? ($flags&~0x2) : $flags);
             if(count($preview)<16){
                 $preview[]=['num_vertices'=>$count,'base'=>$base,
@@ -93,7 +95,7 @@ final class CatalogUE1ClassicPolysNativeReader
             }
         }
         return $db+[
-            'archive_family'=>$sourceFamily,
+            'archive_family'=>$family,
             'status'=>$pos===$limit?'native_polys_database_complete':
                 'native_polys_database_has_extension',
             'polys_preview'=>$preview,'extension_bytes'=>$limit-$pos,

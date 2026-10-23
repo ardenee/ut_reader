@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3g4-batch-source-legacy-parity`
-- **Stage:** implemented-batch-pending-verification-no-tests
-- **Last completed action:** Implemented 4 existing G3/G4 production gaps in one batch: classic palette alpha, function ABI runtime state, source-specific legacy UModel light-map archive, and ULodMesh remap bounds. Seven existing register entries updated. Syntax and diff integrity checks only. No functional tests, new test contracts, or PRD deployment.
-- **Resume at:** Continue batching remaining G2-G4 production implementation differences, then one separate verification and release phase.
-- **Active changed at:** 2026-10-23T17:52:43+00:00
+- **Contract:** `g3g4-epic-ue1-engine-master`
+- **Stage:** implemented-source-hierarchy-batch-unverified
+- **Last completed action:** BATCH production corrections from canonical Epic UE1 Engine Source and scoped UT99 v400 overrides. Removed guessed Model and Mesh sphere/lightmap ambiguity trials. Fixed canonical 16-byte FSphere and old FPlane versus UT99 <=61 12-byte FSphere; source-specific UModel pre-v53 lightmaps and legacy root flag widths; source selection propagated to primitive mesh model palette property function class/script FPoly/BSP readers. Source selector exposes explicit UT99 game override for older packages, baseline Epic UE1 by default. Updated 16 existing register entries and PROJECT-STATUS. All classic PHP syntax and diff integrity passed; no functional tests, new test contracts, PRD deploy or acceptance promotions.
+- **Resume at:** Continue batching remaining existing G2-G4 source-defined implementation changes. Then separate functional verification and safe deployment; propagate explicit game provenance from higher-level callers where known.
+- **Active changed at:** 2026-10-23T18:08:00+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

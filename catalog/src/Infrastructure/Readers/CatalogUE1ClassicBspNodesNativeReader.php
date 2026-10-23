@@ -16,8 +16,10 @@ final class CatalogUE1ClassicBspNodesNativeReader
     public static function inspect(
         CatalogUE1PackageReader $pkg,int $version,
         callable $read,callable $compact,callable $uint,
-        int &$pos,int $limit,?array $legacyDatabase=null
+        int &$pos,int $limit,?array $legacyDatabase=null,
+        ?string $sourceFamily=null
     ): array {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         // UT99 v400 old UBspNodes class still loads the same nodes/zones
         // database; its FBspNode operator clears NF_IsNew/Front/Back on load.
         $signed=static function()use($uint):int{
@@ -34,7 +36,7 @@ final class CatalogUE1ClassicBspNodesNativeReader
         $nodes=[];
         for($i=0;$i<$db['count'];$i++){
             $node=CatalogUE1ClassicGeometryRecordReader::bspNode(
-                $version,$read,$compact,$uint);
+                $version,$read,$compact,$uint,$family);
             if($i<16){$nodes[]=$node;}
         }
         $numZones=$compact();
@@ -49,7 +51,7 @@ final class CatalogUE1ClassicBspNodesNativeReader
             if($i<16){$zones[]=$zone;}
         }
         return $db+[
-            'archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
+            'archive_family'=>$family,
             'status'=>$pos===$limit?'native_bspnodes_database_complete':
                 'native_bspnodes_database_has_extension',
             'nodes_preview'=>$nodes,'num_zones'=>$numZones,

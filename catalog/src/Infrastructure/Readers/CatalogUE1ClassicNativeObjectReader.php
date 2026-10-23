@@ -19,7 +19,7 @@ use RuntimeException;
 final class CatalogUE1ClassicNativeObjectReader
 {
     /** @param array<string,mixed> $propertyStream @return array<string,mixed> */
-    public static function inspect(string $path, CatalogUE1PackageReader $pkg, int $index, array $propertyStream): array
+    public static function inspect(string $path, CatalogUE1PackageReader $pkg, int $index, array $propertyStream, ?string $sourceFamily=null): array
     {
         $exports=$pkg->getExports();$imports=$pkg->getImports();
         $ex=$exports[$index]??null;
@@ -43,6 +43,8 @@ final class CatalogUE1ClassicNativeObjectReader
             throw new RuntimeException('Native UE1 payload outside file');
         }
         $nativeKind=strtolower($className);
+        $sourceVersion=(int)($pkg->getHeader()['version']??0);
+        $family=CatalogUE1ClassicSourceFamily::select($sourceVersion,$sourceFamily);
         if($nativeKind==='actor'){
             $actorVersion=(int)($pkg->getHeader()['version']??0);
             if($actorVersion<35||$actorVersion>69){
@@ -118,34 +120,34 @@ final class CatalogUE1ClassicNativeObjectReader
             $ver=(int)($pkg->getHeader()['version']??0);
             if(in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)){
                 return array_replace($record,CatalogUE1ClassicPropertyNativeReader::inspect(
-                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit));
+                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family));
             }
             if(in_array($nativeKind,CatalogUE1ClassicStructNativeReader::KINDS,true)){
                 return array_replace($record,CatalogUE1ClassicStructNativeReader::inspect(
-                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit));
+                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family));
             }
             if($nativeKind==='primitive'){
                 return array_replace($record,CatalogUE1ClassicPrimitiveNativeReader::inspect(
-                    $ver,$read,$pos,$limit));
+                    $ver,$read,$pos,$limit,$family));
             }
             if($nativeKind==='model'){
                 return array_replace($record,CatalogUE1ClassicModelNativeReader::inspect(
-                    $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
+                    $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek,$family));
             }
             if($nativeKind==='polys'){
                 return array_replace($record,CatalogUE1ClassicPolysNativeReader::inspect(
                     $pkg,$ver,$read,$compact,$int,$pos,$limit,
-                    $propertyStream['legacy_database']??null));
+                    $propertyStream['legacy_database']??null,$family));
             }
             if($nativeKind==='bspnodes'){
                 return array_replace($record,CatalogUE1ClassicBspNodesNativeReader::inspect(
                     $pkg,$ver,$read,$compact,$int,$pos,$limit,
-                    $propertyStream['legacy_database']??null));
+                    $propertyStream['legacy_database']??null,$family));
             }
             if($nativeKind==='bspsurfs'){
                 return array_replace($record,CatalogUE1ClassicBspSurfsNativeReader::inspect(
                     $pkg,$ver,$read,$compact,$int,$pos,$limit,
-                    $propertyStream['legacy_database']??null));
+                    $propertyStream['legacy_database']??null,$family));
             }
             if($nativeKind==='vectors'||$nativeKind==='verts'){
                 return array_replace($record,CatalogUE1ClassicDatabaseNativeReader::inspect(
@@ -159,7 +161,7 @@ final class CatalogUE1ClassicNativeObjectReader
             }
             if($nativeKind==='mesh'||$nativeKind==='lodmesh'){
                 return array_replace($record,CatalogUE1ClassicMeshNativeReader::inspect(
-                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
+                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$seek,$family));
             }
             if($nativeKind==='bitarray'||$nativeKind==='bitmatrix'){
                 return array_replace($record,CatalogUE1ClassicBitArrayNativeReader::inspect(
@@ -424,7 +426,7 @@ final class CatalogUE1ClassicNativeObjectReader
                 // for files <66, including old files loaded by UT99.
                 // Package version <=61 alone cannot identify the loader.
                 $ut99AlphaReset=$ver<66;
-                $loadedAlphaReset=$ver>=62&&$ut99AlphaReset;
+                $loadedAlphaReset=$family===CatalogUE1ClassicSourceFamily::UT99_V400&&$ut99AlphaReset;
                 $preview=[];
                 for($i=0;$i<min(16,$count);$i++){
                     $quad=array_values(unpack('C4',substr($colors,$i*4,4)));
@@ -446,6 +448,7 @@ final class CatalogUE1ClassicNativeObjectReader
                     'alpha_reset_to_255_at_load'=>$loadedAlphaReset,
                     'alpha_reset_if_ut99_v400_load'=>$ut99AlphaReset,
                     'alpha_loader_semantics_source_dependent'=>$ver<=61,
+                    'selected_source_family'=>$family,
                     'extension_bytes'=>$limit-$pos,
                 ]);
             }

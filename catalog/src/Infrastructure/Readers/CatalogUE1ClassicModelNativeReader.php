@@ -31,81 +31,34 @@ final class CatalogUE1ClassicModelNativeReader
     public static function inspect(
         CatalogUE1PackageReader $pkg,int $version,callable $read,
         callable $compact,callable $u32,int &$position,int $limit,
-        ?callable $seek=null
+        ?callable $seek=null,?string $sourceFamily=null
     ):array{
-        if($version>61||$seek===null){
-            return self::inspectWire(
-                $pkg,$version,$read,$compact,$u32,$position,$limit,false,false);
-        }
-        $start=$position;$candidates=[];$failures=[];$seenLayouts=[];
-        $sphereLayouts=$version>=41?[false,true]:[false];
-        $lightMapLayouts=$version<=52?[true,false]:[false];
-        foreach($sphereLayouts as $fullRadius){
-          foreach($lightMapLayouts as $legacyLightMap){
-            $seek($start);
-            try{
-                $parsed=self::inspectWire(
-                    $pkg,$version,$read,$compact,$u32,$position,$limit,
-                    $fullRadius,$legacyLightMap);
-                // With no LightMap entries, both source operators emit
-                // precisely the same bytes: do not invent ambiguity.
-                $wireEquivalent=$parsed['model']['light_map']===[];
-                $layoutKey=($fullRadius?'full':'short').':'
-                    .($wireEquivalent?'empty':($legacyLightMap?'old':'new'));
-                if(!isset($seenLayouts[$layoutKey])){
-                    $seenLayouts[$layoutKey]=true;
-                    $candidates[]=[
-                        'data'=>$parsed,'end'=>$position,
-                        'wire'=>$fullRadius?'sphere_with_radius_16':'sphere_vector_only_12',
-                        'light_map_wire'=>$wireEquivalent?'wire-equivalent-empty':
-                            ($legacyLightMap?'Unreal-v1200-legacy-lightmap':'UT99-v400-lightmap'),
-                    ];
-                }
-            }catch(RuntimeException $ex){
-                $failures[]=$ex->getMessage();
-            }
-          }
-        }
-        $complete=array_values(array_filter($candidates,
-            static fn(array $item):bool=>
-                ($item['data']['status']??'')==='native_model_record_complete'));
-        if(count($complete)===1){
-            $chosen=$complete[0];$seek($chosen['end']);
-            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire'],
-                'light_map_wire_layout'=>$chosen['light_map_wire']];
-        }
-        if(count($complete)>1){
-            $seek($start);
-            return ['status'=>'native_model_source_wire_layout_ambiguous',
-                'source_layout_candidates'=>array_map(static fn(array $c):array=>
-                    ['sphere'=>$c['wire'],'light_map'=>$c['light_map_wire']],$complete),
-                'unparsed_bytes'=>$limit-$start];
-        }
-        if(count($candidates)===1){
-            $chosen=$candidates[0];$seek($chosen['end']);
-            return $chosen['data']+['sphere_wire_layout'=>$chosen['wire'],
-                'light_map_wire_layout'=>$chosen['light_map_wire']];
-        }
-        if(count($candidates)>1){
-            $seek($start);
-            return ['status'=>'native_model_source_wire_layout_ambiguous',
-                'source_layout_candidates'=>array_map(static fn(array $c):array=>
-                    ['sphere'=>$c['wire'],'light_map'=>$c['light_map_wire']],$candidates),
-                'unparsed_bytes'=>$limit-$start];
-        }
-        $seek($start);
-        throw new RuntimeException('No source-compatible native UModel sphere layout: '.
-            implode(' / ',$failures));
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        // There is exactly one operator<< for each source family.
+        // Canonical Epic UE1 uses a 16-byte FSphere and its versioned
+        // FLightMapIndex. UT99's later engine override reads FVector
+        // FSphere for old archives and modern FLightMapIndex fields.
+        // Neither on-disk contents nor successful trial parses establish
+        // game lineage; selection belongs to the source-calling layer.
+        $modern=$family===CatalogUE1ClassicSourceFamily::UT99_V400;
+        $parsed=self::inspectWire(
+            $pkg,$version,$read,$compact,$u32,$position,$limit,
+            $family,!$modern);
+        return $parsed+[
+            'selected_source_family'=>$family,
+            'light_map_wire_layout'=>$modern?'UT99-v400-lightmap':'Epic-UE1-lightmap',
+            'source_selection'=>'explicit-or-epic-engine-baseline',
+        ];
     }
 
     /** @return array<string,mixed> */
     private static function inspectWire(
         CatalogUE1PackageReader $pkg,int $version,callable $read,
         callable $compact,callable $u32,int &$position,int $limit,
-        bool $fullRadius,bool $sourceLegacyLightMap
+        string $sourceFamily,bool $sourceLegacyLightMap
     ):array{
         $result=CatalogUE1ClassicPrimitiveNativeReader::readBase(
-            $version,$read,$position,$limit,$fullRadius);
+            $version,$read,$position,$limit,$sourceFamily);
         $i32=static function()use($u32):int{
             $v=$u32();return $v>=0x80000000?$v-0x100000000:$v;
         };
@@ -166,7 +119,7 @@ final class CatalogUE1ClassicModelNativeReader
             $model['nodes_preview']=[];
             for($i=0;$i<$nodeCount;$i++){
                 $node=CatalogUE1ClassicGeometryRecordReader::bspNode(
-                    $version,$read,$compact,$u32);
+                    $version,$read,$compact,$u32,$sourceFamily);
                 if($i<16){$model['nodes_preview'][]=$node;}
             }
             $surfCount=$count('Surfs',16);
@@ -174,7 +127,7 @@ final class CatalogUE1ClassicModelNativeReader
             $model['surfs_preview']=[];
             for($i=0;$i<$surfCount;$i++){
                 $surf=CatalogUE1ClassicGeometryRecordReader::bspSurf(
-                    $pkg,$version,$read,$compact,$u32);
+                    $pkg,$version,$read,$compact,$u32,$sourceFamily);
                 if($i<16){$model['surfs_preview'][]=$surf;}
             }
             $vertCount=$count('Verts',2);
@@ -236,7 +189,12 @@ final class CatalogUE1ClassicModelNativeReader
             $model['legacy_leaf_zone_reference']=$ref('LeafZone');
             $model['legacy_leaf_leaf_reference']=$ref('LeafLeaf');
         }
-        if($version<=41){
+        if($sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V400){
+            // UT99 UnModel.cpp archives RootOutside and Linked as
+            // INT values at ALL file versions, even <=43.
+            $model['root_outside']=$i32();
+            $model['linked']=$i32();
+        }elseif($version<=41){
             $a=$i32();$b=$i32();$c=$i32();
             $model['old_flag_values']=[$a,$b,$c];
             $model['root_outside']=$a;$model['linked']=$c;

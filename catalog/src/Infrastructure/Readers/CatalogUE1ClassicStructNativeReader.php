@@ -18,8 +18,10 @@ final class CatalogUE1ClassicStructNativeReader
     /** @return array<string,mixed> */
     public static function inspect(
         string $kind,CatalogUE1PackageReader $pkg,int $version,
-        callable $read,callable $compact,callable $u32,int &$position,int $limit
+        callable $read,callable $compact,callable $u32,int &$position,int $limit,
+        ?string $sourceFamily=null
     ):array{
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         if(!in_array($kind,self::KINDS,true)){
             throw new RuntimeException('Unsupported classic field/struct native kind');
         }
@@ -72,7 +74,7 @@ final class CatalogUE1ClassicStructNativeReader
         $record['script_size']=$scriptSize;
         if($scriptSize!==0){
             $script=CatalogUE1ClassicScriptArchiveReader::inspect(
-                $pkg,$version,$scriptSize,$read,$compact,$position);
+                $pkg,$version,$scriptSize,$read,$compact,$position,$family);
             $record['script_archive']=$script;
             if($script['status']!=='script_archive_expressions_decoded'){
                 return array_replace($record,[
@@ -100,7 +102,7 @@ final class CatalogUE1ClassicStructNativeReader
         // Function directly inherits UStruct rather than UState.
         // Epic v1.200 writes both old function ABI fields, while
         // UT99 v400 retains the old fields only in package versions <=63.
-        $legacy=$version<=63;
+        $legacy=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1||$version<=63;
         $record['legacy_parms_size']=$legacy?$u16():null;
         $record['native_index']=$u16();
         $record['legacy_num_parms']=$legacy?$u8():null;
@@ -113,7 +115,7 @@ final class CatalogUE1ClassicStructNativeReader
         // NumParms/ParmsSize/ReturnValueOffset before recomputing
         // from the linked Children UProperty chain. Unreal v1.200
         // instead leaves the three archived values in memory.
-        $ut99=$version>=62;
+        $ut99=$family===CatalogUE1ClassicSourceFamily::UT99_V400;
         $record['loaded_parms_size']=$ut99?null:$record['legacy_parms_size'];
         $record['loaded_num_parms']=$ut99?null:$record['legacy_num_parms'];
         $record['loaded_return_value_offset']=$ut99?null:$record['legacy_return_value_offset'];

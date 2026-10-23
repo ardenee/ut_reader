@@ -32,8 +32,10 @@ final class CatalogUE1ClassicGeometryRecordReader
      * @return array<string,mixed>
      */
     public static function bspNode(
-        int $version,callable $read,callable $compact,callable $u32
+        int $version,callable $read,callable $compact,callable $u32,
+        ?string $sourceFamily=null
     ):array {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         $plane=array_values(unpack('g4',$read(16))?:[]);
         $mask=bin2hex($read(8));
         $flags=ord($read(1));
@@ -50,7 +52,8 @@ final class CatalogUE1ClassicGeometryRecordReader
         return [
             'plane'=>$plane,'zone_mask_le_hex'=>$mask,
             'node_flags'=>$flags,
-            'node_flags_after_epic_load'=>$version>61?($flags&~0xE0):$flags,
+            'node_flags_after_epic_load'=>$family===CatalogUE1ClassicSourceFamily::UT99_V400
+                ?($flags&~0xE0):$flags,
             'indices'=>$indices,'zones'=>[$back,$front],
             'num_vertices'=>$numVertices,'leaves'=>[$leaf0,$leaf1],
         ];
@@ -63,8 +66,10 @@ final class CatalogUE1ClassicGeometryRecordReader
      */
     public static function bspSurf(
         CatalogUE1PackageReader $pkg,int $version,
-        callable $read,callable $compact,callable $u32
+        callable $read,callable $compact,callable $u32,
+        ?string $sourceFamily=null
     ):array {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         $texture=self::objectRef($pkg,$compact,'FBspSurf.Texture');
         $flags=$u32();$indices=[];
         foreach(['p_base','v_normal','v_texture_u','v_texture_v',
@@ -79,7 +84,8 @@ final class CatalogUE1ClassicGeometryRecordReader
         return [
             'texture_reference'=>$texture,
             'poly_flags'=>$flags,
-            'poly_flags_after_epic_load'=>$version>61?($flags&~0x10000000):$flags,
+            'poly_flags_after_epic_load'=>$family===CatalogUE1ClassicSourceFamily::UT99_V400
+                ?($flags&~0x10000000):$flags,
             'indices'=>$indices,'pan_u'=>$panU,'pan_v'=>$panV,
             'actor_reference'=>$actor,
         ];

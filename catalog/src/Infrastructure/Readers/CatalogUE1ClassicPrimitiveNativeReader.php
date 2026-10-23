@@ -15,15 +15,16 @@ final class CatalogUE1ClassicPrimitiveNativeReader
      * @return array<string,mixed>
      * The caller owns $position and $limit. Derived UModel and UMesh
      * serializers can reuse the exact same field-order prefix.
-     * The optional radius override applies ONLY to an old model's
-     * independently trial-parsed alternative sphere layout, never as
-     * an unconditional change to a standalone UPrimitive archive.
+     * Source selection is explicit. Epic UE1 is the baseline;
+     * UT99 game source overrides the old FVector-only FSphere format.
      */
     public static function readBase(
         int $version,callable $read,int &$position,int $limit,
-        bool $radiusForLegacySphere=false
+        ?string $sourceFamily=null
     ):array
     {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        $original=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1;
         $f32=static function()use($read):float{
             return (float)unpack('gvalue',$read(4))['value'];
         };
@@ -31,26 +32,32 @@ final class CatalogUE1ClassicPrimitiveNativeReader
         $box=['min'=>$vector(),'max'=>$vector(),'is_valid'=>ord($read(1))];
         $sphere=$vector();
         $oldPlane=null;
-        if($version<=40){
+        if($original&&$version<=40){
+            // Epic UE1 engine v1.200 UnPrim.cpp archives a legacy
+            // FPlane instead of FSphere before archive version 41.
             $oldPlane=['x'=>$sphere['x'],'y'=>$sphere['y'],
                 'z'=>$sphere['z'],'w'=>$f32()];
             $sphere=['x'=>0.0,'y'=>0.0,'z'=>0.0,'w'=>0.0];
-        }elseif($version>61||$radiusForLegacySphere){
+        }elseif($original||$version>61){
+            // Canonical Epic Core/Inc/UnMath.h always archives
+            // FVector + W. UT99's amended FSphere operator sends
+            // just FVector when loading versions <=61.
             $sphere['w']=$f32();
         }else{
-            $sphere['w']=null; // v41-v61 legacy FVector-only FSphere
+            $sphere['w']=null;
         }
         return [
             'bounding_box'=>$box,'bounding_sphere'=>$sphere,
             'old_legacy_plane'=>$oldPlane,
-            'source_serialized_base_bytes'=>($version<=40||$version>61||$radiusForLegacySphere)?41:37,
+            'source_serialized_base_bytes'=>($original||$version>61)?41:37,
+            'source_family'=>$family,
             'runtime_sphere_radius_linked'=>false,
         ];
     }
     /** @return array<string,mixed> */
-    public static function inspect(int $version,callable $read,int &$position,int $limit):array
+    public static function inspect(int $version,callable $read,int &$position,int $limit,?string $sourceFamily=null):array
     {
-        $data=self::readBase($version,$read,$position,$limit);
+        $data=self::readBase($version,$read,$position,$limit,$sourceFamily);
         return $data+[
             'status'=>$position===$limit?'native_primitive_record_complete':'native_primitive_has_extension',
             'extension_bytes'=>$limit-$position

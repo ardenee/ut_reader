@@ -20,7 +20,7 @@ final class CatalogUE1ClassicClassMetadataReader
     /** @return array<string,mixed> */
     public static function inspect(
         string $path, CatalogUE1PackageReader $pkg, int $index,
-        bool $verifyDefaultDeclarations=true
+        bool $verifyDefaultDeclarations=true,?string $sourceFamily=null
     ): array
     {
         $exports = $pkg->getExports();
@@ -129,7 +129,7 @@ final class CatalogUE1ClassicClassMetadataReader
                 // XFER(T), whereas the archive uses compact object/name
                 // references. Exact supported token traversal is required.
                 $script=CatalogUE1ClassicScriptArchiveReader::inspect(
-                    $pkg,$version,$scriptSize,$read,$compact,$position);
+                    $pkg,$version,$scriptSize,$read,$compact,$position,$sourceFamily);
                 $record['script_archive']=$script;
                 if($script['status']!=='script_archive_expressions_decoded'){
                     return array_replace($record,[

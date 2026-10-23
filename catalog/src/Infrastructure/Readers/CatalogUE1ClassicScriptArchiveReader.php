@@ -22,8 +22,10 @@ final class CatalogUE1ClassicScriptArchiveReader
     /** @return array<string,mixed> */
     public static function inspect(
         CatalogUE1PackageReader $pkg, int $version, int $scriptSize,
-        callable $read, callable $compact, int &$position
+        callable $read, callable $compact, int &$position,
+        ?string $sourceFamily=null
     ): array {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         if ($scriptSize < 0 || $scriptSize > 16000000) {
             throw new RuntimeException('UE1 ScriptSize outside source-supported bounds');
         }
@@ -33,7 +35,7 @@ final class CatalogUE1ClassicScriptArchiveReader
         $unsupported = null;
         $preview = [];
         $lastToken = null; $lastTokenArchiveOffset = null;
-        $ut99 = $version >= 62;
+        $ut99 = $family===CatalogUE1ClassicSourceFamily::UT99_V400;
 
         $mem = static function(int $n) use (
             &$iCode, $scriptSize, &$lastToken, &$lastTokenArchiveOffset, &$position
@@ -314,7 +316,7 @@ final class CatalogUE1ClassicScriptArchiveReader
         return [
             'status' => $unsupported === null ? 'script_archive_expressions_decoded'
                 : 'script_archive_token_unimplemented',
-            'source_family' => $ut99 ? 'UT99-v400-provisional' : 'Unreal-v1200-provisional',
+            'source_family' => $family,
             'script_memory_expected' => $scriptSize,
             'script_memory_decoded' => $iCode,
             'archive_bytes_consumed' => $position - $start,

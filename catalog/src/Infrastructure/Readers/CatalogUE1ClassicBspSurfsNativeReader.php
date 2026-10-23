@@ -9,8 +9,10 @@ final class CatalogUE1ClassicBspSurfsNativeReader
     public static function inspect(
         CatalogUE1PackageReader $pkg,int $version,
         callable $read,callable $compact,callable $uint,
-        int &$pos,int $limit,?array $legacyDatabase=null
+        int &$pos,int $limit,?array $legacyDatabase=null,
+        ?string $sourceFamily=null
     ): array {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         // UT99 v400 Engine/Src/UnModel.cpp old UBspSurfs class still
         // loads DbNum/DbMax and FBspSurf array. Its operator<< clears
         // PF_Transient on load and skips Decals on file archives.
@@ -27,10 +29,10 @@ final class CatalogUE1ClassicBspSurfsNativeReader
         $preview=[];
         for($i=0;$i<$db['count'];$i++){
             $surf=CatalogUE1ClassicGeometryRecordReader::bspSurf(
-                $pkg,$version,$read,$compact,$uint);
+                $pkg,$version,$read,$compact,$uint,$family);
             if($i<16){$preview[]=$surf;}
         }
-        return $db+['archive_family'=>$version>61?'UT99-v400-legacy-database':'Unreal-v1200',
+        return $db+['archive_family'=>$family,
             'status'=>$pos===$limit?'native_bspsurfs_database_complete':
                 'native_bspsurfs_database_has_extension',
             'surfaces_preview'=>$preview,'extension_bytes'=>$limit-$pos];

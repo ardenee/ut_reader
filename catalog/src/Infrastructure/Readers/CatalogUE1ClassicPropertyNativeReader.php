@@ -29,15 +29,16 @@ final class CatalogUE1ClassicPropertyNativeReader
     public static function inspect(
         string $kind, CatalogUE1PackageReader $pkg, int $version,
         callable $read, callable $compact, callable $u32,
-        int &$position, int $limit
+        int &$position, int $limit, ?string $sourceFamily=null
     ): array {
+        $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         if (!in_array($kind, self::KINDS, true)) {
             throw new RuntimeException('Unsupported classic UE1 property serializer: '.$kind);
         }
         // The v1.200 branch uses fixed UStringProperty. Dynamic FString,
         // array, fixed-array and map property classes belong to the later
         // UT99 source, not the v1.200 class registration table.
-        if ($version <= 61 && in_array($kind, [
+        if ($family===CatalogUE1ClassicSourceFamily::EPIC_UE1 && in_array($kind, [
             'strproperty', 'arrayproperty', 'fixedarrayproperty', 'mapproperty'
         ], true)) {
             throw new RuntimeException('Property class not registered by v1.200 source');
@@ -133,12 +134,15 @@ final class CatalogUE1ClassicPropertyNativeReader
             'next_field_reference' => $nextField,
             'array_dim' => $arrayDim,
             'property_flags' => $flags,
-            'effective_property_flags' => $flags,
+            'effective_property_flags' => $family===CatalogUE1ClassicSourceFamily::UT99_V400
+                ?$ut99LegacyEffectiveFlags:$flags,
+            'selected_source_family'=>$family,
             'effective_property_flags_if_ut99_v400_load' =>
                 $ut99LegacyEffectiveFlags,
-            'property_flag_load_semantics' => $version<=61
-                ? 'Unreal-v1200-preserve-flags'
-                : 'UT99-v400-preserve-flags',
+            'property_flag_load_semantics' => $family===CatalogUE1ClassicSourceFamily::UT99_V400&&$version<=61
+                ? 'UT99-v400-old-loader-clears-obsolete-net-flags'
+                : ($family===CatalogUE1ClassicSourceFamily::UT99_V400
+                    ?'UT99-v400-preserve-flags':'Epic-UE1-preserve-flags'),
             'source_dependent_legacy_net_flags' =>
                 $version<=61&&$flags!==$ut99LegacyEffectiveFlags,
             'category_name_index' => $categoryIndex,
