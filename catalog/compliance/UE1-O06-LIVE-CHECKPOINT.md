@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `ue1-game-loader-version-eligibility`
-- **Stage:** implemented-version-gates-verification-deferred
-- **Last completed action:** Added exact UE1 source-profile complete-compatibility gates from pinned game source Core/Inc/UnObjVer.h: Unreal v1.200 epic-ue1 34-61; UT99 v400 ut99-v400 60-68; Unreal v1.227 unreal-v227 60-69. Common selector eligibleProfiles rejects explicit out-of-range source choices, returns a sole candidate as source-only but never game producer identity, and refuses to silently choose between overlapping 60-61 or 62-68 profiles without provenance. Unreal 69/227 confirmed source pair still recognized. CLI emits all version-eligible sources and gate metadata, status/spec updated. Unreal v1.200 and UT99 compiled source linker reads versions below PACKAGE_MIN_VERSION with YesNo user override; ranges are guaranteed backward compatibility, not unconditional engine rejection. O06 remains 252 MAPPED 2 PARTIAL 38 EXCLUDED. Lightweight PHP lint/diff integrity only; native/corpus G5 and PRD deployment deferred.
-- **Resume at:** Finish remaining C98/T99 UClass default archive codecs, then separated native G5/corpus verification. If automated candidate interpretation is added for overlapping versions, use complete bounded structural comparison with explicit ambiguity not first parse success.
-- **Active changed at:** 2026-10-23T20:24:31+00:00
+- **Contract:** `g3-ue1-loader-warning-and-class-fixedstrings`
+- **Stage:** implemented-pending-verification-no-tests
+- **Last completed action:** Corrected UE1 game version gates to Epic native CheckVersion semantics: pinned Unreal v1.200 and UT99 v400 warn+may-continue below PACKAGE_MIN_VERSION; PACKAGE_FILE_VERSION is the saver version, NOT a checked upper loader rejection. Retain declared 34-61, 60-68 and 60-69 as candidate-priority ranges and provide source-specific loaderVersionDiagnostic with below-min warning/above-save notes. Explicit known loader provenance may attempt outside range without pretending that it passed native loading; unknown overlapping profiles still unresolved. Source v1.227 linker unavailable so no invented runtime warning behavior. Added source-defined original v1.200 UStringProperty::SerializeItem FArchive::String into recursive nested UE1 UClass struct/array value reader, bytewise read up to StringSize-1 or NUL and synthesized in-memory NUL without on-disk byte. O06 source register 252 MAPPED 2 PARTIAL 38 EXCLUDED; 2 UClass complex defaults still open; only 3 PHP syntax/diff checks, no native/corpus tests, PRD untouched.
+- **Resume at:** Continue C98/T99 UClass::Serialize complex defaults source implementation from Epic field serializers, especially nested fixed arrays/imported layouts; promote entries only when file-read mapping code complete. Then separate G5 compiled native oracle/corpus verification, release review and PRD deployment.
+- **Active changed at:** 2026-10-23T20:31:11+00:00
 - **Latest DEV test states:** PASS 102; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

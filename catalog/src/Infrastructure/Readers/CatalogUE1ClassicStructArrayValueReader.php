@@ -113,7 +113,7 @@ final class CatalogUE1ClassicStructArrayValueReader
                 $kind=(string)($field['property_kind']??'');
                 if(!in_array($kind,[
                     'byteproperty','boolproperty','intproperty',
-                    'floatproperty','strproperty',
+                    'floatproperty','strproperty','stringproperty',
                     'nameproperty','objectproperty','classproperty',
                     'structproperty'
                 ],true)){
@@ -126,6 +126,16 @@ final class CatalogUE1ClassicStructArrayValueReader
                 }
                 $flags=(int)($field['effective_property_flags']??0);
                 $skip=($flags&0x3000)!==0;
+                $stringSize=null;
+                if($kind==='stringproperty'){
+                    // Unreal v1.200 Core/Inc/UnType.h::UStringProperty
+                    // archives each fixed CHAR[] via FArchive::String,
+                    // not by archiving the full in-memory allocation.
+                    $stringSize=(int)($field['subclass_fields']['string_size']??0);
+                    if($stringSize<1){
+                        return ['status'=>'struct_fixed_string_size_invalid'];
+                    }
+                }
                 $nestedLayout=null;
                 if($kind==='structproperty'&&!$skip){
                     $nestedLayout=self::resolve(
@@ -143,6 +153,7 @@ final class CatalogUE1ClassicStructArrayValueReader
                     'name'=>(string)($fieldEx['objectNameText']??''),
                     'kind'=>$kind,'array_dim'=>$dim,
                     'skip_persistent_archive'=>$skip,
+                    'fixed_string_size'=>$stringSize,
                     'nested_layout'=>$nestedLayout,
                 ];
                 $ref=(int)($field['next_field_reference']??0);
@@ -212,6 +223,36 @@ final class CatalogUE1ClassicStructArrayValueReader
                             'reason'=>$nested['status']??'unknown'];
                     }
                     $v=$nested;
+                }elseif($kind==='stringproperty'){
+                    // Epic v1.200 Core/Src/UnFile.cpp FArchive::String:
+                    // for Count<MaxLength-1 archive exactly one BYTE;
+                    // stop at first NUL, otherwise synthesize final NUL
+                    // in memory without consuming a terminator byte.
+                    $maxLength=(int)($field['fixed_string_size']??0);
+                    if($maxLength<1){
+                        return ['status'=>'struct_fixed_string_size_invalid'];
+                    }
+                    $raw='';
+                    $terminated=false;
+                    for($count=0;$count<$maxLength-1;$count++){
+                        if($position>=strlen($bytes)){
+                            return ['status'=>'struct_fixed_string_archive_truncated'];
+                        }
+                        $b=$bytes[$position++];
+                        if($b==="\0"){
+                            $terminated=true;
+                            break;
+                        }
+                        $raw.=$b;
+                    }
+                    $v=['raw_ansi_bytes_hex'=>bin2hex($raw),
+                        'serialized_text_bytes'=>strlen($raw)+($terminated?1:0),
+                        'declared_capacity'=>$maxLength,
+                        'nul_archived'=>$terminated,
+                        'last_nul_inserted_in_memory'=>!$terminated,
+                        'ascii_text'=>preg_match(
+                            '/^[\x09\x0A\x0D\x20-\x7E]*$/D',$raw
+                        )===1?$raw:null];
                 }elseif($kind==='strproperty'){
                     $decoded=CatalogUE1ClassicFStringArchiveReader::decodeAt(
                         $bytes,$position);

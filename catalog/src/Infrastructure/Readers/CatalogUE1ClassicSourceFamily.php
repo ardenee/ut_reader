@@ -47,8 +47,12 @@ final class CatalogUE1ClassicSourceFamily
     }
 
     /**
-     * Validate a source choice against its version gate. A successful
-     * gate never proves what game produced a file.
+     * Source-accurate ULinkerLoad CheckVersion rule: the defined minimum
+     * version is a *prompt*, not an automatic rejection. Its current
+     * PACKAGE_FILE_VERSION is used for saving and initial archive setup,
+     * not as a checked upper load cutoff. Use eligibleProfiles only to
+     * prioritize likely candidates and warn when leaving the advertised
+     * complete-backward-compatibility range.
      */
     public static function select(int $version,?string $sourceFamily=null):string
     {
@@ -58,12 +62,9 @@ final class CatalogUE1ClassicSourceFamily
         }
         $eligible=self::eligibleProfiles($version);
         if($sourceFamily!==null){
-            if(!in_array($sourceFamily,$eligible,true)){
-                $gate=self::GAME_VERSION_GATES[$sourceFamily];
-                throw new InvalidArgumentException(sprintf(
-                    'UE1 source %s is outside its %d-%d complete-compatibility gate for package version %d',
-                    $sourceFamily,$gate['minimum'],$gate['maximum'],$version));
-            }
+            // Explicit known loader provenance takes priority over an
+            // archive-version inference. Epic's linker does not reject
+            // this outright; record its source warning separately.
             return $sourceFamily;
         }
         if(count($eligible)===1){
@@ -79,6 +80,42 @@ final class CatalogUE1ClassicSourceFamily
         throw new InvalidArgumentException(sprintf(
             'UE1 package version %d has overlapping source profiles [%s]; select known loader provenance or compare candidates',
             $version,implode(', ',$eligible)));
+    }
+
+    /**
+     * Source-version diagnostic for known loader selection.
+     *
+     * This does NOT attempt to emulate GUI YesNo or run a game loader.
+     * Only the two pinned v1.200 and UT99 sources include the inspected
+     * CheckVersion below-minimum user warning; the partial v1.227 tree
+     * has no replacement Core/Src for asserting its runtime prompt.
+     */
+    public static function loaderVersionDiagnostic(
+        int $version,string $selectedSource
+    ):array{
+        if(!isset(self::GAME_VERSION_GATES[$selectedSource])){
+            throw new InvalidArgumentException('Unknown UE1 game/source family');
+        }
+        $gate=self::GAME_VERSION_GATES[$selectedSource];
+        $below=$version<$gate['minimum'];
+        $above=$version>$gate['maximum'];
+        $verified=($selectedSource!==self::UNREAL_V227);
+        return [
+            'source_profile'=>$selectedSource,
+            'archive_version'=>$version,
+            'source_minimum_warning_version'=>$gate['minimum'],
+            'source_save_version'=>$gate['maximum'],
+            'within_declared_compatibility_range'=>!$below&&!$above,
+            'below_source_minimum'=>$below,
+            'above_source_save_version'=>$above,
+            'epic_linker_version_action'=>$below
+                ?($verified?'warn_user_and_allow_continue_or_abort'
+                           :'minimum_warning_behavior_unverified_for_v227')
+                :($verified?'no_version_rejection_in_inspected_linker_check'
+                           :'v227_linker_implementation_unavailable'),
+            'source_linker_check_available'=>$verified,
+            'runtime_load_success_verified'=>false,
+        ];
     }
 
     /**
@@ -126,6 +163,8 @@ final class CatalogUE1ClassicSourceFamily
                 ($selected===self::UT99_V400?self::UT99_V400:null),
             'source_profile'=>$selected,
             'eligible_profiles'=>self::eligibleProfiles($version),
+            'loader_version_diagnostic'=>
+                self::loaderVersionDiagnostic($version,$selected),
             'source_profile_selection_basis'=>$sourceFamily!==null
                 ?'explicit_loader_provenance'
                 :($version===69&&$licenseeVersion===227

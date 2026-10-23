@@ -27,7 +27,7 @@ The pinned game sources declare inclusive minimum and maximum **complete-backwar
 | Unreal Tournament v400 | 60 | 68 | ut99-v400 |
 | Unreal v1.227 | 60 | 69 | unreal-v227 |
 
-CatalogUE1ClassicSourceFamily::GAME_VERSION_GATES and eligibleProfiles($fileVersion) enforce these ranges for source-profile **eligibility**, including explicit --ue1-source choices.
+CatalogUE1ClassicSourceFamily::GAME_VERSION_GATES and eligibleProfiles($fileVersion) provide source-defined **priority and declared compatibility** for candidate selection. A known loader chosen explicitly may attempt an out-of-range package: the actual Epic loader below-minimum check prompts for confirmation and does not unconditionally reject. The reader preserves that source selection and exposes loaderVersionDiagnostic rather than claiming the file will load.
 
 - v34–59: Unreal v1.200 source eligible.
 - v60–61: all three sources eligible, not auto-identified.
@@ -37,7 +37,13 @@ CatalogUE1ClassicSourceFamily::GAME_VERSION_GATES and eligibleProfiles($fileVers
 
 **Crucial source distinction:** The actual ULinkerLoad::LoadSummary check in both Unreal v1.200 and UT99 v400 *prompts* on files older than PACKAGE_MIN_VERSION and may continue. The eligibility gates deliberately reflect complete-compatibility support, **not an assertion that the engine refuses every out-of-range file**. A newer file is not rejected by that particular minimum-version check, either, but may fail in subsequent parsing or linking.
 
-The CLI reports all eligible profiles before selecting. If multiple sources are eligible and no loader provenance is provided, it reports ambiguity rather than silently interpreting a file using the wrong game. A future candidate probe must compare complete structural outcomes and surface ambiguity when multiple sources succeed; successful tagged-property parsing alone does not identify a game. Game source is layered over the Epic UE1 engine serializer, never substituted for it.
+The CLI reports all preferred in-range profiles, plus a source-defined warning diagnostic for an explicitly selected out-of-range profile, before selecting. If multiple sources are eligible and no loader provenance is provided, it reports ambiguity rather than silently interpreting a file using the wrong game. A future candidate probe must compare complete structural outcomes and surface ambiguity when multiple sources succeed; successful tagged-property parsing alone does not identify a game. Game source is layered over the Epic UE1 engine serializer, never substituted for it.
+
+### Exact native loader semantics and fixed-string UClass defaults (2026-10-23)
+
+The inspected pinned Unreal v1.200 and UT99 v400 Core/Src/UnLinker.h checks Summary.FileVersion below PACKAGE_MIN_VERSION, then uses GWarn->YesNof(OldVersion) and aborts only when the user answers no. It does not check FileVersion above PACKAGE_FILE_VERSION at that point. UnrealDB no longer treats either source constant as a hard exclusion when an explicit loader profile is supplied. A selected loader above its own saver version is a speculative attempted load (not proof of successful compatibility). The version 69/227 Unreal header identity check remains independent. The partial v1.227 source tree lacks the relevant linker implementation, so no v1.227 confirmation prompt is invented. sourceLayers and CLI expose the distinction.
+
+Epic Unreal v1.200 Core/Inc/UnType.h UStringProperty::SerializeItem calls FArchive::String(Value,StringSize) from Core/Src/UnFile.cpp. This reads one byte at a time, stopping at an on-disk NUL or at StringSize-1 bytes, then writes a NUL in memory without consuming an additional file byte. CatalogUE1ClassicStructArrayValueReader now implements this exact bounded original-engine string operation for nested UClass default structs and struct-array fields; it does not mistake fixed CHAR arrays for UT99 FString archives. These are code changes, not native-runtime G5 acceptance.
 
 ## Future UE2 / UE2.5 / UE3 / UE4 / UE5 work
 

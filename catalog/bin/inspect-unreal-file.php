@@ -403,6 +403,9 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
                     }
                     $result['ue1_object_payload_preview'] = $samples;
                     $result['ue1_selected_source_family']=$selectedGameSource;
+                    $result['ue1_selected_loader_version_diagnostic']=
+                        $selector::loaderVersionDiagnostic(
+                            (int)($header['version']??0),$selectedGameSource);
                     // Keep source hierarchy explicit: an inherited
                     // Epic UE1 object archive and an optional game override.
                     // Archive version alone cannot identify a game.
