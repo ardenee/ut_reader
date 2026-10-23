@@ -78,7 +78,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
             $classRef=$next;$inherited=true;
         }
         $matched=0;$matchedDirect=0;$matchedInherited=0;$unresolved=0;
-        $mismatches=[];$samples=[];
+        $mismatches=[];$mismatchCount=0;$samples=[];
+        $stringBoundUnverified=0;$stringBoundSamples=[];
         foreach($tags as $tag){
             $key=strtolower((string)($tag['name']??''));
             $decl=$declarations[$key]??null;
@@ -97,32 +98,61 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 ||($tagKind==='objectproperty'&&$declKind==='classproperty');
             $arrayValid=(int)($tag['array_index']??-1)>=0
                 &&(int)($tag['array_index']??-1)<(int)$decl['array_dim'];
+            $stringCapacity=$decl['string_size']??null;
+            $stringLengthValid=$declKind!=='stringproperty'
+                ||($stringCapacity!==null
+                    &&(int)($tag['serialized_size']??-1)>=1
+                    &&(int)$tag['serialized_size']<(int)$stringCapacity);
             if(!$typeValid||!$arrayValid){
-                $mismatches[]=['name'=>$tag['name'],
-                    'actual_type'=>$tagKind,'declared_kind'=>$declKind,
-                    'array_index'=>$tag['array_index'],
-                    'declared_array_dim'=>$decl['array_dim'],
-                    'field_export_ref'=>$decl['ref']];
-                if(count($mismatches)>=16){break;}
+                // C98 Core/Src/UnClass.cpp UStruct::SerializeTaggedProperties:
+                // an incompatible known property emits NAME_Warning; its
+                // serialized Tag.Size bytes have already been consumed by
+                // the shared tagged-property archive. Do not abort the
+                // whole class or incorrectly accept this value.
+                $mismatchCount++;
+                if(count($mismatches)<16){
+                    $mismatches[]=['name'=>$tag['name'],
+                        'reason'=>!$typeValid?'type_mismatch':'array_index_out_of_bounds',
+                        'actual_type'=>$tagKind,'declared_kind'=>$declKind,
+                        'array_index'=>$tag['array_index'],
+                        'declared_array_dim'=>$decl['array_dim'],
+                        'declared_string_capacity'=>$stringCapacity,
+                        'field_export_ref'=>$decl['ref']];
+                }
+                continue;
+            }
+            if(!$stringLengthValid){
+                // C98 FArchive::String reads at most StringSize-1 bytes;
+                // it does NOT take the generic mismatched-tag warning
+                // branch. The exact behaviour of a longer tag payload
+                // cannot be treated as a safely skipped property.
+                $stringBoundUnverified++;
+                if(count($stringBoundSamples)<16){
+                    $stringBoundSamples[]=['name'=>$tag['name'],
+                        'serialized_size'=>$tag['serialized_size'],
+                        'declared_string_capacity'=>$stringCapacity,
+                        'field_export_ref'=>$decl['ref']];
+                }
                 continue;
             }
             $matched++;
             if($decl['inherited']){$matchedInherited++;}else{$matchedDirect++;}
         }
-        if($mismatches!==[]){
-            // A locally known declaration/type mismatch is not safely
-            // reinterpretable as an unverified inherited field.
-            throw new RuntimeException('UE1 class default tag disagrees with UProperty source declaration: '.
-                json_encode($mismatches[0],JSON_UNESCAPED_SLASHES));
-        }
         return [
-            'status'=>$unresolved===0?'all_available_declarations_match':
-                'imported_or_unknown_properties_unverified',
+            'status'=>$mismatchCount>0?'known_incompatible_tags_skipped':
+                ($stringBoundUnverified>0?'fixed_string_archive_size_unverified':
+                ($unresolved===0?'all_available_declarations_match':
+                'imported_or_unknown_properties_unverified')),
             'tag_count'=>count($tags),
             'declaration_type_and_array_index_matches'=>$matched,
             'matches_in_this_class'=>$matchedDirect,
             'matches_in_local_superclasses'=>$matchedInherited,
             'unresolved_tag_count'=>$unresolved,
+            'known_incompatible_tags_skipped'=>$mismatchCount,
+            'fixed_string_archive_bounds_unverified'=>$stringBoundUnverified,
+            'fixed_string_archive_bound_samples'=>$stringBoundSamples,
+            'incompatible_tag_warning_samples'=>$mismatches,
+            'load_policy'=>'warn_and_skip_incompatible_tag_as_epic_source',
             'unresolved_examples'=>$samples,
             'source_declarations_in_this_class'=>$ownFields,
             'source_declarations_in_local_superclasses'=>$parentFields,
@@ -204,7 +234,8 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 $key=strtolower((string)$field['name']);
                 $fields[$key]=['ref'=>$reference,
                     'kind'=>(string)$data['property_kind'],
-                    'array_dim'=>(int)$data['array_dim']];
+                    'array_dim'=>(int)$data['array_dim'],
+                    'string_size'=>$data['subclass_fields']['string_size']??null];
             }
             $reference=(int)($data['next_field_reference']??0);
         }

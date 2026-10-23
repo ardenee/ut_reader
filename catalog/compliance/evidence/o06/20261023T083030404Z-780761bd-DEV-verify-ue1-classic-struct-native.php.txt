@@ -1,0 +1,38 @@
+﻿{
+    "ok": true,
+    "passed": 26,
+    "total": 26,
+    "failures": [],
+    "cases": {
+        "v50_UField_inherited_refs": true,
+        "v69_UField_empty": true,
+        "UField_extension_not_complete": true,
+        "v50_UStruct_source_fields": true,
+        "UStruct_nonzero_code_not_accepted": true,
+        "v50_UStruct_compact_object_ref_script_archive": true,
+        "v69_UStruct_source_token_expressions": true,
+        "v69_UState_script_then_StateFlags": true,
+        "reject_Struct_memwidth_overrun": true,
+        "v69_UState_masks_and_flags": true,
+        "v35_UState_legacy_prefix": true,
+        "UState_extensions_not_hidden": true,
+        "v50_UFunction_old_fields_NET": true,
+        "v69_UFunction_new_fields_no_net": true,
+        "v69_UFunction_NET_conditional_rep": true,
+        "UFunction_extra_bytes_not_complete": true,
+        "reject_UField_bad_import": true,
+        "reject_UField_bad_export": true,
+        "reject_UStruct_bad_script_text": true,
+        "reject_UStruct_bad_children": true,
+        "reject_UStruct_Friendly_None": true,
+        "reject_UStruct_negative_script_size": true,
+        "reject_UState_truncated": true,
+        "reject_UFunction_missing_NET_rep": true,
+        "reject_UFunction_truncated_old_fields": true,
+        "reject_UFunction_truncated_UField": true
+    },
+    "sources": [
+        "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440",
+        "UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342, FUNC_Net=0x40"
+    ]
+}

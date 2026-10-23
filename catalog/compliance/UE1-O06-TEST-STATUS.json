@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T08:14:52.9689462Z",
-    "head_commit":  "536d7521",
+    "updated_at_utc":  "2026-10-23T08:30:41.6720848Z",
+    "head_commit":  "0daf8339",
     "current_target":  "DEV",
-    "current_source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
+    "current_source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-bitarray-native.php",
@@ -45,12 +45,12 @@
                       "test":  "verify-ue1-classic-class-metadata.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T08:14:39.1368009Z",
-                      "source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
+                      "event_at_utc":  "2026-10-23T08:30:30.1679005Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "ccfac32be4c9a9a6d2c45acda5d762aee892bf3e034b70e152cf959fedb5d704",
-                      "run_id":  "20261023T081438566Z-80eb3b74",
+                      "run_id":  "20261023T083029358Z-360fc563",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T081438566Z-80eb3b74-DEV-verify-ue1-classic-class-metadata.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083029358Z-360fc563-DEV-verify-ue1-classic-class-metadata.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-const-native.php",
@@ -165,36 +165,36 @@
                       "test":  "verify-ue1-classic-property-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T08:14:40.9239040Z",
-                      "source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
+                      "event_at_utc":  "2026-10-23T08:30:31.5404874Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-                      "run_id":  "20261023T081440385Z-27ab9394",
+                      "run_id":  "20261023T083031036Z-4e7fc3a4",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T081440385Z-27ab9394-DEV-verify-ue1-classic-property-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083031036Z-4e7fc3a4-DEV-verify-ue1-classic-property-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-struct-native.php",
                       "test":  "verify-ue1-classic-struct-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T15:45:49.4510384Z",
-                      "source_sha256":  "9b9becc4a7f9ac5c1a75c7dd9c967939009eb9e9ff997141a78fb9099df23a9d",
+                      "event_at_utc":  "2026-10-23T08:30:30.8302909Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-                      "run_id":  "20261022T154549148Z-4cb22fd4",
+                      "run_id":  "20261023T083030404Z-780761bd",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T154549148Z-4cb22fd4-DEV-verify-ue1-classic-struct-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083030404Z-780761bd-DEV-verify-ue1-classic-struct-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-tagged-properties.php",
                       "test":  "verify-ue1-classic-tagged-properties.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T08:14:40.1772945Z",
-                      "source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
+                      "event_at_utc":  "2026-10-23T08:30:29.1474959Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
-                      "run_id":  "20261023T081439346Z-1aed4de7",
+                      "run_id":  "20261023T083027826Z-c929dbe5",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T081439346Z-1aed4de7-DEV-verify-ue1-classic-tagged-properties.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083027826Z-c929dbe5-DEV-verify-ue1-classic-tagged-properties.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-textbuffer-native.php",
@@ -321,36 +321,60 @@
                       "test":  "verify-ue1-o06-genuine-class-default-declarations.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T08:13:45.0577054Z",
-                      "source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
-                      "test_sha256":  "e7c8d0da9f0b8ec532ef07dbd10bb4eb429b1c49b81bbb5cade04ed55192b65d",
-                      "run_id":  "20261023T081340433Z-0ff3f4c8",
+                      "event_at_utc":  "2026-10-23T08:30:07.0833559Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
+                      "test_sha256":  "216e372bb01122b8ccb562b5a9c2c46ece9ad56e7958c22f9a0d177b7d37bddd",
+                      "run_id":  "20261023T083003304Z-5b518563",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T081340433Z-0ff3f4c8-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083003304Z-5b518563-DEV-verify-ue1-o06-genuine-class-default-declarations.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-genuine-class-default-strings.php",
+                      "test":  "verify-ue1-o06-genuine-class-default-strings.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T08:30:03.1178350Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
+                      "test_sha256":  "d741bed4b3890b0d41bf0d175ddae88e02c4a91552f055c4121b94072fca5dd8",
+                      "run_id":  "20261023T082959785Z-d811b9a6",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T082959785Z-d811b9a6-DEV-verify-ue1-o06-genuine-class-default-strings.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-genuine-class-default-struct-values.php",
+                      "test":  "verify-ue1-o06-genuine-class-default-struct-values.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-23T08:22:09.1034548Z",
+                      "source_sha256":  "7a46d7de29215f1ca1aab9322629a3f4ffbe128e7e966d4ad4d8dbc7ceeb8130",
+                      "test_sha256":  "d4aa77625956a2230661199aef91e60dbd7159b3eaf088ce7f4cae6e4ed0877e",
+                      "run_id":  "20261023T082205347Z-a766f318",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T082205347Z-a766f318-DEV-verify-ue1-o06-genuine-class-default-struct-values.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-compiled-native.php",
                       "test":  "verify-ue1-o06-genuine-compiled-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T08:14:49.2776424Z",
-                      "source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
+                      "event_at_utc":  "2026-10-23T08:30:39.5087651Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-                      "run_id":  "20261023T081441131Z-7d5f25f6",
+                      "run_id":  "20261023T083031757Z-61831897",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T081441131Z-7d5f25f6-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083031757Z-61831897-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-entry-v61.php",
                       "test":  "verify-ue1-o06-genuine-entry-v61.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T08:14:50.2985525Z",
-                      "source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
+                      "event_at_utc":  "2026-10-23T08:30:39.9966283Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "7347e46366cd92edd248801549611bb101bc4ac1b9b179b6732be96390d4600c",
-                      "run_id":  "20261023T081450022Z-74f7df32",
+                      "run_id":  "20261023T083039731Z-583a98ef",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T081450022Z-74f7df32-DEV-verify-ue1-o06-genuine-entry-v61.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083039731Z-583a98ef-DEV-verify-ue1-o06-genuine-entry-v61.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-original-saveability.php",
@@ -369,12 +393,12 @@
                       "test":  "verify-ue1-o06-payload-negatives.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T07:41:55.7110947Z",
-                      "source_sha256":  "557ce439d98b6ca71318f6ac3659c1325fcee3b6651573f3bf41ebe453d22531",
+                      "event_at_utc":  "2026-10-23T08:30:41.6557068Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "be58ffc16478d4eb446eed331b121ac178e171fae65195daa20baa9a6987edee",
-                      "run_id":  "20261023T074155333Z-fddfc145",
+                      "run_id":  "20261023T083041174Z-504bc396",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T074155333Z-fddfc145-DEV-verify-ue1-o06-payload-negatives.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083041174Z-504bc396-DEV-verify-ue1-o06-payload-negatives.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-original-1996-actor-abi.php",
@@ -981,12 +1005,12 @@
                       "test":  "verify-ue1-v68-v69-genuine-corpus.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T08:14:49.8222859Z",
-                      "source_sha256":  "00052223df4e1eae6abeeefc75e0c67958716c8f6355e77f94bbdfd84aecfb7a",
+                      "event_at_utc":  "2026-10-23T08:30:40.9619867Z",
+                      "source_sha256":  "50b03b55fcf1bb08da85a79968b0fb028e5e6b39db94b7a122ac46822e389289",
                       "test_sha256":  "42b83683478e50310fd211d1c62a6b1bc61d6d9f21bcc69483c333d5378c295c",
-                      "run_id":  "20261023T081449463Z-fab7686b",
+                      "run_id":  "20261023T083040209Z-4a32f6ec",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T081449463Z-fab7686b-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T083040209Z-4a32f6ec-DEV-verify-ue1-v68-v69-genuine-corpus.php.txt"
                   },
                   {
                       "key":  "PRD:verify-ue1-classic-class-metadata.php",

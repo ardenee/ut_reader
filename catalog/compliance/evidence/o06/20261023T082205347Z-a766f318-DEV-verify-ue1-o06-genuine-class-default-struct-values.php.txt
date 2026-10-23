@@ -1,0 +1,113 @@
+﻿{
+    "ok": true,
+    "passed": 113,
+    "checks": 113,
+    "failed": [],
+    "stats": {
+        "total": 97,
+        "vector": 42,
+        "rotator": 49,
+        "scale": 3,
+        "color": 3,
+        "raw_roundtrip": 97
+    },
+    "samples": [
+        {
+            "file": "Engine.u",
+            "class": "Pawn",
+            "tag": "RotationRate",
+            "kind": "frotator_int32_pitch_yaw_roll",
+            "value": {
+                "pitch": 4096,
+                "yaw": 50000,
+                "roll": 3072
+            }
+        },
+        {
+            "file": "Engine.u",
+            "class": "Inventory",
+            "tag": "RotationRate",
+            "kind": "frotator_int32_pitch_yaw_roll",
+            "value": {
+                "pitch": 0,
+                "yaw": 5000,
+                "roll": 0
+            }
+        },
+        {
+            "file": "Engine.u",
+            "class": "Inventory",
+            "tag": "DesiredRotation",
+            "kind": "frotator_int32_pitch_yaw_roll",
+            "value": {
+                "pitch": 0,
+                "yaw": 30000,
+                "roll": 0
+            }
+        },
+        {
+            "file": "Engine.u",
+            "class": "ZoneInfo",
+            "tag": "ZoneGravity",
+            "kind": "fvector_float32_xyz",
+            "value": {
+                "x": 0,
+                "y": 0,
+                "z": -950
+            }
+        },
+        {
+            "file": "Engine.u",
+            "class": "PlayerPawn",
+            "tag": "FlashScale",
+            "kind": "fvector_float32_xyz",
+            "value": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+            }
+        },
+        {
+            "file": "Engine.u",
+            "class": "Weapon",
+            "tag": "PlayerViewOffset",
+            "kind": "fvector_float32_xyz",
+            "value": {
+                "x": 30,
+                "y": 0,
+                "z": -5
+            }
+        },
+        {
+            "file": "Engine.u",
+            "class": "Canvas",
+            "tag": "DrawColor",
+            "kind": "fcolor_serialized_bytes",
+            "value": {
+                "serialized_channel_bytes": [
+                    127,
+                    127,
+                    127,
+                    0
+                ]
+            }
+        },
+        {
+            "file": "Engine.u",
+            "class": "Brush",
+            "tag": "MainScale",
+            "kind": "fscale_vector_rate_axis",
+            "value": {
+                "scale": {
+                    "x": 1,
+                    "y": 1,
+                    "z": 1
+                },
+                "sheer_rate": 0,
+                "sheer_axis": 0
+            }
+        }
+    ],
+    "epic_math_source_sha256": "c63468415d18e1483daa40d5b7dbfc3a4a8b2fc077dc27ae6ef5e820ad126d2b",
+    "remaining": "Raw typed vector/rotator/scale/color source-value roundtrip only; 576 fixed-length strings, transient/class-specific/load-time value semantics and native engine oracle still unresolved."
+}

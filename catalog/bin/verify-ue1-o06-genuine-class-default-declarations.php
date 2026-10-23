@@ -58,6 +58,7 @@ foreach($manifest['files'] as $spec){
    &&$matched===$validation['matches_in_this_class']
      +$validation['matches_in_local_superclasses']
    &&($validation['value_payload_semantics_verified']??true)===false
+   &&($validation['known_incompatible_tags_skipped']??-1)===0
    &&($class['defaults_schema_verified']??true)===false);
   $counts['tags']+=$total;$counts['matched']+=$matched;
   $counts['direct']+=$validation['matches_in_this_class'];
@@ -76,13 +77,19 @@ foreach($manifest['files'] as $spec){
    $mutated=$class['default_property_tags'];
    foreach($mutated as &$tag){$tag['type']='NonexistentProperty';}
    unset($tag);
-   try{Schema::inspect($path,$pkg,$class,$mutated);}
-   catch(RuntimeException){$negativeType=true;}
+   $diagnostic=Schema::inspect($path,$pkg,$class,$mutated);
+   $negativeType=$diagnostic['status']==='known_incompatible_tags_skipped'
+    &&$diagnostic['known_incompatible_tags_skipped']>0
+    &&($diagnostic['incompatible_tag_warning_samples'][0]['reason']??'')==='type_mismatch'
+    &&$diagnostic['declaration_type_and_array_index_matches']<$matched;
    $mutated=$class['default_property_tags'];
    foreach($mutated as &$tag){$tag['array_index']=1048576;}
    unset($tag);
-   try{Schema::inspect($path,$pkg,$class,$mutated);}
-   catch(RuntimeException){$negativeArray=true;}
+   $diagnostic=Schema::inspect($path,$pkg,$class,$mutated);
+   $negativeArray=$diagnostic['status']==='known_incompatible_tags_skipped'
+    &&$diagnostic['known_incompatible_tags_skipped']>0
+    &&($diagnostic['incompatible_tag_warning_samples'][0]['reason']??'')==='array_index_out_of_bounds'
+    &&$diagnostic['declaration_type_and_array_index_matches']<$matched;
   }
  }
  $fileRows[]=['file'=>$file,'classes_with_defaults'=>$localClasses,
@@ -142,8 +149,8 @@ $check('all_declared_tags_matched_but_values_unverified',
  $counts['unresolved_imported_or_unknown']===0
  &&$counts['declaration_complete_classes']===513
  &&$counts['class_schema_semantics_accepted']===0);
-$check('negative_tag_type_mismatch_rejected',$negativeType);
-$check('negative_array_index_mismatch_rejected',$negativeArray);
+$check('negative_tag_type_mismatch_warned_and_skipped',$negativeType);
+$check('negative_array_index_warned_and_skipped',$negativeArray);
 echo json_encode(['ok'=>$failed===[],'checks'=>count($checkResults),
  'passed'=>count($checkResults)-count($failed),'failed'=>$failed,
  'counts'=>$counts,'files'=>$fileRows,'unresolved_examples'=>$examples,

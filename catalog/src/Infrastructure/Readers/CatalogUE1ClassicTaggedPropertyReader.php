@@ -78,6 +78,21 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 elseif($type===1&&$tagSize===1){$value=ord($raw);$valueKind='byte';}
                 elseif($type===2&&$tagSize===4){$v=unpack('V',$raw)[1];$value=$v>=0x80000000?$v-0x100000000:$v;$valueKind='int32';}
                 elseif($type===4&&$tagSize===4){$value=unpack('g',$raw)[1];$valueKind='float32';}
+                elseif($type===7&&$version>=40&&$version<=61&&$tagSize>=1
+                    &&substr($raw,-1)==="\0"
+                    &&strpos($raw,"\0")===strlen($raw)-1){
+                    // C98 Core/Inc/UnType.h UStringProperty::SerializeItem
+                    // calls Ar.String(char*,StringSize); Core/Src/UnFile.cpp
+                    // archives bytes to first NUL, bounded by StringSize.
+                    // This is an ANSI byte sequence; do not guess codepage.
+                    $textBytes=substr($raw,0,-1);
+                    $ascii=preg_match('/^[\\x09\\x0A\\x0D\\x20-\\x7E]*$/D',
+                        $textBytes)===1?$textBytes:null;
+                    $value=['raw_ansi_bytes_hex'=>bin2hex($textBytes),
+                        'ascii_text'=>$ascii,'byte_length'=>strlen($textBytes),
+                        'nul_terminated'=>true];
+                    $valueKind='legacy_ansi_cstring_bytes';
+                }
                 elseif($type===10&&is_array($struct)){
                     $bytes=array_values(unpack('C*',$raw)?:[]);
                     $structName=strtolower($struct['text']);
@@ -86,6 +101,29 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         // raw disk channel order without inferred sRGB.
                         $value=['serialized_channel_bytes'=>$bytes];
                         $valueKind='fcolor_serialized_bytes';
+                    }elseif($structName==='vector'&&$tagSize===12){
+                        // C98 Engine/Inc/UnMath.h FVector::operator<<:
+                        // exactly three little-endian FLOATs, no C++
+                        // struct-memory padding in the archived value.
+                        $f=array_values(unpack('g3',$raw));
+                        $value=['x'=>$f[0],'y'=>$f[1],'z'=>$f[2]];
+                        $valueKind='fvector_float32_xyz';
+                    }elseif($structName==='rotator'&&$tagSize===12){
+                        // FRotator::operator<< archives three INT32 angles.
+                        $v=array_values(unpack('V3',$raw));
+                        $signed=static fn(int $x):int=>$x>=0x80000000
+                            ?$x-0x100000000:$x;
+                        $value=['pitch'=>$signed($v[0]),
+                            'yaw'=>$signed($v[1]),'roll'=>$signed($v[2])];
+                        $valueKind='frotator_int32_pitch_yaw_roll';
+                    }elseif($structName==='scale'&&$tagSize===17){
+                        // FScale::operator<< archives FVector Scale,
+                        // FLOAT SheerRate and BYTE SheerAxis (12+4+1).
+                        $f=array_values(unpack('g3',substr($raw,0,12)));
+                        $value=['scale'=>['x'=>$f[0],'y'=>$f[1],'z'=>$f[2]],
+                            'sheer_rate'=>(float)unpack('g',substr($raw,12,4))[1],
+                            'sheer_axis'=>ord($raw[16])];
+                        $valueKind='fscale_vector_rate_axis';
                     }elseif($structName==='adrop'&&$tagSize===8){
                         // Epic Fire/Classes/WaterTexture.uc: ADrop 8 bytes.
                         $value=array_combine(

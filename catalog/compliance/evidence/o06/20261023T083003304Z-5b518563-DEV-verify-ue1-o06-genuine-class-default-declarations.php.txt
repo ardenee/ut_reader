@@ -1,0 +1,61 @@
+﻿{
+    "ok": true,
+    "checks": 1046,
+    "passed": 1046,
+    "failed": [],
+    "counts": {
+        "classes": 513,
+        "tags": 5344,
+        "matched": 5344,
+        "direct": 861,
+        "inherited": 4483,
+        "unresolved_imported_or_unknown": 0,
+        "declaration_complete_classes": 513,
+        "cross_package_superclass_hops": 967,
+        "class_schema_semantics_accepted": 0
+    },
+    "files": [
+        {
+            "file": "Core.u",
+            "classes_with_defaults": 0,
+            "default_property_tags": 0,
+            "declaration_matched": 0
+        },
+        {
+            "file": "Editor.u",
+            "classes_with_defaults": 1,
+            "default_property_tags": 10,
+            "declaration_matched": 10
+        },
+        {
+            "file": "Engine.u",
+            "classes_with_defaults": 59,
+            "default_property_tags": 476,
+            "declaration_matched": 476
+        },
+        {
+            "file": "Fire.u",
+            "classes_with_defaults": 0,
+            "default_property_tags": 0,
+            "declaration_matched": 0
+        },
+        {
+            "file": "IpDrv.u",
+            "classes_with_defaults": 3,
+            "default_property_tags": 7,
+            "declaration_matched": 7
+        },
+        {
+            "file": "UNreal.u",
+            "classes_with_defaults": 450,
+            "default_property_tags": 4851,
+            "declaration_matched": 4851
+        }
+    ],
+    "unresolved_examples": [],
+    "source_sha256": {
+        "UnClass.cpp": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+        "UnProp.cpp": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b"
+    },
+    "remaining": "All 5344 source-serialized tag declarations resolved in the pinned compiled corpus; opaque value semantics, import package generation and compiled native engine value parity remain unverified."
+}
