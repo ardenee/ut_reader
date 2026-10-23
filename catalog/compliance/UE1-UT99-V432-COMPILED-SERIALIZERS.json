@@ -20,7 +20,26 @@
         "0x40"
       ],
       "source_struct_operators": "v432 Engine/Inc/UnSkeletalMesh.h and UnAnim.h",
-      "mapping": "MAPPED"
+      "mapping": "MAPPED",
+      "rea_ghidra_pilot": {
+        "tool": "REA 6.7.0 / Ghidra 12.1.4 Windows x86 PE",
+        "sha_pinned_engine_dll": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+        "observed_function_address": "0x103ecec0",
+        "observed_inherited_call": "UObject::Serialize",
+        "observed_member_offsets": [
+          "0x28",
+          "0x34",
+          "0x40"
+        ],
+        "observed_archive_calls": 3,
+        "evidence_id": "ev_3a0aa70a7ee584a6701c4b7569ca849f3ccfce05d6b8a7288a0ebae5c39b796b",
+        "local_immutable_analysis_path": "C:\\Temp\\UnrealDB\\O06\\rea-v432-uanimation-decompile.json",
+        "local_analysis_file_sha256": "267f7c3edaa9fe4c1128c948733cadf86224f034ecc08a99b7309d5a7458d242",
+        "local_inspect_path": "C:\\Temp\\UnrealDB\\O06\\rea-v432-engine-inspect.json",
+        "local_inspect_file_sha256": "238f57cd7f5aae34e85b08832a76d4371fd51f7a904dff8cfcbe2532d7989fb4",
+        "source_method_parity": "Matches existing compiled-v432 archive field order mapped into production PHP",
+        "g5_loaded_values_acceptance": "NOT ESTABLISHED"
+      }
     },
     "USkeletalMesh::Serialize": {
       "export_rva": "0x341D",

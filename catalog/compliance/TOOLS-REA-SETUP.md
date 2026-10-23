@@ -32,3 +32,7 @@ REA output evidence and exploratory scripts go under C:\Temp\UnrealDB\O06; compa
 ## Verified first use
 
 REA 6.7.0 Ghidra 12.1.4 provider doctor completed with healthy=true and all 10 scoped checks passed. The CLI successfully inspected the authentic x86 UT99 v432 Engine.dll from the disposable Native-UCC folder (exit code 0), captured provider=ghidra and SHA-256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac. Raw REA evidence remains at C:\Temp\UnrealDB\O06\rea-v432-engine-inspect.json rather than being committed. This proves tooling readiness for native binaries, not correctness of any entire serializer or native runtime acceptance.
+
+## Successful decompilation of a v432 native serializer
+
+REA/Ghidra decompiled the SHA-pinned installed-v432 UAnimation::Serialize compiled function at VA 0x103ECEC0, export stub RVA 0x1FD2. Returned inherited UObject::Serialize call followed by three archiving calls at C++ object member offsets 0x28, 0x34, 0x40. These correspond to declared RefBones, Moves and AnimSeqs and agree with the already mapped UnrealDB implementation. Evidence ID: ev_3a0aa70a7ee584a6701c4b7569ca849f3ccfce05d6b8a7288a0ebae5c39b796b. Source analysis remains in C:\Temp\UnrealDB\O06\rea-v432-uanimation-decompile.json, SHA256 267f7c3edaa9fe4c1128c948733cadf86224f034ecc08a99b7309d5a7458d242. Cold Ghidra CLI native import and decompilation completed with exit status 0 in approximately 88 seconds. No C++ original source was recovered verbatim; this is a static evidence cross-check, not native object-value G5 parity.
