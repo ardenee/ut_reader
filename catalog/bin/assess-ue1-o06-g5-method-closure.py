@@ -45,13 +45,13 @@ status={
   "blocker":"inherited_UObject_script_fixups_negative_paths",
  },
  "T99:UTextBuffer::Serialize":{
-  "result":"FAILED",
+  "result":"BLOCKED",
   "pinned":True,
   "current":True,
   "complete_members":True,
-  "reason":"Known compiled-native 900-character malformed FString consumes beyond SerialSize then reports mismatch; production PHP safely rejects earlier with different consumed-byte semantics. Shared UObject still open.",
-  "next":"Correct error/consumption parity safely (never unsafe out-of-bounds read), then one full acceptance run including inherited branch.",
-  "blocker":"confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+  "reason":"Corrected: original compiled v432 malformed ANSI900 FString attempts Got 912 / Expected 843 and PHP now reports identical virtual archive extent and error without physically reading beyond the export; one consolidated verdict PASS 28/28. Inherited UObject is still BLOCKED.",
+  "next":"Complete T99:UObject::Serialize full method acceptance, then review T99 UTextBuffer inheritance once; no new TextBuffer scalar or malformed tests.",
+  "blocker":"inherited_UObject_full_method_unverified",
  },
  "T99:UFont::Serialize":{
   "result":"FAILED",
@@ -100,15 +100,38 @@ for name in reg["methods"]:
     entry=status[name]
     evidence=by_id[name]
     if entry["current"]:
-        if name in ("T99:USound::Serialize","T99:UMusic::Serialize"):
-            assert evidence["native_slice_evidence_valid"],name
+        # Following a localized TextBuffer-only production change, older
+        # genuine native evidence still exists and remains hash-pinned but
+        # does not automatically inherit the NEW global source fingerprint.
+        # We do not replay tests just to make a BLOCKED decision appear green.
+        # Current fingerprint is required only for any future FULL signoff.
+        if evidence["native_slice_evidence_valid"] or evidence["native_loaded_evidence_current"]:
+            pass
         else:
-            assert evidence["native_loaded_evidence_current"],name
+            assert entry["result"] in ("BLOCKED","FAILED"),name
+            assert evidence["native_slice_test"] or evidence["native_loaded_test"] or evidence["native_loaded_extra_test"],name
+            entry["current"]=False
     old=reg["methods"][name]
     gates={k:"OPEN" for k in criteria}
     if entry["pinned"]:gates["pinned_source_and_dispatch"]="VERIFIED"
     if entry.get("complete_members"):gates["complete_native_field_values_and_references"]="VERIFIED"
     if entry["result"]=="FAILED":gates["malformed_input_error_semantics"]="FAILED"
+    if name=="T99:UTextBuffer::Serialize":
+        events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        test="verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php"
+        ev=next((item for item in reversed(events) if item.get("test")==test and item.get("state")=="PASS"),None)
+        assert ev is not None,"Consolidated TextBuffer corrective proof missing"
+        log=ROOT/ev["log"].replace("\\","/")
+        file=ROOT/"catalog"/"bin"/test
+        assert sha(log)==ev["output_sha256"] and sha(file)==ev["test_sha256"]
+        assert ev["source_sha256"]==reconciliation["current_source_sha256"],"Corrective test is not current"
+        result=read(log)
+        assert result["one_final_method_acceptance"]=="BLOCKED" and result["php_native_error_identical"]
+        assert result["native_compiled_oversized_attempted_bytes"]==912
+        # The observed ANSI900 error and extent now match. Do not mark
+        # the WHOLE malformed-input criterion VERIFIED from a single case.
+        gates["malformed_input_error_semantics"]="OPEN"
+        gates["archive_bytes_and_consumption"]="VERIFIED"
     assert entry["result"] in ("BLOCKED","FAILED")
     assert any(v!="VERIFIED" for v in gates.values())
     old["criteria"]=gates
@@ -116,16 +139,18 @@ for name in reg["methods"]:
     old["decisive_blocker"]=entry["blocker"]
     old["next_action"]=entry["next"]
     old["reason"]=entry["reason"]
-    old["last_consolidated_review"]="existing_current_SHA_pinned_evidence_only_no_new_tests"
+    old["last_consolidated_review"]=("current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
+                                     else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
     decisions[name]={
       "decision":entry["result"],"gate_results":gates,
       "existing_native_loaded_valid":evidence["native_loaded_evidence_current"],
+      "existing_native_proof_current_global_fingerprint":entry["current"],
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":0,
+      "new_native_tests_executed":0,"new_test_runs_executed":1 if name=="T99:UTextBuffer::Serialize" else 0,
     }
 report={
  "schema":1,
@@ -134,7 +159,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":0,"new_test_runs":0,
+ "new_oracle_runs":0,"new_test_runs":1,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
@@ -155,6 +180,6 @@ assert acceptance["distinct_fully_accepted_methods"]==0
 acceptance_path.write_text(json.dumps(acceptance,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
 print(json.dumps({"report":str(OUT.relative_to(ROOT)).replace("\\","/"),
  "methods":len(decisions),"FULL":0,"FAILED":report["failed"],"BLOCKED":report["blocked"],
- "new_test_runs":0,
+ "new_test_runs":report["new_test_runs"],
  "failed_methods":[k for k,v in decisions.items() if v["decision"]=="FAILED"],
  "first_prerequisite":"T99:UObject::Serialize"},indent=2))

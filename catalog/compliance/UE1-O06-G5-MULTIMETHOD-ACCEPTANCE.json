@@ -347,7 +347,7 @@
     },
     {
       "id": "T99:UTextBuffer::Serialize",
-      "full_G5_method_acceptance": "FAILED",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -441,7 +441,7 @@
         "inherited_UObject_full_method_and_compiled_oversized_FString_consumed_bytes_differ_open",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Correct error/consumption parity safely (never unsafe out-of-bounds read), then one full acceptance run including inherited branch.",
+      "next_closure_work": "Complete T99:UObject::Serialize full method acceptance, then review T99 UTextBuffer inheritance once; no new TextBuffer scalar or malformed tests.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -451,7 +451,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch"
+      "decisive_closure_blocker": "inherited_UObject_full_method_unverified"
     },
     {
       "id": "T99:UFont::Serialize",
@@ -807,6 +807,6 @@
     }
   ],
   "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",
-  "failed_method_decisions": 2,
-  "blocked_method_decisions": 6
+  "failed_method_decisions": 1,
+  "blocked_method_decisions": 7
 }

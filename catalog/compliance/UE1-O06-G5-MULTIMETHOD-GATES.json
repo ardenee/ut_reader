@@ -28,7 +28,7 @@
       "decisive_blocker": "remaining_native_StateFrame_and_negative_paths",
       "next_action": "Obtain one native loader path that actually loads all 19 original Entry.unr StateFrames and malformed byte-error semantics; then perform single full-method review.",
       "reason": "Native UObject common positive StateFrame loader covered 14/19 source frames; five original Camera objects and malformed/error byte semantics unverified.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
     },
     "T99:UClass::Serialize": {
       "criteria": {
@@ -47,14 +47,14 @@
       "decisive_blocker": "inherited_UObject_script_fixups_negative_paths",
       "next_action": "Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
       "reason": "All 88 genuine UClass objects and native stored scalar/array/default/inherited values verified; Script bytecode fixups, malformed consumption, source-version variants, and shared UObject not closed.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
     },
     "T99:UTextBuffer::Serialize": {
       "criteria": {
         "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "VERIFIED",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "FAILED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
@@ -62,11 +62,11 @@
       "closure_artifact": null,
       "closure_sha256": null,
       "blocker_summary": "Compiled all 88 Engine.u TextBuffer loaded values match; inherited UObject and oversize error-byte path unresolved.",
-      "decision": "FAILED",
-      "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
-      "next_action": "Correct error/consumption parity safely (never unsafe out-of-bounds read), then one full acceptance run including inherited branch.",
-      "reason": "Known compiled-native 900-character malformed FString consumes beyond SerialSize then reports mismatch; production PHP safely rejects earlier with different consumed-byte semantics. Shared UObject still open.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "decision": "BLOCKED",
+      "decisive_blocker": "inherited_UObject_full_method_unverified",
+      "next_action": "Complete T99:UObject::Serialize full method acceptance, then review T99 UTextBuffer inheritance once; no new TextBuffer scalar or malformed tests.",
+      "reason": "Corrected: original compiled v432 malformed ANSI900 FString attempts Got 912 / Expected 843 and PHP now reports identical virtual archive extent and error without physically reading beyond the export; one consolidated verdict PASS 28/28. Inherited UObject is still BLOCKED.",
+      "last_consolidated_review": "current_single_full_method_verdict_28_checks"
     },
     "T99:UFont::Serialize": {
       "criteria": {
@@ -85,7 +85,7 @@
       "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
       "next_action": "Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
       "reason": "Known native malformed CharRemap consumes four bytes beyond declared serial extent while PHP refuses before the read; other glyph references and native error handling not all closed.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
     },
     "T99:USkeletalMesh::Serialize": {
       "criteria": {
@@ -104,7 +104,7 @@
       "decisive_blocker": "inherited_ULodMesh_and_negative_cases",
       "next_action": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
       "reason": "Native bone/vertex arrays covered, but inherited ULodMesh and other scalar/error branches unverified.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
     },
     "T99:UAnimation::Serialize": {
       "criteria": {
@@ -123,7 +123,7 @@
       "decisive_blocker": "inherited_UObject_and_negative_variants",
       "next_action": "Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
       "reason": "Native 70 genuine MotionChunk arrays with 540,836 bytes compared, but inherited UObject, other versions and negative cases unverified.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
     },
     "T99:USound::Serialize": {
       "criteria": {
@@ -142,7 +142,7 @@
       "decisive_blocker": "export_output_is_not_loader_native_semantics",
       "next_action": "Capture one complete native Sound load/error/byte-consumption oracle; one consolidated acceptance test only.",
       "reason": "Independent compiled WAV exporter slice is output parity, not a complete compiled USound::Serialize loaded-value and error oracle.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
     },
     "T99:UMusic::Serialize": {
       "criteria": {
@@ -161,7 +161,7 @@
       "decisive_blocker": "export_output_is_not_loader_native_semantics",
       "next_action": "Capture one complete native Music load/error/byte-consumption oracle; one consolidated acceptance test only.",
       "reason": "Independent compiled music exporter slice is output parity, not full compiled UMusic::Serialize lazy-array/negative loader semantics.",
-      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
     }
   }
 }

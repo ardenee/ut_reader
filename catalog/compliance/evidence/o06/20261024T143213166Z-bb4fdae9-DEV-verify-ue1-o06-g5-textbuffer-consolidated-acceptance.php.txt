@@ -1,0 +1,20 @@
+﻿{
+    "ok": true,
+    "checks": 28,
+    "passed": 28,
+    "errors": [],
+    "method": "T99:UTextBuffer::Serialize",
+    "native_compiled_oversized_attempted_bytes": 912,
+    "source_declared_bytes": 843,
+    "php_native_error_identical": true,
+    "reused_native_positive_objects": 88,
+    "reused_compiled_variations": [
+        "pos_top",
+        "missing_nul",
+        "wide_utf16",
+        "oversized"
+    ],
+    "one_final_method_acceptance": "BLOCKED",
+    "decisive_remaining_gate": "T99:UObject::Serialize inherited method not independently FULL",
+    "new_compiled_captures": 0
+}

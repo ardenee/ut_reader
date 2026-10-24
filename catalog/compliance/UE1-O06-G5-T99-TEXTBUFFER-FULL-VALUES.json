@@ -117,9 +117,21 @@
   ],
   "coverage_note": "Native complete 88 genuine Enginu Pos/Top/UTF16 text member values across 1007796 bytes; compiled native and PHP accept size-preserving valid variations pos/top, ANSI missing terminal NUL and UTF16 wide; native and PHP both reject oversized 900 but at different byte-consumption/diagnostic stages.",
   "not_accepted_reasons": [
-    "True parent UObject::Serialize and property envelope behaviours are compositional methods that have not passed full G5 separately.",
-    "Native oversized FString attempts read beyond declared export by 69 bytes then reports serial-size mismatch; PHP safely rejects before the read. Error byte-consumption semantics differ.",
-    "Additional source game families and versions, obscure malformed Unicode and empty native string paths remain unproved; do not claim full method complete."
+    "The inherited UObject::Serialize method remains independently BLOCKED and is a prerequisite for full TextBuffer acceptance.",
+    "The original v432 ANSI900 malformed native archive consumed a logical 912 bytes against declared SerialSize 843; the current production reader models those exact attempted bytes and error without reading outside the export; consolidated single-method acceptance 28/28 PASS.",
+    "Other original Unreal game/source families and complete inherited negative cases are not yet FULLY_EPIC_VERIFIED."
   ],
-  "transient_binary_evidence_note": "Original compiled binary, 43.9MB native full-memory dump, CDB logs and scratch mutant assets remain SHA pinned on DEV C:/Temp/UnrealDB/O06. No PRD modification and no canonical source modifications."
+  "transient_binary_evidence_note": "Original compiled binary, 43.9MB native full-memory dump, CDB logs and scratch mutant assets remain SHA pinned on DEV C:/Temp/UnrealDB/O06. No PRD modification and no canonical source modifications.",
+  "corrective_decision": {
+    "result": "BLOCKED",
+    "previous": "FAILED",
+    "resolved_discrepancy": "compiled UT99 v432 UTextBuffer malformed ANSI900 virtual cursor Got912 Expected843",
+    "safe_php_behavior": "calculate attempted archive position, throw exact serial-size mismatch before reading any out-of-export bytes",
+    "contract": "g5-t99-textbuffer-consolidated-acceptance",
+    "test": "verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php",
+    "journal": "20261024T143213166Z-bb4fdae9",
+    "checks_passed": 28,
+    "remaining_prerequisite": "T99:UObject::Serialize fully accepted",
+    "native_debugger_runs_repeated": 0
+  }
 }

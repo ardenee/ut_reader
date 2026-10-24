@@ -1,6 +1,6 @@
 # UE1 O06 — G5 evidence reconciliation
 
-Evidence inventory, not O06 acceptance. Generated 2026-10-24T14:12:54.478000+00:00; Git 45ef1827.
+Evidence inventory, not O06 acceptance. Generated 2026-10-24T14:43:51.214336+00:00; Git e6583f48.
 
 ## Counts
 
@@ -16,9 +16,9 @@ Evidence inventory, not O06 acceptance. Generated 2026-10-24T14:12:54.478000+00:
 - NEW third resumable native contract: 70 genuine MotionChunk in-memory scalar/root header and array-length comparisons, 95 full first-Move AnalogTrack header checks plus 732 full first-track key/BoneIndices bytes identical, 598/598 PASS. Remaining KeyQuat/KeyPos/KeyTime buffers from all other tracks still OPEN; did not replay previous PASS evidence.
 - NEW compiled real v432 **full nested MotionChunk memory**: 70 authentic Moves, 3,292 AnalogTracks, 10,156 distinct root/track/bone nested array buffers, 540,836 entire loaded bytes equal every source byte, 21,020 KeyQuat, 9,268 KeyPos and 21,020 KeyTime keys. Microsoft CDB 46MB full-memory MiniDump MEMORY64 oracle for each original package, independent source bounds/float-preview comparisons; focused 29,145/29,145 PASS, one initial test aggregation FAIL preserved. This validates complete nested element values for TWO original v69 package UAnimation exports, not malformed runtime or other source families.
 - Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded).
-- Latest DEV journal state: {'PASS': 122}.
-- Named tests with current matching source fingerprint: 2 of 197; historical PASS is not an automatically current proof.
-- Global source fingerprint in latest status 834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978; independently recomputed 834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978.
+- Latest DEV journal state: {'PASS': 123}.
+- Named tests with current matching source fingerprint: 0 of 197; historical PASS is not an automatically current proof.
+- Global source fingerprint in latest status 8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe; independently recomputed 8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe.
 
 ## Branches
 

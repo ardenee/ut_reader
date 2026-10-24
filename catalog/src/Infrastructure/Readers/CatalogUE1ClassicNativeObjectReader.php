@@ -334,15 +334,38 @@ final class CatalogUE1ClassicNativeObjectReader
                 if($wide&&$ver<64){
                     throw new RuntimeException('Wide FString not defined by v1.200 ANSI archive');
                 }
+                // The compiled UT99 v432 linker checks object SerialSize AFTER
+                // FString::Serialize has advanced its archive cursor. A
+                // malformed count can therefore report "Got 912, Expected
+                // 843" even though the declared object ends at byte 843.
+                // Reproduce that attempted *logical* cursor and error without
+                // reading the following export or allocating the bad string.
+                // Other source families retain their existing safe rejection.
+                $rejectFStringOverflow=static function(int $size,string $fallback)
+                    use($family,$pos,$limit,$path,$ex):void{
+                    if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                        &&$size>0 &&$pos<=$limit
+                        &&$size<=filesize($path)-$pos){
+                        $got=$pos+$size-(int)$ex['serialOffset'];
+                        $expected=(int)$ex['serialSize'];
+                        throw new RuntimeException(
+                            'TextBuffer: Serial size mismatch: Got '.$got.
+                            ', Expected '.$expected
+                        );
+                    }
+                    throw new RuntimeException($fallback);
+                };
                 if($wide){
                     $count=-$length;
                     if($count>intdiv($limit-$pos,2)){
-                        throw new RuntimeException('TextBuffer UTF-16 FString exceeds export bounds');
+                        $rejectFStringOverflow($count*2,
+                            'TextBuffer UTF-16 FString exceeds export bounds');
                     }
                     $size=$count*2;
                 }else{
                     if($length>$limit-$pos){
-                        throw new RuntimeException('TextBuffer ANSI FString exceeds export bounds');
+                        $rejectFStringOverflow($length,
+                            'TextBuffer ANSI FString exceeds export bounds');
                     }
                     $count=$length;$size=$count;
                 }

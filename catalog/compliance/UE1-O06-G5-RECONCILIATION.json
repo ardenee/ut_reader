@@ -1,22 +1,24 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T14:12:54.478000+00:00",
-  "head": "45ef1827",
-  "previous_runner_head": "300e83fa",
-  "previous_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
-  "current_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
+  "generated_utc": "2026-10-24T14:43:51.214336+00:00",
+  "head": "e6583f48",
+  "previous_runner_head": "e6583f48",
+  "previous_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
+  "current_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
   "fingerprint_changed": false,
+  "source_scope_equivalence_v432_textbuffer_only": true,
+  "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "summary": {
     "mapped": 256,
     "excluded": 38,
     "full_independent_method_verified": 0,
-    "g5_failed_method_decisions": 2,
-    "g5_blocked_method_decisions": 6,
+    "g5_failed_method_decisions": 1,
+    "g5_blocked_method_decisions": 7,
     "native_partial_slice_evidence": 3,
     "compiled_archive_only": 0,
     "with_named_test": 197,
     "without_named_test": 59,
-    "named_tests_with_current_source_fingerprint": 2,
+    "named_tests_with_current_source_fingerprint": 0,
     "genuine_v432_font_archive_compatibility": 1,
     "compiled_native_loaded_value_slice": 6,
     "compiled_UClass_full_nested_member_subset": 1,
@@ -29,7 +31,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 122
+    "PASS": 123
   },
   "branch_totals": {
     "C227": {
@@ -9641,7 +9643,7 @@
       "named_test_state": "PASS",
       "named_test_log_valid": true,
       "named_test_script_valid": true,
-      "named_test_current_global_fingerprint": true,
+      "named_test_current_global_fingerprint": false,
       "independent_oracle": "not_recorded",
       "native_slice_test": null,
       "native_slice_evidence_valid": false,
@@ -9674,7 +9676,8 @@
       "full_G5_method_acceptance": "OPEN",
       "decisive_closure_blocker": null,
       "gaps": [
-        "complete_native_fields_values_references_bytes_errors_not_proven"
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "global_source_inputs_changed"
       ]
     },
     {
@@ -11920,7 +11923,7 @@
       "named_test_state": "PASS",
       "named_test_log_valid": true,
       "named_test_script_valid": true,
-      "named_test_current_global_fingerprint": true,
+      "named_test_current_global_fingerprint": false,
       "independent_oracle": "compiled_native_loaded_values_subset",
       "native_slice_test": "verify-ue1-o06-native-ut99-textbuffer-exports.php",
       "native_slice_evidence_valid": true,
@@ -11950,11 +11953,12 @@
       "native_array_full_element_subset_tests": [],
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
-      "full_G5_method_acceptance": "FAILED",
-      "decisive_closure_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+      "full_G5_method_acceptance": "BLOCKED",
+      "decisive_closure_blocker": "inherited_UObject_full_method_unverified",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
-        "inherited_UObject_full_method_and_compiled_oversized_FString_consumed_bytes_differ_open",
+        "global_source_inputs_changed",
+        "compiled_ANSI900_Got912_Expected843_failure_byte_count_NOW_safely_matches_PHP_single_full_verdict_PASS28_but_inherited_UObject_full_method_still_BLOCKED",
         "native_export_slice_only"
       ]
     },
