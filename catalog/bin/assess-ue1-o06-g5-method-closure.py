@@ -350,7 +350,7 @@ for name in reg["methods"]:
         flag_log=ROOT/flag_ev["log"].replace("\\","/")
         assert sha(flag_log)==flag_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/flag_test)==flag_ev["test_sha256"]
-        assert flag_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert flag_ev["source_sha256"]==reconciliation["previous_source_before_genuine_v227_script_change"]
         flag_result=read(flag_log)
         assert flag_result["ok"] and flag_result["checks"]==30
         assert flag_result["passed"]==30
@@ -360,6 +360,28 @@ for name in reg["methods"]:
         assert flag_result["native_engine_reruns_in_verifier"]==0
         assert flag_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_v227_flag_interpretation_change_scoped"]
+        # Separate original PRD 69/licensee227 source-defined script codec
+        # correction (27 class exports recovered, 399 ordinary streams)
+        # has one current-source acceptance and zero native engine replay.
+        script_test="verify-ue1-o06-c227-genuine-script-source-decision.php"
+        script_ev=next((item for item in reversed(events)
+            if item.get("test")==script_test and item.get("state")=="PASS"),None)
+        assert script_ev is not None
+        script_log=ROOT/script_ev["log"].replace("\\","/")
+        assert sha(script_log)==script_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/script_test)==script_ev["test_sha256"]
+        assert script_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        script_result=read(script_log)
+        assert script_result["ok"] and script_result["checks"]==24
+        assert script_result["passed"]==24
+        assert script_result["genuine_original_licensee_227_packages"]==3
+        assert script_result["real_original_exports"]==426
+        assert script_result["original_object_tagged_streams_decoded"]==399
+        assert script_result["original_UClass_export_streams_decoded"]==27
+        assert script_result["current_original_class_export_parser_errors"]==0
+        assert script_result["compiled_engine_reruns_in_verifier"]==0
+        assert script_result["full_method_decision"]=="BLOCKED"
+        assert reconciliation["source_native_genuine_v227_script_opcode_change_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -371,6 +393,10 @@ for name in reg["methods"]:
         old["compiled_current_full_method_decision_checks"]=30
         old["source_equivalent_v1200_v432_modern_frame_wire_no_native_rerun"]=True
         old["v227_pendingdelete_flag_annotation_corrected"]=True
+        old["genuine_licensed_v227_original_package_exports"]=426
+        old["v227_original_UClass_scripts_source_decoded"]=27
+        old["v227_original_UClass_prior_source_failures_corrected"]=11
+        old["v227_real_source_archive_error_count_after_opcode_fix"]=0
         old["original_PRD_v61_compiled_native_loaded_object_identities"]=308
         old["original_PRD_v61_compiled_loader_native_uninstantiated_Camera"]=4
         old["original_PRD_v61_loaded_tagged_streams_current_source_decoded"]=308

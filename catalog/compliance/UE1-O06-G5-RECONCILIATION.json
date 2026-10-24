@@ -1,15 +1,17 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T22:51:50.703246+00:00",
-  "head": "eb968b34",
-  "previous_runner_head": "eb968b34",
-  "previous_source_sha256": "323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0",
-  "current_source_sha256": "323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0",
+  "generated_utc": "2026-10-24T23:18:28.300787+00:00",
+  "head": "b7a7254f",
+  "previous_runner_head": "b7a7254f",
+  "previous_source_sha256": "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
+  "current_source_sha256": "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
   "source_font_branch_equivalence": true,
+  "source_native_genuine_v227_script_opcode_change_scoped": true,
+  "previous_source_before_genuine_v227_script_change": "323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0",
   "source_native_v227_flag_interpretation_change_scoped": true,
   "previous_source_before_v227_flag_interpretation_change": "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f",
   "source_native_prd_fstring_load_change_scoped": true,
@@ -52,7 +54,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 134
+    "PASS": 135
   },
   "branch_totals": {
     "C227": {
@@ -11366,7 +11368,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "unreal_v1200_v227_compiled_branch_parity_and_native_Camera_reachability_full_method_review",
+      "decisive_closure_blocker": "only_source_proven_legacy_v1200_differences_and_v227_distinct_archetype_flags_unavailable_implementation_and_unloaded_Camera_full_method_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",

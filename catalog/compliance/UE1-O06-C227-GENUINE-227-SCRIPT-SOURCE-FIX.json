@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "method": "C227:UClass::Serialize ScriptArchive / UStruct::SerializeExpr",
+  "result": "file_decoding_repaired_compiled_v227_native_unavailable",
+  "source_engine_v227_Cxx_implementation_available": false,
+  "source_opcode_shared_v227_v432_but_not_v1200": true,
+  "v227_unique_opcode_decoders_remain_unsupported": [
+    "0x15 EX_MapKeyElement",
+    "0x35 EX_EatCtrExpr",
+    "0x37 EX_StructConstruct"
+  ],
+  "genuine_licensee_227_files": [
+    {
+      "source_readonly_PRD": "Z:\\Apache24\\htdocs\\unrealdb\\catalog\\storage\\games\\unrealgold\\verified\\1b8db32202b89cca7a58c152b2671fac.u",
+      "staged_DEV": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v69\\1b8db32202b89cca7a58c152b2671fac.u",
+      "sha256": "c47b33858610760db17c485f27d3fe1364988cf5ec910209731ed649fd6c2a33",
+      "version": 69,
+      "licensee": 227,
+      "bytes": 274440
+    },
+    {
+      "source_readonly_PRD": "Z:\\Apache24\\htdocs\\unrealdb\\catalog\\storage\\games\\unrealgold\\verified\\46cb9714c451de667c2a39cfacf868e6.u",
+      "staged_DEV": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v69\\46cb9714c451de667c2a39cfacf868e6.u",
+      "sha256": "1b5543532e4df6007bbc4ae37e3476da876edacd9c64a3174f1aeef9299ed826",
+      "version": 69,
+      "licensee": 227,
+      "bytes": 23311
+    },
+    {
+      "source_readonly_PRD": "Z:\\Apache24\\htdocs\\unrealdb\\catalog\\storage\\games\\unrealgold\\verified\\12f69674cadf6c7c30ef0f879a2d6e1a.u",
+      "staged_DEV": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v69\\12f69674cadf6c7c30ef0f879a2d6e1a.u",
+      "sha256": "445706a00af3ca46b16b1f2d28342cb295b3d3b1dec56b7e1309756cea86133a",
+      "version": 69,
+      "licensee": 227,
+      "bytes": 212695
+    }
+  ],
+  "oracle_scope": "Read actual PRD original serialized archive bytes only via current PHP DEV. Not compiled engine-loaded C227 object proof.",
+  "before_error_count": 11,
+  "after_error_count": 0,
+  "package_exports": 426,
+  "ordinary_tag_archives_decoded": 399,
+  "class_exports_decoded_without_exception": 27,
+  "class_defaults_native_loaded_values": "not_verified",
+  "input_source_headers_sha256": {
+    "v227_opcode_header": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnStack.h",
+      "sha256": "9a76f1d3205d304bb6b3db97803396a4306c73262d47fd7963a3508edde8d95a"
+    },
+    "v432_opcode_header": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnStack.h",
+      "sha256": "ff910c6a635859d92d5544119d6c2b9e95bc74d265914f6dc10e11c09e1c4137"
+    },
+    "v1200_opcode_header": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnScript.h",
+      "sha256": "2540fe8cc0043765e56d2d9e43583c2a015986b83d39b4dfe8c83c166cfc19a1"
+    },
+    "v227_licensee_header": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjVer.h",
+      "sha256": "9190a63a420acaf6eb626c6711c83f8d3913c05b2b6141d8c8f8d3eed7a2d759"
+    }
+  },
+  "inventory_SHA": {
+    "path": "C:\\Temp\\UnrealDB\\O06\\g5-v227-opcodes-source-groups.json",
+    "sha256": "2da619011558cd327f1287fbd69f3ea94dd0c47db5cef6ab2c249e6af2536b89"
+  },
+  "file_decode_scan_SHA": {
+    "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-real-227-native-archive-readonly-scan.json",
+    "sha256": "d803b07c95f4e7dda29140801199b13f4f1c7a84608f0f555bbe4a81f6b68d4b"
+  },
+  "native_v432_previous_proofs": "SHA-pinned no new compiled runs",
+  "full_method_decision": "BLOCKED"
+}

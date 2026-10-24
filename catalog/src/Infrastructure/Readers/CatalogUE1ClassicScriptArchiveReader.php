@@ -38,7 +38,13 @@ final class CatalogUE1ClassicScriptArchiveReader
         $unsupported = null;
         $preview = [];
         $lastToken = null; $lastTokenArchiveOffset = null;
-        $ut99 = $family===CatalogUE1ClassicSourceFamily::UT99_V432;
+        // Unreal v227 UnStack.h and UT99 v432 UnStack.h share all
+        // common basic VM tokens; Unreal v1.200 is NOT the right
+        // opcode dialect for a genuine 69/227 archive. v227-only
+        // tokens (0x15, 0x35, 0x37) remain unsupported until their
+        // native archive traversal is source-established.
+        $v227 = $family===CatalogUE1ClassicSourceFamily::UNREAL_V227;
+        $modern = $family===CatalogUE1ClassicSourceFamily::UT99_V432 || $v227;
 
         $mem = static function(int $n) use (
             &$iCode, $scriptSize, &$lastToken, &$lastTokenArchiveOffset, &$position
@@ -86,7 +92,7 @@ final class CatalogUE1ClassicScriptArchiveReader
         $expression = null;
         $expression = static function(int $depth) use (
             &$expression, &$iCode, &$count, &$unsupported, $scriptSize,
-            &$position, $ut99, $byte, $word, $dword, $ref, $fname, $read, $mem,
+            &$position, $modern, $v227, $byte, $word, $dword, $ref, $fname, $read, $mem,
             &$lastToken, &$lastTokenArchiveOffset
         ): ?array {
             if ($unsupported !== null) { return null; }
@@ -124,7 +130,7 @@ final class CatalogUE1ClassicScriptArchiveReader
                 }
             };
 
-            $maxConversion = $ut99 ? 0x60 : 0x5a;
+            $maxConversion = $modern ? 0x60 : 0x5a;
             if ($token >= 0x39 && $token < $maxConversion) {
                 $child(); // Every source conversion wraps exactly one expression.
             } elseif ($token >= 0x70) {
@@ -142,14 +148,16 @@ final class CatalogUE1ClassicScriptArchiveReader
                     case 0x30: case 0x31: case 0x08:
                         break;
                     case 0x04: // Unreal 1998 EX_Return no operand; UT99 returns expression.
-                        if ($ut99) { $child(); }
+                        if ($modern) { $child(); }
                         break;
                     case 0x0e: // 1998 ValidateObject no operand; UT99 EatString expression.
-                        if ($ut99) { $child(); }
+                        if ($modern) { $child(); }
                         break;
                     case 0x15: // 1998 EndCode, absent in UT99.
-                        if ($ut99) {
-                            $unsupported = 'UT99 EX_EndCode opcode not source-defined';
+                        if ($modern) {
+                            $unsupported = $v227
+                                ? 'Unreal v227 EX_MapKeyElement archive traversal unverified'
+                                : 'UT99 EX_EndCode opcode not source-defined';
                         }
                         break;
                     case 0x06:
@@ -194,11 +202,11 @@ final class CatalogUE1ClassicScriptArchiveReader
                         $children(2);
                         break;
                     case 0x10: // UT99 DynArrayElement.
-                        if (!$ut99) { $unsupported = 'Unreal 1998 token 0x10 not defined'; break; }
+                        if (!$modern) { $unsupported = 'Unreal 1998 token 0x10 not defined'; break; }
                         $children(2);
                         break;
                     case 0x11: // UT99 New, four expressions.
-                        if (!$ut99) { $unsupported = 'Unreal 1998 token 0x11 not defined'; break; }
+                        if (!$modern) { $unsupported = 'Unreal 1998 token 0x11 not defined'; break; }
                         $children(4);
                         break;
                     case 0x12: case 0x19: // ClassContext/Context.
@@ -212,7 +220,7 @@ final class CatalogUE1ClassicScriptArchiveReader
                         $node['value'] = $ref(); $child();
                         break;
                     case 0x14: // 1998 BeginFunction; UT99 LetBool.
-                        if ($ut99) {
+                        if ($modern) {
                             $children(2);
                         } else {
                             $paramsInfo = [];
@@ -269,7 +277,7 @@ final class CatalogUE1ClassicScriptArchiveReader
                         $node['value'] = $byte();
                         break;
                     case 0x2b: // Old ResizeString only in v1.200.
-                        if ($ut99) { $unsupported = 'UT99 ResizeString not source-defined'; break; }
+                        if ($modern) { $unsupported = 'UT99 ResizeString not source-defined'; break; }
                         $node['value'] = $byte(); $child();
                         break;
                     case 0x2f:
@@ -279,8 +287,8 @@ final class CatalogUE1ClassicScriptArchiveReader
                     case 0x32: case 0x33: // Struct comparison: struct class then two operands.
                         $node['value'] = $ref(); $children(2);
                         break;
-                    case 0x34: // UT99 EX_UnicodeStringConst; v1.200 StructConst not serialized.
-                        if (!$ut99) {
+                    case 0x34: // v227/UT99 EX_UnicodeStringConst; v1.200 StructConst not serialized.
+                        if (!$modern) {
                             $unsupported = 'Unreal 1998 EX_StructConst lacks SerializeExpr branch';
                             break;
                         }

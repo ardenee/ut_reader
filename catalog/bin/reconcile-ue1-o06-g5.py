@@ -84,6 +84,41 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# Original PRD v69 licensee 227 packages prove that old v1.200
+# ScriptArchive opcode meanings are wrong for v227. Keep the v432
+# current source and every compiled oracle intact: reconstruct the
+# immediate previous global source SHA by substituting ONLY this reader.
+v227_script_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicScriptArchiveReader.php"
+before_v227_script=committed("b7a7254f",v227_script_file)
+previous_v227_script_source="323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0"
+sig_before_v227_script=subst_sig(
+    signature,v227_script_file,digest(v227_script_file).upper(),sha_blob(before_v227_script))
+v227_script_test="verify-ue1-o06-c227-genuine-script-source-decision.php"
+v227_script_event=latest.get(v227_script_test)
+v227_script_log=ROOT/v227_script_event["log"] if v227_script_event and v227_script_event.get("log") else None
+try:
+    v227_script_result=read(v227_script_log) if v227_script_log and v227_script_log.exists() else {}
+except Exception:
+    v227_script_result={}
+v227_script_scope=(
+    hashlib.sha256(sig_before_v227_script.encode("utf-8")).hexdigest()==previous_v227_script_source
+    and "CatalogUE1ClassicSourceFamily::UNREAL_V227" in v227_script_file.read_text(encoding="utf-8-sig")
+    and "EX_MapKeyElement archive traversal unverified" in v227_script_file.read_text(encoding="utf-8-sig")
+    and v227_script_event is not None and v227_script_event.get("state")=="PASS"
+    and v227_script_event.get("source_sha256")==current
+    and v227_script_event.get("output_sha256")==digest(v227_script_log)
+    and v227_script_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/v227_script_test)
+    and v227_script_result.get("ok") is True
+    and v227_script_result.get("checks")==24
+    and v227_script_result.get("passed")==24
+    and v227_script_result.get("genuine_original_licensee_227_packages")==3
+    and v227_script_result.get("real_original_exports")==426
+    and v227_script_result.get("original_object_tagged_streams_decoded")==399
+    and v227_script_result.get("original_UClass_export_streams_decoded")==27
+    and v227_script_result.get("current_original_class_export_parser_errors")==0
+    and v227_script_result.get("compiled_engine_reruns_in_verifier")==0
+    and v227_script_result.get("full_method_decision")=="BLOCKED"
+)
 # Unreal v227 uses RF_PendingDelete where v1200/UT99 define
 # RF_DebugSerialize. Both production UObject and UClass post-load flag
 # annotations changed. Reconstruct prior complete source hash by
@@ -93,7 +128,7 @@ before_v227_flag_tag=committed("eb968b34",new_tag_file)
 before_v227_flag_class=committed("eb968b34",class_meta_file)
 previous_v227_flag_source="8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f"
 sig_before_v227_flag=subst_sig(
-    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_v227_flag_tag))
+    sig_before_v227_script,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_v227_flag_tag))
 sig_before_v227_flag=subst_sig(
     sig_before_v227_flag,class_meta_file,digest(class_meta_file).upper(),sha_blob(before_v227_flag_class))
 v227_flag_verifier="verify-ue1-o06-g5-uobject-v227-source-flag-decision.php"
@@ -104,14 +139,15 @@ try:
 except Exception:
     v227_flag_values={}
 v227_flag_scope=(
-    hashlib.sha256(sig_before_v227_flag.encode("utf-8")).hexdigest()==previous_v227_flag_source
+    v227_script_scope
+    and hashlib.sha256(sig_before_v227_flag.encode("utf-8")).hexdigest()==previous_v227_flag_source
     and current_schema==committed("eb968b34",new_schema_file)
     and "CatalogUE1ClassicSourceFamily::UNREAL_V227" in current_tag
     and "loaded_object_flags_after_uobject_serialize" in current_tag
     and "loaded_object_flags_after_uclass_serialize" in class_meta_file.read_text(encoding="utf-8-sig")
     and "loaded_object_flags_after_uobject_serialize" in class_meta_file.read_text(encoding="utf-8-sig")
     and v227_flag_event is not None and v227_flag_event.get("state")=="PASS"
-    and v227_flag_event.get("source_sha256")==current
+    and v227_flag_event.get("source_sha256")==previous_v227_script_source
     and v227_flag_event.get("output_sha256")==digest(v227_flag_log)
     and v227_flag_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/v227_flag_verifier)
     and v227_flag_values.get("ok") is True
@@ -468,6 +504,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (v227_script_scope and f==previous_v227_script_source)
         or (v227_flag_scope and f==previous_v227_flag_source)
         or (string_scope and f==previous_string_source)
         or (nested_scope and f==previous_nested_source)
@@ -645,6 +682,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_genuine_v227_script_opcode_change_scoped":v227_script_scope,
+    "previous_source_before_genuine_v227_script_change":previous_v227_script_source if v227_script_scope else None,
     "source_native_v227_flag_interpretation_change_scoped":v227_flag_scope,
     "previous_source_before_v227_flag_interpretation_change":previous_v227_flag_source if v227_flag_scope else None,
     "source_native_prd_fstring_load_change_scoped":string_scope,

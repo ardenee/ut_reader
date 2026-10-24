@@ -56,7 +56,11 @@
       "original_PRD_v61_native_class_tails_source_complete": 184,
       "original_PRD_v61_native_value_lines_not_field_parity": 8515,
       "source_equivalent_v1200_v432_modern_frame_wire_no_native_rerun": true,
-      "v227_pendingdelete_flag_annotation_corrected": true
+      "v227_pendingdelete_flag_annotation_corrected": true,
+      "genuine_licensed_v227_original_package_exports": 426,
+      "v227_original_UClass_scripts_source_decoded": 27,
+      "v227_original_UClass_prior_source_failures_corrected": 11,
+      "v227_real_source_archive_error_count_after_opcode_fix": 0
     },
     "T99:UClass::Serialize": {
       "criteria": {

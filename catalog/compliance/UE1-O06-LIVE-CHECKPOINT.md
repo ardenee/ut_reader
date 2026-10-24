@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uobject-v227-source-flag-decision`
-- **Stage:** Epic-source-equivalence-v1200-v432-common-modern-v60-61-wire-no-native-retests-v227-flag-fix-PASS30-method-BLOCKED
-- **Last completed action:** Exact local Epic source compared, SHA-pinned 14 files. Modern v1200 vs inherited UT99 v400/v432 FStateFrame archived Node/StateNode/ProbeMask/LatentAction/AR_INDEX code offset same for flagged v60..61, so NO duplicate native tests for that common wire. v1200 unique oldver gates below40/47/51/52/55/57/58 and differences in source tagged property criteria remain separate. v227 Core has 67 header files and zero native cpp/binaries; common declared FStateFrame members but method equivalence unknown; v227 RF_PendingDelete=0x40000000, RF_HasArchtype=0x00000100 in RF_Load, not same as v1200/v432 RF_DebugSerialize=0x40000000. Actual production source fix in tagged UObject and UClass avoids false v227 post-load DebugSerialize/PendingDelete bits and returns unknown/null, leaves original on-disk flags and both v1200/v432 paths untouched. 21 staged original Gold v69 files 15688 exports zero flagged archetype (sample only). New single affected source-scoped DEV verifier PASS30/30 at 20261024T224950639Z-e10583ee; 0 native engine reruns, original compiled 308 v61 object identities SHA reused. Reconcile restores previous full source fingerprint 8a58b69... exactly from only two prechange reader bytes and all earlier source scopes true; G5 0FULL 0FAILED 8BLOCKED. PRD unchanged.
-- **Resume at:** Do not retest common v1200/v432 modern 60-61 frame or native positives. Only resolve source-demonstrated historical v1200 early version branches and v227 actual archetype serializer path if real implementation/runtime becomes available, plus source-visible Camera load reachability and independent seven-criterion complete method acceptance. DEV only until verified tree can deploy compatibly to PRD.
-- **Active changed at:** 2026-10-24T22:56:08+00:00
-- **Latest DEV test states:** PASS 134; FAIL 0; STARTED 0
+- **Contract:** `g5-c227-original-v227-script-source-decision`
+- **Stage:** real-PRD-69-licensee227-v227-class-script-opcode-source-fix-PASS24-original-11-errors-resolved-full-method-BLOCKED
+- **Last completed action:** Original PRD 3 UnrealGold .u archives contain exact Epic v227 package v69/licensee227: source SHA c47b3385..., 1b554353..., 445706a0...; DEV staged byte-identical. Before correction 399 normal tagged export streams decoded, 27 class exports had 11 real fatal decoder errors (+2 script-memory overruns and false native SerialSize overrun). Original v227 UnStack.h and UT99 v432 shared common EExprToken mappings, whereas v1200 is older different bytecode (0x14 BeginFunction vs v227 LetBool and other opcode variants). Production CatalogUE1ClassicScriptArchiveReader now dispatches unreal-v227 through source-common modern bytecode paths, retains old v1200 path and UT99 diagnostics, and explicitly leaves v227-only 0x15 MapKey, 0x35 EatCtrExpr, 0x37 StructConstruct unsupported. Same genuine PRD originals now 399/399 ordinary +27/27 UClass archive parser results, 0 errors, flagged unverified class default values unchanged. Single scoped DEV source acceptance PASS24/24 journal 20261024T231658066Z-2607bcfb and zero compiled native tests. Source fingerprint reconciliation prior b7a7254f source SHA323f... all earlier compiled native source scopes true, full G5 independent review 0FULL 0FAILED 8BLOCKED. Gold Steam compiled version226 not v227 (verified from actual local UCC startup log). PRD read-only and no deployment.
+- **Resume at:** Resolve only v227-unique serialization if source native branch or compiled v227 DLL becomes available, genuine early v1200-only package branches, still uninstantiated Camera runtime access, native UClass defaults/bytecode actual loaded-value criteria and final independent seven-gate method decision. Do not rerun common v1200/v432 frame wire, compiled 308 v61 original objects, 113 genuine Entry values, or previously proven dynamic + nested vector negatives. Continue to other substantive blockers if exact proof impossible.
+- **Active changed at:** 2026-10-24T23:20:33+00:00
+- **Latest DEV test states:** PASS 135; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T23:16:58.7057759Z | verify-ue1-o06-c227-genuine-script-source-decision.php | PASS | 222 | catalog\compliance\evidence\o06\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt |
+| 2026-10-24T23:16:58.0748088Z | verify-ue1-o06-c227-genuine-script-source-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt |
 | 2026-10-24T22:49:51.2358405Z | verify-ue1-o06-g5-uobject-v227-source-flag-decision.php | PASS | 188 | catalog\compliance\evidence\o06\20261024T224950639Z-e10583ee-DEV-verify-ue1-o06-g5-uobject-v227-source-flag-decision.php.txt |
 | 2026-10-24T22:49:50.6468725Z | verify-ue1-o06-g5-uobject-v227-source-flag-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T224950639Z-e10583ee-DEV-verify-ue1-o06-g5-uobject-v227-source-flag-decision.php.txt |
 | 2026-10-24T22:27:51.3003926Z | verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php | PASS | 112 | catalog\compliance\evidence\o06\20261024T222750785Z-7fe50f4a-DEV-verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T21:19:11.5659476Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T211911557Z-96028819-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
 | 2026-10-24T21:18:36.6227464Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | FAIL | 311 | catalog\compliance\evidence\o06\20261024T211835901Z-ffac6a0e-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
 | 2026-10-24T21:18:35.9097802Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T211835901Z-ffac6a0e-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
-| 2026-10-24T20:49:46.6019352Z | verify-ue1-o06-g5-uobject-serializeitem-size-decision.php | PASS | 1115 | catalog\compliance\evidence\o06\20261024T204945069Z-47e2fb37-DEV-verify-ue1-o06-g5-uobject-serializeitem-size-decision.php.txt |
-| 2026-10-24T20:49:45.0769594Z | verify-ue1-o06-g5-uobject-serializeitem-size-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T204945069Z-47e2fb37-DEV-verify-ue1-o06-g5-uobject-serializeitem-size-decision.php.txt |
 
 ## Recovery procedure
 

@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "checks": 24,
+    "passed": 24,
+    "failures": [],
+    "method": "C227:UClass::Serialize ScriptArchive",
+    "genuine_original_licensee_227_packages": 3,
+    "real_original_exports": 426,
+    "original_object_tagged_streams_decoded": 399,
+    "original_UClass_export_streams_decoded": 27,
+    "source_opcode_mismatch_earlier_failed_class_exports": 11,
+    "current_original_class_export_parser_errors": 0,
+    "compiled_engine_reruns_in_verifier": 0,
+    "native_v227_UClass_value_parity": "NOT_VERIFIED",
+    "full_method_decision": "BLOCKED"
+}

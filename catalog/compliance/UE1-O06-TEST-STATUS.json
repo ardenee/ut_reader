@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T22:49:51.2558446Z",
-    "head_commit":  "eb968b34",
+    "updated_at_utc":  "2026-10-24T23:16:58.7347787Z",
+    "head_commit":  "b7a7254f",
     "current_target":  "DEV",
-    "current_source_sha256":  "323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0",
+    "current_source_sha256":  "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -387,6 +387,18 @@
                       "run_id":  "20261022T214052888Z-95d390c6",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261022T214052888Z-95d390c6-DEV-verify-ue1-o06-c227-emitter-serialize-contracts.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-c227-genuine-script-source-decision.php",
+                      "test":  "verify-ue1-o06-c227-genuine-script-source-decision.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T23:16:58.7057759Z",
+                      "source_sha256":  "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
+                      "test_sha256":  "609fe687496d88e669efd48db1a6d0687fed5b861b5c260dbeab1803e05ccbed",
+                      "run_id":  "20261024T231658066Z-2607bcfb",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-classic-runtime-serializer-exclusions.php",
