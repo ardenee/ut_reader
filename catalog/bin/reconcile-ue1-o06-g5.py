@@ -84,13 +84,46 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# Actual compiled v432 native-generated ArrayProperty corrupted AR_INDEX /
+# inner linker references, sealed 61-check current-source method decision.
+before_dynamic_tag=committed("d0061f00",new_tag_file)
+previous_dynamic_source="f7f08918772439cf0d591b4bd2f341633cc226c01a36f44440496ad95831508c"
+sig_before_dynamic=subst_sig(
+    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_dynamic_tag))
+dynamic_verifier="verify-ue1-o06-g5-uobject-dynamic-array-decision.php"
+dynamic_event=latest.get(dynamic_verifier)
+dynamic_log=ROOT/dynamic_event["log"] if dynamic_event and dynamic_event.get("log") else None
+try:
+    dynamic_values=read(dynamic_log) if dynamic_log and dynamic_log.exists() else {}
+except Exception:
+    dynamic_values={}
+dynamic_scope=(
+    hashlib.sha256(sig_before_dynamic.encode("utf-8")).hexdigest()==previous_dynamic_source
+    and current_schema==committed("d0061f00",new_schema_file)
+    and "UE1 v432 dynamic array Inner declaration unresolved" in current_tag
+    and "source_typed_dynamic_array" in current_tag
+    and "ULinkerLoad<<FName invalid name index" in current_tag
+    and dynamic_event is not None and dynamic_event.get("state")=="PASS"
+    and dynamic_event.get("source_sha256")==current
+    and dynamic_event.get("output_sha256")==digest(dynamic_log)
+    and dynamic_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/dynamic_verifier)
+    and dynamic_values.get("ok") is True
+    and dynamic_values.get("checks")==61 and dynamic_values.get("passed")==61
+    and dynamic_values.get("new_compiled_dynamic_array_oracle_cases")==6
+    and dynamic_values.get("new_compiled_array_fatal_archive_cursors_matched")==4
+    and dynamic_values.get("new_compiled_array_valid_malicious_size_cases_matched")==2
+    and dynamic_values.get("compiled_native_original_three_array_values_matched")==3
+    and dynamic_values.get("native_original_113_loaded_property_values_prior_SHA_reused")==113
+    and dynamic_values.get("compiled_native_loader_reruns_in_verifier")==0
+    and dynamic_values.get("full_method_decision")=="BLOCKED"
+)
 # One additional source-scoped v432 valid Struct/FString SerializeItem
 # correction. Require CURRENT-source 50/50 decision and reconstruct the
 # exact 55fa4f1e parent fingerprint before applying older substitutions.
 before_size_tag=committed("55fa4f1e",new_tag_file)
 previous_size_source="f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f"
 sig_before_size=subst_sig(
-    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_size_tag))
+    sig_before_dynamic,new_tag_file,sha_blob(before_dynamic_tag),sha_blob(before_size_tag))
 size_decision="verify-ue1-o06-g5-uobject-serializeitem-size-decision.php"
 size_event=latest.get(size_decision)
 size_log=ROOT/size_event["log"] if size_event and size_event.get("log") else None
@@ -99,12 +132,13 @@ try:
 except Exception:
     size_values={}
 size_scope=(
-    hashlib.sha256(sig_before_size.encode("utf-8")).hexdigest()==previous_size_source
+    dynamic_scope
+    and hashlib.sha256(sig_before_size.encode("utf-8")).hexdigest()==previous_size_source
     and current_schema==committed("55fa4f1e",new_schema_file)
     and "UT99 UStrProperty::SerializeItem delegates" in current_tag
     and "strlen($raw)>=6&&strlen($raw)<=10" in current_tag
     and size_event is not None and size_event.get("state")=="PASS"
-    and size_event.get("source_sha256")==current
+    and size_event.get("source_sha256")==previous_dynamic_source
     and size_event.get("output_sha256")==digest(size_log)
     and size_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/size_decision)
     and size_values.get("ok") is True
@@ -322,6 +356,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (dynamic_scope and f==previous_dynamic_source)
         or (size_scope and f==previous_size_source)
         or (reference_scope and f==previous_reference_source)
         or (latest_source_scope and f==previous_latest_source)
@@ -495,6 +530,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_dynamic_array_change_scoped":dynamic_scope,
+    "previous_source_before_native_dynamic_array_change":previous_dynamic_source if dynamic_scope else None,
     "source_native_struct_str_size_change_scoped":size_scope,
     "previous_source_before_native_struct_str_size_change":previous_size_source if size_scope else None,
     "source_native_reference_change_scoped":reference_scope,

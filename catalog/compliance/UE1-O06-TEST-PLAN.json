@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-t99-uobject-dynamic-array-decision": {
+      "description": "One true compiled v432 UCC-generated and Core SavePackage-generated v69 ordinary UObject with 3 valid typed persisted arrays and six real compiled malformed one-byte cases. Four fatal exact linker cursor outcomes 268/276/272/278, two valid malicious Tag.Size cases consuming actual Inner->SerializeItem length, no replay previous 50/61/49/43, previously compiled original genuine 113 values only SHA-scoped. Strict seven-gate full method remains BLOCKED.",
+      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-uobject-dynamic-array-decision.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-uobject-serializeitem-size-decision": {
       "description": "Single changed-source compiled UT99 v432 UObject method verdict after FOUR new real original Entry.unr Region PointRegion and LevelSummary.Title StrProperty Tag.Size corruption oracles (valid SerializeItem ignores declared size); each original restored SHA256. Valid struct reads exactly six bytes and FString ten even when tags declare 1/12 or 1/20. Reuse SHA-pinned previous six reference-fault and four tag-error outcomes, 43 StateFrame checks and verify 113 actual loaded native values once on CURRENT source. FULL still BLOCKED on other nested dynamic array, historical version and Camera branches.",
       "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],

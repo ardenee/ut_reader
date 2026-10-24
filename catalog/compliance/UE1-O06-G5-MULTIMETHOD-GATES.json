@@ -25,10 +25,10 @@
       "closure_sha256": null,
       "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). All 28 actual compiled Node/StateNode FName names matched original v68 import referents (195/195 PASS); remaining five are Camera exports not loaded by Actor or Camera batchexport, full outer/class object identity, malformed byte/error paths and early source-family variants OPEN.",
       "decision": "BLOCKED",
-      "decisive_blocker": "dynamic_ArrayProperty_native_inner_value_count_and_legacy_version_Camera_full_review",
-      "next_action": "Locate an actual source-selected v432 dynamic ArrayProperty loaded instance and independently compare nested count/value malformed consumption against compiled native code; exercise only unverified historical source-version gates, attempt Camera only with reachable native entrypoint, then independent full seven-gate method review. Reuse previous 4 new struct/string + 6 reference + 4 type error cases, 113 original values and 43 StateFrame checks.",
-      "reason": "Real compiled v432 UObject loaded 33 original Entry.unr exports with all 113/113 tagged values matching the current production reader; earlier six native reference failure/skip and four PropertyTag error cases plus 43 StateFrame checks remain hash pinned. Four NEW compiled native malformed Tag.Size cases establish actual valid PointRegion SerializeItem reads six bytes irrespective declared 1/12, and valid FString Title reads ten bytes irrespective declared 1/20. Current changed-source consolidated method verifier PASS50/50, 4/4 new native outcomes, 113/113 original loaded values; no previous engine run repeated. Dynamic ArrayProperty inner count/value errors, older source-version branches, five uninstantiated Camera actors and independent full method review remain OPEN.",
-      "last_consolidated_review": "current_full_method_decision_50_checks_4_native_struct_string_tag_sizes_6_old_refs_113_original_tags_43_saved_StateFrame",
+      "decisive_blocker": "remaining_nested_FString_Struct_array_inner_and_source_version_Camera_full_review",
+      "next_action": "Resolve source-reachable v432 dynamic array Inner StrProperty/StructProperty codecs using valid compiled saved fixture or explicitly limit support, then source-applicable historical gates and five original Camera StateFrames with a genuine reachable compiled oracle. One final independent seven-criterion method review only; do not replay 6 current array, 4+6+4 prior malformed, 113 original values or 43 StateFrame outcomes.",
+      "reason": "Original compiled v432 native UObject Entry.unr retained 33 genuinely loaded exports / 113 native tagged values and sealed 43 StateFrame checks. A genuine compiled v432 UCC.exe-built + Core.dll SavePackage-produced separate v69 archive now proves actual dynamic ArrayProperty Int/Name/Object loading: Numbers(11,42,-7), Labels(Alpha,Beta), References(self,None). Six NEW real compiled malformed dynamic array cases compared, including four fatal native cursor offsets 268/276/272/278 and two valid malformed Tag.Size outcomes consuming source native element lengths; current changed-source consolidated decision PASS61/61 and all previously sealed native cases remain source-scoped. Original distributable UT99 installed 83 maps plus 45 .u packages do not contain ordinary dynamic array tags. Nested FString/Struct array Inner serializations, applicable older source branches, five uninstantiated Camera frames, and independent seven-gate full method closure still OPEN.",
+      "last_consolidated_review": "current_method_decision_61_checks_native_compiled_three_dynamic_arrays_six_negative_cases_old_positive_proof_source_scoped",
       "compiled_genuine_original_loaded_tags_verified": 113,
       "compiled_genuine_original_exports_compared": 33,
       "compiled_original_14_StateFrames_prior_verified": true,
@@ -37,9 +37,12 @@
       "compiled_native_reference_array_struct_cases_valid": 6,
       "compiled_native_fatal_reference_archive_offsets_valid": 4,
       "compiled_native_array_struct_skip_cases_valid": 2,
-      "compiled_current_full_method_decision_checks": 50,
+      "compiled_current_full_method_decision_checks": 61,
       "compiled_native_valid_struct_malformed_size_cases": 2,
-      "compiled_native_valid_FString_malformed_size_cases": 2
+      "compiled_native_valid_FString_malformed_size_cases": 2,
+      "compiled_native_dynamic_array_proven_int_name_object": 3,
+      "compiled_native_dynamic_array_fatal_cursors": 4,
+      "compiled_native_dynamic_array_size_override_cases": 2
     },
     "T99:UClass::Serialize": {
       "criteria": {

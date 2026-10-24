@@ -144,7 +144,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
                     $loadPolicy='native_warning_skip_invalid_tag_type';
                 }
-                $legacyRef=null;
+                $legacyRef=null;$arrayDecoded=null;
                 // Genuine UE1 v35 package evidence (DProj*, Palette tag):
                 // the original tag declares a native 4-byte UObject slot,
                 // but the payload is a compact serialized package reference.
@@ -175,6 +175,80 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $raw.=$read(5);
                 }elseif($loadPolicy==='native_source_property_SerializeItem'
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&$linkerLimits!==null&&$type===9){
+                    // Epic UArrayProperty::SerializeItem archives an AR_INDEX
+                    // count followed by each source-declared Inner SerializeItem.
+                    // Valid properties NEVER use Tag.Size as their read length.
+                    $innerRef=(int)($declaration['inner_reference']??0);
+                    $ownerPath=$declaration['owner_path']??null;
+                    $ownerPkg=$declaration['owner_package']??null;
+                    if($innerRef<=0||!is_string($ownerPath)
+                        ||!$ownerPkg instanceof CatalogUE1PackageReader){
+                        throw new RuntimeException(
+                            'UE1 v432 dynamic array Inner declaration unresolved');
+                    }
+                    $innerEnvelope=self::inspect(
+                        $ownerPath,$ownerPkg,$innerRef-1,$family);
+                    $native=CatalogUE1ClassicNativeObjectReader::inspect(
+                        $ownerPath,$ownerPkg,$innerRef-1,$innerEnvelope,$family);
+                    if(($native['status']??null)!=='native_property_record_complete'){
+                        throw new RuntimeException(
+                            'UE1 v432 dynamic array Inner native serializer unresolved');
+                    }
+                    $innerKind=(string)($native['property_kind']??'');
+                    $width=match($innerKind){
+                        'byteproperty','boolproperty'=>1,
+                        'intproperty','floatproperty'=>4,
+                        'nameproperty','objectproperty','classproperty'=>-1,
+                        default=>0
+                    };
+                    if($width===0){
+                        throw new RuntimeException(
+                            'UE1 v432 dynamic array Inner SerializeItem not yet verified: '
+                            .$innerKind);
+                    }
+                    [$count,$raw]=$readLinkerIndex();
+                    if($count<0){
+                        throw new RuntimeException(
+                            'UE1 v432 dynamic array negative count at archive offset '
+                            .($offset+$position));
+                    }
+                    $remaining=$archiveLimit-$position;
+                    if($count>($width>0?intdiv($remaining,$width):$remaining)){
+                        throw new RuntimeException(
+                            'UE1 v432 dynamic array element count exceeds export SerialSize');
+                    }
+                    $elements=[];
+                    for($item=0;$item<$count;$item++){
+                        if($width<0){
+                            [$ref,$segment]=$readLinkerIndex();
+                            $validateLinkerIndex(
+                                $ref,$innerKind==='nameproperty'?'name':'object');
+                            $raw.=$segment;
+                            $value=$ref;
+                        }else{
+                            $segment=$read($width);$raw.=$segment;
+                            if($innerKind==='byteproperty'||$innerKind==='boolproperty'){
+                                $value=ord($segment);
+                                if($innerKind==='boolproperty')$value=$value!==0;
+                            }elseif($innerKind==='intproperty'){
+                                $v=unpack('V',$segment)[1];
+                                $value=$v>=0x80000000?$v-0x100000000:$v;
+                            }else{
+                                $value=unpack('g',$segment)[1];
+                                if(!is_finite($value))$value=[
+                                    'nonfinite_ieee754_le_hex'=>bin2hex($segment)];
+                            }
+                        }
+                        if(count($elements)<32)$elements[]=$value;
+                    }
+                    $arrayDecoded=['element_count'=>$count,
+                        'inner_property_kind'=>$innerKind,
+                        'serialized_element_bytes'=>strlen($raw),
+                        'preview_first_32'=>$elements,
+                        'all_values_previewed'=>$count<=32];
+                }elseif($loadPolicy==='native_source_property_SerializeItem'
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
                     &&$linkerLimits!==null&&$type===13){
                     // UT99 UStrProperty::SerializeItem delegates to the
                     // source FString archive operator: signed compact
@@ -199,6 +273,9 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 if(str_starts_with($loadPolicy,'native_warning_skip')){
                     // Keep the raw archived tag and its SHA, but never
                     // present skipped bytes as a native loaded value.
+                }elseif($arrayDecoded!==null){
+                    $value=$arrayDecoded;
+                    $valueKind='source_typed_dynamic_array';
                 }elseif($legacyRef!==null){$value=$legacyRef;$valueKind='v35_compact_object_reference';}
                 elseif($type===3){$value=$arrayPresent;$valueKind='boolean_tag_bit';}
                 elseif($type===1&&strlen($raw)===1){$value=ord($raw);$valueKind='byte';}
@@ -431,9 +508,16 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 }
                 return ($first&128)!==0 ? -$v : $v;
             };
-            $name=static function()use($compact,$names):array{
+            $name=static function()use($compact,$names,$family,$offset,&$position):array{
                 $index=$compact();
-                if($index<0||!isset($names[$index])){throw new RuntimeException('UE1 property name reference is invalid: '.$index);}
+                if($index<0||!isset($names[$index])){
+                    if($family===CatalogUE1ClassicSourceFamily::UT99_V432){
+                        throw new RuntimeException(
+                            'UE1 v432 ULinkerLoad<<FName invalid name index '.$index
+                            .' at archive offset '.($offset+$position));
+                    }
+                    throw new RuntimeException('UE1 property name reference is invalid: '.$index);
+                }
                 $entry=$names[$index];
                 return ['index'=>$index,'text'=>(string)($entry['name']??$entry['text']??'')];
             };

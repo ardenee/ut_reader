@@ -1,0 +1,185 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "profile": "ut99-v432",
+  "package_version": 69,
+  "provenance": "Native compiled UT99 v432 UCC.exe compiled disposable UnrealScript ArrayProperty definitions; compiled Core.dll with Epic UObject::SavePackage generated actual valid UE1 .u archive, compiled Core.dll UObject::LoadPackage loaded real archived integer/FName/UObject arrays. Not pre-existing game asset.",
+  "original": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5ArrayPayload.u",
+    "sha256": "2436d2545135a8ca02d5f1e71252daf3314be6e5b02c371a7db8ae5450e16ff3"
+  },
+  "native_reference_batch": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-dynamic-array-batch.json",
+    "sha256": "ee494164b2f54ba5ae223dc09f22849524a691a2f22dfc664e170e6a0a42da38"
+  },
+  "native_unchanged_baseline_log": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-Array-Load-baseline.txt",
+    "sha256": "fe457ecf0730adb6264423c0dfc299839b06d534f873ae77fab86a4b019f19f0"
+  },
+  "generated_actor_script": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/G5ArrayProbe/Classes/G5ArrayProbeActor.uc",
+    "sha256": "cc84ce6add2d44d5dffe5f787237d0bb01d22738c65c21361fff31db6e052d20"
+  },
+  "compiled_actor_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5ArrayProbe.u",
+    "sha256": "303d645d425c759510ad2bbcd92b4f2320a7fe7af8fff420094645ddb259694f"
+  },
+  "compiled_v432_CoreDLL": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "compiled_v432_UCC": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/UCC.exe",
+    "sha256": "90cf7eb27bf1dd56767720b01deb29d3169d9e749f4fda87933e715db390742f"
+  },
+  "actual_save_generator_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-Array-Generate.cpp",
+    "sha256": "c0ce7d9bd0055de450f889a899a78b24557ec0f837719b2a8bb9cdee4ec6df45"
+  },
+  "actual_save_generator_exe": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-Array-Generate.exe",
+    "sha256": "33035513bb1bc8bbba94f875c1f59e97143d2a019d20d2ea395b4127c004ff96"
+  },
+  "actual_load_oracle_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-Array-Load.cpp",
+    "sha256": "7671e56008a39dcbff628d1014cbc5a8fde406709306a89652110a418e970a1f"
+  },
+  "actual_load_oracle_exe": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-Array-Load.exe",
+    "sha256": "9a7a7472c501a5e8ab052b18710aa29b66ab76644977c1eb1f5e2f897f2d3ff0"
+  },
+  "source_UArrayProperty": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnProp.cpp",
+    "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+  },
+  "source_tagged_properties": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+    "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+  },
+  "source_UArray_compiler": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Editor/Src/UnScrCom.cpp",
+    "sha256": "f5c7797af86b3807fc89fefa33d3d06fd797acbc4ec4d259dd8333230d0ce900"
+  },
+  "cases": [
+    {
+      "name": "numbers_declared_size1",
+      "byte_offset": 253,
+      "original_byte": 13,
+      "mutated_byte": 1,
+      "native_loaded": true,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-array-numbers_declared_size1.txt",
+        "sha256": "6e734d4752cd98491c83dd67f93cefcd961a2e607be409643b812659c401d122"
+      },
+      "native_fatal_archive_offset": null,
+      "native_loaded_int": "Numbers=(11,42,-7)",
+      "native_loaded_names": "Labels=(Alpha,Beta)",
+      "native_loaded_objects": "References=(G5ArrayProbeActor'G5ArrayPayload.G5DynamicActor',None)",
+      "native_expected_count": 1
+    },
+    {
+      "name": "numbers_count2",
+      "byte_offset": 254,
+      "original_byte": 3,
+      "mutated_byte": 2,
+      "native_loaded": false,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-array-numbers_count2.txt",
+        "sha256": "103b1dd600442e7e09287988c65a03fbba680eabb290cdc35371e90b07423f94"
+      },
+      "native_fatal_archive_offset": 268,
+      "native_loaded_int": "Numbers=(11,42,-7)",
+      "native_loaded_names": "Labels=(Alpha,Beta)",
+      "native_loaded_objects": "References=(G5ArrayProbeActor'G5ArrayPayload.G5DynamicActor',None)",
+      "native_expected_count": null
+    },
+    {
+      "name": "numbers_count4",
+      "byte_offset": 254,
+      "original_byte": 3,
+      "mutated_byte": 4,
+      "native_loaded": false,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-array-numbers_count4.txt",
+        "sha256": "ed9f38d0901bdcaed8d3e8126eaa14151770697318a443d4761172331246c49a"
+      },
+      "native_fatal_archive_offset": 276,
+      "native_loaded_int": "Numbers=(11,42,-7)",
+      "native_loaded_names": "Labels=(Alpha,Beta)",
+      "native_loaded_objects": "References=(G5ArrayProbeActor'G5ArrayPayload.G5DynamicActor',None)",
+      "native_expected_count": null
+    },
+    {
+      "name": "labels_invalid_inner_name",
+      "byte_offset": 271,
+      "original_byte": 1,
+      "mutated_byte": 63,
+      "native_loaded": false,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-array-labels_invalid_inner_name.txt",
+        "sha256": "49eae2e5edabc23629031cc00d52eba00826658a22be1f1369630ad3277e74fd"
+      },
+      "native_fatal_archive_offset": 272,
+      "native_loaded_int": "Numbers=(11,42,-7)",
+      "native_loaded_names": "Labels=(Alpha,Beta)",
+      "native_loaded_objects": "References=(G5ArrayProbeActor'G5ArrayPayload.G5DynamicActor',None)",
+      "native_expected_count": null
+    },
+    {
+      "name": "references_invalid_inner_object",
+      "byte_offset": 277,
+      "original_byte": 1,
+      "mutated_byte": 63,
+      "native_loaded": false,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-array-references_invalid_inner_object.txt",
+        "sha256": "d924ce09cfac15bd0fa4e42b1fa964d74dcae20db5fb28fc42dde5c3c6a1f703"
+      },
+      "native_fatal_archive_offset": 278,
+      "native_loaded_int": "Numbers=(11,42,-7)",
+      "native_loaded_names": "Labels=(Alpha,Beta)",
+      "native_loaded_objects": "References=(G5ArrayProbeActor'G5ArrayPayload.G5DynamicActor',None)",
+      "native_expected_count": null
+    },
+    {
+      "name": "references_declared_size1",
+      "byte_offset": 275,
+      "original_byte": 3,
+      "mutated_byte": 1,
+      "native_loaded": true,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-array-references_declared_size1.txt",
+        "sha256": "91bbe656930a2e5d3534bae6f6b83e2b91c0c46b80d2bceefb5e72a81281e84e"
+      },
+      "native_fatal_archive_offset": null,
+      "native_loaded_int": "Numbers=(11,42,-7)",
+      "native_loaded_names": "Labels=(Alpha,Beta)",
+      "native_loaded_objects": "References=(G5ArrayProbeActor'G5ArrayPayload.G5DynamicActor',None)",
+      "native_expected_count": 1
+    }
+  ],
+  "case_count": 6,
+  "all_archive_mutations_restored": true,
+  "native_loaded_values": {
+    "Numbers": [
+      11,
+      42,
+      -7
+    ],
+    "Labels": [
+      "Alpha",
+      "Beta"
+    ],
+    "References": [
+      1,
+      0
+    ]
+  },
+  "full_method_accepted": false,
+  "limits": [
+    "UArrayProperty supported Inner types exercised: Int/Name/Object; production supports direct Byte/Bool/Float with Epic source but distinct native malformed oracle not in this batch.",
+    "Nested FString/StructProperty Inner and advanced recursive native types are separately unresolved.",
+    "Native fixture is tool-generated by compiled Epic binary; not originally distributed game package.",
+    "Unloaded Camera objects and other source-profile version branches remain outside this fixture."
+  ]
+}

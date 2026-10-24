@@ -1,0 +1,19 @@
+﻿{
+    "ok": false,
+    "checks": 61,
+    "passed": 60,
+    "failures": [
+        "actual_compiled_native_loaded_original_all_three"
+    ],
+    "method": "T99:UObject::Serialize",
+    "new_compiled_dynamic_array_oracle_cases": 6,
+    "new_compiled_array_fatal_archive_cursors_matched": 4,
+    "new_compiled_array_valid_malicious_size_cases_matched": 2,
+    "compiled_native_original_three_array_values_matched": 3,
+    "native_original_33_loaded_exports_prior_SHA_reused": 33,
+    "native_original_113_loaded_property_values_prior_SHA_reused": 113,
+    "prior_StateFrame_checks_SHA_reused": 43,
+    "compiled_native_loader_reruns_in_verifier": 0,
+    "full_method_decision": "BLOCKED",
+    "remaining": "Nested FString/Struct ArrayProperty Inner serializers, historical source variants, five Camera objects not independently instantiated, full seven-criterion independent acceptance"
+}

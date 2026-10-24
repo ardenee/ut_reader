@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "f7f08918772439cf0d591b4bd2f341633cc226c01a36f44440496ad95831508c",
+  "source_fingerprint": "92022c708d55d6597e787a4d3b0a70a934e61e9e78d4bbf7ca38523c651cd415",
   "method_count": 8,
   "fully_epic_verified": 0,
   "failed": 0,
   "blocked": 8,
-  "new_oracle_runs": 8,
-  "new_test_runs": 7,
+  "new_oracle_runs": 9,
+  "new_test_runs": 8,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -23,11 +23,11 @@
       "existing_native_loaded_valid": true,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
-      "decisive_blocker": "dynamic_ArrayProperty_native_inner_value_count_and_legacy_version_Camera_full_review",
-      "reason": "Real compiled v432 UObject loaded 33 original Entry.unr exports with all 113/113 tagged values matching the current production reader; earlier six native reference failure/skip and four PropertyTag error cases plus 43 StateFrame checks remain hash pinned. Four NEW compiled native malformed Tag.Size cases establish actual valid PointRegion SerializeItem reads six bytes irrespective declared 1/12, and valid FString Title reads ten bytes irrespective declared 1/20. Current changed-source consolidated method verifier PASS50/50, 4/4 new native outcomes, 113/113 original loaded values; no previous engine run repeated. Dynamic ArrayProperty inner count/value errors, older source-version branches, five uninstantiated Camera actors and independent full method review remain OPEN.",
-      "next_action": "Locate an actual source-selected v432 dynamic ArrayProperty loaded instance and independently compare nested count/value malformed consumption against compiled native code; exercise only unverified historical source-version gates, attempt Camera only with reachable native entrypoint, then independent full seven-gate method review. Reuse previous 4 new struct/string + 6 reference + 4 type error cases, 113 original values and 43 StateFrame checks.",
+      "decisive_blocker": "remaining_nested_FString_Struct_array_inner_and_source_version_Camera_full_review",
+      "reason": "Original compiled v432 native UObject Entry.unr retained 33 genuinely loaded exports / 113 native tagged values and sealed 43 StateFrame checks. A genuine compiled v432 UCC.exe-built + Core.dll SavePackage-produced separate v69 archive now proves actual dynamic ArrayProperty Int/Name/Object loading: Numbers(11,42,-7), Labels(Alpha,Beta), References(self,None). Six NEW real compiled malformed dynamic array cases compared, including four fatal native cursor offsets 268/276/272/278 and two valid malformed Tag.Size outcomes consuming source native element lengths; current changed-source consolidated decision PASS61/61 and all previously sealed native cases remain source-scoped. Original distributable UT99 installed 83 maps plus 45 .u packages do not contain ordinary dynamic array tags. Nested FString/Struct array Inner serializations, applicable older source branches, five uninstantiated Camera frames, and independent seven-gate full method closure still OPEN.",
+      "next_action": "Resolve source-reachable v432 dynamic array Inner StrProperty/StructProperty codecs using valid compiled saved fixture or explicitly limit support, then source-applicable historical gates and five original Camera StateFrames with a genuine reachable compiled oracle. One final independent seven-criterion method review only; do not replay 6 current array, 4+6+4 prior malformed, 113 original values or 43 StateFrame outcomes.",
       "new_native_tests_executed": 0,
-      "new_test_runs_executed": 5
+      "new_test_runs_executed": 6
     },
     "T99:UClass::Serialize": {
       "decision": "BLOCKED",

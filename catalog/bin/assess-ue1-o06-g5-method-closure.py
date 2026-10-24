@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Real compiled v432 UObject loaded 33 original Entry.unr exports with all 113/113 tagged values matching the current production reader; earlier six native reference failure/skip and four PropertyTag error cases plus 43 StateFrame checks remain hash pinned. Four NEW compiled native malformed Tag.Size cases establish actual valid PointRegion SerializeItem reads six bytes irrespective declared 1/12, and valid FString Title reads ten bytes irrespective declared 1/20. Current changed-source consolidated method verifier PASS50/50, 4/4 new native outcomes, 113/113 original loaded values; no previous engine run repeated. Dynamic ArrayProperty inner count/value errors, older source-version branches, five uninstantiated Camera actors and independent full method review remain OPEN.",
-  "next":"Locate an actual source-selected v432 dynamic ArrayProperty loaded instance and independently compare nested count/value malformed consumption against compiled native code; exercise only unverified historical source-version gates, attempt Camera only with reachable native entrypoint, then independent full seven-gate method review. Reuse previous 4 new struct/string + 6 reference + 4 type error cases, 113 original values and 43 StateFrame checks.",
-  "blocker":"dynamic_ArrayProperty_native_inner_value_count_and_legacy_version_Camera_full_review",
+  "reason":"Original compiled v432 native UObject Entry.unr retained 33 genuinely loaded exports / 113 native tagged values and sealed 43 StateFrame checks. A genuine compiled v432 UCC.exe-built + Core.dll SavePackage-produced separate v69 archive now proves actual dynamic ArrayProperty Int/Name/Object loading: Numbers(11,42,-7), Labels(Alpha,Beta), References(self,None). Six NEW real compiled malformed dynamic array cases compared, including four fatal native cursor offsets 268/276/272/278 and two valid malformed Tag.Size outcomes consuming source native element lengths; current changed-source consolidated decision PASS61/61 and all previously sealed native cases remain source-scoped. Original distributable UT99 installed 83 maps plus 45 .u packages do not contain ordinary dynamic array tags. Nested FString/Struct array Inner serializations, applicable older source branches, five uninstantiated Camera frames, and independent seven-gate full method closure still OPEN.",
+  "next":"Resolve source-reachable v432 dynamic array Inner StrProperty/StructProperty codecs using valid compiled saved fixture or explicitly limit support, then source-applicable historical gates and five original Camera StateFrames with a genuine reachable compiled oracle. One final independent seven-criterion method review only; do not replay 6 current array, 4+6+4 prior malformed, 113 original values or 43 StateFrame outcomes.",
+  "blocker":"remaining_nested_FString_Struct_array_inner_and_source_version_Camera_full_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -236,7 +236,7 @@ for name in reg["methods"]:
         size_result_log=ROOT/new_ev["log"].replace("\\","/")
         assert sha(size_result_log)==new_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/sizetest)==new_ev["test_sha256"]
-        assert new_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert new_ev["source_sha256"]==reconciliation["previous_source_before_native_dynamic_array_change"]
         size_result=read(size_result_log)
         assert size_result["ok"] and size_result["checks"]==50
         assert size_result["passed"]==50
@@ -251,6 +251,29 @@ for name in reg["methods"]:
         assert size_result["compiled_native_loader_reruns"]==0
         assert size_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_struct_str_size_change_scoped"]
+        # Latest compiled Core v432 real dynamic array engine-generated archive.
+        # Native count/inner-reference errors and exact cursor from one batch;
+        # all previous genuine original loaded positives SHA-scoped, not rerun.
+        array_test="verify-ue1-o06-g5-uobject-dynamic-array-decision.php"
+        array_ev=next((item for item in reversed(events)
+            if item.get("test")==array_test and item.get("state")=="PASS"),None)
+        assert array_ev is not None,"Missing native dynamic array consolidated decision"
+        array_log=ROOT/array_ev["log"].replace("\\","/")
+        assert sha(array_log)==array_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/array_test)==array_ev["test_sha256"]
+        assert array_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        array_result=read(array_log)
+        assert array_result["ok"] and array_result["checks"]==61
+        assert array_result["passed"]==61
+        assert array_result["new_compiled_dynamic_array_oracle_cases"]==6
+        assert array_result["new_compiled_array_fatal_archive_cursors_matched"]==4
+        assert array_result["new_compiled_array_valid_malicious_size_cases_matched"]==2
+        assert array_result["compiled_native_original_three_array_values_matched"]==3
+        assert array_result["native_original_113_loaded_property_values_prior_SHA_reused"]==113
+        assert array_result["prior_StateFrame_checks_SHA_reused"]==43
+        assert array_result["compiled_native_loader_reruns_in_verifier"]==0
+        assert array_result["full_method_decision"]=="BLOCKED"
+        assert reconciliation["source_native_dynamic_array_change_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -259,7 +282,10 @@ for name in reg["methods"]:
         old["compiled_native_reference_array_struct_cases_valid"]=6
         old["compiled_native_fatal_reference_archive_offsets_valid"]=4
         old["compiled_native_array_struct_skip_cases_valid"]=2
-        old["compiled_current_full_method_decision_checks"]=50
+        old["compiled_current_full_method_decision_checks"]=61
+        old["compiled_native_dynamic_array_proven_int_name_object"]=3
+        old["compiled_native_dynamic_array_fatal_cursors"]=4
+        old["compiled_native_dynamic_array_size_override_cases"]=2
         old["compiled_native_valid_struct_malformed_size_cases"]=2
         old["compiled_native_valid_FString_malformed_size_cases"]=2
         old["compiled_genuine_original_exports_compared"]=33
@@ -275,7 +301,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
-        else "current_full_method_decision_50_checks_4_native_struct_string_tag_sizes_6_old_refs_113_original_tags_43_saved_StateFrame" if name=="T99:UObject::Serialize"
+        else "current_method_decision_61_checks_native_compiled_three_dynamic_arrays_six_negative_cases_old_positive_proof_source_scoped" if name=="T99:UObject::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -286,7 +312,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":5 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":6 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -295,7 +321,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":8,"new_test_runs":7,
+ "new_oracle_runs":9,"new_test_runs":8,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
