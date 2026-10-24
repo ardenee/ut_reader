@@ -54,6 +54,28 @@ $check('original_filters_and_dashboard_link_preserved',
     &&str_contains($src,'$detailArgs = $args;')
     &&str_contains($src,"'view' => null")
     &&str_contains($src,'Back to Site Activity Logs'));
+$check('all_five_full_reports_have_exact_activity_drilldowns',
+    str_contains($src, '$rowFilters = match ($detailView)')
+    && str_contains($src, "'pages' => ['event' => 'page_activity', 'page_exact'")
+    && str_contains($src, "'links' => ['event' => 'page_activity', 'path_exact'")
+    && str_contains($src, "'event' => 'section', 'page_exact'")
+    && str_contains($src, "'section_exact' => (string)\$row['section_key']")
+    && str_contains($src, "'event' => 'interaction', 'page_exact'")
+    && str_contains($src, "'action_exact' => (string)\$row['action_key']")
+    && str_contains($src, "'target_exact' => (string)(\$row['target_path'] ?? '')")
+    && str_contains($src, "'referrer_exact' => (string)\$row['source_path']")
+    && str_contains($src, "'destination_exact' => (string)\$row['destination_path']"));
+$check('full_report_hits_link_to_raw_activity',
+    str_contains($src, "\$field === 'hits' || \$field === 'unique_ips'")
+    && str_contains($src, 'access_matrix_query(array_merge($rowFilters, [')
+    && str_contains($src, "'view' => null, 'detail_q' => null, 'detail_p' => null")
+    && str_contains($src, "'#matching-ips' : '#raw-events'")
+    && str_contains($src, 'class="access-matrix-metric-link" href="access-matrix.php?'));
+$check('full_report_ips_link_to_contributing_addresses',
+    str_contains($src, "'show_ips' => \$field === 'unique_ips' ? 1 : null")
+    && str_contains($src, "'event' => 'page_activity'")
+    && str_contains($src, "'event' => 'section'")
+    && str_contains($src, "'event' => 'interaction'"));
 $check('no_change_to_existing_top_ten',
     preg_match_all('/LIMIT 10(?!0)/',$src)===5);
 echo json_encode(['ok'=>$bad===[],'passed'=>$n-count($bad),'checks'=>$n,'failures'=>$bad],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;

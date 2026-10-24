@@ -451,11 +451,34 @@ try {
             }
             echo '</tr></thead><tbody>';
             foreach ($detailRows as $row) {
+                $rowFilters = match ($detailView) {
+                    'pages' => ['event' => 'page_activity', 'page_exact' => (string)$row['page_key']],
+                    'links' => ['event' => 'page_activity', 'path_exact' => (string)$row['request_path']],
+                    'sections' => [
+                        'event' => 'section', 'page_exact' => (string)$row['page_key'],
+                        'section_exact' => (string)$row['section_key'],
+                    ],
+                    'interactions' => [
+                        'event' => 'interaction', 'page_exact' => (string)$row['page_key'],
+                        'action_exact' => (string)$row['action_key'],
+                        'target_exact' => (string)($row['target_path'] ?? ''),
+                    ],
+                    'navigation' => [
+                        'event' => 'page_activity', 'referrer_exact' => (string)$row['source_path'],
+                        'destination_exact' => (string)$row['destination_path'],
+                    ],
+                };
                 echo '<tr>';
                 foreach ($report['columns'] as $field => $heading) {
                     $value = (string)($row[$field] ?? '');
                     if ($field === 'hits' || $field === 'unique_ips') {
-                        $cell = number_format((int)$value);
+                        $drilldown = access_matrix_query(array_merge($rowFilters, [
+                            'view' => null, 'detail_q' => null, 'detail_p' => null,
+                            'show_ips' => $field === 'unique_ips' ? 1 : null, 'p' => 1,
+                        ]));
+                        $anchor = $field === 'unique_ips' ? '#matching-ips' : '#raw-events';
+                        $cell = '<a class="access-matrix-metric-link" href="access-matrix.php?'
+                            . catalog_h($drilldown) . $anchor . '">' . number_format((int)$value) . '</a>';
                     } elseif ($field === 'page_key') {
                         $cell = access_matrix_logged_link($row['sample_path'] ?? '', $value);
                     } elseif (in_array($field, ['request_path','source_path','destination_path','target_path'], true)) {
