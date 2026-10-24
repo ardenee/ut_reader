@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "source_profile": "ut99-v432",
+  "classification": "ONE_RECOVERED_REAL_COMPILED_V432_REFERENCE_ARRAY_STRUCT_NEGATIVE_BATCH",
+  "original": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Entry.unr",
+    "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c"
+  },
+  "CoreDLL": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "launcher": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-LoadPackage-TaggedValues.exe",
+    "sha256": "0e98e445a7d7fd72fcce6f02fd26050a8f136cbeb68e93806292b30a3115ef8a"
+  },
+  "native_batch": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-reference-error-batch6.json",
+    "sha256": "7f3865a95b5d578104839ebe9bf9014e9df8a8acbaca73d0778ccd43579685b2"
+  },
+  "dependency_Engine_u": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+    "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+  },
+  "dependency_Core_u": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.u",
+    "sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70"
+  },
+  "source_inherited_FPropertyTag": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+    "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+  },
+  "source_inherited_ULinkerLoad": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnLinker.h",
+    "sha256": "810b2b4c86482272d00bd0460561f8d09bb8f7e72ef478a67faa1e53cadcd9a9"
+  },
+  "cases": [
+    {
+      "name": "invalid_positive_summary_ref",
+      "position": 1657,
+      "original_byte": 29,
+      "mutated_byte": 63,
+      "native_success": false,
+      "native_offset_on_fatal": 1658,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-reference-invalid_positive_summary_ref.txt",
+        "sha256": "5de8b8384decf8852db371d51239a8b74e6194118a7ab0cd7363327b1a7a9d77"
+      },
+      "checked_tag": null,
+      "expected_policy": null,
+      "expected_skipped_bytes": null
+    },
+    {
+      "name": "invalid_negative_class_ref",
+      "position": 1660,
+      "original_byte": 151,
+      "mutated_byte": 191,
+      "native_success": false,
+      "native_offset_on_fatal": 1661,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-reference-invalid_negative_class_ref.txt",
+        "sha256": "bb2e2e578e706d2e19a39599245d56405293bed7ccd1d902863bd5acec60120e"
+      },
+      "checked_tag": null,
+      "expected_policy": null,
+      "expected_skipped_bytes": null
+    },
+    {
+      "name": "invalid_fname_ref",
+      "position": 1727,
+      "original_byte": 27,
+      "mutated_byte": 191,
+      "native_success": false,
+      "native_offset_on_fatal": 1728,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-reference-invalid_fname_ref.txt",
+        "sha256": "a15468e276abefed89fe43a11e20bb3982fb04f24812d8f536d0ee29f78fe10b"
+      },
+      "checked_tag": null,
+      "expected_policy": null,
+      "expected_skipped_bytes": null
+    },
+    {
+      "name": "out_of_bounds_AIProfile_index",
+      "position": 1669,
+      "original_byte": 1,
+      "mutated_byte": 127,
+      "native_success": true,
+      "native_offset_on_fatal": null,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-reference-out_of_bounds_AIProfile_index.txt",
+        "sha256": "91387453c9abfd25a1f12a743cf9a0027ce8ceff26f8ede539dcaf9e3e07d3c2"
+      },
+      "checked_tag": "AIProfile",
+      "expected_policy": "native_warning_skip_declared_tag_bytes",
+      "expected_skipped_bytes": 4
+    },
+    {
+      "name": "wrong_Region_struct_identity",
+      "position": 1730,
+      "original_byte": 2,
+      "mutated_byte": 3,
+      "native_success": true,
+      "native_offset_on_fatal": null,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-reference-wrong_Region_struct_identity.txt",
+        "sha256": "786e417eba2b16cb9edbe1ae7a736479f9f2f834cb17153c8a228787f043ff72"
+      },
+      "checked_tag": "Region",
+      "expected_policy": "native_warning_skip_declared_tag_bytes",
+      "expected_skipped_bytes": 6
+    },
+    {
+      "name": "invalid_Region_zone_ref",
+      "position": 1732,
+      "original_byte": 1,
+      "mutated_byte": 63,
+      "native_success": false,
+      "native_offset_on_fatal": 1733,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-reference-invalid_Region_zone_ref.txt",
+        "sha256": "e572af764eb858ed92c6db3c11ecc375ebd34c6a11f414b8ee47b728db877e20"
+      },
+      "checked_tag": "Region",
+      "expected_policy": null,
+      "expected_skipped_bytes": null
+    }
+  ],
+  "case_count": 6,
+  "native_executions_repeated_for_manifest": 0,
+  "full_method_accepted": false,
+  "limits": [
+    "Reference errors are fatal only when an actual resolved UProperty invokes native SerializeItem. An unknown tag is skipped without resolving contained references.",
+    "Native exact fatal position is obtained from existing compiled History() trace. Compiled diagnostic wording is not asserted to be identical to PHP.",
+    "The four fatal and two warning/skip cases are a subset of all possible malformed array, struct and reference variants. Source-selected version variants and five unobserved Camera actors remain open."
+  ]
+}

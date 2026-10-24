@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T18:39:15.8125847Z",
-    "head_commit":  "36bae778",
+    "updated_at_utc":  "2026-10-24T19:08:28.5552804Z",
+    "head_commit":  "122f8fbc",
     "current_target":  "DEV",
-    "current_source_sha256":  "d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372",
+    "current_source_sha256":  "f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -723,6 +723,18 @@
                       "run_id":  "20261024T163857793Z-e7641b1e",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T163857793Z-e7641b1e-DEV-verify-ue1-o06-g5-uobject-consolidated-acceptance.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uobject-current-full-decision.php",
+                      "test":  "verify-ue1-o06-g5-uobject-current-full-decision.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T19:08:28.5312857Z",
+                      "source_sha256":  "f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f",
+                      "test_sha256":  "a10daaa7cd943191877c070131b3eeacd93b9a70e57505ba4c324b2496782196",
+                      "run_id":  "20261024T190826959Z-56364d87",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T190826959Z-56364d87-DEV-verify-ue1-o06-g5-uobject-current-full-decision.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-uobject-tag-error-consolidated.php",

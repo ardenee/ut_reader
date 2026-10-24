@@ -1,0 +1,7 @@
+﻿
+Fatal error: Uncaught JsonException: Syntax error in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php:14
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php(14): json_decode('\xEF\xBB\xBF{\r\n    "ok":...', true, 512, 4194304)
+#1 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php(137): {closure:C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php:14}('C:\\Users\\arden\\...')
+#2 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php on line 14

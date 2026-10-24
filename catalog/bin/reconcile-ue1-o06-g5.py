@@ -84,9 +84,43 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# 2026-10-24 reference / array-index / PointRegion v432 correction.
+# Reconstruct exactly the parent 122f8fbc source fingerprint and require
+# the latest single consolidated 61-check CURRENT-source acceptance.
+previous_reference_tag=committed("122f8fbc",new_tag_file)
+previous_reference_source="d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372"
+sig_before_reference=subst_sig(
+    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(previous_reference_tag))
+new_reference_acceptance="verify-ue1-o06-g5-uobject-current-full-decision.php"
+ref_ev=latest.get(new_reference_acceptance)
+ref_log=ROOT/ref_ev["log"] if ref_ev and ref_ev.get("log") else None
+try:
+    ref_values=read(ref_log) if ref_log and ref_log.exists() else {}
+except Exception:
+    ref_values={}
+reference_scope=(
+    hashlib.sha256(sig_before_reference.encode("utf-8")).hexdigest()==previous_reference_source
+    and current_schema==committed("122f8fbc",new_schema_file)
+    and "IndexToObject" in current_tag
+    and "native_source_property_SerializeItem" in current_tag
+    and "readLinkerIndex" in current_tag
+    and ref_ev is not None and ref_ev.get("state")=="PASS"
+    and ref_ev.get("source_sha256")==current
+    and ref_ev.get("output_sha256")==digest(ref_log)
+    and ref_ev.get("test_sha256")==digest(ROOT/"catalog"/"bin"/new_reference_acceptance)
+    and ref_values.get("ok") is True
+    and ref_values.get("checks")==61 and ref_values.get("passed")==61
+    and ref_values.get("real_native_reference_outcomes_matched")==6
+    and ref_values.get("fatal_archive_offset_outcomes_matched")==4
+    and ref_values.get("nonfatal_exact_skip_bytes_outcomes_matched")==2
+    and ref_values.get("current_source_compiled_loaded_values_matched")==113
+    and ref_values.get("current_source_compiled_loaded_exports")==33
+    and ref_values.get("new_compiled_engine_invocations")==0
+    and ref_values.get("full_method_decision")=="BLOCKED"
+)
 previous_latest_source="452e64cfe46f9df04a12680b7377ec84d9c49e398eb58ff96de86816a364eaa3"
 sig_before_latest=subst_sig(
-    subst_sig(signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(old_latest_tag)),
+    subst_sig(sig_before_reference,new_tag_file,sha_blob(previous_reference_tag),sha_blob(old_latest_tag)),
     new_schema_file,digest(new_schema_file).upper(),sha_blob(old_latest_schema))
 # The added declaration resolver is scoped: the old class-default inspector
 # remains byte-for-byte unchanged after its original doc/inspect anchor.
@@ -118,10 +152,11 @@ try:
 except Exception:
     proof_values={}
 latest_source_scope=(
-    hashlib.sha256(sig_before_latest.encode("utf-8")).hexdigest()==previous_latest_source
+    reference_scope
+    and hashlib.sha256(sig_before_latest.encode("utf-8")).hexdigest()==previous_latest_source
     and schema_scope and tag_scope
     and proof is not None and proof.get("state")=="PASS"
-    and proof.get("source_sha256")==current
+    and proof.get("source_sha256")==previous_reference_source
     and proof.get("output_sha256")==digest(proof_log)
     and proof.get("test_sha256")==digest(ROOT/"catalog"/"bin"/new_acceptance)
     and proof_values.get("ok") is True
@@ -253,6 +288,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (reference_scope and f==previous_reference_source)
         or (latest_source_scope and f==previous_latest_source)
         or (region_scope and f==previous_full_source)
         or (uobject_scope and f==uobject_previous_source_sha256)
@@ -424,6 +460,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_reference_change_scoped":reference_scope,
+    "previous_source_before_native_reference_change":previous_reference_source if reference_scope else None,
     "source_native_tag_error_change_scoped":latest_source_scope,
     "previous_source_before_native_tag_error_change":previous_latest_source if latest_source_scope else None,
     "source_native_tag_decl_resolver_scoped":schema_scope,

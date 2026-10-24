@@ -1,15 +1,17 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T18:44:57.031792+00:00",
-  "head": "36bae778",
-  "previous_runner_head": "36bae778",
-  "previous_source_sha256": "d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372",
-  "current_source_sha256": "d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372",
+  "generated_utc": "2026-10-24T19:13:33.434028+00:00",
+  "head": "122f8fbc",
+  "previous_runner_head": "122f8fbc",
+  "previous_source_sha256": "f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f",
+  "current_source_sha256": "f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
   "source_font_branch_equivalence": true,
+  "source_native_reference_change_scoped": true,
+  "previous_source_before_native_reference_change": "d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372",
   "source_native_tag_error_change_scoped": true,
   "previous_source_before_native_tag_error_change": "452e64cfe46f9df04a12680b7377ec84d9c49e398eb58ff96de86816a364eaa3",
   "source_native_tag_decl_resolver_scoped": true,
@@ -40,7 +42,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 127
+    "PASS": 128
   },
   "branch_totals": {
     "C227": {
@@ -11354,7 +11356,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "malformed_tag_reference_error_consumption_and_source_version_variants_plus_review",
+      "decisive_closure_blocker": "remaining_native_linker_reference_array_struct_errors_and_source_variant_consumption_plus_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",

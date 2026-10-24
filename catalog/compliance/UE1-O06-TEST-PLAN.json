@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-t99-uobject-current-full-decision": {
+      "description": "Single changed-source T99:UObject method decision: six previously captured real compiled v432 malformed reference/array/struct oracle outcomes with fatal cursor positions; 4 earlier native tag outcomes and 43 StateFrame evidence reused by pinned SHA; 113 original actual loaded native tagged values compared on current source once. No compiled native reruns. BLOCKED until other applicable branch and native error paths plus independent closure.",
+      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicClassDefaultSchemaReader.php"],
+      "focus": ["verify-ue1-o06-g5-uobject-current-full-decision.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-uobject-tag-error-consolidated": {
       "description": "One consolidated latest T99:UObject::Serialize compiler/native error acceptance on four controlled one-byte malformed FPropertyTag branches from unchanged genuine Entry.unr: type zero warn/skip, schema type mismatch warn/skip, early NAME_None native SerialSize Got16 Expected105 for AActor::Serialize Super-only ancestry, and declared float Size12 with native UFloatProperty four-byte SerializeItem. Original compiled v432 Core.dll outcome/source logs SHA-pinned, four original archives restored each. Verify all 113 previous original native-loaded tagged values on updated production reader WITHOUT compiling/running native again. Strict FULL still BLOCKED on other error source paths and final independent review.",
       "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicClassDefaultSchemaReader.php"],

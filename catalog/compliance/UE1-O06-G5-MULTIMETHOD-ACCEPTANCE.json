@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "Source-audit remaining malformed object/linker references, FPropertyTag array/struct/size consumption and applicable v432 version gates; run one complete acceptance after actual fixes. Reuse 4/4 malformed property outcomes, 113/113 native original loaded values, 43/43 real StateFrame checks. Never replay previous positives merely for fingerprint.",
+      "next_closure_work": "Resolve source-applicable v432 dynamic ArrayProperty/StructProperty nested malformed consumption and older source-family version gates; account for five Camera objects only with an actual reachable compiled native loader, then one final independent full-method review. Reuse previous 6+4 compiled invalid outcomes, 113 real values and 43 StateFrame checks, never repeat them without input changes.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -242,7 +242,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "remaining_native_linker_reference_array_struct_errors_and_source_variant_consumption_plus_review"
+      "decisive_closure_blocker": "remaining_nested_dynamic_array_struct_and_version_branches_camera_plus_full_review"
     },
     {
       "id": "T99:UClass::Serialize",

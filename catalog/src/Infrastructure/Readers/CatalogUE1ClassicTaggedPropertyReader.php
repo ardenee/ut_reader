@@ -33,9 +33,39 @@ final class CatalogUE1ClassicTaggedPropertyReader
     private static function parseTags(
         callable $read, callable $u8, callable $name, callable $compact,
         int $version, int $offset, int &$position, int $archiveLimit,
-        ?string $sourceFamily=null,?array $sourceDeclarations=null
+        ?string $sourceFamily=null,?array $sourceDeclarations=null,
+        ?array $linkerLimits=null
     ): array {
             $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+            // In ULinkerLoad, an archive object/name reference is an AR_INDEX,
+            // checked by IndexToObject or NameMap.IsValidIndex immediately
+            // after its last byte, before the remaining struct fields.
+            $readLinkerIndex=static function()use($read):array{
+                $raw=$read(1);$first=ord($raw);$v=$first&63;
+                $more=($first&64)!==0;$shift=6;
+                while($more){
+                    if(strlen($raw)>=5){
+                        throw new RuntimeException('UE1 v432 linker compact index overflow');
+                    }
+                    $byte=$read(1);$raw.=$byte;$b=ord($byte);
+                    $v|=($b&127)<<$shift;$more=($b&128)!==0;$shift+=7;
+                }
+                return [(($first&128)!==0?-$v:$v),$raw];
+            };
+            $validateLinkerIndex=static function(int $index,string $kind)
+                use($linkerLimits,$offset,&$position):void{
+                if($linkerLimits===null)return;
+                $bad=$kind==='name'
+                    ?($index<0||$index >= (int)$linkerLimits['names'])
+                    :($index>0 && $index>(int)$linkerLimits['exports'])
+                        ||($index<0 && -$index>(int)$linkerLimits['imports']);
+                if($bad){
+                    $origin=$kind==='name'?'ULinkerLoad<<FName':'IndexToObject';
+                    throw new RuntimeException(
+                        'UE1 v432 '.$origin.' invalid '.$kind.' index '.$index
+                        .' at archive offset '.($offset+$position));
+                }
+            };
             $tags=[];$end=false;
             // Epic's FPropertyTag reader reads until NAME_None; it has no
             // fixed 20,000-tag limit. Bound traversal by the actual bytes
@@ -103,7 +133,10 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         // UFloatProperty::SerializeItem always performs
                         // Ar<<FLOAT (four bytes). Tag.Size is used only in
                         // the warning+skip path, not valid property loading.
-                        if($type===4&&$expectedType==='floatproperty'){
+                        if($type===1&&$expectedType==='byteproperty'){
+                            $loadSize=1;
+                        }elseif(($type===2&&$expectedType==='intproperty')
+                            ||($type===4&&$expectedType==='floatproperty')){
                             $loadSize=4;
                         }
                     }
@@ -120,7 +153,27 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 if($version===35 && ($type===5||$type===8) && $tagSize===4){
                     $legacyRef=$compact();
                     $raw='';
-                } else {
+                }elseif($loadPolicy==='native_source_property_SerializeItem'
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&$linkerLimits!==null
+                    &&in_array($type,[5,6,8],true)){
+                    // Valid v432 Object/Class/Name SerializeItem uses AR_INDEX;
+                    // Tag.Size is NOT the number of bytes it consumes.
+                    [$reference,$raw]=$readLinkerIndex();
+                    $validateLinkerIndex(
+                        $reference,$type===6?'name':'object');
+                }elseif($loadPolicy==='native_source_property_SerializeItem'
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&$linkerLimits!==null&&$type===10
+                    &&strcasecmp((string)($struct['text']??''),'PointRegion')===0){
+                    // Real FPointRegion::SerializeBin reads UObject* Zone
+                    // FIRST, then INT iLeaf and BYTE ZoneNumber. If Zone
+                    // fails IndexToObject, Epic stops at that byte, not at
+                    // Tag.Size or the end of the six-byte struct.
+                    [$reference,$raw]=$readLinkerIndex();
+                    $validateLinkerIndex($reference,'object');
+                    $raw.=$read(5);
+                }else{
                     $raw=$type===3?'':$read($loadSize);
                 }
                 $value=null;$valueKind='opaque';
@@ -132,8 +185,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     // present skipped bytes as a native loaded value.
                 }elseif($legacyRef!==null){$value=$legacyRef;$valueKind='v35_compact_object_reference';}
                 elseif($type===3){$value=$arrayPresent;$valueKind='boolean_tag_bit';}
-                elseif($type===1&&$tagSize===1){$value=ord($raw);$valueKind='byte';}
-                elseif($type===2&&$tagSize===4){$v=unpack('V',$raw)[1];$value=$v>=0x80000000?$v-0x100000000:$v;$valueKind='int32';}
+                elseif($type===1&&strlen($raw)===1){$value=ord($raw);$valueKind='byte';}
+                elseif($type===2&&strlen($raw)===4){$v=unpack('V',$raw)[1];$value=$v>=0x80000000?$v-0x100000000:$v;$valueKind='int32';}
                 elseif($type===4&&strlen($raw)===4){$value=unpack('g',$raw)[1];$valueKind='float32';}
                 elseif($type===7){
                     // Unreal v1.200 FArchive::String stops at NUL OR
@@ -399,7 +452,12 @@ final class CatalogUE1ClassicTaggedPropertyReader
             }
             $tags=self::parseTags(
                 $read,$u8,$name,$compact,$version,$offset,$position,$size,
-                $family,$schema);
+                $family,$schema,
+                $schema!==null&&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    ?['names'=>count($names),
+                        'exports'=>count($package->getExports()),
+                        'imports'=>count($package->getImports())]
+                    :null);
             // The original v432 Engine native AActor::Serialize calls
             // Super::Serialize and archives NO trailing actor data.
             // This includes every fully resolved Engine.Actor subclass

@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 61,
+    "passed": 61,
+    "failures": [],
+    "method": "T99:UObject::Serialize",
+    "previous_compiled_native_malformed_tag_cases_reused": 4,
+    "previous_compiled_StateFrame_evidence_reused": 43,
+    "new_compiled_native_reference_cases_reused": 6,
+    "real_native_reference_outcomes_matched": 6,
+    "fatal_archive_offset_outcomes_matched": 4,
+    "nonfatal_exact_skip_bytes_outcomes_matched": 2,
+    "current_source_compiled_loaded_values_matched": 113,
+    "current_source_compiled_loaded_exports": 33,
+    "new_compiled_engine_invocations": 0,
+    "full_method_decision": "BLOCKED",
+    "remaining": "other source-version property serialization, malformed nested dynamic array/struct variants, excluded Camera contexts and independent full review"
+}

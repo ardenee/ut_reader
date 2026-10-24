@@ -1,0 +1,12 @@
+﻿
+Warning: Undefined array key "dependency_Engine.u" in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php on line 46
+
+Warning: Trying to access array offset on null in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php on line 48
+
+Warning: Trying to access array offset on null in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php on line 49
+
+Fatal error: Uncaught TypeError: copy(): Argument #1 ($from) must be of type string, null given in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php:49
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php(49): copy(NULL, 'C:/Temp/UnrealD...')
+#1 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-uobject-current-full-decision.php on line 49
