@@ -25,6 +25,78 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
     private static array $packageCache=[];
 
     /**
+     * Resolve an ordinary UObject instance's real UClass property declarations.
+     * Follow only pinned package export/import identities, then Epic's
+     * UStruct.Children / UField.Next / SuperField chain. This is the same
+     * declaration source already used for class-default validation.
+     *
+     * A missing package or an import chain which cannot be resolved returns
+     * unresolved; never guess a property layout from tag bytes alone.
+     *
+     * @return array{status:string,declarations:array<string,array<string,mixed>>}
+     */
+    public static function resolveObjectPropertyDeclarations(
+        string $path,CatalogUE1PackageReader $pkg,int $classRef,
+        ?string $sourceFamily=null
+    ):array{
+        static $cache=[],$active=false;
+        $family=CatalogUE1ClassicSourceFamily::selectFromHeader(
+            $pkg->getHeader(),$sourceFamily);
+        $key=$path."\0".$classRef."\0".$family;
+        if(isset($cache[$key]))return $cache[$key];
+        if($active||$classRef===0)return [
+            'status'=>'unresolved','declarations'=>[]];
+        $active=true;
+        try{
+            $decls=[];$seen=[];$resolved=true;
+            $actorReached=false;$engineNativeSource=true;
+            for($depth=0;$classRef!==0&&$depth<128;$depth++){
+                if($classRef<0){
+                    $target=self::importedParent($path,$pkg,$classRef);
+                    if($target===null){$resolved=false;break;}
+                    $path=$target['path'];$pkg=$target['package'];
+                    $classRef=$target['ref'];
+                }
+                $visit=$path."\0".$classRef;
+                if(isset($seen[$visit])){$resolved=false;break;}
+                $seen[$visit]=true;
+                $export=$pkg->getExports()[$classRef-1]??null;
+                if(!is_array($export)
+                    ||(int)$export['classIndex']!==0){$resolved=false;break;}
+                if(strcasecmp((string)$export['objectNameText'],'Actor')===0){
+                    $actorReached=true;
+                }
+                if(!$actorReached
+                    &&strcasecmp((string)pathinfo($path,PATHINFO_FILENAME),'Engine')!==0){
+                    $engineNativeSource=false;
+                }
+                $meta=CatalogUE1ClassicClassMetadataReader::inspect(
+                    $path,$pkg,$classRef-1,false,$family);
+                foreach(self::fieldChain(
+                    $path,$pkg,(int)($meta['children_reference']??0),$family
+                ) as $name=>$decl){
+                    if(!isset($decls[$name]))$decls[$name]=$decl;
+                }
+                $classRef=(int)($meta['super_field_reference']??0);
+            }
+            if($classRef!==0)$resolved=false;
+            return $cache[$key]=[
+                'status'=>$resolved?'resolved':'partial',
+                'declarations'=>$decls,
+                // Engine v432 AActor::Serialize only calls Super::Serialize;
+                // no other A*::Serialize override exists in Epic's
+                // Engine/Src v400 source implementation. Only assert that
+                // native behaviour for fully resolved Engine UClasses.
+                'actor_super_only_archive'=>$resolved&&$actorReached
+                    &&$engineNativeSource
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432];
+        }catch(\Throwable $error){
+            return $cache[$key]=[
+                'status'=>'unresolved','declarations'=>[]];
+        }finally{$active=false;}
+    }
+
+    /**
      * @param array<string,mixed> $classRecord
      * @param list<array<string,mixed>> $tags
      * @return array<string,mixed>

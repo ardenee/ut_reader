@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "452e64cfe46f9df04a12680b7377ec84d9c49e398eb58ff96de86816a364eaa3",
+  "source_fingerprint": "d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372",
   "method_count": 8,
   "fully_epic_verified": 0,
   "failed": 0,
   "blocked": 8,
-  "new_oracle_runs": 5,
-  "new_test_runs": 4,
+  "new_oracle_runs": 6,
+  "new_test_runs": 5,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -23,11 +23,11 @@
       "existing_native_loaded_valid": true,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
-      "decisive_blocker": "malformed_tag_reference_error_consumption_and_source_version_variants_plus_review",
-      "reason": "Compiled v432 UObject::LoadPackage loaded 33 genuine original Entry.unr exports; all 113/113 actually serialized tagged property values match loaded native ExportProperties results including 23 resolved object references, 15 FNames, 14 FPointRegion structs and source-defined CsgOper enums (current SHA-pinned method review 37/37). Earlier 14/19 original native StateFrame instances, 28 native state referents, and three compiled malformed Code offsets -2,0,63 retained from SHA-pinned PASS 43/43. Original Camera five were skipped by compiled selected source context; complete malformed tagged-property, reference/consumption and version family paths plus independent final full review still OPEN.",
-      "next_action": "Finish genuinely unverified malformed UPropertyTag decoding, invalid object/reference and exact archive consumption/error semantics, plus source-applicable version variants, then independent full method review. Reuse 33 real compiled loads, 113/113 values and 43/43 historical StateFrame proof; do not retest these passing paths.",
+      "decisive_blocker": "remaining_native_linker_reference_array_struct_errors_and_source_variant_consumption_plus_review",
+      "reason": "Compiled v432 real UObject loaded 33 genuine Entry.unr exports with all 113/113 serialized tagged property values matching native loaded objects; preserved prior 14 original StateFrames, 28 referents and malformed Code offsets -2/0/63 from SHA-pinned 43/43. Latest compiled v432 four-case malformed FPropertyTag batch now matches production: invalid type zero warn/skip; mismatched known name warn/skip; early NAME_None exact Got16 Expected105; declared Float Tag.Size12 but native SerializeItem reads4. Current 49/49 acceptance PASS, no compiled replay, all prior loaded 113 unchanged. Other source-relevant tag/reference errors/consumed archive/version branches plus independent full closure still OPEN.",
+      "next_action": "Source-audit remaining malformed object/linker references, FPropertyTag array/struct/size consumption and applicable v432 version gates; run one complete acceptance after actual fixes. Reuse 4/4 malformed property outcomes, 113/113 native original loaded values, 43/43 real StateFrame checks. Never replay previous positives merely for fingerprint.",
       "new_native_tests_executed": 0,
-      "new_test_runs_executed": 2
+      "new_test_runs_executed": 3
     },
     "T99:UClass::Serialize": {
       "decision": "BLOCKED",

@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 49,
+    "passed": 49,
+    "errors": [],
+    "method": "T99:UObject::Serialize",
+    "native_tag_error_cases_compared": 4,
+    "native_tag_error_cases_matching": 4,
+    "original_native_loaded_exports_preserved": 33,
+    "all_native_tagged_positive_values_matched": 113,
+    "compiled_oracle_executable_replays": 0,
+    "native_tagged_error_full_method_acceptance": "BLOCKED",
+    "remaining": "other unsupported tag/reference error and source-version branches, full method consumed byte semantics and independent full acceptance"
+}

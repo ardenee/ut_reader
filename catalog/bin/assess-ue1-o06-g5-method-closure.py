@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Compiled v432 UObject::LoadPackage loaded 33 genuine original Entry.unr exports; all 113/113 actually serialized tagged property values match loaded native ExportProperties results including 23 resolved object references, 15 FNames, 14 FPointRegion structs and source-defined CsgOper enums (current SHA-pinned method review 37/37). Earlier 14/19 original native StateFrame instances, 28 native state referents, and three compiled malformed Code offsets -2,0,63 retained from SHA-pinned PASS 43/43. Original Camera five were skipped by compiled selected source context; complete malformed tagged-property, reference/consumption and version family paths plus independent final full review still OPEN.",
-  "next":"Finish genuinely unverified malformed UPropertyTag decoding, invalid object/reference and exact archive consumption/error semantics, plus source-applicable version variants, then independent full method review. Reuse 33 real compiled loads, 113/113 values and 43/43 historical StateFrame proof; do not retest these passing paths.",
-  "blocker":"malformed_tag_reference_error_consumption_and_source_version_variants_plus_review",
+  "reason":"Compiled v432 real UObject loaded 33 genuine Entry.unr exports with all 113/113 serialized tagged property values matching native loaded objects; preserved prior 14 original StateFrames, 28 referents and malformed Code offsets -2/0/63 from SHA-pinned 43/43. Latest compiled v432 four-case malformed FPropertyTag batch now matches production: invalid type zero warn/skip; mismatched known name warn/skip; early NAME_None exact Got16 Expected105; declared Float Tag.Size12 but native SerializeItem reads4. Current 49/49 acceptance PASS, no compiled replay, all prior loaded 113 unchanged. Other source-relevant tag/reference errors/consumed archive/version branches plus independent full closure still OPEN.",
+  "next":"Source-audit remaining malformed object/linker references, FPropertyTag array/struct/size consumption and applicable v432 version gates; run one complete acceptance after actual fixes. Reuse 4/4 malformed property outcomes, 113/113 native original loaded values, 43/43 real StateFrame checks. Never replay previous positives merely for fingerprint.",
+  "blocker":"remaining_native_linker_reference_array_struct_errors_and_source_variant_consumption_plus_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -170,7 +170,7 @@ for name in reg["methods"]:
         tagged_verifier=ROOT/"catalog"/"bin"/tagtest
         assert sha(tagged_log)==tagged["output_sha256"]
         assert sha(tagged_verifier)==tagged["test_sha256"]
-        assert tagged["source_sha256"]==reconciliation["current_source_sha256"]
+        assert tagged["source_sha256"]==reconciliation["previous_source_before_native_tag_error_change"]
         t=read(tagged_log)
         assert t["ok"] and t["checks"]==37 and t["passed"]==37
         assert t["genuine_original_native_loaded_exports"]==33
@@ -179,9 +179,32 @@ for name in reg["methods"]:
         assert t["compiled_native_executable_replays"]==0
         assert t["independent_full_method_acceptance"]=="BLOCKED"
         assert reconciliation["source_region_pointregion_exact_codec_only"]
+        # Latest source-v432 change is pinned to both modified readers
+        # plus a REAL new compiled four-negative-case corpus. Do not replay
+        # the 37/37 positive test or 43/43 StateFrame test.
+        latest_test="verify-ue1-o06-g5-uobject-tag-error-consolidated.php"
+        recent=next((item for item in reversed(events)
+            if item.get("test")==latest_test and item.get("state")=="PASS"),None)
+        assert recent is not None,"Missing newest compiled native PropertyTag acceptance"
+        latest_log=ROOT/recent["log"].replace("\\","/")
+        assert sha(latest_log)==recent["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/latest_test)==recent["test_sha256"]
+        assert recent["source_sha256"]==reconciliation["current_source_sha256"]
+        latest_result=read(latest_log)
+        assert latest_result["ok"] and latest_result["checks"]==49
+        assert latest_result["passed"]==49
+        assert latest_result["native_tag_error_cases_compared"]==4
+        assert latest_result["native_tag_error_cases_matching"]==4
+        assert latest_result["all_native_tagged_positive_values_matched"]==113
+        assert latest_result["original_native_loaded_exports_preserved"]==33
+        assert latest_result["compiled_oracle_executable_replays"]==0
+        assert latest_result["native_tagged_error_full_method_acceptance"]=="BLOCKED"
+        assert reconciliation["source_native_tag_error_change_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
+        old["compiled_native_malformed_tag_cases_valid"]=4
+        old["compiled_native_malformed_tag_outcomes_current_source"]=True
         old["compiled_genuine_original_exports_compared"]=33
         old["compiled_original_14_StateFrames_prior_verified"]=True
         gates["current_acceptance_tests"]="VERIFIED"
@@ -195,7 +218,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
-        else "current_full_method_review_37_checks_with_113_native_values_plus_prior_43_checks" if name=="T99:UObject::Serialize"
+        else "latest_49_native_malformed_tag_and_113_loaded_native_values_pass_plus_old_43_StateFrame" if name=="T99:UObject::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -206,7 +229,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":2 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":3 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -215,7 +238,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":5,"new_test_runs":4,
+ "new_oracle_runs":6,"new_test_runs":5,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

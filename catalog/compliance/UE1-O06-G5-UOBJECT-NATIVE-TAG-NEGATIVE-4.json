@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "source_profile": "ut99-v432",
+  "classification": "COMPILED_v432_NATIVE_TAGGED_PROPERTY_ERROR_NEGATIVE_BATCH_AND_UNCHANGED_POSITIVE_113",
+  "original": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Entry.unr",
+    "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c"
+  },
+  "CoreDLL": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "launcher": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-LoadPackage-TaggedValues.exe",
+    "sha256": "0e98e445a7d7fd72fcce6f02fd26050a8f136cbeb68e93806292b30a3115ef8a"
+  },
+  "compiled_error_batch": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-property-error-batch.json",
+    "sha256": "2f3ea8519a8765796067041ae4e743af164a2be231ef6a5f63cb5d2657cbc371"
+  },
+  "source_AActorSuperOnly": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Engine/Src/UnActor.cpp",
+    "sha256": "013884e10a448b9d97b86b5e0e614f14601a4c4f7653a85a688f61d1c34b3e48"
+  },
+  "cases": [
+    {
+      "name": "invalid_type_zero",
+      "position": 1650,
+      "original_byte": 36,
+      "mutated_byte": 32,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-property-invalid_type_zero.txt",
+        "sha256": "3cebe579980ff72e9c715d064c27467c1d7ece0e94e2e8fa1a95971c4a0232eb"
+      },
+      "expected": "native_load_pass_skip",
+      "expected_original_tags": 15,
+      "expected_first_name": "TimeSeconds",
+      "expected_first_policy": "native_warning_skip_declared_tag_bytes",
+      "expected_kind": "epic_skipped_declared_tag_bytes",
+      "expected_consumed_bytes": 4
+    },
+    {
+      "name": "known_unknown_property_name",
+      "position": 1649,
+      "original_byte": 47,
+      "mutated_byte": 44,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-property-known_unknown_property_name.txt",
+        "sha256": "113413dae7be0546a20ee4e5e427dbd3d7131d69f867b68179e9efd8efea3bcd"
+      },
+      "expected": "native_load_pass_skip",
+      "expected_original_tags": 15,
+      "expected_first_name": "ZonePlayerEvent",
+      "expected_first_policy": "native_warning_skip_declared_tag_bytes",
+      "expected_kind": "epic_skipped_declared_tag_bytes",
+      "expected_consumed_bytes": 4
+    },
+    {
+      "name": "early_name_none_terminator",
+      "position": 1649,
+      "original_byte": 47,
+      "mutated_byte": 0,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-property-early_name_none_terminator.txt",
+        "sha256": "3947fbe14ce4a8a98377b198cc92e84dd41bffed58a82c962a7a6fc0511cb25a"
+      },
+      "expected": "native_serial_size_mismatch",
+      "error": "LevelInfo Entry.LevelInfo0: Serial size mismatch: Got 16, Expected 105"
+    },
+    {
+      "name": "declared_float_size12",
+      "position": 1650,
+      "original_byte": 36,
+      "mutated_byte": 52,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-property-declared_float_size12.txt",
+        "sha256": "8abdbc8bbc42e8fd2d3d07260d8e46c00b770fade762248ff6c6395b21c91e4b"
+      },
+      "expected": "native_load_pass_float4",
+      "expected_original_tags": 15,
+      "expected_first_name": "TimeSeconds",
+      "expected_first_policy": "native_source_property_SerializeItem",
+      "expected_kind": "float32",
+      "expected_tag_size": 12,
+      "expected_consumed_bytes": 4,
+      "expected_loaded_float": 17.008888
+    }
+  ],
+  "old_native_tagged_manifest": "UE1-O06-G5-UOBJECT-NATIVE-TAGGED-113.json",
+  "old_native_stateframe_proof": "20261024T163857793Z-e7641b1e",
+  "scope_limits": [
+    "This batch tested FOUR mutations of the SAME original v68 LevelInfo0 export with all other archive bytes identical, and each fixture restored after execution. It does NOT cover every FPropertyTag type, all ref/error cases and all compiled branches.",
+    "Compiled v432 UPropertyTag source behavior: invalid tag type and known invalid class property are warned/skipped using declared Tag.Size; known valid FloatProperty reads four bytes despite mismatched tag size; early NAME_None yields exact compiled object SerialSize error.",
+    "Source-driven actor-only serial-size condition requires a fully resolved Engine.Actor ancestry. Other Unreal or licensee game native class methods are not assumed to have zero tail bytes.",
+    "One current-source consolidated full acceptance can recheck four negative cases against immutable compiled logs and compare original 113 positives using stored real native engine output. This is not full method closure."
+  ],
+  "full_method_accepted": false
+}

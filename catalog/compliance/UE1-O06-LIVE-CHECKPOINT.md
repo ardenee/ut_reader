@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uobject-loaded-tagged-acceptance`
-- **Stage:** compiled-native-33-genuine-original-loaded-UObject-exports-all-113-tags-value-ref-pass37-BLOCKED
-- **Last completed action:** Captured REAL compiled UT99 v432 UObject::LoadPackage and UObject::ExportProperties loaded objects with no Epic modifications: 33 original Entry.unr v68 objects; all 113 serialized original tagged values matched native memory exactly (23 object refs with path identity, 15 FNames, 14 source-defined FPointRegion with Zone/Leaf/ZoneNumber, vectors, scales, rotations, strings, 9 BYTE including CsgOper source enums). DEV source now decodes 14 FPointRegion instead of opaque, Source Git 96713018 branch-specific exact SHA equivalence maintained. One method acceptance verifier current production parser against saved native output passed 37/37 journal 20261024T181255469Z-a501b037; prior 43/43 StateFrame-native and 3 malformed Code errors reused hash pinned only, not executed. Two initial BOM parser FAILs retained and resolved in test harness. No compiled engine reruns by acceptance review; new oracle originally captured once. Strict FULL still 0; eight-method batch 0 FULL 0 FAILED 8 BLOCKED because malformed property/tag/reference and precise byte/error outcomes, source version variants, and final independent review remain open. Original Entry archive unchanged; PRD untouched.
-- **Resume at:** Continue only on outstanding T99 UObject::Serialize full acceptance: source-defined malformed FPropertyTag/invalid reference handling and exact native archive byte cursor/error semantics, version-applicable source branches, final independent closure. DO NOT rerun 113/113 saved native property value comparisons, 43/43 StateFrame test, 14/19 frame native attempts or unrelated serializers. Retain C:\Temp NVMe oracle SHA manifest and append-only O06 journals. Commit and push after reconciliation; PRD requires coordinated reader dependency deployment.
-- **Active changed at:** 2026-10-24T18:18:21+00:00
-- **Latest DEV test states:** PASS 126; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-uobject-tag-error-consolidated`
+- **Stage:** four-real-compiled-v432-property-tag-error-outcomes-fixed-PASS49-full-method-BLOCKED
+- **Last completed action:** Fixed four genuine compiled v432 UObject::Serialize tagged-property cases using original genuine Entry.unr one-byte transient mutation and compiled Core.dll native oracle. Type0 warns/skips4; known wrong property name warns/skips4; premature NAME_None yields original LevelInfo Entry.LevelInfo0 Serial size mismatch Got16 Expected105; known FloatProperty whose tag declares Size12 actually reads4 bytes, original value 17.008888. New source-linked actual UClass property declaration import/ancestor resolver and bounded native warning skip in ClassDefaultSchemaReader/TaggedPropertyReader, source-scoped UT99 v432 only. ONE compiled native four-case batch captured once, no replays; one NEW consolidated PHP method acceptance PASS49/49 (20261024T183914268Z-5110d87c), all 113/113 genuine original loaded tagged values retained, previous 37/37 and 43/43 prior proofs reused SHA only. Two-file exact source SHA substitution to original 36bae778 source fingerprint plus current PASS49; six native loaded slices still provenance valid. T99 UObject remains BLOCKED on other malformed tag/ref/array/struct native byte-consumption and selected source variants; 0 FULL 0 FAILED 8 BLOCKED. DEV original v68 Entry archive restored, PRD untouched.
+- **Resume at:** Finish T99 UObject source-applicable invalid package/FName reference, Array/Struct property-tag error consumed-byte and version-gated branches in next meaningful consolidated compiled native comparison; do NOT repeat 4-case native outcome, 49/49, 113/113 loaded values, 43/43 StateFrames or old class/Font tests. For method FULL require all seven criteria and independently signed hash-pinned closure; never give false acceptance. Keep all tests and compiles C:\Temp NVMe; commit and push before next runs.
+- **Active changed at:** 2026-10-24T18:46:46+00:00
+- **Latest DEV test states:** PASS 127; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T18:39:15.7905850Z | verify-ue1-o06-g5-uobject-tag-error-consolidated.php | PASS | 1107 | catalog\compliance\evidence\o06\20261024T183914268Z-5110d87c-DEV-verify-ue1-o06-g5-uobject-tag-error-consolidated.php.txt |
+| 2026-10-24T18:39:14.2765825Z | verify-ue1-o06-g5-uobject-tag-error-consolidated.php | STARTED |  | catalog\compliance\evidence\o06\20261024T183914268Z-5110d87c-DEV-verify-ue1-o06-g5-uobject-tag-error-consolidated.php.txt |
 | 2026-10-24T18:12:56.3637135Z | verify-ue1-o06-g5-uobject-tagged-native-acceptance.php | PASS | 489 | catalog\compliance\evidence\o06\20261024T181255469Z-a501b037-DEV-verify-ue1-o06-g5-uobject-tagged-native-acceptance.php.txt |
 | 2026-10-24T18:12:55.4767439Z | verify-ue1-o06-g5-uobject-tagged-native-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261024T181255469Z-a501b037-DEV-verify-ue1-o06-g5-uobject-tagged-native-acceptance.php.txt |
 | 2026-10-24T18:12:16.8605669Z | verify-ue1-o06-g5-uobject-tagged-native-acceptance.php | FAIL | 610 | catalog\compliance\evidence\o06\20261024T181215840Z-5a622000-DEV-verify-ue1-o06-g5-uobject-tagged-native-acceptance.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T13:55:16.2012073Z | verify-ue1-o06-g5-uclass-inherited-native-88.php | STARTED |  | catalog\compliance\evidence\o06\20261024T135516193Z-60662b9c-DEV-verify-ue1-o06-g5-uclass-inherited-native-88.php.txt |
 | 2026-10-24T13:40:29.5703892Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | PASS | 1121 | catalog\compliance\evidence\o06\20261024T134028040Z-eeac5ddd-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
 | 2026-10-24T13:40:28.0474184Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | STARTED |  | catalog\compliance\evidence\o06\20261024T134028040Z-eeac5ddd-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
-| 2026-10-24T13:40:25.5693888Z | verify-ue1-o06-g5-uclass-all-native-nested-memory.php | PASS | 1079 | catalog\compliance\evidence\o06\20261024T134024084Z-52991fa8-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt |
-| 2026-10-24T13:40:24.0914166Z | verify-ue1-o06-g5-uclass-all-native-nested-memory.php | STARTED |  | catalog\compliance\evidence\o06\20261024T134024084Z-52991fa8-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt |
 
 ## Recovery procedure
 

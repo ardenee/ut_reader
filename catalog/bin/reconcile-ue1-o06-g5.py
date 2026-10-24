@@ -73,6 +73,64 @@ def subst_sig(s,path,new_hash,old_hash):
     return s.replace(before,str(path)+":"+old_hash,1)
 def sha_blob(value):
     return hashlib.sha256(value.encode("utf-8")).hexdigest().upper()
+# Latest 2026-10-24 native tagged-error correction modified exactly TWO
+# source readers. Reconstruct every old source input to the previously pinned
+# 36bae778 fingerprint. The original 113/113 genuine-native values and four
+# compiled malformed property outcomes were checked against the CURRENT
+# sources by the one new SHA-pinned PASS 49/49 acceptance journal.
+new_tag_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicTaggedPropertyReader.php"
+new_schema_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicClassDefaultSchemaReader.php"
+old_latest_tag=committed("36bae778",new_tag_file)
+old_latest_schema=committed("36bae778",new_schema_file)
+current_tag=new_tag_file.read_text(encoding="utf-8-sig")
+current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+previous_latest_source="452e64cfe46f9df04a12680b7377ec84d9c49e398eb58ff96de86816a364eaa3"
+sig_before_latest=subst_sig(
+    subst_sig(signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(old_latest_tag)),
+    new_schema_file,digest(new_schema_file).upper(),sha_blob(old_latest_schema))
+# The added declaration resolver is scoped: the old class-default inspector
+# remains byte-for-byte unchanged after its original doc/inspect anchor.
+schema_anchor="    /**\n     * @param array<string,mixed> $classRecord"
+method_start="    /**\n     * Resolve an ordinary UObject instance"
+schema_scope=(
+    old_latest_schema.count(schema_anchor)==1
+    and current_schema.count(schema_anchor)==1
+    and current_schema.count(method_start)==1
+    and current_schema[:current_schema.index(method_start)]
+        + current_schema[current_schema.index(schema_anchor):]
+       == old_latest_schema
+    and "actor_super_only_archive" in current_schema
+)
+tag_scope=(
+    current_tag.count("native_warning_skip_declared_tag_bytes")==1
+    and "resolveObjectPropertyDeclarations(" in current_tag
+    and "$loadSize=4;" in current_tag
+    and "$position!==$size" in current_tag
+    and "fpointregion_zone_leaf_number" in current_tag
+)
+# The *latest* exact current-source acceptance event is required to reuse
+# old native positive results; simple hash-substitution alone is insufficient.
+new_acceptance="verify-ue1-o06-g5-uobject-tag-error-consolidated.php"
+proof=latest.get(new_acceptance)
+proof_log=ROOT/proof["log"].replace("\\","/") if proof and proof.get("log") else None
+try:
+    proof_values=read(proof_log) if proof_log and proof_log.exists() else {}
+except Exception:
+    proof_values={}
+latest_source_scope=(
+    hashlib.sha256(sig_before_latest.encode("utf-8")).hexdigest()==previous_latest_source
+    and schema_scope and tag_scope
+    and proof is not None and proof.get("state")=="PASS"
+    and proof.get("source_sha256")==current
+    and proof.get("output_sha256")==digest(proof_log)
+    and proof.get("test_sha256")==digest(ROOT/"catalog"/"bin"/new_acceptance)
+    and proof_values.get("ok") is True
+    and proof_values.get("checks")==49
+    and proof_values.get("passed")==49
+    and proof_values.get("native_tag_error_cases_matching")==4
+    and proof_values.get("all_native_tagged_positive_values_matched")==113
+    and proof_values.get("compiled_oracle_executable_replays")==0
+)
 # The new UObject change is precisely scoped to the execution-frame
 # offset check for non-INDEX_NONE values, and to passing the source file and
 # export index into that helper. Preserve already SHA-sealed old POSITIVE
@@ -82,7 +140,7 @@ def sha_blob(value):
 # existing StructProperty branch, leaving other codecs byte-identical.
 region_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicTaggedPropertyReader.php"
 before_region=committed("96713018",region_file)
-after_region=region_file.read_text(encoding="utf-8-sig")
+after_region=old_latest_tag
 region_start="                    }elseif($structName==='pointregion'"
 region_end="                    }elseif($structName==='adrop'"
 if after_region.count(region_start)==1 and after_region.count(region_end)==1:
@@ -94,8 +152,8 @@ else:
     region_code_scoped=False
 previous_full_source="bd8f3d5b028951d08b0548b43586fe98cae55f6b709edc142369f2bd1c92a3a7"
 sig_before_region=subst_sig(
-    signature,region_file,digest(region_file).upper(),sha_blob(before_region))
-region_scope=(region_code_scoped
+    sig_before_latest,region_file,sha_blob(old_latest_tag),sha_blob(before_region))
+region_scope=(latest_source_scope and region_code_scoped
     and hashlib.sha256(sig_before_region.encode("utf-8")).hexdigest()==previous_full_source
     and "FPointRegion" in region_insertion
     and "$family===CatalogUE1ClassicSourceFamily::UT99_V432" in region_insertion)
@@ -195,6 +253,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (latest_source_scope and f==previous_latest_source)
         or (region_scope and f==previous_full_source)
         or (uobject_scope and f==uobject_previous_source_sha256)
         or (uobject_scope and font_scope and f==middle_fingerprint)
@@ -365,6 +424,9 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_tag_error_change_scoped":latest_source_scope,
+    "previous_source_before_native_tag_error_change":previous_latest_source if latest_source_scope else None,
+    "source_native_tag_decl_resolver_scoped":schema_scope,
     "source_region_pointregion_exact_codec_only":region_scope,
     "previous_uobject_source_before_pointregion":previous_full_source if region_scope else None,
     "source_uobject_positive_branch_equivalence":uobject_scope,

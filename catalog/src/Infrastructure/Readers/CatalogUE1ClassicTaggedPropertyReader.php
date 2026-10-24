@@ -33,7 +33,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
     private static function parseTags(
         callable $read, callable $u8, callable $name, callable $compact,
         int $version, int $offset, int &$position, int $archiveLimit,
-        ?string $sourceFamily=null
+        ?string $sourceFamily=null,?array $sourceDeclarations=null
     ): array {
             $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
             $tags=[];$end=false;
@@ -45,7 +45,14 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 $property=$name();
                 if(strcasecmp($property['text'],'None')===0){$end=true;break;}
                 $info=$u8();$type=$info&15;$kind=self::TYPE_NAMES[$type]??'UnknownProperty';
-                if($type===0){throw new RuntimeException('UE1 property tag has invalid type zero');}
+                // Epic reads arbitrary FPropertyTag.Type values and only
+                // later checks against the resolved actual UProperty ID.
+                // Invalid type zero is a nonfatal skip+warning, not an
+                // archive corruption exception, in the compiled v432 engine.
+                if($type===0
+                    &&$family!==CatalogUE1ClassicSourceFamily::UT99_V432){
+                    throw new RuntimeException('UE1 property tag has invalid type zero');
+                }
                 $struct=$type===10?$name():null;
                 $mode=$info&0x70;
                 $tagSize=match($mode){
@@ -65,6 +72,45 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     }
                 }
                 $dataOffset=$offset+$position;
+                $declaration=$sourceDeclarations!==null
+                    ?($sourceDeclarations[strtolower($property['text'])]??null)
+                    :null;
+                $loadPolicy='archive_bytes_only_schema_not_linked';
+                $loadSize=$tagSize;
+                if($sourceDeclarations!==null
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
+                    $expectedType=strtolower((string)($declaration['kind']??''));
+                    $actualType=strtolower($kind);
+                    $matching=$declaration!==null
+                        &&($actualType===$expectedType
+                            ||($actualType==='objectproperty'
+                                &&$expectedType==='classproperty'))
+                        &&$arrayIndex>=0
+                        &&$arrayIndex<(int)($declaration['array_dim']??0)
+                        &&($type!==10
+                            ||strcasecmp(
+                                (string)($struct['text']??''),
+                                (string)($declaration['struct_name']??'')
+                            )===0)
+                        &&(((int)($declaration['property_flags']??0))&0x00003000)===0;
+                    if(!$matching){
+                        // UStruct::SerializeTaggedProperties: unknown name,
+                        // type mismatch, invalid array index or incompatible
+                        // struct -> warn then skip exactly Tag.Size bytes.
+                        $loadPolicy='native_warning_skip_declared_tag_bytes';
+                    }else{
+                        $loadPolicy='native_source_property_SerializeItem';
+                        // UFloatProperty::SerializeItem always performs
+                        // Ar<<FLOAT (four bytes). Tag.Size is used only in
+                        // the warning+skip path, not valid property loading.
+                        if($type===4&&$expectedType==='floatproperty'){
+                            $loadSize=4;
+                        }
+                    }
+                }elseif($type===0
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
+                    $loadPolicy='native_warning_skip_invalid_tag_type';
+                }
                 $legacyRef=null;
                 // Genuine UE1 v35 package evidence (DProj*, Palette tag):
                 // the original tag declares a native 4-byte UObject slot,
@@ -75,14 +121,20 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $legacyRef=$compact();
                     $raw='';
                 } else {
-                    $raw=$type===3?'':$read($tagSize);
+                    $raw=$type===3?'':$read($loadSize);
                 }
                 $value=null;$valueKind='opaque';
-                if($legacyRef!==null){$value=$legacyRef;$valueKind='v35_compact_object_reference';}
+                if(str_starts_with($loadPolicy,'native_warning_skip')){
+                    $valueKind='epic_skipped_declared_tag_bytes';
+                }
+                if(str_starts_with($loadPolicy,'native_warning_skip')){
+                    // Keep the raw archived tag and its SHA, but never
+                    // present skipped bytes as a native loaded value.
+                }elseif($legacyRef!==null){$value=$legacyRef;$valueKind='v35_compact_object_reference';}
                 elseif($type===3){$value=$arrayPresent;$valueKind='boolean_tag_bit';}
                 elseif($type===1&&$tagSize===1){$value=ord($raw);$valueKind='byte';}
                 elseif($type===2&&$tagSize===4){$v=unpack('V',$raw)[1];$value=$v>=0x80000000?$v-0x100000000:$v;$valueKind='int32';}
-                elseif($type===4&&$tagSize===4){$value=unpack('g',$raw)[1];$valueKind='float32';}
+                elseif($type===4&&strlen($raw)===4){$value=unpack('g',$raw)[1];$valueKind='float32';}
                 elseif($type===7){
                     // Unreal v1.200 FArchive::String stops at NUL OR
                     // StringSize-1; in the latter case it writes a NUL
@@ -192,7 +244,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     'bool_value'=>$type===3?$arrayPresent:null,
                     'struct_name'=>$struct,'serialized_size'=>$tagSize,
                     'on_disk_value_bytes'=>$offset+$position-$dataOffset,
-                    'tag_offset'=>$offset+$start,'value_offset'=>$dataOffset,'value_kind'=>$valueKind,
+                    'tag_offset'=>$offset+$start,'value_offset'=>$dataOffset,
+                    'native_load_policy'=>$loadPolicy,'value_kind'=>$valueKind,
                     'value'=>$value,'value_sha256'=>$raw!==''?hash('sha256',$raw):null];
             }
             if(!$end){throw new RuntimeException('UE1 property tags have no NAME_None terminator within archive bounds');}
@@ -335,7 +388,39 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 },
                 $position,$offset,$family,$path,$exportIndex
             );
-            $tags=self::parseTags($read,$u8,$name,$compact,$version,$offset,$position,$size,$family);
+            $schema=null;
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432){
+                $resolved=CatalogUE1ClassicClassDefaultSchemaReader::
+                    resolveObjectPropertyDeclarations(
+                        $path,$package,(int)$export['classIndex'],$family);
+                if(($resolved['status']??'')==='resolved'){
+                    $schema=$resolved['declarations'];
+                }
+            }
+            $tags=self::parseTags(
+                $read,$u8,$name,$compact,$version,$offset,$position,$size,
+                $family,$schema);
+            // The original v432 Engine native AActor::Serialize calls
+            // Super::Serialize and archives NO trailing actor data.
+            // This includes every fully resolved Engine.Actor subclass
+            // whose native class does not override Serialize. Epic's
+            // ULinkerLoad::Preload therefore fails if NAME_None appears
+            // before the declared end of such an export. Keep other
+            // UObject/native-source families in their own dispatch path.
+            if(($resolved['actor_super_only_archive']??false)
+                &&$position!==$size){
+                $classRef=(int)$export['classIndex'];
+                $classRow=$classRef<0
+                    ?($package->getImports()[-$classRef-1]??null)
+                    :($classRef>0?($package->getExports()[$classRef-1]??null):null);
+                $className=is_array($classRow)
+                    ?(string)$classRow['objectNameText']:'Object';
+                throw new RuntimeException(
+                    $className.' '.pathinfo($path,PATHINFO_FILENAME)
+                    .'.'.(string)$export['objectNameText']
+                    .': Serial size mismatch: Got '.$position
+                    .', Expected '.$size);
+            }
             $tagEnd=$offset+$position;
             $legacyState=null;$legacyGroup=null;
             if($epic&&$version<57){$legacyState=$name();}
