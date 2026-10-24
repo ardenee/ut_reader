@@ -1,0 +1,5 @@
+﻿
+Fatal error: Uncaught TypeError: count(): Argument #1 ($value) must be of type Countable|array, int given in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-camera-source-reachability-decision.php:99
+Stack trace:
+#0 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-o06-g5-camera-source-reachability-decision.php on line 99

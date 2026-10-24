@@ -1,0 +1,17 @@
+﻿{
+    "ok": true,
+    "checks": 69,
+    "passed": 69,
+    "failures": [],
+    "C98_original_v54_Camera_skipped": 5,
+    "UT99_original_v61_Camera_skipped": 4,
+    "UT99_original_v68_Camera_skipped": 5,
+    "genuine_source_excluded_Camera_exports": 14,
+    "unrelated_original_exports_not_falsely_skipped": 15,
+    "native_compiled_v432_4_plus_5_Camera_exclusions_sha_reused": 9,
+    "camera_native_CreateExport_criterion": "CLOSED_SOURCE_DEFINED_EXCLUSION",
+    "Camera_serialized_bytes_still_inspectable": true,
+    "v227_native_Camera_unknown": true,
+    "compiled_native_oracle_replays": 0,
+    "full_method_decision": "BLOCKED"
+}

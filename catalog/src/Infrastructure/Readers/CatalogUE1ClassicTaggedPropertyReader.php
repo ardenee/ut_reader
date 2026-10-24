@@ -595,6 +595,21 @@ final class CatalogUE1ClassicTaggedPropertyReader
         $family=CatalogUE1ClassicSourceFamily::selectFromHeader(
             $package->getHeader(),$sourceFamily);
         $epic=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1;
+        // The source loader is authoritative for whether a serialized
+        // export is ever instantiated. Epic v1.200 UnLinker.h::CreateExport
+        // excludes class Camera when Ver()<57; UT99 inherited v400
+        // UnLinker.h explicitly returns NULL for Camera at all versions,
+        // corroborated by real v432 LoadPackage on original v61/v68 maps.
+        // A separate on-disk archive preview is still useful; it must
+        // never be mislabeled as a successfully native-loaded Camera.
+        $classIndex=(int)$export['classIndex'];
+        $className=$classIndex<0
+            ?(string)($package->getImports()[-$classIndex-1]['objectNameText']??'')
+            :($classIndex>0
+                ?(string)($all[$classIndex-1]['objectNameText']??''):'Class');
+        $cameraLoaderExcluded=strcasecmp($className,'Camera')===0
+            &&($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                ||($epic&&$version<57));
         $names=$package->getNames();
         $len=(int)filesize($path);
         if ($offset<0 || $size>$len-$offset) { throw new RuntimeException('UE1 payload outside physical file'); }
@@ -720,8 +735,20 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 'legacy_state_name_after_load'=>$loadedState,
                 'legacy_group_name'=>$legacyGroup,
                 'loaded_object_flags_after_uobject_serialize'=>
-                    $family===CatalogUE1ClassicSourceFamily::UNREAL_V227 ? null : ((int)$export['objectFlags']|0x40000000),
-                'source_sets_rf_debug_serialize'=>$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227,
+                    $cameraLoaderExcluded||$family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                        ?null:((int)$export['objectFlags']|0x40000000),
+                'source_sets_rf_debug_serialize'=>
+                    !$cameraLoaderExcluded&&$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227,
+                // Not a heuristic class-name rejection: these are the
+                // exact native ULinkerLoad::CreateExport source branches.
+                // For other classes this field does NOT assert they were
+                // loaded: context flags, imports and caller still matter.
+                'native_loader_class_excluded_by_epic_source'=>$cameraLoaderExcluded,
+                'native_loader_UObject_serialize_invoked'=>$cameraLoaderExcluded?false:null,
+                'native_loader_source_branch'=>$cameraLoaderExcluded
+                    ?($epic?'v1200_Camera_skipped_before_version57'
+                            :'UT99_v400_inherited_Camera_CreateExport_returns_NULL')
+                    :'not_determined_from_class_only',
                 'native_tail_bytes'=>$size-$position,
                 'selected_source_family'=>$family,
                 'schema_verified'=>false]);

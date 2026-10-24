@@ -84,6 +84,41 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# Camera is an intentional source-defined ULinkerLoad::CreateExport
+# exclusion (v1200 Ver<57, UT99 inherited v400 all versions). A real
+# compiled v432 native loader already omitted the four v61 and five
+# v68 Camera exports, so no repeat engine run is justified.
+before_camera_tag=committed("06ae43e2",new_tag_file)
+previous_camera_source="6dba20b269aa8efc12f97f57ffca9ddd293a06e1a5d2f6b78e285282860929d8"
+sig_before_camera=subst_sig(
+    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_camera_tag))
+camera_test="verify-ue1-o06-g5-camera-source-reachability-decision.php"
+camera_event=latest.get(camera_test)
+camera_log=ROOT/camera_event["log"] if camera_event and camera_event.get("log") else None
+try:
+    camera_result=read(camera_log) if camera_log and camera_log.exists() else {}
+except Exception:
+    camera_result={}
+camera_scope=(
+    hashlib.sha256(sig_before_camera.encode("utf-8")).hexdigest()==previous_camera_source
+    and "native_loader_class_excluded_by_epic_source" in current_tag
+    and "native_loader_UObject_serialize_invoked" in current_tag
+    and "v1200_Camera_skipped_before_version57" in current_tag
+    and "UT99_v400_inherited_Camera_CreateExport_returns_NULL" in current_tag
+    and camera_event is not None and camera_event.get("state")=="PASS"
+    and camera_event.get("source_sha256")==current
+    and camera_event.get("output_sha256")==digest(camera_log)
+    and camera_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/camera_test)
+    and camera_result.get("ok") is True
+    and camera_result.get("checks")==69
+    and camera_result.get("passed")==69
+    and camera_result.get("genuine_source_excluded_Camera_exports")==14
+    and camera_result.get("unrelated_original_exports_not_falsely_skipped")==15
+    and camera_result.get("native_compiled_v432_4_plus_5_Camera_exclusions_sha_reused")==9
+    and camera_result.get("camera_native_CreateExport_criterion")=="CLOSED_SOURCE_DEFINED_EXCLUSION"
+    and camera_result.get("compiled_native_oracle_replays")==0
+    and camera_result.get("full_method_decision")=="BLOCKED"
+)
 # Genuine original Unreal Gold v54 UModel native archives prove the
 # Epic v1.200 FSphere : FVector serializes only twelve bytes. The
 # v1200-only Primitive reader change corrects 299 real UModel payloads
@@ -92,7 +127,7 @@ primitive_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1Classi
 before_primitive=committed("7fea68cb",primitive_file)
 previous_primitive_source="c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f"
 sig_before_primitive=subst_sig(
-    signature,primitive_file,digest(primitive_file).upper(),sha_blob(before_primitive))
+    sig_before_camera,primitive_file,digest(primitive_file).upper(),sha_blob(before_primitive))
 primitive_test="verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php"
 primitive_ev=latest.get(primitive_test)
 primitive_log=ROOT/primitive_ev["log"] if primitive_ev and primitive_ev.get("log") else None
@@ -101,11 +136,12 @@ try:
 except Exception:
     primitive_result={}
 primitive_scope=(
-    hashlib.sha256(sig_before_primitive.encode("utf-8")).hexdigest()==previous_primitive_source
+    camera_scope
+    and hashlib.sha256(sig_before_primitive.encode("utf-8")).hexdigest()==previous_primitive_source
     and "FSphere : FVector has" in primitive_file.read_text(encoding="utf-8-sig")
     and "elseif(!$original&&$version>61)" in primitive_file.read_text(encoding="utf-8-sig")
     and primitive_ev is not None and primitive_ev.get("state")=="PASS"
-    and primitive_ev.get("source_sha256")==current
+    and primitive_ev.get("source_sha256")==previous_camera_source
     and primitive_ev.get("output_sha256")==digest(primitive_log)
     and primitive_ev.get("test_sha256")==digest(ROOT/"catalog"/"bin"/primitive_test)
     and primitive_result.get("ok") is True
@@ -161,7 +197,7 @@ before_v227_flag_tag=committed("eb968b34",new_tag_file)
 before_v227_flag_class=committed("eb968b34",class_meta_file)
 previous_v227_flag_source="8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f"
 sig_before_v227_flag=subst_sig(
-    sig_before_v227_script,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_v227_flag_tag))
+    sig_before_v227_script,new_tag_file,sha_blob(before_camera_tag),sha_blob(before_v227_flag_tag))
 sig_before_v227_flag=subst_sig(
     sig_before_v227_flag,class_meta_file,digest(class_meta_file).upper(),sha_blob(before_v227_flag_class))
 v227_flag_verifier="verify-ue1-o06-g5-uobject-v227-source-flag-decision.php"
@@ -537,6 +573,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (camera_scope and f==previous_camera_source)
         or (primitive_scope and f==previous_primitive_source)
         or (v227_script_scope and f==previous_v227_script_source)
         or (v227_flag_scope and f==previous_v227_flag_source)
@@ -716,6 +753,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_Camera_loader_skip_change_scoped":camera_scope,
+    "previous_source_before_Camera_loader_skip_change":previous_camera_source if camera_scope else None,
     "source_native_genuine_v54_v1200_FSphere_change_scoped":primitive_scope,
     "previous_source_before_v54_v1200_FSphere_change":previous_primitive_source if primitive_scope else None,
     "source_native_genuine_v227_script_opcode_change_scoped":v227_script_scope,

@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "method": "UE1 O06 UObject native Camera reachability decision",
+  "source_rule_v1200": "CreateExport skips saved Camera objects when archive version <57",
+  "source_rule_UT99_inherited_v400": "CreateExport returns NULL for Camera regardless of archive version",
+  "source_rule_UT99_v432_compiled": "original compiled Core.dll observes zero instantiated Camera on two native original maps",
+  "v227_loader_source_available": false,
+  "scope": "Camera native loader creation reachability only; old file bytes remain inspectable and v227 behavior unknown",
+  "source_SHA": {
+    "Epic_Unreal_v1200_Core_UnLinker_CreateExport": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h",
+      "sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f"
+    },
+    "UT99_inherited_v400_Core_UnLinker_CreateExport": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnLinker.h",
+      "sha256": "810b2b4c86482272d00bd0460561f8d09bb8f7e72ef478a67faa1e53cadcd9a9"
+    },
+    "Epic_Unreal_v1200_Core_UnObj": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462"
+    },
+    "UT99_inherited_v400_Core_UnObj": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnObj.cpp",
+      "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+    }
+  },
+  "original_archives_SHA": {
+    "original_PRD_UnrealGold_v54_Map": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\OriginalGold-v54-DMVilla2.unr",
+      "sha256": "c9829b551d13dd10ebe315b808c4a4956554a4d85acaf51b6ff050e879dc2fb2"
+    },
+    "original_PRD_UnrealGold_v61_Map": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v61\\fd0609f727411e4f073fc1e60cc91f49.unr",
+      "sha256": "399057393bb891e832013bda353c686bcc86facc43a5f674db13bb7daaf510a6"
+    },
+    "original_installed_UT99_v68_Entry_Map": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Entry.unr",
+      "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c"
+    }
+  },
+  "original_compiled_oracles_SHA": {
+    "compiled_v432_original_v61_308_of_312": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-UOBJECT-PRD-REAL-V61-COMPILED-OBJECT-308.json",
+      "sha256": "c91394818131ec3e37bc0a74188842a2900a38d36499c1c308a77cbcc0e6ff6f"
+    },
+    "compiled_v432_original_v68_14_of_19_saved_frames": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-MULTIMETHOD-STATEFRAME-V68-NATIVE.json",
+      "sha256": "b99191eb6ffa2252033a8d289f8b59a07beb923f30e2794d76ad400ea79c91d0"
+    }
+  },
+  "original_expected_Camera_source_skips": {
+    "original_PRD_UnrealGold_v54_Map": 5,
+    "original_PRD_UnrealGold_v61_Map": 4,
+    "original_installed_UT99_v68_Entry_Map": 5
+  },
+  "previous_native_v61_Camera_uninstantiated": 4,
+  "previous_native_v68_Camera_uninstantiated": 5,
+  "conclusion": "CLOSED_AS_EPIC_SOURCE_DEFINED_NATIVE_CREATEEXPORT_SKIP",
+  "source_scope_method_full_decision": "BLOCKED",
+  "native_engine_reruns": 0
+}
