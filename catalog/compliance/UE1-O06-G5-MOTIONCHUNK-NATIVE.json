@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "classification": "GENUINE_UNMODIFIED_PRD_UT99_69_COMPILED_V432_MOTIONCHUNK_HEADER_AND_FIRST_TRACK_VALUES",
+  "updated_date": "2026-10-24",
+  "engine": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+  "engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "source_profile": "ut99-v432",
+  "method": "UAnimation::Serialize compiled post archive Engine.dll RVA 0xECF21",
+  "native_struct_layout": "MotionChunk stride 88, root speed XYZ offset0, track time+12, start bone+16, flags+20, BoneIndices TArray +24 (count+28), AnimTracks TArray +36 (count+40), RootTrack AnalogTrack +48 with TArrays for KeyQuat/KeyPos/KeyTime. AnalogTrack stride 40.",
+  "cases": [
+    {
+      "name": "EcoTerror",
+      "original": "0484bd0af82de2031dd5991c13c2648f.u",
+      "package_sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+      "id": 6,
+      "moves": 68,
+      "bones": 47,
+      "tracks": 47,
+      "keys": 10,
+      "log_sha256": "9dc2fe5c1e5b8a3626423e8952b72224b20f060b24ff7bf02be221896071364c",
+      "files": {
+        "allmoves-headers": {
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-allmoves-headers.bin",
+          "sha256": "b1bb4794db596d631c966a943b7b47717b8f1b1612024aa2287b8f76e86395c3"
+        },
+        "move0-indices": {
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-move0-indices.bin",
+          "sha256": "d1c3ff7c2c42747ff51d29e7d3ad7265a414e3cf2f4a6828dcfc4b754ddff495"
+        },
+        "move0-tracks": {
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-move0-tracks.bin",
+          "sha256": "3afd78efe6bb0cf36d0a4c7950e053bf12ae7b1dcc59167f345c45cd5edcfc0b"
+        },
+        "move0-track0-quat": {
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-move0-track0-quat.bin",
+          "sha256": "e190bb08b66d7912b8749e0e5579090c97ccb948d449eda9c1c8ffbcbae4bdc3"
+        },
+        "move0-track0-pos": {
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-move0-track0-pos.bin",
+          "sha256": "d01e3db4bba4a1a6cd2cb9257d44ede3e3910109e4d416acdc01ea501ee54291"
+        },
+        "move0-track0-time": {
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-move0-track0-time.bin",
+          "sha256": "cdbef331239c813b13247d1602cef6bafe3d554530747163d10259662b8e161b"
+        }
+      },
+      "path": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+      "log": "C:/Temp/UnrealDB/O06/g5-native-motion-headers-EcoTerror.log"
+    },
+    {
+      "name": "d00d",
+      "original": "04d58f820f84f91b627d53f237226208.u",
+      "package_sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+      "id": 7,
+      "moves": 2,
+      "bones": 48,
+      "tracks": 48,
+      "keys": 1,
+      "log_sha256": "7f097aa44a6cbb5d517f4e3a6642fc47997db1a47dc2f3ba65ef8f082f5e272b",
+      "files": {
+        "allmoves-headers": {
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-allmoves-headers.bin",
+          "sha256": "6f54c17ba5df842b76be40f1486150a53558f2da7a655fc94df7ea1296615fbe"
+        },
+        "move0-indices": {
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-move0-indices.bin",
+          "sha256": "80fc1615f9fb52112da4a5b41f0221f733d159c4a413f5f31a6d87f9d2f62d56"
+        },
+        "move0-tracks": {
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-move0-tracks.bin",
+          "sha256": "9ce05b4599b9ee257572ab3ddc454abc97d8c964a4157bfe3a61f016a0cd7f39"
+        },
+        "move0-track0-quat": {
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-move0-track0-quat.bin",
+          "sha256": "d61c33f50d0a4b49d71831263031565c33b58d377c70a2d95bec2cc8a4a8ff02"
+        },
+        "move0-track0-pos": {
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-move0-track0-pos.bin",
+          "sha256": "00a407b6b7f8e1330f4e4f99c321402ea99e8e012a2cd2434ccb66de2fea5d20"
+        },
+        "move0-track0-time": {
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-move0-track0-time.bin",
+          "sha256": "df3f619804a92fdb4057192dc43dd748ea778adc52bc498ce80524c014b81119"
+        }
+      },
+      "path": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+      "log": "C:/Temp/UnrealDB/O06/g5-native-motion-headers-d00d.log"
+    }
+  ],
+  "limits": [
+    "70 MotionChunk structs: exact source scalar headers and all bone index/track count scalars from native; first motion chunk entire BoneIndices and 47/48 AnalogTrack headers compared.",
+    "First track of first chunk full KeyQuat, KeyPos, KeyTime arrays source/native byte-identical. All other nested key buffers need independent native array dumps; no full UAnimation method acceptance.",
+    "Original PRD archive only read-only; compiled original v432 DLL not modified; CDB engine method after real Serialize."
+  ]
+}

@@ -3,17 +3,19 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g5-v432-native-resumable-batch`
-- **Stage:** two-native-contracts-2362-checks-pass-resume-verified
-- **Last completed action:** Batch run produced 2 separate SHA-journaled focused PASS entries on DEV: genuine 237 complete native FMeshBone record semantics 15,168 live bytes, 1787/1787 checks; real 70 FMeshAnimSeq and 22 nested FMeshAnimNotify time/function records, 575/575 checks; 2362/2362 new checks. Second invocation SKIPPED 2/2 UNCHANGED_PASS (zero test replays), C:\Temp\UnrealDB\O06 atomic batch state ALL PASS; SHA-pinned original native engine, original 3 package archives, 5 native RefSkeleton dumps, 2 native AnimSeqs dumps and compiled debugger logs. No source reader changes or PRD writes.
-- **Resume at:** G5 still OPEN: next independently verify UAnimation MotionChunk Moves and nested AnimTracks, USkeletalMesh inherited ULodMesh, malformed native error byte paths; SFCharacter4 deps unresolved; 256 MAPPED, 38 EXCLUDED, 3 native loaded methods, 0 FULL G5. Resume using catalog/bin/run-ue1-o06-g5-resumable-batch.ps1 without -Force; existing matching PASS auto-skips. Commit and push batch proof only.
-- **Active changed at:** 2026-10-24T07:51:29+00:00
-- **Latest DEV test states:** PASS 110; FAIL 0; STARTED 0
+- **Stage:** three-compiled-native-contracts-pass-598-new-checks
+- **Last completed action:** Authentic v69 EcoTerror.u and d00d.u loaded by actual v432 Engine.dll: 70 native MotionChunk headers scalar/root/array counts, 95 first-Move full AnalogTrack headers and complete first bone index and keyquat/keypos/keytime buffers 732 source bytes exactly match; SHA-pinned native dumps and logs, dedicated focused verifier 598/598 PASS 20261024T080958061Z-783e25a3. Resumable runner now 3 contracts; immediate second run showed UNCHANGED_PASS 3/3, zero repeats; 256 MAPPED 38 EXCLUDED; all FULL acceptance still OPEN, production PHP unchanged, PRD read-only.
+- **Resume at:** Next scoped batch only: full nested KeyQuat/KeyPos/KeyTime data for additional AnalogTracks, nested other Moves; inherited ULodMesh; malformed-input native byte/diagnostic differences. Do not rerun the 3 current PASS methods or claim whole-method parity.
+- **Active changed at:** 2026-10-24T08:15:28+00:00
+- **Latest DEV test states:** PASS 111; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T08:09:58.5925749Z | verify-ue1-o06-g5-native-v432-motionchunk-headers.php | PASS | 167 | catalog\compliance\evidence\o06\20261024T080958061Z-783e25a3-DEV-verify-ue1-o06-g5-native-v432-motionchunk-headers.php.txt |
+| 2026-10-24T08:09:58.0685598Z | verify-ue1-o06-g5-native-v432-motionchunk-headers.php | STARTED |  | catalog\compliance\evidence\o06\20261024T080958061Z-783e25a3-DEV-verify-ue1-o06-g5-native-v432-motionchunk-headers.php.txt |
 | 2026-10-24T07:47:56.8126890Z | verify-ue1-o06-g5-native-animseq-notifies-v432.php | PASS | 168 | catalog\compliance\evidence\o06\20261024T074756286Z-b04f9000-DEV-verify-ue1-o06-g5-native-animseq-notifies-v432.php.txt |
 | 2026-10-24T07:47:56.2861356Z | verify-ue1-o06-g5-native-animseq-notifies-v432.php | STARTED |  | catalog\compliance\evidence\o06\20261024T074756286Z-b04f9000-DEV-verify-ue1-o06-g5-native-animseq-notifies-v432.php.txt |
 | 2026-10-24T07:47:54.2478928Z | verify-ue1-o06-g5-native-refbones-v432.php | PASS | 207 | catalog\compliance\evidence\o06\20261024T074753646Z-7d3a4af8-DEV-verify-ue1-o06-g5-native-refbones-v432.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-23T23:04:04.8549659Z | verify-ue1-o06-g5-genuine-v432-skeletal-animation.php | STARTED |  | catalog\compliance\evidence\o06\20261023T230404847Z-a5e0faba-DEV-verify-ue1-o06-g5-genuine-v432-skeletal-animation.php.txt |
 | 2026-10-23T22:41:38.3089216Z | verify-ue1-o06-g5-native-v432-font-loaded-values.php | PASS | 142 | catalog\compliance\evidence\o06\20261023T224137762Z-0af749c6-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt |
 | 2026-10-23T22:41:37.7698862Z | verify-ue1-o06-g5-native-v432-font-loaded-values.php | STARTED |  | catalog\compliance\evidence\o06\20261023T224137762Z-0af749c6-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt |
-| 2026-10-23T22:41:05.1406494Z | verify-ue1-o06-g5-native-v432-font-loaded-values.php | FAIL | 152 | catalog\compliance\evidence\o06\20261023T224104586Z-a3703c73-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt |
-| 2026-10-23T22:41:04.5936503Z | verify-ue1-o06-g5-native-v432-font-loaded-values.php | STARTED |  | catalog\compliance\evidence\o06\20261023T224104586Z-a3703c73-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt |
 
 ## Recovery procedure
 

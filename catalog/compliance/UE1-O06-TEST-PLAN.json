@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-v432-native-motionchunk-headers": {
+      "description": "Genuine v69 EcoTerror and d00d UAnimation under compiled v432: 70 complete MotionChunk scalar/root headers, per-move BoneIndices/AnimTracks counts, 95 first-Move AnalogTrack headers, complete BoneIndices and first-track KeyQuat/Pos/Time buffers against production parser",
+      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-native-v432-motionchunk-headers.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-v432-native-refbones-full-elements": {
       "description": "Unmodified original PRD v69 UT99 table/EcoTerror/d00d: native compiled v432 237 full FMeshBone memory structs/strings, byte-for-byte serialized member values, FName table, excludes uninitialized YSize and Depth",
       "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],

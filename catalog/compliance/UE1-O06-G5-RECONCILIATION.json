@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T07:51:04.308859+00:00",
-  "head": "60fa684a",
-  "previous_runner_head": "60fa684a",
+  "generated_utc": "2026-10-24T08:15:07.984809+00:00",
+  "head": "40bf736a",
+  "previous_runner_head": "40bf736a",
   "previous_source_sha256": "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
   "current_source_sha256": "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
   "fingerprint_changed": false,
@@ -22,7 +22,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 110
+    "PASS": 111
   },
   "branch_totals": {
     "C227": {
@@ -6262,9 +6262,11 @@
       "native_loaded_additional_valid": true,
       "native_array_full_element_subset_tests": [
         "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
-        "verify-ue1-o06-g5-native-animseq-notifies-v432.php"
+        "verify-ue1-o06-g5-native-animseq-notifies-v432.php",
+        "verify-ue1-o06-g5-native-v432-motionchunk-headers.php"
       ],
       "native_array_full_element_subset_states": [
+        true,
         true,
         true
       ],
@@ -6273,7 +6275,7 @@
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",
-        "MotionChunk_Moves_nested_elements_and_errors_open"
+        "MotionChunk_Moves_first_95_track_headers_checked_all_other_nested_keys_and_errors_open"
       ]
     },
     {

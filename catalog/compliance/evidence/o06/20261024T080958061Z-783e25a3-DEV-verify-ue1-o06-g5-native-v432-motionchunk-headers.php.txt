@@ -1,0 +1,10 @@
+﻿{
+    "ok": true,
+    "checks": 598,
+    "passed": 598,
+    "failures": [],
+    "genuine_compiled_motion_chunk_headers": 70,
+    "first_move_AnalogTrack_headers": 95,
+    "full_bone_indices_and_first_track_quat_pos_time_bytes": 732,
+    "limits": "All 70 MotionChunk scalar headers/root/array counts and 95 first-Move AnalogTrack headers; only first track nested array bytes from each package verified. The remaining nested KeyQuat/Pos/Time data of thousands of tracks not fully native checked. UAnimation FULL method OPEN."
+}

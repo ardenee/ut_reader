@@ -18,11 +18,12 @@ $repo=(Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
 $state='C:\Temp\UnrealDB\O06\g5-native-resumable-batch-state.json'
 $steps=@(
  @{name='g5-v432-native-refbones-full-elements';test='verify-ue1-o06-g5-native-refbones-v432.php'},
- @{name='g5-v432-native-animseq-and-notifies';test='verify-ue1-o06-g5-native-animseq-notifies-v432.php'}
+ @{name='g5-v432-native-animseq-and-notifies';test='verify-ue1-o06-g5-native-animseq-notifies-v432.php'},
+ @{name='g5-v432-native-motionchunk-headers';test='verify-ue1-o06-g5-native-v432-motionchunk-headers.php'}
 )
 function AtomicState([string]$current,[string]$stage){
  $data=[ordered]@{
-  schema=1;batch='g5-v432-genuine-native-refbones-and-animseq'
+  schema=1;batch='g5-v432-genuine-native-refbones-animseq-and-motionchunk'
   updated_at_utc=[DateTime]::UtcNow.ToString('o')
   current_contract=$current;stage=$stage
   source_of_truth='catalog/compliance/UE1-O06-TEST-EVENTS.jsonl'
@@ -62,6 +63,6 @@ foreach($step in $steps){
  }
 }
 AtomicState 'ALL' 'ALL_CONTRACTS_PASS_OR_HASH_REUSED'
-& python $checkpoint --activate 'g5-v432-native-resumable-batch' --stage batch-pass-two-scoped-contracts --action 'FMeshBone and AnimSeq/Notify compiled oracle focused contracts each passed or valid current hash PASS reused' --next 'Continue with inherited ULodMesh and animation MotionChunk nested arrays; negative byte/error parity and full G5 remain OPEN.'
+& python $checkpoint --activate 'g5-v432-native-resumable-batch' --stage batch-pass-three-scoped-contracts --action 'FMeshBone, AnimSeq/Notify and MotionChunk compiled oracle focused contracts each passed or valid current hash PASS reused' --next 'Continue with inherited ULodMesh and animation MotionChunk nested arrays; negative byte/error parity and full G5 remain OPEN.'
 if($LASTEXITCODE -ne 0){throw 'Final batch checkpoint failed'}
-Write-Host 'G5_BATCH_COMPLETE contracts=2 O06_full_acceptance=OPEN'
+Write-Host 'G5_BATCH_COMPLETE contracts=3 O06_full_acceptance=OPEN'

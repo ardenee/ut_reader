@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T07:47:56.8336451Z",
-    "head_commit":  "60fa684a",
+    "updated_at_utc":  "2026-10-24T08:09:58.6105757Z",
+    "head_commit":  "40bf736a",
     "current_target":  "DEV",
     "current_source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
     "tests":  [
@@ -531,6 +531,18 @@
                       "run_id":  "20261023T224137762Z-0af749c6",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T224137762Z-0af749c6-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-native-v432-motionchunk-headers.php",
+                      "test":  "verify-ue1-o06-g5-native-v432-motionchunk-headers.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T08:09:58.5925749Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "8a53ac2816c2abac57816c555ad88688e9cf4c9a3b322cbfe8b02934ec10ef12",
+                      "run_id":  "20261024T080958061Z-783e25a3",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T080958061Z-783e25a3-DEV-verify-ue1-o06-g5-native-v432-motionchunk-headers.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
