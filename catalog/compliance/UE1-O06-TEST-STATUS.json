@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-23T23:31:07.9201607Z",
-    "head_commit":  "5ae4a9b3",
+    "updated_at_utc":  "2026-10-24T07:47:56.8336451Z",
+    "head_commit":  "60fa684a",
     "current_target":  "DEV",
     "current_source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
     "tests":  [
@@ -495,6 +495,30 @@
                       "run_id":  "20261023T230435525Z-504a1849",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T230435525Z-504a1849-DEV-verify-ue1-o06-g5-genuine-v432-skeletal-animation.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-native-animseq-notifies-v432.php",
+                      "test":  "verify-ue1-o06-g5-native-animseq-notifies-v432.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T07:47:56.8126890Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "affe07c762bb8abf9559854785ea2d36d01b37cc1145ccd5d0972ca4d409e492",
+                      "run_id":  "20261024T074756286Z-b04f9000",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T074756286Z-b04f9000-DEV-verify-ue1-o06-g5-native-animseq-notifies-v432.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-native-refbones-v432.php",
+                      "test":  "verify-ue1-o06-g5-native-refbones-v432.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T07:47:54.2478928Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "7112f272a4a956636fed2291fb45bd9f1b933c84618f4274d3a53728d66ce375",
+                      "run_id":  "20261024T074753646Z-7d3a4af8",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T074753646Z-7d3a4af8-DEV-verify-ue1-o06-g5-native-refbones-v432.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-native-v432-font-loaded-values.php",

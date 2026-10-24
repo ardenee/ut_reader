@@ -2,6 +2,20 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-v432-native-refbones-full-elements": {
+      "description": "Unmodified original PRD v69 UT99 table/EcoTerror/d00d: native compiled v432 237 full FMeshBone memory structs/strings, byte-for-byte serialized member values, FName table, excludes uninitialized YSize and Depth",
+      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-native-refbones-v432.php"],
+      "affected": [],
+      "gate": []
+    },
+    "g5-v432-native-animseq-and-notifies": {
+      "description": "Unmodified PRD original UT99 v69 compiled Engine.dll: genuine 70 native FMeshAnimSeq records plus 22 nested FMeshAnimNotify functions and timestamps, source-decoder numeric fields and global native FName names, SHA-pinned CDB logs",
+      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-native-animseq-notifies-v432.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-native-skeletal-vector-array-elements": {
       "description": "Real original PRD UT99 v69: compiled v432 native-loaded complete Points and LocalPoints arrays for five genuine USkeletalMesh objects; 10 full float32 FVector arrays SHA-pinned from debugger, all 225756 bytes and production field previews",
       "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],

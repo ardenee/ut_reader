@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "classification": "GENUINE_UNMODIFIED_PRD_UT99_V69_COMPILED_V432_RESTARTABLE_FOCUSED_BATCH",
+  "notes": "All real original SHA-named package files copied to DEV temporary, original PRD share read-only; native methods real compiled v432 Engine.dll, FName::Names table used for identity not raw index. All test files SHA-pinned. No full-method acceptance, nonserialized YSize and Depth are ignored.",
+  "engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "native_engine_path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+  "source_profile": "ut99-v432",
+  "contracts": [
+    "g5-v432-native-refbones-full-elements",
+    "g5-v432-native-animseq-and-notifies"
+  ],
+  "cases": [
+    {
+      "name": "table",
+      "archive": "C:/Temp/UnrealDB/O06/00a9f59043e94e8879c722c6e521f252.u",
+      "archive_sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+      "refLog": "C:/Temp/UnrealDB/O06/g5-native-refbones-table.log",
+      "refLog_sha256": "b3ca91b981a52349c5d0c83ae256bb6e4ae4f7571d96ecf20ab9e6d99adcb67f",
+      "refs": [
+        {
+          "index": 12,
+          "count": 47,
+          "sha256": "b2d21c35ea79cad8936ce14f1aa70e483eb9df7ea651001a7f96f185f86f437b",
+          "path": "C:/Temp/UnrealDB/O06/G5-table-skel12-refbones.bin"
+        },
+        {
+          "index": 24,
+          "count": 47,
+          "sha256": "b2d21c35ea79cad8936ce14f1aa70e483eb9df7ea651001a7f96f185f86f437b",
+          "path": "C:/Temp/UnrealDB/O06/G5-table-skel24-refbones.bin"
+        }
+      ],
+      "seqLog": null,
+      "seqLog_sha256": null,
+      "seq": [],
+      "notifyLog": null,
+      "notifyLog_sha256": null
+    },
+    {
+      "name": "EcoTerror",
+      "archive": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+      "archive_sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+      "refLog": "C:/Temp/UnrealDB/O06/g5-native-refbones-EcoTerror.log",
+      "refLog_sha256": "ef0676dd0ff6386b61f76e0b1de65ed9fb764fb365e548ceb028cb4c300042f0",
+      "refs": [
+        {
+          "index": 0,
+          "count": 47,
+          "sha256": "efa7ce2b507fa011a98662ff8089889733c490df6602a7bfaf0958802b37ef3f",
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-skel0-refbones.bin"
+        }
+      ],
+      "seqLog": "C:/Temp/UnrealDB/O06/g5-native-animseq-EcoTerror.log",
+      "seqLog_sha256": "5c6b7aa2e3b58402cd2ccb3e56c802a24c811aa6955a2515ab52392d239662d8",
+      "seq": [
+        {
+          "index": 6,
+          "count": 68,
+          "sha256": "b074b311d4e36670a4d9c67fb7cddc5870433c8a1d984dbae9496f3e2c4a21db",
+          "path": "C:/Temp/UnrealDB/O06/G5-EcoTerror-anim6-seqs.bin"
+        }
+      ],
+      "notifyLog": "C:/Temp/UnrealDB/O06/g5-native-anim-notifies-EcoTerror.log",
+      "notifyLog_sha256": "d03b1f11400c586f4deae9511da0de319dd878e98332470946699ed48593d6e1"
+    },
+    {
+      "name": "d00d",
+      "archive": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+      "archive_sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+      "refLog": "C:/Temp/UnrealDB/O06/g5-native-refbones-d00d.log",
+      "refLog_sha256": "8dbde7804772ccb0c556e5e9963b5519eae4043fa327db98857b076c0c879dfa",
+      "refs": [
+        {
+          "index": 4,
+          "count": 48,
+          "sha256": "cf8bf74f2afbfabb2570bf61c6b88194bc7237489f34d265f91b6a8116d30650",
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel4-refbones.bin"
+        },
+        {
+          "index": 11,
+          "count": 48,
+          "sha256": "0f1536ef6a65230616d467cf8ca7e2930f460dd935cf875aaa39967ac7461728",
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-skel11-refbones.bin"
+        }
+      ],
+      "seqLog": "C:/Temp/UnrealDB/O06/g5-native-animseq-d00d.log",
+      "seqLog_sha256": "61623956618eb741e834c24e2cff1ebbe96599089aaf4a41b1ee53641eb33b4d",
+      "seq": [
+        {
+          "index": 7,
+          "count": 2,
+          "sha256": "a13ddadd39c3c7332d42b1765bf5d26d43e3cebbe65ce794a7ee9086c2cb79ea",
+          "path": "C:/Temp/UnrealDB/O06/G5-d00d-anim7-seqs.bin"
+        }
+      ],
+      "notifyLog": null,
+      "notifyLog_sha256": null
+    }
+  ]
+}

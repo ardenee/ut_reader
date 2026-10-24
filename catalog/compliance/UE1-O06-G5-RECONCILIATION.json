@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-23T23:33:17.775362+00:00",
-  "head": "5ae4a9b3",
-  "previous_runner_head": "5ae4a9b3",
+  "generated_utc": "2026-10-24T07:51:04.308859+00:00",
+  "head": "60fa684a",
+  "previous_runner_head": "60fa684a",
   "previous_source_sha256": "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
   "current_source_sha256": "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
   "fingerprint_changed": false,
@@ -18,11 +18,11 @@
     "genuine_v432_font_archive_compatibility": 1,
     "compiled_native_loaded_value_slice": 3,
     "compiled_full_array_element_subset": 2,
-    "compiled_native_individual_array_bytes_verified": 269504,
+    "compiled_native_individual_array_bytes_verified": 286912,
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 108
+    "PASS": 110
   },
   "branch_totals": {
     "C227": {
@@ -6261,9 +6261,11 @@
       "native_loaded_evidence_current": true,
       "native_loaded_additional_valid": true,
       "native_array_full_element_subset_tests": [
-        "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"
+        "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
+        "verify-ue1-o06-g5-native-animseq-notifies-v432.php"
       ],
       "native_array_full_element_subset_states": [
+        true,
         true
       ],
       "native_array_full_element_subset_valid": true,
@@ -6271,7 +6273,7 @@
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",
-        "Moves_AnimSeqs_nested_elements_and_errors_open"
+        "MotionChunk_Moves_nested_elements_and_errors_open"
       ]
     },
     {
@@ -7222,9 +7224,11 @@
       "native_loaded_additional_valid": true,
       "native_array_full_element_subset_tests": [
         "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
-        "verify-ue1-o06-g5-real-skeletal-vector-arrays.php"
+        "verify-ue1-o06-g5-real-skeletal-vector-arrays.php",
+        "verify-ue1-o06-g5-native-refbones-v432.php"
       ],
       "native_array_full_element_subset_states": [
+        true,
         true,
         true
       ],
@@ -7233,7 +7237,7 @@
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",
-        "RefSkeleton_inherited_ULodMesh_other_elements_and_errors_open"
+        "inherited_ULodMesh_and_unverified_scalar_fields_errors_open"
       ]
     },
     {

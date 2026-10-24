@@ -1,0 +1,10 @@
+﻿{
+    "ok": true,
+    "checks": 575,
+    "passed": 575,
+    "failures": [],
+    "native_AnimSeq_objects": 2,
+    "full_loaded_sequence_metadata_records": 70,
+    "nested_native_notifies_verified": 22,
+    "limitations": "Runtime FMeshAnimSeq serialized names, group, start, frames, rate, notify count and 22 notify functions/times verified; MotionChunk Moves nested arrays, negative errors, other programs and all method behavior remain OPEN."
+}
