@@ -101,7 +101,7 @@ final class CatalogUE1ClassicClassMetadataReader
             // applies to flagged class objects and ordinary object exports.
             $stateFrame=CatalogUE1ClassicStateFrameReader::read(
                 $pkg,$version,(int)$ex['objectFlags'],
-                $read,$compact,$i32,$position,0,$family
+                $read,$compact,$i32,$position,0,$family,$path,$index
             );
             $record['serialized_state_frame']=$stateFrame;
             if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1

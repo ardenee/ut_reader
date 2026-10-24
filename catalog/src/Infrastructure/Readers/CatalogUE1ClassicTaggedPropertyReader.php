@@ -313,7 +313,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $v=(int)unpack('V',$read(4))[1];
                     return $v>=0x80000000?$v-0x100000000:$v;
                 },
-                $position,$offset,$family
+                $position,$offset,$family,$path,$exportIndex
             );
             $tags=self::parseTags($read,$u8,$name,$compact,$version,$offset,$position,$size,$family);
             $tagEnd=$offset+$position;

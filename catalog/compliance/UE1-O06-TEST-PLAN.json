@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-t99-uobject-consolidated-acceptance": {
+      "description": "ONE compiled native UT99 v432 UObject::Serialize method acceptance decision: pinned genuine original v68 Entry.unr standalone compiled Core.dll LoadPackage native event 14/19 loaded 5 Camera context excluded, prior 28 real runtime referent names, and three independently executed single-byte invalid StateFrame code offsets -2, 0, 63 with native error Offset mismatch N 0. PHP derives Node->Script.Num through actual referenced class metadata and reproduces exact errors without permanent source modifications. Full method BLOCKED on unclosed complete UObject tagged loaded values and additional negative/property variants; do not inflate partial into FULL.",
+      "readers": ["CatalogUE1ClassicStateFrameReader.php", "CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicClassMetadataReader.php"],
+      "focus": ["verify-ue1-o06-g5-uobject-consolidated-acceptance.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-font-consolidated-acceptance": {
       "description": "ONE complete T99:UFont::Serialize verdict after correcting source-selected v432 malformed TMap CharRemap cursor from proactive PHP bounds rejection to original compiled Got4116 Expected4112, without physically reading outside export. Reuse already pinned original four legal remaps, real native glyph/texture and two nonempty PRD font loader proofs; inherited UObject still not FULL and method therefore BLOCKED.",
       "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],

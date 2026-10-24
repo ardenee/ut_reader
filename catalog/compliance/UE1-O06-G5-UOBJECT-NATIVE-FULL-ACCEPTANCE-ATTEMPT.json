@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "classification": "GENUINE_V432_UObject_LoadPackage_SELECTED_14_FRAMES_AND_THREE_MALFORMED_NATIVE_STATEFRAME_ERROR_SEMANTICS",
+  "source_profile": "ut99-v432",
+  "original_map": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Entry.unr",
+    "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c"
+  },
+  "compiled_Core": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "compiled_Core_lib": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament v432/Core/Lib/Core.lib",
+    "sha256": "066f48ac6e136ac0ddfc27663305f52d957709f4f4ca4539c6f58be0760e6448"
+  },
+  "selected_v432_header": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament v432/Core/Inc/UnObjBas.h",
+    "sha256": "a18f6d4fcf1d0ad81e82dee5d5b001980ebd560ddcc3a7ac604649ce61381dfe"
+  },
+  "inherited_v400_method_source": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnObj.cpp",
+    "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+  },
+  "compiled_native_launcher": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-LoadPackage.exe",
+    "sha256": "cf4e9fa4c234bb4ab6cbd4628cb8f4ddde8b2306bd439144486f9cde8ac6ebcc",
+    "provenance": "Disposable C++ launcher using original v400 UCC.cpp appInit and unmodified linked v432 compiled Core.lib. Compiler compatibility fix of INT I typo only in C:\\Temp copy of v432 headers."
+  },
+  "original_load_logs": [
+    {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-genuine-Core-LoadPackage-stdout.txt",
+      "sha256": "fbe96e49e3d4f6930237ada9b447a586d74dc08b7853eab8634f36f86072f080"
+    },
+    {
+      "path": "C:/Temp/UnrealDB/O06/g5-Entry-v432-StateFrame-all14-native-referents.log",
+      "sha256": "bbb3d4dc3d8da81d03a3d8c600ed7198e65ac9f5df57e826b92c1e67185cd6fd"
+    }
+  ],
+  "original_positive_RF_HasStack": 19,
+  "compiled_original_postSerialize_positive": 14,
+  "original_omitted_indices": [
+    12,
+    33,
+    34,
+    35,
+    36
+  ],
+  "original_omitted_name": "Camera",
+  "original_omitted_flags": "0x02340000",
+  "compiled_loader_mode": "UObject::LoadPackage(NULL, Entry.unr, LOAD_NoFail), GIsEditor=1, GIsServer=0, GIsClient=0",
+  "malformed_fixture": "single source byte at absolute offset 1821, Brush Entry.Brush495 frame start 1807; compact AR_INDEX -1 (0x81) replaced with three other one-byte values. Original source restored after every compiled and PHP test.",
+  "native_malformed_cases": [
+    {
+      "label": "negative_two",
+      "offset": -2,
+      "byte": 130,
+      "error": "Brush Entry.Brush495: Offset mismatch: -2 0",
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-StateFrame-negative_two-result.txt",
+      "sha256": "f29ed18771074e30ee9659dae0b9a58fea1572c3f9159b045e23660ff5501c92"
+    },
+    {
+      "label": "zero",
+      "offset": 0,
+      "byte": 0,
+      "error": "Brush Entry.Brush495: Offset mismatch: 0 0",
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-StateFrame-zero-result.txt",
+      "sha256": "46e53e5cefa75928524119c76fb3bd9d00fe16d257e18e4611ab643abd3d86fc"
+    },
+    {
+      "label": "positive63",
+      "offset": 63,
+      "byte": 63,
+      "error": "Brush Entry.Brush495: Offset mismatch: 63 0",
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-invalid-Brush-Code63-output.txt",
+      "sha256": "e48184f3f1b3079256f9e14b73cebeea20d580cd61f163e1c350d2da8aab3d21"
+    }
+  ],
+  "remaining_after_this_work": [
+    "Five original Camera actors excluded by all observed native loader contexts; original export flags and loaded behaviour verified, but editor live values not independently exercised.",
+    "Class tagged properties across all v432 loaded UObject exports have not been exhaustively checked as independently loaded C++ property values and all references.",
+    "Additional malformed property/tag/reference errors and archive consumed-byte cases across all source-selected UObject branches are not yet independently closed.",
+    "Independent full method acceptance and reviewed SHA-pinned signed closure still absent."
+  ],
+  "full_method_accepted": false
+}

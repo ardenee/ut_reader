@@ -1,0 +1,20 @@
+﻿{
+    "ok": true,
+    "checks": 43,
+    "passed": 43,
+    "failures": [],
+    "method": "T99:UObject::Serialize",
+    "genuine_original_StateFrames": 19,
+    "native_compiled_loader_positive_StateFrames": 14,
+    "original_Camera_exports_context_excluded": [
+        12,
+        33,
+        34,
+        35,
+        36
+    ],
+    "native_malformed_offsets_php_exact_error_matches": 3,
+    "native_compiled_reruns_this_verification": 0,
+    "full_method_acceptance": "BLOCKED",
+    "remaining": "complete inherited/tagged UObject loaded-property semantics and additional malformed object/property/reference errors plus independent final review"
+}

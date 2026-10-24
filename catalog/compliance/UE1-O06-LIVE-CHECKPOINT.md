@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-font-consolidated-acceptance`
-- **Stage:** both-confirmed-native-error-differences-corrected-0-failed-8-blocked
-- **Last completed action:** Completed second actual production parity fix after TextBuffer: UT99 v432 UFont malformed compact CharRemap count one extra TMap pair plus IsRemapped crosses declared 4112 by four bytes; genuine compiled engine reports Got4116 Expected4112. Source-selected V432NativeDeltaReader now safely emulates that logical attempted FArchive cursor/error with physical filesize cap, never reads beyond declared export; single consolidated method verdict 23/23 PASS journal 20261024T144929174Z-5d96da45. Reused original compiled native glyphs/texture/remap and prior positive SHA-pinned proofs; no native CDB runs or repeated 62-font tests. Earlier TextBuffer one complete verdict 28/28 PASS and committed 97702616. Combined eight-method decisions now 0 FULL, 0 FAILED, 8 BLOCKED (parent UObject and unverified branches); 6 valid compiled loaded subsets and 3 old export slices preserved by strict two-commit two-branch SHA equivalence proof with no replay. All transient tests C:\Temp; PRD NOT deployed because original server reader diverges 375 lines and lacks dependent source-family reader interfaces.
-- **Resume at:** Next decisive shared blocker: FULL T99:UObject::Serialize including original Entry.unr five Camera StateFrames, full native outer/class reference identity and malformed archive consumption; execute ONE complete method acceptance after meaningful fix, not new partial tests. Independently verify any missing inherited error requirements for TextBuffer/Font before accepting FULL. Do not rerun old 28/28, 23/23, class, font or seven-package passes. PRD coordinated deployment only after reviewing reader/dependency mismatch; preserve production config/storage.
-- **Active changed at:** 2026-10-24T14:54:47+00:00
-- **Latest DEV test states:** PASS 124; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-uobject-consolidated-acceptance`
+- **Stage:** compiled-native-object-loader-and-stateframe-error-discrepancy-fixed-43of43-BLOCKED
+- **Last completed action:** Completed actual compiled UT99 v432 UObject::LoadPackage(NULL, Entry.unr) with genuine archive v68 and original source SHA sealed. Native editor-context engine loaded 14/19 original RF_HasStack frames; five Camera exports remain uninstantiated even with LoadPackage, not failure. Native three independently captured one-byte Code offset malformed cases -2,0,63 in original Brush495 -> exact Offset mismatch -2 0 / 0 0 / 63 0, using actual referenced Engine.Brush compiled Script.Num=0. DEV production StateFrameReader now derives referenced native UClass script_size and reproduces exact class diagnostic; path/index passed via TaggedProperty and ClassMetadata readers; valid Code INDEX_NONE returns unchanged. ONE consolidated focus acceptance PASS 43/43, SHA sealed journal 20261024T163857793Z-e7641b1e. 0 previous native CDB proofs repeated by final verifier. Reconciled all three touched source paths against pinned 4c0428dc old global source fingerprint, earlier six independent compiled-positive slices still valid without replay. Final T99 UObject method deliberately BLOCKED, full loaded tagged property values/reference & malformed additional branches and version variants not covered. Eight total 0 FULL 0 FAILED 8 BLOCKED. PRD untouched.
+- **Resume at:** Resolve genuinely unverified UObject::Serialize tagged property loaded values / references against compiled v432 native engine in a SINGLE complete method-oriented acceptance batch; test other malformed tagged-property/reference archive outcomes, and early version profile boundaries only if source supports them. Preserve already passed 43/43 consolidated test and native 14/19 source-reachable frames; do not repeat old class/font/multimethod cases. Never mark FULL without seven criteria/closure artifact; PRD coordinated deployment required because remote reader dependencies differ.
+- **Active changed at:** 2026-10-24T17:01:48+00:00
+- **Latest DEV test states:** PASS 125; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T16:38:58.3782435Z | verify-ue1-o06-g5-uobject-consolidated-acceptance.php | PASS | 183 | catalog\compliance\evidence\o06\20261024T163857793Z-e7641b1e-DEV-verify-ue1-o06-g5-uobject-consolidated-acceptance.php.txt |
+| 2026-10-24T16:38:57.8002477Z | verify-ue1-o06-g5-uobject-consolidated-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261024T163857793Z-e7641b1e-DEV-verify-ue1-o06-g5-uobject-consolidated-acceptance.php.txt |
 | 2026-10-24T14:49:29.8427883Z | verify-ue1-o06-g5-font-consolidated-acceptance.php | PASS | 258 | catalog\compliance\evidence\o06\20261024T144929174Z-5d96da45-DEV-verify-ue1-o06-g5-font-consolidated-acceptance.php.txt |
 | 2026-10-24T14:49:29.1817547Z | verify-ue1-o06-g5-font-consolidated-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261024T144929174Z-5d96da45-DEV-verify-ue1-o06-g5-font-consolidated-acceptance.php.txt |
 | 2026-10-24T14:32:13.8711107Z | verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php | PASS | 300 | catalog\compliance\evidence\o06\20261024T143213166Z-bb4fdae9-DEV-verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T13:38:19.2377624Z | verify-ue1-o06-g5-v432-uclass-real-export-coverage.php | STARTED |  | catalog\compliance\evidence\o06\20261024T133819230Z-4a3eca8d-DEV-verify-ue1-o06-g5-v432-uclass-real-export-coverage.php.txt |
 | 2026-10-24T13:29:09.0523874Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | PASS | 1124 | catalog\compliance\evidence\o06\20261024T132907473Z-d4ba89c1-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
 | 2026-10-24T13:29:07.4814030Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | STARTED |  | catalog\compliance\evidence\o06\20261024T132907473Z-d4ba89c1-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
-| 2026-10-24T11:43:21.3870348Z | verify-ue1-o06-g5-uclass-all-native-nested-memory.php | PASS | 1096 | catalog\compliance\evidence\o06\20261024T114319921Z-fac19f70-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt |
-| 2026-10-24T11:43:19.9290303Z | verify-ue1-o06-g5-uclass-all-native-nested-memory.php | STARTED |  | catalog\compliance\evidence\o06\20261024T114319921Z-fac19f70-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt |
 
 ## Recovery procedure
 

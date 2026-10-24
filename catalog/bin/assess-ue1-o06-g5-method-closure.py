@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Native UObject common positive StateFrame loader covered 14/19 source frames; five original Camera objects and malformed/error byte semantics unverified.",
-  "next":"Obtain one native loader path that actually loads all 19 original Entry.unr StateFrames and malformed byte-error semantics; then perform single full-method review.",
-  "blocker":"remaining_native_StateFrame_and_negative_paths",
+  "reason":"New genuine compiled v432 UObject::LoadPackage in editor context re-confirmed 14 of 19 saved original v68 Entry StateFrames; five Camera exports (RF_NotForClient/Server, not public) were not actually instantiated by the compiled loader. Full 28 native Node/StateNode names retained. Three controlled native malformed offsets (-2,0,63) now match PHP using actual referenced Engine.Brush Script.Num=0; single consolidated method verdict PASS 43/43. Other complete tagged loaded property values, variant/error cases and final review still open.",
+  "next":"For full method acceptance, establish native loaded tagged-property values and all relevant malformed property/tag/reference and archive-consumption outcomes; require loaded-only Camera distinction or genuine compiled preloading of their exports when in scope. Do not repeat 14 StateFrames, three code-offset native probes or consolidated 43/43.",
+  "blocker":"remaining_loaded_tagged_UObject_values_other_error_paths_and_final_full_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -129,7 +129,8 @@ for name in reg["methods"]:
             assert reconciliation["source_font_branch_equivalence"]
             assert ev["source_sha256"]==reconciliation["middle_unmodified_branch_source_sha256"]
         else:
-            assert ev["source_sha256"]==reconciliation["current_source_sha256"]
+            assert reconciliation["source_uobject_positive_branch_equivalence"]
+            assert ev["source_sha256"]==reconciliation["previous_uobject_positive_source_sha256"]
         result=read(log)
         if name=="T99:UTextBuffer::Serialize":
             assert result["one_final_method_acceptance"]=="BLOCKED" and result["php_native_error_identical"]
@@ -137,10 +138,29 @@ for name in reg["methods"]:
         else:
             assert result["single_consolidated_method_decision"]=="BLOCKED" and result["error_matches_native"]
             assert result["native_attempted_bytes"]==4116 and result["declared_bytes"]==4112
-        # The observed ANSI900 error and extent now match. Do not mark
+        # The observed native error extent now matches. Do not mark
         # the WHOLE malformed-input criterion VERIFIED from a single case.
         gates["malformed_input_error_semantics"]="OPEN"
         gates["archive_bytes_and_consumption"]="VERIFIED"
+    if name=="T99:UObject::Serialize":
+        events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        method_test="verify-ue1-o06-g5-uobject-consolidated-acceptance.php"
+        pass_event=next((item for item in reversed(events) if item.get("test")==method_test and item.get("state")=="PASS"),None)
+        assert pass_event is not None,"Missing single UObject compiled/native verdict"
+        log=ROOT/pass_event["log"].replace("\\","/")
+        verifier=ROOT/"catalog"/"bin"/method_test
+        assert sha(log)==pass_event["output_sha256"] and sha(verifier)==pass_event["test_sha256"]
+        assert pass_event["source_sha256"]==reconciliation["current_source_sha256"]
+        result=read(log)
+        assert result["ok"] and result["passed"]==43 and result["checks"]==43
+        assert result["full_method_acceptance"]=="BLOCKED"
+        assert result["genuine_original_StateFrames"]==19
+        assert result["native_compiled_loader_positive_StateFrames"]==14
+        assert result["native_malformed_offsets_php_exact_error_matches"]==3
+        assert result["native_compiled_reruns_this_verification"]==0
+        assert reconciliation["source_uobject_positive_branch_equivalence"]
+        assert reconciliation["previous_uobject_positive_source_sha256"]
+        gates["current_acceptance_tests"]="VERIFIED"
     assert entry["result"] in ("BLOCKED","FAILED")
     assert any(v!="VERIFIED" for v in gates.values())
     old["criteria"]=gates
@@ -151,6 +171,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
+        else "current_single_full_method_verdict_43_checks" if name=="T99:UObject::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -161,7 +182,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize","T99:UObject::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -170,7 +191,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":0,"new_test_runs":2,
+ "new_oracle_runs":4,"new_test_runs":3,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

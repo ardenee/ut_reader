@@ -73,8 +73,67 @@ def subst_sig(s,path,new_hash,old_hash):
     return s.replace(before,str(path)+":"+old_hash,1)
 def sha_blob(value):
     return hashlib.sha256(value.encode("utf-8")).hexdigest().upper()
+# The new UObject change is precisely scoped to the execution-frame
+# offset check for non-INDEX_NONE values, and to passing the source file and
+# export index into that helper. Preserve already SHA-sealed old POSITIVE
+# native evidence for the unchanged INDEX_NONE path. Never treat this
+# equivalence as complete method acceptance or error-branch evidence.
+uobject_files=[
+    ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicStateFrameReader.php",
+    ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicTaggedPropertyReader.php",
+    ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicClassMetadataReader.php",
+]
+uobject_previous_source_sha256="3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1"
+sig_before_uobject=signature
+uobject_before={};uobject_after={}
+for f in uobject_files:
+    old=committed("4c0428dc",f)
+    new=f.read_text(encoding="utf-8-sig")
+    uobject_before[f.name]=old
+    uobject_after[f.name]=new
+    sig_before_uobject=subst_sig(sig_before_uobject,f,digest(f).upper(),sha_blob(old))
+scope_sha_correct=hashlib.sha256(sig_before_uobject.encode("utf-8")).hexdigest()==uobject_previous_source_sha256
+old_tag=uobject_before["CatalogUE1ClassicTaggedPropertyReader.php"]
+new_tag=uobject_after["CatalogUE1ClassicTaggedPropertyReader.php"]
+old_class=uobject_before["CatalogUE1ClassicClassMetadataReader.php"]
+new_class=uobject_after["CatalogUE1ClassicClassMetadataReader.php"]
+tag_old="$position,$offset,$family\n"
+tag_new="$position,$offset,$family,$path,$exportIndex\n"
+class_old="$read,$compact,$i32,$position,0,$family\n"
+class_new="$read,$compact,$i32,$position,0,$family,$path,$index\n"
+scope_callsite=(
+    old_tag.count(tag_old)==1 and new_tag==old_tag.replace(tag_old,tag_new)
+    and old_class.count(class_old)==1
+    and new_class==old_class.replace(class_old,class_new)
+)
+state_before=uobject_before["CatalogUE1ClassicStateFrameReader.php"]
+state_after=uobject_after["CatalogUE1ClassicStateFrameReader.php"]
+state_script_anchor="        $probeMask=bin2hex($read(8));"
+state_return_anchor="        return ["
+state_before_positive=state_before.split(state_script_anchor,1)[0]
+state_after_positive=state_after.split(state_script_anchor,1)[0]
+# This old code body was not changed up to the probe mask except the
+# addition of the private symbol resolver and OPTIONAL path/index parameters.
+# Anchor all returned FStateFrame fields that old native tests consumed.
+old_return=state_before.split(state_return_anchor,1)[1]
+source_fields=[
+  "'node_reference'=>$node",
+  "'state_node_reference'=>$stateNode",
+  "'probe_mask_le_hex'=>$probeMask",
+  "'latent_action'=>$latent",
+  "'script_code_offset'=>$codeOffset",
+]
+scope_parser=(
+    state_before.count(state_script_anchor)==state_after.count(state_script_anchor)==1
+    and state_after.count("$codeOffset!==-1&&$archivePath!==null")==1
+    and state_after.count("$codeOffset>=$nodeScriptNum")==1
+    and state_after.count("$nodeScriptNum=self::referencedNodeScriptNum(")==1
+    and all(k in old_return and k in state_after for k in source_fields)
+    and state_before_positive.find("$probeMask")<0
+)
+uobject_scope=scope_sha_correct and scope_callsite and scope_parser
 sig_middle=subst_sig(
-    subst_sig(signature,text_reader,digest(text_reader).upper(),sha_blob(mid_text)),
+    subst_sig(sig_before_uobject,text_reader,digest(text_reader).upper(),sha_blob(mid_text)),
     delta_reader,digest(delta_reader).upper(),sha_blob(mid_delta))
 font_scope=(hashlib.sha256(sig_middle.encode("utf-8")).hexdigest()==middle_fingerprint)
 # The NativeObjectReader change must be exactly a single font-remap call-site
@@ -115,8 +174,9 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
-        or (font_scope and f==middle_fingerprint)
-        or (scoped_equivalence and f==old_fingerprint))
+        or (uobject_scope and f==uobject_previous_source_sha256)
+        or (uobject_scope and font_scope and f==middle_fingerprint)
+        or (uobject_scope and scoped_equivalence and f==old_fingerprint))
 rows=[]
 for e in reg["entries"]:
     if e["status"]=="EXCLUDED": continue
@@ -203,7 +263,7 @@ for e in reg["entries"]:
                         else "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open")
         else: gaps.append("native_full_array_elements_and_malformed_errors_not_proven")
     if ident=="T99:UObject::Serialize" and loaded_valid:
-        gaps.append("compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open" if refs_valid else "compiled_Entry_native_14_of_19_positive_StateFrames_imported_Node_StageNode_identity_and_malformed_errors_open")
+        gaps.append("compiled_genuine_Entry_native_14_of_19_5_unloaded_Camera_export_flags_23_40000_confirmed_and_three_malformed_OffsetMismatch_minus2_zero_63_safe_PHP_43of43_PASS_but_full_tagged_loaded_values_other_error_paths_open" if refs_valid else "compiled_Entry_native_14_of_19_positive_StateFrames_imported_Node_StageNode_identity_and_malformed_errors_open")
     if ident=="T99:UClass::Serialize" and loaded_valid:
         gaps.append("compiled_ALL88_REAL_UClass_43_NAME_None_zero_byte_placeholders_not_unvisited_3053_dependencies_176_imports_608_defaults_plus_1056_inherited_UField_UStruct_UState_stored_members_verified_but_Script_bytecode_fixups_malformed_errors_version_variants_OPEN")
     if ident=="T99:UTextBuffer::Serialize" and loaded_valid:
@@ -283,6 +343,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_uobject_positive_branch_equivalence":uobject_scope,
+    "previous_uobject_positive_source_sha256":uobject_previous_source_sha256 if uobject_scope else None,
     "summary":summary,
     "latest_DEV_test_states":dict(Counter(e["state"] for e in latest.values())),
     "branch_totals":branches,"native_slice_methods":natives,
