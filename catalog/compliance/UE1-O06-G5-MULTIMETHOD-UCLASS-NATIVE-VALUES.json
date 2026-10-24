@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "classification": "GENUINE_COMPILED_v432_UClass_SERIALIZE_loaded_scalar_GUID_TArray_member_subset",
+  "source_profile": "ut99-v432",
+  "original_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+    "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+  },
+  "compiled_core": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "compiled_native_log": {
+    "path": "C:/Temp/UnrealDB/O06/g5-v432-uclass-loaded-names-g5.log",
+    "sha256": "7005c2577b4b7f3af49e38451ace88a7732187b1755c39a4e5f5469dba2784f8"
+  },
+  "compiled_disassembly": {
+    "path": "C:/Temp/UnrealDB/O06/g5-v432-uclass-native-disassembly.log",
+    "sha256": "c3014518f2f8d84cf53736b79beccbc2d1611dad3d7dd8912a414fa3802b0b5f"
+  },
+  "native_post_archive_rva": "Core.dll+0x27C92",
+  "compiled_method_entry_rva": "Core.dll+0x1203",
+  "native_class_flags_offset": "UClass+0x488",
+  "native_guid_offset": "UClass+0x490",
+  "native_dependencies_num_offset": "UClass+0x4C4",
+  "native_package_imports_num_offset": "UClass+0x4D0",
+  "native_class_config_FName_offset": "UClass+0x4A4",
+  "native_within_pointer_offset": "UClass+0x4A0",
+  "native_actual_names": "UObject+0x20 FName Index -> Core!FName::Names[] -> FNameEntry+0xC",
+  "expected_compiled_invocations": 90,
+  "expected_original_package_class_exports": 131,
+  "expected_compiled_loaded_original_class_records": 88,
+  "expected_non_Engine_same_linker_index_classes": [
+    "2:Object",
+    "328:Subsystem"
+  ],
+  "full_method_acceptance": "OPEN",
+  "remaining": [
+    "43 original Engine.u class exports are not invoked by selected real UCC loading path.",
+    "Compiled 88 class GUIDs, counts and config names match source; complete dependency TArray elements, individual PackageImports names, ClassWithin full pointer identity/default property values not compared.",
+    "Inherited UState/UStruct/UField/UObject serializer correctness and malformed consumption/errors across other versions remain OPEN."
+  ]
+}

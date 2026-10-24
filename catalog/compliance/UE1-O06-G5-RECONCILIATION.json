@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T10:48:23.914527+00:00",
-  "head": "b3b7e90f",
-  "previous_runner_head": "b3b7e90f",
+  "generated_utc": "2026-10-24T11:16:41.750204+00:00",
+  "head": "bd2bcc9c",
+  "previous_runner_head": "bd2bcc9c",
   "previous_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "current_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "fingerprint_changed": false,
@@ -16,14 +16,14 @@
     "without_named_test": 59,
     "named_tests_with_current_source_fingerprint": 2,
     "genuine_v432_font_archive_compatibility": 1,
-    "compiled_native_loaded_value_slice": 5,
+    "compiled_native_loaded_value_slice": 6,
     "compiled_full_array_element_subset": 2,
     "compiled_stateframe_native_referent_name_subsets": 1,
     "compiled_native_individual_array_bytes_verified": 827748,
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 117
+    "PASS": 118
   },
   "branch_totals": {
     "C227": {
@@ -79,7 +79,7 @@
       "unnamed": 4,
       "native_slice": 3,
       "compiled_order": 0,
-      "native_loaded_value_slice": 5,
+      "native_loaded_value_slice": 6,
       "native_full_array_element_subset": 2
     },
     "U86": {
@@ -7112,14 +7112,14 @@
       "named_test_log_valid": true,
       "named_test_script_valid": true,
       "named_test_current_global_fingerprint": false,
-      "independent_oracle": "not_recorded",
+      "independent_oracle": "compiled_native_loaded_values_subset",
       "native_slice_test": null,
       "native_slice_evidence_valid": false,
       "genuine_archive_test": null,
       "genuine_archive_evidence_current": false,
-      "native_loaded_test": null,
+      "native_loaded_test": "verify-ue1-o06-g5-multimethod-uclass-loaded-values.php",
       "native_loaded_extra_test": null,
-      "native_loaded_evidence_current": false,
+      "native_loaded_evidence_current": true,
       "native_loaded_additional_valid": false,
       "native_stateframe_native_referent_test": null,
       "native_stateframe_referent_names_current": false,
@@ -7130,7 +7130,8 @@
       "full_G5_method_acceptance": "OPEN",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
-        "global_source_inputs_changed"
+        "global_source_inputs_changed",
+        "compiled_88_of_131_Engine_UClass_loaded_scalar_GUID_array_counts_config_native_values_only_43_unreached_full_defaults_inherited_errors_open"
       ]
     },
     {

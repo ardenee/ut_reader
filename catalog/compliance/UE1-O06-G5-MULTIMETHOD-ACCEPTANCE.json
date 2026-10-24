@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:48:24+00:00",
+  "updated_utc": "2026-10-24T11:16:41+00:00",
   "source_profile": "ut99-v432",
   "classification": "DISCOVERY_AND_FULL_METHOD_ACCEPTANCE_QUEUE_NOT_NATIVE_PROOF",
   "scanner_sha256": "4541234f4f730a60279c01b129db664f75023527be5441e89225a1a17fe6ac4d",
@@ -308,10 +308,11 @@
       "production_archive_bytes_inspected": 0,
       "compiled_StateFrame_referent_names_current": false,
       "compiled_StateFrame_referent_names_verified": 0,
-      "prior_oracle_classification": "not_recorded",
+      "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
-        "global_source_inputs_changed"
+        "global_source_inputs_changed",
+        "compiled_88_of_131_Engine_UClass_loaded_scalar_GUID_array_counts_config_native_values_only_43_unreached_full_defaults_inherited_errors_open"
       ],
       "next_closure_work": "Prove actual compiled class defaults, references, metadata values and superclass invocation.",
       "required_signoff": [

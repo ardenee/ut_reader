@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-multimethod-uclass-native-values": {
+      "description": "Real unmodified compiled v432 Core!UClass::Serialize same-load post-archive 90 calls, 88 authentic Engine.u class exports with exact loaded ClassFlags, 16-byte GUID, dependency and import TArray lengths, ClassWithin pointer and runtime FName ConfigName; two unrelated Core objects disambiguated by actual compiled class names; 43 unobserved remain OPEN.",
+      "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
+      "focus": ["verify-ue1-o06-g5-multimethod-uclass-loaded-values.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-multimethod-stateframe-native-referents": {
       "description": "Actual compiled UT99 v432 UObject::Serialize post-StateFrame with live FName global name table resolutions for 14 original Entry.unr v68 Node and StateNode object pointer references; strict 28 reference name comparisons and ProbeMask/LatentAction/Code versus source with SHA pinned native CDB and untouched source. Remaining five and full G5 method acceptance OPEN.",
       "readers": ["CatalogUE1ClassicStateFrameReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],

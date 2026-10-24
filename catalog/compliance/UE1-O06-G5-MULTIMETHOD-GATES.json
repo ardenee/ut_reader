@@ -37,7 +37,7 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Shared native compile call count observed but complete class metadata/defaults still unverified."
+      "blocker_summary": "Compiled v432 original Core UClass::Serialize actually loaded 88/131 original Engine.u class exports with exact ClassFlags, full GUID, Dependencies and PackageImports counts, and ConfigName FName matched production reader (716/716 PASS, two unrelated native Core class names excluded). Complete class-default loaded properties, all nested dependencies, inherited UObject/UField/UStruct/UState paths, malformed byte/error semantics, and 43 unvisited original UClasses remain OPEN."
     },
     "T99:UTextBuffer::Serialize": {
       "criteria": {
