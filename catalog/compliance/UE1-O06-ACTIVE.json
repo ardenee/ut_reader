@@ -1,7 +1,7 @@
 {
   "contract": "g5-v432-native-resumable-batch",
-  "stage": "three-compiled-native-contracts-pass-598-new-checks",
-  "last_action": "Authentic v69 EcoTerror.u and d00d.u loaded by actual v432 Engine.dll: 70 native MotionChunk headers scalar/root/array counts, 95 first-Move full AnalogTrack headers and complete first bone index and keyquat/keypos/keytime buffers 732 source bytes exactly match; SHA-pinned native dumps and logs, dedicated focused verifier 598/598 PASS 20261024T080958061Z-783e25a3. Resumable runner now 3 contracts; immediate second run showed UNCHANGED_PASS 3/3, zero repeats; 256 MAPPED 38 EXCLUDED; all FULL acceptance still OPEN, production PHP unchanged, PRD read-only.",
-  "next_step": "Next scoped batch only: full nested KeyQuat/KeyPos/KeyTime data for additional AnalogTracks, nested other Moves; inherited ULodMesh; malformed-input native byte/diagnostic differences. Do not rerun the 3 current PASS methods or claim whole-method parity.",
-  "updated_at_utc": "2026-10-24T08:15:28+00:00"
+  "stage": "four-genuine-native-contracts-fully-resumeable-current-pass",
+  "last_action": "Completed DEV read-only compiled v432 genuine EcoTerror/d00d full memory snapshots, parsed MiniDump Memory64 VA mapping and verified ALL 70 MotionChunks 3292 AnalogTracks 10156 nested TArrays 540836 source-equivalent bytes with 29145/29145 PASS run 20261024T082534795Z-89fb2a79. Original source and compiled DLL SHA pinned; first test-only tally FAIL 20261024T082448302Z-b87602db preserved unchanged. Existing 3 focus contracts PASS previously; 4-step resumable runner was rerun and gave 4/4 UNCHANGED_PASS skips, zero repeated tests. Native data dump retained only on DEV C:\\Temp; no production PHP or PRD modifications. Reconciliation now 827748 native-array/member bytes proved on selected v432 genuine objects.",
+  "next_step": "O06/G5 remain OPEN: investigate USkeletalMesh inherited ULodMesh on authentic original source/compiled engine, native malformed byte/error differences, broader game-source/early branches and SFCharacter4 unresolved dependencies. Do not rerun current FOUR PASS tests, reuse hash-backed journal; continue with a new scoped contract.",
+  "updated_at_utc": "2026-10-24T08:29:29+00:00"
 }

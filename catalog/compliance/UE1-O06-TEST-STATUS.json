@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T08:09:58.6105757Z",
-    "head_commit":  "40bf736a",
+    "updated_at_utc":  "2026-10-24T08:25:35.4483311Z",
+    "head_commit":  "a84d6772",
     "current_target":  "DEV",
     "current_source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
     "tests":  [
@@ -531,6 +531,18 @@
                       "run_id":  "20261023T224137762Z-0af749c6",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T224137762Z-0af749c6-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php",
+                      "test":  "verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T08:25:35.4272928Z",
+                      "source_sha256":  "c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce",
+                      "test_sha256":  "0f1aa0805c5d9bd4e7e89fc06bba0e56bd978fff673a2ac2c5e76084ddaf4507",
+                      "run_id":  "20261024T082534795Z-89fb2a79",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T082534795Z-89fb2a79-DEV-verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-native-v432-motionchunk-headers.php",

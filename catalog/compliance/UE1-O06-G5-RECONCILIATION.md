@@ -1,6 +1,6 @@
 # UE1 O06 — G5 evidence reconciliation
 
-Evidence inventory, not O06 acceptance. Generated 2026-10-24T08:15:07.984809+00:00; Git 40bf736a.
+Evidence inventory, not O06 acceptance. Generated 2026-10-24T08:29:29.635007+00:00; Git a84d6772.
 
 ## Counts
 
@@ -13,8 +13,9 @@ Evidence inventory, not O06 acceptance. Generated 2026-10-24T08:15:07.984809+00:
 - NEW **full native array-element subsets**: 2 compiled v432 methods (T99 USkeletalMesh, UAnimation): genuine 5 skeletal objects 42,032 bytes of complete bone index/weights and 225,756 bytes of complete Points/LocalPoints, plus 143 animation ref bones full native name-table-resolved FName/flags/parent semantic records (1,716 bytes). Total 269,504 bytes, focused 733/733 + 228/228 PASS, no repeated tests.
 - NEW independent compiled-v432 **resumable 2-case batch**: 237 full native FMeshBone records (15,168 bytes) source field-by-field including runtime-resolved names and XSize's second serialized write, 1787/1787 PASS; 70 full native FMeshAnimSeq metadata records (2,240 bytes), all 22 nested native notification time/function names, 575/575 PASS. Both were rerun in resume mode with 2/2 UNCHANGED_PASS cache skips, zero repeated tests. Combined new 2362/2362 checks. SHA-pinned native manifests and append-only events preserved; YSize/Depth nonserialized fields and MotionChunk Moves still OPEN.
 - NEW third resumable native contract: 70 genuine MotionChunk in-memory scalar/root header and array-length comparisons, 95 full first-Move AnalogTrack header checks plus 732 full first-track key/BoneIndices bytes identical, 598/598 PASS. Remaining KeyQuat/KeyPos/KeyTime buffers from all other tracks still OPEN; did not replay previous PASS evidence.
+- NEW compiled real v432 **full nested MotionChunk memory**: 70 authentic Moves, 3,292 AnalogTracks, 10,156 distinct root/track/bone nested array buffers, 540,836 entire loaded bytes equal every source byte, 21,020 KeyQuat, 9,268 KeyPos and 21,020 KeyTime keys. Microsoft CDB 46MB full-memory MiniDump MEMORY64 oracle for each original package, independent source bounds/float-preview comparisons; focused 29,145/29,145 PASS, one initial test aggregation FAIL preserved. This validates complete nested element values for TWO original v69 package UAnimation exports, not malformed runtime or other source families.
 - Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded).
-- Latest DEV journal state: {'PASS': 111}.
+- Latest DEV journal state: {'PASS': 112}.
 - Named tests with current matching source fingerprint: 0 of 197; historical PASS is not an automatically current proof.
 - Global source fingerprint in latest status c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce; independently recomputed c5fcd53d482d93cf2e43eaa9379f0845ea1d1cdb43b1e2a4a0a9facec6a348ce.
 
@@ -35,7 +36,7 @@ Evidence inventory, not O06 acceptance. Generated 2026-10-24T08:15:07.984809+00:
 ## G5 finite queue (do not replay existing valid tests)
 
 1. Identify exact v432 PHP reader changes since last journal fingerprint and rerun only their invalidated focused tests.
-2. NEW resume-safe three-contract native batch: 237 FMeshBone records, 70 real AnimSeq records and 22 notifications, plus 70 MotionChunk and 95 first-Move AnalogTrack headers and 732 first-track/key bytes. Next UAnimation remaining 95+ nested key-array buffers across all moves, inherited ULodMesh; SFCharacter4 native deps remain blocked.
+2. NEW resume-safe FOUR-contract native batch: 237 FMeshBone records, 70 real AnimSeqs and 22 notifications, 70 MotionChunk headers, 95 first-Move AnalogTracks, plus ALL 10,156 nested animation arrays (540,836 native bytes) from original EcoTerror/d00d. Remaining priorities: inherited ULodMesh on genuine skeletal objects, native malformed/error semantics, and other source families; SFCharacter4 deps remain blocked.
 3. Compare actual native property/default/struct loaded values, reference identities and consumed bytes for available genuine packages.
 4. R82/R83: 52 registered methods carry only source identity proof, no named test. Attach actual per-method source/production/fixture evidence before G5 signoff.
 5. Early R82/R83/R96/U86/U97/D97: locate matching original runtime; otherwise record a native oracle limitation, not invented PASS.

@@ -3,17 +3,21 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g5-v432-native-resumable-batch`
-- **Stage:** three-compiled-native-contracts-pass-598-new-checks
-- **Last completed action:** Authentic v69 EcoTerror.u and d00d.u loaded by actual v432 Engine.dll: 70 native MotionChunk headers scalar/root/array counts, 95 first-Move full AnalogTrack headers and complete first bone index and keyquat/keypos/keytime buffers 732 source bytes exactly match; SHA-pinned native dumps and logs, dedicated focused verifier 598/598 PASS 20261024T080958061Z-783e25a3. Resumable runner now 3 contracts; immediate second run showed UNCHANGED_PASS 3/3, zero repeats; 256 MAPPED 38 EXCLUDED; all FULL acceptance still OPEN, production PHP unchanged, PRD read-only.
-- **Resume at:** Next scoped batch only: full nested KeyQuat/KeyPos/KeyTime data for additional AnalogTracks, nested other Moves; inherited ULodMesh; malformed-input native byte/diagnostic differences. Do not rerun the 3 current PASS methods or claim whole-method parity.
-- **Active changed at:** 2026-10-24T08:15:28+00:00
-- **Latest DEV test states:** PASS 111; FAIL 0; STARTED 0
+- **Stage:** four-genuine-native-contracts-fully-resumeable-current-pass
+- **Last completed action:** Completed DEV read-only compiled v432 genuine EcoTerror/d00d full memory snapshots, parsed MiniDump Memory64 VA mapping and verified ALL 70 MotionChunks 3292 AnalogTracks 10156 nested TArrays 540836 source-equivalent bytes with 29145/29145 PASS run 20261024T082534795Z-89fb2a79. Original source and compiled DLL SHA pinned; first test-only tally FAIL 20261024T082448302Z-b87602db preserved unchanged. Existing 3 focus contracts PASS previously; 4-step resumable runner was rerun and gave 4/4 UNCHANGED_PASS skips, zero repeated tests. Native data dump retained only on DEV C:\Temp; no production PHP or PRD modifications. Reconciliation now 827748 native-array/member bytes proved on selected v432 genuine objects.
+- **Resume at:** O06/G5 remain OPEN: investigate USkeletalMesh inherited ULodMesh on authentic original source/compiled engine, native malformed byte/error differences, broader game-source/early branches and SFCharacter4 unresolved dependencies. Do not rerun current FOUR PASS tests, reuse hash-backed journal; continue with a new scoped contract.
+- **Active changed at:** 2026-10-24T08:29:29+00:00
+- **Latest DEV test states:** PASS 112; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T08:25:35.4272928Z | verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php | PASS | 270 | catalog\compliance\evidence\o06\20261024T082534795Z-89fb2a79-DEV-verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php.txt |
+| 2026-10-24T08:25:34.8029151Z | verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php | STARTED |  | catalog\compliance\evidence\o06\20261024T082534795Z-89fb2a79-DEV-verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php.txt |
+| 2026-10-24T08:24:48.9243008Z | verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php | FAIL | 279 | catalog\compliance\evidence\o06\20261024T082448302Z-b87602db-DEV-verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php.txt |
+| 2026-10-24T08:24:48.3093033Z | verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php | STARTED |  | catalog\compliance\evidence\o06\20261024T082448302Z-b87602db-DEV-verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php.txt |
 | 2026-10-24T08:09:58.5925749Z | verify-ue1-o06-g5-native-v432-motionchunk-headers.php | PASS | 167 | catalog\compliance\evidence\o06\20261024T080958061Z-783e25a3-DEV-verify-ue1-o06-g5-native-v432-motionchunk-headers.php.txt |
 | 2026-10-24T08:09:58.0685598Z | verify-ue1-o06-g5-native-v432-motionchunk-headers.php | STARTED |  | catalog\compliance\evidence\o06\20261024T080958061Z-783e25a3-DEV-verify-ue1-o06-g5-native-v432-motionchunk-headers.php.txt |
 | 2026-10-24T07:47:56.8126890Z | verify-ue1-o06-g5-native-animseq-notifies-v432.php | PASS | 168 | catalog\compliance\evidence\o06\20261024T074756286Z-b04f9000-DEV-verify-ue1-o06-g5-native-animseq-notifies-v432.php.txt |
@@ -28,10 +32,6 @@
 | 2026-10-23T23:09:33.1302403Z | verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php | STARTED |  | catalog\compliance\evidence\o06\20261023T230933123Z-cf294e12-DEV-verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php.txt |
 | 2026-10-23T23:04:36.2245925Z | verify-ue1-o06-g5-genuine-v432-skeletal-animation.php | PASS | 298 | catalog\compliance\evidence\o06\20261023T230435525Z-504a1849-DEV-verify-ue1-o06-g5-genuine-v432-skeletal-animation.php.txt |
 | 2026-10-23T23:04:35.5326944Z | verify-ue1-o06-g5-genuine-v432-skeletal-animation.php | STARTED |  | catalog\compliance\evidence\o06\20261023T230435525Z-504a1849-DEV-verify-ue1-o06-g5-genuine-v432-skeletal-animation.php.txt |
-| 2026-10-23T23:04:05.5507607Z | verify-ue1-o06-g5-genuine-v432-skeletal-animation.php | FAIL | 298 | catalog\compliance\evidence\o06\20261023T230404847Z-a5e0faba-DEV-verify-ue1-o06-g5-genuine-v432-skeletal-animation.php.txt |
-| 2026-10-23T23:04:04.8549659Z | verify-ue1-o06-g5-genuine-v432-skeletal-animation.php | STARTED |  | catalog\compliance\evidence\o06\20261023T230404847Z-a5e0faba-DEV-verify-ue1-o06-g5-genuine-v432-skeletal-animation.php.txt |
-| 2026-10-23T22:41:38.3089216Z | verify-ue1-o06-g5-native-v432-font-loaded-values.php | PASS | 142 | catalog\compliance\evidence\o06\20261023T224137762Z-0af749c6-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt |
-| 2026-10-23T22:41:37.7698862Z | verify-ue1-o06-g5-native-v432-font-loaded-values.php | STARTED |  | catalog\compliance\evidence\o06\20261023T224137762Z-0af749c6-DEV-verify-ue1-o06-g5-native-v432-font-loaded-values.php.txt |
 
 ## Recovery procedure
 

@@ -12,7 +12,7 @@ COMPILED={"T99:UFont::Serialize","T99:UAnimation::Serialize","T99:USkeletalMesh:
 GENUINE_ARCHIVE={"T99:UFont::Serialize":"verify-ue1-o06-g5-genuine-v432-fonts.php"}
 NATIVE_LOADED={"T99:UFont::Serialize":"verify-ue1-o06-g5-native-v432-font-loaded-values.php"}
 NATIVE_ARRAY_TESTS={"T99:USkeletalMesh::Serialize": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php", "verify-ue1-o06-g5-real-skeletal-vector-arrays.php", "verify-ue1-o06-g5-native-refbones-v432.php"],
-                    "T99:UAnimation::Serialize": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php", "verify-ue1-o06-g5-native-animseq-notifies-v432.php", "verify-ue1-o06-g5-native-v432-motionchunk-headers.php"]}
+                    "T99:UAnimation::Serialize": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php", "verify-ue1-o06-g5-native-animseq-notifies-v432.php", "verify-ue1-o06-g5-native-v432-motionchunk-headers.php", "verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php"]}
 NATIVE_LOADED_EXTRA={"T99:UFont::Serialize":"verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php",
                      "T99:USkeletalMesh::Serialize":"verify-ue1-o06-g5-genuine-v432-skeletal-animation.php",
                      "T99:UAnimation::Serialize":"verify-ue1-o06-g5-genuine-v432-skeletal-animation.php"}
@@ -98,7 +98,7 @@ for e in reg["entries"]:
                          "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"])
         elif array_subset_valid:
             gaps.append("inherited_ULodMesh_and_unverified_scalar_fields_errors_open" if ident=="T99:USkeletalMesh::Serialize"
-                        else "MotionChunk_Moves_first_95_track_headers_checked_all_other_nested_keys_and_errors_open")
+                        else "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open")
         else: gaps.append("native_full_array_elements_and_malformed_errors_not_proven")
     if ident in NATIVE: gaps.append("native_export_slice_only")
     rows.append({"id":ident,"branch":e["branch"],"implementation":"MAPPED",
@@ -137,7 +137,7 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
          "compiled_full_array_element_subset":sum(r["native_array_full_element_subset_valid"] for r in rows),
          "compiled_native_individual_array_bytes_verified":(
              (282956 if any(r["id"]=="T99:USkeletalMesh::Serialize" and r["native_array_full_element_subset_valid"] for r in rows) else 0)
-             +(3956 if any(r["id"]=="T99:UAnimation::Serialize" and r["native_array_full_element_subset_valid"] for r in rows) else 0)),
+             +(544792 if any(r["id"]=="T99:UAnimation::Serialize" and r["native_array_full_element_subset_valid"] for r in rows) else 0)),
          "early_methods_without_matching_compiled_runtime":sum(r["branch"] in EARLY for r in rows)}
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
@@ -163,6 +163,7 @@ lines=["# UE1 O06 — G5 evidence reconciliation","",
        "- NEW **full native array-element subsets**: "+str(summary["compiled_full_array_element_subset"])+" compiled v432 methods (T99 USkeletalMesh, UAnimation): genuine 5 skeletal objects 42,032 bytes of complete bone index/weights and 225,756 bytes of complete Points/LocalPoints, plus 143 animation ref bones full native name-table-resolved FName/flags/parent semantic records (1,716 bytes). Total 269,504 bytes, focused 733/733 + 228/228 PASS, no repeated tests.",
        "- NEW independent compiled-v432 **resumable 2-case batch**: 237 full native FMeshBone records (15,168 bytes) source field-by-field including runtime-resolved names and XSize's second serialized write, 1787/1787 PASS; 70 full native FMeshAnimSeq metadata records (2,240 bytes), all 22 nested native notification time/function names, 575/575 PASS. Both were rerun in resume mode with 2/2 UNCHANGED_PASS cache skips, zero repeated tests. Combined new 2362/2362 checks. SHA-pinned native manifests and append-only events preserved; YSize/Depth nonserialized fields and MotionChunk Moves still OPEN.",
        "- NEW third resumable native contract: 70 genuine MotionChunk in-memory scalar/root header and array-length comparisons, 95 full first-Move AnalogTrack header checks plus 732 full first-track key/BoneIndices bytes identical, 598/598 PASS. Remaining KeyQuat/KeyPos/KeyTime buffers from all other tracks still OPEN; did not replay previous PASS evidence.",
+       "- NEW compiled real v432 **full nested MotionChunk memory**: 70 authentic Moves, 3,292 AnalogTracks, 10,156 distinct root/track/bone nested array buffers, 540,836 entire loaded bytes equal every source byte, 21,020 KeyQuat, 9,268 KeyPos and 21,020 KeyTime keys. Microsoft CDB 46MB full-memory MiniDump MEMORY64 oracle for each original package, independent source bounds/float-preview comparisons; focused 29,145/29,145 PASS, one initial test aggregation FAIL preserved. This validates complete nested element values for TWO original v69 package UAnimation exports, not malformed runtime or other source families.",
        "- Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded)." ,
        "- Latest DEV journal state: "+str(result["latest_DEV_test_states"])+".",
        "- Named tests with current matching source fingerprint: "+str(summary["named_tests_with_current_source_fingerprint"])+" of "+str(summary["with_named_test"])+"; historical PASS is not an automatically current proof.",
@@ -174,7 +175,7 @@ for b,x in branches.items():
     lines.append("| "+b+" | "+str(x["mapped"])+" | "+str(x["unnamed"])+" | "+str(x["native_slice"])+" | "+str(x["compiled_order"])+" | "+str(x["native_loaded_value_slice"])+" | "+str(x["native_full_array_element_subset"])+" |")
 lines+=["","## G5 finite queue (do not replay existing valid tests)","",
         "1. Identify exact v432 PHP reader changes since last journal fingerprint and rerun only their invalidated focused tests.",
-        "2. NEW resume-safe three-contract native batch: 237 FMeshBone records, 70 real AnimSeq records and 22 notifications, plus 70 MotionChunk and 95 first-Move AnalogTrack headers and 732 first-track/key bytes. Next UAnimation remaining 95+ nested key-array buffers across all moves, inherited ULodMesh; SFCharacter4 native deps remain blocked.",
+        "2. NEW resume-safe FOUR-contract native batch: 237 FMeshBone records, 70 real AnimSeqs and 22 notifications, 70 MotionChunk headers, 95 first-Move AnalogTracks, plus ALL 10,156 nested animation arrays (540,836 native bytes) from original EcoTerror/d00d. Remaining priorities: inherited ULodMesh on genuine skeletal objects, native malformed/error semantics, and other source families; SFCharacter4 deps remain blocked.",
         "3. Compare actual native property/default/struct loaded values, reference identities and consumed bytes for available genuine packages.",
         "4. R82/R83: 52 registered methods carry only source identity proof, no named test. Attach actual per-method source/production/fixture evidence before G5 signoff.",
         "5. Early R82/R83/R96/U86/U97/D97: locate matching original runtime; otherwise record a native oracle limitation, not invented PASS.",

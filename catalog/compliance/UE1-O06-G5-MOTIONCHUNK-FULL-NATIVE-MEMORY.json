@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "classification": "REAL_UNMODIFIED_UT99_V69_FULL_NATIVE_COMPILED_V432_MOTIONCHUNK_NESTED_ARRAY_MEMORY64_DUMP_ORACLE",
+  "source_profile": "ut99-v432",
+  "native_method": "UAnimation::Serialize Engine.dll RVA 0xECF21 post-FArchive CDB breakpoint",
+  "compiled_engine": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+  "compiled_engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "cases": [
+    {
+      "name": "EcoTerror",
+      "package": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+      "package_sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+      "export_index": 6,
+      "moves": 68,
+      "dump": "C:/Temp/UnrealDB/O06/G5-EcoTerror-v432-fullmemory.dmp",
+      "dump_sha256": "cf6b1aec3d8ca1120335d4368310a828c68b3994fa6c5aff3e283d11d89dc773",
+      "log": "C:/Temp/UnrealDB/O06/g5-EcoTerror-full-memory-dump.log",
+      "log_sha256": "ad7e7f504ab33e4e3a49f6bd6b7b1dab18b093919364415e3c18208959657054",
+      "cdb_label": "G5_NATIVE_ANIM_FULL_MEM_EcoTerror"
+    },
+    {
+      "name": "d00d",
+      "package": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+      "package_sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+      "export_index": 7,
+      "moves": 2,
+      "dump": "C:/Temp/UnrealDB/O06/G5-d00d-fullmemory.dmp",
+      "dump_sha256": "965908759f59bd9fc0a0d85594fab90c7c4efeb1b4e4235ec3da18fc3362d582",
+      "log": "C:/Temp/UnrealDB/O06/g5-d00d-full-memory-dump.log",
+      "log_sha256": "f79bbb370a9424c11899b316231f91b5181a4b00b0b50e8e3d793b71d9f12e15",
+      "cdb_label": "G5_NATIVE_ANIM_FULL_MEM_d00d"
+    }
+  ],
+  "native_inmemory_offsets": {
+    "uAnimationMovesArrayPtr": "UAnimation+0x34",
+    "MotionChunkSize": 88,
+    "MotionChunkBoneIndices": 24,
+    "MotionChunkAnimTracks": 36,
+    "MotionChunkRootTrack": 48,
+    "AnalogTrackSize": 40,
+    "AnalogTrackKeyQuatArray": 4,
+    "AnalogTrackKeyPosArray": 16,
+    "AnalogTrackKeyTimeArray": 28
+  },
+  "notes": [
+    "Full user-mode CDB .dump /ma native process snapshot, not an artificial runtime simulation. Captured after genuinely loaded UAnimation::Serialize for named real package source export.",
+    "Read-only PHP MiniDump MEMORY64 stream parser reconstructs VA range mapping. Entire nested MotionChunk arrays must match exact source source-defined FArchive byte buffers, including empty arrays, every AnalogTrack and RootTrack.",
+    "Snapshot files (~46MB each) remain under DEV C:/Temp/UnrealDB/O06 and are not committed or deployed to PRD. Manifest pins original dump SHA and native DLL.",
+    "PRD original verified corpus source share read-only. No production PHP modification. Malformed-input error path still OPEN, other source families OPEN."
+  ]
+}

@@ -1,0 +1,17 @@
+﻿{
+    "ok": false,
+    "checks": 29145,
+    "passed": 29144,
+    "errors": [
+        "source_native_all_nested_bytes_equal_d00d"
+    ],
+    "compiled_genuine_MotionChunks": 70,
+    "compiled_genuine_AnalogTracks": 3292,
+    "native_TArray_buffers_verified": 10156,
+    "nested_array_pointers_checked": 290,
+    "all_nested_key_and_bone_bytes_identical": 540836,
+    "native_Quat_keys": 21020,
+    "native_Pos_keys": 9268,
+    "native_Time_keys": 21020,
+    "limits": "All MotionChunk source serial elements and nested AnalogTrack/RootTrack key arrays in two genuine v69 packages compared to real compiled v432 minidump. Other original files/source families, malformed native error paths and inherited functions remain OPEN."
+}
