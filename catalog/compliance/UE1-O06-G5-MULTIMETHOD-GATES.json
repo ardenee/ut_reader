@@ -37,7 +37,7 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Compiled v432 Core UClass::Serialize actually loaded 88/131 original Engine.u classes. First scalar/GUID/count/config native comparison 716/716 PASS; next genuine full-memory 44 MB dump matched 3,053 entire FDependency class-pointer identity/Deep/CRC records (9,159 fields), 176 complete PackageImports runtime FName entries and 88 ClassWithin native class names, 9,876/9,876 PASS, two unrelated native Core classes explicitly excluded. The remaining 43 source UClass exports, full class-default object/property values, inherited UObject/UField/UStruct/UState methods, malformed-byte/error consumption and other source variants remain OPEN."
+      "blocker_summary": "Compiled v432 Core UClass::Serialize loaded 88/131 genuine Engine.u classes. All scalar/GUID/count/config fields (716/716), all 3,053 full native FDependency elements, 176 runtime PackageImports FNames and 88 ClassWithin names (9,876/9,876), AND all 608 tagged class-default values versus native UProperty offsets/loaded Defaults buffers (1,670/1,670) independently verified. 607 serialized values exact; one GameReplicationInfo.ServerName difference is confirmed runtime UnrealTournament.ini override, not a parser mismatch. Two unrelated native Core classes explicitly excluded. The 43 unvisited genuine classes, full inherited UObject/UField/UStruct/UState paths, malformed-byte/error semantics and other source family variants remain OPEN."
     },
     "T99:UTextBuffer::Serialize": {
       "criteria": {

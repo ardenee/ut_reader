@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-multimethod-uclass-defaults-native-608": {
+      "description": "88 genuine v69 Engine.u UClass::Serialize defaults in actual compiled UT99 v432 Memory64 full process snapshot: entire 608 source tagged defaults resolved through live UClass Defaults and UProperty PropertyLink, Offset, FBool mask, native UObject reference/name table, FString and struct bytes. 607 exact values; single GameReplicationInfo.ServerName runtime config override corroborated by SHA-pinned UnrealTournament.ini. Full method OPEN due 43 classes, inheritance, malformed, source variants.",
+      "readers": ["CatalogUE1ClassicClassMetadataReader.php", "CatalogUE1ClassicClassDefaultSchemaReader.php"],
+      "focus": ["verify-ue1-o06-g5-uclass-defaults-native-608.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-multimethod-uclass-full-nested-memory": {
       "description": "UT99 v432 actual compiled Core.dll UClass::Serialize after 90th loaded class: 44 MB real MiniDump MEMORY64 contains full UClass FDependency TArray elements (runtime UObject class FName / Deep / CRC), complete PackageImports runtime FName array and ClassWithin referent. Compare all 88 original loaded Engine.u classes against production CatalogUE1ClassicClassMetadataReader. Do not mark method fully G5 accepted while inherited defaults, malformed/errors or other 43 genuine UClasses are open.",
       "readers": ["CatalogUE1ClassicClassMetadataReader.php"],

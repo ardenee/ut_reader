@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-multimethod-uclass-full-nested-memory`
-- **Stage:** complete-3053-genuine-class-dependencies-and-176-imports-native-memory-pass-method-open
-- **Last completed action:** G5: one actual untouched compiled UT99 v432 UClass::Serialize package load at Core+0x27C92 produced SHA-pinned 44,210,111-byte MEMORY64 process dump under C:\Temp, plus 90 real method member-array pointer events. Independent verifier read real compiled FDependency UObject references through live FName table and all 3053 source-aligned class names, Deep, CRC = 9159 element fields, all 176 PackageImports actual live FName names and all 88 ClassWithin names. All 88 genuine Engine.u loaded UClasses agree with production ClassMetadataReader; 2 unrelated Core classes excluded by true name. New focused test 9876/9876 PASS journal 20261024T114319921Z-fac19f70; resumption confirmed UNCHANGED_PASS skip with zero repeated work; no production PHP/PRD edits. Previous 716/716 and 7 source-package cache passes reused. Reconciliation records 6 native-loaded partial method subsets plus 1 UClass complete nested element subset; strict full methods 0/256 (43 original class exports not reached, defaults/inheritance/malformed errors open).
-- **Resume at:** First full UClass closure still blocked by 43 original unobserved classes, independent compiled class defaults and inherited UObject/UField/UStruct/UState semantics, error-byte consumption and source variants. Instead of repeating current 9876/9876 and 716/716 passes, identify smallest new native default value comparison on existing 44MB dump or different authentic class-loading commandlet; advance actual full acceptance gates only when demonstrably complete. Preserve C:\Temp NVMe binary SHA, source journal; commit/push current verified evidence.
-- **Active changed at:** 2026-10-24T11:49:28+00:00
-- **Latest DEV test states:** PASS 119; FAIL 0; STARTED 0
+- **Contract:** `g5-multimethod-uclass-defaults-native-608`
+- **Stage:** all-608-genuine-class-default-tag-values-native-compared-pass-method-open
+- **Last completed action:** Completed next non-replay real compiled UT99 v432 UClass loaded Defaults proof using existing unchanged SHA-pinned 44MB Core native Memory64 dump and authentic Engine.u. Per actual native UProperty linked list, offset, element width, Boolean bitmask, UClass.Defaults pointer, native FName and UObject references, verified ALL 608 source tagged defaults across 88 original loaded UClass exports: 607 exact values; one GameReplicationInfo.ServerName original Another UT Demo Server vs native Another UT Server is explicitly supported by SHA pinned real UnrealTournament.ini ServerName and accepted only as exact configuration override. By types: Float 146, Byte 89, Bool 165, Int 63, Name 6, Object 39, Str 84, Struct 16. Independent focused 1670/1670 PASS journal 20261024T132907473Z-d4ba89c1 (1124ms). Reconciliation and 8-method shared acceptance ledger report 608 source↔native class defaults, 1 supported runtime override, STRICT FULL 0/256. All 7 original package caches skipped unchanged, no compiled rerun, production PHP untouched, PRD untouched.
+- **Resume at:** Close smallest remaining real gaps without replaying current PASS: find native compiled loader route for 43 missing genuine Engine.u UClasses, capture actual inherited UState/UStruct/UField/UObject native complete archive member values, and compare malformed archive/error byte consumption plus early UE1 versions. Full UClass still OPEN; only mark FULL after all seven criteria and independent signoff. Preserve SHA-pinned native dump on C:\Temp NVMe.
+- **Active changed at:** 2026-10-24T13:33:23+00:00
+- **Latest DEV test states:** PASS 120; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T13:29:09.0523874Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | PASS | 1124 | catalog\compliance\evidence\o06\20261024T132907473Z-d4ba89c1-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
+| 2026-10-24T13:29:07.4814030Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | STARTED |  | catalog\compliance\evidence\o06\20261024T132907473Z-d4ba89c1-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
 | 2026-10-24T11:43:21.3870348Z | verify-ue1-o06-g5-uclass-all-native-nested-memory.php | PASS | 1096 | catalog\compliance\evidence\o06\20261024T114319921Z-fac19f70-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt |
 | 2026-10-24T11:43:19.9290303Z | verify-ue1-o06-g5-uclass-all-native-nested-memory.php | STARTED |  | catalog\compliance\evidence\o06\20261024T114319921Z-fac19f70-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt |
 | 2026-10-24T11:14:59.4061817Z | verify-ue1-o06-g5-multimethod-uclass-loaded-values.php | PASS | 1014 | catalog\compliance\evidence\o06\20261024T111458040Z-305f115a-DEV-verify-ue1-o06-g5-multimethod-uclass-loaded-values.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T10:15:36.6964180Z | verify-ue1-o06-native-ut99-sound-exports.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101536696Z-5dc7ce93-DEV-verify-ue1-o06-native-ut99-sound-exports.php.txt |
 | 2026-10-24T10:15:36.2963978Z | verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php | PASS | 326 | catalog\compliance\evidence\o06\20261024T101535626Z-f7acbabf-DEV-verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php.txt |
 | 2026-10-24T10:15:35.6263880Z | verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101535626Z-f7acbabf-DEV-verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php.txt |
-| 2026-10-24T10:15:35.2294141Z | verify-ue1-o06-g5-native-v432-motionchunk-headers.php | PASS | 251 | catalog\compliance\evidence\o06\20261024T101534633Z-463256d9-DEV-verify-ue1-o06-g5-native-v432-motionchunk-headers.php.txt |
-| 2026-10-24T10:15:34.6334188Z | verify-ue1-o06-g5-native-v432-motionchunk-headers.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101534633Z-463256d9-DEV-verify-ue1-o06-g5-native-v432-motionchunk-headers.php.txt |
 
 ## Recovery procedure
 
