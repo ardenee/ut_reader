@@ -82,7 +82,7 @@
   "methods": [
     {
       "id": "T99:UObject::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "Close shared inherited StateFrame/property envelope and exact runtime error/byte semantics.",
+      "next_closure_work": "Obtain one native loader path that actually loads all 19 original Entry.unr StateFrames and malformed byte-error semantics; then perform single full-method review.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -241,11 +241,12 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "remaining_native_StateFrame_and_negative_paths"
     },
     {
       "id": "T99:UClass::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -332,7 +333,7 @@
         "global_source_inputs_changed",
         "compiled_ALL88_REAL_UClass_43_NAME_None_zero_byte_placeholders_not_unvisited_3053_dependencies_176_imports_608_defaults_plus_1056_inherited_UField_UStruct_UState_stored_members_verified_but_Script_bytecode_fixups_malformed_errors_version_variants_OPEN"
       ],
-      "next_closure_work": "Prove actual compiled class defaults, references, metadata values and superclass invocation.",
+      "next_closure_work": "Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -341,11 +342,12 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "inherited_UObject_script_fixups_negative_paths"
     },
     {
       "id": "T99:UTextBuffer::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "FAILED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -439,7 +441,7 @@
         "inherited_UObject_full_method_and_compiled_oversized_FString_consumed_bytes_differ_open",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Native loaded 88 strings verified; inherited UObject and oversized native byte/error mismatch remain.",
+      "next_closure_work": "Correct error/consumption parity safely (never unsafe out-of-bounds read), then one full acceptance run including inherited branch.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -448,11 +450,12 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch"
     },
     {
       "id": "T99:UFont::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "FAILED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -505,7 +508,7 @@
         "controlled_malformed_CharRemap_native_consumes_4_bytes_past_serial_extent_PHP_rejects_early",
         "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"
       ],
-      "next_closure_work": "Prove all native font-page glyph arrays, texture refs and malformed CharRemap paths.",
+      "next_closure_work": "Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -514,11 +517,12 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch"
     },
     {
       "id": "T99:USkeletalMesh::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -583,7 +587,7 @@
         "no_named_test",
         "inherited_ULodMesh_and_unverified_scalar_fields_errors_open"
       ],
-      "next_closure_work": "Close inherited ULodMesh and remaining scalar/references/error semantics.",
+      "next_closure_work": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -592,11 +596,12 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "inherited_ULodMesh_and_negative_cases"
     },
     {
       "id": "T99:UAnimation::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -659,7 +664,7 @@
         "no_named_test",
         "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open"
       ],
-      "next_closure_work": "Verify inherited UObject and untested native/error/source-version boundaries.",
+      "next_closure_work": "Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -668,11 +673,12 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "inherited_UObject_and_negative_variants"
     },
     {
       "id": "T99:USound::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -724,7 +730,7 @@
         "global_source_inputs_changed",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Go beyond native WAV exports to full source-defined serialized payload, values and error handling.",
+      "next_closure_work": "Capture one complete native Sound load/error/byte-consumption oracle; one consolidated acceptance test only.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -733,11 +739,12 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "export_output_is_not_loader_native_semantics"
     },
     {
       "id": "T99:UMusic::Serialize",
-      "full_G5_method_acceptance": "OPEN",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -786,7 +793,7 @@
         "global_source_inputs_changed",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Go beyond native exports to complete lazy-array seek semantics, native payload and errors.",
+      "next_closure_work": "Capture one complete native Music load/error/byte-consumption oracle; one consolidated acceptance test only.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -795,8 +802,11 @@
         "all inherited serializers and selected game/version variants",
         "current affected test evidence",
         "separately reviewed method acceptance"
-      ]
+      ],
+      "decisive_closure_blocker": "export_output_is_not_loader_native_semantics"
     }
   ],
-  "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method."
+  "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",
+  "failed_method_decisions": 2,
+  "blocked_method_decisions": 6
 }

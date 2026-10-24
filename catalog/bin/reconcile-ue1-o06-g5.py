@@ -29,6 +29,7 @@ EARLY={"R82","R83","R96","U86","U97","D97"}
 def read(p): return json.loads(p.read_text(encoding="utf-8-sig"))
 def digest(p): return hashlib.sha256(p.read_bytes()).hexdigest() if p and p.is_file() else None
 reg=read(C/"UE1-O06-SERIALIZER-REGISTER.json")
+method_decisions=read(C/"UE1-O06-G5-MULTIMETHOD-GATES.json")["methods"]
 status=read(C/"UE1-O06-TEST-STATUS.json")
 events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
 latest={}
@@ -173,7 +174,9 @@ for e in reg["entries"]:
         "native_array_full_element_subset_tests":arraytests,
         "native_array_full_element_subset_states":arraytest_states,
         "native_array_full_element_subset_valid":array_subset_valid,
-        "full_G5_method_acceptance":"OPEN","gaps":gaps})
+        "full_G5_method_acceptance":method_decisions.get(ident,{}).get("decision","OPEN"),
+        "decisive_closure_blocker":method_decisions.get(ident,{}).get("decisive_blocker"),
+        "gaps":gaps})
 branches={}
 for b in sorted({r["branch"] for r in rows}):
     bs=[r for r in rows if r["branch"]==b]
@@ -185,7 +188,10 @@ for b in sorted({r["branch"] for r in rows}):
 no_named=[r["id"] for r in rows if not r["named_test"]]
 natives=[r["id"] for r in rows if r["native_slice_evidence_valid"]]
 summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
-         "full_independent_method_verified":0,"native_partial_slice_evidence":len(natives),
+         "full_independent_method_verified":0,
+         "g5_failed_method_decisions":sum(r["full_G5_method_acceptance"]=="FAILED" for r in rows),
+         "g5_blocked_method_decisions":sum(r["full_G5_method_acceptance"]=="BLOCKED" for r in rows),
+         "native_partial_slice_evidence":len(natives),
          "compiled_archive_only":sum(r["id"] in COMPILED and not r["native_loaded_evidence_current"] for r in rows),"with_named_test":len(rows)-len(no_named),
          "without_named_test":len(no_named),
          "named_tests_with_current_source_fingerprint":sum(r["named_test_current_global_fingerprint"] for r in rows),

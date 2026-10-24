@@ -88,7 +88,9 @@ def render(rows,config,src_sha):
         proof_path=ROOT/proof if isinstance(proof,str) and proof.startswith("catalog/compliance/") else None
         proof_valid=bool(all_verified and proof_path and proof_path.is_file()
                          and isinstance(proof_hash,str) and sha(proof_path)==proof_hash)
-        current_status="ACCEPTED" if proof_valid else "OPEN"
+        current_status="ACCEPTED" if proof_valid else gate.get("decision","OPEN")
+        if current_status not in ("ACCEPTED","FAILED","BLOCKED","OPEN"):
+            raise RuntimeError("Invalid method closure decision: "+method)
         if proof_valid:accepted+=1
         source_stats=[p.get("production_native_payloads",{}).get(method,{}) for p in rows]
         sourceFrameCounts=[(p.get("source_uobject_state_frames",{}) if method=="T99:UObject::Serialize" else {}) for p in rows]

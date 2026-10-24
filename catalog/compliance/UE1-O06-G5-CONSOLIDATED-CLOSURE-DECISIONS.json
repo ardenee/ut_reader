@@ -1,0 +1,165 @@
+{
+  "schema": 1,
+  "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
+  "source_fingerprint": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
+  "method_count": 8,
+  "fully_epic_verified": 0,
+  "failed": 2,
+  "blocked": 6,
+  "new_oracle_runs": 0,
+  "new_test_runs": 0,
+  "methods": {
+    "T99:UObject::Serialize": {
+      "decision": "BLOCKED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": true,
+      "existing_export_slice_valid": false,
+      "decisive_blocker": "remaining_native_StateFrame_and_negative_paths",
+      "reason": "Native UObject common positive StateFrame loader covered 14/19 source frames; five original Camera objects and malformed/error byte semantics unverified.",
+      "next_action": "Obtain one native loader path that actually loads all 19 original Entry.unr StateFrames and malformed byte-error semantics; then perform single full-method review.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    },
+    "T99:UClass::Serialize": {
+      "decision": "BLOCKED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": true,
+      "existing_export_slice_valid": false,
+      "decisive_blocker": "inherited_UObject_script_fixups_negative_paths",
+      "reason": "All 88 genuine UClass objects and native stored scalar/array/default/inherited values verified; Script bytecode fixups, malformed consumption, source-version variants, and shared UObject not closed.",
+      "next_action": "Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    },
+    "T99:UTextBuffer::Serialize": {
+      "decision": "FAILED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "FAILED",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": true,
+      "existing_export_slice_valid": true,
+      "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+      "reason": "Known compiled-native 900-character malformed FString consumes beyond SerialSize then reports mismatch; production PHP safely rejects earlier with different consumed-byte semantics. Shared UObject still open.",
+      "next_action": "Correct error/consumption parity safely (never unsafe out-of-bounds read), then one full acceptance run including inherited branch.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    },
+    "T99:UFont::Serialize": {
+      "decision": "FAILED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "FAILED",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": true,
+      "existing_export_slice_valid": false,
+      "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+      "reason": "Known native malformed CharRemap consumes four bytes beyond declared serial extent while PHP refuses before the read; other glyph references and native error handling not all closed.",
+      "next_action": "Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    },
+    "T99:USkeletalMesh::Serialize": {
+      "decision": "BLOCKED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": true,
+      "existing_export_slice_valid": false,
+      "decisive_blocker": "inherited_ULodMesh_and_negative_cases",
+      "reason": "Native bone/vertex arrays covered, but inherited ULodMesh and other scalar/error branches unverified.",
+      "next_action": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    },
+    "T99:UAnimation::Serialize": {
+      "decision": "BLOCKED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": true,
+      "existing_export_slice_valid": false,
+      "decisive_blocker": "inherited_UObject_and_negative_variants",
+      "reason": "Native 70 genuine MotionChunk arrays with 540,836 bytes compared, but inherited UObject, other versions and negative cases unverified.",
+      "next_action": "Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    },
+    "T99:USound::Serialize": {
+      "decision": "BLOCKED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": false,
+      "existing_export_slice_valid": true,
+      "decisive_blocker": "export_output_is_not_loader_native_semantics",
+      "reason": "Independent compiled WAV exporter slice is output parity, not a complete compiled USound::Serialize loaded-value and error oracle.",
+      "next_action": "Capture one complete native Sound load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    },
+    "T99:UMusic::Serialize": {
+      "decision": "BLOCKED",
+      "gate_results": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "existing_native_loaded_valid": false,
+      "existing_export_slice_valid": true,
+      "decisive_blocker": "export_output_is_not_loader_native_semantics",
+      "reason": "Independent compiled music exporter slice is output parity, not full compiled UMusic::Serialize lazy-array/negative loader semantics.",
+      "next_action": "Capture one complete native Music load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "new_native_tests_executed": 0,
+      "new_test_runs_executed": 0
+    }
+  }
+}

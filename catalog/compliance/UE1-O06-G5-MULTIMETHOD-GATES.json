@@ -13,7 +13,7 @@
   "methods": {
     "T99:UObject::Serialize": {
       "criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
@@ -23,11 +23,16 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). All 28 actual compiled Node/StateNode FName names matched original v68 import referents (195/195 PASS); remaining five are Camera exports not loaded by Actor or Camera batchexport, full outer/class object identity, malformed byte/error paths and early source-family variants OPEN."
+      "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). All 28 actual compiled Node/StateNode FName names matched original v68 import referents (195/195 PASS); remaining five are Camera exports not loaded by Actor or Camera batchexport, full outer/class object identity, malformed byte/error paths and early source-family variants OPEN.",
+      "decision": "BLOCKED",
+      "decisive_blocker": "remaining_native_StateFrame_and_negative_paths",
+      "next_action": "Obtain one native loader path that actually loads all 19 original Entry.unr StateFrames and malformed byte-error semantics; then perform single full-method review.",
+      "reason": "Native UObject common positive StateFrame loader covered 14/19 source frames; five original Camera objects and malformed/error byte semantics unverified.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     },
     "T99:UClass::Serialize": {
       "criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
@@ -37,39 +42,54 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Compiled v432 Core UClass::Serialize loaded ALL 88/88 genuine nonempty Engine.u UClasses; 43 extra ClassIndex==0 entries are zero-sized NAME_None placeholders and not class exports. Full real native loaded-value proofs current: ClassFlags/GUID/array counts/ConfigName (719/719), all 3,053 full native FDependency elements, 176 PackageImports FNames and 88 ClassWithin referents (9,878/9,878), all 608 tagged defaults (607 exact + one SHA-pinned runtime GameReplicationInfo.ServerName INI override, 1,672/1,672), and 12 inherited UField/UStruct/UState real in-memory stored fields per each of 88 classes (1,056 values, 1,334/1,334 checks). All verifiers are SHA-pinned genuine v432 compiled engine comparisons. Full inherited method closure still requires complete Script bytecode element/fixup values, UObject remaining variants, malformed/error archive consumption and other selected source family boundaries; method FULL remains OPEN."
+      "blocker_summary": "Compiled v432 Core UClass::Serialize loaded ALL 88/88 genuine nonempty Engine.u UClasses; 43 extra ClassIndex==0 entries are zero-sized NAME_None placeholders and not class exports. Full real native loaded-value proofs current: ClassFlags/GUID/array counts/ConfigName (719/719), all 3,053 full native FDependency elements, 176 PackageImports FNames and 88 ClassWithin referents (9,878/9,878), all 608 tagged defaults (607 exact + one SHA-pinned runtime GameReplicationInfo.ServerName INI override, 1,672/1,672), and 12 inherited UField/UStruct/UState real in-memory stored fields per each of 88 classes (1,056 values, 1,334/1,334 checks). All verifiers are SHA-pinned genuine v432 compiled engine comparisons. Full inherited method closure still requires complete Script bytecode element/fixup values, UObject remaining variants, malformed/error archive consumption and other selected source family boundaries; method FULL remains OPEN.",
+      "decision": "BLOCKED",
+      "decisive_blocker": "inherited_UObject_script_fixups_negative_paths",
+      "next_action": "Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
+      "reason": "All 88 genuine UClass objects and native stored scalar/array/default/inherited values verified; Script bytecode fixups, malformed consumption, source-version variants, and shared UObject not closed.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     },
     "T99:UTextBuffer::Serialize": {
       "criteria": {
-        "pinned_source_and_dispatch": "OPEN",
-        "complete_native_field_values_and_references": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
+        "malformed_input_error_semantics": "FAILED",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Compiled all 88 Engine.u TextBuffer loaded values match; inherited UObject and oversize error-byte path unresolved."
+      "blocker_summary": "Compiled all 88 Engine.u TextBuffer loaded values match; inherited UObject and oversize error-byte path unresolved.",
+      "decision": "FAILED",
+      "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+      "next_action": "Correct error/consumption parity safely (never unsafe out-of-bounds read), then one full acceptance run including inherited branch.",
+      "reason": "Known compiled-native 900-character malformed FString consumes beyond SerialSize then reports mismatch; production PHP safely rejects earlier with different consumed-byte semantics. Shared UObject still open.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     },
     "T99:UFont::Serialize": {
       "criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
+        "malformed_input_error_semantics": "FAILED",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Genuine glyphs and nonempty remaps partially verified; malformed and other specimens remain."
+      "blocker_summary": "Genuine glyphs and nonempty remaps partially verified; malformed and other specimens remain.",
+      "decision": "FAILED",
+      "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+      "next_action": "Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
+      "reason": "Known native malformed CharRemap consumes four bytes beyond declared serial extent while PHP refuses before the read; other glyph references and native error handling not all closed.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     },
     "T99:USkeletalMesh::Serialize": {
       "criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
@@ -79,11 +99,16 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "237 native FMeshBone records verified; inherited ULodMesh is still open."
+      "blocker_summary": "237 native FMeshBone records verified; inherited ULodMesh is still open.",
+      "decision": "BLOCKED",
+      "decisive_blocker": "inherited_ULodMesh_and_negative_cases",
+      "next_action": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
+      "reason": "Native bone/vertex arrays covered, but inherited ULodMesh and other scalar/error branches unverified.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     },
     "T99:UAnimation::Serialize": {
       "criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
@@ -93,7 +118,12 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Complete nested keys for two genuine animation packages; inheritance and malformed variants remain."
+      "blocker_summary": "Complete nested keys for two genuine animation packages; inheritance and malformed variants remain.",
+      "decision": "BLOCKED",
+      "decisive_blocker": "inherited_UObject_and_negative_variants",
+      "next_action": "Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
+      "reason": "Native 70 genuine MotionChunk arrays with 540,836 bytes compared, but inherited UObject, other versions and negative cases unverified.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     },
     "T99:USound::Serialize": {
       "criteria": {
@@ -107,7 +137,12 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Compiled native WAV export slice only; full semantics and error handling open."
+      "blocker_summary": "Compiled native WAV export slice only; full semantics and error handling open.",
+      "decision": "BLOCKED",
+      "decisive_blocker": "export_output_is_not_loader_native_semantics",
+      "next_action": "Capture one complete native Sound load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "reason": "Independent compiled WAV exporter slice is output parity, not a complete compiled USound::Serialize loaded-value and error oracle.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     },
     "T99:UMusic::Serialize": {
       "criteria": {
@@ -121,7 +156,12 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Compiled native music export slice only; full lazy-array and error semantics open."
+      "blocker_summary": "Compiled native music export slice only; full lazy-array and error semantics open.",
+      "decision": "BLOCKED",
+      "decisive_blocker": "export_output_is_not_loader_native_semantics",
+      "next_action": "Capture one complete native Music load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "reason": "Independent compiled music exporter slice is output parity, not full compiled UMusic::Serialize lazy-array/negative loader semantics.",
+      "last_consolidated_review": "existing_current_SHA_pinned_evidence_only_no_new_tests"
     }
   }
 }
