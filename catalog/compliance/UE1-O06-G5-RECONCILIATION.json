@@ -1,15 +1,17 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T23:18:28.300787+00:00",
-  "head": "b7a7254f",
-  "previous_runner_head": "b7a7254f",
-  "previous_source_sha256": "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
-  "current_source_sha256": "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
+  "generated_utc": "2026-10-24T23:36:30.884213+00:00",
+  "head": "7fea68cb",
+  "previous_runner_head": "7fea68cb",
+  "previous_source_sha256": "6dba20b269aa8efc12f97f57ffca9ddd293a06e1a5d2f6b78e285282860929d8",
+  "current_source_sha256": "6dba20b269aa8efc12f97f57ffca9ddd293a06e1a5d2f6b78e285282860929d8",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
   "source_font_branch_equivalence": true,
+  "source_native_genuine_v54_v1200_FSphere_change_scoped": true,
+  "previous_source_before_v54_v1200_FSphere_change": "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
   "source_native_genuine_v227_script_opcode_change_scoped": true,
   "previous_source_before_genuine_v227_script_change": "323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0",
   "source_native_v227_flag_interpretation_change_scoped": true,
@@ -54,7 +56,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 135
+    "PASS": 136
   },
   "branch_totals": {
     "C227": {

@@ -84,6 +84,38 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# Genuine original Unreal Gold v54 UModel native archives prove the
+# Epic v1.200 FSphere : FVector serializes only twelve bytes. The
+# v1200-only Primitive reader change corrects 299 real UModel payloads
+# without touching the UT99 v432 version-gated sphere operator.
+primitive_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicPrimitiveNativeReader.php"
+before_primitive=committed("7fea68cb",primitive_file)
+previous_primitive_source="c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f"
+sig_before_primitive=subst_sig(
+    signature,primitive_file,digest(primitive_file).upper(),sha_blob(before_primitive))
+primitive_test="verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php"
+primitive_ev=latest.get(primitive_test)
+primitive_log=ROOT/primitive_ev["log"] if primitive_ev and primitive_ev.get("log") else None
+try:
+    primitive_result=read(primitive_log) if primitive_log and primitive_log.exists() else {}
+except Exception:
+    primitive_result={}
+primitive_scope=(
+    hashlib.sha256(sig_before_primitive.encode("utf-8")).hexdigest()==previous_primitive_source
+    and "FSphere : FVector has" in primitive_file.read_text(encoding="utf-8-sig")
+    and "elseif(!$original&&$version>61)" in primitive_file.read_text(encoding="utf-8-sig")
+    and primitive_ev is not None and primitive_ev.get("state")=="PASS"
+    and primitive_ev.get("source_sha256")==current
+    and primitive_ev.get("output_sha256")==digest(primitive_log)
+    and primitive_ev.get("test_sha256")==digest(ROOT/"catalog"/"bin"/primitive_test)
+    and primitive_result.get("ok") is True
+    and primitive_result.get("checks")==31 and primitive_result.get("passed")==31
+    and primitive_result.get("genuine_PRD_original_v54_export_count")==2667
+    and primitive_result.get("real_legacy_UModel_complete_after_fix")==299
+    and primitive_result.get("real_legacy_UModel_previously_failed_or_extended")==299
+    and primitive_result.get("UT99_v432_existing_native_oracles_rerun")==0
+    and primitive_result.get("full_method_decision")=="BLOCKED"
+)
 # Original PRD v69 licensee 227 packages prove that old v1.200
 # ScriptArchive opcode meanings are wrong for v227. Keep the v432
 # current source and every compiled oracle intact: reconstruct the
@@ -92,7 +124,7 @@ v227_script_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1Clas
 before_v227_script=committed("b7a7254f",v227_script_file)
 previous_v227_script_source="323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0"
 sig_before_v227_script=subst_sig(
-    signature,v227_script_file,digest(v227_script_file).upper(),sha_blob(before_v227_script))
+    sig_before_primitive,v227_script_file,digest(v227_script_file).upper(),sha_blob(before_v227_script))
 v227_script_test="verify-ue1-o06-c227-genuine-script-source-decision.php"
 v227_script_event=latest.get(v227_script_test)
 v227_script_log=ROOT/v227_script_event["log"] if v227_script_event and v227_script_event.get("log") else None
@@ -101,11 +133,12 @@ try:
 except Exception:
     v227_script_result={}
 v227_script_scope=(
-    hashlib.sha256(sig_before_v227_script.encode("utf-8")).hexdigest()==previous_v227_script_source
+    primitive_scope
+    and hashlib.sha256(sig_before_v227_script.encode("utf-8")).hexdigest()==previous_v227_script_source
     and "CatalogUE1ClassicSourceFamily::UNREAL_V227" in v227_script_file.read_text(encoding="utf-8-sig")
     and "EX_MapKeyElement archive traversal unverified" in v227_script_file.read_text(encoding="utf-8-sig")
     and v227_script_event is not None and v227_script_event.get("state")=="PASS"
-    and v227_script_event.get("source_sha256")==current
+    and v227_script_event.get("source_sha256")==previous_primitive_source
     and v227_script_event.get("output_sha256")==digest(v227_script_log)
     and v227_script_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/v227_script_test)
     and v227_script_result.get("ok") is True
@@ -504,6 +537,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (primitive_scope and f==previous_primitive_source)
         or (v227_script_scope and f==previous_v227_script_source)
         or (v227_flag_scope and f==previous_v227_flag_source)
         or (string_scope and f==previous_string_source)
@@ -682,6 +716,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_genuine_v54_v1200_FSphere_change_scoped":primitive_scope,
+    "previous_source_before_v54_v1200_FSphere_change":previous_primitive_source if primitive_scope else None,
     "source_native_genuine_v227_script_opcode_change_scoped":v227_script_scope,
     "previous_source_before_genuine_v227_script_change":previous_v227_script_source if v227_script_scope else None,
     "source_native_v227_flag_interpretation_change_scoped":v227_flag_scope,

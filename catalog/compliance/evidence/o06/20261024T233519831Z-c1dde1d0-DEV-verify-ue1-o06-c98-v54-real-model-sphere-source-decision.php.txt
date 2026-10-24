@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 31,
+    "passed": 31,
+    "failures": [],
+    "genuine_PRD_original_v54_export_count": 2667,
+    "real_legacy_UModel_complete_after_fix": 299,
+    "real_legacy_UModel_previously_failed_or_extended": 299,
+    "UT99_v432_existing_native_oracles_rerun": 0,
+    "v1200_native_compiled_loaded_values": "NOT_VERIFIED",
+    "full_method_decision": "BLOCKED"
+}

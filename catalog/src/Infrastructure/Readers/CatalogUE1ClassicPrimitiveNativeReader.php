@@ -5,6 +5,8 @@
  * Engine/Inc/UnMath.h FBox/FVector/FPlane serializers;
  * UT99 v400 Engine/Src/UnPrim.cpp:22-29 and Core/Inc/UnMath.h:
  * FSphere::operator<< serializes FVector only when Ver<=61.
+ * Epic v1.200 FSphere : FVector has no matching operator<< for FSphere;
+ * inherited FVector serialization is 12 bytes at versions >40.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -38,18 +40,22 @@ final class CatalogUE1ClassicPrimitiveNativeReader
             $oldPlane=['x'=>$sphere['x'],'y'=>$sphere['y'],
                 'z'=>$sphere['z'],'w'=>$f32()];
             $sphere=['x'=>0.0,'y'=>0.0,'z'=>0.0,'w'=>0.0];
-        }elseif($original||$version>61){
-            // Canonical Epic Core/Inc/UnMath.h always archives
-            // FVector + W. UT99's amended FSphere operator sends
-            // just FVector when loading versions <=61.
+        }elseif(!$original&&$version>61){
+            // UT99 v400 Core/Inc/UnMath.h explicitly defines the
+            // FSphere archive operator: FPlane for versions >61.
             $sphere['w']=$f32();
         }else{
+            // Epic v1.200 Engine/Inc/UnMath.h FSphere : FVector has
+            // NO FSphere archive operator; its friend FPlane overload
+            // is not applicable. C++ archives inherited FVector (12
+            // bytes) for ALL v>40. UT99 v400 uses the same FVector
+            // wire when Ver<=61 via its explicit FSphere operator.
             $sphere['w']=null;
         }
         return [
             'bounding_box'=>$box,'bounding_sphere'=>$sphere,
             'old_legacy_plane'=>$oldPlane,
-            'source_serialized_base_bytes'=>($original||$version>61)?41:37,
+            'source_serialized_base_bytes'=>($original&&$version<=40)||(!$original&&$version>61)?41:37,
             'source_family'=>$family,
             'runtime_sphere_radius_linked'=>false,
         ];

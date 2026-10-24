@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T23:16:58.7347787Z",
-    "head_commit":  "b7a7254f",
+    "updated_at_utc":  "2026-10-24T23:35:20.4190967Z",
+    "head_commit":  "7fea68cb",
     "current_target":  "DEV",
-    "current_source_sha256":  "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
+    "current_source_sha256":  "6dba20b269aa8efc12f97f57ffca9ddd293a06e1a5d2f6b78e285282860929d8",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -399,6 +399,18 @@
                       "run_id":  "20261024T231658066Z-2607bcfb",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php",
+                      "test":  "verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T23:35:20.3961062Z",
+                      "source_sha256":  "6dba20b269aa8efc12f97f57ffca9ddd293a06e1a5d2f6b78e285282860929d8",
+                      "test_sha256":  "50559e5c991d71c0d1d5a591d96c937a092e2132c8bc355d66712e489f9609eb",
+                      "run_id":  "20261024T233519831Z-c1dde1d0",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T233519831Z-c1dde1d0-DEV-verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-classic-runtime-serializer-exclusions.php",

@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-c227-original-v227-script-source-decision`
-- **Stage:** real-PRD-69-licensee227-v227-class-script-opcode-source-fix-PASS24-original-11-errors-resolved-full-method-BLOCKED
-- **Last completed action:** Original PRD 3 UnrealGold .u archives contain exact Epic v227 package v69/licensee227: source SHA c47b3385..., 1b554353..., 445706a0...; DEV staged byte-identical. Before correction 399 normal tagged export streams decoded, 27 class exports had 11 real fatal decoder errors (+2 script-memory overruns and false native SerialSize overrun). Original v227 UnStack.h and UT99 v432 shared common EExprToken mappings, whereas v1200 is older different bytecode (0x14 BeginFunction vs v227 LetBool and other opcode variants). Production CatalogUE1ClassicScriptArchiveReader now dispatches unreal-v227 through source-common modern bytecode paths, retains old v1200 path and UT99 diagnostics, and explicitly leaves v227-only 0x15 MapKey, 0x35 EatCtrExpr, 0x37 StructConstruct unsupported. Same genuine PRD originals now 399/399 ordinary +27/27 UClass archive parser results, 0 errors, flagged unverified class default values unchanged. Single scoped DEV source acceptance PASS24/24 journal 20261024T231658066Z-2607bcfb and zero compiled native tests. Source fingerprint reconciliation prior b7a7254f source SHA323f... all earlier compiled native source scopes true, full G5 independent review 0FULL 0FAILED 8BLOCKED. Gold Steam compiled version226 not v227 (verified from actual local UCC startup log). PRD read-only and no deployment.
-- **Resume at:** Resolve only v227-unique serialization if source native branch or compiled v227 DLL becomes available, genuine early v1200-only package branches, still uninstantiated Camera runtime access, native UClass defaults/bytecode actual loaded-value criteria and final independent seven-gate method decision. Do not rerun common v1200/v432 frame wire, compiled 308 v61 original objects, 113 genuine Entry values, or previously proven dynamic + nested vector negatives. Continue to other substantive blockers if exact proof impossible.
-- **Active changed at:** 2026-10-24T23:20:33+00:00
-- **Latest DEV test states:** PASS 135; FAIL 0; STARTED 0
+- **Contract:** `g5-c98-v54-original-model-FSphere-source-decision`
+- **Stage:** genuine-original-v54-Epic-v1200-UPrimitive-FSphere12-UModel-299of299-native-source-complete-PASS31-full-method-BLOCKED
+- **Last completed action:** Read-only PRD Gold ue_files DB identifies exactly one v<60 original DMVilla2.unr v54 id1246569, PRD verified SHA-c9829b55 byte-copied to DEV C:/Temp/UnrealDB/O06. Initial 2667/2667 UObject tagged property streams good; native UModel failures 297 and incomplete extension 2 of 299. Root EXACT Epic source Unreal v1.200 Engine/Inc/UnMath.h FSphere : FVector and no operator<<(FSphere&), friend FPlane operator does not apply, UPrimitive::Serialize v>40 serializes inherited FVector12, unlike UnrealDB previously 16; UT99 v400 explicit FSphere operator uses 12 for v<=61, 16 for later. Fixed only Epic v1200 PrimitiveNativeReader legacy sphere semantics, no UT99 behavior changed. Single original file DEV source native sweep: 2667/2667 recognized native exports complete; UModel 299/299 no failures/extensions, other model BSP Verts/Vectors/Polys counts 299/598 etc complete. Genuine v54 contains zero flagged StateFrames, no nonNone state/group (thus those legacy paths remain unverified). SHA-pinned source/original evidence manifest UE1-O06-C98-V54-REAL-MODEL-SPHERE-SOURCE-FIX.json; scoped DEV verifier PASS31/31 journal 20261024T233519831Z-c1dde1d0 zero native engine reruns. Reconcile prior 7fea68cb source digest c63cafd... reconstructed from sole Primitive reader, all earlier native/source scoped proofs true. G5 independent full-method count 0FULL 0FAILED 8BLOCKED. PRD unchanged.
+- **Resume at:** Do not retest v54 UModel or source-common v1.200/v432 v60..61 frame or prior original v61 308 native objects/v227 scripts. Need source-specific C98 pre<54 historical archive proof only if genuine files available, unresolved native Camera loader behavior and v227 archetype native implementation; independent seven-gate method closure. Prioritize actual reader corrections on source-defined errors over another partial proof or testing same method.
+- **Active changed at:** 2026-10-24T23:38:01+00:00
+- **Latest DEV test states:** PASS 136; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T23:35:20.3961062Z | verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php | PASS | 159 | catalog\compliance\evidence\o06\20261024T233519831Z-c1dde1d0-DEV-verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php.txt |
+| 2026-10-24T23:35:19.8380953Z | verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T233519831Z-c1dde1d0-DEV-verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php.txt |
 | 2026-10-24T23:16:58.7057759Z | verify-ue1-o06-c227-genuine-script-source-decision.php | PASS | 222 | catalog\compliance\evidence\o06\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt |
 | 2026-10-24T23:16:58.0748088Z | verify-ue1-o06-c227-genuine-script-source-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt |
 | 2026-10-24T22:49:51.2358405Z | verify-ue1-o06-g5-uobject-v227-source-flag-decision.php | PASS | 188 | catalog\compliance\evidence\o06\20261024T224950639Z-e10583ee-DEV-verify-ue1-o06-g5-uobject-v227-source-flag-decision.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T21:20:02.5926285Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T212002584Z-35b1cb0a-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
 | 2026-10-24T21:19:12.2839445Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | FAIL | 309 | catalog\compliance\evidence\o06\20261024T211911557Z-96028819-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
 | 2026-10-24T21:19:11.5659476Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T211911557Z-96028819-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
-| 2026-10-24T21:18:36.6227464Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | FAIL | 311 | catalog\compliance\evidence\o06\20261024T211835901Z-ffac6a0e-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
-| 2026-10-24T21:18:35.9097802Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T211835901Z-ffac6a0e-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
 
 ## Recovery procedure
 

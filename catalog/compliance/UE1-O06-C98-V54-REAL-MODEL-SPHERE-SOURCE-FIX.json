@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "contract": "Unreal C98 v1.200 inherited FSphere native wire in v54 UPrimitive/UModel",
+  "verified_readonly_PRD_original": "Z:\\Apache24\\htdocs\\unrealdb\\catalog\\storage\\games\\unrealgold\\verified\\6e98be261024d078db5421423b3c50e2.unr",
+  "staged_DEV_exact_copy": "C:\\Temp\\UnrealDB\\O06\\OriginalGold-v54-DMVilla2.unr",
+  "original_sha256": "c9829b551d13dd10ebe315b808c4a4956554a4d85acaf51b6ff050e879dc2fb2",
+  "original_size": 1158697,
+  "version": 54,
+  "licensee": 0,
+  "original_file_name": "DMVilla2.unr",
+  "original_export_count": 2667,
+  "uobject_tag_streams_decoded": 2667,
+  "source_original_primitive_before_FIX_read_bytes": 41,
+  "source_original_primitive_after_FIX_read_bytes": 37,
+  "native_UModel_complete_before": 0,
+  "native_UModel_has_extension_before": 2,
+  "native_UModel_fatal_decode_before": 297,
+  "native_UModel_complete_after": 299,
+  "native_UModel_unresolved_after": 0,
+  "all_original_native_record_statuses_after": {
+    "tag_envelope_complete_no_native_tail": 572,
+    "native_level_record_complete": 1,
+    "native_bspsurfs_database_complete": 299,
+    "native_model_record_complete": 299,
+    "native_polys_database_complete": 299,
+    "native_vectors_database_complete": 598,
+    "native_verts_database_complete": 299,
+    "native_bspnodes_database_complete": 299,
+    "native_textbuffer_record_complete": 1
+  },
+  "original_v54_stateframe_flagged_objects": 0,
+  "v1200_explicit_FSPhere_archive_operator_exists": false,
+  "Epic_original_FSPhere_inherits_FVector_12_byte_serializer": true,
+  "Epic_v1200_UPrimitive_old_v40_FPlane_16_byte_branch_unchanged": true,
+  "UT99_v400_FSPhere_explicit_overload_v61_cutoff_unchanged": true,
+  "v432_compiled_tests_rerun": 0,
+  "full_method_decision": "BLOCKED",
+  "source_SHA": {
+    "v1200_Engine_FSPhere_overload": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Engine\\Inc\\UnMath.h",
+      "sha256": "c63468415d18e1483daa40d5b7dbfc3a4a8b2fc077dc27ae6ef5e820ad126d2b"
+    },
+    "v1200_Engine_UPrimitive_Serialize": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Engine\\Src\\UnPrim.cpp",
+      "sha256": "c32722a772a0f01ca5280cf29cd0ce87eb082e217919a3a2c604abf93b7e95f1"
+    },
+    "v1200_Engine_UModel_Serialize": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Engine\\Src\\UnModel.cpp",
+      "sha256": "fbceb3f076bdcdb5d3329beae9b003985744d811582222bba2b1643c1f7a2bff"
+    },
+    "UT99_v400_Core_FSPhere_operator": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnMath.h",
+      "sha256": "63377767b1fe7383b799a94b96b1697e807d598dae06d96dd76ea196f455a13e"
+    }
+  },
+  "source_native_sweep_SHA": {
+    "path": "C:\\Temp\\UnrealDB\\O06\\g5-original-v54-native-source-tail-sweep.json",
+    "sha256": "92f5828c1a726ccdae794bb05e2350fd1f6389ca1c7013b38cd5af97f0a83c61"
+  },
+  "source_scope": "Source-defined archive byte layout, not full runtime-loaded v1200 object parity"
+}

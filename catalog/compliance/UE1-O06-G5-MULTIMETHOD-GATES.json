@@ -60,7 +60,11 @@
       "genuine_licensed_v227_original_package_exports": 426,
       "v227_original_UClass_scripts_source_decoded": 27,
       "v227_original_UClass_prior_source_failures_corrected": 11,
-      "v227_real_source_archive_error_count_after_opcode_fix": 0
+      "v227_real_source_archive_error_count_after_opcode_fix": 0,
+      "genuine_original_v54_epic_v1200_exports_source_parsed": 2667,
+      "genuine_original_v54_UModel_full_native_archives": 299,
+      "genuine_original_v54_UModel_previously_broken": 299,
+      "v1200_FSPhere_inherited_FVector12_compiled_v432_untouched": true
     },
     "T99:UClass::Serialize": {
       "criteria": {

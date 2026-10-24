@@ -370,7 +370,7 @@ for name in reg["methods"]:
         script_log=ROOT/script_ev["log"].replace("\\","/")
         assert sha(script_log)==script_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/script_test)==script_ev["test_sha256"]
-        assert script_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert script_ev["source_sha256"]==reconciliation["previous_source_before_v54_v1200_FSphere_change"]
         script_result=read(script_log)
         assert script_result["ok"] and script_result["checks"]==24
         assert script_result["passed"]==24
@@ -382,6 +382,26 @@ for name in reg["methods"]:
         assert script_result["compiled_engine_reruns_in_verifier"]==0
         assert script_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_genuine_v227_script_opcode_change_scoped"]
+        # One original v54 Unreal Gold map exposed a v1200 FSphere
+        # wire-size error, now source-corrected. Existing v432 compiled
+        # engine results were reused and never rerun.
+        sphere_test="verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php"
+        sphere_ev=next((item for item in reversed(events)
+            if item.get("test")==sphere_test and item.get("state")=="PASS"),None)
+        assert sphere_ev is not None
+        sphere_log=ROOT/sphere_ev["log"].replace("\\","/")
+        assert sha(sphere_log)==sphere_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/sphere_test)==sphere_ev["test_sha256"]
+        assert sphere_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        sphere_result=read(sphere_log)
+        assert sphere_result["ok"] and sphere_result["checks"]==31
+        assert sphere_result["passed"]==31
+        assert sphere_result["genuine_PRD_original_v54_export_count"]==2667
+        assert sphere_result["real_legacy_UModel_complete_after_fix"]==299
+        assert sphere_result["real_legacy_UModel_previously_failed_or_extended"]==299
+        assert sphere_result["UT99_v432_existing_native_oracles_rerun"]==0
+        assert sphere_result["full_method_decision"]=="BLOCKED"
+        assert reconciliation["source_native_genuine_v54_v1200_FSphere_change_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -397,6 +417,10 @@ for name in reg["methods"]:
         old["v227_original_UClass_scripts_source_decoded"]=27
         old["v227_original_UClass_prior_source_failures_corrected"]=11
         old["v227_real_source_archive_error_count_after_opcode_fix"]=0
+        old["genuine_original_v54_epic_v1200_exports_source_parsed"]=2667
+        old["genuine_original_v54_UModel_full_native_archives"]=299
+        old["genuine_original_v54_UModel_previously_broken"]=299
+        old["v1200_FSPhere_inherited_FVector12_compiled_v432_untouched"]=True
         old["original_PRD_v61_compiled_native_loaded_object_identities"]=308
         old["original_PRD_v61_compiled_loader_native_uninstantiated_Camera"]=4
         old["original_PRD_v61_loaded_tagged_streams_current_source_decoded"]=308
