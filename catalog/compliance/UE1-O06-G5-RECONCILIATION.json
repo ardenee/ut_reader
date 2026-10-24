@@ -1,15 +1,17 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T16:57:58.817772+00:00",
-  "head": "4c0428dc",
-  "previous_runner_head": "4c0428dc",
-  "previous_source_sha256": "bd8f3d5b028951d08b0548b43586fe98cae55f6b709edc142369f2bd1c92a3a7",
-  "current_source_sha256": "bd8f3d5b028951d08b0548b43586fe98cae55f6b709edc142369f2bd1c92a3a7",
+  "generated_utc": "2026-10-24T18:17:45.269698+00:00",
+  "head": "96713018",
+  "previous_runner_head": "96713018",
+  "previous_source_sha256": "452e64cfe46f9df04a12680b7377ec84d9c49e398eb58ff96de86816a364eaa3",
+  "current_source_sha256": "452e64cfe46f9df04a12680b7377ec84d9c49e398eb58ff96de86816a364eaa3",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
   "source_font_branch_equivalence": true,
+  "source_region_pointregion_exact_codec_only": true,
+  "previous_uobject_source_before_pointregion": "bd8f3d5b028951d08b0548b43586fe98cae55f6b709edc142369f2bd1c92a3a7",
   "source_uobject_positive_branch_equivalence": true,
   "previous_uobject_positive_source_sha256": "3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1",
   "summary": {
@@ -35,7 +37,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 125
+    "PASS": 126
   },
   "branch_totals": {
     "C227": {
@@ -11349,11 +11351,11 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "remaining_native_StateFrame_and_negative_paths",
+      "decisive_closure_blocker": "malformed_tag_reference_error_consumption_and_source_version_variants_plus_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",
-        "compiled_genuine_Entry_native_14_of_19_5_unloaded_Camera_export_flags_23_40000_confirmed_and_three_malformed_OffsetMismatch_minus2_zero_63_safe_PHP_43of43_PASS_but_full_tagged_loaded_values_other_error_paths_open"
+        "compiled_genuine_Entry_native_14_of_19_5_unloaded_Camera_export_flags_23_40000_confirmed_and_three_malformed_OffsetMismatch_minus2_zero_63_safe_PHP_43of43_PASS_plus_33_original_loaded_UObjects_all_113_genuine_serialized_tagged_values_exact_native_refs_structs_ENUM_source_37of37_PASS_but_other_malformed_reference_consumption_variant_paths_open"
       ]
     },
     {

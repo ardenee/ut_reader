@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 37,
+    "passed": 37,
+    "issues": [],
+    "method": "T99:UObject::Serialize",
+    "genuine_original_native_loaded_exports": 33,
+    "complete_saved_tagged_value_comparisons": 113,
+    "previous_compiled_StateFrame_checks_reused_not_rerun": 43,
+    "compiled_native_executable_replays": 0,
+    "current_source_parser_runs": 1,
+    "independent_full_method_acceptance": "BLOCKED",
+    "remaining_gate": "Other malformed property and reference errors, archive consumption, applicable version branches and independent final review"
+}

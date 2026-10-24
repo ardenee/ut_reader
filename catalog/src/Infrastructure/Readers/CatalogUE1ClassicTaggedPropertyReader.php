@@ -149,6 +149,26 @@ final class CatalogUE1ClassicTaggedPropertyReader
                             'sheer_rate'=>(float)unpack('g',substr($raw,12,4))[1],
                             'sheer_axis'=>ord($raw[16])];
                         $valueKind='fscale_vector_rate_axis';
+                    }elseif($structName==='pointregion'
+                        &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                        &&$tagSize>=6&&$tagSize<=10){
+                        // Actual v432 Engine/Inc/UnObj.h FPointRegion:
+                        // UObject* Zone (AR_INDEX), INT iLeaf, BYTE ZoneNumber.
+                        // Do not assume a one-byte package object index.
+                        $p=0;$first=ord($raw[$p++]);$neg=($first&0x80)!==0;
+                        $more=($first&0x40)!==0;$ref=$first&0x3f;$shift=6;
+                        while($more&&$p<strlen($raw)-5&&$shift<=27){
+                            $byte=ord($raw[$p++]);
+                            $ref|=($byte&0x7f)<<$shift;
+                            $more=($byte&0x80)!==0;$shift+=7;
+                        }
+                        if(!$more&&$p+5===strlen($raw)){
+                            $leaf=(int)unpack('V',substr($raw,$p,4))[1];
+                            if($leaf>=0x80000000)$leaf-=0x100000000;
+                            $value=['zone_object_reference'=>$neg?-$ref:$ref,
+                                'i_leaf'=>$leaf,'zone_number'=>ord($raw[$p+4])];
+                            $valueKind='fpointregion_zone_leaf_number';
+                        }
                     }elseif($structName==='adrop'&&$tagSize===8){
                         // Epic Fire/Classes/WaterTexture.uc: ADrop 8 bytes.
                         $value=array_combine(

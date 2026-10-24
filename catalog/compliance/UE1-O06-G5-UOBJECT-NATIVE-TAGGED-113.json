@@ -1,0 +1,65 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "source_profile": "ut99-v432",
+  "classification": "AUTHENTIC_COMPILED_UT99_V432_LoadPackage_33_genuine_original_Entry_exports_113_exact_loaded_tagged_property_values_including_FPointRegion_and_all_refs",
+  "archive": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Entry.unr",
+    "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c",
+    "version": 68
+  },
+  "compiled_Core": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "compiled_native_launcher": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-LoadPackage-TaggedValues.exe",
+    "sha256": "0e98e445a7d7fd72fcce6f02fd26050a8f136cbeb68e93806292b30a3115ef8a"
+  },
+  "launcher_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-LoadPackage-TaggedValues.cpp",
+    "sha256": "9ef8cca4ccb7addaf377e65599f5f8e053d762da3b69252e31ba90b0828e0d8f"
+  },
+  "compiled_loaded_values_log": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-loaded-tagged-all.txt",
+    "sha256": "6f63572f100b37b286bdb0609b6eebb194411548ba0317448f603b4f8e3868d7"
+  },
+  "source_Engine_region": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament v432/Engine/Inc/UnObj.h",
+    "sha256": "31349e1ca706d06d140fba7092c0e755efaae72a8b3c6a8598cbc9832125f6da"
+  },
+  "source_Engine_csg_enum": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament v432/Engine/Inc/EngineClasses.h",
+    "sha256": "20f5b0e76e3fe47119972da361b01239bd53b1e769f104fc15fa762029b51b16"
+  },
+  "expected_native_loaded_original_export_count": 33,
+  "expected_complete_tag_comparisons": 113,
+  "matched_by_source_defined_value_kind": {
+    "float32": 2,
+    "package_object_index": 23,
+    "int32": 10,
+    "fname_index": 15,
+    "fpointregion_zone_leaf_number": 14,
+    "boolean_tag_bit": 2,
+    "fvector_float32_xyz": 20,
+    "byte": 9,
+    "fscale_vector_rate_axis": 15,
+    "frotator_int32_pitch_yaw_roll": 2,
+    "fstring_ansi_archive": 1
+  },
+  "previous_complete_stateframe_acceptance": {
+    "test": "verify-ue1-o06-g5-uobject-consolidated-acceptance.php",
+    "journal": "20261024T163857793Z-e7641b1e",
+    "checks": 43,
+    "evidence_label": "original14_loaded_and_three_compiled_Code_error_native_cases",
+    "no_repeat": true
+  },
+  "limitations": [
+    "Native ExportProperties returns current runtime state rather than a dump of archive consumption; matches are for 113 original serialized tagged values in 33 loaded Entry.unr exports, not all live/default properties or every Unreal object source family.",
+    "Five original Camera exports were excluded from actual compiled native object loading, so only source-reachable 33 objects are asserted here.",
+    "Native malformed PropertyTag, malformed object/reference and exact archive cursor/consumption and version-dependent variants across complete UObject::Serialize still require independent compiled evidence.",
+    "Previously captured 43/43 original StateFrame verifier is SHA-pinned and NOT rerun.",
+    "Full method acceptance remains BLOCKED; no reviewed seven-gate closure artifact."
+  ],
+  "full_method_accepted": false
+}

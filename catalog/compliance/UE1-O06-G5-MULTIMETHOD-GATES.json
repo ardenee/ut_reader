@@ -25,10 +25,13 @@
       "closure_sha256": null,
       "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). All 28 actual compiled Node/StateNode FName names matched original v68 import referents (195/195 PASS); remaining five are Camera exports not loaded by Actor or Camera batchexport, full outer/class object identity, malformed byte/error paths and early source-family variants OPEN.",
       "decision": "BLOCKED",
-      "decisive_blocker": "remaining_loaded_tagged_UObject_values_other_error_paths_and_final_full_review",
-      "next_action": "For full method acceptance, establish native loaded tagged-property values and all relevant malformed property/tag/reference and archive-consumption outcomes; require loaded-only Camera distinction or genuine compiled preloading of their exports when in scope. Do not repeat 14 StateFrames, three code-offset native probes or consolidated 43/43.",
-      "reason": "New genuine compiled v432 UObject::LoadPackage in editor context re-confirmed 14 of 19 saved original v68 Entry StateFrames; five Camera exports (RF_NotForClient/Server, not public) were not actually instantiated by the compiled loader. Full 28 native Node/StateNode names retained. Three controlled native malformed offsets (-2,0,63) now match PHP using actual referenced Engine.Brush Script.Num=0; single consolidated method verdict PASS 43/43. Other complete tagged loaded property values, variant/error cases and final review still open.",
-      "last_consolidated_review": "current_single_full_method_verdict_43_checks"
+      "decisive_blocker": "malformed_tag_reference_error_consumption_and_source_version_variants_plus_review",
+      "next_action": "Finish genuinely unverified malformed UPropertyTag decoding, invalid object/reference and exact archive consumption/error semantics, plus source-applicable version variants, then independent full method review. Reuse 33 real compiled loads, 113/113 values and 43/43 historical StateFrame proof; do not retest these passing paths.",
+      "reason": "Compiled v432 UObject::LoadPackage loaded 33 genuine original Entry.unr exports; all 113/113 actually serialized tagged property values match loaded native ExportProperties results including 23 resolved object references, 15 FNames, 14 FPointRegion structs and source-defined CsgOper enums (current SHA-pinned method review 37/37). Earlier 14/19 original native StateFrame instances, 28 native state referents, and three compiled malformed Code offsets -2,0,63 retained from SHA-pinned PASS 43/43. Original Camera five were skipped by compiled selected source context; complete malformed tagged-property, reference/consumption and version family paths plus independent final full review still OPEN.",
+      "last_consolidated_review": "current_full_method_review_37_checks_with_113_native_values_plus_prior_43_checks",
+      "compiled_genuine_original_loaded_tags_verified": 113,
+      "compiled_genuine_original_exports_compared": 33,
+      "compiled_original_14_StateFrames_prior_verified": true
     },
     "T99:UClass::Serialize": {
       "criteria": {

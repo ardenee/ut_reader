@@ -78,20 +78,41 @@ def sha_blob(value):
 # export index into that helper. Preserve already SHA-sealed old POSITIVE
 # native evidence for the unchanged INDEX_NONE path. Never treat this
 # equivalence as complete method acceptance or error-branch evidence.
+# Current edit only adds a source-defined v432 FPointRegion decoder to the
+# existing StructProperty branch, leaving other codecs byte-identical.
+region_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicTaggedPropertyReader.php"
+before_region=committed("96713018",region_file)
+after_region=region_file.read_text(encoding="utf-8-sig")
+region_start="                    }elseif($structName==='pointregion'"
+region_end="                    }elseif($structName==='adrop'"
+if after_region.count(region_start)==1 and after_region.count(region_end)==1:
+    prefix,tail=after_region.split(region_start,1)
+    added,ending=tail.split(region_end,1)
+    region_insertion=region_start+added
+    region_code_scoped=prefix+region_end+ending==before_region
+else:
+    region_code_scoped=False
+previous_full_source="bd8f3d5b028951d08b0548b43586fe98cae55f6b709edc142369f2bd1c92a3a7"
+sig_before_region=subst_sig(
+    signature,region_file,digest(region_file).upper(),sha_blob(before_region))
+region_scope=(region_code_scoped
+    and hashlib.sha256(sig_before_region.encode("utf-8")).hexdigest()==previous_full_source
+    and "FPointRegion" in region_insertion
+    and "$family===CatalogUE1ClassicSourceFamily::UT99_V432" in region_insertion)
 uobject_files=[
     ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicStateFrameReader.php",
     ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicTaggedPropertyReader.php",
     ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicClassMetadataReader.php",
 ]
 uobject_previous_source_sha256="3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1"
-sig_before_uobject=signature
+sig_before_uobject=sig_before_region
 uobject_before={};uobject_after={}
 for f in uobject_files:
     old=committed("4c0428dc",f)
-    new=f.read_text(encoding="utf-8-sig")
+    new=before_region if f==region_file else f.read_text(encoding="utf-8-sig")
     uobject_before[f.name]=old
     uobject_after[f.name]=new
-    sig_before_uobject=subst_sig(sig_before_uobject,f,digest(f).upper(),sha_blob(old))
+    sig_before_uobject=subst_sig(sig_before_uobject,f,sha_blob(new),sha_blob(old))
 scope_sha_correct=hashlib.sha256(sig_before_uobject.encode("utf-8")).hexdigest()==uobject_previous_source_sha256
 old_tag=uobject_before["CatalogUE1ClassicTaggedPropertyReader.php"]
 new_tag=uobject_after["CatalogUE1ClassicTaggedPropertyReader.php"]
@@ -131,7 +152,7 @@ scope_parser=(
     and all(k in old_return and k in state_after for k in source_fields)
     and state_before_positive.find("$probeMask")<0
 )
-uobject_scope=scope_sha_correct and scope_callsite and scope_parser
+uobject_scope=scope_sha_correct and scope_callsite and scope_parser and region_scope
 sig_middle=subst_sig(
     subst_sig(sig_before_uobject,text_reader,digest(text_reader).upper(),sha_blob(mid_text)),
     delta_reader,digest(delta_reader).upper(),sha_blob(mid_delta))
@@ -174,6 +195,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (region_scope and f==previous_full_source)
         or (uobject_scope and f==uobject_previous_source_sha256)
         or (uobject_scope and font_scope and f==middle_fingerprint)
         or (uobject_scope and scoped_equivalence and f==old_fingerprint))
@@ -263,7 +285,7 @@ for e in reg["entries"]:
                         else "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open")
         else: gaps.append("native_full_array_elements_and_malformed_errors_not_proven")
     if ident=="T99:UObject::Serialize" and loaded_valid:
-        gaps.append("compiled_genuine_Entry_native_14_of_19_5_unloaded_Camera_export_flags_23_40000_confirmed_and_three_malformed_OffsetMismatch_minus2_zero_63_safe_PHP_43of43_PASS_but_full_tagged_loaded_values_other_error_paths_open" if refs_valid else "compiled_Entry_native_14_of_19_positive_StateFrames_imported_Node_StageNode_identity_and_malformed_errors_open")
+        gaps.append("compiled_genuine_Entry_native_14_of_19_5_unloaded_Camera_export_flags_23_40000_confirmed_and_three_malformed_OffsetMismatch_minus2_zero_63_safe_PHP_43of43_PASS_plus_33_original_loaded_UObjects_all_113_genuine_serialized_tagged_values_exact_native_refs_structs_ENUM_source_37of37_PASS_but_other_malformed_reference_consumption_variant_paths_open" if refs_valid else "compiled_Entry_native_14_of_19_positive_StateFrames_imported_Node_StageNode_identity_and_malformed_errors_open")
     if ident=="T99:UClass::Serialize" and loaded_valid:
         gaps.append("compiled_ALL88_REAL_UClass_43_NAME_None_zero_byte_placeholders_not_unvisited_3053_dependencies_176_imports_608_defaults_plus_1056_inherited_UField_UStruct_UState_stored_members_verified_but_Script_bytecode_fixups_malformed_errors_version_variants_OPEN")
     if ident=="T99:UTextBuffer::Serialize" and loaded_valid:
@@ -343,6 +365,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_region_pointregion_exact_codec_only":region_scope,
+    "previous_uobject_source_before_pointregion":previous_full_source if region_scope else None,
     "source_uobject_positive_branch_equivalence":uobject_scope,
     "previous_uobject_positive_source_sha256":uobject_previous_source_sha256 if uobject_scope else None,
     "summary":summary,
@@ -360,7 +384,7 @@ lines=["# UE1 O06 — G5 evidence reconciliation","",
        "- "+str(len(natives))+" independent compiled v432 native export comparison slices: "+", ".join(natives)+".",
        "- Compiled v432 method archive-order evidence with no genuine loaded-value evidence: "+(", ".join(sorted(r["id"] for r in rows if r["id"] in COMPILED and not r["native_loaded_evidence_current"])) or "none")+".",
        "- Current genuine archive compatibility: "+str(summary["genuine_v432_font_archive_compatibility"])+" method (T99 UFont; 34 SHA-pinned file exports / 66 checks PASS).",
-       "- Current **compiled v432 genuine native loaded-value subsets**: "+str(summary["compiled_native_loaded_value_slice"])+" methods ("+", ".join(sorted(r["id"] for r in rows if r["native_loaded_evidence_current"]))+"). Includes ALL 88/88 real named nonzero Engine.u UClasses (131 ClassIndex==0 rows include 43 zero-byte NAME_None placeholders), native ClassFlags/GUID/ConfigName, 3053 native FDependency class-reference/Deep/CRC tuples, 176 live FName PackageImports and 88 ClassWithin names, PLUS 1,056 stored UField/UStruct/UState native inherited values for all 88 classes, and 608/608 actual UClass loaded tagged default values of which 607 serialized values exactly match and one GameReplicationInfo.ServerName has a verified runtime INI override, UFont real glyph and nonempty remaps, USkeletalMesh/Animation full nested-array subsets, all 88 genuine Engine.u TextBuffer post-load values, and common UObject real inherited flags + 14/19 compiled positive RF_HasStack map frames. These remain PARTIAL method proofs; full error/reference/inherited source-family closure is OPEN.",
+       "- Current **compiled v432 genuine native loaded-value subsets**: "+str(summary["compiled_native_loaded_value_slice"])+" methods ("+", ".join(sorted(r["id"] for r in rows if r["native_loaded_evidence_current"]))+"). Includes ALL 88/88 real named nonzero Engine.u UClasses (131 ClassIndex==0 rows include 43 zero-byte NAME_None placeholders), native ClassFlags/GUID/ConfigName, 3053 native FDependency class-reference/Deep/CRC tuples, 176 live FName PackageImports and 88 ClassWithin names, PLUS 1,056 stored UField/UStruct/UState native inherited values for all 88 classes, and 608/608 actual UClass loaded tagged default values of which 607 serialized values exactly match and one GameReplicationInfo.ServerName has a verified runtime INI override, UFont real glyph and nonempty remaps, USkeletalMesh/Animation full nested-array subsets, all 88 genuine Engine.u TextBuffer post-load values, and common UObject real inherited flags + 14/19 compiled positive RF_HasStack map frames, PLUS genuine Entry.unr 33 compiled loaded object exports with all 113/113 serialized tagged-property values independently matched (23 object references, 15 FNames, 14 FPointRegions, all scalar/struct/enum values, SHA-pinned 37/37). These remain PARTIAL method proofs; full error/reference/inherited source-family closure is OPEN.",
        "- NEW compiled v432 **genuine StateFrame referent name subset**: "+str(summary["compiled_stateframe_native_referent_name_subsets"])+" verified UObject method with 14/19 original Entry.unr v68 StateFrames and all 28 real compiled Node/StateNode FName strings matching import references, plus exact ProbeMask64/LatentAction/Code values (195/195 PASS). Five Camera original exports and complete outer/class/error semantics OPEN.",
        "- NEW **full native array-element subsets**: "+str(summary["compiled_full_array_element_subset"])+" compiled v432 methods (T99 USkeletalMesh, UAnimation): genuine 5 skeletal objects 42,032 bytes of complete bone index/weights and 225,756 bytes of complete Points/LocalPoints, plus 143 animation ref bones full native name-table-resolved FName/flags/parent semantic records (1,716 bytes). Total 269,504 bytes, focused 733/733 + 228/228 PASS, no repeated tests.",
        "- NEW independent compiled-v432 **resumable 2-case batch**: 237 full native FMeshBone records (15,168 bytes) source field-by-field including runtime-resolved names and XSize's second serialized write, 1787/1787 PASS; 70 full native FMeshAnimSeq metadata records (2,240 bytes), all 22 nested native notification time/function names, 575/575 PASS. Both were rerun in resume mode with 2/2 UNCHANGED_PASS cache skips, zero repeated tests. Combined new 2362/2362 checks. SHA-pinned native manifests and append-only events preserved; YSize/Depth nonserialized fields and MotionChunk Moves still OPEN.",
