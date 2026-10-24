@@ -84,13 +84,46 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# One additional source-scoped v432 valid Struct/FString SerializeItem
+# correction. Require CURRENT-source 50/50 decision and reconstruct the
+# exact 55fa4f1e parent fingerprint before applying older substitutions.
+before_size_tag=committed("55fa4f1e",new_tag_file)
+previous_size_source="f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f"
+sig_before_size=subst_sig(
+    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_size_tag))
+size_decision="verify-ue1-o06-g5-uobject-serializeitem-size-decision.php"
+size_event=latest.get(size_decision)
+size_log=ROOT/size_event["log"] if size_event and size_event.get("log") else None
+try:
+    size_values=read(size_log) if size_log and size_log.exists() else {}
+except Exception:
+    size_values={}
+size_scope=(
+    hashlib.sha256(sig_before_size.encode("utf-8")).hexdigest()==previous_size_source
+    and current_schema==committed("55fa4f1e",new_schema_file)
+    and "UT99 UStrProperty::SerializeItem delegates" in current_tag
+    and "strlen($raw)>=6&&strlen($raw)<=10" in current_tag
+    and size_event is not None and size_event.get("state")=="PASS"
+    and size_event.get("source_sha256")==current
+    and size_event.get("output_sha256")==digest(size_log)
+    and size_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/size_decision)
+    and size_values.get("ok") is True
+    and size_values.get("checks")==50 and size_values.get("passed")==50
+    and size_values.get("real_native_new_size_mutation_cases")==4
+    and size_values.get("valid_struct_TagSize_mismatch_consumes_source_bytes")==2
+    and size_values.get("valid_FString_TagSize_mismatch_consumes_source_bytes")==2
+    and size_values.get("compiled_original_tags_current_source_matched")==113
+    and size_values.get("compiled_original_exports_current_source_matched")==33
+    and size_values.get("compiled_native_loader_reruns")==0
+    and size_values.get("full_method_decision")=="BLOCKED"
+)
 # 2026-10-24 reference / array-index / PointRegion v432 correction.
 # Reconstruct exactly the parent 122f8fbc source fingerprint and require
 # the latest single consolidated 61-check CURRENT-source acceptance.
 previous_reference_tag=committed("122f8fbc",new_tag_file)
 previous_reference_source="d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372"
 sig_before_reference=subst_sig(
-    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(previous_reference_tag))
+    sig_before_size,new_tag_file,sha_blob(before_size_tag),sha_blob(previous_reference_tag))
 new_reference_acceptance="verify-ue1-o06-g5-uobject-current-full-decision.php"
 ref_ev=latest.get(new_reference_acceptance)
 ref_log=ROOT/ref_ev["log"] if ref_ev and ref_ev.get("log") else None
@@ -99,13 +132,14 @@ try:
 except Exception:
     ref_values={}
 reference_scope=(
-    hashlib.sha256(sig_before_reference.encode("utf-8")).hexdigest()==previous_reference_source
+    size_scope
+    and hashlib.sha256(sig_before_reference.encode("utf-8")).hexdigest()==previous_reference_source
     and current_schema==committed("122f8fbc",new_schema_file)
     and "IndexToObject" in current_tag
     and "native_source_property_SerializeItem" in current_tag
     and "readLinkerIndex" in current_tag
     and ref_ev is not None and ref_ev.get("state")=="PASS"
-    and ref_ev.get("source_sha256")==current
+    and ref_ev.get("source_sha256")==previous_size_source
     and ref_ev.get("output_sha256")==digest(ref_log)
     and ref_ev.get("test_sha256")==digest(ROOT/"catalog"/"bin"/new_reference_acceptance)
     and ref_values.get("ok") is True
@@ -288,6 +322,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (size_scope and f==previous_size_source)
         or (reference_scope and f==previous_reference_source)
         or (latest_source_scope and f==previous_latest_source)
         or (region_scope and f==previous_full_source)
@@ -460,6 +495,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_struct_str_size_change_scoped":size_scope,
+    "previous_source_before_native_struct_str_size_change":previous_size_source if size_scope else None,
     "source_native_reference_change_scoped":reference_scope,
     "previous_source_before_native_reference_change":previous_reference_source if reference_scope else None,
     "source_native_tag_error_change_scoped":latest_source_scope,

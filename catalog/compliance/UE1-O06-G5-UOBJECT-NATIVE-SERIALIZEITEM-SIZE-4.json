@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "selection": "genuine version68 Entry.unr, actual compiled UT99 v432 Core.dll, single-byte Tag.Size mutations",
+  "original": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Entry.unr",
+    "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c"
+  },
+  "CoreDLL": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "launcher": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-LoadPackage-TaggedValues.exe",
+    "sha256": "0e98e445a7d7fd72fcce6f02fd26050a8f136cbeb68e93806292b30a3115ef8a"
+  },
+  "native_record": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-v432-property-SerializeItem-size-mismatch-4.json",
+    "sha256": "19c3e74593ee3f9b1acc548d9dc573bced1d88fa1bbbaad6b7c67850b78799af"
+  },
+  "dependency_Engine_u": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+    "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+  },
+  "dependency_Core_u": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.u",
+    "sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70"
+  },
+  "source_PropertyTag": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+    "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+  },
+  "source_UArrayProperty_and_UStrProperty": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnProp.cpp",
+    "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+  },
+  "source_FString": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnMisc.cpp",
+    "sha256": "6daaf8be3b1b1d00d0a97105e5bb3723f1fc871adf5197884f1e50ff8fb1cb2d"
+  },
+  "selected_v432_PointRegion": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament v432/Engine/Inc/UnObj.h",
+    "sha256": "31349e1ca706d06d140fba7092c0e755efaae72a8b3c6a8598cbc9832125f6da"
+  },
+  "cases": [
+    {
+      "name": "region_declared1",
+      "position": 1731,
+      "original_byte": 6,
+      "new_byte": 1,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-v432-size-mismatch-region_declared1.txt",
+        "sha256": "a3948d81247ba33c93e60507e435a6ad2138a9809810436e5981ae98c5a87702"
+      },
+      "expected_native_33": true,
+      "export_index": 0,
+      "tag_name": "Region",
+      "native_property_kind": "PointRegion",
+      "expected_consumed_bytes": 6,
+      "expected_value_kind": "fpointregion_zone_leaf_number",
+      "expected_ascii": null,
+      "expected_zone_reference": 1
+    },
+    {
+      "name": "region_declared12",
+      "position": 1731,
+      "original_byte": 6,
+      "new_byte": 12,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-v432-size-mismatch-region_declared12.txt",
+        "sha256": "48ce30d85c4e931ea16a0cd534dddc9d263904c7166ce3d93596c9e3be07a02e"
+      },
+      "expected_native_33": true,
+      "export_index": 0,
+      "tag_name": "Region",
+      "native_property_kind": "PointRegion",
+      "expected_consumed_bytes": 6,
+      "expected_value_kind": "fpointregion_zone_leaf_number",
+      "expected_ascii": null,
+      "expected_zone_reference": 1
+    },
+    {
+      "name": "title_declared1",
+      "position": 9986,
+      "original_byte": 10,
+      "new_byte": 1,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-v432-size-mismatch-title_declared1.txt",
+        "sha256": "285101e0990a12261b4b99c9f6412836e53260ed11dcd47e6a8c370f3d55ac50"
+      },
+      "expected_native_33": true,
+      "export_index": 28,
+      "tag_name": "Title",
+      "native_property_kind": "StrProperty",
+      "expected_consumed_bytes": 10,
+      "expected_value_kind": "fstring_ansi_archive",
+      "expected_ascii": "Untitled",
+      "expected_zone_reference": null
+    },
+    {
+      "name": "title_declared20",
+      "position": 9986,
+      "original_byte": 10,
+      "new_byte": 20,
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-v432-size-mismatch-title_declared20.txt",
+        "sha256": "87ad80bed0cb993e25ab4210e4f6018864d014818a19d527103b25e011b263b9"
+      },
+      "expected_native_33": true,
+      "export_index": 28,
+      "tag_name": "Title",
+      "native_property_kind": "StrProperty",
+      "expected_consumed_bytes": 10,
+      "expected_value_kind": "fstring_ansi_archive",
+      "expected_ascii": "Untitled",
+      "expected_zone_reference": null
+    }
+  ],
+  "case_count": 4,
+  "source_archive_restored": true,
+  "full_method_accepted": false,
+  "limitations": [
+    "These four real native malformed tags cover a valid v432 PointRegion struct and valid v432 dynamic FString property and cannot certify all StructProperty layouts or nested ArrayProperty inner serializers.",
+    "Declared Tag.Size ignored by source SerializeItem only for resolved valid properties. Warning/skip uses Tag.Size for invalid type/name/schema/array index.",
+    "Compiled output success and original loaded values checked; no independent full method signoff or unsupported-family inferred equivalence."
+  ]
+}

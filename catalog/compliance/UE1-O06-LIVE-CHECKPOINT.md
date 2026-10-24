@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uobject-current-full-decision`
-- **Stage:** six-compiled-v432-references-native-cursors-PASS61-full-method-BLOCKED-PRD-coordinated-sync-pending
-- **Last completed action:** Recovered six previously run SHA-pinned genuine v432 native negative cases; fixed source-scoped valid property name/UObject compact ref immediate bounds validation, PointRegion.Zone nested abort location, Byte/Int/Float SerializeItem byte consumption and nonfatal tag-size skips. One current-source method decision PASS61/61: fatal byte offsets 1658/1661/1728/1733; two valid 4/6-byte skips, 113 original actual native values and 33 exports retained. Previous compiled four tag errors and 43 StateFrame checks reused by immutable SHA, no compiled reruns. Reconciler and 8-method BLOCKED decision updated; v1.200 legacy branch inventory audited and documented. PRD verified older reader tree and missing StateFrame dependency, intentionally not touched.
-- **Resume at:** Address specific remaining nested v432 ArrayProperty/StructProperty malformed inner-value consumption and independently reachable original Camera StateFrames; audit other source/version gates only when source-applicable and with real compiled oracle. Then independent full seven-gate method review, avoid repeating completed checks. Coordinate DEV-to-PRD reader/dependency tree deployment before copying current single file.
-- **Active changed at:** 2026-10-24T19:18:12+00:00
-- **Latest DEV test states:** PASS 128; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-uobject-serializeitem-size-decision`
+- **Stage:** genuine-compiled-v432-struct-FString-TagSize-mismatch-fixed-PASS50-full-method-BLOCKED
+- **Last completed action:** Four NEW genuine compiled v432 malformed Tag.Size native loaded outcomes tested and SHA-pinned: Region PointRegion declared 1/12 reads 6, LevelSummary.Title FString declared 1/20 reads10. Corrected production source-scoped String compact-count read, PointRegion decoded from actual raw size. NEW one full-method verifier 50/50 PASS, current source still matches 113/113 genuine native loaded tagged values across 33 actual objects. Previous 61/61, native 6 reference faults, 4 property tag errors, 43 StateFrame checks SHA reused only. All six other native evidence method subsets preserved via chained scoped reconciliation and 8 BLOCKED closure; PRD untouched due old missing deps.
+- **Resume at:** Find original source-selected v432 native-load-reachable dynamic UArrayProperty tagged instance and establish compiled error/cursor behavior for malformed element count and inner linker refs. Do not retest completed 4+6+4 native errors, 113 current values or 43 StateFrame checks. Afterwards resolve independently reachable Camera/older source-version branches and independent full seven-gate method signoff; coordinate PRD compatible reader tree before deploy.
+- **Active changed at:** 2026-10-24T20:54:13+00:00
+- **Latest DEV test states:** PASS 129; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T20:49:46.6019352Z | verify-ue1-o06-g5-uobject-serializeitem-size-decision.php | PASS | 1115 | catalog\compliance\evidence\o06\20261024T204945069Z-47e2fb37-DEV-verify-ue1-o06-g5-uobject-serializeitem-size-decision.php.txt |
+| 2026-10-24T20:49:45.0769594Z | verify-ue1-o06-g5-uobject-serializeitem-size-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T204945069Z-47e2fb37-DEV-verify-ue1-o06-g5-uobject-serializeitem-size-decision.php.txt |
 | 2026-10-24T19:08:28.5312857Z | verify-ue1-o06-g5-uobject-current-full-decision.php | PASS | 1160 | catalog\compliance\evidence\o06\20261024T190826959Z-56364d87-DEV-verify-ue1-o06-g5-uobject-current-full-decision.php.txt |
 | 2026-10-24T19:08:26.9673121Z | verify-ue1-o06-g5-uobject-current-full-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T190826959Z-56364d87-DEV-verify-ue1-o06-g5-uobject-current-full-decision.php.txt |
 | 2026-10-24T19:08:02.8163212Z | verify-ue1-o06-g5-uobject-current-full-decision.php | FAIL | 366 | catalog\compliance\evidence\o06\20261024T190802037Z-1cad85e4-DEV-verify-ue1-o06-g5-uobject-current-full-decision.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T18:11:53.7457474Z | verify-ue1-o06-g5-uobject-tagged-native-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261024T181153738Z-9eb08f99-DEV-verify-ue1-o06-g5-uobject-tagged-native-acceptance.php.txt |
 | 2026-10-24T16:38:58.3782435Z | verify-ue1-o06-g5-uobject-consolidated-acceptance.php | PASS | 183 | catalog\compliance\evidence\o06\20261024T163857793Z-e7641b1e-DEV-verify-ue1-o06-g5-uobject-consolidated-acceptance.php.txt |
 | 2026-10-24T16:38:57.8002477Z | verify-ue1-o06-g5-uobject-consolidated-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261024T163857793Z-e7641b1e-DEV-verify-ue1-o06-g5-uobject-consolidated-acceptance.php.txt |
-| 2026-10-24T14:49:29.8427883Z | verify-ue1-o06-g5-font-consolidated-acceptance.php | PASS | 258 | catalog\compliance\evidence\o06\20261024T144929174Z-5d96da45-DEV-verify-ue1-o06-g5-font-consolidated-acceptance.php.txt |
-| 2026-10-24T14:49:29.1817547Z | verify-ue1-o06-g5-font-consolidated-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261024T144929174Z-5d96da45-DEV-verify-ue1-o06-g5-font-consolidated-acceptance.php.txt |
 
 ## Recovery procedure
 

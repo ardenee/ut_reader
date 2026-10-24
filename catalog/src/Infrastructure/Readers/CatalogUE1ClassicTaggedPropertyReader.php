@@ -173,6 +173,22 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     [$reference,$raw]=$readLinkerIndex();
                     $validateLinkerIndex($reference,'object');
                     $raw.=$read(5);
+                }elseif($loadPolicy==='native_source_property_SerializeItem'
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&$linkerLimits!==null&&$type===13){
+                    // UT99 UStrProperty::SerializeItem delegates to the
+                    // source FString archive operator: signed compact
+                    // character count followed by count ANSI bytes (or
+                    // twice that for Unicode). Tag.Size is advisory for
+                    // a valid property and MUST NOT control this read.
+                    [$count,$raw]=$readLinkerIndex();
+                    $units=($count<0||((ord($raw[0])&128)!==0))?2:1;
+                    $chars=abs($count);
+                    if($chars>intdiv($archiveLimit-$position,$units)){
+                        throw new RuntimeException(
+                            'UE1 v432 FString SerializeItem exceeds export SerialSize');
+                    }
+                    $raw.=$read($chars*$units);
                 }else{
                     $raw=$type===3?'':$read($loadSize);
                 }
@@ -256,7 +272,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         $valueKind='fscale_vector_rate_axis';
                     }elseif($structName==='pointregion'
                         &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
-                        &&$tagSize>=6&&$tagSize<=10){
+                        &&strlen($raw)>=6&&strlen($raw)<=10){
                         // Actual v432 Engine/Inc/UnObj.h FPointRegion:
                         // UObject* Zone (AR_INDEX), INT iLeaf, BYTE ZoneNumber.
                         // Do not assume a one-byte package object index.

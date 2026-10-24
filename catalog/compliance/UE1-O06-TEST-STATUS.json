@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T19:08:28.5552804Z",
-    "head_commit":  "122f8fbc",
+    "updated_at_utc":  "2026-10-24T20:49:46.6229655Z",
+    "head_commit":  "55fa4f1e",
     "current_target":  "DEV",
-    "current_source_sha256":  "f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f",
+    "current_source_sha256":  "f7f08918772439cf0d591b4bd2f341633cc226c01a36f44440496ad95831508c",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -735,6 +735,18 @@
                       "run_id":  "20261024T190826959Z-56364d87",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T190826959Z-56364d87-DEV-verify-ue1-o06-g5-uobject-current-full-decision.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uobject-serializeitem-size-decision.php",
+                      "test":  "verify-ue1-o06-g5-uobject-serializeitem-size-decision.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T20:49:46.6019352Z",
+                      "source_sha256":  "f7f08918772439cf0d591b4bd2f341633cc226c01a36f44440496ad95831508c",
+                      "test_sha256":  "99407b51ceeb6eaba729f9684ba588b3407c6660a2309ec1dae8e29df6870579",
+                      "run_id":  "20261024T204945069Z-47e2fb37",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T204945069Z-47e2fb37-DEV-verify-ue1-o06-g5-uobject-serializeitem-size-decision.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-uobject-tag-error-consolidated.php",

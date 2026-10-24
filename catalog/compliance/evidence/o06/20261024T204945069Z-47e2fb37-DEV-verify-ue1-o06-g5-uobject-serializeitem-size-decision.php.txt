@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 50,
+    "passed": 50,
+    "failures": [],
+    "method": "T99:UObject::Serialize",
+    "real_native_new_size_mutation_cases": 4,
+    "valid_struct_TagSize_mismatch_consumes_source_bytes": 2,
+    "valid_FString_TagSize_mismatch_consumes_source_bytes": 2,
+    "previous_native_reference_cases_SHA_reused": 6,
+    "previous_native_property_error_cases_SHA_reused": 4,
+    "previous_StateFrame_decision_checks_SHA_reused": 43,
+    "compiled_original_tags_current_source_matched": 113,
+    "compiled_original_exports_current_source_matched": 33,
+    "compiled_native_loader_reruns": 0,
+    "full_method_decision": "BLOCKED",
+    "remaining": "dynamic ArrayProperty nested inner values and malformed counts with live compiled oracle, legacy source-version gates, five uninstantiated Camera StateFrames and full independent seven-gate review"
+}

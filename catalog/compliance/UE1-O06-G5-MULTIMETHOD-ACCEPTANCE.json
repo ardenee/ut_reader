@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "Resolve source-applicable v432 dynamic ArrayProperty/StructProperty nested malformed consumption and older source-family version gates; account for five Camera objects only with an actual reachable compiled native loader, then one final independent full-method review. Reuse previous 6+4 compiled invalid outcomes, 113 real values and 43 StateFrame checks, never repeat them without input changes.",
+      "next_closure_work": "Locate an actual source-selected v432 dynamic ArrayProperty loaded instance and independently compare nested count/value malformed consumption against compiled native code; exercise only unverified historical source-version gates, attempt Camera only with reachable native entrypoint, then independent full seven-gate method review. Reuse previous 4 new struct/string + 6 reference + 4 type error cases, 113 original values and 43 StateFrame checks.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -242,7 +242,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "remaining_nested_dynamic_array_struct_and_version_branches_camera_plus_full_review"
+      "decisive_closure_blocker": "dynamic_ArrayProperty_native_inner_value_count_and_legacy_version_Camera_full_review"
     },
     {
       "id": "T99:UClass::Serialize",

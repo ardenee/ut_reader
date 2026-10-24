@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f",
+  "source_fingerprint": "f7f08918772439cf0d591b4bd2f341633cc226c01a36f44440496ad95831508c",
   "method_count": 8,
   "fully_epic_verified": 0,
   "failed": 0,
   "blocked": 8,
-  "new_oracle_runs": 7,
-  "new_test_runs": 6,
+  "new_oracle_runs": 8,
+  "new_test_runs": 7,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -23,11 +23,11 @@
       "existing_native_loaded_valid": true,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
-      "decisive_blocker": "remaining_nested_dynamic_array_struct_and_version_branches_camera_plus_full_review",
-      "reason": "Compiled original v432 Core.dll genuine Entry.unr loaded 33 exports with 113/113 real native tagged property values matching current source reader. Four previous native malformed PropertyTag outcomes and 43 StateFrame checks remain hash pinned. Recovered six compiled v432 reference/array/struct negative cases: four fatal IndexToObject/FName errors at exact archive offsets 1658/1661/1728/1733 and two nonfatal array index or struct identity skips of exactly 4/6 bytes. Current changed-method 61/61 consolidated acceptance PASS, no compiled engine reruns. Other dynamic array/struct malformed paths, source-selected version variants, five omitted Camera StateFrames and independent full method review remain OPEN.",
-      "next_action": "Resolve source-applicable v432 dynamic ArrayProperty/StructProperty nested malformed consumption and older source-family version gates; account for five Camera objects only with an actual reachable compiled native loader, then one final independent full-method review. Reuse previous 6+4 compiled invalid outcomes, 113 real values and 43 StateFrame checks, never repeat them without input changes.",
+      "decisive_blocker": "dynamic_ArrayProperty_native_inner_value_count_and_legacy_version_Camera_full_review",
+      "reason": "Real compiled v432 UObject loaded 33 original Entry.unr exports with all 113/113 tagged values matching the current production reader; earlier six native reference failure/skip and four PropertyTag error cases plus 43 StateFrame checks remain hash pinned. Four NEW compiled native malformed Tag.Size cases establish actual valid PointRegion SerializeItem reads six bytes irrespective declared 1/12, and valid FString Title reads ten bytes irrespective declared 1/20. Current changed-source consolidated method verifier PASS50/50, 4/4 new native outcomes, 113/113 original loaded values; no previous engine run repeated. Dynamic ArrayProperty inner count/value errors, older source-version branches, five uninstantiated Camera actors and independent full method review remain OPEN.",
+      "next_action": "Locate an actual source-selected v432 dynamic ArrayProperty loaded instance and independently compare nested count/value malformed consumption against compiled native code; exercise only unverified historical source-version gates, attempt Camera only with reachable native entrypoint, then independent full seven-gate method review. Reuse previous 4 new struct/string + 6 reference + 4 type error cases, 113 original values and 43 StateFrame checks.",
       "new_native_tests_executed": 0,
-      "new_test_runs_executed": 4
+      "new_test_runs_executed": 5
     },
     "T99:UClass::Serialize": {
       "decision": "BLOCKED",
