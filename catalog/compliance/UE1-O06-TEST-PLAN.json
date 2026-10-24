@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-full-method-textbuffer-v432-candidate": {
+      "description": "Strict T99:UTextBuffer::Serialize candidate full-method acceptance gate: authentic compiled Core.dll PostSerialize 88 genuine Engine.u complete Pos/Top/TCHAR strings (1007796 actual native memory bytes), compiled controlled positive Pos/Top and wide, missing-NUL source discrepancy corrected, oversized native and PHP both reject; inherited method and native error bytepath still OPEN",
+      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-classic-textbuffer-native.php", "verify-ue1-o06-g5-textbuffer-native-all-values.php"],
+      "affected": ["verify-ue1-o06-native-ut99-textbuffer-exports.php"],
+      "gate": []
+    },
     "g5-v432-native-motionchunk-full-memory": {
       "description": "Native compiled UT99 v432 genuine v69 UAnimation full loaded MotionChunk/Moves/AnalogTrack/RootTrack nested KeyQuat KeyPos KeyTime arrays: SHA-pinned CDB full-memory snapshots and strict production source bytes for all 70 Moves across original EcoTerror/d00d packages",
       "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],

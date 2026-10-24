@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "classification": "T99_UTextBuffer_Serialize_compiled_v432_candidate_full_method_gate_not_yet_accepted",
+  "source_family": "ut99-v432",
+  "source_method": "UT99 v400 Core/Src/UnObj.cpp:3588-3593 baseline confirmed in v432 compiled Core.dll Core+0x31bb jumping to Core+0x5ec10; compiled post-archive RVA 0x5ec6a; UObject::Serialize then Pos, Top, FString",
+  "fstring_operator": "UT99 v400 Core/Src/UnMisc.cpp:173-200, reads count code units without final-NUL validation; logical FString::Len() excludes last slot",
+  "compiled_core": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "base_archive": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+    "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+  },
+  "native_disassembly": {
+    "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-compiled-disasm.log",
+    "sha256": "9b1ca1257de0358ccc441a271320e042aeb5d278a4b74b5734a340951c66e26c"
+  },
+  "native_loaded_log": {
+    "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-88-full-memory-v2.log",
+    "sha256": "b83bd603e9d02065c302aa5461ceb36361b533fe5338b2ebcf51ab7ccdcf6680"
+  },
+  "native_memory_dump": {
+    "path": "C:/Temp/UnrealDB/O06/G5-TextBuffer-88-all-native-memory.dmp",
+    "sha256": "6de26213805698dead880c930d10a903f2cac444bf322a6da1e6f3cd62c627c8"
+  },
+  "expected_genuine_loaded_textbuffers": 88,
+  "expected_native_serialize_calls": 90,
+  "expected_extra_native_linker_indices": [
+    333,
+    579
+  ],
+  "expected_UTF16_storage_bytes": 1007796,
+  "variations": [
+    {
+      "kind": "pos_top",
+      "archive": {
+        "path": "C:/Temp/UnrealDB/O06/G5-TextBuffer-v432-PosTop3-10.u",
+        "sha256": "696cd1ead1f83db85825fed3f58b0e582a903f5e915f998235e716e3f9fed584"
+      },
+      "log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-valid-native.log",
+        "sha256": "4654c3099b8b1c4ff0576bef3d00988c5216dbed989a7f03a95f681413c3c181"
+      },
+      "stdout": {
+        "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-valid-stdout.txt",
+        "sha256": "1f3fbb64141e90dd65a7ca0d892710442136a0c17cd82aefb1ca39d65c03aa4d"
+      },
+      "export": {
+        "path": "C:/Temp/UnrealDB/O06/G5TextFixture_valid/ScriptText.txt",
+        "sha256": "7ee9596302f2944a8d3831cb3ab4eddfac15efccdb268b4837557451244fac57"
+      },
+      "idx": 5321,
+      "pos": 3,
+      "top": 10,
+      "expected_native_exit": 0
+    },
+    {
+      "kind": "missing_nul",
+      "archive": {
+        "path": "C:/Temp/UnrealDB/O06/G5-TextBuffer-v432-MissingFinalNUL.u",
+        "sha256": "a7697957ea2d7e367e75fe0af9c72377e30879eeef9f19cce8b546dde984c96f"
+      },
+      "log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-nonul-native.log",
+        "sha256": "8f4154700a918a92d491fcb42aa4cc0cecd423ac747c708a7c08d9e2544d1705"
+      },
+      "stdout": {
+        "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-nonul-stdout.txt",
+        "sha256": "6c1cbc94a1a27cfa71e2ebca266d5902a326cf8a0beb46ed9f9bc8136906c0d3"
+      },
+      "export": {
+        "path": "C:/Temp/UnrealDB/O06/G5TextFixture_nonul/ScriptText.txt",
+        "sha256": "7ee9596302f2944a8d3831cb3ab4eddfac15efccdb268b4837557451244fac57"
+      },
+      "idx": 5321,
+      "last_serial_byte_ascii": 88,
+      "expected_native_exit": 0
+    },
+    {
+      "kind": "wide_utf16",
+      "archive": {
+        "path": "C:/Temp/UnrealDB/O06/G5-TextBuffer-v432-Wide548-omega.u",
+        "sha256": "820923f6a90a51db2279fa25d04f7cf6e4cf6b7c7a1e50a5bc7372d3d0c1cf15"
+      },
+      "log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-v432-wide-native.log",
+        "sha256": "129b0fee75e4acc5f1ef7d7506dcd02bdf23bad3ed104f643c1fdc9ccd2a8b4d"
+      },
+      "stdout": {
+        "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-v432-wide-stdout.txt",
+        "sha256": "12e776a89f233326e90303af331b0d59d6e93c391f7d8de775277149cc406c59"
+      },
+      "native_memory": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-textbuffer-v432-wide-inmemory.bin",
+        "sha256": "5b1ff3feded3091ababcf871d5788dff33b6a6e86641f996235645c0a682f70e"
+      },
+      "idx": 4867,
+      "count": 548,
+      "characters": 547,
+      "expected_native_exit": 0
+    },
+    {
+      "kind": "oversized",
+      "archive": {
+        "path": "C:/Temp/UnrealDB/O06/G5-TextBuffer-v432-Overlong900.u",
+        "sha256": "e9091844d9edb087523efb7ed8dab24486c6df38479ff805bc91becf2da3ce91"
+      },
+      "stdout": {
+        "path": "C:/Temp/UnrealDB/O06/g5-T99-textbuffer-v432-overlong-native.txt",
+        "sha256": "85b898e4f487c6ac0fd8c3d7ec75e93192c158e2953a20f1d3278fd662febad6"
+      },
+      "idx": 5321,
+      "expected_native_exit": 1,
+      "expected_native_error": "TextBuffer Engine.ClipMarker.ScriptText: Serial size mismatch: Got 912, Expected 843"
+    }
+  ],
+  "coverage_note": "Native complete 88 genuine Enginu Pos/Top/UTF16 text member values across 1007796 bytes; compiled native and PHP accept size-preserving valid variations pos/top, ANSI missing terminal NUL and UTF16 wide; native and PHP both reject oversized 900 but at different byte-consumption/diagnostic stages.",
+  "not_accepted_reasons": [
+    "True parent UObject::Serialize and property envelope behaviours are compositional methods that have not passed full G5 separately.",
+    "Native oversized FString attempts read beyond declared export by 69 bytes then reports serial-size mismatch; PHP safely rejects before the read. Error byte-consumption semantics differ.",
+    "Additional source game families and versions, obscure malformed Unicode and empty native string paths remain unproved; do not claim full method complete."
+  ],
+  "transient_binary_evidence_note": "Original compiled binary, 43.9MB native full-memory dump, CDB logs and scratch mutant assets remain SHA pinned on DEV C:/Temp/UnrealDB/O06. No PRD modification and no canonical source modifications."
+}

@@ -347,19 +347,16 @@ final class CatalogUE1ClassicNativeObjectReader
                     $count=$length;$size=$count;
                 }
                 $textOffset=$pos;$raw=$read($size);
-                if($count>0){
-                    if($wide){
-                        if(substr($raw,-2)!=="\x00\x00"){
-                            throw new RuntimeException('TextBuffer wide FString lacks final NUL');
-                        }
-                        $encoded=substr($raw,0,-2);
-                    }else{
-                        if(substr($raw,-1)!=="\x00"){
-                            throw new RuntimeException('TextBuffer ANSI FString lacks final NUL');
-                        }
-                        $encoded=substr($raw,0,-1);
-                    }
-                }else{$encoded='';}
+                // Epic UT99 v400 Core/Src/UnMisc.cpp FString operator<<
+                // reads every A.Num() code unit without asserting the final
+                // slot is NUL; FString::Len() excludes that last slot.
+                // Compiled v432 accepts an original Engine.u copy with its
+                // terminal ANSI NUL changed to X. Preserve the raw bytes
+                // while decoding just the logical length; retain bounds.
+                $terminatorIsNul=$count===0?null:($wide
+                    ?substr($raw,-2)==="\x00\x00"
+                    :substr($raw,-1)==="\x00");
+                $encoded=$count>0?substr($raw,0,-($wide?2:1)):'';
                 $decoded=$encoded===''?'':($wide
                     ?@iconv('UTF-16LE','UTF-8',$encoded)
                     :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($encoded));
@@ -370,6 +367,7 @@ final class CatalogUE1ClassicNativeObjectReader
                     'status'=>$pos===$limit?'native_textbuffer_record_complete':'native_textbuffer_has_extension',
                     'position'=>$textPos,'top'=>$top,'text'=>$decoded,
                     'text_encoding'=>$wide?'UTF-16LE':'Epic-FromAnsi-bytewise',
+                    'text_terminator_is_nul'=>$terminatorIsNul,
                     'text_character_count'=>$count>0?$count-1:0,
                     'text_raw_bytes'=>$size,'text_raw_offset'=>$textOffset,
                     'text_raw_sha256'=>hash('sha256',$raw),

@@ -63,11 +63,13 @@ $inspect=static function(int $version,string $body)use($make,&$paths):array {
     file_put_contents($path,$make($version,$body));
     $pkg=new Package($path);
     if($pkg->validatePackage()!==[]){throw new RuntimeException('Fixture not a valid UE1 package: '.json_encode($pkg->validatePackage()));}
-    $tag=Tag::inspect($path,$pkg,0);
+    // Test lineage is explicitly authored, not inferred from version 69.
+    $family=$version>=60?'ut99-v432':'epic-ue1';
+    $tag=Tag::inspect($path,$pkg,0,$family);
     if(($tag['status']??'')!=='tag_envelope_decoded'){
         throw new RuntimeException('UE1 property stream did not decode');
     }
-    return [Native::inspect($path,$pkg,0,$tag),$tag,$path];
+    return [Native::inspect($path,$pkg,0,$tag,$family),$tag,$path];
 };
 $mustFail=static function(int $ver,string $body)use($inspect):bool {
     try{$inspect($ver,$body);return false;}
@@ -77,7 +79,8 @@ try {
     [$a,$tag,$path]=$inspect(50,$native(3,-2,7,"Alpha\n\0"));
     $check('v50_ansi_full_decode',($a['status']??'')==='native_textbuffer_record_complete'
         && $a['position']===3 && $a['top']===-2 && $a['text']==="Alpha\n"
-        && $a['text_encoding']==='Windows-1252' && $a['text_character_count']===6);
+        && $a['text_encoding']==='Epic-FromAnsi-bytewise' && $a['text_character_count']===6
+        && $a['text_terminator_is_nul']===true);
     $check('v50_no_tag_terminator_mistaken_as_native',($tag['native_tail_bytes']??null)===16
         && $a['text_raw_offset']===524 && $a['extension_bytes']===0);
     [$b]=$inspect(69,$native(-19,42,5,"Caf\xe9\0"));
@@ -96,8 +99,14 @@ try {
     $check('v50_wide_version_rejected',$mustFail(50,$native(0,0,-2,"X\0\0\0")));
     $check('v50_count_overflow_rejected',$mustFail(50,$native(0,0,17,"X\0")));
     $check('v69_wide_count_overflow_rejected',$mustFail(69,$native(0,0,-9,"\0\0")));
-    $check('v50_missing_ansi_nul_rejected',$mustFail(50,$native(0,0,2,"AB")));
-    $check('v69_missing_wide_nul_rejected',$mustFail(69,$native(0,0,-2,"\x41\x00\x42\x00")));
+    [$nonulAnsi]=$inspect(50,$native(0,0,2,"AB"));
+    $check('v50_native_FString_without_final_ansi_nul_accepted',
+        $nonulAnsi['text']==='A' && $nonulAnsi['text_character_count']===1
+        && $nonulAnsi['text_terminator_is_nul']===false);
+    [$nonulWide]=$inspect(69,$native(0,0,-2,"\x41\x00\x42\x00"));
+    $check('v69_native_FString_without_final_utf16_nul_accepted',
+        $nonulWide['text']==='A' && $nonulWide['text_character_count']===1
+        && $nonulWide['text_terminator_is_nul']===false);
     $check('v69_invalid_utf16_surrogate_rejected',$mustFail(69,$native(0,0,-2,"\x00\xd8\0\0")));
     $check('v50_truncated_fields_rejected',$mustFail(50,"\0\0\0"));
 }finally {

@@ -1,0 +1,27 @@
+﻿{
+    "ok": true,
+    "passed": 13,
+    "total": 13,
+    "failed": [],
+    "cases": {
+        "v50_ansi_full_decode": true,
+        "v50_no_tag_terminator_mistaken_as_native": true,
+        "v69_ansi_windows_1252": true,
+        "v69_wide_text": true,
+        "v50_empty_text": true,
+        "extension_is_not_complete": true,
+        "v50_wide_version_rejected": true,
+        "v50_count_overflow_rejected": true,
+        "v69_wide_count_overflow_rejected": true,
+        "v50_native_FString_without_final_ansi_nul_accepted": true,
+        "v69_native_FString_without_final_utf16_nul_accepted": true,
+        "v69_invalid_utf16_surrogate_rejected": true,
+        "v50_truncated_fields_rejected": true
+    },
+    "epic_sources": [
+        "v1.200 Core/Src/UnObj.cpp:3033-3038",
+        "v1.200 Core/Inc/UnTemplate.h:416-418",
+        "UT99 v400 Core/Src/UnObj.cpp:3588-3593",
+        "UT99 v400 Core/Src/UnMisc.cpp:173-198"
+    ]
+}

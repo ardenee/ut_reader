@@ -1,0 +1,20 @@
+﻿{
+    "ok": true,
+    "checks": 813,
+    "passed": 813,
+    "errors": [],
+    "genuine_Engine_u_loaded_objects": 88,
+    "native_loaded_utf16_text_storage_bytes": 1007796,
+    "compiled_mutations": {
+        "positive_PosTop": "loaded",
+        "positive_UTF16": "loaded",
+        "missing_final_NUL": "loaded",
+        "oversized_900": "rejected"
+    },
+    "full_G5_method_acceptance": "OPEN",
+    "not_closed_reasons": [
+        "True parent UObject::Serialize and property envelope behaviours are compositional methods that have not passed full G5 separately.",
+        "Native oversized FString attempts read beyond declared export by 69 bytes then reports serial-size mismatch; PHP safely rejects before the read. Error byte-consumption semantics differ.",
+        "Additional source game families and versions, obscure malformed Unicode and empty native string paths remain unproved; do not claim full method complete."
+    ]
+}
