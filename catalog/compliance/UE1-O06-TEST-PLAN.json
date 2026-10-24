@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-v432-uclass-inherited-native-values": {
+      "description": "Compiled original UT99 v432 UClass inherits UField/UStruct/UState: all 88/88 named nonzero genuine Engine.u UClasses have original SuperField/Next, ScriptText/Children, FriendlyName, Script.Num, TextPos/Line, ProbeMask64, IgnoreMask64, StateFlags and LabelOffset verified against full SHA-pinned native compiled MEMORY64 snapshot (12 fields per class). v432 source headers plus v400 legacy source pinned; malformed/native Script fixups and variants OPEN.",
+      "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
+      "focus": ["verify-ue1-o06-g5-uclass-inherited-native-88.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-v432-uclass-real-export-coverage": {
       "description": "Correct v69 Engine.u ClassIndex==0 denominator: 131 ExportMap rows are 88 genuine nonempty named UClass serializations plus 43 zero-size NAME_None placeholders. Real compiled v432 Core!UClass::Serialize loaded ALL 88/88 named classes; 2 unrelated Core class records separated by actual FName + local linker index. Supersedes previous false 43-unvisited-class blocker; inherited, malformed and version variants still OPEN.",
       "readers": ["CatalogUE1PackageReader.php", "CatalogUE1ClassicClassMetadataReader.php"],

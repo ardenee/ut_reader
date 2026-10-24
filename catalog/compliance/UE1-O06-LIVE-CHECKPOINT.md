@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-v432-uclass-real-export-coverage`
-- **Stage:** corrected-88-of-88-native-classes-43-zero-size-placeholders-excluded-method-open
-- **Last completed action:** Independent original v69 Engine.u ExportMap + compiled v432 live UClass FName proof shows ClassIndex0 rows 131 partition into 88 genuine nonzero named classes and 43 zero-sized NAME_None placeholders (NOT UClasses). All 88/88 real class serialization records loaded and proven; two unrelated native Core.Object/Core.Subsystem calls disambiguated. New proof 99/99 PASS run 20261024T133819230Z-4a3eca8d; affected previous native scalar/nested/defaults test assertions were corrected and all three PASS 719/719, 9878/9878, 1672/1672 (20261024T134020063Z-c5a96f0f, 20261024T134024084Z-52991fa8, 20261024T134028040Z-eeac5ddd); historical test journals preserved. Multi-method scanner previously miscounted 43 dummy rows as UClass/UObject, changed to ignore and enumerate ignored rows; ONE justified scanner-SHA-cache refresh of 7 real packages corrected candidate UClass 140 to 97 and UObject 5469 to 5426. Then 7/7 UNCHANGED_PACKAGE_SKIP confirmed. Compiled UClass default 608 property values remain current, 607 exact and one verified INI ServerName override. Full G5 0/256, not accepted; production PHP/PRD untouched. All SHA pins and corrective proof versioned for commit.
-- **Resume at:** For first method FULL closure, focus on genuine inherited UState->UStruct->UField->UObject correctness/compiled archive-byte extent and negative malformed-native error/consumption, and other selected source-version variants. Do not seek 43 classes: those were just NAME_None placeholders, all real v69 Engine UClasses already covered. Reuse current 44MB C:\Temp native dump and SHA journal, no redundant source rescans/native captures. Commit all current corrections before further probing.
-- **Active changed at:** 2026-10-24T13:47:36+00:00
-- **Latest DEV test states:** PASS 121; FAIL 0; STARTED 0
+- **Contract:** `g5-v432-uclass-inherited-native-values`
+- **Stage:** compiled-all-88-uclasses-inherited-12-fields-times-88-pass-method-open
+- **Last completed action:** After 300e83fa false 43-class blocker correction, took same original SHA-pinned 44MB compiled v432 Core UClass::Serialize full MEMORY64 snapshot, same genuine Engine.u, and v432 UnClass.h source hash plus v400 inherited source hash; resolved all original class metadata, native UObject ptr and FName actual names. Verified 12 stored inherited UField/UStruct/UState member values for each of ALL 88 genuine original Engine.u UClasses: SuperField, Next, ScriptText, Children native object refs; FriendlyName, Script Num, TextPos, Line, 64bit ProbeMask and IgnoreMask, StateFlags and LabelTableOffset. 1056/1056 actual loaded members match production UClass MetadataReader; focused SHA journal 1334/1334 PASS 20261024T135516193Z-60662b9c. New current evidence in G5 recon and eight-method acceptance ledger, seven original packages all 7/7 source-hash cached skip, no native CDB recapture, no production PHP/PRD change. All 88 real UClasses covered, 43 zero-size NAME_None rows rightly excluded; overall FULL methods still 0/256, not falsely accepted.
+- **Resume at:** Work on actual remaining UClass closing blockers: compiled vs source full UStruct.Script bytecode pointer/name fixups and precise archive byte consumption, native malformed negative/error semantics and other UE1 source-version families. Reuse source and 44MB original v432 compiled Memory64 evidence on C:\Temp, do not replay 1334/1334, 1672/1672, 9878/9878 or 719/719 PASS. Strict independent full-method signoff is still required.
+- **Active changed at:** 2026-10-24T13:58:38+00:00
+- **Latest DEV test states:** PASS 122; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T13:55:17.6932069Z | verify-ue1-o06-g5-uclass-inherited-native-88.php | PASS | 1089 | catalog\compliance\evidence\o06\20261024T135516193Z-60662b9c-DEV-verify-ue1-o06-g5-uclass-inherited-native-88.php.txt |
+| 2026-10-24T13:55:16.2012073Z | verify-ue1-o06-g5-uclass-inherited-native-88.php | STARTED |  | catalog\compliance\evidence\o06\20261024T135516193Z-60662b9c-DEV-verify-ue1-o06-g5-uclass-inherited-native-88.php.txt |
 | 2026-10-24T13:40:29.5703892Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | PASS | 1121 | catalog\compliance\evidence\o06\20261024T134028040Z-eeac5ddd-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
 | 2026-10-24T13:40:28.0474184Z | verify-ue1-o06-g5-uclass-defaults-native-608.php | STARTED |  | catalog\compliance\evidence\o06\20261024T134028040Z-eeac5ddd-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt |
 | 2026-10-24T13:40:25.5693888Z | verify-ue1-o06-g5-uclass-all-native-nested-memory.php | PASS | 1079 | catalog\compliance\evidence\o06\20261024T134024084Z-52991fa8-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T11:14:58.0471783Z | verify-ue1-o06-g5-multimethod-uclass-loaded-values.php | STARTED |  | catalog\compliance\evidence\o06\20261024T111458040Z-305f115a-DEV-verify-ue1-o06-g5-multimethod-uclass-loaded-values.php.txt |
 | 2026-10-24T10:41:04.5599355Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | PASS | 76 | catalog\compliance\evidence\o06\20261024T104104103Z-cfcaa051-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
 | 2026-10-24T10:41:04.1109346Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | STARTED |  | catalog\compliance\evidence\o06\20261024T104104103Z-cfcaa051-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
-| 2026-10-24T10:40:00.6216107Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | FAIL | 87 | catalog\compliance\evidence\o06\20261024T104000173Z-9bea1caa-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
-| 2026-10-24T10:40:00.1806008Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | STARTED |  | catalog\compliance\evidence\o06\20261024T104000173Z-9bea1caa-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
 
 ## Recovery procedure
 

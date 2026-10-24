@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "classification": "AUTHENTIC_COMPILED_v432_UClass_inherited_UField_UStruct_UState_loaded_values_subset",
+  "method": "T99:UClass::Serialize",
+  "source_profile": "ut99-v432",
+  "pinned_sources": [
+    {
+      "path": "L:/Source/Games/UT99/Unreal Tournament v432/Core/Inc/UnClass.h",
+      "sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+      "role": "build selected declarations"
+    },
+    {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+      "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+      "role": "legacy inherited source body; compiled v432 takes precedence"
+    }
+  ],
+  "genuine_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+    "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+  },
+  "compiled_Core": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "compiled_UClass_mem": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UClass-v432-after-90-all-memory.dmp",
+    "sha256": "fb77216dabcb1e2152b27c82447184ecafe5869f888986c7452314fa5a4359e8"
+  },
+  "compiled_class_log": {
+    "path": "C:/Temp/UnrealDB/O06/g5-v432-uclass-native-nested-values.log",
+    "sha256": "38be93aa859b2b8e1c60150c2c4b215d536362be0e6b182502cada61f484e1f7"
+  },
+  "genuine_loaded_UClass_count": 88,
+  "native_comparisons_per_UClass": 12,
+  "expected_native_matches": 1056,
+  "field_map": {
+    "super_field_ref_ptr": 40,
+    "next_field_ref_ptr": 44,
+    "script_text_ref_ptr": 52,
+    "children_ref_ptr": 56,
+    "friendly_name_FName_index": 68,
+    "script_Num": 76,
+    "source_TextPos": 84,
+    "source_Line": 88,
+    "probe_Mask_8bytes": 112,
+    "ignore_Mask_8bytes": 120,
+    "state_flags_u32": 128,
+    "label_table_offset_low_u16": 132
+  },
+  "limitations": [
+    "This validates 12 inherited stored fields per genuine class and their loaded referents; not the complete UField/UStruct/UState native object semantics, all property descriptors, Script array element values or complete byte consumption.",
+    "Legacy source body v400 is crosschecked but real v432 compiled is selected game build truth.",
+    "Malformed/error consumed-byte cases, other UE1 game/version source branches, runtime side effects and fully independent full-method review remain open."
+  ],
+  "full_method_accepted": false
+}

@@ -118,6 +118,7 @@ def render(rows,config,src_sha):
           "production_reader_native_records_complete":sum(int(s.get("complete",0)) for s in source_stats),
           "production_reader_errors":sum(int(s.get("errors",0)) for s in source_stats),
           "production_archive_bytes_inspected":sum(int(s.get("archive_bytes",0)) for s in source_stats),
+          "compiled_UClass_inherited_member_values":record.get("native_UClass_inherited_values_compared",0),
           "compiled_UClass_defaults_current":record.get("native_UClass_defaults_current",False),
           "compiled_UClass_default_tags_compared":record.get("native_UClass_defaults_tag_values_native_compared",0),
           "compiled_UClass_exact_default_values":record.get("native_UClass_defaults_exact",0),
@@ -189,6 +190,7 @@ def main():
                   "packages",row["observed_qualified_package_count"],
                   "production_native_complete",row.get("production_reader_native_records_complete",0),
                   "same_native_load_calls",row.get("compiled_same_real_load_dispatch_calls"),
+                  "UClass_inherited_native_fields",row.get("compiled_UClass_inherited_member_values",0),
                   "UClass_native_defaults",row.get("compiled_UClass_default_tags_compared",0),
                   "UClass_config_overrides",row.get("compiled_UClass_runtime_config_overrides",0))
         return 0

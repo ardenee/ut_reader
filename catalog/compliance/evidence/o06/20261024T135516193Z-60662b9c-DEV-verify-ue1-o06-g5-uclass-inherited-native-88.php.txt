@@ -1,0 +1,25 @@
+﻿{
+    "ok": true,
+    "checks": 1334,
+    "passed": 1334,
+    "failures": [],
+    "real_original_UClass_verified": 88,
+    "compiled_inherited_fields_compared": 1056,
+    "all_twelve_inherited_fields_by_name": {
+        "children_reference": 88,
+        "friendly_name": 88,
+        "ignore_mask": 88,
+        "label_table_offset": 88,
+        "next_field_reference": 88,
+        "probe_mask": 88,
+        "script_size": 88,
+        "script_text_reference": 88,
+        "source_line": 88,
+        "source_text_pos": 88,
+        "state_flags": 88,
+        "super_field_reference": 88
+    },
+    "native_name_indices_resolved": 149,
+    "full_method_accepted": false,
+    "gaps": "Malformed errors/consumption, complete script bytecode element fixups and other UE1 game/version variants"
+}
