@@ -158,7 +158,17 @@ foreach($events as $ev){
 }
 sort($foreign);
 $ck('foreign_Core_Class_disambiguation',$foreign===['2:Object','328:Subsystem']);
+$originalClassRows=array_filter($exports,static fn($e)=>(int)$e['classIndex']===0);
+$realClasses=array_filter($originalClassRows,static fn($e)=>(int)$e['serialSize']>0
+    &&strcasecmp((string)$e['objectNameText'],'None')!==0);
+$emptyPlaceholders=array_filter($originalClassRows,static fn($e)=>(int)$e['serialSize']===0
+    &&strcasecmp((string)$e['objectNameText'],'None')===0);
 $ck('real_Engine_88_UClass_objects_loaded',$classes===$m['native_loaded_classes']);
+$ck('all_real_named_original_UClass_covered',
+    count($realClasses)===$classes&&count($seen)===count($realClasses));
+$ck('43_ClassIndex_zero_NAME_None_empty_placeholders',
+    count($emptyPlaceholders)===43
+    &&count($originalClassRows)===count($realClasses)+count($emptyPlaceholders));
 $ck('all_source_default_tags_reached',$tagsCount===$m['original_class_defaults_tag_count']);
 $ck('type_distribution_matches_genuine_source',$types==$m['expected_type_counts']);
 $ck('607_native_exact_default_values',$exact===$m['expected_exact_serialized_to_native']);
@@ -168,11 +178,13 @@ $ck('method_still_has_unclosed_transitive_proofs',
 echo json_encode([
  'ok'=>$errors===[],'checks'=>$checks,'passed'=>$checks-count($errors),
  'failures'=>$errors,'original_Engine_classes'=>$classes,
+ 'real_UClass_unobserved'=>count($realClasses)-count($seen),
+ 'ClassIndex_zero_nonserialized_placeholders'=>count($emptyPlaceholders),
  'source_class_default_tags'=>$tagsCount,'native_exact_value_matches'=>$exact,
  'native_config_ini_overrides'=>$overrides,
  'typed_default_values'=>$types,'resolved_native_FName_indices'=>count($nameCache),
  'compiled_memory_regions'=>count($regions),
  'full_method_accepted'=>false,
- 'remaining'=>'43 genuine class exports, inherited loader and error/archive consumption/source variants'
+ 'remaining'=>'All 88 real UClasses covered; inherited loader, malformed error/archive consumption and version branches remain'
 ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE).PHP_EOL;
 exit($errors===[]?0:1);

@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T13:29:09.0744386Z",
-    "head_commit":  "5379bacb",
+    "updated_at_utc":  "2026-10-24T13:40:29.5924177Z",
+    "head_commit":  "6473e206",
     "current_target":  "DEV",
     "current_source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
     "tests":  [
@@ -525,12 +525,12 @@
                       "test":  "verify-ue1-o06-g5-multimethod-uclass-loaded-values.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-24T11:14:59.4061817Z",
+                      "event_at_utc":  "2026-10-24T13:40:21.5433906Z",
                       "source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
-                      "test_sha256":  "4616125d46888cdbfde3c694e232d2f99eb697f28eb58867506b5d49c5fda5fa",
-                      "run_id":  "20261024T111458040Z-305f115a",
+                      "test_sha256":  "aaa8108cff293910ca73f19bf5eea2c1547d00ee6472762047caa15febd2ce63",
+                      "run_id":  "20261024T134020063Z-c5a96f0f",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T111458040Z-305f115a-DEV-verify-ue1-o06-g5-multimethod-uclass-loaded-values.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T134020063Z-c5a96f0f-DEV-verify-ue1-o06-g5-multimethod-uclass-loaded-values.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-multimethod-uobject-inherited-flags.php",
@@ -657,24 +657,36 @@
                       "test":  "verify-ue1-o06-g5-uclass-all-native-nested-memory.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-24T11:43:21.3870348Z",
+                      "event_at_utc":  "2026-10-24T13:40:25.5693888Z",
                       "source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
-                      "test_sha256":  "af27e7566d818c5d144d6ebc089cb8d1230709bbacf8fe285d3303523977e1f2",
-                      "run_id":  "20261024T114319921Z-fac19f70",
+                      "test_sha256":  "6364311c349de10d9a7a788e7d02302e702793eb06c2299edae57660638caa8b",
+                      "run_id":  "20261024T134024084Z-52991fa8",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T114319921Z-fac19f70-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T134024084Z-52991fa8-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-uclass-defaults-native-608.php",
                       "test":  "verify-ue1-o06-g5-uclass-defaults-native-608.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-24T13:29:09.0523874Z",
+                      "event_at_utc":  "2026-10-24T13:40:29.5703892Z",
                       "source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
-                      "test_sha256":  "2c596f53481c0cdb05d11525e12f6f767028b8af11e6b10b5c44e63a96e98e35",
-                      "run_id":  "20261024T132907473Z-d4ba89c1",
+                      "test_sha256":  "62d7f69c747a5f4c1b0fe430d76caab882cdb87e70839fb025cf27c69e8f1738",
+                      "run_id":  "20261024T134028040Z-eeac5ddd",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T132907473Z-d4ba89c1-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T134028040Z-eeac5ddd-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-v432-uclass-real-export-coverage.php",
+                      "test":  "verify-ue1-o06-g5-v432-uclass-real-export-coverage.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T13:38:19.7617241Z",
+                      "source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
+                      "test_sha256":  "1bc6dd046972821bc846b2ed24d0a6e305508681810d485341ff894496900668",
+                      "run_id":  "20261024T133819230Z-4a3eca8d",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T133819230Z-4a3eca8d-DEV-verify-ue1-o06-g5-v432-uclass-real-export-coverage.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-class-default-declarations.php",

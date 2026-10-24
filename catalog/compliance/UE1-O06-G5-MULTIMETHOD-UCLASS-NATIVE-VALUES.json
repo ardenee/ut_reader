@@ -36,8 +36,12 @@
   ],
   "full_method_acceptance": "OPEN",
   "remaining": [
-    "43 original Engine.u class exports are not invoked by selected real UCC loading path.",
-    "Compiled 88 class GUIDs, counts and config names match source; complete dependency TArray elements, individual PackageImports names, ClassWithin full pointer identity/default property values not compared.",
+    "Original Engine.u contains 88 named nonzero UClasses and 43 ClassIndex==0 zero-size NAME_None placeholders; ALL 88 real UClasses were reached in this compiled v432 UCC invocation.",
+    "Original serialized scalar/GUID/array counts were independently compared; complete nested dependencies and loaded defaults are verified by subsequent SHA-pinned companion oracles.",
     "Inherited UState/UStruct/UField/UObject serializer correctness and malformed consumption/errors across other versions remain OPEN."
-  ]
+  ],
+  "original_engine_u_classindex_zero_rows": 131,
+  "genuine_serialized_UClass_exports": 88,
+  "nonserialized_NAME_None_zero_size_placeholders": 43,
+  "genuine_UClass_all_compiled_loaded": true
 }

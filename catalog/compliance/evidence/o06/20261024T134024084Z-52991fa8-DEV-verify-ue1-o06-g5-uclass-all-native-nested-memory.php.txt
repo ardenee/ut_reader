@@ -1,0 +1,21 @@
+﻿{
+    "ok": true,
+    "checks": 9878,
+    "passed": 9878,
+    "failures": [],
+    "source_Engine_original_UClass_records": 88,
+    "unobserved_real_UClass_exports": 0,
+    "nonserialized_NAME_None_placeholder_entries": 43,
+    "real_native_FDependency_elements": 3053,
+    "real_native_FDependency_member_comparisons": 9159,
+    "real_native_PackageImport_FName_matches": 176,
+    "real_native_ClassWithin_referent_matches": 88,
+    "actual_native_FName_lookup_count": 94,
+    "dump_region_count": 240,
+    "foreign_Core_classes": [
+        "2:Object",
+        "328:Subsystem"
+    ],
+    "full_G5_method_acceptance": "OPEN",
+    "gap": "All 88 real Engine.u classes covered; inherited methods, malformed byte/error semantics and other source versions remain OPEN"
+}

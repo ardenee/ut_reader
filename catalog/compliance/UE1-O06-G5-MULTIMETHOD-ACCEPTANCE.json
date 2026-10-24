@@ -1,15 +1,16 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T13:32:48+00:00",
+  "updated_utc": "2026-10-24T13:47:08+00:00",
   "source_profile": "ut99-v432",
   "classification": "DISCOVERY_AND_FULL_METHOD_ACCEPTANCE_QUEUE_NOT_NATIVE_PROOF",
-  "scanner_sha256": "4541234f4f730a60279c01b129db664f75023527be5441e89225a1a17fe6ac4d",
+  "scanner_sha256": "b63f8a998f37841e79794d6bf66a49f89776236fea3f6f24a00a4342f7c50f19",
   "packages_scanned": 7,
   "packages_expected": 7,
   "distinct_fully_accepted_methods": 0,
   "target_method_count": 8,
   "target_method_acceptance_completed": 0,
   "total_examined_export_rows": 5469,
+  "ignored_nonserialized_NAME_None_export_rows": 43,
   "total_production_export_ranges_inspected": 115,
   "total_production_reader_records_complete": 115,
   "total_production_reader_errors": 0,
@@ -26,6 +27,7 @@
       "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
       "archive_version": 69,
       "export_count": 5370,
+      "ignored_nonserialized_NAME_None_classIndex_zero_exports": 43,
       "reader_instance_count": 1
     },
     {
@@ -33,6 +35,7 @@
       "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
       "archive_version": 69,
       "export_count": 25,
+      "ignored_nonserialized_NAME_None_classIndex_zero_exports": 0,
       "reader_instance_count": 1
     },
     {
@@ -40,6 +43,7 @@
       "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
       "archive_version": 69,
       "export_count": 14,
+      "ignored_nonserialized_NAME_None_classIndex_zero_exports": 0,
       "reader_instance_count": 1
     },
     {
@@ -47,6 +51,7 @@
       "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
       "archive_version": 69,
       "export_count": 16,
+      "ignored_nonserialized_NAME_None_classIndex_zero_exports": 0,
       "reader_instance_count": 1
     },
     {
@@ -54,6 +59,7 @@
       "sha256": "e0e5ef3ceeaf169f790fb696ce49dcfc97df5b17d9de0e2b67f8108878186c3b",
       "archive_version": 61,
       "export_count": 5,
+      "ignored_nonserialized_NAME_None_classIndex_zero_exports": 0,
       "reader_instance_count": 1
     },
     {
@@ -61,6 +67,7 @@
       "sha256": "10839051ef41ea0145823243e00f3b1016df2a3ddc67d81a7716817158a16a95",
       "archive_version": 64,
       "export_count": 1,
+      "ignored_nonserialized_NAME_None_classIndex_zero_exports": 0,
       "reader_instance_count": 1
     },
     {
@@ -68,6 +75,7 @@
       "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c",
       "archive_version": 68,
       "export_count": 38,
+      "ignored_nonserialized_NAME_None_classIndex_zero_exports": 0,
       "reader_instance_count": 1
     }
   ],
@@ -96,11 +104,11 @@
       "compiled_positive_RF_HasStack_proof_manifest": "catalog/compliance/UE1-O06-G5-MULTIMETHOD-STATEFRAME-V68-NATIVE.json",
       "mapped": true,
       "observed_qualified_package_count": 7,
-      "observed_candidate_exports": 5469,
+      "observed_candidate_exports": 5426,
       "packages": [
         {
           "key": "Engine-69",
-          "objects": 5370,
+          "objects": 5327,
           "sample_indices": [
             0,
             1,
@@ -258,11 +266,11 @@
       "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
       "observed_qualified_package_count": 4,
-      "observed_candidate_exports": 140,
+      "observed_candidate_exports": 97,
       "packages": [
         {
           "key": "Engine-69",
-          "objects": 131,
+          "objects": 88,
           "sample_indices": [
             0,
             1,
@@ -320,7 +328,7 @@
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",
-        "compiled_88_of_131_UClass_3053_FDependency_176_PackageImports_88_ClassWithin_AND_608_DefaultTags_607_exact_1_verified_RuntimeINI_ServerName_override_but_43_unreached_inherited_errors_variants_OPEN"
+        "compiled_ALL_88_of_88_REAL_UClass_43_ClassIndex0_NAME_None_zerobyte_placeholders_NOT_unvisited_3053_FDependency_176_Imports_608_DefaultTags_607_exact_1_INI_override_inherited_errors_variants_OPEN"
       ],
       "next_closure_work": "Prove actual compiled class defaults, references, metadata values and superclass invocation.",
       "required_signoff": [

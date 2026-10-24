@@ -35,8 +35,12 @@
   },
   "accepted": false,
   "limits": [
-    "Only 88 genuine Engine.u classes reached by this commandlet, 43 source class exports unvisited.",
+    "All 88 genuine named nonzero Engine.u UClasses reached; the other 43 ClassIndex==0 ExportMap rows are NAME_None zero-size placeholders, not unvisited classes.",
     "Runtime arrays captured at final UClass::Serialize; field-level source comparison not proof of complete defaults or inherited UClass chain.",
     "Native path names/outer and malformed consumed byte/error semantics remain open."
-  ]
+  ],
+  "original_engine_u_classindex_zero_rows": 131,
+  "genuine_serialized_UClass_exports": 88,
+  "nonserialized_NAME_None_zero_size_placeholders": 43,
+  "genuine_UClass_all_compiled_loaded": true
 }

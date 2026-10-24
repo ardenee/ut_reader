@@ -1,0 +1,17 @@
+﻿{
+    "ok": true,
+    "checks": 719,
+    "passed": 719,
+    "errors": [],
+    "actual_original_UClass_exports": 88,
+    "classIndex_zero_nonserialized_placeholders": 43,
+    "compiled_UClass_serialize_calls": 90,
+    "compiled_unique_Engine_UClass_matches": 88,
+    "compiled_unrelated_UClass_calls": [
+        "2:Object",
+        "328:Subsystem"
+    ],
+    "unobserved_real_UClass_exports": 0,
+    "full_G5_method_accepted": false,
+    "reason": "Inherited UObject->UField->UStruct->UState, default loaded values, complete nested dependency refs, malignant byte/error branches and all 88 genuine classes loaded; inheritance and malformed error branches remain open"
+}

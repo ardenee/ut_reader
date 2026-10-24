@@ -140,12 +140,23 @@ foreach($events as $line){
 sort($foreign);
 $ck('two_unrelated_core_class_linker_indices',
     $foreign===['2:Object','328:Subsystem']);
+$classRows=array_filter($exports,static fn($e)=>(int)$e['classIndex']===0);
+$genuineRows=array_filter($classRows,static fn($e)=>(int)$e['serialSize']>0
+    &&strcasecmp((string)$e['objectNameText'],'None')!==0);
+$noneRows=array_filter($classRows,static fn($e)=>(int)$e['serialSize']===0
+    &&strcasecmp((string)$e['objectNameText'],'None')===0);
 $ck('all_88_original_UClass_nested_buffers_compared',$matched===88);
+$ck('all_88_REAL_nonzero_named_UClass_entries_compared',
+     count($genuineRows)===88&&count($seen)===count($genuineRows));
+$ck('43_zero_byte_NAME_None_exports_not_classes',
+     count($noneRows)===43&&count($classRows)===count($genuineRows)+count($noneRows));
 $ck('no_original_class_covered_twice',count($seen)===$matched);
 $ck('method_remains_OPEN',$m['accepted']===false);
 echo json_encode([
   'ok'=>$fail===[], 'checks'=>$checked,'passed'=>$checked-count($fail),
   'failures'=>$fail,'source_Engine_original_UClass_records'=>$matched,
+  'unobserved_real_UClass_exports'=>count($genuineRows)-count($seen),
+  'nonserialized_NAME_None_placeholder_entries'=>count($noneRows),
   'real_native_FDependency_elements'=>$depRecords,
   'real_native_FDependency_member_comparisons'=>$depFields,
   'real_native_PackageImport_FName_matches'=>$importEntries,
@@ -153,6 +164,6 @@ echo json_encode([
   'actual_native_FName_lookup_count'=>count($nameCache),
   'dump_region_count'=>count($ranges),'foreign_Core_classes'=>$foreign,
   'full_G5_method_acceptance'=>'OPEN',
-  'gap'=>'43 original Engine.u classes unvisited, full runtime defaults, inherited methods, malformed byte/error semantics and other versions remain OPEN'
+  'gap'=>'All 88 real Engine.u classes covered; inherited methods, malformed byte/error semantics and other source versions remain OPEN'
 ],JSON_PRETTY_PRINT|JSON_INVALID_UTF8_SUBSTITUTE|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($fail===[]?0:1);

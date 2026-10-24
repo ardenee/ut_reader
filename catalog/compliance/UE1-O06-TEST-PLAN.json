@@ -2,22 +2,29 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-v432-uclass-real-export-coverage": {
+      "description": "Correct v69 Engine.u ClassIndex==0 denominator: 131 ExportMap rows are 88 genuine nonempty named UClass serializations plus 43 zero-size NAME_None placeholders. Real compiled v432 Core!UClass::Serialize loaded ALL 88/88 named classes; 2 unrelated Core class records separated by actual FName + local linker index. Supersedes previous false 43-unvisited-class blocker; inherited, malformed and version variants still OPEN.",
+      "readers": ["CatalogUE1PackageReader.php", "CatalogUE1ClassicClassMetadataReader.php"],
+      "focus": ["verify-ue1-o06-g5-v432-uclass-real-export-coverage.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-multimethod-uclass-defaults-native-608": {
-      "description": "88 genuine v69 Engine.u UClass::Serialize defaults in actual compiled UT99 v432 Memory64 full process snapshot: entire 608 source tagged defaults resolved through live UClass Defaults and UProperty PropertyLink, Offset, FBool mask, native UObject reference/name table, FString and struct bytes. 607 exact values; single GameReplicationInfo.ServerName runtime config override corroborated by SHA-pinned UnrealTournament.ini. Full method OPEN due 43 classes, inheritance, malformed, source variants.",
+      "description": "88 genuine v69 Engine.u UClass::Serialize defaults in actual compiled UT99 v432 Memory64 full process snapshot: entire 608 source tagged defaults resolved through live UClass Defaults and UProperty PropertyLink, Offset, FBool mask, native UObject reference/name table, FString and struct bytes. 607 exact values; single GameReplicationInfo.ServerName runtime config override corroborated by SHA-pinned UnrealTournament.ini. Full method OPEN for inheritance, malformed/error and other source variants; all 88 real classes loaded, 43 rows are zero-size NAME_None placeholders.",
       "readers": ["CatalogUE1ClassicClassMetadataReader.php", "CatalogUE1ClassicClassDefaultSchemaReader.php"],
       "focus": ["verify-ue1-o06-g5-uclass-defaults-native-608.php"],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-uclass-full-nested-memory": {
-      "description": "UT99 v432 actual compiled Core.dll UClass::Serialize after 90th loaded class: 44 MB real MiniDump MEMORY64 contains full UClass FDependency TArray elements (runtime UObject class FName / Deep / CRC), complete PackageImports runtime FName array and ClassWithin referent. Compare all 88 original loaded Engine.u classes against production CatalogUE1ClassicClassMetadataReader. Do not mark method fully G5 accepted while inherited defaults, malformed/errors or other 43 genuine UClasses are open.",
+      "description": "UT99 v432 actual compiled Core.dll UClass::Serialize after 90th loaded class: 44 MB real MiniDump MEMORY64 contains full UClass FDependency TArray elements (runtime UObject class FName / Deep / CRC), complete PackageImports runtime FName array and ClassWithin referent. Compare all 88 original loaded Engine.u classes against production CatalogUE1ClassicClassMetadataReader. Do not mark method fully G5 accepted while inherited defaults, malformed/errors or other source branches are open; all 88 genuine Engine.u classes are covered.",
       "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
       "focus": ["verify-ue1-o06-g5-uclass-all-native-nested-memory.php"],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-uclass-native-values": {
-      "description": "Real unmodified compiled v432 Core!UClass::Serialize same-load post-archive 90 calls, 88 authentic Engine.u class exports with exact loaded ClassFlags, 16-byte GUID, dependency and import TArray lengths, ClassWithin pointer and runtime FName ConfigName; two unrelated Core objects disambiguated by actual compiled class names; 43 unobserved remain OPEN.",
+      "description": "Real unmodified compiled v432 Core!UClass::Serialize same-load post-archive 90 calls, 88 authentic Engine.u class exports with exact loaded ClassFlags, 16-byte GUID, dependency and import TArray lengths, ClassWithin pointer and runtime FName ConfigName; two unrelated Core objects disambiguated by actual compiled class names; 43 ClassIndex==0 rows are zero-size NAME_None placeholders, NOT unobserved real classes; other method branches OPEN.",
       "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
       "focus": ["verify-ue1-o06-g5-multimethod-uclass-loaded-values.php"],
       "affected": [],

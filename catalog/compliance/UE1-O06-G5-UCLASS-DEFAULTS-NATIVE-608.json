@@ -60,9 +60,13 @@
   },
   "strict_full_method_accepted": false,
   "remaining": [
-    "43 original Engine.u UClass exports not loaded by this compiled UCC pathway.",
+    "All 88 genuine named nonzero Engine.u UClasses reached; the 43 remaining ClassIndex==0 ExportMap entries are nonserialized NAME_None zero-size placeholders, not classes.",
     "Inherited UState/UStruct/UField/UObject and full engine initialization semantics not entirely proved.",
     "Malformed archive/error byte consumption and other UE1 source profiles not independently closed.",
     "Runtime config can override original default strings; this one override must be accounted for rather than incorrectly treating original byte values as always final."
-  ]
+  ],
+  "original_engine_u_classindex_zero_rows": 131,
+  "genuine_serialized_UClass_exports": 88,
+  "nonserialized_NAME_None_zero_size_placeholders": 43,
+  "genuine_UClass_all_compiled_loaded": true
 }

@@ -30,10 +30,16 @@ try{
   if(count($methods[$method]['sample_indices'])<12)
    $methods[$method]['sample_indices'][]=$idx;
  };
- $classCounts=[];$seen=0;$payloadTargets=[];$stackTargets=[];
+ $classCounts=[];$seen=0;$payloadTargets=[];$stackTargets=[];$emptyNameNoneExports=0;
  foreach($exports as $e){
   $idx=(int)($e['index']??$seen);$seen++;
   $ci=(int)($e['classIndex']??0);
+  // ClassIndex==0 alone is not proof of a serialized UClass.
+  // Engine.u v69 contains 43 NAME_None, zero-size ExportMap placeholders.
+  if($ci===0 && (int)($e['serialSize']??0)===0
+      &&strcasecmp((string)($e['objectNameText']??''),'None')===0){
+   $emptyNameNoneExports++;continue;
+  }
   $class=$ci<0?(string)($imports[-$ci-1]['objectNameText']??''):
    ($ci>0?(string)($exports[$ci-1]['objectNameText']??''):'Class');
   if($class===''){$class='UnresolvedClassIndex';}
@@ -115,6 +121,7 @@ try{
   'archive_version'=>$version,'licensee_version'=>(int)($header['licenseeVersion']??0),
   'source_profile'=>'ut99-v432',
   'valid_package'=>true,'export_count'=>count($exports),'import_count'=>count($imports),
+  'ignored_nonserialized_NAME_None_classIndex_zero_exports'=>$emptyNameNoneExports,
   'class_counts_top'=>array_slice($classCounts,0,18,true),
   'methods'=>$methods,
   'production_native_payloads'=>$production,

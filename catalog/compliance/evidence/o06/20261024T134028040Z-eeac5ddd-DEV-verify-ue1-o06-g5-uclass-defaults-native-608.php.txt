@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "checks": 1672,
+    "passed": 1672,
+    "failures": [],
+    "original_Engine_classes": 88,
+    "real_UClass_unobserved": 0,
+    "ClassIndex_zero_nonserialized_placeholders": 43,
+    "source_class_default_tags": 608,
+    "native_exact_value_matches": 607,
+    "native_config_ini_overrides": 1,
+    "typed_default_values": {
+        "StructProperty": 16,
+        "FloatProperty": 146,
+        "ByteProperty": 89,
+        "BoolProperty": 165,
+        "ObjectProperty": 39,
+        "IntProperty": 63,
+        "NameProperty": 6,
+        "StrProperty": 84
+    },
+    "resolved_native_FName_indices": 1409,
+    "compiled_memory_regions": 240,
+    "full_method_accepted": false,
+    "remaining": "All 88 real UClasses covered; inherited loader, malformed error/archive consumption and version branches remain"
+}

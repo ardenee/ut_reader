@@ -41,11 +41,18 @@ $ck('compiled_method_finished',
  &&(int)$end[1]===count($native));
 $path=$m['original_package']['path'];$p=new P($path);$exports=$p->getExports();
 $original=array_filter($exports,static fn($e)=>(int)$e['classIndex']===0);
+$real=array_filter($original,static fn($e)=>(int)$e['serialSize']>0
+   &&strcasecmp((string)$e['objectNameText'],'None')!==0);
+$placeholders=array_filter($original,static fn($e)=>(int)$e['serialSize']===0
+   &&strcasecmp((string)$e['objectNameText'],'None')===0);
+$ck('no_other_UClass_entry_kinds',count($real)+count($placeholders)===count($original));
+$ck('43_zero_size_NAME_None_placeholders',count($placeholders)===43);
+$ck('all_88_real_UClass_serialized_entries',count($real)===88);
 $ck('original_Engine_131_ClassMap_entries',
  count($original)===$m['expected_original_package_class_exports']);
 foreach($native as $rec){
  $idx=(int)$rec[1];$name=$rec[2];$label='native_Class_'.$name.'_idx_'.$idx;
- $ex=$original[$idx]??null;
+ $ex=$real[$idx]??null;
  if(!is_array($ex)||strcasecmp((string)$ex['objectNameText'],$name)!==0){
   $extraneous[]="$idx:$name";continue;
  }
@@ -75,15 +82,16 @@ sort($expected);
 $ck('only_known_foreign_loaded_Core_classes',$extraneous===$expected);
 $ck('exactly_88_untouched_Engine_class_loaded_values',
  $matched===$m['expected_compiled_loaded_original_class_records']);
-$ck('not_full_method_43_original_classes_unobserved',
- count($original)-count($seen)===43);
+$ck('all_real_Engine_UClass_entries_are_native_observed',
+ count($real)-count($seen)===0);
 echo json_encode(['ok'=>$errors===[],'checks'=>$checks,'passed'=>$checks-count($errors),
  'errors'=>$errors,
- 'original_UClass_exports'=>count($original),
+ 'actual_original_UClass_exports'=>count($real),
+ 'classIndex_zero_nonserialized_placeholders'=>count($placeholders),
  'compiled_UClass_serialize_calls'=>count($native),
  'compiled_unique_Engine_UClass_matches'=>$matched,
  'compiled_unrelated_UClass_calls'=>$extraneous,
- 'unobserved_original_UClass_exports'=>count($original)-count($seen),
+ 'unobserved_real_UClass_exports'=>count($real)-count($seen),
  'full_G5_method_accepted'=>false,
- 'reason'=>'Inherited UObject->UField->UStruct->UState, default loaded values, complete nested dependency refs, malignant byte/error branches and 43 unvisited classes remain open'],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
+ 'reason'=>'Inherited UObject->UField->UStruct->UState, default loaded values, complete nested dependency refs, malignant byte/error branches and all 88 genuine classes loaded; inheritance and malformed error branches remain open'],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES).PHP_EOL;
 exit($errors===[]?0:1);

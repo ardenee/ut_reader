@@ -142,6 +142,7 @@ def render(rows,config,src_sha):
       "target_method_count":len(target),
       "target_method_acceptance_completed":accepted,
       "total_examined_export_rows":sum(row["export_count"] for row in rows),
+      "ignored_nonserialized_NAME_None_export_rows":sum(int(row.get("ignored_nonserialized_NAME_None_classIndex_zero_exports",0)) for row in rows),
       "total_production_export_ranges_inspected":sum(int(s.get("attempted",0)) for p in rows for s in p.get("production_native_payloads",{}).values()),
       "total_production_reader_records_complete":sum(int(s.get("complete",0)) for p in rows for s in p.get("production_native_payloads",{}).values()),
       "total_production_reader_errors":sum(int(s.get("errors",0)) for p in rows for s in p.get("production_native_payloads",{}).values()),
@@ -155,6 +156,7 @@ def render(rows,config,src_sha):
       "package_observations":[{"key":p["key"],"sha256":p["sha256"],
              "archive_version":p["archive_version"],
              "export_count":p["export_count"],
+             "ignored_nonserialized_NAME_None_classIndex_zero_exports":int(p.get("ignored_nonserialized_NAME_None_classIndex_zero_exports",0)),
              "reader_instance_count":p["reader_instance_count"]} for p in rows],
       "methods":methods,
       "do_not_infer":"Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method."
@@ -176,6 +178,7 @@ def main():
               "of",doc.get("total_production_export_ranges_inspected",0),
               "source_bytes",doc.get("total_source_payload_bytes_inspected",0),
               "errors",doc.get("total_production_reader_errors",0))
+        print("IGNORED_NAME_None_EMPTY_EXPORTS",doc.get("ignored_nonserialized_NAME_None_export_rows",0))
         print("SOURCE_STATEFRAMES",doc.get("source_positive_RF_HasStack_decoded",0),
               "/",doc.get("source_positive_RF_HasStack_exports",0),
               "tagged_properties",doc.get("source_positive_RF_HasStack_tagged_properties",0),

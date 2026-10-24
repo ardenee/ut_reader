@@ -1,0 +1,17 @@
+﻿{
+    "ok": true,
+    "checks": 99,
+    "passed": 99,
+    "failures": [],
+    "original_classIndex_zero_rows": 131,
+    "zero_size_NAME_None_export_placeholders": 43,
+    "genuine_serialized_UClass_exports": 88,
+    "compiled_genuine_UClass_coverage": 88,
+    "remaining_real_UClass_unloaded": 0,
+    "foreign_Core_UClass_loaded": [
+        "2:Object",
+        "328:Subsystem"
+    ],
+    "full_method_accepted": false,
+    "remaining": "Inherited serializer, malformed/errors, source branch variants and full method review"
+}
