@@ -455,7 +455,7 @@
     },
     {
       "id": "T99:UFont::Serialize",
-      "full_G5_method_acceptance": "FAILED",
+      "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "OPEN",
@@ -508,7 +508,7 @@
         "controlled_malformed_CharRemap_native_consumes_4_bytes_past_serial_extent_PHP_rejects_early",
         "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"
       ],
-      "next_closure_work": "Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
+      "next_closure_work": "Complete T99:UObject::Serialize full method acceptance, then independently review Font inherited and remaining version/error paths once; do not repeat fonts positive array tests.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -518,7 +518,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch"
+      "decisive_closure_blocker": "inherited_UObject_full_method_and_other_variant_errors"
     },
     {
       "id": "T99:USkeletalMesh::Serialize",
@@ -807,6 +807,6 @@
     }
   ],
   "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",
-  "failed_method_decisions": 1,
-  "blocked_method_decisions": 7
+  "failed_method_decisions": 0,
+  "blocked_method_decisions": 8
 }

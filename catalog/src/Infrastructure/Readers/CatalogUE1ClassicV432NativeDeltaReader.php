@@ -476,7 +476,8 @@ final class CatalogUE1ClassicV432NativeDeltaReader
      */
     public static function decodeFontRemap(
         int $version,callable $read,callable $compact,
-        callable $uint,int &$position,int $limit
+        callable $uint,int &$position,int $limit,
+        int $exportSerialOffset,int $physicalFileSize
     ):array{
         if($version<69){
             return [
@@ -494,6 +495,22 @@ final class CatalogUE1ClassicV432NativeDeltaReader
         $count=$compact();
         if($count<0||$limit-$position<4
             ||$count>intdiv($limit-$position-4,4)){
+            // Compiled v432 UFont consumes all CharRemap pairs, then the
+            // IsRemapped DWORD, and checks export SerialSize afterwards.
+            // A malicious extra pair may reach +4 past the export. Recreate
+            // only the attempted logical cursor/error; NEVER read beyond the
+            // export. Check physical-file length to distinguish an actual
+            // end-of-file error from an export-size mismatch.
+            if($count>=0&&$limit-$position>=4
+                &&$position<=$physicalFileSize
+                &&$count<=intdiv($physicalFileSize-$position-4,4)){
+                $got=$position+$count*4+4-$exportSerialOffset;
+                $expected=$limit-$exportSerialOffset;
+                throw new RuntimeException(
+                    'Font: Serial size mismatch: Got '.$got.
+                    ', Expected '.$expected
+                );
+            }
             throw new RuntimeException(
                 'UT99 v432 font CharRemap pairs exceed native bounds');
         }

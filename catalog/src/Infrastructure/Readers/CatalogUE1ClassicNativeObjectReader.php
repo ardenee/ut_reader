@@ -498,7 +498,8 @@ final class CatalogUE1ClassicNativeObjectReader
                 $charactersPerPage=$rawCharactersPerPage>=0x80000000
                     ?$rawCharactersPerPage-0x100000000:$rawCharactersPerPage;
                 $fontRemap=CatalogUE1ClassicV432NativeDeltaReader::decodeFontRemap(
-                    $ver,$read,$compact,$int,$pos,$limit);
+                    $ver,$read,$compact,$int,$pos,$limit,
+                    (int)$ex['serialOffset'],(int)filesize($path));
                 return array_replace($record,$fontRemap,[
                     'status'=>$pos===$limit?'native_font_record_complete':'native_font_has_extension',
                     'page_count'=>$pageCount,'pages'=>$pages,

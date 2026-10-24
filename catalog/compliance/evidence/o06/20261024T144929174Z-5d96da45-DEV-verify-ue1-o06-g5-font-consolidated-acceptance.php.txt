@@ -1,0 +1,15 @@
+﻿{
+    "ok": true,
+    "checks": 23,
+    "passed": 23,
+    "errors": [],
+    "method": "T99:UFont::Serialize",
+    "native_attempted_bytes": 4116,
+    "declared_bytes": 4112,
+    "error_matches_native": true,
+    "verified_compiled_legal_remap_pairs": 4,
+    "prior_native_font_evidence_reused_without_replay": true,
+    "single_consolidated_method_decision": "BLOCKED",
+    "remaining_dependency": "T99:UObject::Serialize and unclosed other malformed/source branches",
+    "new_native_compiled_captures": 0
+}

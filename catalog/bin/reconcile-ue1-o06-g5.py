@@ -50,45 +50,73 @@ for s in [r"L:\Source\Games\Unreal\Unreal [v0.84a] [1996-12-11]\Src",
 signature="\n".join(str(p)+":"+digest(p).upper() for p in sorted(inputs,key=lambda p:str(p).casefold()) if p.is_file())
 if missing: signature += "\n"+"\n".join(missing)
 current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
-# An audited, bounded TextBuffer error-path change must NOT invalidate
-# unrelated compiled UClass/Font/Animation/Sound/Music proof slices. Prove
-# that the *only* reader-content difference from pinned commit e6583f48
-# lies inside TextBuffer's own branch, and that ALL other source inputs
-# still reconstruct the previous SHA-256 global fingerprint exactly.
-textbuffer_reader=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicNativeObjectReader.php"
-original=subprocess.check_output(
-    ["git","-C",str(ROOT),"show",
-     "e6583f48:catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php"]
-).decode("utf-8-sig").replace("\r\n","\n")
-updated=textbuffer_reader.read_text(encoding="utf-8-sig").replace("\r\n","\n")
-branch_start="            if($nativeKind==='textbuffer'){"
-branch_end="            if($nativeKind==='sound'||$nativeKind==='music'){"
-scoped_equivalence=False
+# Two independently reviewed, branch-local reader changes, with no native
+# retests. Pin the BEFORE/MIDDLE commits and reconstruct their source SHA
+# from ALL current source input hashes, substituting only these two readers.
+# Native method evidence for unaffected branches remains valid; if any other
+# source file or positive decoder changes, this proof automatically fails.
+text_reader=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicNativeObjectReader.php"
+delta_reader=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicV432NativeDeltaReader.php"
+def committed(ref,path):
+    return subprocess.check_output(["git","-C",str(ROOT),"show",
+        ref+":"+path.relative_to(ROOT).as_posix()]).decode("utf-8-sig")
+old_text=committed("e6583f48",text_reader)
+mid_text=committed("97702616",text_reader)
+mid_delta=committed("97702616",delta_reader)
+new_text=text_reader.read_text(encoding="utf-8-sig")
+new_delta=delta_reader.read_text(encoding="utf-8-sig")
 old_fingerprint="834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978"
-if original.count(branch_start)==updated.count(branch_start)==1 and original.count(branch_end)==updated.count(branch_end)==1:
-    before_old,tail_old=original.split(branch_start,1)
-    before_new,tail_new=updated.split(branch_start,1)
-    body_old,after_old=tail_old.split(branch_end,1)
-    body_new,after_new=tail_new.split(branch_end,1)
-    # Exact preservation outside TextBuffer, AND identical decoded positive
-    # FString materialization after its original $textOffset= assignment.
-    decode_anchor="                $textOffset=$pos;$raw=$read($size);"
-    legacy_digest=hashlib.sha256(original.encode("utf-8")).hexdigest().upper()
-    current_digest=digest(textbuffer_reader).upper()
-    restored=signature.replace(str(textbuffer_reader)+":"+current_digest,
-                               str(textbuffer_reader)+":"+legacy_digest)
-    scoped_equivalence=(
-        before_old==before_new and after_old==after_new
-        and decode_anchor in body_old and decode_anchor in body_new
-        and body_old.split(decode_anchor,1)[1]==body_new.split(decode_anchor,1)[1]
-        and hashlib.sha256(restored.encode("utf-8")).hexdigest()==old_fingerprint
-        and current!=old_fingerprint
-    )
+middle_fingerprint="8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe"
+def subst_sig(s,path,new_hash,old_hash):
+    before=str(path)+":"+new_hash
+    assert s.count(before)==1
+    return s.replace(before,str(path)+":"+old_hash,1)
+def sha_blob(value):
+    return hashlib.sha256(value.encode("utf-8")).hexdigest().upper()
+sig_middle=subst_sig(
+    subst_sig(signature,text_reader,digest(text_reader).upper(),sha_blob(mid_text)),
+    delta_reader,digest(delta_reader).upper(),sha_blob(mid_delta))
+font_scope=(hashlib.sha256(sig_middle.encode("utf-8")).hexdigest()==middle_fingerprint)
+# The NativeObjectReader change must be exactly a single font-remap call-site
+# argument update. The positive body after decoding one safe count stays
+# byte-for-byte identical to prior compiled oracle's reader.
+old_call="""                $fontRemap=CatalogUE1ClassicV432NativeDeltaReader::decodeFontRemap(
+                    $ver,$read,$compact,$int,$pos,$limit);"""
+new_call="""                $fontRemap=CatalogUE1ClassicV432NativeDeltaReader::decodeFontRemap(
+                    $ver,$read,$compact,$int,$pos,$limit,
+                    (int)$ex['serialOffset'],(int)filesize($path));"""
+font_scope=font_scope and mid_text.count(old_call)==1 and new_text==mid_text.replace(old_call,new_call)
+a="    public static function decodeFontRemap("
+b="        $pairOffset=$position;"
+if font_scope and mid_delta.count(a)==new_delta.count(a)==1 and mid_delta.count(b)==new_delta.count(b)==1:
+    prefix_mid,rest_mid=mid_delta.split(a,1)
+    prefix_new,rest_new=new_delta.split(a,1)
+    _,unchanged_mid=rest_mid.split(b,1)
+    _,unchanged_new=rest_new.split(b,1)
+    font_scope=prefix_mid==prefix_new and unchanged_mid==unchanged_new
+else:font_scope=False
+# The earlier TextBuffer branch alone differs between e6583f48 and 97702616;
+# no positive FString materialization/return body was changed.
+s_b="            if($nativeKind==='textbuffer'){"
+s_e="            if($nativeKind==='sound'||$nativeKind==='music'){"
+text_scope=False
+if old_text.count(s_b)==mid_text.count(s_b)==1 and old_text.count(s_e)==mid_text.count(s_e)==1:
+    a0,t0=old_text.split(s_b,1)
+    a1,t1=mid_text.split(s_b,1)
+    b0,z0=t0.split(s_e,1)
+    b1,z1=t1.split(s_e,1)
+    marker="                $textOffset=$pos;$raw=$read($size);"
+    sig_old=subst_sig(sig_middle,text_reader,sha_blob(mid_text),sha_blob(old_text))
+    text_scope=(a0==a1 and z0==z1 and marker in b0 and marker in b1
+                and b0.split(marker,1)[1]==b1.split(marker,1)[1]
+                and hashlib.sha256(sig_old.encode("utf-8")).hexdigest()==old_fingerprint)
+scoped_equivalence=font_scope and text_scope
 def source_compatible(ev,ident):
     if not ev:return False
-    return ev.get("source_sha256")==current or (
-        scoped_equivalence and ev.get("source_sha256")==old_fingerprint
-    )
+    f=ev.get("source_sha256")
+    return (f==current
+        or (font_scope and f==middle_fingerprint)
+        or (scoped_equivalence and f==old_fingerprint))
 rows=[]
 for e in reg["entries"]:
     if e["status"]=="EXCLUDED": continue
@@ -168,7 +196,7 @@ for e in reg["entries"]:
     if ident in COMPILED:
         if not loaded_valid: gaps.append("genuine_v432_loaded_values_missing")
         elif ident=="T99:UFont::Serialize":
-            gaps.extend(["controlled_malformed_CharRemap_native_consumes_4_bytes_past_serial_extent_PHP_rejects_early",
+            gaps.extend(["native_malformed_CharRemap_Got4116_Expected4112_now_matches_safe_PHP_23of23_consolidated_Blocked_on_inherited_UObject",
                          "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"])
         elif array_subset_valid:
             gaps.append("inherited_ULodMesh_and_unverified_scalar_fields_errors_open" if ident=="T99:USkeletalMesh::Serialize"
@@ -253,6 +281,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "fingerprint_changed":bool(current and current!=status.get("current_source_sha256")),
     "source_scope_equivalence_v432_textbuffer_only":scoped_equivalence,
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
+    "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
+    "source_font_branch_equivalence":font_scope,
     "summary":summary,
     "latest_DEV_test_states":dict(Counter(e["state"] for e in latest.values())),
     "branch_totals":branches,"native_slice_methods":natives,

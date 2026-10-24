@@ -72,8 +72,8 @@
       "criteria": {
         "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "FAILED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
@@ -81,11 +81,11 @@
       "closure_artifact": null,
       "closure_sha256": null,
       "blocker_summary": "Genuine glyphs and nonempty remaps partially verified; malformed and other specimens remain.",
-      "decision": "FAILED",
-      "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
-      "next_action": "Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
-      "reason": "Known native malformed CharRemap consumes four bytes beyond declared serial extent while PHP refuses before the read; other glyph references and native error handling not all closed.",
-      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
+      "decision": "BLOCKED",
+      "decisive_blocker": "inherited_UObject_full_method_and_other_variant_errors",
+      "next_action": "Complete T99:UObject::Serialize full method acceptance, then independently review Font inherited and remaining version/error paths once; do not repeat fonts positive array tests.",
+      "reason": "Original compiled v432 malformed CharRemap attempted Got4116 / Expected4112 and now PHP models identical logical byte count/error safely; ONE consolidated verdict PASS 23/23 using previous real native glyph/remap proofs. Shared inherited UObject and other malformed/source branches still open.",
+      "last_consolidated_review": "current_single_full_method_verdict_23_checks"
     },
     "T99:USkeletalMesh::Serialize": {
       "criteria": {

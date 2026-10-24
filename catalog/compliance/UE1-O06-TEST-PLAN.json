@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-t99-font-consolidated-acceptance": {
+      "description": "ONE complete T99:UFont::Serialize verdict after correcting source-selected v432 malformed TMap CharRemap cursor from proactive PHP bounds rejection to original compiled Got4116 Expected4112, without physically reading outside export. Reuse already pinned original four legal remaps, real native glyph/texture and two nonempty PRD font loader proofs; inherited UObject still not FULL and method therefore BLOCKED.",
+      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],
+      "focus": ["verify-ue1-o06-g5-font-consolidated-acceptance.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-textbuffer-consolidated-acceptance": {
       "description": "ONE full T99:UTextBuffer::Serialize decision using SHA-pinned existing original v432 Core Engine.u and 88 actual loaded strings plus source-selected real malformed/positive cases. Safely reproduce compiled ANSI900 malformed attempted cursor and Serial size mismatch Got912 Expected843 without actually reading the following export. The true inherited T99:UObject::Serialize remains BLOCKED so the method may only become BLOCKED, never falsely FULL.",
       "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],

@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T14:32:13.8951072Z",
-    "head_commit":  "e6583f48",
+    "updated_at_utc":  "2026-10-24T14:49:29.8637882Z",
+    "head_commit":  "97702616",
     "current_target":  "DEV",
-    "current_source_sha256":  "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
+    "current_source_sha256":  "3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -459,6 +459,18 @@
                       "run_id":  "20261023T151542836Z-4be7e371",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261023T151542836Z-4be7e371-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-font-consolidated-acceptance.php",
+                      "test":  "verify-ue1-o06-g5-font-consolidated-acceptance.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T14:49:29.8427883Z",
+                      "source_sha256":  "3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1",
+                      "test_sha256":  "1a3784134ad3fe2b6395afe1c64f14681d2d6c9e42d4e1d8b47ba6b6c6104049",
+                      "run_id":  "20261024T144929174Z-5d96da45",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T144929174Z-5d96da45-DEV-verify-ue1-o06-g5-font-consolidated-acceptance.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-genuine-v432-fonts.php",

@@ -58,7 +58,19 @@
     "The original v69 package 4x UFont loaded full bytes and reference identity were separately verified on unmodified source.",
     "Valid synthetic fixture changes one glyph count 256->255, reuses freed 16 bytes for four remap pairs, keeps export size and all subsequent offsets unchanged.",
     "CDB observed 4 TMap entries in memory, IsRemapped=1 and 255 loaded glyph records, and dumped 4080+32 native memory bytes identical to UnrealDB decode.",
-    "Malformed controlled one-byte count mutation is rejected by both implementations, but native crosses the exported SerialSize by four bytes and PHP proactively rejects within export bounds. This is an observed error-handling/byte-consumption divergence, not an Epic error-handling PASS.",
+    "Observed compiled malformed CharRemap consumes a logical 4116 bytes versus declared SerialSize 4112. The UT99-v432-only production delta reader now reports the identical attempted cursor/error without physically reading outside the export. One consolidated full-method verdict confirmed the correction. The method still awaits inherited UObject and other unverified error/variant paths.",
     "No modified Epic source, installed game packages or compiled DLL; disposable Native-UCC Engine.u restored to pristine hash."
-  ]
+  ],
+  "corrective_decision": {
+    "result": "BLOCKED",
+    "prior": "FAILED",
+    "corrected_error": "Font: Serial size mismatch: Got 4116, Expected 4112",
+    "native_compiled_error": "Font Engine.SmallFont: Serial size mismatch: Got 4116, Expected 4112",
+    "safe_php_mechanism": "virtual computed cursor, physical file-size checked, no read beyond declared export",
+    "test": "verify-ue1-o06-g5-font-consolidated-acceptance.php",
+    "journal": "20261024T144929174Z-5d96da45",
+    "checks_passed": 23,
+    "new_compiled_runs": 0,
+    "remaining": "T99:UObject::Serialize inherited method and untested source/malformed branches"
+  }
 }

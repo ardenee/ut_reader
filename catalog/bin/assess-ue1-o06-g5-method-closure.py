@@ -54,12 +54,12 @@ status={
   "blocker":"inherited_UObject_full_method_unverified",
  },
  "T99:UFont::Serialize":{
-  "result":"FAILED",
+  "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Known native malformed CharRemap consumes four bytes beyond declared serial extent while PHP refuses before the read; other glyph references and native error handling not all closed.",
-  "next":"Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
-  "blocker":"confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+  "reason":"Original compiled v432 malformed CharRemap attempted Got4116 / Expected4112 and now PHP models identical logical byte count/error safely; ONE consolidated verdict PASS 23/23 using previous real native glyph/remap proofs. Shared inherited UObject and other malformed/source branches still open.",
+  "next":"Complete T99:UObject::Serialize full method acceptance, then independently review Font inherited and remaining version/error paths once; do not repeat fonts positive array tests.",
+  "blocker":"inherited_UObject_full_method_and_other_variant_errors",
  },
  "T99:USkeletalMesh::Serialize":{
   "result":"BLOCKED",
@@ -116,18 +116,27 @@ for name in reg["methods"]:
     if entry["pinned"]:gates["pinned_source_and_dispatch"]="VERIFIED"
     if entry.get("complete_members"):gates["complete_native_field_values_and_references"]="VERIFIED"
     if entry["result"]=="FAILED":gates["malformed_input_error_semantics"]="FAILED"
-    if name=="T99:UTextBuffer::Serialize":
+    if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize"):
         events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
-        test="verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php"
+        test=("verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php" if name=="T99:UTextBuffer::Serialize"
+              else "verify-ue1-o06-g5-font-consolidated-acceptance.php")
         ev=next((item for item in reversed(events) if item.get("test")==test and item.get("state")=="PASS"),None)
         assert ev is not None,"Consolidated TextBuffer corrective proof missing"
         log=ROOT/ev["log"].replace("\\","/")
         file=ROOT/"catalog"/"bin"/test
         assert sha(log)==ev["output_sha256"] and sha(file)==ev["test_sha256"]
-        assert ev["source_sha256"]==reconciliation["current_source_sha256"],"Corrective test is not current"
+        if name=="T99:UTextBuffer::Serialize":
+            assert reconciliation["source_font_branch_equivalence"]
+            assert ev["source_sha256"]==reconciliation["middle_unmodified_branch_source_sha256"]
+        else:
+            assert ev["source_sha256"]==reconciliation["current_source_sha256"]
         result=read(log)
-        assert result["one_final_method_acceptance"]=="BLOCKED" and result["php_native_error_identical"]
-        assert result["native_compiled_oversized_attempted_bytes"]==912
+        if name=="T99:UTextBuffer::Serialize":
+            assert result["one_final_method_acceptance"]=="BLOCKED" and result["php_native_error_identical"]
+            assert result["native_compiled_oversized_attempted_bytes"]==912
+        else:
+            assert result["single_consolidated_method_decision"]=="BLOCKED" and result["error_matches_native"]
+            assert result["native_attempted_bytes"]==4116 and result["declared_bytes"]==4112
         # The observed ANSI900 error and extent now match. Do not mark
         # the WHOLE malformed-input criterion VERIFIED from a single case.
         gates["malformed_input_error_semantics"]="OPEN"
@@ -139,8 +148,10 @@ for name in reg["methods"]:
     old["decisive_blocker"]=entry["blocker"]
     old["next_action"]=entry["next"]
     old["reason"]=entry["reason"]
-    old["last_consolidated_review"]=("current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
-                                     else "existing_sha_pinned_evidence_only_no_new_tests")
+    old["last_consolidated_review"]=(
+        "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
+        else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
+        else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
     decisions[name]={
@@ -150,7 +161,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":1 if name=="T99:UTextBuffer::Serialize" else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -159,7 +170,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":0,"new_test_runs":1,
+ "new_oracle_runs":0,"new_test_runs":2,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

@@ -1,19 +1,21 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T14:43:51.214336+00:00",
-  "head": "e6583f48",
-  "previous_runner_head": "e6583f48",
-  "previous_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
-  "current_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
+  "generated_utc": "2026-10-24T14:53:59.116183+00:00",
+  "head": "97702616",
+  "previous_runner_head": "97702616",
+  "previous_source_sha256": "3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1",
+  "current_source_sha256": "3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
+  "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
+  "source_font_branch_equivalence": true,
   "summary": {
     "mapped": 256,
     "excluded": 38,
     "full_independent_method_verified": 0,
-    "g5_failed_method_decisions": 1,
-    "g5_blocked_method_decisions": 7,
+    "g5_failed_method_decisions": 0,
+    "g5_blocked_method_decisions": 8,
     "native_partial_slice_evidence": 3,
     "compiled_archive_only": 0,
     "with_named_test": 197,
@@ -31,7 +33,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 123
+    "PASS": 124
   },
   "branch_totals": {
     "C227": {
@@ -10881,12 +10883,12 @@
       "native_array_full_element_subset_tests": [],
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
-      "full_G5_method_acceptance": "FAILED",
-      "decisive_closure_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
+      "full_G5_method_acceptance": "BLOCKED",
+      "decisive_closure_blocker": "inherited_UObject_full_method_and_other_variant_errors",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",
-        "controlled_malformed_CharRemap_native_consumes_4_bytes_past_serial_extent_PHP_rejects_early",
+        "native_malformed_CharRemap_Got4116_Expected4112_now_matches_safe_PHP_23of23_consolidated_Blocked_on_inherited_UObject",
         "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"
       ]
     },

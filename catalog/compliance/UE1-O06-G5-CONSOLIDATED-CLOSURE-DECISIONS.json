@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
+  "source_fingerprint": "3e148da2ea4b703f90e896355a228d6b75722e6f17106ef08ef50822486a79e1",
   "method_count": 8,
   "fully_epic_verified": 0,
-  "failed": 1,
-  "blocked": 7,
+  "failed": 0,
+  "blocked": 8,
   "new_oracle_runs": 0,
-  "new_test_runs": 1,
+  "new_test_runs": 2,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -70,12 +70,12 @@
       "new_test_runs_executed": 1
     },
     "T99:UFont::Serialize": {
-      "decision": "FAILED",
+      "decision": "BLOCKED",
       "gate_results": {
         "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "FAILED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
@@ -83,11 +83,11 @@
       "existing_native_loaded_valid": true,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
-      "decisive_blocker": "confirmed_native_vs_PHP_malformed_byte_consumption_mismatch",
-      "reason": "Known native malformed CharRemap consumes four bytes beyond declared serial extent while PHP refuses before the read; other glyph references and native error handling not all closed.",
-      "next_action": "Resolve exact malformed archive semantics safely, then one final complete Font acceptance run covering nonempty remaps and inherited behavior.",
+      "decisive_blocker": "inherited_UObject_full_method_and_other_variant_errors",
+      "reason": "Original compiled v432 malformed CharRemap attempted Got4116 / Expected4112 and now PHP models identical logical byte count/error safely; ONE consolidated verdict PASS 23/23 using previous real native glyph/remap proofs. Shared inherited UObject and other malformed/source branches still open.",
+      "next_action": "Complete T99:UObject::Serialize full method acceptance, then independently review Font inherited and remaining version/error paths once; do not repeat fonts positive array tests.",
       "new_native_tests_executed": 0,
-      "new_test_runs_executed": 0
+      "new_test_runs_executed": 1
     },
     "T99:USkeletalMesh::Serialize": {
       "decision": "BLOCKED",
