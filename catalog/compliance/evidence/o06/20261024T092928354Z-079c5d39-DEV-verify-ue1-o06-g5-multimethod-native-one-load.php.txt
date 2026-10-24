@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 11,
+    "passed": 11,
+    "errors": [],
+    "single_compiled_engine_package_loads": 1,
+    "compiled_methods_observed": 3,
+    "UClass_hits": 90,
+    "UTextBuffer_hits": 90,
+    "UFont_hits": 4,
+    "full_method_accepted": 0,
+    "scope": "Actual same-load native method-call counts only; NOT complete loaded values, references, errors, inherited behaviors or full G5 acceptance."
+}

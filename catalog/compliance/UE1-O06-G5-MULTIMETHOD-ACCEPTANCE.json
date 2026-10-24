@@ -1,0 +1,660 @@
+{
+  "schema": 1,
+  "updated_utc": "2026-10-24T09:39:40+00:00",
+  "source_profile": "ut99-v432",
+  "classification": "DISCOVERY_AND_FULL_METHOD_ACCEPTANCE_QUEUE_NOT_NATIVE_PROOF",
+  "scanner_sha256": "6f78849518b7a3a69275c08db9afa87643a864f37c966c387ceb123df61cde3f",
+  "packages_scanned": 6,
+  "packages_expected": 6,
+  "distinct_fully_accepted_methods": 0,
+  "target_method_count": 8,
+  "target_method_acceptance_completed": 0,
+  "total_examined_export_rows": 5431,
+  "total_production_export_ranges_inspected": 114,
+  "total_production_reader_records_complete": 114,
+  "total_production_reader_errors": 0,
+  "total_source_payload_bytes_inspected": 2547089,
+  "single_compiled_native_load_evidence": "catalog/compliance/UE1-O06-G5-MULTIMETHOD-NATIVE-ONE-LOAD.json",
+  "methods_observed_in_one_compiled_loader_invocation": 3,
+  "package_observations": [
+    {
+      "key": "Engine-69",
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "archive_version": 69,
+      "export_count": 5370,
+      "reader_instance_count": 1
+    },
+    {
+      "key": "table-69",
+      "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+      "archive_version": 69,
+      "export_count": 25,
+      "reader_instance_count": 1
+    },
+    {
+      "key": "EcoTerror-69",
+      "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+      "archive_version": 69,
+      "export_count": 14,
+      "reader_instance_count": 1
+    },
+    {
+      "key": "d00d-69",
+      "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+      "archive_version": 69,
+      "export_count": 16,
+      "reader_instance_count": 1
+    },
+    {
+      "key": "DMatch-Sound",
+      "sha256": "e0e5ef3ceeaf169f790fb696ce49dcfc97df5b17d9de0e2b67f8108878186c3b",
+      "archive_version": 61,
+      "export_count": 5,
+      "reader_instance_count": 1
+    },
+    {
+      "key": "Mission-Music",
+      "sha256": "10839051ef41ea0145823243e00f3b1016df2a3ddc67d81a7716817158a16a95",
+      "archive_version": 64,
+      "export_count": 1,
+      "reader_instance_count": 1
+    }
+  ],
+  "methods": [
+    {
+      "id": "T99:UObject::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": null,
+      "mapped": true,
+      "observed_qualified_package_count": 6,
+      "observed_candidate_exports": 5431,
+      "packages": [
+        {
+          "key": "Engine-69",
+          "objects": 5370,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        },
+        {
+          "key": "table-69",
+          "objects": 25,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        },
+        {
+          "key": "EcoTerror-69",
+          "objects": 14,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        },
+        {
+          "key": "d00d-69",
+          "objects": 16,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
+        },
+        {
+          "key": "DMatch-Sound",
+          "objects": 5,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "key": "Mission-Music",
+          "objects": 1,
+          "sample_indices": [
+            0
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 0,
+      "production_reader_native_records_complete": 0,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 0,
+      "prior_oracle_classification": "not_recorded",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "global_source_inputs_changed"
+      ],
+      "next_closure_work": "Close shared inherited StateFrame/property envelope and exact runtime error/byte semantics.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    },
+    {
+      "id": "T99:UClass::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": 90,
+      "mapped": true,
+      "observed_qualified_package_count": 4,
+      "observed_candidate_exports": 140,
+      "packages": [
+        {
+          "key": "Engine-69",
+          "objects": 131,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            4,
+            5,
+            6,
+            7,
+            11,
+            14,
+            17,
+            18,
+            19
+          ]
+        },
+        {
+          "key": "table-69",
+          "objects": 3,
+          "sample_indices": [
+            13,
+            14,
+            17
+          ]
+        },
+        {
+          "key": "EcoTerror-69",
+          "objects": 3,
+          "sample_indices": [
+            1,
+            2,
+            4
+          ]
+        },
+        {
+          "key": "d00d-69",
+          "objects": 3,
+          "sample_indices": [
+            2,
+            3,
+            8
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 0,
+      "production_reader_native_records_complete": 0,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 0,
+      "prior_oracle_classification": "not_recorded",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "global_source_inputs_changed"
+      ],
+      "next_closure_work": "Prove actual compiled class defaults, references, metadata values and superclass invocation.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    },
+    {
+      "id": "T99:UTextBuffer::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": 90,
+      "mapped": true,
+      "observed_qualified_package_count": 4,
+      "observed_candidate_exports": 97,
+      "packages": [
+        {
+          "key": "Engine-69",
+          "objects": 88,
+          "sample_indices": [
+            4867,
+            4868,
+            4869,
+            4870,
+            4871,
+            4872,
+            4873,
+            4874,
+            4875,
+            4876,
+            4878,
+            4879
+          ]
+        },
+        {
+          "key": "table-69",
+          "objects": 3,
+          "sample_indices": [
+            15,
+            16,
+            19
+          ]
+        },
+        {
+          "key": "EcoTerror-69",
+          "objects": 3,
+          "sample_indices": [
+            3,
+            5,
+            7
+          ]
+        },
+        {
+          "key": "d00d-69",
+          "objects": 3,
+          "sample_indices": [
+            6,
+            9,
+            10
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 97,
+      "production_reader_native_records_complete": 97,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 516306,
+      "prior_oracle_classification": "compiled_native_export_slice",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "global_source_inputs_changed",
+        "native_export_slice_only"
+      ],
+      "next_closure_work": "Native loaded 88 strings verified; inherited UObject and oversized native byte/error mismatch remain.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    },
+    {
+      "id": "T99:UFont::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": 4,
+      "mapped": true,
+      "observed_qualified_package_count": 1,
+      "observed_candidate_exports": 4,
+      "packages": [
+        {
+          "key": "Engine-69",
+          "objects": 4,
+          "sample_indices": [
+            2634,
+            5088,
+            5091,
+            5094
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 4,
+      "production_reader_native_records_complete": 4,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 16448,
+      "prior_oracle_classification": "compiled_native_loaded_values_subset",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "global_source_inputs_changed",
+        "controlled_malformed_CharRemap_native_consumes_4_bytes_past_serial_extent_PHP_rejects_early",
+        "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"
+      ],
+      "next_closure_work": "Prove all native font-page glyph arrays, texture refs and malformed CharRemap paths.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    },
+    {
+      "id": "T99:USkeletalMesh::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": null,
+      "mapped": true,
+      "observed_qualified_package_count": 3,
+      "observed_candidate_exports": 5,
+      "packages": [
+        {
+          "key": "table-69",
+          "objects": 2,
+          "sample_indices": [
+            12,
+            24
+          ]
+        },
+        {
+          "key": "EcoTerror-69",
+          "objects": 1,
+          "sample_indices": [
+            0
+          ]
+        },
+        {
+          "key": "d00d-69",
+          "objects": 2,
+          "sample_indices": [
+            4,
+            11
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 5,
+      "production_reader_native_records_complete": 5,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 533673,
+      "prior_oracle_classification": "compiled_native_loaded_values_subset",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "no_named_test",
+        "inherited_ULodMesh_and_unverified_scalar_fields_errors_open"
+      ],
+      "next_closure_work": "Close inherited ULodMesh and remaining scalar/references/error semantics.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    },
+    {
+      "id": "T99:UAnimation::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": null,
+      "mapped": true,
+      "observed_qualified_package_count": 3,
+      "observed_candidate_exports": 3,
+      "packages": [
+        {
+          "key": "table-69",
+          "objects": 1,
+          "sample_indices": [
+            23
+          ]
+        },
+        {
+          "key": "EcoTerror-69",
+          "objects": 1,
+          "sample_indices": [
+            6
+          ]
+        },
+        {
+          "key": "d00d-69",
+          "objects": 1,
+          "sample_indices": [
+            7
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 3,
+      "production_reader_native_records_complete": 3,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 568735,
+      "prior_oracle_classification": "compiled_native_loaded_values_subset",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "no_named_test",
+        "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open"
+      ],
+      "next_closure_work": "Verify inherited UObject and untested native/error/source-version boundaries.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    },
+    {
+      "id": "T99:USound::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": null,
+      "mapped": true,
+      "observed_qualified_package_count": 1,
+      "observed_candidate_exports": 4,
+      "packages": [
+        {
+          "key": "DMatch-Sound",
+          "objects": 4,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            3
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 4,
+      "production_reader_native_records_complete": 4,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 177148,
+      "prior_oracle_classification": "compiled_native_export_slice",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "global_source_inputs_changed",
+        "native_export_slice_only"
+      ],
+      "next_closure_work": "Go beyond native WAV exports to full source-defined serialized payload, values and error handling.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    },
+    {
+      "id": "T99:UMusic::Serialize",
+      "full_G5_method_acceptance": "OPEN",
+      "ready_for_acceptance": false,
+      "acceptance_criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "acceptance_criteria_met": 0,
+      "acceptance_criteria_total": 7,
+      "closure_artifact_verified": false,
+      "compiled_same_real_load_dispatch_calls": null,
+      "mapped": true,
+      "observed_qualified_package_count": 1,
+      "observed_candidate_exports": 1,
+      "packages": [
+        {
+          "key": "Mission-Music",
+          "objects": 1,
+          "sample_indices": [
+            0
+          ]
+        }
+      ],
+      "production_reader_export_ranges_inspected": 1,
+      "production_reader_native_records_complete": 1,
+      "production_reader_errors": 0,
+      "production_archive_bytes_inspected": 734779,
+      "prior_oracle_classification": "compiled_native_export_slice",
+      "prior_gaps": [
+        "complete_native_fields_values_references_bytes_errors_not_proven",
+        "global_source_inputs_changed",
+        "native_export_slice_only"
+      ],
+      "next_closure_work": "Go beyond native exports to complete lazy-array seek semantics, native payload and errors.",
+      "required_signoff": [
+        "pinned selected Epic source / compiled dispatch",
+        "full native loaded fields and references",
+        "source-exact bytes and archive extent",
+        "positive/negative runtime outcomes and error byte consumption",
+        "all inherited serializers and selected game/version variants",
+        "current affected test evidence",
+        "separately reviewed method acceptance"
+      ]
+    }
+  ],
+  "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method."
+}

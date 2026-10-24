@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-full-method-textbuffer-v432-candidate`
-- **Stage:** 848-checks-pass-native-source-fix-committed-prd-deployment-blocked
-- **Last completed action:** T99 UTextBuffer whole-values candidate: 88 real v69 objects, 1007796 loaded WCHAR bytes match, 813/813 SHA-pinned native verifier PASS, 13/13 source fixture PASS, 22/22 genuine exporter PASS. Product missing-final-NUL native parity defect fixed and published Git commit 0ad6838e; original compiled Core / precise PosTop, Unicode, nonNUL native variants and oversize native rejection proven. FULL method still OPEN because UObject inherited and malformed byte-path divergence. PRD target Z:\Apache24\htdocs\unrealdb has older 420-line native reader blob b176b79c from 76c3a0d6, not baseline DEV blob 54bef0c9; intentionally no PRD overwrite as current DEV reader depends on other newer reader signatures; no PRD PHP tests.
-- **Resume at:** Primary next full method blocker is T99 UObject::Serialize inherited dispatch and parent field/linker semantics on same genuine Engine.u, then decide safe malformed-error equivalence without silently accepting divergent native byte consumption. Coordinate PRD version dependency upgrade before deploying product fix, no blind one-file copy; user wants FULL accepted method count to move from 0, not more scattered PASS tests.
-- **Active changed at:** 2026-10-24T09:12:19+00:00
-- **Latest DEV test states:** PASS 113; FAIL 0; STARTED 0
+- **Contract:** `g5-multimethod-8-target-shared-package-batch`
+- **Stage:** six-genuine-packages-eight-methods-one-native-session-pass-resumable
+- **Last completed action:** Implemented resumable shared G5 multi-method pipeline: six original SHA-pinned UT99/PRD source packages cached on C:\Temp NVMe, one CatalogUE1PackageReader/package and single PHP worker processing all eight target method candidates, six production native record kinds. Actual six-package source pass 5431 ExportMap rows, 114/114 selected native records complete, 2547089 source payload bytes, no errors. 6/6 unchanged SHA package scans skip on rerun. One actual compiled original Engine.u UCC load with CDB recorded UClass::Serialize 90 calls, UTextBuffer::Serialize 90, UFont::Serialize 4, independent 11/11 focused O06 PASS, subsequent unchanged-pass skip. Separate seven-gate per-method fully-reviewed SHA evidence requirements, 0/8 batch fully accepted and O06 full still 0/256. All transient and future C++ build outputs C:\Temp\UnrealDB\O06, no PRD modifications, no original sources changed.
+- **Resume at:** Use shared method ledger to close transitive UObject/StateFrame and UClass defaults alongside TextBuffer and Font variants using compiled oracle in same genuine package loads; add actual full native method values and malformed diagnostics per method. Do not rescan 6 unchanged packages or replay current one-load native PASS. Fully accepted only when 7 closure gates and pinned reviewer artifact satisfied.
+- **Active changed at:** 2026-10-24T09:40:08+00:00
+- **Latest DEV test states:** PASS 114; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T09:29:28.8164804Z | verify-ue1-o06-g5-multimethod-native-one-load.php | PASS | 78 | catalog\compliance\evidence\o06\20261024T092928354Z-079c5d39-DEV-verify-ue1-o06-g5-multimethod-native-one-load.php.txt |
+| 2026-10-24T09:29:28.3625101Z | verify-ue1-o06-g5-multimethod-native-one-load.php | STARTED |  | catalog\compliance\evidence\o06\20261024T092928354Z-079c5d39-DEV-verify-ue1-o06-g5-multimethod-native-one-load.php.txt |
 | 2026-10-24T09:04:37.7636372Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | PASS | 135 | catalog\compliance\evidence\o06\20261024T090437219Z-25ba344b-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
 | 2026-10-24T09:04:37.2278619Z | verify-ue1-o06-native-ut99-textbuffer-exports.php | STARTED |  | catalog\compliance\evidence\o06\20261024T090437219Z-25ba344b-DEV-verify-ue1-o06-native-ut99-textbuffer-exports.php.txt |
 | 2026-10-24T09:04:07.6586631Z | verify-ue1-o06-g5-textbuffer-native-all-values.php | PASS | 420 | catalog\compliance\evidence\o06\20261024T090406857Z-532677b0-DEV-verify-ue1-o06-g5-textbuffer-native-all-values.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T07:47:56.2861356Z | verify-ue1-o06-g5-native-animseq-notifies-v432.php | STARTED |  | catalog\compliance\evidence\o06\20261024T074756286Z-b04f9000-DEV-verify-ue1-o06-g5-native-animseq-notifies-v432.php.txt |
 | 2026-10-24T07:47:54.2478928Z | verify-ue1-o06-g5-native-refbones-v432.php | PASS | 207 | catalog\compliance\evidence\o06\20261024T074753646Z-7d3a4af8-DEV-verify-ue1-o06-g5-native-refbones-v432.php.txt |
 | 2026-10-24T07:47:53.6514619Z | verify-ue1-o06-g5-native-refbones-v432.php | STARTED |  | catalog\compliance\evidence\o06\20261024T074753646Z-7d3a4af8-DEV-verify-ue1-o06-g5-native-refbones-v432.php.txt |
-| 2026-10-23T23:31:07.9021961Z | verify-ue1-o06-g5-real-skeletal-vector-arrays.php | PASS | 193 | catalog\compliance\evidence\o06\20261023T233107304Z-bfeaef38-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt |
-| 2026-10-23T23:31:07.3111588Z | verify-ue1-o06-g5-real-skeletal-vector-arrays.php | STARTED |  | catalog\compliance\evidence\o06\20261023T233107304Z-bfeaef38-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt |
 
 ## Recovery procedure
 

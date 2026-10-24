@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "classification": "GENUINE_COMPILED_UT99_V432_SINGLE_NATIVE_LOAD_THREE_SERIALIZER_DISPATCH_OBSERVATIONS",
+  "source_profile": "ut99-v432",
+  "original_package": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+  "original_package_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+  "core_dll": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+  "core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "engine_dll": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+  "engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "log": "C:/Temp/UnrealDB/O06/g5-multi-native-one-load-classes-text-font.log",
+  "log_sha256": "76c2650663735c8d8cb7cda1c75af0ca3fcf23d7132beb8061dac876fdd5dd36",
+  "native_command": "ucc.exe batchexport Engine.u TextBuffer txt C:/Temp/UnrealDB/O06/g5-multi-native-out",
+  "captured_methods": [
+    {
+      "method": "T99:UClass::Serialize",
+      "native_symbol": "Core+0x1203",
+      "hits": 90
+    },
+    {
+      "method": "T99:UTextBuffer::Serialize",
+      "native_symbol": "Core+0x31bb",
+      "hits": 90
+    },
+    {
+      "method": "T99:UFont::Serialize",
+      "native_symbol": "Engine+0x242d",
+      "hits": 4
+    }
+  ],
+  "method_count": 3,
+  "package_loads": 1,
+  "notes": [
+    "One real compiled engine commandlet package load and one CDB debugger invocation observed THREE actual serializer method-entry dispatches; 90 UClass calls, 90 TextBuffer calls, 4 Font calls. The original file was opened once by the native loader session.",
+    "Some runtime objects can be dynamically generated and counts need not match original ExportMap rows exactly; these are method-call counters, not per-object full native field/value proof.",
+    "Full method acceptance remains zero. No compiled native binary or installed original file modified. Native debug log remains on NVMe C:/Temp."
+  ]
+}

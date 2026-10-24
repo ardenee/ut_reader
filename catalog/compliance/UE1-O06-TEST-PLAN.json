@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-multimethod-one-load-v432": {
+      "description": "One authentic compiled v432 Engine.u package load in one CDB invocation exercises THREE selected method entry points: UClass 90 calls, UTextBuffer 90, UFont 4. Independent SHA-pinned Core/Engine original DLLs and debugger log; this is dispatch coverage only, not full-method acceptance.",
+      "readers": [],
+      "focus": ["verify-ue1-o06-g5-multimethod-native-one-load.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-full-method-textbuffer-v432-candidate": {
       "description": "Strict T99:UTextBuffer::Serialize candidate full-method acceptance gate: authentic compiled Core.dll PostSerialize 88 genuine Engine.u complete Pos/Top/TCHAR strings (1007796 actual native memory bytes), compiled controlled positive Pos/Top and wide, missing-NUL source discrepancy corrected, oversized native and PHP both reject; inherited method and native error bytepath still OPEN",
       "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],

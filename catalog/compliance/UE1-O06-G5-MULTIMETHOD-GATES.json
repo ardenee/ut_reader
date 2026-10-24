@@ -1,0 +1,127 @@
+{
+  "schema": 1,
+  "required_criteria": [
+    "pinned_source_and_dispatch",
+    "complete_native_field_values_and_references",
+    "archive_bytes_and_consumption",
+    "malformed_input_error_semantics",
+    "inherited_and_version_variant_semantics",
+    "current_acceptance_tests",
+    "independent_full_method_review"
+  ],
+  "policy": "A method counts FULLY_EPIC_VERIFIED only when every criterion equals VERIFIED, closure_artifact exists with SHA256, and acceptance review is explicit. Partial compiled source/values and package discovery cannot satisfy full acceptance automatically.",
+  "methods": {
+    "T99:UObject::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "Shared prerequisite for all derived serializers; full UE1 StateFrame/property and error variants remain open."
+    },
+    "T99:UClass::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "Shared native compile call count observed but complete class metadata/defaults still unverified."
+    },
+    "T99:UTextBuffer::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "Compiled all 88 Engine.u TextBuffer loaded values match; inherited UObject and oversize error-byte path unresolved."
+    },
+    "T99:UFont::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "Genuine glyphs and nonempty remaps partially verified; malformed and other specimens remain."
+    },
+    "T99:USkeletalMesh::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "237 native FMeshBone records verified; inherited ULodMesh is still open."
+    },
+    "T99:UAnimation::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "Complete nested keys for two genuine animation packages; inheritance and malformed variants remain."
+    },
+    "T99:USound::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "Compiled native WAV export slice only; full semantics and error handling open."
+    },
+    "T99:UMusic::Serialize": {
+      "criteria": {
+        "pinned_source_and_dispatch": "OPEN",
+        "complete_native_field_values_and_references": "OPEN",
+        "archive_bytes_and_consumption": "OPEN",
+        "malformed_input_error_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "OPEN",
+        "current_acceptance_tests": "OPEN",
+        "independent_full_method_review": "OPEN"
+      },
+      "closure_artifact": null,
+      "closure_sha256": null,
+      "blocker_summary": "Compiled native music export slice only; full lazy-array and error semantics open."
+    }
+  }
+}

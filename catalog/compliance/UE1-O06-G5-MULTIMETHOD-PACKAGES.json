@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "batch": "G5-8-method-6-package-single-discovery-pass",
+  "default_profile": "ut99-v432",
+  "workspace": "C:/Temp/UnrealDB/O06/g5-multimethod",
+  "acceptance": "FULL acceptance may only be set after independent Epic/compiled evidence for source semantics, native fields/values/references, archive consumption and errors, transitive supers, variants and current tests. Discovery is never acceptance.",
+  "packages": [
+    {
+      "key": "Engine-69",
+      "label": "Original installed UT99 Engine.u",
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+    },
+    {
+      "key": "table-69",
+      "label": "Original PRD UT99 v69 table.u",
+      "path": "C:/Temp/UnrealDB/O06/00a9f59043e94e8879c722c6e521f252.u",
+      "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8"
+    },
+    {
+      "key": "EcoTerror-69",
+      "label": "Original PRD UT99 v69 EcoTerror.u",
+      "path": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+      "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879"
+    },
+    {
+      "key": "d00d-69",
+      "label": "Original PRD UT99 v69 d00d.u",
+      "path": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+      "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426"
+    },
+    {
+      "key": "DMatch-Sound",
+      "label": "Original installed UT99 DMatch.uax",
+      "path": "C:/Temp/UnrealDB/O06/g5-multimethod/inputs/DMatch.uax",
+      "sha256": "e0e5ef3ceeaf169f790fb696ce49dcfc97df5b17d9de0e2b67f8108878186c3b"
+    },
+    {
+      "key": "Mission-Music",
+      "label": "Original installed UT99 Mission.umx",
+      "path": "C:/Temp/UnrealDB/O06/g5-multimethod/inputs/Mission.umx",
+      "sha256": "10839051ef41ea0145823243e00f3b1016df2a3ddc67d81a7716817158a16a95"
+    }
+  ],
+  "targets": [
+    "T99:UObject::Serialize",
+    "T99:UClass::Serialize",
+    "T99:UTextBuffer::Serialize",
+    "T99:UFont::Serialize",
+    "T99:USkeletalMesh::Serialize",
+    "T99:UAnimation::Serialize",
+    "T99:USound::Serialize",
+    "T99:UMusic::Serialize"
+  ],
+  "notes": [
+    "No synthetic test cases counted as complete; all six original package bytes hash-pinned.",
+    "One metadata reader per package discovers all related methods, not one package scan per serializer.",
+    "Stale prior method PASS or native subsets are not full-method acceptance; each method remains independently OPEN.",
+    "Transient scan/result cache, debugger/compile/scratch go to C:/Temp on NVMe; versioned scanner, manifest and acceptance summaries stay in Git."
+  ]
+}
