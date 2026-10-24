@@ -37,6 +37,16 @@ function access_matrix_query(array $overrides = []): string
     return http_build_query($query);
 }
 
+function access_matrix_summary_heading(string $title, string $view): string
+{
+    $query = access_matrix_query([
+        'view' => $view, 'detail_q' => null, 'detail_p' => 1,
+        'show_ips' => null, 'p' => 1,
+    ]);
+    return '<h2><a href="access-matrix.php?' . catalog_h($query)
+        . '" onclick="event.stopPropagation()">' . catalog_h($title) . '</a></h2>';
+}
+
 function access_matrix_time(mixed $value): string
 {
     $value = trim((string)$value);
@@ -316,6 +326,165 @@ try {
     }
     $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
 
+    // Dedicated complete, searchable view for each Top 10 card. Keep the
+    // dashboard's time/IP/page/session filters and the same grouped queries.
+    $detailView = access_matrix_choice(
+        (string)($_GET['view'] ?? ''),
+        ['pages', 'links', 'sections', 'interactions', 'navigation'],
+        ''
+    );
+    if ($detailView !== '') {
+        $detailSearch = access_matrix_text((string)($_GET['detail_q'] ?? ''), 190);
+        $detailPage = max(1, min(1000000, (int)($_GET['detail_p'] ?? 1)));
+        $reports = [
+            'pages' => [
+                'title' => 'Busiest pages',
+                'columns' => ['page_key' => 'Page', 'hits' => 'Hits', 'unique_ips' => 'IPs'],
+                'select' => 'a.page_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips',
+                'event' => 'a.event_type IN ("page_view","server_page")',
+                'group' => 'a.page_key',
+                'search' => ['page_key'],
+                'order' => 'hits DESC,a.page_key',
+            ],
+            'links' => [
+                'title' => 'Busiest links',
+                'columns' => ['request_path' => 'Link', 'hits' => 'Hits', 'unique_ips' => 'IPs'],
+                'select' => 'a.request_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips',
+                'event' => 'a.event_type IN ("page_view","server_page") AND a.request_path<>""',
+                'group' => 'a.request_path',
+                'search' => ['request_path'],
+                'order' => 'hits DESC,a.request_path',
+            ],
+            'sections' => [
+                'title' => 'Busiest sections',
+                'columns' => ['page_key' => 'Page', 'section_key' => 'Section', 'hits' => 'Hits', 'unique_ips' => 'IPs'],
+                'select' => 'a.page_key,a.section_key,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips',
+                'event' => 'a.event_type="section" AND a.section_key IS NOT NULL',
+                'group' => 'a.page_key,a.section_key',
+                'search' => ['page_key', 'section_key'],
+                'order' => 'hits DESC,a.page_key,a.section_key',
+            ],
+            'interactions' => [
+                'title' => 'Top interactions',
+                'columns' => ['page_key' => 'Page', 'action_key' => 'Action', 'target_path' => 'Target', 'hits' => 'Hits', 'unique_ips' => 'IPs'],
+                'select' => 'a.page_key,a.action_key,a.target_path,MIN(a.request_path) sample_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips',
+                'event' => 'a.event_type="interaction" AND a.action_key IS NOT NULL',
+                'group' => 'a.page_key,a.action_key,a.target_path',
+                'search' => ['page_key', 'action_key', 'target_path'],
+                'order' => 'hits DESC,a.page_key,a.action_key,a.target_path',
+            ],
+            'navigation' => [
+                'title' => 'Navigation matrix',
+                'columns' => ['source_path' => 'From', 'destination_path' => 'To', 'hits' => 'Hits', 'unique_ips' => 'IPs'],
+                'select' => 'a.referrer_path source_path,a.request_path destination_path,COUNT(*) hits,COUNT(DISTINCT a.ip_address) unique_ips',
+                'event' => 'a.event_type IN ("page_view","server_page") AND a.referrer_path IS NOT NULL AND a.referrer_path<>""',
+                'group' => 'a.referrer_path,a.request_path',
+                'search' => ['source_path', 'destination_path'],
+                'order' => 'hits DESC,a.referrer_path,a.request_path',
+            ],
+        ];
+        $report = $reports[$detailView];
+        $detailRows = [];
+        $detailTotal = 0;
+        if ($eventsAvailable) {
+            $conditions = $where;
+            $conditions[] = $report['event'];
+            $sql = 'SELECT ' . $report['select'] . ' FROM ue_access_events a WHERE '
+                . implode(' AND ', $conditions) . ' GROUP BY ' . $report['group'];
+            $detailArgs = $args;
+            if ($detailSearch !== '') {
+                $like = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $detailSearch) . '%';
+                $having = [];
+                foreach ($report['search'] as $column) {
+                    $having[] = $column . ' LIKE ? ESCAPE "\\\\"';
+                    $detailArgs[] = $like;
+                }
+                $sql .= ' HAVING (' . implode(' OR ', $having) . ')';
+            }
+            $countStatement = $db->prepare('SELECT COUNT(*) FROM (' . $sql . ') grouped_events');
+            $countStatement->execute($detailArgs);
+            $detailTotal = (int)$countStatement->fetchColumn();
+            $lastPage = max(1, (int)ceil($detailTotal / 100));
+            $detailPage = min($detailPage, $lastPage);
+            $statement = $db->prepare($sql . ' ORDER BY ' . $report['order']
+                . ' LIMIT 100 OFFSET ' . (($detailPage - 1) * 100));
+            $statement->execute($detailArgs);
+            $detailRows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        }
+        $detailPages = max(1, (int)ceil($detailTotal / 100));
+        $backUrl = 'access-matrix.php?' . access_matrix_query([
+            'view' => null, 'detail_q' => null, 'detail_p' => null, 'p' => 1,
+        ]);
+        catalog_head($report['title'] . ' - Site Activity Logs');
+        catalog_page_header(
+            $report['title'],
+            'All grouped entries for the selected activity filters, ordered by hits.',
+            ['Back to Site Activity Logs' => $backUrl]
+        );
+        echo '<form class="access-matrix-detail-filter" method="get" action="access-matrix.php" '
+            . 'style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-bottom:16px">';
+        echo '<input type="hidden" name="view" value="' . catalog_h($detailView) . '">';
+        foreach ([
+            'days','ip','page_q','page_exact','path_exact','section_exact',
+            'action_exact','target_exact','referrer_exact','destination_exact','session','q',
+        ] as $key) {
+            if (isset($_GET[$key]) && is_scalar($_GET[$key])) {
+                echo '<input type="hidden" name="' . catalog_h($key) . '" value="'
+                    . catalog_h((string)$_GET[$key]) . '">';
+            }
+        }
+        echo '<label style="flex:1;min-width:240px">Search ' . catalog_h($report['title'])
+            . '<input name="detail_q" type="search" value="' . catalog_h($detailSearch)
+            . '" placeholder="Filter all entries" style="width:100%"></label>'
+            . '<button type="submit">Search</button>'
+            . '<a class="button secondary" href="access-matrix.php?'
+            . catalog_h(access_matrix_query(['detail_q' => null, 'detail_p' => 1]))
+            . '">Clear</a></form>';
+        echo '<section class="ui-section"><div class="ui-section__body">'
+            . '<p class="muted">' . number_format($detailTotal) . ' matching entries; 100 per page.</p>';
+        if ($detailRows === []) {
+            echo '<p class="muted">No matching entries.</p>';
+        } else {
+            echo '<div style="overflow-x:auto"><table><thead><tr>';
+            foreach ($report['columns'] as $heading) {
+                echo '<th>' . catalog_h($heading) . '</th>';
+            }
+            echo '</tr></thead><tbody>';
+            foreach ($detailRows as $row) {
+                echo '<tr>';
+                foreach ($report['columns'] as $field => $heading) {
+                    $value = (string)($row[$field] ?? '');
+                    if ($field === 'hits' || $field === 'unique_ips') {
+                        $cell = number_format((int)$value);
+                    } elseif ($field === 'page_key') {
+                        $cell = access_matrix_logged_link($row['sample_path'] ?? '', $value);
+                    } elseif (in_array($field, ['request_path','source_path','destination_path','target_path'], true)) {
+                        $cell = access_matrix_logged_link($value);
+                    } else {
+                        $cell = catalog_h($value);
+                    }
+                    echo '<td>' . $cell . '</td>';
+                }
+                echo '</tr>';
+            }
+            echo '</tbody></table></div>';
+        }
+        $previous = $detailPage > 1
+            ? '<a class="button secondary" href="access-matrix.php?'
+                . catalog_h(access_matrix_query(['detail_p' => $detailPage - 1]))
+                . '">Previous</a>' : '';
+        $next = $detailPage < $detailPages
+            ? '<a class="button secondary" href="access-matrix.php?'
+                . catalog_h(access_matrix_query(['detail_p' => $detailPage + 1]))
+                . '">Next</a>' : '';
+        echo '<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:16px">'
+            . '<span>' . $previous . '</span><span class="muted">Page '
+            . $detailPage . ' of ' . $detailPages . '</span><span>' . $next . '</span></div>';
+        echo '</div></section>';
+        catalog_foot();
+        exit;
+    }
+
     // The event selector controls the raw activity log only. Busiest pages,
     // sections, interactions and navigation cards must not disappear merely
     // because the operator is looking at page loads in the raw list.
@@ -478,6 +647,7 @@ try {
         . '.access-matrix-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-bottom:16px;max-width:100%;align-items:start}'
         . '.access-matrix-grid .ui-section{margin:0;min-width:0;max-width:100%;overflow:hidden}'
         . '.access-matrix-grid .ui-section__body{min-width:0;max-width:100%;overflow-x:auto}'
+        . '.access-matrix-grid .access-matrix-wide{grid-column:1/-1}'
         . '.access-matrix-grid table{width:100%;max-width:100%;table-layout:auto}'
         . '.access-matrix-grid th,.access-matrix-grid td{vertical-align:top}'
         . '.access-matrix-grid td:first-child,.access-matrix-grid th:first-child{min-width:0;overflow-wrap:anywhere;word-break:break-word}'
@@ -562,7 +732,7 @@ try {
     echo '</select></label><button type="submit">Apply</button></form>';
 
     echo '<div class="access-matrix-grid">';
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest pages</h2><p>Browser-confirmed and server-only page requests.</p></div></div><div class="ui-section__body">';
+    echo '<details class="ui-section access-matrix-collapsible" open><summary><div class="ui-section__header"><div>' . access_matrix_summary_heading('Busiest pages', 'pages') . '<p>Browser-confirmed and server-only page requests.</p></div></div></summary><div class="ui-section__body">';
     if ($topPages === []) echo '<p class="muted">No page activity.</p>';
     else {
         echo '<table><thead><tr><th>Page</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
@@ -574,9 +744,9 @@ try {
         }
         echo '</tbody></table>';
     }
-    echo '</div></section>';
+    echo '</div></details>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest links</h2><p>Exact requested URLs from browser-confirmed and server-only page activity.</p></div></div><div class="ui-section__body">';
+    echo '<details class="ui-section access-matrix-collapsible" open><summary><div class="ui-section__header"><div>' . access_matrix_summary_heading('Busiest links', 'links') . '<p>Exact requested URLs from browser-confirmed and server-only page activity.</p></div></div></summary><div class="ui-section__body">';
     if ($topLinks === []) echo '<p class="muted">No page-link activity.</p>';
     else {
         echo '<table><thead><tr><th>Link</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
@@ -588,28 +758,9 @@ try {
         }
         echo '</tbody></table>';
     }
-    echo '</div></section>';
+    echo '</div></details>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Navigation matrix</h2><p>Same-site HTTP referrer → destination across page activity.</p></div></div><div class="ui-section__body">';
-    if ($transitions === []) echo '<p class="muted">No same-site navigation transitions recorded.</p>';
-    else {
-        echo '<table><thead><tr><th>From</th><th>To</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
-        foreach ($transitions as $row) {
-            $transitionFilters = [
-                'event' => 'page_activity',
-                'referrer_exact' => (string)$row['source_path'],
-                'destination_exact' => (string)$row['destination_path'],
-                'p' => 1,
-            ];
-            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['source_path']) . '</td><td class="mono small">' . access_matrix_logged_link((string)$row['destination_path']) . '</td>'
-                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($transitionFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
-                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($transitionFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
-        }
-        echo '</tbody></table>';
-    }
-    echo '</div></section>';
-
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Busiest sections</h2><p>Browser JavaScript only; server-only/crawler requests cannot report visible sections.</p></div></div><div class="ui-section__body">';
+    echo '<details class="ui-section access-matrix-collapsible" open><summary><div class="ui-section__header"><div>' . access_matrix_summary_heading('Busiest sections', 'sections') . '<p>Browser JavaScript only; server-only/crawler requests cannot report visible sections.</p></div></div></summary><div class="ui-section__body">';
     if ($topSections === []) echo '<p class="muted">No section-view data.</p>';
     else {
         echo '<table class="access-matrix-sections-table"><thead><tr><th>Page</th><th>Section</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
@@ -626,9 +777,9 @@ try {
         }
         echo '</tbody></table>';
     }
-    echo '</div></section>';
+    echo '</div></details>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Top interactions</h2><p>Browser JavaScript actions only; ordinary same-site navigation is intentionally not duplicated here.</p></div></div><div class="ui-section__body">';
+    echo '<details class="ui-section access-matrix-collapsible" open><summary><div class="ui-section__header"><div>' . access_matrix_summary_heading('Top interactions', 'interactions') . '<p>Browser JavaScript actions only; ordinary same-site navigation is intentionally not duplicated here.</p></div></div></summary><div class="ui-section__body">';
     if ($topActions === []) echo '<p class="muted">No interaction data.</p>';
     else {
         echo '<table class="access-matrix-interactions-table"><thead><tr><th>Page</th><th>Action</th><th>Target</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
@@ -646,7 +797,26 @@ try {
         }
         echo '</tbody></table>';
     }
-    echo '</div></section>';
+    echo '</div></details>';
+    echo '<details class="ui-section access-matrix-collapsible access-matrix-wide" open><summary><div class="ui-section__header"><div>' . access_matrix_summary_heading('Navigation matrix', 'navigation') . '<p>Same-site HTTP referrer → destination across page activity.</p></div></div></summary><div class="ui-section__body">';
+    if ($transitions === []) echo '<p class="muted">No same-site navigation transitions recorded.</p>';
+    else {
+        echo '<table><thead><tr><th>From</th><th>To</th><th>Hits</th><th>IPs</th></tr></thead><tbody>';
+        foreach ($transitions as $row) {
+            $transitionFilters = [
+                'event' => 'page_activity',
+                'referrer_exact' => (string)$row['source_path'],
+                'destination_exact' => (string)$row['destination_path'],
+                'p' => 1,
+            ];
+            echo '<tr><td class="mono small">' . access_matrix_logged_link((string)$row['source_path']) . '</td><td class="mono small">' . access_matrix_logged_link((string)$row['destination_path']) . '</td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($transitionFilters + ['show_ips' => null])) . '#raw-events">' . (int)$row['hits'] . '</a></td>'
+                . '<td><a class="access-matrix-metric-link" href="access-matrix.php?' . catalog_h(access_matrix_query($transitionFilters + ['show_ips' => 1])) . '#matching-ips">' . (int)$row['unique_ips'] . '</a></td></tr>';
+        }
+        echo '</tbody></table>';
+    }
+    echo '</div></details>';
+
     echo '</div>';
 
     if ($showIps) {

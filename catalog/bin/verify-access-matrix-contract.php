@@ -197,9 +197,9 @@ $record(
 
 $record(
     'page_activity_populates_page_link_and_navigation_cards',
-    str_contains($admin, '<h2>Busiest pages</h2>')
-        && str_contains($admin, '<h2>Busiest links</h2>')
-        && str_contains($admin, '<h2>Navigation matrix</h2>')
+    str_contains($admin, "access_matrix_summary_heading('Busiest pages', 'pages')")
+        && str_contains($admin, "access_matrix_summary_heading('Busiest links', 'links')")
+        && str_contains($admin, "access_matrix_summary_heading('Navigation matrix', 'navigation')")
         && substr_count($admin, 'a.event_type IN ("page_view","server_page")') >= 4
         && str_contains($admin, "'event' => 'page_activity'")
         && str_contains($admin, 'GROUP BY a.request_path')
