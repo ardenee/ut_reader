@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T10:17:36+00:00",
+  "updated_utc": "2026-10-24T10:48:24+00:00",
   "source_profile": "ut99-v432",
   "classification": "DISCOVERY_AND_FULL_METHOD_ACCEPTANCE_QUEUE_NOT_NATIVE_PROOF",
   "scanner_sha256": "4541234f4f730a60279c01b129db664f75023527be5441e89225a1a17fe6ac4d",
@@ -211,11 +211,13 @@
       "production_reader_native_records_complete": 0,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 0,
+      "compiled_StateFrame_referent_names_current": true,
+      "compiled_StateFrame_referent_names_verified": 28,
       "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",
-        "compiled_Entry_native_14_of_19_positive_StateFrames_imported_Node_StageNode_identity_and_malformed_errors_open"
+        "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
       "next_closure_work": "Close shared inherited StateFrame/property envelope and exact runtime error/byte semantics.",
       "required_signoff": [
@@ -304,6 +306,8 @@
       "production_reader_native_records_complete": 0,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 0,
+      "compiled_StateFrame_referent_names_current": false,
+      "compiled_StateFrame_referent_names_verified": 0,
       "prior_oracle_classification": "not_recorded",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
@@ -403,6 +407,8 @@
       "production_reader_native_records_complete": 98,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 516378,
+      "compiled_StateFrame_referent_names_current": false,
+      "compiled_StateFrame_referent_names_verified": 0,
       "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
@@ -461,6 +467,8 @@
       "production_reader_native_records_complete": 4,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 16448,
+      "compiled_StateFrame_referent_names_current": false,
+      "compiled_StateFrame_referent_names_verified": 0,
       "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
@@ -533,6 +541,8 @@
       "production_reader_native_records_complete": 5,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 533673,
+      "compiled_StateFrame_referent_names_current": false,
+      "compiled_StateFrame_referent_names_verified": 0,
       "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
@@ -602,6 +612,8 @@
       "production_reader_native_records_complete": 3,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 568735,
+      "compiled_StateFrame_referent_names_current": false,
+      "compiled_StateFrame_referent_names_verified": 0,
       "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
@@ -660,6 +672,8 @@
       "production_reader_native_records_complete": 4,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 177148,
+      "compiled_StateFrame_referent_names_current": false,
+      "compiled_StateFrame_referent_names_verified": 0,
       "prior_oracle_classification": "compiled_native_export_slice",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
@@ -715,6 +729,8 @@
       "production_reader_native_records_complete": 1,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 734779,
+      "compiled_StateFrame_referent_names_current": false,
+      "compiled_StateFrame_referent_names_verified": 0,
       "prior_oracle_classification": "compiled_native_export_slice",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",

@@ -1,0 +1,17 @@
+﻿{
+    "ok": true,
+    "checks": 195,
+    "passed": 195,
+    "errors": [],
+    "compiled_original_frames": 14,
+    "native_imported_Node_and_StateNode_reference_name_matches": 28,
+    "native_memory_source_frame_bytes_compared": 210,
+    "original_source_positive_total": 19,
+    "remaining_original_positive_unloaded": 5,
+    "full_method_accepted": false,
+    "gaps": [
+        "5 original Entry.unr RF_HasStack frames not observed native",
+        "Native reference names verified but not full class/outer identity",
+        "Malformed consumption/errors and other source versions open"
+    ]
+}

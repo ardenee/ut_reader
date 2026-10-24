@@ -23,7 +23,7 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). Remaining five not reached, Node/StateNode native referent identity, malformed byte/error paths and early source-family variants OPEN."
+      "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). All 28 actual compiled Node/StateNode FName names matched original v68 import referents (195/195 PASS); remaining five are Camera exports not loaded by Actor or Camera batchexport, full outer/class object identity, malformed byte/error paths and early source-family variants OPEN."
     },
     "T99:UClass::Serialize": {
       "criteria": {

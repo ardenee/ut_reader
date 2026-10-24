@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T10:15:42.1074214Z",
-    "head_commit":  "bd4600d4",
+    "updated_at_utc":  "2026-10-24T10:41:04.5789328Z",
+    "head_commit":  "b3b7e90f",
     "current_target":  "DEV",
     "current_source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
     "tests":  [
@@ -507,6 +507,18 @@
                       "run_id":  "20261024T092928354Z-079c5d39",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T092928354Z-079c5d39-DEV-verify-ue1-o06-g5-multimethod-native-one-load.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-multimethod-stateframe-native-referents.php",
+                      "test":  "verify-ue1-o06-g5-multimethod-stateframe-native-referents.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T10:41:04.5599355Z",
+                      "source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
+                      "test_sha256":  "8f5829679469844114c8e21238f4284c92bafb64d88d29e9f1f48a16e0c9274c",
+                      "run_id":  "20261024T104104103Z-cfcaa051",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T104104103Z-cfcaa051-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-multimethod-uobject-inherited-flags.php",

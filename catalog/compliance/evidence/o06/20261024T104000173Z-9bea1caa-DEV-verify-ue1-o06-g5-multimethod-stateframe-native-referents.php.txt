@@ -1,0 +1,23 @@
+﻿{
+    "ok": false,
+    "checks": 26,
+    "passed": 21,
+    "errors": [
+        "exact_fourteen_real_native_records",
+        "native_terminates_after_fourteen_loaded_positive_actors",
+        "all_original_observed_frames_evaluated",
+        "exact_source_import_referent_names_all_twenty_eight",
+        "five_remaining_unobserved_original_export_frames"
+    ],
+    "compiled_original_frames": 1,
+    "native_imported_Node_and_StateNode_reference_name_matches": 2,
+    "native_memory_source_frame_bytes_compared": 15,
+    "original_source_positive_total": 19,
+    "remaining_original_positive_unloaded": 18,
+    "full_method_accepted": false,
+    "gaps": [
+        "5 original Entry.unr RF_HasStack frames not observed native",
+        "Native reference names verified but not full class/outer identity",
+        "Malformed consumption/errors and other source versions open"
+    ]
+}

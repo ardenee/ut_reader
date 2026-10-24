@@ -2,18 +2,22 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-multimethod-8-target-shared-package-batch`
-- **Stage:** seven-native-source-packages-common-UObject-positive-stateframe-subsets-pass
-- **Last completed action:** One SHA-cache reader context per 7 original Unreal/UT99 packages (Engine/table/EcoTerror/d00d/DMatch/Mission/Entry); 5469 total ExportMap entries, 115/115 selected native export payload decodes, 2547161 inspected source payload bytes, 0 reader errors. Extended shared package scan with 19/19 positive RF_HasStack v68 Entry.unr object StateFrames, 285 archive bytes, 172 tags source-decoded with zero errors; compiled genuine v432 Core UObject StateFrame post-Serialize reached 14/19 original map exports with probe64/latent/codePointer matches, 152/152 focused PASS run 20261024T100737198Z-eac2b05f. In a separate SAME real Engine.u compiled load, 5955 UObject, 90 UClass, 90 UTextBuffer, 4 UFont calls and 88+4 derived loaded flags compared 564/564 PASS run 20261024T095321588Z-0849582f. Both current matches UNCHANGED_PASS on second invocation. Prior TextBuffer code fix invalidated 12 historical native verifiers; refreshed ONLY 12 pinned current-source snapshot tests once and skipped one existing PASS, no compiled re-capture. Reconciliation shows FIVE CURRENT compiled native-loaded subset methods and TWO full array subsets, 0/256 FULL accepted. Seven package source scan second run 7/7 cache skipped. All new fixtures and compiled probes on C:\Temp NVMe; PRD untouched.
-- **Resume at:** Keep eight method acceptance gates individual and strict. Next multi-method closure steps: capture Node/StateNode native referenced object identities on 14 v68 Entry StateFrames, trigger remaining 5 original flagged map objects via suitable compiled engine commandlet, verify malformed StateFrame/Tag archive byte/error parity; then address shared UObject complete inherited prerequisite for UClass/UTextBuffer/UFont. No prior PASS replay. Commit and push actual verification result; FULL methods stay 0 until complete 7 gates and independent evidence.
-- **Active changed at:** 2026-10-24T10:17:36+00:00
-- **Latest DEV test states:** PASS 116; FAIL 0; STARTED 0
+- **Contract:** `g5-multimethod-stateframe-native-referents`
+- **Stage:** fourteen-genuine-stateframes-28-native-referents-pass-5-camera-blocked
+- **Last completed action:** Resumed from clean b3b7e90f. In genuine v68 Entry.unr loaded by compiled v432 Core.dll, CDB dereferenced actual 14 native FStateFrame Node/StateNode UObject pointers, runtime UObject+0x20 FName indices, Core!FName::Names and FNameEntry Unicode. All 28 actual native referent FNames matched original source ImportMap names plus exact flags, masks, latent action, code pointers and 15-byte bounds: 195/195 PASS 20261024T104104103Z-cfcaa051. First test-only log line anchor regex FAIL 20261024T104000173Z-9bea1caa immutable/preserved, then corrected test-only regex and new PASS; no production parser changes. Missing five original Entry flags are Camera exports idx 12,33,34,35,36. Second compiled Camera class batchexport loaded no new objects (SHA pinned diagnostic), so no repeat of class-filtered exports. New native FName reference subset reconciled as current valid for T99:UObject, overall FULL 0/256. Seven genuine package cache remains 7/7 skipped. All temporary compiled CDB files on C:\Temp NVMe, PRD unchanged.
+- **Resume at:** Work toward first FULL method: use materially different genuine editor/engine loading path to reach five Camera StateFrames if feasible; verify native full outer/class referent paths and malformed object property/StateFrame error-byte consumption; process UClass defaults alongside shared UObject and UTextBuffer/Font in same loaded-session groups. Do NOT repeat current 195/195 PASS or prior 7 cached packages. Preserve append-only journal, SHA-pinned debugger evidence; strict G5 still 0/256.
+- **Active changed at:** 2026-10-24T10:49:47+00:00
+- **Latest DEV test states:** PASS 117; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T10:41:04.5599355Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | PASS | 76 | catalog\compliance\evidence\o06\20261024T104104103Z-cfcaa051-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
+| 2026-10-24T10:41:04.1109346Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | STARTED |  | catalog\compliance\evidence\o06\20261024T104104103Z-cfcaa051-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
+| 2026-10-24T10:40:00.6216107Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | FAIL | 87 | catalog\compliance\evidence\o06\20261024T104000173Z-9bea1caa-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
+| 2026-10-24T10:40:00.1806008Z | verify-ue1-o06-g5-multimethod-stateframe-native-referents.php | STARTED |  | catalog\compliance\evidence\o06\20261024T104000173Z-9bea1caa-DEV-verify-ue1-o06-g5-multimethod-stateframe-native-referents.php.txt |
 | 2026-10-24T10:15:42.0844210Z | verify-ue1-o06-g5-genuine-v432-fonts.php | PASS | 401 | catalog\compliance\evidence\o06\20261024T101541346Z-5b1d1a91-DEV-verify-ue1-o06-g5-genuine-v432-fonts.php.txt |
 | 2026-10-24T10:15:41.3464213Z | verify-ue1-o06-g5-genuine-v432-fonts.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101541346Z-5b1d1a91-DEV-verify-ue1-o06-g5-genuine-v432-fonts.php.txt |
 | 2026-10-24T10:15:40.9384239Z | verify-ue1-o06-native-ut99-music-all.php | PASS | 1123 | catalog\compliance\evidence\o06\20261024T101539454Z-055c3644-DEV-verify-ue1-o06-native-ut99-music-all.php.txt |
@@ -28,10 +32,6 @@
 | 2026-10-24T10:15:33.7094199Z | verify-ue1-o06-g5-native-animseq-notifies-v432.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101533709Z-39aae562-DEV-verify-ue1-o06-g5-native-animseq-notifies-v432.php.txt |
 | 2026-10-24T10:15:33.3133914Z | verify-ue1-o06-g5-native-refbones-v432.php | PASS | 348 | catalog\compliance\evidence\o06\20261024T101532618Z-3130eb4c-DEV-verify-ue1-o06-g5-native-refbones-v432.php.txt |
 | 2026-10-24T10:15:32.6184189Z | verify-ue1-o06-g5-native-refbones-v432.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101532618Z-3130eb4c-DEV-verify-ue1-o06-g5-native-refbones-v432.php.txt |
-| 2026-10-24T10:15:32.2174272Z | verify-ue1-o06-g5-real-skeletal-vector-arrays.php | PASS | 268 | catalog\compliance\evidence\o06\20261024T101531600Z-61c1892d-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt |
-| 2026-10-24T10:15:31.6003869Z | verify-ue1-o06-g5-real-skeletal-vector-arrays.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101531600Z-61c1892d-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt |
-| 2026-10-24T10:15:31.2143867Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | PASS | 391 | catalog\compliance\evidence\o06\20261024T101530481Z-5ee25529-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
-| 2026-10-24T10:15:30.4813961Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | STARTED |  | catalog\compliance\evidence\o06\20261024T101530481Z-5ee25529-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
 
 ## Recovery procedure
 

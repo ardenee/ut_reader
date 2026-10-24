@@ -118,6 +118,8 @@ def render(rows,config,src_sha):
           "production_reader_native_records_complete":sum(int(s.get("complete",0)) for s in source_stats),
           "production_reader_errors":sum(int(s.get("errors",0)) for s in source_stats),
           "production_archive_bytes_inspected":sum(int(s.get("archive_bytes",0)) for s in source_stats),
+          "compiled_StateFrame_referent_names_current":record.get("native_stateframe_referent_names_current",False),
+          "compiled_StateFrame_referent_names_verified":record.get("native_stateframe_referent_names_verified",0),
           "prior_oracle_classification":record.get("independent_oracle","not_recorded"),
           "prior_gaps":record.get("gaps",[]),
           "next_closure_work":goals.get(method,"Attach complete compiled native method oracle."),

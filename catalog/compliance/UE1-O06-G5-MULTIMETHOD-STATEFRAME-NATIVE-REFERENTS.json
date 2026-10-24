@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "classification": "GENUINE_COMPILED_V432_StateFrame_Node_And_StateNode_Native_FName_REFERENCE_SUBSET",
+  "source_profile": "ut99-v432",
+  "source": "C:/Temp/UnrealDB/O06/Native-UCC/System/Entry.unr",
+  "source_sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c",
+  "core": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+  "core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "native_log": "C:/Temp/UnrealDB/O06/g5-Entry-v432-StateFrame-all14-native-referents.log",
+  "native_log_sha256": "bbb3d4dc3d8da81d03a3d8c600ed7198e65ac9f5df57e826b92c1e67185cd6fd",
+  "native_dump_method": "CDB compiled Core.dll UObject::Serialize body RVA 0x556b1, dereference FStateFrame Node+4 and StateNode+0x18 UObject* pointers, then each UObject+0x20 FName Index, global original v432 Core!FName::Names TArray table and FNameEntry+0xC TCHAR Name; CDB debugger .printf %mu emits actual runtime names, not source strings.",
+  "compiled_records": 14,
+  "expected_source_positive_objects": 19,
+  "expected_native_named_references": 28,
+  "remaining_source_positive_unobserved": 5,
+  "additional_camera_class_export_diagnostic": {
+    "native_commandlet_class": "Camera",
+    "log": "C:/Temp/UnrealDB/O06/g5-Entry-v432-StateFrame-Camera-native-referents.log",
+    "log_sha256": "2ee33e6ed276359b3ea8bbfa7b6ef5c868e9e20fcf61fc9bb6c74b07da988851",
+    "compiled_frames_reached": 14,
+    "additional_original_Camera_frames_reached": 0,
+    "evidence_class": "diagnostic_no_extra_coverage"
+  },
+  "limitations": [
+    "Compiled debugger compares live UObject FName referent identity by name against original Entry.u ImportMap objectNameText; full engine object outer/class identity not yet independently checked.",
+    "Five other original saved v68 state frames not called before Batchexport stops at unavailable LevelInfo T3D exporter; this is an exporter limitation, not loader exception.",
+    "Malformed or discontiguous archive consumption and other source-family behaviors remain OPEN. Full method acceptance not claimed."
+  ]
+}
