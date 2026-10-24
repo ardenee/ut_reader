@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "source_family_for_loader": "ut99-v432",
+  "actual_archive_version": 61,
+  "original_archive_created_by_game": "original PRD verified Unreal Gold corpus sample; creator/game provenance not proven by version",
+  "actual_native_oracle": "authentic compiled original UT99 v432 Core.dll LoadPackage with real original v61 .unr and original installed dependency files, on DEV only",
+  "original_export_objects": 312,
+  "compiled_loaded_and_identity_matched": 308,
+  "compiled_loaded_property_export_line_count_NOT_field_parity": 8515,
+  "compiled_native_runtime_status": "LoadPackage completed successfully; exit code 0",
+  "uninstantiated_export_names": [
+    "Camera0",
+    "Camera1",
+    "Camera2",
+    "Camera3"
+  ],
+  "native_camera_instances": 0,
+  "native_missing_other_classes": 0,
+  "proof_scope": "Exact native object class/name identity and runtime loaded package branch; not all stored tagged values compared and not Camera native Serialize on uninstantiated editor Camera exports",
+  "source_files_sha256": {
+    "PRD_original_verified_map_read_only": {
+      "path": "Z:\\Apache24\\htdocs\\unrealdb\\catalog\\storage\\games\\unrealgold\\verified\\fd0609f727411e4f073fc1e60cc91f49.unr",
+      "sha256": "399057393bb891e832013bda353c686bcc86facc43a5f674db13bb7daaf510a6"
+    },
+    "DEV_original_SHA_copied_package": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v61\\fd0609f727411e4f073fc1e60cc91f49.unr",
+      "sha256": "399057393bb891e832013bda353c686bcc86facc43a5f674db13bb7daaf510a6"
+    },
+    "DEV_native_oracle_staged_map": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5PRDCameraSimpleV61.unr",
+      "sha256": "399057393bb891e832013bda353c686bcc86facc43a5f674db13bb7daaf510a6"
+    },
+    "actual_compiled_core_DLL": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "compiled_v432_native_UObject_LoadPackage_launcher": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5-UObject-Native-PRD-V61-Simple-Load.exe",
+      "sha256": "fe450e3c52a7fcd5ac120a274e074982cb871dcbcbff7dece7ea57f32b8a3fab"
+    },
+    "compiled_launcher_CPP_source": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-PRD-V61-Simple-Load.cpp",
+      "sha256": "d0ddb5897441d1abead57c00f5288dbdf98a673aa631bf0c862883132ab809cf"
+    },
+    "genuine_complete_compiled_native_loaded_object_and_property_stdout": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-native-real-PRD-v61-Camera-complete.log",
+      "sha256": "5d4fb17a24285640ecc06071b50ed299ff28841ae7e0f0a4b238a72972ced63b"
+    },
+    "export_identities_from_actual_original_file": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-prd-real-v61-export-identity.json",
+      "sha256": "e42e7edfb4ab50dd21846f37ee862d563887bf5f7864705cd0eceef3c488e157"
+    },
+    "exact_308_native_object_vs_312_original_export_comparison": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-PRD-v61-original-identity-native-parity.json",
+      "sha256": "e3e0e9bafdfc63ec1993bc9d5648b1d8d489d5aa2eacd7e7e4c0e53baf0cd924"
+    },
+    "dependency_genin_from_installed_UT99": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\Textures\\GenIn.utx",
+      "sha256": "d5ec3f3ab0b51a8f5d209dcd4176130ccb045c53fa25323ce62ad13322128bbd"
+    },
+    "dependency_detail_from_installed_UT99": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\Textures\\Detail.utx",
+      "sha256": "42c79438778910108f46a40db91f0d1cb177555075da516031d2e46f00a7d837"
+    },
+    "DEV_current_tagged_and_184_native_tails_source_preflight": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-PRD-v61-native-loaded-source-sweep.json",
+      "sha256": "e6faaa5921cb1aa88c04f5f23a3119c05ce3c15439b3837af08904b9b5b9bd1a"
+    }
+  },
+  "unverified": [
+    "Actual engine versions 1.200 and 1.227 native paths",
+    "Four Camera exports uninstantiated despite valid archive FStateFrame bytes",
+    "Individual 8515 textual exported native property values not all compared to actual stored tags",
+    "All other original source/version branches and full seven-gate method review"
+  ],
+  "method_FULL": false,
+  "current_source_native_archive_parity_preflight": {
+    "native_loaded_instances_exactly_matched": 308,
+    "all_native_loaded_instance_tag_streams_parsed": 308,
+    "native_tail_records_source_complete": 184,
+    "native_tail_records_incomplete": 0,
+    "parser_exceptions": 0,
+    "data_type": "Current PHP source proof on real original v61 archive; not native per-value comparison"
+  }
+}

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T22:14:29.552012+00:00",
-  "head": "52fa7a45",
-  "previous_runner_head": "52fa7a45",
+  "generated_utc": "2026-10-24T22:29:30.145129+00:00",
+  "head": "aeef7a74",
+  "previous_runner_head": "aeef7a74",
   "previous_source_sha256": "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f",
   "current_source_sha256": "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f",
   "fingerprint_changed": false,
@@ -50,7 +50,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 132
+    "PASS": 133
   },
   "branch_totals": {
     "C227": {
@@ -11364,7 +11364,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "nonempty_dynamic_FString_native_ABI_plus_historical_versions_Camera_independent_review",
+      "decisive_closure_blocker": "source_version_family_native_validation_and_camera_runtime_full_method_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",

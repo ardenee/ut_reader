@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Real PRD read-only UE1 corpus has 74432 verified UT99 and 10935 verified Unreal Gold files. SHA-copied 239 original packages to DEV; scanned 150150 real exports, 6 actual ArrayProperty schema declarations and 433 source-parsed Camera StateFrames across package versions61/63/68/69; an additional 315 real textures have 43 source-complete FireTexture native serialized tails with 4573 nonempty FSpark records. Genuine native compiled v432 UCC/Core SavePackage created a separate valid-wire 2xFString array and 2xFVector array; source-level parser decodes both, but compiled Core.dll failed during native LoadPackage with CDB invalid 0xBAADF00D pointer, consistent with actual Epic UArrayProperty FArray::Add unconstructed FString members. Production correctly flags those string values NOT_VERIFIED as native loaded. One latest changed-source method verifier PASS37/37, old actual compiled v432 six Int/Name/Object malformed cases, three nested Vector cases, original Entry33 native objects /113 tags and 43 StateFrame checks SHA reused without rerunning. Source-origin for overlapping v69 Gold must not be invented. Remaining historical compiled source-family/version semantics, Camera runtime reachability and independent seven-gate full method review OPEN.",
-  "next":"Avoid repeating proved compiled-native 6 dynamic Int/Name/Object, 3 nested vector, 4 size, 4 tag and 6 reference cases. Use PRD 433 original Camera StateFrames by source-selected versions61/63/68/69 as candidates, but obtain matching compiled Unreal-v227/v1200 runtime or trace actual v432 reachable original Camera instances before claiming native parity. Bound native nonempty FString branch with actual source Add vs AddZeroed and crash evidence; do not mislabel correct file decode as successfully loaded value. Then independent full method seven-gate review and coordinated DEV-to-PRD deployment only after compatibility verified.",
-  "blocker":"source_version_family_native_validation_and_camera_runtime_full_method_review",
+  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines, NOT individually compared to PHP archived values. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Remaining independent Unreal v1.200/v1.227 compiled source-loader behavior, Camera reachability and complete per-field parity and final full seven-gate review OPEN.",
+  "next":"Prioritize genuine PRD v61/63/68/69 archive candidates against actual compiled v1.200 and v1.227 engines when available, and source-selected Camera runtime reachability. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
+  "blocker":"unreal_v1200_v227_compiled_branch_parity_and_native_Camera_reachability_full_method_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -319,6 +319,29 @@ for name in reg["methods"]:
         assert string_result["compiled_native_reruns_in_acceptance"]==0
         assert string_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_prd_fstring_load_change_scoped"]
+        # New real original PRD Unreal v61 map (not tool-generated):
+        # compiled v432 runtime class/object identity 308/312; precisely
+        # four original Camera objects not loaded. All 308 PHP tag archives
+        # and 184 native source-specific tails complete. Zero oracle replay.
+        v61_test="verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php"
+        v61_ev=next((item for item in reversed(events)
+            if item.get("test")==v61_test and item.get("state")=="PASS"),None)
+        assert v61_ev is not None,"Missing compiled v432 genuine PRD v61 native object oracle"
+        v61_log=ROOT/v61_ev["log"].replace("\\","/")
+        assert sha(v61_log)==v61_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/v61_test)==v61_ev["test_sha256"]
+        assert v61_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        v61_result=read(v61_log)
+        assert v61_result["ok"] and v61_result["checks"]==24 and v61_result["passed"]==24
+        assert v61_result["real_prd_v61_exports"]==312
+        assert v61_result["compiled_native_v432_loaded_objects"]==308
+        assert v61_result["exact_native_class_name_matches"]==308
+        assert v61_result["source_archives_for_native_loaded"]==308
+        assert v61_result["source_native_tails_complete"]==184
+        assert v61_result["native_uninstantiated_Camera"]==4
+        assert v61_result["native_exported_property_lines_not_individually_compared"]==8515
+        assert v61_result["native_oracle_replays_in_acceptance"]==0
+        assert v61_result["full_method_decision"]=="BLOCKED"
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -327,7 +350,12 @@ for name in reg["methods"]:
         old["compiled_native_reference_array_struct_cases_valid"]=6
         old["compiled_native_fatal_reference_archive_offsets_valid"]=4
         old["compiled_native_array_struct_skip_cases_valid"]=2
-        old["compiled_current_full_method_decision_checks"]=37
+        old["compiled_current_full_method_decision_checks"]=24
+        old["original_PRD_v61_compiled_native_loaded_object_identities"]=308
+        old["original_PRD_v61_compiled_loader_native_uninstantiated_Camera"]=4
+        old["original_PRD_v61_loaded_tagged_streams_current_source_decoded"]=308
+        old["original_PRD_v61_native_class_tails_source_complete"]=184
+        old["original_PRD_v61_native_value_lines_not_field_parity"]=8515
         old["prd_original_verified_u_unr_files_staged"]=239
         old["prd_original_camera_stateframes_source_parsed"]=433
         old["prd_source_native_firetexture_fspark_records"]=4573
@@ -353,7 +381,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
-        else "current_method_decision_37_checks_PRD_corpus_v432_native_FString_load_crash_old_native_proofs_SHA_reused" if name=="T99:UObject::Serialize"
+        else "current_method_decision_24_checks_real_PRD_v61_compiled_v432_308_of_312_exact_identities_source_tails_184_Camera_4_unloaded" if name=="T99:UObject::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -364,7 +392,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":8 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":9 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -373,7 +401,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":11,"new_test_runs":10,
+ "new_oracle_runs":12,"new_test_runs":11,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

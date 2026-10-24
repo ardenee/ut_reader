@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T22:10:18.2795090Z",
-    "head_commit":  "52fa7a45",
+    "updated_at_utc":  "2026-10-24T22:27:51.3203907Z",
+    "head_commit":  "aeef7a74",
     "current_target":  "DEV",
     "current_source_sha256":  "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f",
     "tests":  [
@@ -771,6 +771,18 @@
                       "run_id":  "20261024T221017518Z-bf35c3dd",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T221017518Z-bf35c3dd-DEV-verify-ue1-o06-g5-uobject-prd-native-string-decision.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php",
+                      "test":  "verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T22:27:51.3003926Z",
+                      "source_sha256":  "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f",
+                      "test_sha256":  "652aa35f69d63bab14622abd82fbf5b72124eba832ca90aed459fe0291379228",
+                      "run_id":  "20261024T222750785Z-7fe50f4a",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T222750785Z-7fe50f4a-DEV-verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-uobject-serializeitem-size-decision.php",

@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "Avoid repeating proved compiled-native 6 dynamic Int/Name/Object, 3 nested vector, 4 size, 4 tag and 6 reference cases. Use PRD 433 original Camera StateFrames by source-selected versions61/63/68/69 as candidates, but obtain matching compiled Unreal-v227/v1200 runtime or trace actual v432 reachable original Camera instances before claiming native parity. Bound native nonempty FString branch with actual source Add vs AddZeroed and crash evidence; do not mislabel correct file decode as successfully loaded value. Then independent full method seven-gate review and coordinated DEV-to-PRD deployment only after compatibility verified.",
+      "next_closure_work": "Prioritize genuine PRD v61/63/68/69 archive candidates against actual compiled v1.200 and v1.227 engines when available, and source-selected Camera runtime reachability. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -242,7 +242,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "source_version_family_native_validation_and_camera_runtime_full_method_review"
+      "decisive_closure_blocker": "unreal_v1200_v227_compiled_branch_parity_and_native_Camera_reachability_full_method_review"
     },
     {
       "id": "T99:UClass::Serialize",

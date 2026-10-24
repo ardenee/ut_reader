@@ -25,10 +25,10 @@
       "closure_sha256": null,
       "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). All 28 actual compiled Node/StateNode FName names matched original v68 import referents (195/195 PASS); remaining five are Camera exports not loaded by Actor or Camera batchexport, full outer/class object identity, malformed byte/error paths and early source-family variants OPEN.",
       "decision": "BLOCKED",
-      "decisive_blocker": "source_version_family_native_validation_and_camera_runtime_full_method_review",
-      "next_action": "Avoid repeating proved compiled-native 6 dynamic Int/Name/Object, 3 nested vector, 4 size, 4 tag and 6 reference cases. Use PRD 433 original Camera StateFrames by source-selected versions61/63/68/69 as candidates, but obtain matching compiled Unreal-v227/v1200 runtime or trace actual v432 reachable original Camera instances before claiming native parity. Bound native nonempty FString branch with actual source Add vs AddZeroed and crash evidence; do not mislabel correct file decode as successfully loaded value. Then independent full method seven-gate review and coordinated DEV-to-PRD deployment only after compatibility verified.",
-      "reason": "Real PRD read-only UE1 corpus has 74432 verified UT99 and 10935 verified Unreal Gold files. SHA-copied 239 original packages to DEV; scanned 150150 real exports, 6 actual ArrayProperty schema declarations and 433 source-parsed Camera StateFrames across package versions61/63/68/69; an additional 315 real textures have 43 source-complete FireTexture native serialized tails with 4573 nonempty FSpark records. Genuine native compiled v432 UCC/Core SavePackage created a separate valid-wire 2xFString array and 2xFVector array; source-level parser decodes both, but compiled Core.dll failed during native LoadPackage with CDB invalid 0xBAADF00D pointer, consistent with actual Epic UArrayProperty FArray::Add unconstructed FString members. Production correctly flags those string values NOT_VERIFIED as native loaded. One latest changed-source method verifier PASS37/37, old actual compiled v432 six Int/Name/Object malformed cases, three nested Vector cases, original Entry33 native objects /113 tags and 43 StateFrame checks SHA reused without rerunning. Source-origin for overlapping v69 Gold must not be invented. Remaining historical compiled source-family/version semantics, Camera runtime reachability and independent seven-gate full method review OPEN.",
-      "last_consolidated_review": "current_method_decision_37_checks_PRD_corpus_v432_native_FString_load_crash_old_native_proofs_SHA_reused",
+      "decisive_blocker": "unreal_v1200_v227_compiled_branch_parity_and_native_Camera_reachability_full_method_review",
+      "next_action": "Prioritize genuine PRD v61/63/68/69 archive candidates against actual compiled v1.200 and v1.227 engines when available, and source-selected Camera runtime reachability. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
+      "reason": "Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines, NOT individually compared to PHP archived values. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Remaining independent Unreal v1.200/v1.227 compiled source-loader behavior, Camera reachability and complete per-field parity and final full seven-gate review OPEN.",
+      "last_consolidated_review": "current_method_decision_24_checks_real_PRD_v61_compiled_v432_308_of_312_exact_identities_source_tails_184_Camera_4_unloaded",
       "compiled_genuine_original_loaded_tags_verified": 113,
       "compiled_genuine_original_exports_compared": 33,
       "compiled_original_14_StateFrames_prior_verified": true,
@@ -37,7 +37,7 @@
       "compiled_native_reference_array_struct_cases_valid": 6,
       "compiled_native_fatal_reference_archive_offsets_valid": 4,
       "compiled_native_array_struct_skip_cases_valid": 2,
-      "compiled_current_full_method_decision_checks": 37,
+      "compiled_current_full_method_decision_checks": 24,
       "compiled_native_valid_struct_malformed_size_cases": 2,
       "compiled_native_valid_FString_malformed_size_cases": 2,
       "compiled_native_dynamic_array_proven_int_name_object": 3,
@@ -49,7 +49,12 @@
       "prd_original_camera_stateframes_source_parsed": 433,
       "prd_source_native_firetexture_fspark_records": 4573,
       "compiled_v432_native_nonempty_FString_load_failed_in_fixture": true,
-      "native_FString_loaded_value_parity": "NOT_VERIFIED"
+      "native_FString_loaded_value_parity": "NOT_VERIFIED",
+      "original_PRD_v61_compiled_native_loaded_object_identities": 308,
+      "original_PRD_v61_compiled_loader_native_uninstantiated_Camera": 4,
+      "original_PRD_v61_loaded_tagged_streams_current_source_decoded": 308,
+      "original_PRD_v61_native_class_tails_source_complete": 184,
+      "original_PRD_v61_native_value_lines_not_field_parity": 8515
     },
     "T99:UClass::Serialize": {
       "criteria": {

@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-t99-uobject-prd-v61-native-loaded-decision": {
+      "description": "Single SHA-pinned real PRD version61 original map loaded by compiled authentic UT99 v432 Core.dll, 308/312 export objects exact native class-name identities; four original Camera entries genuinely not instantiated; 308 tagged streams and 184 native class tails decoded in source, 0 errors. Native original 8515 textual export property lines NOT individually matched to PHP. Previous 37/37 and 113 native values reused only by SHA, no new native runs in acceptance; seven-gate method BLOCKED.",
+      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-uobject-prd-native-string-decision": {
       "description": "One production source-current decision based on SHA-pinned original PRD UE1 corpus sample, genuine compiled v432 engine-generated nonempty FString array wire archive, compiled native Core.dll failed load plus CDB uninitialized pointer and source FArray::Add versus AddZeroed. Source wire values remain visible but runtime loaded values NOT_VERIFIED. Reuse prior native compiled 36/36 + 113 original values by SHA only; full T99 UObject remains BLOCKED.",
       "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],

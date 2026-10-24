@@ -1,0 +1,18 @@
+﻿{
+    "ok": false,
+    "checks": 24,
+    "passed": 23,
+    "failures": [
+        "original_or_native_SHA_PRD_original_verified_map_read_only"
+    ],
+    "method": "T99:UObject::Serialize",
+    "real_prd_v61_exports": 312,
+    "compiled_native_v432_loaded_objects": 308,
+    "exact_native_class_name_matches": 308,
+    "source_archives_for_native_loaded": 308,
+    "source_native_tails_complete": 184,
+    "native_uninstantiated_Camera": 4,
+    "native_exported_property_lines_not_individually_compared": 8515,
+    "native_oracle_replays_in_acceptance": 0,
+    "full_method_decision": "BLOCKED"
+}
