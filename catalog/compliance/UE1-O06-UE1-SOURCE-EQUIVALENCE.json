@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "contract": "UE1 O06 UObject source-equivalence and legacy version branch pruning",
+  "source_truth": "original local Epic v1.200 Core implementations and inherited UT99 v400 bodies; v432 declaration source and actual compiled v432 test evidence",
+  "v432_source_scope": "original v432 release provides Core headers and compiled Core.dll, but no Core/Src implementation; v400 is inherited implementation baseline as required by AGENTS.md",
+  "v227_source_scope": "v227 Core/Inc headers available; no Core/Src .cpp or compiled Core binary in provided tree. Version macro equivalence is NOT serializer implementation equivalence",
+  "verified_source_input_sha256": {
+    "v1200_UObject_implementation": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462"
+    },
+    "v1200_UStructTagged_implementation": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+      "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+    },
+    "v1200_Core_version_gates": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnObjVer.h",
+      "sha256": "0c4a881bd409a40d397afcc877920fb34ec2dffb5a370090a11248b45feab033"
+    },
+    "v227_Core_version_gates": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjVer.h",
+      "sha256": "9190a63a420acaf6eb626c6711c83f8d3913c05b2b6141d8c8f8d3eed7a2d759"
+    },
+    "v227_Core_object_declarations": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnCorObj.h",
+      "sha256": "51d7e40a7ed3923acd5282cdd2a5d248903f96ca84eea76d14e9ee70a45e3871"
+    },
+    "v400_inherited_UT99_UObject_implementation": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnObj.cpp",
+      "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+    },
+    "v400_inherited_UT99_UStructTagged_implementation": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+      "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    "v432_Core_version_gates": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjVer.h",
+      "sha256": "ffec6ffb6416c9af3d925f52533a86574040f2bc46328e7f9834afc77850bf24"
+    },
+    "v432_Core_object_declarations": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnCorObj.h",
+      "sha256": "a800f0d7891137882bfee561b6103bd527f7e4d83428afb25a72551556832787"
+    },
+    "v1200_Core_object_flags": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnObjBas.h",
+      "sha256": "6f1668c2ec156a302f99f8a7ae6e1161bac1706e551d70ed9445ab9ae55c68f7"
+    },
+    "v227_Core_object_flags": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h",
+      "sha256": "de50501bfbc22980d6e932bcc328aa3de725f6358587ca06eb320a3da30c8b2a"
+    },
+    "v432_Core_object_flags": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjBas.h",
+      "sha256": "a18f6d4fcf1d0ad81e82dee5d5b001980ebd560ddcc3a7ac604649ce61381dfe"
+    },
+    "v227_FStateFrame_class_declarations": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnStack.h",
+      "sha256": "9a76f1d3205d304bb6b3db97803396a4306c73262d47fd7963a3508edde8d95a"
+    },
+    "v432_FStateFrame_class_declarations": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnStack.h",
+      "sha256": "ff910c6a635859d92d5544119d6c2b9e95bc74d265914f6dc10e11c09e1c4137"
+    }
+  },
+  "implementation_scope_text_sha256": {
+    "v1200_UObject": "9b33e245ce993d41b522209559e0d2a8a376599b1d73234c0e893163b1f6eaa6",
+    "v400_UObject": "b1de1360d246e0c4daf6e3b926b48078512de5c9ddf295bdb2d6a741e1613a2f",
+    "v1200_SerializeTaggedProperties": "6e525fac042640d2a346cfb41d9eb898c953a9680afbbac32563c47c7d0bfcc7",
+    "v400_SerializeTaggedProperties": "89f7be48b2885f01d034df8770709996357065907dd7d944fa8e553df9a7a85d"
+  },
+  "reviewed_operations": [
+    {
+      "operation": "RF_DebugSerialize flag set",
+      "v1200_vs_inherited_UT99_v400": "same_source_side_effect",
+      "applicable_file_versions": "all",
+      "native_retest": "NO"
+    },
+    {
+      "operation": "preload declaring class on archive load",
+      "v1200_vs_inherited_UT99_v400": "same_source_intent",
+      "applicable_file_versions": "all",
+      "native_retest": "NO for shared effect"
+    },
+    {
+      "operation": "RF_HasStack modern frame wire Node,StateNode,ProbeMask,LatentAction,optional compact Script offset",
+      "v1200_vs_inherited_UT99_v400": "same_order_and_wire_for_v60_to_v61",
+      "applicable_file_versions": "60..61 with RF_HasStack, ordinary file not transaction",
+      "native_retest": "NO for confirmed shared wire subset; retain v1200 frame creation/discard path as variant"
+    },
+    {
+      "operation": "tagged property stream entry after frame",
+      "v1200_vs_inherited_UT99_v400": "same entry point but different implementation logic",
+      "applicable_file_versions": "60..61",
+      "native_retest": "NO for pure tag framing; YES only for variant property matching and legacy conversion"
+    },
+    {
+      "operation": "v1200 TempNum+TempMax database prefix",
+      "v1200_vs_inherited_UT99_v400": "different legacy branch",
+      "applicable_file_versions": "below40",
+      "native_retest": "only if remaining source-specific acceptance needs it; no v432 equivalence"
+    },
+    {
+      "operation": "v1200 OldClass legacy frame/temporary class/latent gates",
+      "v1200_vs_inherited_UT99_v400": "different legacy branch",
+      "applicable_file_versions": "below55",
+      "native_retest": "only applicable early v1200 paths"
+    },
+    {
+      "operation": "v1200 state and group suffix after tagged properties",
+      "v1200_vs_inherited_UT99_v400": "different legacy branch",
+      "applicable_file_versions": "below57 and below58 respectively",
+      "native_retest": "only early v1200 paths"
+    },
+    {
+      "operation": "v1200 unknown ObjectProperty tag skip",
+      "v1200_vs_inherited_UT99_v400": "different legacy branch",
+      "applicable_file_versions": "below36",
+      "native_retest": "only early v1200 paths"
+    },
+    {
+      "operation": "v400 old fixed StringProperty to dynamic StrProperty upgrade",
+      "v1200_vs_inherited_UT99_v400": "different v400-only tagged upgrade",
+      "applicable_file_versions": "v400 family source branch (legacy tag)",
+      "native_retest": "only if newly encountered supported valid schema; shared bytes are not evidence"
+    },
+    {
+      "operation": "v227 Core native UObject::Serialize/UStruct::SerializeTaggedProperties",
+      "v1200_vs_inherited_UT99_v400": "UNKNOWN, native .cpp and binary absent",
+      "applicable_file_versions": "60..69 declaration gates only",
+      "native_retest": "NO DUPLICATE TESTS; exact equivalence cannot be certified without implementation or compiled binary"
+    },
+    {
+      "operation": "v227 runtime flag meaning 0x40000000 / extra archived RF_HasArchtype",
+      "v1200_vs_inherited_UT99_v400": "v227 demonstrably different from both: PendingDelete, not DebugSerialize",
+      "applicable_file_versions": "v227 game source, 60..69",
+      "native_retest": "NO for shared operation; source-correct v227 flag annotation to unknown, native archetype handling remains unverified"
+    }
+  ],
+  "shared_wire_v1200_v432_version_interval": [
+    60,
+    61
+  ],
+  "v227_native_implementation_source_available": false,
+  "current_native_oracle_sharing": "Existing original compiled v432 v61 308/308 objects is valid for v432 loading v61, not proof of v1200 or v227 native behavior",
+  "test_policy": "do not rerun already verified same-source and same-wire operations; only address demonstrated version-specific semantic differences",
+  "full_method_decision": "BLOCKED",
+  "v227_vs_v432_stateframe_declaration": {
+    "archive_members_common": [
+      "FFrame* CurrentFrame",
+      "UState* StateNode",
+      "QWORD ProbeMask",
+      "INT LatentAction"
+    ],
+    "native_serializer_body_equivalence": "NOT PROVED; v227 C++ implementations absent"
+  },
+  "v227_vs_v432_flag_difference": {
+    "v1200_and_v432_bit_0x40000000": "RF_DebugSerialize",
+    "v227_bit_0x40000000": "RF_PendingDelete",
+    "v227_bit_0x00000100": "RF_HasArchtype, included in RF_Load",
+    "v432_RF_HasArchtype": "not declared in Core/Inc/UnObjBas.h",
+    "source_authoritative_conclusion": "v227 flag interpretation cannot reuse v432; do not fabricate v227 post-UObject::Serialize high bit",
+    "source_compiled_v227_body": "missing"
+  },
+  "genuine_prd_v69_gold_archetype_flag_sample": {
+    "files": 21,
+    "exports_checked": 15688,
+    "RF_HasArchtype_bit_set": 0,
+    "warning": "sample only, exact source game provenance cannot be established by archive version"
+  }
+}

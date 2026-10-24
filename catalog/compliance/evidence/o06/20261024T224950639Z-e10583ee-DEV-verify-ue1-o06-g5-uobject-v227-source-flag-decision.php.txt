@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 30,
+    "passed": 30,
+    "failures": [],
+    "v1200_v432_shared_archive_frame_versions": "60..61",
+    "v227_FStateFrame_data_members": "same_declarations_not_implementation",
+    "v227_loaded_DebugSerialize_bit": "never fabricated",
+    "v227_native_serializer_implementation": "unavailable_in_local_source",
+    "native_engine_reruns_in_verifier": 0,
+    "old_compiled_PRD_v61_load_exact_identity_count_SHA_reused": 308,
+    "full_method_decision": "BLOCKED"
+}

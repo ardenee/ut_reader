@@ -720,8 +720,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 'legacy_state_name_after_load'=>$loadedState,
                 'legacy_group_name'=>$legacyGroup,
                 'loaded_object_flags_after_uobject_serialize'=>
-                    ((int)$export['objectFlags']|0x40000000),
-                'source_sets_rf_debug_serialize'=>true,
+                    $family===CatalogUE1ClassicSourceFamily::UNREAL_V227 ? null : ((int)$export['objectFlags']|0x40000000),
+                'source_sets_rf_debug_serialize'=>$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227,
                 'native_tail_bytes'=>$size-$position,
                 'selected_source_family'=>$family,
                 'schema_verified'=>false]);

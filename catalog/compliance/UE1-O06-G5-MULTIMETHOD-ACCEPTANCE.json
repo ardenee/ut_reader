@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "Prioritize genuine PRD v61/63/68/69 archive candidates against actual compiled v1.200 and v1.227 engines when available, and source-selected Camera runtime reachability. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
+      "next_closure_work": "Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, and actual Camera load reachability. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -242,7 +242,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "unreal_v1200_v227_compiled_branch_parity_and_native_Camera_reachability_full_method_review"
+      "decisive_closure_blocker": "only_source_proven_legacy_v1200_differences_and_v227_distinct_archetype_flags_unavailable_implementation_and_unloaded_Camera_full_method_review"
     },
     {
       "id": "T99:UClass::Serialize",

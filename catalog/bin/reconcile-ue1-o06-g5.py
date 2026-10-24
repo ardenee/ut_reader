@@ -84,6 +84,44 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# Unreal v227 uses RF_PendingDelete where v1200/UT99 define
+# RF_DebugSerialize. Both production UObject and UClass post-load flag
+# annotations changed. Reconstruct prior complete source hash by
+# substituting only the two exact prechange reader blobs. No native replay.
+class_meta_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicClassMetadataReader.php"
+before_v227_flag_tag=committed("eb968b34",new_tag_file)
+before_v227_flag_class=committed("eb968b34",class_meta_file)
+previous_v227_flag_source="8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f"
+sig_before_v227_flag=subst_sig(
+    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_v227_flag_tag))
+sig_before_v227_flag=subst_sig(
+    sig_before_v227_flag,class_meta_file,digest(class_meta_file).upper(),sha_blob(before_v227_flag_class))
+v227_flag_verifier="verify-ue1-o06-g5-uobject-v227-source-flag-decision.php"
+v227_flag_event=latest.get(v227_flag_verifier)
+v227_flag_log=ROOT/v227_flag_event["log"] if v227_flag_event and v227_flag_event.get("log") else None
+try:
+    v227_flag_values=read(v227_flag_log) if v227_flag_log and v227_flag_log.exists() else {}
+except Exception:
+    v227_flag_values={}
+v227_flag_scope=(
+    hashlib.sha256(sig_before_v227_flag.encode("utf-8")).hexdigest()==previous_v227_flag_source
+    and current_schema==committed("eb968b34",new_schema_file)
+    and "CatalogUE1ClassicSourceFamily::UNREAL_V227" in current_tag
+    and "loaded_object_flags_after_uobject_serialize" in current_tag
+    and "loaded_object_flags_after_uclass_serialize" in class_meta_file.read_text(encoding="utf-8-sig")
+    and "loaded_object_flags_after_uobject_serialize" in class_meta_file.read_text(encoding="utf-8-sig")
+    and v227_flag_event is not None and v227_flag_event.get("state")=="PASS"
+    and v227_flag_event.get("source_sha256")==current
+    and v227_flag_event.get("output_sha256")==digest(v227_flag_log)
+    and v227_flag_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/v227_flag_verifier)
+    and v227_flag_values.get("ok") is True
+    and v227_flag_values.get("checks")==30 and v227_flag_values.get("passed")==30
+    and v227_flag_values.get("v1200_v432_shared_archive_frame_versions")=="60..61"
+    and v227_flag_values.get("v227_loaded_DebugSerialize_bit")=="never fabricated"
+    and v227_flag_values.get("old_compiled_PRD_v61_load_exact_identity_count_SHA_reused")==308
+    and v227_flag_values.get("native_engine_reruns_in_verifier")==0
+    and v227_flag_values.get("full_method_decision")=="BLOCKED"
+)
 # Source-defined nonempty dynamic FString native materialization hazard:
 # PRD real UE1 corpus + real compiled v432 SavePackage output, CDB native
 # invalid pointer on LoadPackage. Only a single current-source decision
@@ -91,7 +129,7 @@ current_schema=new_schema_file.read_text(encoding="utf-8-sig")
 before_string_tag=committed("52fa7a45",new_tag_file)
 previous_string_source="aae4f3ff114d1b0823efb2791c4a79c2afcc2ca2e96162f7d92f149e7ea7f21b"
 sig_before_string=subst_sig(
-    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_string_tag))
+    sig_before_v227_flag,new_tag_file,sha_blob(before_v227_flag_tag),sha_blob(before_string_tag))
 string_verifier="verify-ue1-o06-g5-uobject-prd-native-string-decision.php"
 string_event=latest.get(string_verifier)
 string_log=ROOT/string_event["log"] if string_event and string_event.get("log") else None
@@ -100,12 +138,13 @@ try:
 except Exception:
     string_result={}
 string_scope=(
-    hashlib.sha256(sig_before_string.encode("utf-8")).hexdigest()==previous_string_source
+    v227_flag_scope
+    and hashlib.sha256(sig_before_string.encode("utf-8")).hexdigest()==previous_string_source
     and current_schema==committed("52fa7a45",new_schema_file)
     and "native_loaded_value_parity" in current_tag
     and "UArrayProperty::SerializeItem uses FArray::Add" in current_tag
     and string_event is not None and string_event.get("state")=="PASS"
-    and string_event.get("source_sha256")==current
+    and string_event.get("source_sha256")==previous_v227_flag_source
     and string_event.get("output_sha256")==digest(string_log)
     and string_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/string_verifier)
     and string_result.get("ok") is True
@@ -342,7 +381,8 @@ sig_before_uobject=sig_before_region
 uobject_before={};uobject_after={}
 for f in uobject_files:
     old=committed("4c0428dc",f)
-    new=before_region if f==region_file else f.read_text(encoding="utf-8-sig")
+    new=(before_region if f==region_file else
+        (before_v227_flag_class if f==class_meta_file else f.read_text(encoding="utf-8-sig")))
     uobject_before[f.name]=old
     uobject_after[f.name]=new
     sig_before_uobject=subst_sig(sig_before_uobject,f,sha_blob(new),sha_blob(old))
@@ -428,6 +468,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (v227_flag_scope and f==previous_v227_flag_source)
         or (string_scope and f==previous_string_source)
         or (nested_scope and f==previous_nested_source)
         or (dynamic_scope and f==previous_dynamic_source)
@@ -604,6 +645,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_v227_flag_interpretation_change_scoped":v227_flag_scope,
+    "previous_source_before_v227_flag_interpretation_change":previous_v227_flag_source if v227_flag_scope else None,
     "source_native_prd_fstring_load_change_scoped":string_scope,
     "previous_source_before_native_prd_fstring_load_change":previous_string_source if string_scope else None,
     "source_native_nested_vector_change_scoped":nested_scope,

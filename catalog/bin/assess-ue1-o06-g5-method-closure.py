@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines, NOT individually compared to PHP archived values. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Remaining independent Unreal v1.200/v1.227 compiled source-loader behavior, Camera reachability and complete per-field parity and final full seven-gate review OPEN.",
-  "next":"Prioritize genuine PRD v61/63/68/69 archive candidates against actual compiled v1.200 and v1.227 engines when available, and source-selected Camera runtime reachability. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
-  "blocker":"unreal_v1200_v227_compiled_branch_parity_and_native_Camera_reachability_full_method_review",
+  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines, NOT individually compared to PHP archived values. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera reachability and complete per-field parity and final full seven-gate review OPEN.",
+  "next":"Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, and actual Camera load reachability. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
+  "blocker":"only_source_proven_legacy_v1200_differences_and_v227_distinct_archetype_flags_unavailable_implementation_and_unloaded_Camera_full_method_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -303,7 +303,7 @@ for name in reg["methods"]:
         string_log=ROOT/string_ev["log"].replace("\\","/")
         assert sha(string_log)==string_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/string_test)==string_ev["test_sha256"]
-        assert string_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert string_ev["source_sha256"]==reconciliation["previous_source_before_v227_flag_interpretation_change"]
         string_result=read(string_log)
         assert string_result["ok"] and string_result["checks"]==37
         assert string_result["passed"]==37
@@ -330,7 +330,7 @@ for name in reg["methods"]:
         v61_log=ROOT/v61_ev["log"].replace("\\","/")
         assert sha(v61_log)==v61_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/v61_test)==v61_ev["test_sha256"]
-        assert v61_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert v61_ev["source_sha256"]==reconciliation["previous_source_before_v227_flag_interpretation_change"]
         v61_result=read(v61_log)
         assert v61_result["ok"] and v61_result["checks"]==24 and v61_result["passed"]==24
         assert v61_result["real_prd_v61_exports"]==312
@@ -342,6 +342,24 @@ for name in reg["methods"]:
         assert v61_result["native_exported_property_lines_not_individually_compared"]==8515
         assert v61_result["native_oracle_replays_in_acceptance"]==0
         assert v61_result["full_method_decision"]=="BLOCKED"
+        # Source-level v227 flag interpretation is verified separately.
+        flag_test="verify-ue1-o06-g5-uobject-v227-source-flag-decision.php"
+        flag_ev=next((item for item in reversed(events)
+            if item.get("test")==flag_test and item.get("state")=="PASS"),None)
+        assert flag_ev is not None
+        flag_log=ROOT/flag_ev["log"].replace("\\","/")
+        assert sha(flag_log)==flag_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/flag_test)==flag_ev["test_sha256"]
+        assert flag_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        flag_result=read(flag_log)
+        assert flag_result["ok"] and flag_result["checks"]==30
+        assert flag_result["passed"]==30
+        assert flag_result["v1200_v432_shared_archive_frame_versions"]=="60..61"
+        assert flag_result["v227_loaded_DebugSerialize_bit"]=="never fabricated"
+        assert flag_result["old_compiled_PRD_v61_load_exact_identity_count_SHA_reused"]==308
+        assert flag_result["native_engine_reruns_in_verifier"]==0
+        assert flag_result["full_method_decision"]=="BLOCKED"
+        assert reconciliation["source_native_v227_flag_interpretation_change_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -350,7 +368,9 @@ for name in reg["methods"]:
         old["compiled_native_reference_array_struct_cases_valid"]=6
         old["compiled_native_fatal_reference_archive_offsets_valid"]=4
         old["compiled_native_array_struct_skip_cases_valid"]=2
-        old["compiled_current_full_method_decision_checks"]=24
+        old["compiled_current_full_method_decision_checks"]=30
+        old["source_equivalent_v1200_v432_modern_frame_wire_no_native_rerun"]=True
+        old["v227_pendingdelete_flag_annotation_corrected"]=True
         old["original_PRD_v61_compiled_native_loaded_object_identities"]=308
         old["original_PRD_v61_compiled_loader_native_uninstantiated_Camera"]=4
         old["original_PRD_v61_loaded_tagged_streams_current_source_decoded"]=308
@@ -381,7 +401,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
-        else "current_method_decision_24_checks_real_PRD_v61_compiled_v432_308_of_312_exact_identities_source_tails_184_Camera_4_unloaded" if name=="T99:UObject::Serialize"
+        else "current_method_decision_30_checks_v227_flag_collision_and_v1200_v432_source_common_wire_no_native_replays" if name=="T99:UObject::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -392,7 +412,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":9 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":10 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -401,7 +421,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":12,"new_test_runs":11,
+ "new_oracle_runs":12,"new_test_runs":12,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

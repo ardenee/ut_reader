@@ -90,9 +90,14 @@ final class CatalogUE1ClassicClassMetadataReader
                 'source_version'=>$version,'class_metadata_serial_offset'=>$start,
                 'loaded_object_flags_after_uobject_serialize'=>
                     ((int)$ex['objectFlags']|0x40000000),
-                'source_sets_rf_debug_serialize'=>true,
+                'source_sets_rf_debug_serialize'=>$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227,
                 'execution_performed'=>false,'runtime_refs_resolved'=>false,
             ];
+            // The header-only v227 branch has no native Serialize body.
+            // Its high-bit flag is PendingDelete, not DebugSerialize.
+            if($family===CatalogUE1ClassicSourceFamily::UNREAL_V227){
+                $record['loaded_object_flags_after_uobject_serialize']=null;
+            }
             if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1&&$version<40){
                 $record['legacy_database']=['count'=>$i32(),'capacity'=>$i32()];
             }
@@ -171,8 +176,9 @@ final class CatalogUE1ClassicClassMetadataReader
             $record['source_legacy_class_flags_added']=$legacyUt99
                 ?0x00080004:0;
             $record['loaded_object_flags_after_uclass_serialize']=
-                $record['loaded_object_flags_after_uobject_serialize']
-                |$record['source_legacy_class_flags_added'];
+                $record['loaded_object_flags_after_uobject_serialize']===null
+                    ?null:($record['loaded_object_flags_after_uobject_serialize']
+                        |$record['source_legacy_class_flags_added']);
             $record['class_flags']=$u32();
             $record['class_guid_raw_hex']=strtoupper(bin2hex($read(16)));
             // TArray<FDependency>, FDependency::operator<<:
