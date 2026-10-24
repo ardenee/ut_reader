@@ -10,10 +10,13 @@ NATIVE={"T99:UTextBuffer::Serialize":"verify-ue1-o06-native-ut99-textbuffer-expo
         "T99:UMusic::Serialize":"verify-ue1-o06-native-ut99-music-all.php"}
 COMPILED={"T99:UFont::Serialize","T99:UAnimation::Serialize","T99:USkeletalMesh::Serialize"}
 GENUINE_ARCHIVE={"T99:UFont::Serialize":"verify-ue1-o06-g5-genuine-v432-fonts.php"}
-NATIVE_LOADED={"T99:UFont::Serialize":"verify-ue1-o06-g5-native-v432-font-loaded-values.php"}
+NATIVE_LOADED={"T99:UFont::Serialize":"verify-ue1-o06-g5-native-v432-font-loaded-values.php",
+               "T99:UTextBuffer::Serialize":"verify-ue1-o06-g5-textbuffer-native-all-values.php",
+               "T99:UObject::Serialize":"verify-ue1-o06-g5-multimethod-uobject-inherited-flags.php"}
 NATIVE_ARRAY_TESTS={"T99:USkeletalMesh::Serialize": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php", "verify-ue1-o06-g5-real-skeletal-vector-arrays.php", "verify-ue1-o06-g5-native-refbones-v432.php"],
                     "T99:UAnimation::Serialize": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php", "verify-ue1-o06-g5-native-animseq-notifies-v432.php", "verify-ue1-o06-g5-native-v432-motionchunk-headers.php", "verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php"]}
 NATIVE_LOADED_EXTRA={"T99:UFont::Serialize":"verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php",
+                     "T99:UObject::Serialize":"verify-ue1-o06-g5-multimethod-v68-positive-stateframe.php",
                      "T99:USkeletalMesh::Serialize":"verify-ue1-o06-g5-genuine-v432-skeletal-animation.php",
                      "T99:UAnimation::Serialize":"verify-ue1-o06-g5-genuine-v432-skeletal-animation.php"}
 EARLY={"R82","R83","R96","U86","U97","D97"}
@@ -73,7 +76,7 @@ for e in reg["entries"]:
     loaded_extra=bool(xe and xe.get("state")=="PASS" and xe.get("source_sha256")==current
                       and xe.get("output_sha256") and digest(xlog)==xe["output_sha256"]
                       and digest(ROOT/"catalog"/"bin"/extra)==xe.get("test_sha256"))
-    loaded_valid=(loaded_primary and loaded_extra) if ident=="T99:UFont::Serialize" else (loaded_primary or loaded_extra)
+    loaded_valid=(loaded_primary and loaded_extra) if ident in {"T99:UFont::Serialize","T99:UObject::Serialize"} else (loaded_primary or loaded_extra)
     arraytests=NATIVE_ARRAY_TESTS.get(ident,[])
     arraytest_states=[]
     for aname in arraytests:
@@ -100,14 +103,18 @@ for e in reg["entries"]:
             gaps.append("inherited_ULodMesh_and_unverified_scalar_fields_errors_open" if ident=="T99:USkeletalMesh::Serialize"
                         else "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open")
         else: gaps.append("native_full_array_elements_and_malformed_errors_not_proven")
+    if ident=="T99:UObject::Serialize" and loaded_valid:
+        gaps.append("compiled_Entry_native_14_of_19_positive_StateFrames_imported_Node_StageNode_identity_and_malformed_errors_open")
+    if ident=="T99:UTextBuffer::Serialize" and loaded_valid:
+        gaps.append("inherited_UObject_full_method_and_compiled_oversized_FString_consumed_bytes_differ_open")
     if ident in NATIVE: gaps.append("native_export_slice_only")
     rows.append({"id":ident,"branch":e["branch"],"implementation":"MAPPED",
         "reader":e.get("reader"),"named_test":named or None,
         "named_test_state":ev.get("state") if ev else None,
         "named_test_log_valid":logvalid,"named_test_script_valid":scriptvalid,
         "named_test_current_global_fingerprint":sourcevalid,
-        "independent_oracle":"compiled_native_export_slice" if ident in NATIVE else
-                             "compiled_native_loaded_values_subset" if loaded_valid else
+        "independent_oracle":"compiled_native_loaded_values_subset" if loaded_valid else
+                             "compiled_native_export_slice" if ident in NATIVE else
                              "compiled_archive_disassembly_only" if ident in COMPILED else "not_recorded",
         "native_slice_test":independent,"native_slice_evidence_valid":nativeslice,
         "genuine_archive_test":gt,"genuine_archive_evidence_current":genuine_valid,
@@ -159,7 +166,7 @@ lines=["# UE1 O06 — G5 evidence reconciliation","",
        "- "+str(len(natives))+" independent compiled v432 native export comparison slices: "+", ".join(natives)+".",
        "- Compiled v432 method archive-order evidence with no genuine loaded-value evidence: "+(", ".join(sorted(r["id"] for r in rows if r["id"] in COMPILED and not r["native_loaded_evidence_current"])) or "none")+".",
        "- Current genuine archive compatibility: "+str(summary["genuine_v432_font_archive_compatibility"])+" method (T99 UFont; 34 SHA-pinned file exports / 66 checks PASS).",
-       "- Current **compiled v432 genuine native loaded-value subsets**: "+str(summary["compiled_native_loaded_value_slice"])+" methods (T99 UFont, USkeletalMesh, UAnimation); 4 Engine.u fonts 16,384 glyph bytes + 4 texture reference identities 61/61 PASS; PRD 62 genuine v69 nonempty fonts across two UWindowFonts.utx variants 255/1183 map entries each and both full native map-value hashes (467/467 PASS); PRD 8 skeletal/animation native loaded exports and 3 linked default animation identities (151/151 PASS). Other unverified fields/arrays and malformed errors remain OPEN.",
+       "- Current **compiled v432 genuine native loaded-value subsets**: "+str(summary["compiled_native_loaded_value_slice"])+" methods ("+", ".join(sorted(r["id"] for r in rows if r["native_loaded_evidence_current"]))+"). Includes UFont real glyph and nonempty remaps, USkeletalMesh/Animation full nested-array subsets, all 88 genuine Engine.u TextBuffer post-load values, and common UObject real inherited flags + 14/19 compiled positive RF_HasStack map frames. These remain PARTIAL method proofs; full error/reference/inherited source-family closure is OPEN.",
        "- NEW **full native array-element subsets**: "+str(summary["compiled_full_array_element_subset"])+" compiled v432 methods (T99 USkeletalMesh, UAnimation): genuine 5 skeletal objects 42,032 bytes of complete bone index/weights and 225,756 bytes of complete Points/LocalPoints, plus 143 animation ref bones full native name-table-resolved FName/flags/parent semantic records (1,716 bytes). Total 269,504 bytes, focused 733/733 + 228/228 PASS, no repeated tests.",
        "- NEW independent compiled-v432 **resumable 2-case batch**: 237 full native FMeshBone records (15,168 bytes) source field-by-field including runtime-resolved names and XSize's second serialized write, 1787/1787 PASS; 70 full native FMeshAnimSeq metadata records (2,240 bytes), all 22 nested native notification time/function names, 575/575 PASS. Both were rerun in resume mode with 2/2 UNCHANGED_PASS cache skips, zero repeated tests. Combined new 2362/2362 checks. SHA-pinned native manifests and append-only events preserved; YSize/Depth nonserialized fields and MotionChunk Moves still OPEN.",
        "- NEW third resumable native contract: 70 genuine MotionChunk in-memory scalar/root header and array-length comparisons, 95 full first-Move AnalogTrack header checks plus 732 full first-track key/BoneIndices bytes identical, 598/598 PASS. Remaining KeyQuat/KeyPos/KeyTime buffers from all other tracks still OPEN; did not replay previous PASS evidence.",

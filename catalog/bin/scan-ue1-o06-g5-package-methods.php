@@ -30,7 +30,7 @@ try{
   if(count($methods[$method]['sample_indices'])<12)
    $methods[$method]['sample_indices'][]=$idx;
  };
- $classCounts=[];$seen=0;$payloadTargets=[];
+ $classCounts=[];$seen=0;$payloadTargets=[];$stackTargets=[];
  foreach($exports as $e){
   $idx=(int)($e['index']??$seen);$seen++;
   $ci=(int)($e['classIndex']??0);
@@ -38,6 +38,8 @@ try{
    ($ci>0?(string)($exports[$ci-1]['objectNameText']??''):'Class');
   if($class===''){$class='UnresolvedClassIndex';}
   $classCounts[$class]=($classCounts[$class]??0)+1;
+  if(((int)($e['objectFlags']??0)&0x02000000)!==0
+      &&(int)($e['serialSize']??0)>0)$stackTargets[]=$idx;
   // Each serialized ordinary object runs this transitive base serializer.
   $add('T99:UObject::Serialize',$idx);
   if($ci===0){$add('T99:UClass::Serialize',$idx);continue;}
@@ -83,6 +85,29 @@ try{
      'reason'=>$err->getMessage()];
   }
  }
+ // Same cached package context: decode saved UObject execution frames
+ // once, not once per derived class or source method.
+ $frames=['flagged'=>count($stackTargets),'decoded'=>0,'errors'=>0,
+   'source_frame_bytes'=>0,'tagged_properties'=>0,'example_indices'=>[]];
+ $frameErrors=[];
+ foreach($stackTargets as $id){
+  try{
+   $tag=Tag::inspect($path,$reader,$id,'ut99-v432');
+   $frame=$tag['serialized_state_frame']??null;
+   if(($tag['status']??null)!=='tag_envelope_decoded'
+      ||!is_array($frame)||$frame['has_stack_object_flag']!==true
+      ||(int)$frame['serialized_size']<=0){
+    throw new RuntimeException('Failed to decode source-defined RF_HasStack StateFrame');
+   }
+   $frames['decoded']++;
+   $frames['source_frame_bytes']+=(int)$frame['serialized_size'];
+   $frames['tagged_properties']+=count($tag['tags']??[]);
+   if(count($frames['example_indices'])<12)$frames['example_indices'][]=$id;
+  }catch(Throwable $exc){
+   $frames['errors']++;
+   if(count($frameErrors)<12)$frameErrors[]=['index'=>$id,'reason'=>$exc->getMessage()];
+  }
+ }
  ksort($methods);ksort($production);arsort($classCounts);
  $result=[
   'key'=>$key,'path'=>$path,'sha256'=>hash_file('sha256',$path),
@@ -95,6 +120,8 @@ try{
   'production_native_payloads'=>$production,
   'source_payload_bytes_inspected'=>$payloadBytes,
   'source_payload_errors'=>$errors,
+  'source_uobject_state_frames'=>$frames,
+  'source_stateframe_errors'=>$frameErrors,
   'discovery_only'=>false,
   'reader_instance_count'=>1,
   'note'=>'One package metadata pass plus one shared production-reader payload traversal for six serializer types. Individual bounded export ranges are read as necessary; not a compiled-engine oracle. UObject/UClass mappings are candidates, not independent runtime calls.'

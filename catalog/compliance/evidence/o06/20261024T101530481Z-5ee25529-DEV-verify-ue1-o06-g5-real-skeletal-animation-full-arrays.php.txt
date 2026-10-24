@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 733,
+    "passed": 733,
+    "errors": [],
+    "compiled_real_skeletal_objects": 5,
+    "compiled_real_animation_objects": 3,
+    "full_skeletal_weight_index_and_influence_bytes": 42032,
+    "native_skeletal_and_animation_elements": 10414,
+    "full_semantic_named_bone_records": 143,
+    "full_memory_bytes_examined": 43748,
+    "remaining": "Skeletal Points/RefSkeleton/LocalPoints/inherited LodMesh and Animation Moves/AnimSeqs nested values, malformed byte/error parity; full G5 methods OPEN."
+}

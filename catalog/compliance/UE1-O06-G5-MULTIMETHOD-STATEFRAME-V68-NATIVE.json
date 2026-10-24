@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "classification": "GENUINE_UT99_V68_POSITIVE_RF_HASSTACK_COMPILED_V432_POST_STATEFRAME_PARTIAL",
+  "source_profile": "ut99-v432",
+  "original_map": "C:/Temp/UnrealDB/O06/Native-UCC/System/Entry.unr",
+  "original_map_sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c",
+  "core": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+  "core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "dependencies": [
+    {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Textures/Logo.utx",
+      "sha256": "e9d72bd8a3ee3eb46e4a9d9e6ff784d1ba6cf30f445e2136a76eec93de03a5d8"
+    },
+    {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Textures/credits.utx",
+      "sha256": "6e68b638d9f1cf09316aadd7795a7ce04cce29cee351086ab633d8f5abfc0c51"
+    }
+  ],
+  "native_log": "C:/Temp/UnrealDB/O06/g5-v432-Entry-positive-stateframe-native-v3.log",
+  "native_log_sha256": "da4cb1e8c5ce50606937badefc3cae67d842a1ad495ac155df3c93803ceeb8cc",
+  "native_breakpoint": "Compiled v432 Core.dll UObject::Serialize body Core+0x556b1, immediately after StateFrame Node/StateNode/ProbeMask/LatentAction/Code archive consumed and RuntimeCode pointer resolved",
+  "original_positive_state_frame_exports": 19,
+  "compiled_positive_loaded_records": 14,
+  "unloaded_positive_exports": 5,
+  "original_package_version": 68,
+  "derived_bounds": [
+    "StateFrame Node and StateNode reference identities NOT yet compared to actual compiled FName/Linker reference objects",
+    "Remaining 5 positive original map export objects not reached due commandlet missing Actor t3d exporter",
+    "Other native archive flags, malformed code offsets and all source-family variants not yet proved",
+    "Shared G5 UObject method remains OPEN; neither native method count nor subset loaded values satisfies full independent acceptance"
+  ]
+}

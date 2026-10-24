@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "classification": "GENUINE_UT99_V432_COMPILED_UObject_SHARED_INHERITED_FLAGS_AND_FIELDS_PARTIAL",
+  "source_profile": "ut99-v432",
+  "native_profile": "Unmodified UT99 v432 compiled Core.dll Engine.dll ucc.exe",
+  "source_file": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+  "source_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+  "core_dll": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+  "core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "engine_dll": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+  "engine_sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+  "log_file": "C:/Temp/UnrealDB/O06/g5-multi-shared-UObject-loaded-fields.log",
+  "log_sha256": "109f5ceeae2cd3b6fdf4c484380829450fba9baddd9129bdb7f26d4a0410d98c",
+  "native_symbols": {
+    "UObject": "Core+0x17b7",
+    "UClass": "Core+0x1203",
+    "UTextBuffer": "Core+0x31bb",
+    "UFont": "Engine+0x242d",
+    "TextBuffer_post": "Core+0x5ec6a",
+    "Font_post": "Engine+0x8486b"
+  },
+  "expected_calls": {
+    "UObject": 5955,
+    "UClass": 90,
+    "UTextBuffer": 90,
+    "UFont": 4,
+    "UObjectStackBefore": 0
+  },
+  "loaded_export_samples": {
+    "TextBuffer": 88,
+    "Font": 4
+  },
+  "expected_post_loaded_flags": {
+    "TextBuffer": "0x41348000",
+    "Font": "0x410f8004"
+  },
+  "caveats": [
+    "A single compiled ucc batchexport Engine.u TextBuffer txt loads genuine file and enters shared UObject 5955 times. Runtime loaders create additional objects beyond 5370 exported.",
+    "Compiled object post-load flags include RF_DebugSerialize 0x40000000 and other life-cycle flags. Non-archive runtime flags are not asserted to be serialized.",
+    "No RF_HasStack flags exist in this Engine.u export header. Native selected source run did not exercise positive FStateFrame; UObject full method remains OPEN.",
+    "Other UE1 versions, class defaults, malformed tag and state frame validation remain OPEN; do not claim complete Epic native behavior."
+  ]
+}

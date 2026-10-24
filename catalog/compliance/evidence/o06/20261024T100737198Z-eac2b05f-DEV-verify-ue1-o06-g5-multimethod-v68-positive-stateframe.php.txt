@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 152,
+    "passed": 152,
+    "failures": [],
+    "genuine_original_positive_StateFrames": 19,
+    "compiled_post_StateFrame_objects_verified": 14,
+    "unloaded_original_positive_StateFrames": 5,
+    "actual_StateFrame_bytes_correlated": 210,
+    "correlated_tagged_property_records": 112,
+    "full_method_acceptance": "OPEN",
+    "gap": "Five original Entry objects not exercised; Node/StateNode actual native identities and malformed code offsets and other source versions unverified."
+}

@@ -23,7 +23,7 @@
       },
       "closure_artifact": null,
       "closure_sha256": null,
-      "blocker_summary": "Shared prerequisite for all derived serializers; full UE1 StateFrame/property and error variants remain open."
+      "blocker_summary": "Shared prerequisite: genuine Engine.u has 0 saved StateFrames; actual compiled v432 loaded 5,955 UObject calls and correlates 88 real TextBuffer plus 4 Font inherited flags (564/564). Genuine Entry.unr has 19 positive RF_HasStack StateFrames decoded and 14 actual compiled ProbeMask/LatentAction/Code-pointer matches (152/152). Remaining five not reached, Node/StateNode native referent identity, malformed byte/error paths and early source-family variants OPEN."
     },
     "T99:UClass::Serialize": {
       "criteria": {

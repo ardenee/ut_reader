@@ -2,6 +2,20 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-multimethod-v68-positive-stateframe": {
+      "description": "Original UT99 version-68 Entry.unr contains 19 RF_HasStack actor exports; all source state frames decode, 14 are independently observed after actual compiled v432 UObject::Serialize FStateFrame with exact 64-bit probe masks, signed latent actions and null code pointers. Five not reached due absent Actor t3d exporter; full method remains OPEN.",
+      "readers": ["CatalogUE1ClassicStateFrameReader.php","CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-multimethod-v68-positive-stateframe.php"],
+      "affected": [],
+      "gate": []
+    },
+    "g5-multimethod-uobject-inherited-v432": {
+      "description": "Same genuine compiled UT99 v432 Engine.u load: 5955 UObject serialize entries, 90 UClass, 90 TextBuffer, 4 Font; 88 original TextBuffer and 4 Font complete post-archive flags, source frame absence, source Pos/Top/Text length, tag bounds and native-tail semantics. Authentic CDB + original DLL package SHA sealed. Does NOT close untested positive StateFrame, malformed/input or other UE1 source profile.",
+      "readers": ["CatalogUE1ClassicStateFrameReader.php","CatalogUE1ClassicTaggedPropertyReader.php","CatalogUE1ClassicNativeObjectReader.php"],
+      "focus": ["verify-ue1-o06-g5-multimethod-uobject-inherited-flags.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-multimethod-one-load-v432": {
       "description": "One authentic compiled v432 Engine.u package load in one CDB invocation exercises THREE selected method entry points: UClass 90 calls, UTextBuffer 90, UFont 4. Independent SHA-pinned Core/Engine original DLLs and debugger log; this is dispatch coverage only, not full-method acceptance.",
       "readers": [],

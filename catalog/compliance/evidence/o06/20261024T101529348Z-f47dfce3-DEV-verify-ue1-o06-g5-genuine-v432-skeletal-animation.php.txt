@@ -1,0 +1,71 @@
+﻿{
+    "ok": true,
+    "checks": 151,
+    "passed": 151,
+    "errors": [],
+    "genuine_exports_decoded": 10,
+    "native_loaded_value_slices": {
+        "SkeletalMesh": 5,
+        "Animation": 3
+    },
+    "native_positive_animation_refs_checked": 3,
+    "covered": [
+        {
+            "package": "table.u",
+            "class": "SkeletalMesh",
+            "index": 12,
+            "object": "Table",
+            "native_loaded": true
+        },
+        {
+            "package": "table.u",
+            "class": "SkeletalMesh",
+            "index": 24,
+            "object": "Selectiontable",
+            "native_loaded": true
+        },
+        {
+            "package": "table.u",
+            "class": "Animation",
+            "index": 23,
+            "object": "tableSelectAnim",
+            "native_loaded": true
+        },
+        {
+            "package": "EcoTerror.u",
+            "class": "SkeletalMesh",
+            "index": 0,
+            "object": "EcoTerror",
+            "native_loaded": true
+        },
+        {
+            "package": "EcoTerror.u",
+            "class": "Animation",
+            "index": 6,
+            "object": "EcoTerrorAnim",
+            "native_loaded": true
+        },
+        {
+            "package": "d00d.u",
+            "class": "SkeletalMesh",
+            "index": 4,
+            "object": "d00d",
+            "native_loaded": true
+        },
+        {
+            "package": "d00d.u",
+            "class": "SkeletalMesh",
+            "index": 11,
+            "object": "selectd00d",
+            "native_loaded": true
+        },
+        {
+            "package": "d00d.u",
+            "class": "Animation",
+            "index": 7,
+            "object": "selectd00d",
+            "native_loaded": true
+        }
+    ],
+    "limits": "Three genuine v69 UT99 packages, 8 native object loaded-count/reference slices; whole arrays, native errors, and SFCharacter4 remain open. No O06 full-method signoff."
+}

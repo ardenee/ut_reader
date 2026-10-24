@@ -1,19 +1,23 @@
 {
   "schema": 1,
-  "updated_utc": "2026-10-24T09:39:40+00:00",
+  "updated_utc": "2026-10-24T10:17:36+00:00",
   "source_profile": "ut99-v432",
   "classification": "DISCOVERY_AND_FULL_METHOD_ACCEPTANCE_QUEUE_NOT_NATIVE_PROOF",
-  "scanner_sha256": "6f78849518b7a3a69275c08db9afa87643a864f37c966c387ceb123df61cde3f",
-  "packages_scanned": 6,
-  "packages_expected": 6,
+  "scanner_sha256": "4541234f4f730a60279c01b129db664f75023527be5441e89225a1a17fe6ac4d",
+  "packages_scanned": 7,
+  "packages_expected": 7,
   "distinct_fully_accepted_methods": 0,
   "target_method_count": 8,
   "target_method_acceptance_completed": 0,
-  "total_examined_export_rows": 5431,
-  "total_production_export_ranges_inspected": 114,
-  "total_production_reader_records_complete": 114,
+  "total_examined_export_rows": 5469,
+  "total_production_export_ranges_inspected": 115,
+  "total_production_reader_records_complete": 115,
   "total_production_reader_errors": 0,
-  "total_source_payload_bytes_inspected": 2547089,
+  "total_source_payload_bytes_inspected": 2547161,
+  "source_positive_RF_HasStack_exports": 19,
+  "source_positive_RF_HasStack_decoded": 19,
+  "source_positive_RF_HasStack_tagged_properties": 172,
+  "source_positive_RF_HasStack_errors": 0,
   "single_compiled_native_load_evidence": "catalog/compliance/UE1-O06-G5-MULTIMETHOD-NATIVE-ONE-LOAD.json",
   "methods_observed_in_one_compiled_loader_invocation": 3,
   "package_observations": [
@@ -58,6 +62,13 @@
       "archive_version": 64,
       "export_count": 1,
       "reader_instance_count": 1
+    },
+    {
+      "key": "Entry-68-HasStack",
+      "sha256": "4bd31b4af4195d257d4b100026c12c7ad511b000f3bc8653e4a34a30fbbf689c",
+      "archive_version": 68,
+      "export_count": 38,
+      "reader_instance_count": 1
     }
   ],
   "methods": [
@@ -78,9 +89,14 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
+      "source_RF_HasStack_positive_frame_exports": 19,
+      "source_RF_HasStack_decoded_frames": 19,
+      "source_RF_HasStack_tagged_properties": 172,
+      "compiled_positive_RF_HasStack_native_subset": 14,
+      "compiled_positive_RF_HasStack_proof_manifest": "catalog/compliance/UE1-O06-G5-MULTIMETHOD-STATEFRAME-V68-NATIVE.json",
       "mapped": true,
-      "observed_qualified_package_count": 6,
-      "observed_candidate_exports": 5431,
+      "observed_qualified_package_count": 7,
+      "observed_candidate_exports": 5469,
       "packages": [
         {
           "key": "Engine-69",
@@ -171,16 +187,35 @@
           "sample_indices": [
             0
           ]
+        },
+        {
+          "key": "Entry-68-HasStack",
+          "objects": 38,
+          "sample_indices": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ]
         }
       ],
       "production_reader_export_ranges_inspected": 0,
       "production_reader_native_records_complete": 0,
       "production_reader_errors": 0,
       "production_archive_bytes_inspected": 0,
-      "prior_oracle_classification": "not_recorded",
+      "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
-        "global_source_inputs_changed"
+        "global_source_inputs_changed",
+        "compiled_Entry_native_14_of_19_positive_StateFrames_imported_Node_StageNode_identity_and_malformed_errors_open"
       ],
       "next_closure_work": "Close shared inherited StateFrame/property envelope and exact runtime error/byte semantics.",
       "required_signoff": [
@@ -210,6 +245,11 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": 90,
+      "source_RF_HasStack_positive_frame_exports": 0,
+      "source_RF_HasStack_decoded_frames": 0,
+      "source_RF_HasStack_tagged_properties": 0,
+      "compiled_positive_RF_HasStack_native_subset": null,
+      "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
       "observed_qualified_package_count": 4,
       "observed_candidate_exports": 140,
@@ -297,9 +337,14 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": 90,
+      "source_RF_HasStack_positive_frame_exports": 0,
+      "source_RF_HasStack_decoded_frames": 0,
+      "source_RF_HasStack_tagged_properties": 0,
+      "compiled_positive_RF_HasStack_native_subset": null,
+      "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
-      "observed_qualified_package_count": 4,
-      "observed_candidate_exports": 97,
+      "observed_qualified_package_count": 5,
+      "observed_candidate_exports": 98,
       "packages": [
         {
           "key": "Engine-69",
@@ -345,16 +390,23 @@
             9,
             10
           ]
+        },
+        {
+          "key": "Entry-68-HasStack",
+          "objects": 1,
+          "sample_indices": [
+            13
+          ]
         }
       ],
-      "production_reader_export_ranges_inspected": 97,
-      "production_reader_native_records_complete": 97,
+      "production_reader_export_ranges_inspected": 98,
+      "production_reader_native_records_complete": 98,
       "production_reader_errors": 0,
-      "production_archive_bytes_inspected": 516306,
-      "prior_oracle_classification": "compiled_native_export_slice",
+      "production_archive_bytes_inspected": 516378,
+      "prior_oracle_classification": "compiled_native_loaded_values_subset",
       "prior_gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
-        "global_source_inputs_changed",
+        "inherited_UObject_full_method_and_compiled_oversized_FString_consumed_bytes_differ_open",
         "native_export_slice_only"
       ],
       "next_closure_work": "Native loaded 88 strings verified; inherited UObject and oversized native byte/error mismatch remain.",
@@ -385,6 +437,11 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": 4,
+      "source_RF_HasStack_positive_frame_exports": 0,
+      "source_RF_HasStack_decoded_frames": 0,
+      "source_RF_HasStack_tagged_properties": 0,
+      "compiled_positive_RF_HasStack_native_subset": null,
+      "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
       "observed_qualified_package_count": 1,
       "observed_candidate_exports": 4,
@@ -439,6 +496,11 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
+      "source_RF_HasStack_positive_frame_exports": 0,
+      "source_RF_HasStack_decoded_frames": 0,
+      "source_RF_HasStack_tagged_properties": 0,
+      "compiled_positive_RF_HasStack_native_subset": null,
+      "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
       "observed_qualified_package_count": 3,
       "observed_candidate_exports": 5,
@@ -505,6 +567,11 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
+      "source_RF_HasStack_positive_frame_exports": 0,
+      "source_RF_HasStack_decoded_frames": 0,
+      "source_RF_HasStack_tagged_properties": 0,
+      "compiled_positive_RF_HasStack_native_subset": null,
+      "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
       "observed_qualified_package_count": 3,
       "observed_candidate_exports": 3,
@@ -569,6 +636,11 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
+      "source_RF_HasStack_positive_frame_exports": 0,
+      "source_RF_HasStack_decoded_frames": 0,
+      "source_RF_HasStack_tagged_properties": 0,
+      "compiled_positive_RF_HasStack_native_subset": null,
+      "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
       "observed_qualified_package_count": 1,
       "observed_candidate_exports": 4,
@@ -622,6 +694,11 @@
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
+      "source_RF_HasStack_positive_frame_exports": 0,
+      "source_RF_HasStack_decoded_frames": 0,
+      "source_RF_HasStack_tagged_properties": 0,
+      "compiled_positive_RF_HasStack_native_subset": null,
+      "compiled_positive_RF_HasStack_proof_manifest": null,
       "mapped": true,
       "observed_qualified_package_count": 1,
       "observed_candidate_exports": 1,

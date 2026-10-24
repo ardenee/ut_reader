@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "checks": 228,
+    "passed": 228,
+    "errors": [],
+    "real_v69_skeletal_meshes": 5,
+    "loaded_arrays": 10,
+    "compiled_native_vector_bytes_compared": 225756,
+    "FVector_records": 18813,
+    "limits": "Only Points and LocalPoints 10 whole arrays; bone and FNamedBone whole arrays separately G5 733/733; inherited LodMesh, RefSkeleton, animation nested arrays and malformed errors remain OPEN."
+}

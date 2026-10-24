@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "checks": 564,
+    "passed": 564,
+    "failures": [],
+    "single_original_compiled_load_UObject_calls": 5955,
+    "single_original_compiled_load_UClass_calls": 90,
+    "single_original_compiled_load_UTextBuffer_calls": 90,
+    "single_original_compiled_load_UFont_calls": 4,
+    "compiled_inherited_loaded_TextBuffer_export_records": 88,
+    "compiled_inherited_loaded_Font_export_records": 4,
+    "source_archive_bytes_of_correlated_objects": 521411,
+    "original_exports_with_RF_HasStack": 0,
+    "full_method_acceptance": "OPEN",
+    "reason": "No actual positive StateFrame branch or all properties/super/inherited error paths verified; native runtime flags include loader lifecycle bits not attributed solely to UObject::Serialize."
+}

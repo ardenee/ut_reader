@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 1787,
+    "passed": 1787,
+    "failures": [],
+    "genuine_loaded_meshes": 5,
+    "resolved_full_FMeshBone_records": 237,
+    "runtime_FMeshBone_bytes_compared": 15168,
+    "native_debug_fill_y_and_depth_instances": 237,
+    "exclusion": "YSize and Depth are uninitialized native members and cannot be asserted from archive; first archived XSize is overwritten by second, only second compares to compiled native XSize.",
+    "remaining": "Inherited ULodMesh and other skeletal fields, nested animation Moves/other payloads, native malformed errors; G5 method OPEN."
+}

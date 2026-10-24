@@ -24,6 +24,7 @@ SCANNER=CAT/"bin"/"scan-ue1-o06-g5-package-methods.php"
 RECON=COM/"UE1-O06-G5-RECONCILIATION.json"
 GATES=COM/"UE1-O06-G5-MULTIMETHOD-GATES.json"
 NATIVE_SAME_LOAD=COM/"UE1-O06-G5-MULTIMETHOD-NATIVE-ONE-LOAD.json"
+POSITIVE_STATEFRAME_NATIVE=COM/"UE1-O06-G5-MULTIMETHOD-STATEFRAME-V68-NATIVE.json"
 
 def sha(file):
     digest=hashlib.sha256()
@@ -57,6 +58,8 @@ def render(rows,config,src_sha):
     required=gates["required_criteria"]
     compiled=json.loads(NATIVE_SAME_LOAD.read_text(encoding="utf-8"))
     compiled_hits={m["method"]:m["hits"] for m in compiled["captured_methods"]}
+    positive_state=json.loads(POSITIVE_STATEFRAME_NATIVE.read_text(encoding="utf-8"))
+    frame_source=[p.get("source_uobject_state_frames",{}) for p in rows]
     accepted=0
     goals={
       "T99:UObject::Serialize":"Close shared inherited StateFrame/property envelope and exact runtime error/byte semantics.",
@@ -88,6 +91,7 @@ def render(rows,config,src_sha):
         current_status="ACCEPTED" if proof_valid else "OPEN"
         if proof_valid:accepted+=1
         source_stats=[p.get("production_native_payloads",{}).get(method,{}) for p in rows]
+        sourceFrameCounts=[(p.get("source_uobject_state_frames",{}) if method=="T99:UObject::Serialize" else {}) for p in rows]
         # Observation alone NEVER clears a requirement or makes a method ACCEPTED.
         methods.append({
           "id":method,"full_G5_method_acceptance":current_status,
@@ -97,6 +101,15 @@ def render(rows,config,src_sha):
           "acceptance_criteria_total":len(required),
           "closure_artifact_verified":proof_valid,
           "compiled_same_real_load_dispatch_calls":compiled_hits.get(method),
+          "source_RF_HasStack_positive_frame_exports":sum(int(s.get("flagged",0)) for s in sourceFrameCounts),
+          "source_RF_HasStack_decoded_frames":sum(int(s.get("decoded",0)) for s in sourceFrameCounts),
+          "source_RF_HasStack_tagged_properties":sum(int(s.get("tagged_properties",0)) for s in sourceFrameCounts),
+          "compiled_positive_RF_HasStack_native_subset":(
+             positive_state["compiled_positive_loaded_records"]
+             if method=="T99:UObject::Serialize" else None),
+          "compiled_positive_RF_HasStack_proof_manifest":(
+             "catalog/compliance/UE1-O06-G5-MULTIMETHOD-STATEFRAME-V68-NATIVE.json"
+             if method=="T99:UObject::Serialize" else None),
           "mapped":record.get("implementation")=="MAPPED",
           "observed_qualified_package_count":len(archives),
           "observed_candidate_exports":sum(v["objects"] for v in archives),
@@ -127,6 +140,10 @@ def render(rows,config,src_sha):
       "total_production_reader_records_complete":sum(int(s.get("complete",0)) for p in rows for s in p.get("production_native_payloads",{}).values()),
       "total_production_reader_errors":sum(int(s.get("errors",0)) for p in rows for s in p.get("production_native_payloads",{}).values()),
       "total_source_payload_bytes_inspected":sum(int(p.get("source_payload_bytes_inspected",0)) for p in rows),
+      "source_positive_RF_HasStack_exports":sum(int(s.get("flagged",0)) for s in frame_source),
+      "source_positive_RF_HasStack_decoded":sum(int(s.get("decoded",0)) for s in frame_source),
+      "source_positive_RF_HasStack_tagged_properties":sum(int(s.get("tagged_properties",0)) for s in frame_source),
+      "source_positive_RF_HasStack_errors":sum(int(s.get("errors",0)) for s in frame_source),
       "single_compiled_native_load_evidence":"catalog/compliance/UE1-O06-G5-MULTIMETHOD-NATIVE-ONE-LOAD.json",
       "methods_observed_in_one_compiled_loader_invocation":len(compiled_hits),
       "package_observations":[{"key":p["key"],"sha256":p["sha256"],
@@ -153,6 +170,10 @@ def main():
               "of",doc.get("total_production_export_ranges_inspected",0),
               "source_bytes",doc.get("total_source_payload_bytes_inspected",0),
               "errors",doc.get("total_production_reader_errors",0))
+        print("SOURCE_STATEFRAMES",doc.get("source_positive_RF_HasStack_decoded",0),
+              "/",doc.get("source_positive_RF_HasStack_exports",0),
+              "tagged_properties",doc.get("source_positive_RF_HasStack_tagged_properties",0),
+              "errors",doc.get("source_positive_RF_HasStack_errors",0))
         for row in doc["methods"]:
             print("METHOD",row["id"],row["full_G5_method_acceptance"],
                   "candidate_exports",row["observed_candidate_exports"],
