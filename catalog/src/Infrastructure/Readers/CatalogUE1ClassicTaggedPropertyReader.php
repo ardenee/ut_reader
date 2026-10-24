@@ -34,7 +34,9 @@ final class CatalogUE1ClassicTaggedPropertyReader
         callable $read, callable $u8, callable $name, callable $compact,
         int $version, int $offset, int &$position, int $archiveLimit,
         ?string $sourceFamily=null,?array $sourceDeclarations=null,
-        ?array $linkerLimits=null
+        ?array $linkerLimits=null,
+        ?CatalogUE1PackageReader $valuePkg=null,
+        ?array &$streamState=null
     ): array {
             $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
             // In ULinkerLoad, an archive object/name reference is an AR_INDEX,
@@ -70,7 +72,9 @@ final class CatalogUE1ClassicTaggedPropertyReader
             // Epic's FPropertyTag reader reads until NAME_None; it has no
             // fixed 20,000-tag limit. Bound traversal by the actual bytes
             // of this file's export/default archive, not a guessed count.
-            while($position<$archiveLimit){
+            while($position<$archiveLimit
+                ||(($streamState['allow_overread']??false)
+                    &&$position<($streamState['physical_limit']??$archiveLimit))){
                 $start=$position;
                 $property=$name();
                 if(strcasecmp($property['text'],'None')===0){$end=true;break;}
@@ -200,6 +204,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         'byteproperty','boolproperty'=>1,
                         'intproperty','floatproperty'=>4,
                         'nameproperty','objectproperty','classproperty'=>-1,
+                        'strproperty'=>-2,
+                        'structproperty'=>-3,
                         default=>0
                     };
                     if($width===0){
@@ -207,6 +213,38 @@ final class CatalogUE1ClassicTaggedPropertyReader
                             'UE1 v432 dynamic array Inner SerializeItem not yet verified: '
                             .$innerKind);
                     }
+                    $structLayout=null;
+                    if($width===-3){
+                        if($valuePkg===null)throw new RuntimeException(
+                            'UE1 v432 dynamic struct owning linker unavailable');
+                        $structLayout=CatalogUE1ClassicStructArrayValueReader::resolve(
+                            $ownerPath,$ownerPkg,
+                            (int)($native['subclass_fields']['struct_reference']??0),
+                            $family);
+                        if(($structLayout['status']??'')!=='struct_local_field_layout_resolved'){
+                            throw new RuntimeException(
+                                'UE1 v432 dynamic Inner UStruct SerializeBin layout unresolved');
+                        }
+                        // Read only source-proven UStruct::SerializeBin member
+                        // types; retain explicit unsupported disposition.
+                        foreach($structLayout['fields'] as $field){
+                            if(!$field['skip_persistent_archive']
+                                &&!in_array($field['kind'],[
+                                    'byteproperty','boolproperty','intproperty',
+                                    'floatproperty','nameproperty',
+                                    'objectproperty','classproperty',
+                                    'strproperty'],true)){
+                                throw new RuntimeException(
+                                    'UE1 v432 dynamic Inner struct member unsupported: '
+                                    .$field['kind']);
+                            }
+                        }
+                    }
+                    // Epic ULinkerLoad's FArchive reads from the physical
+                    // file, NOT from the export's declared SerialSize.
+                    // A malformed array count may read into the next export
+                    // before the native linker reports its true failure.
+                    if($streamState!==null)$streamState['allow_overread']=true;
                     [$count,$raw]=$readLinkerIndex();
                     if($count<0){
                         throw new RuntimeException(
@@ -220,12 +258,75 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     }
                     $elements=[];
                     for($item=0;$item<$count;$item++){
-                        if($width<0){
+                        if($width===-1){
                             [$ref,$segment]=$readLinkerIndex();
                             $validateLinkerIndex(
                                 $ref,$innerKind==='nameproperty'?'name':'object');
                             $raw.=$segment;
                             $value=$ref;
+                        }elseif($width===-2){
+                            // Inner UStrProperty::SerializeItem uses source
+                            // FString signed count, not array Tag.Size.
+                            [$n,$segment]=$readLinkerIndex();
+                            $unit=(ord($segment[0])&128)!==0?2:1;
+                            if(abs($n)>intdiv($archiveLimit-$position,$unit)){
+                                throw new RuntimeException(
+                                    'UE1 v432 dynamic array FString exceeds export SerialSize');
+                            }
+                            $segment.=$read(abs($n)*$unit);
+                            $p=0;
+                            $decoded=CatalogUE1ClassicFStringArchiveReader::decodeAt(
+                                $segment,$p);
+                            if($decoded===null||$p!==strlen($segment)){
+                                throw new RuntimeException(
+                                    'UE1 v432 dynamic array FString archive malformed');
+                            }
+                            $raw.=$segment;
+                            $value=$decoded['value']+
+                                ['archive_value_kind'=>$decoded['value_kind']];
+                        }elseif($width===-3){
+                            // Source-resolved actual UStruct::SerializeBin field
+                            // chain determines each inner member's on-disk
+                            // width; reuse shared struct reader for values.
+                            $segment='';
+                            foreach($structLayout['fields'] as $field){
+                                if($field['skip_persistent_archive'])continue;
+                                for($n=0;$n<$field['array_dim'];$n++){
+                                    $memberKind=$field['kind'];
+                                    if(in_array($memberKind,[
+                                        'nameproperty','objectproperty',
+                                        'classproperty'],true)){
+                                        [$ref,$part]=$readLinkerIndex();
+                                        $validateLinkerIndex($ref,
+                                            $memberKind==='nameproperty'?'name':'object');
+                                    }elseif($memberKind==='strproperty'){
+                                        [$chars,$part]=$readLinkerIndex();
+                                        $unit=(ord($part[0])&128)!==0?2:1;
+                                        if(abs($chars)>intdiv(
+                                            $archiveLimit-$position,$unit)){
+                                            throw new RuntimeException(
+                                                'UE1 v432 struct string exceeds export SerialSize');
+                                        }
+                                        $part.=$read(abs($chars)*$unit);
+                                    }else{
+                                        $size=in_array($memberKind,[
+                                            'byteproperty','boolproperty'],true)?1:4;
+                                        $part=$read($size);
+                                    }
+                                    $segment.=$part;
+                                }
+                            }
+                            $decodedPosition=0;
+                            $decoded=CatalogUE1ClassicStructArrayValueReader::readAt(
+                                $segment,$decodedPosition,$structLayout,
+                                count($elements)<32,$valuePkg);
+                            if(($decoded['status']??null)!=='struct_field_values_decoded'
+                                ||$decodedPosition!==strlen($segment)){
+                                throw new RuntimeException(
+                                    'UE1 v432 dynamic Inner UStruct archived members unverified');
+                            }
+                            $raw.=$segment;
+                            $value=$decoded;
                         }else{
                             $segment=$read($width);$raw.=$segment;
                             if($innerKind==='byteproperty'||$innerKind==='boolproperty'){
@@ -488,8 +589,12 @@ final class CatalogUE1ClassicTaggedPropertyReader
         $position=0;
         try {
             if (fseek($fp,$offset)!==0) {throw new RuntimeException('Cannot seek UE1 payload');}
-            $read=static function(int $n)use($fp,$size,&$position):string{
-                if($n<0||$n>$size-$position){throw new RuntimeException('UE1 property tag exceeds export SerialSize');}
+            $streamState=['allow_overread'=>false,
+                'physical_limit'=>$len-$offset];
+            $read=static function(int $n)use($fp,$size,&$position,&$streamState):string{
+                $limit=$streamState['allow_overread']
+                    ?$streamState['physical_limit']:$size;
+                if($n<0||$n>$limit-$position){throw new RuntimeException('UE1 property tag exceeds export SerialSize');}
                 $bytes='';
                 while(strlen($bytes)<$n){
                     $next=fread($fp,$n-strlen($bytes));
@@ -557,7 +662,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     ?['names'=>count($names),
                         'exports'=>count($package->getExports()),
                         'imports'=>count($package->getImports())]
-                    :null);
+                    :null,
+                $schema!==null?$package:null,$streamState);
             // The original v432 Engine native AActor::Serialize calls
             // Super::Serialize and archives NO trailing actor data.
             // This includes every fully resolved Engine.Actor subclass

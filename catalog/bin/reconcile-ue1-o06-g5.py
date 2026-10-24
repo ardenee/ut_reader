@@ -84,12 +84,46 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# Nested StructProperty ArrayProperty: original v432 Core DLL produced
+# and loaded two source-declared Core.Vector UStruct values; three native
+# damaged count/TagSize cases SHA pinned, current 61-check acceptance.
+before_nested_tag=committed("81809c7b",new_tag_file)
+previous_nested_source="92022c708d55d6597e787a4d3b0a70a934e61e9e78d4bbf7ca38523c651cd415"
+sig_before_nested=subst_sig(
+    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_nested_tag))
+nested_verifier="verify-ue1-o06-g5-uobject-nested-vector-decision.php"
+nested_ev=latest.get(nested_verifier)
+nested_log=ROOT/nested_ev["log"] if nested_ev and nested_ev.get("log") else None
+try:
+    nested_result=read(nested_log) if nested_log and nested_log.exists() else {}
+except Exception:
+    nested_result={}
+nested_scope=(
+    hashlib.sha256(sig_before_nested.encode("utf-8")).hexdigest()==previous_nested_source
+    and current_schema==committed("81809c7b",new_schema_file)
+    and "StructArrayValueReader::resolve" in current_tag
+    and "FStringArchiveReader::decodeAt" in current_tag
+    and "physical_limit" in current_tag
+    and nested_ev is not None and nested_ev.get("state")=="PASS"
+    and nested_ev.get("source_sha256")==current
+    and nested_ev.get("output_sha256")==digest(nested_log)
+    and nested_ev.get("test_sha256")==digest(ROOT/"catalog"/"bin"/nested_verifier)
+    and nested_result.get("ok") is True
+    and nested_result.get("checks")==36 and nested_result.get("passed")==36
+    and nested_result.get("real_compiled_native_nested_struct_cases_matched")==3
+    and nested_result.get("compiled_native_nested_vector_loaded_value_matches")==1
+    and nested_result.get("compiled_native_nested_array_fatal_cursor_matches")==2
+    and nested_result.get("previous_six_dynamic_array_cases_SHA_reused")==6
+    and nested_result.get("previous_genuine_original_TaggedValues_SHA_reused")==113
+    and nested_result.get("compiled_native_engine_reruns_in_verifier")==0
+    and nested_result.get("full_method_decision")=="BLOCKED"
+)
 # Actual compiled v432 native-generated ArrayProperty corrupted AR_INDEX /
 # inner linker references, sealed 61-check current-source method decision.
 before_dynamic_tag=committed("d0061f00",new_tag_file)
 previous_dynamic_source="f7f08918772439cf0d591b4bd2f341633cc226c01a36f44440496ad95831508c"
 sig_before_dynamic=subst_sig(
-    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_dynamic_tag))
+    sig_before_nested,new_tag_file,sha_blob(before_nested_tag),sha_blob(before_dynamic_tag))
 dynamic_verifier="verify-ue1-o06-g5-uobject-dynamic-array-decision.php"
 dynamic_event=latest.get(dynamic_verifier)
 dynamic_log=ROOT/dynamic_event["log"] if dynamic_event and dynamic_event.get("log") else None
@@ -98,13 +132,14 @@ try:
 except Exception:
     dynamic_values={}
 dynamic_scope=(
-    hashlib.sha256(sig_before_dynamic.encode("utf-8")).hexdigest()==previous_dynamic_source
+    nested_scope
+    and hashlib.sha256(sig_before_dynamic.encode("utf-8")).hexdigest()==previous_dynamic_source
     and current_schema==committed("d0061f00",new_schema_file)
     and "UE1 v432 dynamic array Inner declaration unresolved" in current_tag
     and "source_typed_dynamic_array" in current_tag
     and "ULinkerLoad<<FName invalid name index" in current_tag
     and dynamic_event is not None and dynamic_event.get("state")=="PASS"
-    and dynamic_event.get("source_sha256")==current
+    and dynamic_event.get("source_sha256")==previous_nested_source
     and dynamic_event.get("output_sha256")==digest(dynamic_log)
     and dynamic_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/dynamic_verifier)
     and dynamic_values.get("ok") is True
@@ -356,6 +391,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (nested_scope and f==previous_nested_source)
         or (dynamic_scope and f==previous_dynamic_source)
         or (size_scope and f==previous_size_source)
         or (reference_scope and f==previous_reference_source)
@@ -530,6 +566,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_nested_vector_change_scoped":nested_scope,
+    "previous_source_before_native_nested_vector_change":previous_nested_source if nested_scope else None,
     "source_native_dynamic_array_change_scoped":dynamic_scope,
     "previous_source_before_native_dynamic_array_change":previous_dynamic_source if dynamic_scope else None,
     "source_native_struct_str_size_change_scoped":size_scope,

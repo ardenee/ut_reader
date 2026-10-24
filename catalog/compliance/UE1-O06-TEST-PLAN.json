@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-t99-uobject-nested-vector-decision": {
+      "description": "One changed-source compiled real UT99 v432 UCC and Core.dll SavePackage native nested array<vector> archive. Native original 2 FVector fields each 12 bytes, array count2+24 bytes, malformed Tag.Size=1 still reads25, count1 native fail at archive cursor235, count3 native source FName failure at250 beyond declared export SerialSize, same source-scope PHP cursor. Reuse original six dynamic array native results and SHA-pinned original genuine Entry 113 values and 43 frames without native reruns. Full method remains BLOCKED on nonempty nested FString and other source/Camera variants.",
+      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-uobject-nested-vector-decision.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-uobject-dynamic-array-decision": {
       "description": "One true compiled v432 UCC-generated and Core SavePackage-generated v69 ordinary UObject with 3 valid typed persisted arrays and six real compiled malformed one-byte cases. Four fatal exact linker cursor outcomes 268/276/272/278, two valid malicious Tag.Size cases consuming actual Inner->SerializeItem length, no replay previous 50/61/49/43, previously compiled original genuine 113 values only SHA-scoped. Strict seven-gate full method remains BLOCKED.",
       "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],

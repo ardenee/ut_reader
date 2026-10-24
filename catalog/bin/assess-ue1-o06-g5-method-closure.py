@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Original compiled v432 native UObject Entry.unr retained 33 genuinely loaded exports / 113 native tagged values and sealed 43 StateFrame checks. A genuine compiled v432 UCC.exe-built + Core.dll SavePackage-produced separate v69 archive now proves actual dynamic ArrayProperty Int/Name/Object loading: Numbers(11,42,-7), Labels(Alpha,Beta), References(self,None). Six NEW real compiled malformed dynamic array cases compared, including four fatal native cursor offsets 268/276/272/278 and two valid malformed Tag.Size outcomes consuming source native element lengths; current changed-source consolidated decision PASS61/61 and all previously sealed native cases remain source-scoped. Original distributable UT99 installed 83 maps plus 45 .u packages do not contain ordinary dynamic array tags. Nested FString/Struct array Inner serializations, applicable older source branches, five uninstantiated Camera frames, and independent seven-gate full method closure still OPEN.",
-  "next":"Resolve source-reachable v432 dynamic array Inner StrProperty/StructProperty codecs using valid compiled saved fixture or explicitly limit support, then source-applicable historical gates and five original Camera StateFrames with a genuine reachable compiled oracle. One final independent seven-criterion method review only; do not replay 6 current array, 4+6+4 prior malformed, 113 original values or 43 StateFrame outcomes.",
-  "blocker":"remaining_nested_FString_Struct_array_inner_and_source_version_Camera_full_review",
+  "reason":"Compiled native UT99 v432 UCC and Core SavePackage-generated real ordinary UObject v69 dynamic arrays now have real loaded Int, Name, Object and nested Core.Vector struct values. Six prior compiled malformed inner references and count outcomes pinned unchanged; NEW source-resolved nested StructProperty SerializeBin matches 2 FVector member triples, exact 25-byte array consumption when declared Tag.Size=1, and both real fatal count cursor positions 235/250 including physical file overread beyond declared export. New current-source nested-array acceptance PASS36/36, old compiled genuine Entry 33 exports / 113 values and 43 StateFrame checks source-SHA reused. Nonempty nested FString compiled test still blocked by disposable C++ harness heap corruption; older source version gates, five uninstantiated Camera StateFrames and full independent seven-gate closure OPEN.",
+  "next":"Repair only disposable native C++ nonempty nested FString harness ABI, then compare actual compiled loaded array<string> source stream and malformed count/size to production source codec. Avoid rerunning prior 3 nested Vector, 6 dynamic Int/Name/Object, previous malformed 4+6+4, original 113 and 43 frames. Independently validate applicable early source/version branches and Camera when reachable before final seven-gate closure.",
+  "blocker":"nonempty_dynamic_FString_native_ABI_plus_historical_versions_Camera_independent_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -261,7 +261,7 @@ for name in reg["methods"]:
         array_log=ROOT/array_ev["log"].replace("\\","/")
         assert sha(array_log)==array_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/array_test)==array_ev["test_sha256"]
-        assert array_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert array_ev["source_sha256"]==reconciliation["previous_source_before_native_nested_vector_change"]
         array_result=read(array_log)
         assert array_result["ok"] and array_result["checks"]==61
         assert array_result["passed"]==61
@@ -274,6 +274,26 @@ for name in reg["methods"]:
         assert array_result["compiled_native_loader_reruns_in_verifier"]==0
         assert array_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_dynamic_array_change_scoped"]
+        nested_test="verify-ue1-o06-g5-uobject-nested-vector-decision.php"
+        nested_ev=next((item for item in reversed(events)
+            if item.get("test")==nested_test and item.get("state")=="PASS"),None)
+        assert nested_ev is not None,"Missing source-current actual compiled nested vector oracle"
+        nested_log=ROOT/nested_ev["log"].replace("\\","/")
+        assert sha(nested_log)==nested_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/nested_test)==nested_ev["test_sha256"]
+        assert nested_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        nested_result=read(nested_log)
+        assert nested_result["ok"] and nested_result["checks"]==36 and nested_result["passed"]==36
+        assert nested_result["real_compiled_native_nested_struct_cases_matched"]==3
+        assert nested_result["compiled_native_nested_vector_loaded_value_matches"]==1
+        assert nested_result["compiled_native_nested_array_fatal_cursor_matches"]==2
+        assert nested_result["actual_native_nested_struct_array_consumed_bytes"]==25
+        assert nested_result["previous_six_dynamic_array_cases_SHA_reused"]==6
+        assert nested_result["previous_genuine_original_TaggedValues_SHA_reused"]==113
+        assert nested_result["previous_StateFrame_SHA_reused"]==43
+        assert nested_result["compiled_native_engine_reruns_in_verifier"]==0
+        assert nested_result["full_method_decision"]=="BLOCKED"
+        assert reconciliation["source_native_nested_vector_change_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -282,7 +302,9 @@ for name in reg["methods"]:
         old["compiled_native_reference_array_struct_cases_valid"]=6
         old["compiled_native_fatal_reference_archive_offsets_valid"]=4
         old["compiled_native_array_struct_skip_cases_valid"]=2
-        old["compiled_current_full_method_decision_checks"]=61
+        old["compiled_current_full_method_decision_checks"]=36
+        old["compiled_native_nested_vector_loaded_values"]=2
+        old["compiled_native_nested_vector_invalid_count_offsets_matched"]=2
         old["compiled_native_dynamic_array_proven_int_name_object"]=3
         old["compiled_native_dynamic_array_fatal_cursors"]=4
         old["compiled_native_dynamic_array_size_override_cases"]=2
@@ -301,7 +323,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
-        else "current_method_decision_61_checks_native_compiled_three_dynamic_arrays_six_negative_cases_old_positive_proof_source_scoped" if name=="T99:UObject::Serialize"
+        else "current_method_decision_36_checks_native_compiled_nested_Vector_array_valid_value_and_two_fatal_cursors_no_native_replays" if name=="T99:UObject::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -312,7 +334,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":6 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":7 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -321,7 +343,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":9,"new_test_runs":8,
+ "new_oracle_runs":10,"new_test_runs":9,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

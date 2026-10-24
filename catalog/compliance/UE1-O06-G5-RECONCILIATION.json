@@ -1,15 +1,17 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-24T21:22:11.014852+00:00",
-  "head": "d0061f00",
-  "previous_runner_head": "d0061f00",
-  "previous_source_sha256": "92022c708d55d6597e787a4d3b0a70a934e61e9e78d4bbf7ca38523c651cd415",
-  "current_source_sha256": "92022c708d55d6597e787a4d3b0a70a934e61e9e78d4bbf7ca38523c651cd415",
+  "generated_utc": "2026-10-24T21:39:12.272945+00:00",
+  "head": "81809c7b",
+  "previous_runner_head": "81809c7b",
+  "previous_source_sha256": "aae4f3ff114d1b0823efb2791c4a79c2afcc2ca2e96162f7d92f149e7ea7f21b",
+  "current_source_sha256": "aae4f3ff114d1b0823efb2791c4a79c2afcc2ca2e96162f7d92f149e7ea7f21b",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
   "source_font_branch_equivalence": true,
+  "source_native_nested_vector_change_scoped": true,
+  "previous_source_before_native_nested_vector_change": "92022c708d55d6597e787a4d3b0a70a934e61e9e78d4bbf7ca38523c651cd415",
   "source_native_dynamic_array_change_scoped": true,
   "previous_source_before_native_dynamic_array_change": "f7f08918772439cf0d591b4bd2f341633cc226c01a36f44440496ad95831508c",
   "source_native_struct_str_size_change_scoped": true,
@@ -46,7 +48,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 130
+    "PASS": 131
   },
   "branch_totals": {
     "C227": {
@@ -11360,7 +11362,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "dynamic_ArrayProperty_native_inner_value_count_and_legacy_version_Camera_full_review",
+      "decisive_closure_blocker": "remaining_nested_FString_Struct_array_inner_and_source_version_Camera_full_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",

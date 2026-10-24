@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "native_profile": "ut99-v432",
+  "source_lineage": "UArrayProperty::SerializeItem count + UStructProperty::SerializeItem -> UStruct::SerializeBin",
+  "generated_disposable_not_original_game_package": true,
+  "original": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5NestedPayload.u",
+    "sha256": "e6275e080e437a016fd9350e80c250848f0aee7dcd16cd5bf5d4b0165143b4ba"
+  },
+  "native_batch": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-nested-vector-cases.json",
+    "sha256": "42519432e99f60cbd9f260eafd4595aaf8c3b1196fda3247bb914691384a4fbe"
+  },
+  "real_native_positive_output": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-nested-vector-original.txt",
+    "sha256": "07ebff1c2d96b91f837069adf10c19374681631e1a9aacef4bc6afd701348400"
+  },
+  "native_compiled_CoreDLL": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "native_compiled_UCC": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/UCC.exe",
+    "sha256": "90cf7eb27bf1dd56767720b01deb29d3169d9e749f4fda87933e715db390742f"
+  },
+  "generated_script": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/G5NestedProbe/Classes/G5NestedProbeActor.uc",
+    "sha256": "0be7032189321c91c15600db2e43c387d04115a3a1252fd3004797f4c271befd"
+  },
+  "compiled_class_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5NestedProbe.u",
+    "sha256": "e48dc18d909a915fe65b2123e38db7f3a022b74eff7a5f3a4d8fa379ad63dfc7"
+  },
+  "native_save_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-Nested-Generate.cpp",
+    "sha256": "f08f51b64cb9c6ed5903897e348727fee902807636c875389e8b087af198822c"
+  },
+  "native_save_executable": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-Nested-Generate.exe",
+    "sha256": "72f5f7af7ad7c221b164101dc9c689261ebb451b3d7621a4821932020d0d7cd3"
+  },
+  "native_load_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-Nested-Load.cpp",
+    "sha256": "d4617fa9e6ba6d7d5d1ff21b879dc31ffb03ca67007fa309fa4d5582c9bbcd33"
+  },
+  "native_load_executable": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5-UObject-Native-Nested-Load.exe",
+    "sha256": "b844cb0a041febd5e1c8f6cc172b22c5b546e0980c7f935c5e9755a387095967"
+  },
+  "source_UnProp_cpp": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnProp.cpp",
+    "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+  },
+  "source_UnClass_cpp": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+    "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+  },
+  "source_UnScrCom_cpp": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Editor/Src/UnScrCom.cpp",
+    "sha256": "f5c7797af86b3807fc89fefa33d3d06fd797acbc4ec4d259dd8333230d0ce900"
+  },
+  "cases": [
+    {
+      "name": "locations_declared_size1",
+      "byte_offset": 208,
+      "original_byte": 25,
+      "mutated_byte": 1,
+      "native_success": true,
+      "native_fatal_offset": null,
+      "native_stdout": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-nested-locations_declared_size1.txt",
+        "sha256": "52c7fdf41fa0fa71f9755a4d03a403290fc01aac82c6c4b01dbde0b8c6c567ba"
+      },
+      "original_restored": true
+    },
+    {
+      "name": "locations_count1",
+      "byte_offset": 209,
+      "original_byte": 2,
+      "mutated_byte": 1,
+      "native_success": false,
+      "native_fatal_offset": 235,
+      "native_stdout": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-nested-locations_count1.txt",
+        "sha256": "e3b8b794ac58d7a442752ade65879fea5c1517b3f26ce1cd9a239fc6588c08a6"
+      },
+      "original_restored": true
+    },
+    {
+      "name": "locations_count3",
+      "byte_offset": 209,
+      "original_byte": 2,
+      "mutated_byte": 3,
+      "native_success": false,
+      "native_fatal_offset": 250,
+      "native_stdout": {
+        "path": "C:/Temp/UnrealDB/O06/G5-UObject-native-nested-locations_count3.txt",
+        "sha256": "c69b5d90129b76fc2aaa1a54e87ce9f0fcb56abd4e753a2b091df9ac4be9ca89"
+      },
+      "original_restored": true
+    }
+  ],
+  "count": 3,
+  "expected_vector_values": [
+    [
+      1.5,
+      2.5,
+      3.5
+    ],
+    [
+      -4.0,
+      5.0,
+      -6.0
+    ]
+  ],
+  "expected_source_serialized_bytes": 25,
+  "full_method_accepted": false,
+  "limitations": [
+    "Nonempty array<string> native writer not yet ABI-validated: separately attempted disposable C++ harness corrupts heap; compiled UCC accepts declaration and empty array only.",
+    "UStruct source schema is imported Core.Vector via actual Core.u, three ordered float fields, not guessed from type name.",
+    "Malicious count3 can read physically past 29-byte export before fatal FName cursor 250; PHP uses source-selected physical streamer on source-linked native arrays.",
+    "No claim for arbitrary unsupported recursive or native-only inner kinds or source profiles."
+  ]
+}

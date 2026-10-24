@@ -1,0 +1,17 @@
+﻿{
+    "ok": true,
+    "checks": 36,
+    "passed": 36,
+    "failures": [],
+    "method": "T99:UObject::Serialize",
+    "real_compiled_native_nested_struct_cases_matched": 3,
+    "compiled_native_nested_vector_loaded_value_matches": 1,
+    "compiled_native_nested_array_fatal_cursor_matches": 2,
+    "actual_native_nested_struct_array_consumed_bytes": 25,
+    "previous_six_dynamic_array_cases_SHA_reused": 6,
+    "previous_genuine_original_TaggedValues_SHA_reused": 113,
+    "previous_StateFrame_SHA_reused": 43,
+    "compiled_native_engine_reruns_in_verifier": 0,
+    "full_method_decision": "BLOCKED",
+    "remaining": "Nonempty inner FString native oracle blocked by disposable MSVC fixture ABI; other nested/recursive struct types, older source versions, Camera not loaded, independent seven-gate full method signoff"
+}

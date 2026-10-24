@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uobject-dynamic-array-decision`
-- **Stage:** compiled-v432-real-saved-native-dynamic-array-PASS61-full-method-BLOCKED-PRD-not-deployed
-- **Last completed action:** Found no ordinary ArrayProperty tags in 83 original installed UT99 maps and 45 installed .u packages (52,744 ordinary exports). Created isolated original compiled v432 UCC-generated class and Core.dll SavePackage native v69 instance with arrays 3 Int, 2 Name, 2 UObject references; actual compiled Core.dll LoadPackage loads all three. Six original-archive one-byte controlled native cases pin four fatal offsets 268/276/272/278, two ignored corrupt Tag.Size valid loads. Source-linked production reader now consumes real UArrayProperty Inner SerializeItem and validates nested name/object references precisely. Current consolidated changed-source DEV 61/61 PASS 20261024T212002584Z-35b1cb0a, older 50/61/49/43 and 113 genuine native original tagged values SHA reuse, zero repeats. Source-fingerprint reconciliation preserved, eight method decisions still BLOCKED, PRD intentionally unchanged.
-- **Resume at:** Only unresolved T99 UObject paths: source-linked nested UArrayProperty Inner FString/Struct serialization, selected historical UE1 source-family/version branches, five original Camera StateFrames that native loader did not instantiate, independent full seven-gate method review. Do not replay completed 6 dynamic+4 size+6 reference+4 tag mutation or 113 genuine positive and 43 StateFrame proofs. Coordinated dependency-complete PRD deployment only after verified acceptance.
-- **Active changed at:** 2026-10-24T21:24:53+00:00
-- **Latest DEV test states:** PASS 130; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-uobject-nested-vector-decision`
+- **Stage:** actual-compiled-v432-nested-UStruct-vector-source-parity-PASS36-full-method-BLOCKED
+- **Last completed action:** Created new isolated original v432 UCC compiled G5NestedProbe class array<string> and array<vector>, actual compiled Core.dll SavePackage native file G5NestedPayload.u v69 SHA e6275e080e437a016fd9350e80c250848f0aee7dcd16cd5bf5d4b0165143b4ba with two FVector values and zero string values. Real compiled v432 loader loaded both FVector triples; controlled single-byte native count/Tag.Size outcomes: size25->1 still reads25 and loads, count2->1/3 fatal at FName archive offsets235/250, including physical overread across export. Updated source-linked production reader to actual UArrayProperty.Inner UStruct source schema Core.Vector, reads ordered native field values through shared StructArrayValueReader, handles nested Str source codec but nonempty string not native-proven, physically bounded stream for malformed native array. ONE current changed-source DEV acceptance PASS36/36 at 20261024T213654772Z-be2e37be, three compiled outcomes no repeats, earlier six arrays, 113 original Entry tags and 43 StateFrame checks SHA reused. Source fingerprint reconciliation and 8 BLOCKED closure updated; PRD untouched.
+- **Resume at:** Primary blocker: repair disposable modern-MSVC C++ harness heap corruption for actual nonempty array<string> v432 saved package, then compare real compiled native loaded values and malformed nested FString consumption without retesting prior 3 nested vectors, 6 arrays, 4+6+4 original negatives, 113 original values or 43 StateFrames. Remaining older version/source branches, Camera uninstantiated frames, independent full seven gate method closure; PRD only coordinated dependency-complete deployment after verified acceptance.
+- **Active changed at:** 2026-10-24T21:40:04+00:00
+- **Latest DEV test states:** PASS 131; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-24T21:36:55.5132768Z | verify-ue1-o06-g5-uobject-nested-vector-decision.php | PASS | 332 | catalog\compliance\evidence\o06\20261024T213654772Z-be2e37be-DEV-verify-ue1-o06-g5-uobject-nested-vector-decision.php.txt |
+| 2026-10-24T21:36:54.7792759Z | verify-ue1-o06-g5-uobject-nested-vector-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T213654772Z-be2e37be-DEV-verify-ue1-o06-g5-uobject-nested-vector-decision.php.txt |
 | 2026-10-24T21:20:03.3116417Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | PASS | 310 | catalog\compliance\evidence\o06\20261024T212002584Z-35b1cb0a-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
 | 2026-10-24T21:20:02.5926285Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T212002584Z-35b1cb0a-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
 | 2026-10-24T21:19:12.2839445Z | verify-ue1-o06-g5-uobject-dynamic-array-decision.php | FAIL | 309 | catalog\compliance\evidence\o06\20261024T211911557Z-96028819-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T19:07:37.6452863Z | verify-ue1-o06-g5-uobject-current-full-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T190737637Z-76e41c5b-DEV-verify-ue1-o06-g5-uobject-current-full-decision.php.txt |
 | 2026-10-24T18:39:15.7905850Z | verify-ue1-o06-g5-uobject-tag-error-consolidated.php | PASS | 1107 | catalog\compliance\evidence\o06\20261024T183914268Z-5110d87c-DEV-verify-ue1-o06-g5-uobject-tag-error-consolidated.php.txt |
 | 2026-10-24T18:39:14.2765825Z | verify-ue1-o06-g5-uobject-tag-error-consolidated.php | STARTED |  | catalog\compliance\evidence\o06\20261024T183914268Z-5110d87c-DEV-verify-ue1-o06-g5-uobject-tag-error-consolidated.php.txt |
-| 2026-10-24T18:12:56.3637135Z | verify-ue1-o06-g5-uobject-tagged-native-acceptance.php | PASS | 489 | catalog\compliance\evidence\o06\20261024T181255469Z-a501b037-DEV-verify-ue1-o06-g5-uobject-tagged-native-acceptance.php.txt |
-| 2026-10-24T18:12:55.4767439Z | verify-ue1-o06-g5-uobject-tagged-native-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261024T181255469Z-a501b037-DEV-verify-ue1-o06-g5-uobject-tagged-native-acceptance.php.txt |
 
 ## Recovery procedure
 
