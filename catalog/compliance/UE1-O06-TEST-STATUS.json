@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T11:14:59.4252149Z",
-    "head_commit":  "bd2bcc9c",
+    "updated_at_utc":  "2026-10-24T11:43:21.4060335Z",
+    "head_commit":  "176fbc66",
     "current_target":  "DEV",
     "current_source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
     "tests":  [
@@ -651,6 +651,18 @@
                       "run_id":  "20261024T090406857Z-532677b0",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T090406857Z-532677b0-DEV-verify-ue1-o06-g5-textbuffer-native-all-values.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uclass-all-native-nested-memory.php",
+                      "test":  "verify-ue1-o06-g5-uclass-all-native-nested-memory.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T11:43:21.3870348Z",
+                      "source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
+                      "test_sha256":  "af27e7566d818c5d144d6ebc089cb8d1230709bbacf8fe285d3303523977e1f2",
+                      "run_id":  "20261024T114319921Z-fac19f70",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T114319921Z-fac19f70-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-class-default-declarations.php",

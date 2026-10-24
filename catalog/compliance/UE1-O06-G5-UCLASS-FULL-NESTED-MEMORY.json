@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "method": "T99:UClass::Serialize",
+  "source_profile": "ut99-v432",
+  "scope": "full nested FDependency Class/Deep/CRC and PackageImports FName, ClassWithin referent-name subset for 88 compiled-loaded Engine.u classes",
+  "compiled_core": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+  },
+  "original_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+    "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+  },
+  "native_log": {
+    "path": "C:/Temp/UnrealDB/O06/g5-v432-uclass-native-nested-values.log",
+    "sha256": "38be93aa859b2b8e1c60150c2c4b215d536362be0e6b182502cada61f484e1f7"
+  },
+  "native_memory": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UClass-v432-after-90-all-memory.dmp",
+    "sha256": "fb77216dabcb1e2152b27c82447184ecafe5869f888986c7452314fa5a4359e8"
+  },
+  "method_post_return": "Core.dll+0x27c92",
+  "native_globals": {
+    "module_image_base": "0x10100000",
+    "FName_Names_TArray_VA": "0x10295D30",
+    "FName_entry_name_offset": 12,
+    "UObject_Name_FName_index_offset": 32,
+    "FDependency_TArray_data_offset": 1216,
+    "FDependency_TArray_count_offset": 1220,
+    "FDependency_TArray_capacity_offset": 1224,
+    "PackageImports_TArray_data_offset": 1228,
+    "PackageImports_TArray_count_offset": 1232,
+    "PackageImports_TArray_capacity_offset": 1236,
+    "ClassWithin_UClass_pointer_offset": 1184
+  },
+  "accepted": false,
+  "limits": [
+    "Only 88 genuine Engine.u classes reached by this commandlet, 43 source class exports unvisited.",
+    "Runtime arrays captured at final UClass::Serialize; field-level source comparison not proof of complete defaults or inherited UClass chain.",
+    "Native path names/outer and malformed consumed byte/error semantics remain open."
+  ]
+}

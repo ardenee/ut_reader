@@ -1,0 +1,19 @@
+﻿{
+    "ok": true,
+    "checks": 9876,
+    "passed": 9876,
+    "failures": [],
+    "source_Engine_original_UClass_records": 88,
+    "real_native_FDependency_elements": 3053,
+    "real_native_FDependency_member_comparisons": 9159,
+    "real_native_PackageImport_FName_matches": 176,
+    "real_native_ClassWithin_referent_matches": 88,
+    "actual_native_FName_lookup_count": 94,
+    "dump_region_count": 240,
+    "foreign_Core_classes": [
+        "2:Object",
+        "328:Subsystem"
+    ],
+    "full_G5_method_acceptance": "OPEN",
+    "gap": "43 original Engine.u classes unvisited, full runtime defaults, inherited methods, malformed byte/error semantics and other versions remain OPEN"
+}

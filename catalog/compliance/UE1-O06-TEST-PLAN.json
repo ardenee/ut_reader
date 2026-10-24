@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-multimethod-uclass-full-nested-memory": {
+      "description": "UT99 v432 actual compiled Core.dll UClass::Serialize after 90th loaded class: 44 MB real MiniDump MEMORY64 contains full UClass FDependency TArray elements (runtime UObject class FName / Deep / CRC), complete PackageImports runtime FName array and ClassWithin referent. Compare all 88 original loaded Engine.u classes against production CatalogUE1ClassicClassMetadataReader. Do not mark method fully G5 accepted while inherited defaults, malformed/errors or other 43 genuine UClasses are open.",
+      "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
+      "focus": ["verify-ue1-o06-g5-uclass-all-native-nested-memory.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-multimethod-uclass-native-values": {
       "description": "Real unmodified compiled v432 Core!UClass::Serialize same-load post-archive 90 calls, 88 authentic Engine.u class exports with exact loaded ClassFlags, 16-byte GUID, dependency and import TArray lengths, ClassWithin pointer and runtime FName ConfigName; two unrelated Core objects disambiguated by actual compiled class names; 43 unobserved remain OPEN.",
       "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
