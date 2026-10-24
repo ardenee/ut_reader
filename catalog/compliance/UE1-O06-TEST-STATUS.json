@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-24T21:36:55.5372891Z",
-    "head_commit":  "81809c7b",
+    "updated_at_utc":  "2026-10-24T22:10:18.2795090Z",
+    "head_commit":  "52fa7a45",
     "current_target":  "DEV",
-    "current_source_sha256":  "aae4f3ff114d1b0823efb2791c4a79c2afcc2ca2e96162f7d92f149e7ea7f21b",
+    "current_source_sha256":  "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -759,6 +759,18 @@
                       "run_id":  "20261024T213654772Z-be2e37be",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T213654772Z-be2e37be-DEV-verify-ue1-o06-g5-uobject-nested-vector-decision.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uobject-prd-native-string-decision.php",
+                      "test":  "verify-ue1-o06-g5-uobject-prd-native-string-decision.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-24T22:10:18.2584787Z",
+                      "source_sha256":  "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f",
+                      "test_sha256":  "39c6735b5d0767fefba1a2b5b541a1d976bda8c38c5e67206bc8defb807831b0",
+                      "run_id":  "20261024T221017518Z-bf35c3dd",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T221017518Z-bf35c3dd-DEV-verify-ue1-o06-g5-uobject-prd-native-string-decision.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-uobject-serializeitem-size-decision.php",

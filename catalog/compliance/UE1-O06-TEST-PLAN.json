@@ -2,6 +2,13 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
+    "g5-t99-uobject-prd-native-string-decision": {
+      "description": "One production source-current decision based on SHA-pinned original PRD UE1 corpus sample, genuine compiled v432 engine-generated nonempty FString array wire archive, compiled native Core.dll failed load plus CDB uninitialized pointer and source FArray::Add versus AddZeroed. Source wire values remain visible but runtime loaded values NOT_VERIFIED. Reuse prior native compiled 36/36 + 113 original values by SHA only; full T99 UObject remains BLOCKED.",
+      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
+      "focus": ["verify-ue1-o06-g5-uobject-prd-native-string-decision.php"],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-uobject-nested-vector-decision": {
       "description": "One changed-source compiled real UT99 v432 UCC and Core.dll SavePackage native nested array<vector> archive. Native original 2 FVector fields each 12 bytes, array count2+24 bytes, malformed Tag.Size=1 still reads25, count1 native fail at archive cursor235, count3 native source FName failure at250 beyond declared export SerialSize, same source-scope PHP cursor. Reuse original six dynamic array native results and SHA-pinned original genuine Entry 113 values and 43 frames without native reruns. Full method remains BLOCKED on nonempty nested FString and other source/Camera variants.",
       "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],

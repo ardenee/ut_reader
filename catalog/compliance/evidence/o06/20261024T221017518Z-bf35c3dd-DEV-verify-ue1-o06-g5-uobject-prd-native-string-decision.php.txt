@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 37,
+    "passed": 37,
+    "failures": [],
+    "method": "T99:UObject::Serialize",
+    "prd_original_staged_u_unr": 239,
+    "prd_original_camera_StateFrames_static_decoded": 433,
+    "prd_source_native_FSpark_records_decoded": 4573,
+    "real_v432_saved_nonempty_FString_elements_source_decoded": 2,
+    "compiled_v432_nonempty_string_load_status": "native_access_violation",
+    "compiled_Core_native_load_success": false,
+    "current_production_string_native_loaded_value_parity": "NOT_VERIFIED",
+    "previous_compiled_native_nested_vector_cases_SHA_reused": 3,
+    "previous_113_genuine_Entry_native_tagged_values_SHA_reused": 113,
+    "compiled_native_reruns_in_acceptance": 0,
+    "full_method_decision": "BLOCKED"
+}

@@ -348,6 +348,20 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         'serialized_element_bytes'=>strlen($raw),
                         'preview_first_32'=>$elements,
                         'all_values_previewed'=>$count<=32];
+                    if($innerKind==='strproperty'&&$count>0){
+                        // In compiled v432 Core the native UArrayProperty
+                        // loader calls FArray::Add(n,c), NOT AddZeroed,
+                        // then calls FString::SerializeItem on those raw
+                        // unconstructed inner FString memory slots. The
+                        // isolated real compiled two-string package oracle
+                        // faults during native LoadPackage; do not present
+                        // correct archive text as a verified loaded value.
+                        // This flags a source-defined runtime hazard rather
+                        // than asserting every allocator will always fault.
+                        $arrayDecoded['native_loaded_value_parity']='NOT_VERIFIED';
+                        $arrayDecoded['source_runtime_risk']=
+                            'Epic v432 UArrayProperty::SerializeItem uses FArray::Add for unconstructed FString inner memory';
+                    }
                 }elseif($loadPolicy==='native_source_property_SerializeItem'
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
                     &&$linkerLimits!==null&&$type===13){

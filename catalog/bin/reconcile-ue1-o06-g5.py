@@ -84,13 +84,49 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# Source-defined nonempty dynamic FString native materialization hazard:
+# PRD real UE1 corpus + real compiled v432 SavePackage output, CDB native
+# invalid pointer on LoadPackage. Only a single current-source decision
+# accepts the typed archive preview as NOT_VERIFIED native loaded value.
+before_string_tag=committed("52fa7a45",new_tag_file)
+previous_string_source="aae4f3ff114d1b0823efb2791c4a79c2afcc2ca2e96162f7d92f149e7ea7f21b"
+sig_before_string=subst_sig(
+    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_string_tag))
+string_verifier="verify-ue1-o06-g5-uobject-prd-native-string-decision.php"
+string_event=latest.get(string_verifier)
+string_log=ROOT/string_event["log"] if string_event and string_event.get("log") else None
+try:
+    string_result=read(string_log) if string_log and string_log.exists() else {}
+except Exception:
+    string_result={}
+string_scope=(
+    hashlib.sha256(sig_before_string.encode("utf-8")).hexdigest()==previous_string_source
+    and current_schema==committed("52fa7a45",new_schema_file)
+    and "native_loaded_value_parity" in current_tag
+    and "UArrayProperty::SerializeItem uses FArray::Add" in current_tag
+    and string_event is not None and string_event.get("state")=="PASS"
+    and string_event.get("source_sha256")==current
+    and string_event.get("output_sha256")==digest(string_log)
+    and string_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/string_verifier)
+    and string_result.get("ok") is True
+    and string_result.get("checks")==37 and string_result.get("passed")==37
+    and string_result.get("prd_original_staged_u_unr")==239
+    and string_result.get("prd_original_camera_StateFrames_static_decoded")==433
+    and string_result.get("prd_source_native_FSpark_records_decoded")==4573
+    and string_result.get("real_v432_saved_nonempty_FString_elements_source_decoded")==2
+    and string_result.get("compiled_Core_native_load_success") is False
+    and string_result.get("current_production_string_native_loaded_value_parity")=="NOT_VERIFIED"
+    and string_result.get("previous_compiled_native_nested_vector_cases_SHA_reused")==3
+    and string_result.get("compiled_native_reruns_in_acceptance")==0
+    and string_result.get("full_method_decision")=="BLOCKED"
+)
 # Nested StructProperty ArrayProperty: original v432 Core DLL produced
 # and loaded two source-declared Core.Vector UStruct values; three native
 # damaged count/TagSize cases SHA pinned, current 61-check acceptance.
 before_nested_tag=committed("81809c7b",new_tag_file)
 previous_nested_source="92022c708d55d6597e787a4d3b0a70a934e61e9e78d4bbf7ca38523c651cd415"
 sig_before_nested=subst_sig(
-    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_nested_tag))
+    sig_before_string,new_tag_file,sha_blob(before_string_tag),sha_blob(before_nested_tag))
 nested_verifier="verify-ue1-o06-g5-uobject-nested-vector-decision.php"
 nested_ev=latest.get(nested_verifier)
 nested_log=ROOT/nested_ev["log"] if nested_ev and nested_ev.get("log") else None
@@ -99,13 +135,14 @@ try:
 except Exception:
     nested_result={}
 nested_scope=(
-    hashlib.sha256(sig_before_nested.encode("utf-8")).hexdigest()==previous_nested_source
+    string_scope
+    and hashlib.sha256(sig_before_nested.encode("utf-8")).hexdigest()==previous_nested_source
     and current_schema==committed("81809c7b",new_schema_file)
     and "StructArrayValueReader::resolve" in current_tag
     and "FStringArchiveReader::decodeAt" in current_tag
     and "physical_limit" in current_tag
     and nested_ev is not None and nested_ev.get("state")=="PASS"
-    and nested_ev.get("source_sha256")==current
+    and nested_ev.get("source_sha256")==previous_string_source
     and nested_ev.get("output_sha256")==digest(nested_log)
     and nested_ev.get("test_sha256")==digest(ROOT/"catalog"/"bin"/nested_verifier)
     and nested_result.get("ok") is True
@@ -391,6 +428,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (string_scope and f==previous_string_source)
         or (nested_scope and f==previous_nested_source)
         or (dynamic_scope and f==previous_dynamic_source)
         or (size_scope and f==previous_size_source)
@@ -566,6 +604,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_prd_fstring_load_change_scoped":string_scope,
+    "previous_source_before_native_prd_fstring_load_change":previous_string_source if string_scope else None,
     "source_native_nested_vector_change_scoped":nested_scope,
     "previous_source_before_native_nested_vector_change":previous_nested_source if nested_scope else None,
     "source_native_dynamic_array_change_scoped":dynamic_scope,

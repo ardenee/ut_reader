@@ -1,0 +1,131 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "conclusion": "BLOCKED",
+  "origins": [
+    "PRD verified UE1 archives sampled read-only and copied SHA-preserved to DEV scratch",
+    "Native v432 compiled Core DLL and UCC original save and load in disposable DEV scratch"
+  ],
+  "corpus": {
+    "verified_prd_ut99_files": 74432,
+    "verified_prd_unrealgold_files": 10935,
+    "sha_staged_real_u_unr_files": 239,
+    "real_exports_examined": 150150,
+    "array_property_declarations_found": 6,
+    "original_maps_with_camera_names": 90,
+    "Camera_exports_read": 437,
+    "Camera_stateframes_parsed": 433,
+    "real_map_ordinary_property_exports_parsed": 30000,
+    "actual_array_tag_values_in_30000": 0,
+    "real_utx_packages_staged": 315,
+    "real_procedural_texture_exports": 9189,
+    "source_native_firetexture_records_complete": 43,
+    "real_nonempty_FireTexture_Sparks_arrays": 37,
+    "native_source_FSpark_records": 4573
+  },
+  "native_fstring": {
+    "fixture_is_generated_by_compiled_v432_not_original_game_asset": true,
+    "source_compiler_version": "v432 original UCC",
+    "native_wire_strings": [
+      "Alpha-string",
+      "Beta-string"
+    ],
+    "source_inner_string_count": 2,
+    "source_inner_SerializeItem_bytes": 28,
+    "native_Core_SavePackage_success": true,
+    "native_Core_LoadPackage_success": false,
+    "compiled_loader_failure": "Windows heap corruption exit 0xC0000374, debugger first/second chance C0000005",
+    "debugger_uninitialized_pointer": "0xBAADF00D",
+    "source_causal_risk": "UArrayProperty::SerializeItem calls FArray::Add(n,c), not AddZeroed, before UStrProperty::SerializeItem invokes FString archive on raw unconstructed elements.",
+    "no_universal_failure_claim": true,
+    "archive_decode_versus_native_loaded_value_parity_distinct": true
+  },
+  "sha_pinned_evidence": {
+    "prd_ue1_header_sample": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-ue1-header-sample.json",
+      "sha256": "8549322f77fec3c4a3ac8a4eb4e17681dfd04a385856b551d562787277446bca"
+    },
+    "prd_original_staged_239": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-ue1-staged-manifest.json",
+      "sha256": "858e2294a453ded87359f61f68b8103b699d35d15fed62f93dd9780c2d96d0bd"
+    },
+    "prd_source_array_schema_scan": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-ue1-staged-array-schema-scan.json",
+      "sha256": "b5a3dc5f974ed7629c612831481e8427338568cbf242eb55de722be66b9b3226"
+    },
+    "prd_real_camera_stateframe_scan": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-camera-stateframe-sample.json",
+      "sha256": "65ddecebde66ab0d39a4f18159b91ee40107bfeec8a2634dfe082f817286e895"
+    },
+    "prd_real_ordinary_actor_30000_tags": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-real-ordinary-array-tags.json",
+      "sha256": "5964693eb459e85c2c9a142713bb329f0cfaa5db9ab43d095dd8578ba2b7cace"
+    },
+    "prd_procedural_original_staged_315": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-ue1-procedural-staged.json",
+      "sha256": "db9b6a4bb0f357dec3f35e05abb6747f50b7809c9603bc45c4f05c2291a03b98"
+    },
+    "prd_procedural_tag_scan": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-procedural-original-value-scan.json",
+      "sha256": "d0fdd951f8d7ee3d8cfed4ec73c654ae6062cf57d44af378160389da04568f1b"
+    },
+    "prd_native_fire_spark_scan": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-prd-original-firetexture-native-records.json",
+      "sha256": "50d23435477ea68dc10a4c57eb4443c75a0e9d89939a007432aff7389b6e0e8d"
+    },
+    "real_compiled_native_string_generator": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-String-Generate.cpp",
+      "sha256": "8b114b30f75a1e7a8e44b64d6879034f88e64bc27d8c253a78b878d0c8ccce17"
+    },
+    "real_compiled_native_string_generator_exe": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5-UObject-Native-String-Generate.exe",
+      "sha256": "4e94269a24728cf9a1686caad7bd309e4211fbfbd52734d0a0c2c530ec10a77b"
+    },
+    "compiled_native_string_UE1_package": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5StringPayload.u",
+      "sha256": "680f56fd730b1f61d9d1b25a8c8bc8f0aaff95f4e7ce8900753159b24b6e2e5c"
+    },
+    "compiled_native_string_loader_exe": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5-UObject-Native-String-Load.exe",
+      "sha256": "a5228cfe4cf2c5207e2c7a59ed13670e61db780472554f42885e470fcaaffcca"
+    },
+    "compiled_native_string_loader_unbuffered_output": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-native-string-instrumented.log",
+      "sha256": "f04607b6d94fdfe8379c61cf3c431367780ceace2da5de50bf464060e8e95671"
+    },
+    "compiled_native_string_CDB_stack": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-native-string-cdb.log",
+      "sha256": "0e84350b17a5f02729edf213f92fe4dacefbada91d9741bcb197b5fa10b49f27"
+    },
+    "compiled_v432_Core_binary": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "compiled_v432_UCC_binary": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\UCC.exe",
+      "sha256": "90cf7eb27bf1dd56767720b01deb29d3169d9e749f4fda87933e715db390742f"
+    },
+    "compiled_native_script_class": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5NestedProbe.u",
+      "sha256": "e48dc18d909a915fe65b2123e38db7f3a022b74eff7a5f3a4d8fa379ad63dfc7"
+    },
+    "compiled_original_unreal_script": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\G5NestedProbe\\Classes\\G5NestedProbeActor.uc",
+      "sha256": "0be7032189321c91c15600db2e43c387d04115a3a1252fd3004797f4c271befd"
+    },
+    "native_UE1_UArrayProperty_source": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+    },
+    "native_v432_FArray_Add_source": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnTemplate.h",
+      "sha256": "00bbde592c0e461199f613bdb08b70b04f93d5968818c91fe06073b38e9d0975"
+    }
+  },
+  "limits": [
+    "Real corpus discovery and source-defined class-tail parsers are NOT compiled native oracle comparisons.",
+    "Original PRD objects have not been retested under a compiled v227 executable; version source family on Gold sample is a candidate.",
+    "Native string memory initialization issue proven for generated fixture; does not assert every allocator always faults.",
+    "No new method FULL. Prior compiled original Entry.u 113 loaded values, six dynamic cases and three nested Vector outcomes remain sealed and not rerun."
+  ]
+}

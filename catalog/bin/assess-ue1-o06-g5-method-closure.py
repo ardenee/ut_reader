@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Compiled native UT99 v432 UCC and Core SavePackage-generated real ordinary UObject v69 dynamic arrays now have real loaded Int, Name, Object and nested Core.Vector struct values. Six prior compiled malformed inner references and count outcomes pinned unchanged; NEW source-resolved nested StructProperty SerializeBin matches 2 FVector member triples, exact 25-byte array consumption when declared Tag.Size=1, and both real fatal count cursor positions 235/250 including physical file overread beyond declared export. New current-source nested-array acceptance PASS36/36, old compiled genuine Entry 33 exports / 113 values and 43 StateFrame checks source-SHA reused. Nonempty nested FString compiled test still blocked by disposable C++ harness heap corruption; older source version gates, five uninstantiated Camera StateFrames and full independent seven-gate closure OPEN.",
-  "next":"Repair only disposable native C++ nonempty nested FString harness ABI, then compare actual compiled loaded array<string> source stream and malformed count/size to production source codec. Avoid rerunning prior 3 nested Vector, 6 dynamic Int/Name/Object, previous malformed 4+6+4, original 113 and 43 frames. Independently validate applicable early source/version branches and Camera when reachable before final seven-gate closure.",
-  "blocker":"nonempty_dynamic_FString_native_ABI_plus_historical_versions_Camera_independent_review",
+  "reason":"Real PRD read-only UE1 corpus has 74432 verified UT99 and 10935 verified Unreal Gold files. SHA-copied 239 original packages to DEV; scanned 150150 real exports, 6 actual ArrayProperty schema declarations and 433 source-parsed Camera StateFrames across package versions61/63/68/69; an additional 315 real textures have 43 source-complete FireTexture native serialized tails with 4573 nonempty FSpark records. Genuine native compiled v432 UCC/Core SavePackage created a separate valid-wire 2xFString array and 2xFVector array; source-level parser decodes both, but compiled Core.dll failed during native LoadPackage with CDB invalid 0xBAADF00D pointer, consistent with actual Epic UArrayProperty FArray::Add unconstructed FString members. Production correctly flags those string values NOT_VERIFIED as native loaded. One latest changed-source method verifier PASS37/37, old actual compiled v432 six Int/Name/Object malformed cases, three nested Vector cases, original Entry33 native objects /113 tags and 43 StateFrame checks SHA reused without rerunning. Source-origin for overlapping v69 Gold must not be invented. Remaining historical compiled source-family/version semantics, Camera runtime reachability and independent seven-gate full method review OPEN.",
+  "next":"Avoid repeating proved compiled-native 6 dynamic Int/Name/Object, 3 nested vector, 4 size, 4 tag and 6 reference cases. Use PRD 433 original Camera StateFrames by source-selected versions61/63/68/69 as candidates, but obtain matching compiled Unreal-v227/v1200 runtime or trace actual v432 reachable original Camera instances before claiming native parity. Bound native nonempty FString branch with actual source Add vs AddZeroed and crash evidence; do not mislabel correct file decode as successfully loaded value. Then independent full method seven-gate review and coordinated DEV-to-PRD deployment only after compatibility verified.",
+  "blocker":"source_version_family_native_validation_and_camera_runtime_full_method_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -281,7 +281,7 @@ for name in reg["methods"]:
         nested_log=ROOT/nested_ev["log"].replace("\\","/")
         assert sha(nested_log)==nested_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/nested_test)==nested_ev["test_sha256"]
-        assert nested_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert nested_ev["source_sha256"]==reconciliation["previous_source_before_native_prd_fstring_load_change"]
         nested_result=read(nested_log)
         assert nested_result["ok"] and nested_result["checks"]==36 and nested_result["passed"]==36
         assert nested_result["real_compiled_native_nested_struct_cases_matched"]==3
@@ -294,6 +294,31 @@ for name in reg["methods"]:
         assert nested_result["compiled_native_engine_reruns_in_verifier"]==0
         assert nested_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_nested_vector_change_scoped"]
+        # Genuine PRD UE1 archive samples + native compiled v432 nonempty
+        # FString loader crash; distinguish serialized wire data and loaded.
+        string_test="verify-ue1-o06-g5-uobject-prd-native-string-decision.php"
+        string_ev=next((item for item in reversed(events)
+            if item.get("test")==string_test and item.get("state")=="PASS"),None)
+        assert string_ev is not None,"Missing changed-source native FString load verdict"
+        string_log=ROOT/string_ev["log"].replace("\\","/")
+        assert sha(string_log)==string_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/string_test)==string_ev["test_sha256"]
+        assert string_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        string_result=read(string_log)
+        assert string_result["ok"] and string_result["checks"]==37
+        assert string_result["passed"]==37
+        assert string_result["prd_original_staged_u_unr"]==239
+        assert string_result["prd_original_camera_StateFrames_static_decoded"]==433
+        assert string_result["prd_source_native_FSpark_records_decoded"]==4573
+        assert string_result["real_v432_saved_nonempty_FString_elements_source_decoded"]==2
+        assert string_result["compiled_v432_nonempty_string_load_status"]=="native_access_violation"
+        assert string_result["compiled_Core_native_load_success"] is False
+        assert string_result["current_production_string_native_loaded_value_parity"]=="NOT_VERIFIED"
+        assert string_result["previous_compiled_native_nested_vector_cases_SHA_reused"]==3
+        assert string_result["previous_113_genuine_Entry_native_tagged_values_SHA_reused"]==113
+        assert string_result["compiled_native_reruns_in_acceptance"]==0
+        assert string_result["full_method_decision"]=="BLOCKED"
+        assert reconciliation["source_native_prd_fstring_load_change_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -302,7 +327,12 @@ for name in reg["methods"]:
         old["compiled_native_reference_array_struct_cases_valid"]=6
         old["compiled_native_fatal_reference_archive_offsets_valid"]=4
         old["compiled_native_array_struct_skip_cases_valid"]=2
-        old["compiled_current_full_method_decision_checks"]=36
+        old["compiled_current_full_method_decision_checks"]=37
+        old["prd_original_verified_u_unr_files_staged"]=239
+        old["prd_original_camera_stateframes_source_parsed"]=433
+        old["prd_source_native_firetexture_fspark_records"]=4573
+        old["compiled_v432_native_nonempty_FString_load_failed_in_fixture"]=True
+        old["native_FString_loaded_value_parity"]="NOT_VERIFIED"
         old["compiled_native_nested_vector_loaded_values"]=2
         old["compiled_native_nested_vector_invalid_count_offsets_matched"]=2
         old["compiled_native_dynamic_array_proven_int_name_object"]=3
@@ -323,7 +353,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
-        else "current_method_decision_36_checks_native_compiled_nested_Vector_array_valid_value_and_two_fatal_cursors_no_native_replays" if name=="T99:UObject::Serialize"
+        else "current_method_decision_37_checks_PRD_corpus_v432_native_FString_load_crash_old_native_proofs_SHA_reused" if name=="T99:UObject::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -334,7 +364,7 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
-      "new_native_tests_executed":0,"new_test_runs_executed":7 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":8 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -343,7 +373,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":10,"new_test_runs":9,
+ "new_oracle_runs":11,"new_test_runs":10,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

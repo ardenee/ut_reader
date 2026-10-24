@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "Repair only disposable native C++ nonempty nested FString harness ABI, then compare actual compiled loaded array<string> source stream and malformed count/size to production source codec. Avoid rerunning prior 3 nested Vector, 6 dynamic Int/Name/Object, previous malformed 4+6+4, original 113 and 43 frames. Independently validate applicable early source/version branches and Camera when reachable before final seven-gate closure.",
+      "next_closure_work": "Avoid repeating proved compiled-native 6 dynamic Int/Name/Object, 3 nested vector, 4 size, 4 tag and 6 reference cases. Use PRD 433 original Camera StateFrames by source-selected versions61/63/68/69 as candidates, but obtain matching compiled Unreal-v227/v1200 runtime or trace actual v432 reachable original Camera instances before claiming native parity. Bound native nonempty FString branch with actual source Add vs AddZeroed and crash evidence; do not mislabel correct file decode as successfully loaded value. Then independent full method seven-gate review and coordinated DEV-to-PRD deployment only after compatibility verified.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -242,7 +242,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "nonempty_dynamic_FString_native_ABI_plus_historical_versions_Camera_independent_review"
+      "decisive_closure_blocker": "source_version_family_native_validation_and_camera_runtime_full_method_review"
     },
     {
       "id": "T99:UClass::Serialize",
