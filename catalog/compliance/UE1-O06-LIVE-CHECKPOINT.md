@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-textbuffer-v432-independent-source-profile-full`
-- **Stage:** T99-v432-TextBuffer-7of7-independent-FULL-G5-3FULL-5BLOCKED
-- **Last completed action:** Independent UT99-v432-only TextBuffer file-read method closure. Original compiled Core.dll loaded 88 genuine Engine.u TextBuffer exports, exact 1007796 UTF16 native bytes plus Pos/Top, full SHA-pinned original CDB memory dump. Current source selected all 88 real inherited UObject envelopes no RF_HasStack and no tagged properties, each NAME_None two compact bytes 5034, all native records complete. Real compiled positive size-preserving Pos3 Top10, wide Omega, missing final NUL; native oversized ANSI900 reports serial extent Got912 Expected843 and current PHP safely reproduces exact error. One independent journaled DEV focus PASS302/302 at 20261025T163728748Z-a60cb4ef, no native engine reruns. Per-method SHA closure UE1-O06-G5-UTEXTBUFFER-SOURCE-PROFILE-FULL-ACCEPTANCE.json. All seven T99 v432 source-profile gates VERIFIED, general T99 UObject and C98/C227 remain BLOCKED independently. Dashboard 3FULL 5BLOCKED 0FAILED. PRD unchanged.
-- **Resume at:** Do not rerun 88 original TextBuffer native members, malformed correction, audio 11 source objects or v61 UObject 926 original values. Next prioritize T99 UFont from original 4 compiled loaded fonts and already source-corrected CharRemap native mismatch, test inherited specific branch once. Then remaining global UObject, UClass, SkeletalMesh, Animation. Only accept source-scoped whole methods with independently pinned 7/7 evidence.
-- **Active changed at:** 2026-10-25T16:40:14+00:00
-- **Latest DEV test states:** PASS 144; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-font-v432-independent-source-profile-full`
+- **Stage:** T99-UFont-independent-FULL-G5-4FULL-4BLOCKED
+- **Last completed action:** Compiled native v432 UFont actual full values verified for 62 original nonempty Font objects: 1,200,128 glyph bytes, 46,434 TMap pairs, 185,736 remap bytes, 62 exact Texture references. Four original Engine fonts previously fully verified; total 66 inherited UObject envelopes match two-byte NAME_None no StateFrame or tags. Compiled malformed Font cursor Got4116 Expected4112 matches production safely. SHA-pinned sources, native executable and logs, original packages, independent PASS185/185 final journal 20261025T193250550Z-22963d14. All seven G5 gates verified for UT99 v432 source-profile file-reading UFont method; unrelated UObject and Unreal C98/C227 remain blocked. No PRD change.
+- **Resume at:** Do not repeat 66 Font loaded cases or earlier Sound Music TextBuffer native proof. Continue remaining 4 blocked T99 methods UObject, UClass, USkeletalMesh, UAnimation; focus one genuinely missing compiled native or malformed serializer path at a time. PRD untouched.
+- **Active changed at:** 2026-10-25T19:37:17+00:00
+- **Latest DEV test states:** PASS 145; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-25T19:32:51.3018217Z | verify-ue1-o06-g5-t99-font-independent-full.php | PASS | 321 | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
+| 2026-10-25T19:32:50.5588217Z | verify-ue1-o06-g5-t99-font-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
 | 2026-10-25T16:37:29.4722968Z | verify-ue1-o06-g5-t99-textbuffer-independent-full.php | PASS | 307 | catalog\compliance\evidence\o06\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt |
 | 2026-10-25T16:37:28.7562960Z | verify-ue1-o06-g5-t99-textbuffer-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt |
 | 2026-10-25T12:57:05.6259523Z | verify-ue1-o06-g5-t99-audio-independent-full-method-review.php | PASS | 151 | catalog\compliance\evidence\o06\20261025T125705062Z-d637d841-DEV-verify-ue1-o06-g5-t99-audio-independent-full-method-review.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-25T10:28:16.3994224Z | verify-ue1-o06-g5-native-audio-source-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261025T102816392Z-9fc33d4a-DEV-verify-ue1-o06-g5-native-audio-source-array-decision.php.txt |
 | 2026-10-25T09:34:37.1726627Z | verify-ue1-o06-c227-archetype-native-operator-guard.php | PASS | 104 | catalog\compliance\evidence\o06\20261025T093436644Z-43a655ff-DEV-verify-ue1-o06-c227-archetype-native-operator-guard.php.txt |
 | 2026-10-25T09:34:36.6526595Z | verify-ue1-o06-c227-archetype-native-operator-guard.php | STARTED |  | catalog\compliance\evidence\o06\20261025T093436644Z-43a655ff-DEV-verify-ue1-o06-c227-archetype-native-operator-guard.php.txt |
-| 2026-10-24T23:44:45.2730452Z | verify-ue1-o06-g5-camera-source-reachability-decision.php | PASS | 575 | catalog\compliance\evidence\o06\20261024T234444289Z-915a2fc3-DEV-verify-ue1-o06-g5-camera-source-reachability-decision.php.txt |
-| 2026-10-24T23:44:44.2960430Z | verify-ue1-o06-g5-camera-source-reachability-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T234444289Z-915a2fc3-DEV-verify-ue1-o06-g5-camera-source-reachability-decision.php.txt |
 
 ## Recovery procedure
 

@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "checks": 185,
+    "passed": 185,
+    "failed": [],
+    "method": "T99:UFont::Serialize",
+    "source_profile": "UT99-v432",
+    "verified_native_4_existing_plus_62_new_Font_objects": 66,
+    "new_complete_compiled_glyph_bytes": 1200128,
+    "new_complete_compiled_map_bytes": 185736,
+    "new_complete_compiled_map_pairs": 46434,
+    "original_inherited_UObject_no_stack_no_tags": 66,
+    "original_native_failure_cursor": "Got 4116, Expected 4112",
+    "seven_gates": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
+    },
+    "review": "FULL_SOURCE_PROFILE_ONLY",
+    "general_T99_UObject": "BLOCKED_INDEPENDENTLY",
+    "repeated_prior_font_native_CDB_runs": 0
+}

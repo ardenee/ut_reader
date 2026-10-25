@@ -288,6 +288,66 @@ for name in reg["methods"]:
         old["closure_artifact"]=str(artifact.relative_to(ROOT)).replace("\\","/")
         old["closure_sha256"]=sha(artifact)
         old["inherited_T99_TextBuffer_source_specific_branch_complete"]=True
+    if name=="T99:UFont::Serialize":
+        # Independent UT99 v432 UFont full *read method*, not an
+        # inferred closure from other UObject engines/profiles.
+        # Actual compiled v432 Engine source loader field values:
+        # 4 genuine Engine.u full glyph arrays and 62 genuine
+        # UWindowFonts complete glyphs+TMap pairs+page texture refs.
+        # 66 no-stack/no-tag UObject Super envelopes verified on disk.
+        test="verify-ue1-o06-g5-t99-font-independent-full.php"
+        ev=next((r for r in reversed(events)
+            if r.get("test")==test and r.get("state")=="PASS"),None)
+        assert ev is not None
+        logfile=ROOT/ev["log"].replace("\\","/")
+        assert sha(logfile)==ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/test)==ev["test_sha256"]
+        assert ev["source_sha256"]==reconciliation["current_source_sha256"]
+        summary=read(logfile)
+        assert summary["ok"] and summary["checks"]==185
+        assert summary["passed"]==185 and summary["review"]=="FULL_SOURCE_PROFILE_ONLY"
+        assert summary["source_profile"]=="UT99-v432"
+        assert summary["verified_native_4_existing_plus_62_new_Font_objects"]==66
+        assert summary["new_complete_compiled_glyph_bytes"]==1200128
+        assert summary["new_complete_compiled_map_bytes"]==185736
+        assert summary["new_complete_compiled_map_pairs"]==46434
+        assert summary["original_inherited_UObject_no_stack_no_tags"]==66
+        assert summary["original_native_failure_cursor"]=="Got 4116, Expected 4112"
+        assert summary["repeated_prior_font_native_CDB_runs"]==0
+        assert summary["general_T99_UObject"]=="BLOCKED_INDEPENDENTLY"
+        assert set(summary["seven_gates"])==set(criteria)
+        assert all(v=="VERIFIED" for v in summary["seven_gates"].values())
+        manifest=C/"UE1-O06-G5-T99-FONT-COMPILED-ALL-VALUES-REVIEW.json"
+        artifact=C/"UE1-O06-G5-UFONT-SOURCE-PROFILE-FULL-ACCEPTANCE.json"
+        assert manifest.is_file() and artifact.is_file()
+        closure=read(artifact)
+        assert closure["decision"]=="FULL" and closure["method"]==name
+        assert closure["scope"]=="UT99_v432_T99_source_profile_package_reader_loading_only"
+        assert closure["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert closure["independent_final_acceptance_script_sha256"]==ev["test_sha256"]
+        assert closure["independent_final_acceptance_log_sha256"]==ev["output_sha256"]
+        assert closure["review_source_manifest_sha256"]==sha(manifest)
+        assert closure["seven_verified_criteria"]==summary["seven_gates"]
+        assert closure["compiled_original_native_new_invocations"]==2
+        assert closure["prior_native_CDB_replays"]==0
+        assert closure["general_T99_UObject_method_decision"]=="BLOCKED_SEPARATELY"
+        assert entry["current"] and entry["pinned"]
+        gates.update(summary["seven_gates"])
+        entry["result"]="FULL"
+        entry["reason"]=("Source-profile FULL T99-v432 UFont file-reading: "
+            "66 genuine inherited no-stack no-tag envelopes, "
+            "62 complete native UWindowFonts glyph+map+texture values "
+            "plus 4 original native Engine fonts, real malformed "
+            "CharRemap cursor parity, and independent 185/185 "
+            "7-of-7 original compiled engine acceptance.")
+        entry["blocker"]=None
+        entry["next"]="T99 v432 Font complete; do not repeat original 66 fonts. Generic UObject and other source profiles remain separate."
+        old["closure_artifact"]=str(artifact.relative_to(ROOT)).replace("\\","/")
+        old["closure_sha256"]=sha(artifact)
+        old["full_native_font_objects_compared"]=66
+        old["full_native_font_glyph_bytes_compared"]=1200128
+        old["full_native_font_remap_pairs_compared"]=46434
+        old["method_scoped_inherited_super_closed"]=True
     if name=="T99:UObject::Serialize":
         events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
         method_test="verify-ue1-o06-g5-uobject-consolidated-acceptance.php"
@@ -753,7 +813,7 @@ for name in reg["methods"]:
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
       "new_native_tests_executed":(9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -763,7 +823,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":22,"new_test_runs":20,
+ "new_oracle_runs":24,"new_test_runs":21,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

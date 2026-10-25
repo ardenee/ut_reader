@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "method": "T99:UFont::Serialize",
+  "scope": "UT99_v432_T99_source_profile_package_reader_loading_only",
+  "decision": "FULL",
+  "limitations": "Only UT99 v432 actual file-reading operator, no assertion of C98 v1200 or C227 v227, native save mode, or unrelated generic UObject::Serialize source-profile full.",
+  "seven_verified_criteria": {
+    "pinned_source_and_dispatch": "VERIFIED",
+    "complete_native_field_values_and_references": "VERIFIED",
+    "archive_bytes_and_consumption": "VERIFIED",
+    "malformed_input_error_semantics": "VERIFIED",
+    "inherited_and_version_variant_semantics": "VERIFIED",
+    "current_acceptance_tests": "VERIFIED",
+    "independent_full_method_review": "VERIFIED"
+  },
+  "compiled_native_positive": {
+    "original_engine_Fonts_4_glyphs": 4,
+    "original_UWindowFonts_62_full_glyph_maps_refs": 62,
+    "full_original_glyph_bytes": 1200128,
+    "original_remap_pairs": 46434,
+    "original_remap_data_bytes": 185736,
+    "actual_source_inherited_none_envelopes": 66
+  },
+  "compiled_native_malformed": "Font Engine.SmallFont Serial size mismatch Got4116 Expected4112; source safely emits exact attempted cursor",
+  "current_production_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+  "independent_final_acceptance_script": "catalog/bin/verify-ue1-o06-g5-t99-font-independent-full.php",
+  "independent_final_acceptance_script_sha256": "6535ebfb69370b27332273e705b99d623c1601446cdd506aff18ed4c54a0b91d",
+  "independent_final_acceptance_log": "catalog\\compliance\\evidence\\o06\\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt",
+  "independent_final_acceptance_log_sha256": "33edd165a0ce5b572d673c59b7e14eabe25b1f92d9b912dff72bfb27da04eb17",
+  "review_source_manifest": "catalog/compliance/UE1-O06-G5-T99-FONT-COMPILED-ALL-VALUES-REVIEW.json",
+  "review_source_manifest_sha256": "ac0cffeb8392b8e756b2b48af4538e72ff32b7657d77f7f5dcbe3eac6a3e7379",
+  "compiled_original_native_new_invocations": 2,
+  "prior_native_CDB_replays": 0,
+  "general_T99_UObject_method_decision": "BLOCKED_SEPARATELY"
+}

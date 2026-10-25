@@ -1,0 +1,154 @@
+{
+  "schema": 1,
+  "method": "T99:UFont::Serialize",
+  "source_profile": "UT99 v432 only; original UE1 package read, not C98 or C227",
+  "originals_compiled_current_native_complete": 66,
+  "inherited_real_UObject_no_stateframe_no_tags": 66,
+  "inherited_complete_two_byte_compact_None_Engine_u": "5034",
+  "inherited_complete_two_byte_compact_None_UWindowFonts": "7201",
+  "old_original_Engine_fonts_full_glyphs": 4,
+  "new_original_UWindowFonts_full_glyphs_and_map": 62,
+  "new_actual_compiled_original_loaded_bytes": {
+    "remap_pairs": 46434,
+    "remap_bytes": 185736,
+    "glyph_bytes": 1200128,
+    "full_native_font_objects": 62
+  },
+  "native_page_texture_full_class_qualified_identities": 62,
+  "previous_compiled_4_full_glyph_arrays": true,
+  "previous_compiled_genuine_nonempty_map_counts_across_62": 46434,
+  "native_malformed_Font_current_error": "Font: Serial size mismatch: Got 4116, Expected 4112",
+  "old_native_CDB_glyph_or_maps_replayed": false,
+  "compiled_native_new_invocations": 2,
+  "source_defined_version_gate": "v69: modern v432 font pages, TMap CharRemap and IsRemapped; original v400 method confirms Super, Pages, CharactersPerPage order; actual compiled v432 CDB confirms 0x846D0 native remap branch",
+  "original_compiled_core_and_Epic_sources_sha": {
+    "original_v400_Engine_UnFont_legacy_method": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Src\\UnFont.cpp",
+      "sha256": "259908fb9276f7c003d5ab2bacc6375bb142db931f512b70546ec7d5885790f5"
+    },
+    "original_v400_Core_UObject_method": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnObj.cpp",
+      "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+    },
+    "original_v432_Engine_UnTex_UFont_members": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Engine\\Inc\\UnTex.h",
+      "sha256": "7da1e241262702380fa2ae9bd02cf3aaba3b8898a723e8373973c30f7d82252b"
+    },
+    "compiled_genuine_v432_Core_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "compiled_genuine_v432_Engine_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+    }
+  },
+  "positive_and_malformed_proof_sha": {
+    "compiled_original_native_Cplusplus_full_62_font_oracle": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-Native-Loaded-Values.cpp",
+      "sha256": "8a0ade601682cfddfbedcaf1408420a69198df13774563d2c0ce3cbcc03352a7"
+    },
+    "compiled_original_native_x86_full_62_font_executable": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-Native-Loaded-Values.exe",
+      "sha256": "b3cc640b3a5c9bf0e7388d2acdd25880105a1d6a43f7ace762ad12c4d8307462"
+    },
+    "native_29_fonts_loaded_full_arrays": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-29-Native-Loaded.txt",
+      "sha256": "78030eb3f2b72ea2e3d6266467194e4abd0cdb2f6a8c01fa4da751c303de69ac"
+    },
+    "native_33_fonts_loaded_full_arrays": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-33-Native-Loaded.txt",
+      "sha256": "5c92799082ffe135953b2098e3c9b4b6312b50eb468ace1218a6f45dbe0a519d"
+    },
+    "original_29_font_list": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-29-Names.txt",
+      "sha256": "3199497754b110d42bd489fc0802dacdd88b1189bc54adec19dcb14e43aebdb6"
+    },
+    "original_33_font_list": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-33-Names.txt",
+      "sha256": "8f892434e5c1a42c33fff9fa80cc9a9a86b0fd541c1e471e08a07e331e015b21"
+    },
+    "original_PHP_native_expected_62": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-Native-Expected-Archive.json",
+      "sha256": "999532f8a2f1b56e84dcdc00927d67b575efd5f76a86aeef8d3b9d83135e7286"
+    },
+    "original_PHP_66_inherited_envelopes": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-Genuine-Inherited-Envelopes.json",
+      "sha256": "e7d9089b827d9c6718425af9885d95863f82bdb56e073b7518d193de2d92133d"
+    },
+    "native_62_full_actual_value_parity": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Font-62-Full-Compiled-Memory-vs-Archive-Parity.json",
+      "sha256": "6fd1c3295fe58ce6d781228a8befbbe2ae1f41f7712faffe8654a47907d44de4"
+    },
+    "DEV_only_62_independent_comparator": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-font-62-compiled-byte-parity.py",
+      "sha256": "3dd0649e0e2a52f0d5b9fdc2d542df6c8acd7d57347266e7fef58f50877877a5"
+    },
+    "DEV_only_PHP_expected_source": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-font-all-native-expected-archive.php",
+      "sha256": "da67afb57fd49e5f16ff61e1e86607029d69cfacb34514398efd3bf713c2aef9"
+    },
+    "prior_4_fonts_loaded_full_glyph": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-FONT-NATIVE-LOADED.json",
+      "sha256": "b0a92c4678cf7fa841f9193d2d4ddcd8568f12e0892da5f6294450d57f3fe3d2"
+    },
+    "prior_62_fonts_loaded_nonempty_maps": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-PRD-NATIVE-NONEMPTY-FONTS.json",
+      "sha256": "fbd8713a2bbfaeacba184348ad67b0207648d4e33721dcafb4d4823a78169f31"
+    },
+    "prior_compiled_valid_and_malformed": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-FONT-NONEMPTY-AND-MALFORMED.json",
+      "sha256": "a4a31cfe775fedf0e8e96e2f818f439ad9085543bb27f47776516415aff4aea1"
+    },
+    "prior_compiled_23_acceptance_source": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\bin\\verify-ue1-o06-g5-font-consolidated-acceptance.php",
+      "sha256": "1a3784134ad3fe2b6395afe1c64f14681d2d6c9e42d4e1d8b47ba6b6c6104049"
+    },
+    "production_UE1_native_reader": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\src\\Infrastructure\\Readers\\CatalogUE1ClassicNativeObjectReader.php",
+      "sha256": "dacc000ce7a2bbf2f1df725de49289398d3ef1b3a842eff7c188060a4797724a"
+    },
+    "production_UT99_v432_Font_delta": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\src\\Infrastructure\\Readers\\CatalogUE1ClassicV432NativeDeltaReader.php",
+      "sha256": "0407964cacf9107ca973f5bb429186a0ec84ca9ee3b6ce21201faa6e49dead38"
+    }
+  },
+  "actual_compiled_native_load_logs_sha": {
+    "G5Font255": {
+      "native_log": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-29-Native-Loaded.txt",
+      "native_log_sha256": "78030eb3f2b72ea2e3d6266467194e4abd0cdb2f6a8c01fa4da751c303de69ac",
+      "original_archive": "C:/Temp/UnrealDB/O06/G5-real-UWindowFonts-255.utx",
+      "original_sha256": "2e0490a7d7b20b6fc577b08d2f85c313b5cf1dd8381ff1c98d382da0ed8309f6",
+      "full_native_objects": 29
+    },
+    "UWindowFonts": {
+      "native_log": "C:\\Temp\\UnrealDB\\O06\\G5-Font-All-33-Native-Loaded.txt",
+      "native_log_sha256": "5c92799082ffe135953b2098e3c9b4b6312b50eb468ace1218a6f45dbe0a519d",
+      "original_archive": "C:/Temp/UnrealDB/O06/Native-UCC/Textures/UWindowFonts.utx",
+      "original_sha256": "67187424ee70b54f07c6a49cabc6738e41ff5cdf26f29d591df5de230280a9c7",
+      "full_native_objects": 33
+    }
+  },
+  "original_packages_sha": {
+    "Engine.u-d6d016aa": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "version": 69,
+      "fonts": 4
+    },
+    "G5-real-UWindowFonts-255.utx-2e0490a7": {
+      "path": "C:/Temp/UnrealDB/O06/G5-real-UWindowFonts-255.utx",
+      "sha256": "2e0490a7d7b20b6fc577b08d2f85c313b5cf1dd8381ff1c98d382da0ed8309f6",
+      "version": 69,
+      "fonts": 29
+    },
+    "UWindowFonts.utx-67187424": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Textures/UWindowFonts.utx",
+      "sha256": "67187424ee70b54f07c6a49cabc6738e41ff5cdf26f29d591df5de230280a9c7",
+      "version": 69,
+      "fonts": 33
+    }
+  },
+  "method_scope_limit": "Only UT99 v432 archive-load operator for observed genuine v69 sources, original source-defined branches and native error semantics; not other UE1 families or generic UObject FULL",
+  "independent_method_final": "PENDING_SEPARATE_FOCUS_ACCEPTANCE"
+}

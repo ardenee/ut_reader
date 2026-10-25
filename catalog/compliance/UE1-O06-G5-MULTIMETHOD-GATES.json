@@ -127,21 +127,25 @@
     "T99:UFont::Serialize": {
       "criteria": {
         "pinned_source_and_dispatch": "VERIFIED",
-        "complete_native_field_values_and_references": "OPEN",
+        "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
-        "independent_full_method_review": "OPEN"
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
       },
-      "closure_artifact": null,
-      "closure_sha256": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UFONT-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "2999984a2e430c07c646078d57581254dc75ebb88c39552f2dd4b29e43d7f8c5",
       "blocker_summary": "Genuine glyphs and nonempty remaps partially verified; malformed and other specimens remain.",
-      "decision": "BLOCKED",
-      "decisive_blocker": "inherited_UObject_full_method_and_other_variant_errors",
-      "next_action": "Complete T99:UObject::Serialize full method acceptance, then independently review Font inherited and remaining version/error paths once; do not repeat fonts positive array tests.",
-      "reason": "Original compiled v432 malformed CharRemap attempted Got4116 / Expected4112 and now PHP models identical logical byte count/error safely; ONE consolidated verdict PASS 23/23 using previous real native glyph/remap proofs. Shared inherited UObject and other malformed/source branches still open.",
-      "last_consolidated_review": "current_single_full_method_verdict_23_checks"
+      "decision": "FULL",
+      "decisive_blocker": null,
+      "next_action": "T99 v432 Font complete; do not repeat original 66 fonts. Generic UObject and other source profiles remain separate.",
+      "reason": "Source-profile FULL T99-v432 UFont file-reading: 66 genuine inherited no-stack no-tag envelopes, 62 complete native UWindowFonts glyph+map+texture values plus 4 original native Engine fonts, real malformed CharRemap cursor parity, and independent 185/185 7-of-7 original compiled engine acceptance.",
+      "last_consolidated_review": "current_single_full_method_verdict_23_checks",
+      "full_native_font_objects_compared": 66,
+      "full_native_font_glyph_bytes_compared": 1200128,
+      "full_native_font_remap_pairs_compared": 46434,
+      "method_scoped_inherited_super_closed": true
     },
     "T99:USkeletalMesh::Serialize": {
       "criteria": {

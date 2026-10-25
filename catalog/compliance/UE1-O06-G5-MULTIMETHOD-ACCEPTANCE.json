@@ -6,9 +6,9 @@
   "scanner_sha256": "b63f8a998f37841e79794d6bf66a49f89776236fea3f6f24a00a4342f7c50f19",
   "packages_scanned": 7,
   "packages_expected": 7,
-  "distinct_fully_accepted_methods": 3,
+  "distinct_fully_accepted_methods": 4,
   "target_method_count": 8,
-  "target_method_acceptance_completed": 3,
+  "target_method_acceptance_completed": 4,
   "total_examined_export_rows": 5469,
   "ignored_nonserialized_NAME_None_export_rows": 43,
   "total_production_export_ranges_inspected": 115,
@@ -461,20 +461,20 @@
     },
     {
       "id": "T99:UFont::Serialize",
-      "full_G5_method_acceptance": "BLOCKED",
+      "full_G5_method_acceptance": "FULL",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "VERIFIED",
-        "complete_native_field_values_and_references": "OPEN",
+        "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
-        "independent_full_method_review": "OPEN"
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
       },
-      "acceptance_criteria_met": 2,
+      "acceptance_criteria_met": 7,
       "acceptance_criteria_total": 7,
-      "closure_artifact_verified": false,
+      "closure_artifact_verified": true,
       "compiled_same_real_load_dispatch_calls": 4,
       "source_RF_HasStack_positive_frame_exports": 0,
       "source_RF_HasStack_decoded_frames": 0,
@@ -514,7 +514,7 @@
         "controlled_malformed_CharRemap_native_consumes_4_bytes_past_serial_extent_PHP_rejects_early",
         "remaining_font_glyph_arrays_and_texture_links_not_all_native_verified"
       ],
-      "next_closure_work": "Complete T99:UObject::Serialize full method acceptance, then independently review Font inherited and remaining version/error paths once; do not repeat fonts positive array tests.",
+      "next_closure_work": "T99 v432 Font complete; do not repeat original 66 fonts. Generic UObject and other source profiles remain separate.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -524,9 +524,9 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_full_method_and_other_variant_errors",
-      "closure_artifact": null,
-      "closure_sha256": null
+      "decisive_closure_blocker": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UFONT-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "2999984a2e430c07c646078d57581254dc75ebb88c39552f2dd4b29e43d7f8c5"
     },
     {
       "id": "T99:USkeletalMesh::Serialize",
@@ -824,5 +824,5 @@
   ],
   "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",
   "failed_method_decisions": 0,
-  "blocked_method_decisions": 5
+  "blocked_method_decisions": 4
 }
