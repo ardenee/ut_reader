@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uobject-original-v61-802-compiled-saved-values`
-- **Stage:** original-PRD-v61-compiled-308-loaded-objects-802-of802-printable-values-exact-124-source-excluded-30PASS-no-native-replays
-- **Last completed action:** Genuine original PRD Unreal Gold v61 original native loaded 308 of 312 objects from existing original UT99 v432 compiled Core.dll, four Camera source-defined native linker omissions. Previously native UObject::ExportProperties 8515 text lines never checked: current original source-decoded all 926 saved object tags across 308 loaded real exports, independent compiled text compare exactly 802 typed property values (Name FName, Object full class-qualified path, PointRegion full Zone/leaf/zone-number, Vector Float FScale Rotator String Byte enum Int Bool) to six-decimal native text with 1e-6 float tolerance, zero mismatches. Remaining 124 archived Actor.XLevel transient pointers are legitimately excluded from native ExportProperties text per v400 Actor.uc var transient const, Core/UnProp.cpp UProperty::Port checks Category==None CPF_Transient, UnObj.cpp ExportProperties calls Port; NOT called direct pointer-loaded parity. Current v61 original 926/926 accounted zero other omissions. Source original/native-log SHA and Python comparator hash pinned UE1-O06-G5-UOBJECT-PRD-V61-COMPILED-SAVED-VALUES-802.json. Single strengthened DEV acceptance PASS30/30 journal 20261025T115635564Z-7540c810, no new native engine runs nor any production reader modification. Prior Sound/Music loaded-malformed 5/7 gate closure unchanged, all previous sources remain valid. T99 UObject 0FULL 0FAILED 8BLOCKED, no PRD changes.
-- **Resume at:** Do NOT rerun original v61 308 native objects nor 926 saved tags or prior 113 original Entry values, 43 frame, 11 Sound/Music objects and five audio negatives. Remaining T99 UObject true seven gate blockers are independent source version dispatch/old UObject variants, 124 source-text-excluded XLevel actual native pointer values (not assumed zero), distinct untested nested postload values/errors, and missing v227 positive archetype native operator for C227. Prioritize executable evidence on genuinely unsupported path only; exact Epic source remains authoritative. PRD untouched until all dependent methods acceptance.
-- **Active changed at:** 2026-10-25T11:58:45+00:00
-- **Latest DEV test states:** PASS 141; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-uobject-v61-direct-XLevel-pointer`
+- **Stage:** original-v61-all-926-compiled-loaded-property-values-CLOSED-124-direct-native-XLevel-PASS25
+- **Last completed action:** Exactly one new native original UT99 v432 Core+Engine x86 DEV oracle directly examined 124 transient Actor.XLevel pointers not exported as text by UProperty::Port. All 124 compiled pointers nonnull, each Level G5PRDCameraSimpleV61.MyLevel; actual PHP original serialized ObjectProperty index2 resolves same class-qualified native Level object for all 124, zero mismatches. Previous 802 compiled text matches + 124 native direct pointer matches = entire original PRD Gold v61 map 926/926 genuine saved tags positively compared; archived map SHA and native DLLs/executable/logs and independent checker all pinned in UE1-O06-G5-UOBJECT-V61-XLEVEL-124-COMPILED-POINTERS.json. Focus scoped contract PASS25/25; no production PHP reader changes or PRD changes. Earlier 308 object full text tests reused without native rerun. T99 UObject full global still blocked due C98 early source branches, v227 unavailable native, and remaining variants/independent review. In source original v1200 System and v227 source tree, no corresponding Core DLL/UCC/Unreal compiled native runtime found. G5 0FULL 0FAILED 8BLOCKED.
+- **Resume at:** Do not repeat genuine original v61 802 text or 124 native pointer proof or the 11 native audio buffers; v61 original saved property parity is COMPLETE. Find distinct genuine original early C98 old-version unresolved behavior or real matching licensed v227 native archive operator instead. Do not transfer modern v432 behavior to missing native variants. Continue one conclusive method decision at a time; PRD untouched.
+- **Active changed at:** 2026-10-25T12:44:56+00:00
+- **Latest DEV test states:** PASS 142; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-25T12:37:43.6373562Z | verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php | PASS | 99 | catalog\compliance\evidence\o06\20261025T123743131Z-8e6a2aef-DEV-verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php.txt |
+| 2026-10-25T12:37:43.1393531Z | verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php | STARTED |  | catalog\compliance\evidence\o06\20261025T123743131Z-8e6a2aef-DEV-verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php.txt |
 | 2026-10-25T11:56:36.0702773Z | verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php | PASS | 93 | catalog\compliance\evidence\o06\20261025T115635564Z-7540c810-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt |
 | 2026-10-25T11:56:35.5712819Z | verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php | STARTED |  | catalog\compliance\evidence\o06\20261025T115635564Z-7540c810-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt |
 | 2026-10-25T11:50:31.8965369Z | verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php | PASS | 95 | catalog\compliance\evidence\o06\20261025T115031386Z-7b05606e-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-24T23:44:13.2337707Z | verify-ue1-o06-g5-camera-source-reachability-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T234413226Z-45fe741b-DEV-verify-ue1-o06-g5-camera-source-reachability-decision.php.txt |
 | 2026-10-24T23:35:20.3961062Z | verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php | PASS | 159 | catalog\compliance\evidence\o06\20261024T233519831Z-c1dde1d0-DEV-verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php.txt |
 | 2026-10-24T23:35:19.8380953Z | verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T233519831Z-c1dde1d0-DEV-verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php.txt |
-| 2026-10-24T23:16:58.7057759Z | verify-ue1-o06-c227-genuine-script-source-decision.php | PASS | 222 | catalog\compliance\evidence\o06\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt |
-| 2026-10-24T23:16:58.0748088Z | verify-ue1-o06-c227-genuine-script-source-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261024T231658066Z-2607bcfb-DEV-verify-ue1-o06-c227-genuine-script-source-decision.php.txt |
 
 ## Recovery procedure
 

@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "decision": "Closed actual native 124 Actor.XLevel transient pointer values, previously omitted from compiled ExportProperties by UProperty::Port",
+  "source": "Original v432 compiled Engine + v400 Epic Actor.uc / UnProp.cpp",
+  "epic_source_sha": {
+    "original_v400_Actor_declares_XLevel_transient": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Actor.uc",
+      "sha256": "b736bb6c51b6dc5c439a3c340111449da88c981e8623619dda3b29e382d28c68"
+    },
+    "original_v400_UProperty_Port_excludes_transient": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+    },
+    "exact_v432_Engine_header": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Engine\\Inc\\Engine.h",
+      "sha256": "3765dc6693203279af4db1cb95cd593b79b202f4bd1e567b67379a0b20270bb2"
+    },
+    "compiled_v432_Core_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "compiled_v432_Engine_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+    }
+  },
+  "original_and_native_evidence_sha": {
+    "DEV_original_Gold_v61_archive": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v61\\fd0609f727411e4f073fc1e60cc91f49.unr",
+      "sha256": "399057393bb891e832013bda353c686bcc86facc43a5f674db13bb7daaf510a6"
+    },
+    "DEV_canonical_native_staged_map": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5PRDCameraSimpleV61.unr",
+      "sha256": "399057393bb891e832013bda353c686bcc86facc43a5f674db13bb7daaf510a6"
+    },
+    "compiled_native_Cplusplus_source": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-XLevel-Direct-Pointer.cpp",
+      "sha256": "0eee6bc92cdb3660a9294a8cf8fabf34734c54a85e96bb776f595c175bbd468d"
+    },
+    "compiled_native_x86_executable": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-XLevel-Direct-Pointer.exe",
+      "sha256": "10123e753f4fde7782c8eefcbb5d45f04b8e886e95dd5f486b1c6e94599e31f1"
+    },
+    "compiled_native_original_stdout": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-XLevel-Direct-Pointer-Original-v61-native.log",
+      "sha256": "6191315a4f1ceeee469125574ac8a9951d061b0aed99977aa7ae9da4c0a3afac"
+    },
+    "current_PHP_original_tag_manifest": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-v61-308-Saved-Tags-For-Native-Value-Comparison.json",
+      "sha256": "7b873c06a6fb3dbd7a3b98276e13810676fc04f3c5edcd3f86889fdc66a54ec8"
+    },
+    "full_124_archived_vs_native_pointer_matches": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-v61-XLevel-124-Native-Pointer-Matches.json",
+      "sha256": "56e7e6e401e1f3ee5960f6d10501dc4117fcf43945070f4a69b36ec103e03fdb"
+    },
+    "independent_DEV_native_pointer_checker": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-uobject-124-xlevel-native-memory-parity.py",
+      "sha256": "b962779a434757c3437ae68269047532b6be3da9cf7b561e6335695feda80d96"
+    }
+  },
+  "genuine_archive_saved_v61_tagged_fields": 926,
+  "earlier_compiled_text_typed_matches": 802,
+  "new_compiled_direct_pointer_matches": 124,
+  "all_926_saved_original_tag_values_with_compiled_comparison": 926,
+  "mismatches": 0,
+  "new_compiled_binary_invocations": 1,
+  "native_scope_limit": "This closes genuine v61 original Actor.XLevel direct loaded pointers in actual compiled v432 engine only. No v1200 or v227 binary/provenance, not all UObject versions, no full global method closure.",
+  "method_full_status": "BLOCKED"
+}

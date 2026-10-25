@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-25T11:56:36.0892858Z",
-    "head_commit":  "24fdf6d3",
+    "updated_at_utc":  "2026-10-25T12:37:43.6573564Z",
+    "head_commit":  "7325875e",
     "current_target":  "DEV",
     "current_source_sha256":  "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
     "tests":  [
@@ -915,6 +915,18 @@
                       "run_id":  "20261024T224950639Z-e10583ee",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T224950639Z-e10583ee-DEV-verify-ue1-o06-g5-uobject-v227-source-flag-decision.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php",
+                      "test":  "verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-25T12:37:43.6373562Z",
+                      "source_sha256":  "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+                      "test_sha256":  "c565b9eb2da90a35c6b17250c315c7a778de7f99345aba719d05aa0c8e457610",
+                      "run_id":  "20261025T123743131Z-8e6a2aef",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T123743131Z-8e6a2aef-DEV-verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-v432-uclass-real-export-coverage.php",

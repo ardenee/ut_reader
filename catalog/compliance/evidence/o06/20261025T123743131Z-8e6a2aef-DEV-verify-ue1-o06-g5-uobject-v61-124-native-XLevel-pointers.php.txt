@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 25,
+    "passed": 25,
+    "failed": [],
+    "native_compiled_actor_XLevel_pointers": 124,
+    "full_class_qualified_export_references_matched": 124,
+    "native_positive_mismatches": 0,
+    "genuine_v61_total_saved_values_compared": 926,
+    "native_compiled_invocations": 1,
+    "global_T99_UObject_status": "BLOCKED_OTHER_VERSION_AND_METHOD_GATES"
+}

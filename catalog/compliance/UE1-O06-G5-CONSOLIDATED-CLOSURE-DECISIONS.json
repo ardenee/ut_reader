@@ -6,8 +6,8 @@
   "fully_epic_verified": 0,
   "failed": 0,
   "blocked": 8,
-  "new_oracle_runs": 21,
-  "new_test_runs": 17,
+  "new_oracle_runs": 22,
+  "new_test_runs": 18,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -24,7 +24,7 @@
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
       "decisive_blocker": "legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
-      "reason": "Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags are now accounted for: 802 exact typed native loaded-value comparisons and 124 intentionally unexported transient XLevel fields, with zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
+      "reason": "Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
       "next_action": "Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, but Camera loader exclusions are source-proven and CLOSED. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
       "uobject_original_v61_saved_tag_fields": {
         "actual_runtime_text_value_matches": 802,
@@ -34,7 +34,7 @@
       },
       "camera_native_loader_criterion": "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION",
       "new_native_tests_executed": 0,
-      "new_test_runs_executed": 14
+      "new_test_runs_executed": 15
     },
     "T99:UClass::Serialize": {
       "decision": "BLOCKED",

@@ -32,7 +32,7 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags are now accounted for: 802 exact typed native loaded-value comparisons and 124 intentionally unexported transient XLevel fields, with zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
+  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
   "next":"Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, but Camera loader exclusions are source-proven and CLOSED. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
   "blocker":"legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
  },
@@ -527,6 +527,30 @@ for name in reg["methods"]:
         old["compiled_genuine_original_v61_source_defined_transient_XLevel_export_text_exclusions"]=124
         old["compiled_genuine_original_v61_saved_tag_value_mismatches"]=0
         old["compiled_genuine_original_v61_all_saved_tags_accounted"]=926
+        # The 124 XLevel tags excluded by UObject::ExportProperties
+        # are actual native non-null Actor.XLevel pointers, NOT merely
+        # an inferred text exclusion: check the true compiled v432
+        # AActor member and compare entire object paths vs export IDs.
+        xlevel_test="verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php"
+        xlevel_ev=next((item for item in reversed(events)
+            if item.get("test")==xlevel_test and item.get("state")=="PASS"),None)
+        assert xlevel_ev is not None
+        xlevel_log=ROOT/xlevel_ev["log"].replace("\\","/")
+        assert sha(xlevel_log)==xlevel_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/xlevel_test)==xlevel_ev["test_sha256"]
+        assert xlevel_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        xlevel_values=read(xlevel_log)
+        assert xlevel_values["ok"] and xlevel_values["checks"]==25
+        assert xlevel_values["passed"]==25
+        assert xlevel_values["native_compiled_actor_XLevel_pointers"]==124
+        assert xlevel_values["full_class_qualified_export_references_matched"]==124
+        assert xlevel_values["native_positive_mismatches"]==0
+        assert xlevel_values["genuine_v61_total_saved_values_compared"]==926
+        assert xlevel_values["native_compiled_invocations"]==1
+        assert xlevel_values["global_T99_UObject_status"]=="BLOCKED_OTHER_VERSION_AND_METHOD_GATES"
+        old["compiled_genuine_original_v61_direct_native_XLevel_pointer_values_verified"]=124
+        old["compiled_genuine_original_v61_total_native_saved_values_verified"]=926
+        old["compiled_genuine_original_v61_all_saved_values_complete"]=True
         # This closes only the v61 ORIGINAL, not every other class/
         # version/error path of UObject::Serialize.
         # These 113 values are a fully validated genuine v68 package slice,
@@ -611,7 +635,7 @@ for name in reg["methods"]:
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
       "new_native_tests_executed":(9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-      "new_test_runs_executed":14 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize","T99:USound::Serialize","T99:UMusic::Serialize") else 0,
+      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize","T99:USound::Serialize","T99:UMusic::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -620,7 +644,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":21,"new_test_runs":17,
+ "new_oracle_runs":22,"new_test_runs":18,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
