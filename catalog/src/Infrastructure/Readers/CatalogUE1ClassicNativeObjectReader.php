@@ -405,7 +405,16 @@ final class CatalogUE1ClassicNativeObjectReader
                 // Both preserve bytes for O07 interpretation.
                 $nameIndex=$compact();$names=$pkg->getNames();
                 if($nameIndex<0||!isset($names[$nameIndex])){throw new RuntimeException('Audio FileType FName out of range');}
-                $seekEnd=$ver>61?$int():null;
+                // The lazy SeekPos is an archive operation of the
+                // DATA TYPE, not a generic package-version field.
+                // Epic v1.200 Engine/Inc/UnAudio.h: USound and UMusic
+                // both own ordinary TArray<BYTE> for every Ver().
+                // UT99 v400 and Unreal v227 Engine/Inc/UnAudio.h:
+                // FSoundData : TLazyArray<BYTE> and UMusic Data is a
+                // TLazyArray<BYTE>; its Core/Inc/UnTemplate.h stores
+                // the absolute SeekPos only for Ver()>61.
+                $lazyAudio=$family!==CatalogUE1ClassicSourceFamily::EPIC_UE1;
+                $seekEnd=$lazyAudio&&$ver>61?$int():null;
                 $dataSize=$compact();
                 if($dataSize<0||$dataSize>$limit-$pos){throw new RuntimeException('Audio byte array exceeds export bounds');}
                 $dataStart=$pos;$audioHash=hash_init('sha256');
@@ -426,6 +435,8 @@ final class CatalogUE1ClassicNativeObjectReader
                     'audio_data_sha256'=>hash_final($audioHash),
                     'audio_data_preview_hex'=>strtoupper(bin2hex($audioPreview)),
                     'selected_source_family'=>$family,
+                    'source_audio_array_type'=>$lazyAudio?'TLazyArray<BYTE>':'TArray<BYTE>',
+                    'source_lazy_seek_header_present'=>$seekEnd!==null,
                     'lazy_seek_pos'=>$seekEnd,'extension_bytes'=>$limit-$pos,
                     'audio_data_decoded'=>true,'audio_data_interpreted'=>false]);
             }

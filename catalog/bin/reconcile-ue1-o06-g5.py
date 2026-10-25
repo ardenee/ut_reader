@@ -85,6 +85,51 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# One source-local audio branch delta. Unreal v1.200 USound and UMusic
+# own TArray<BYTE> for EVERY archive version; UT99 v400 and v227
+# own TLazyArray<BYTE>, whose SeekPos is written only above v61.
+# Only this isolated audio branch changes, while compiled v432 audio
+# and ALL nonaudio archived handling remain semantically unchanged.
+before_audio_native=committed("1ca5c902",text_reader)
+before_audio_source="2610d2ccd252d8cb8b342c8ac2b4aae05640ea0502dd19166e91ade49d368e6f"
+sig_before_audio=subst_sig(
+    signature,text_reader,digest(text_reader).upper(),sha_blob(before_audio_native))
+audio_start="if($nativeKind==='sound'||$nativeKind==='music'){"
+audio_end="if($nativeKind==='font'&&$family===CatalogUE1ClassicSourceFamily::UT99_V432){"
+audio_part_old=before_audio_native.split(audio_start,1)
+audio_part_new=new_text.split(audio_start,1)
+audio_branch_isolated=False
+if len(audio_part_old)==2 and len(audio_part_new)==2:
+    before_parts=audio_part_old[1].split(audio_end,1)
+    after_parts=audio_part_new[1].split(audio_end,1)
+    audio_branch_isolated=(
+        len(before_parts)==2 and len(after_parts)==2
+        and audio_part_old[0]==audio_part_new[0]
+        and before_parts[1]==after_parts[1])
+audio_test="verify-ue1-o06-g5-native-audio-source-array-decision.php"
+audio_event=latest.get(audio_test)
+audio_log=ROOT/audio_event["log"] if audio_event and audio_event.get("log") else None
+try:
+    audio_values=read(audio_log) if audio_log and audio_log.exists() else {}
+except Exception:
+    audio_values={}
+audio_scope=(
+    hashlib.sha256(sig_before_audio.encode("utf-8")).hexdigest()==before_audio_source
+    and audio_branch_isolated
+    and "$lazyAudio=$family!==CatalogUE1ClassicSourceFamily::EPIC_UE1;" in new_text
+    and "$seekEnd=$lazyAudio&&$ver>61?$int():null;" in new_text
+    and audio_event is not None and audio_event.get("state")=="PASS"
+    and audio_event.get("source_sha256")==current
+    and audio_event.get("output_sha256")==digest(audio_log)
+    and audio_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/audio_test)
+    and audio_values.get("ok") is True
+    and audio_values.get("checks")==176 and audio_values.get("passed")==176
+    and audio_values.get("genuine_real_original_audio_exports")==35
+    and audio_values.get("v1200_TArray_audio_records")==2
+    and audio_values.get("v227_TLazyArray_audio_records")==33
+    and audio_values.get("compilation_engine_reruns")==0
+    and audio_values.get("method_full_decision")=="BLOCKED"
+)
 # The shared classic export-map decoder was a missing fingerprint input:
 # it is transitive input for every UE1 native/source verdict, so pin it
 # from this point forward. Its only behavioral delta guards confirmed
@@ -95,7 +140,7 @@ old_legacy=committed("dff8840a",legacy_reader)
 new_legacy=legacy_reader.read_text(encoding="utf-8-sig")
 previous_legacy_source="694bd853341a6a44afafced6d91635f008147f88668c9281b730a5c310310320"
 legacy_sig_line=str(legacy_reader)+":"+digest(legacy_reader).upper()
-sig_before_legacy="\n".join(line for line in signature.split("\n")
+sig_before_legacy="\n".join(line for line in sig_before_audio.split("\n")
     if line!=legacy_sig_line)
 legacy_guard_test="verify-ue1-o06-c227-archetype-native-operator-guard.php"
 legacy_event=latest.get(legacy_guard_test)
@@ -105,13 +150,14 @@ try:
 except Exception:
     legacy_values={}
 legacy_guard_scope=(
-    signature.count(legacy_sig_line)==1
+    audio_scope
+    and sig_before_audio.count(legacy_sig_line)==1
     and hashlib.sha256(sig_before_legacy.encode("utf-8")).hexdigest()==previous_legacy_source
     and "CatalogLegacyPackageReader.php" in str(legacy_reader)
     and "requires unverified native ArchetypeIndex" in new_legacy
     and "requires unverified native ArchetypeIndex" not in old_legacy
     and legacy_event is not None and legacy_event.get("state")=="PASS"
-    and legacy_event.get("source_sha256")==current
+    and legacy_event.get("source_sha256")==before_audio_source
     and legacy_event.get("output_sha256")==digest(legacy_log)
     and legacy_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/legacy_guard_test)
     and legacy_values.get("ok") is True
@@ -570,7 +616,7 @@ scope_parser=(
 )
 uobject_scope=scope_sha_correct and scope_callsite and scope_parser and region_scope
 sig_middle=subst_sig(
-    subst_sig(sig_before_uobject,text_reader,digest(text_reader).upper(),sha_blob(mid_text)),
+    subst_sig(sig_before_uobject,text_reader,sha_blob(before_audio_native),sha_blob(mid_text)),
     delta_reader,digest(delta_reader).upper(),sha_blob(mid_delta))
 font_scope=(hashlib.sha256(sig_middle.encode("utf-8")).hexdigest()==middle_fingerprint)
 # The NativeObjectReader change must be exactly a single font-remap call-site
@@ -581,7 +627,7 @@ old_call="""                $fontRemap=CatalogUE1ClassicV432NativeDeltaReader::d
 new_call="""                $fontRemap=CatalogUE1ClassicV432NativeDeltaReader::decodeFontRemap(
                     $ver,$read,$compact,$int,$pos,$limit,
                     (int)$ex['serialOffset'],(int)filesize($path));"""
-font_scope=font_scope and mid_text.count(old_call)==1 and new_text==mid_text.replace(old_call,new_call)
+font_scope=font_scope and mid_text.count(old_call)==1 and before_audio_native==mid_text.replace(old_call,new_call)
 a="    public static function decodeFontRemap("
 b="        $pairOffset=$position;"
 if font_scope and mid_delta.count(a)==new_delta.count(a)==1 and mid_delta.count(b)==new_delta.count(b)==1:
@@ -611,6 +657,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (audio_scope and f==before_audio_source)
         or (legacy_guard_scope and f==previous_legacy_source)
         or (camera_scope and f==previous_camera_source)
         or (primitive_scope and f==previous_primitive_source)
@@ -792,6 +839,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_audio_array_type_dispatch_scoped":audio_scope,
+    "previous_source_before_audio_array_dispatch":before_audio_source if audio_scope else None,
     "source_native_v227_export_archetype_guard_scoped":legacy_guard_scope,
     "previous_source_before_v227_export_guard":previous_legacy_source if legacy_guard_scope else None,
     "source_native_Camera_loader_skip_change_scoped":camera_scope,

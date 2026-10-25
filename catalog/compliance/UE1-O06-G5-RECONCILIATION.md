@@ -1,6 +1,6 @@
 # UE1 O06 — G5 evidence reconciliation
 
-Evidence inventory, not O06 acceptance. Generated 2026-10-25T09:35:41.868046+00:00; Git dff8840a.
+Evidence inventory, not O06 acceptance. Generated 2026-10-25T10:31:13.168527+00:00; Git 1ca5c902.
 
 ## Counts
 
@@ -16,9 +16,9 @@ Evidence inventory, not O06 acceptance. Generated 2026-10-25T09:35:41.868046+00:
 - NEW third resumable native contract: 70 genuine MotionChunk in-memory scalar/root header and array-length comparisons, 95 full first-Move AnalogTrack header checks plus 732 full first-track key/BoneIndices bytes identical, 598/598 PASS. Remaining KeyQuat/KeyPos/KeyTime buffers from all other tracks still OPEN; did not replay previous PASS evidence.
 - NEW compiled real v432 **full nested MotionChunk memory**: 70 authentic Moves, 3,292 AnalogTracks, 10,156 distinct root/track/bone nested array buffers, 540,836 entire loaded bytes equal every source byte, 21,020 KeyQuat, 9,268 KeyPos and 21,020 KeyTime keys. Microsoft CDB 46MB full-memory MiniDump MEMORY64 oracle for each original package, independent source bounds/float-preview comparisons; focused 29,145/29,145 PASS, one initial test aggregation FAIL preserved. This validates complete nested element values for TWO original v69 package UAnimation exports, not malformed runtime or other source families.
 - Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded).
-- Latest DEV journal state: {'PASS': 138}.
+- Latest DEV journal state: {'PASS': 139}.
 - Named tests with current matching source fingerprint: 0 of 197; historical PASS is not an automatically current proof.
-- Global source fingerprint in latest status 2610d2ccd252d8cb8b342c8ac2b4aae05640ea0502dd19166e91ade49d368e6f; independently recomputed 2610d2ccd252d8cb8b342c8ac2b4aae05640ea0502dd19166e91ade49d368e6f.
+- Global source fingerprint in latest status 30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc; independently recomputed 30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc.
 
 ## Branches
 

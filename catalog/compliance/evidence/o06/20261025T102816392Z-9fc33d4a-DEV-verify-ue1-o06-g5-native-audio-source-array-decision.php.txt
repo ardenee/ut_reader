@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "checks": 176,
+    "passed": 176,
+    "failed": [],
+    "genuine_real_original_audio_exports": 35,
+    "v1200_TArray_audio_records": 2,
+    "v227_TLazyArray_audio_records": 33,
+    "compilation_engine_reruns": 0,
+    "method_full_decision": "BLOCKED"
+}

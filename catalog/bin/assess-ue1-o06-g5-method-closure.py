@@ -433,7 +433,7 @@ for name in reg["methods"]:
         archetype_log=ROOT/archetype_ev["log"].replace("\\","/")
         assert sha(archetype_log)==archetype_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/archetype_test)==archetype_ev["test_sha256"]
-        assert archetype_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert archetype_ev["source_sha256"]==reconciliation["previous_source_before_audio_array_dispatch"]
         archetype_result=read(archetype_log)
         assert archetype_result["ok"] and archetype_result["checks"]==24
         assert archetype_result["passed"]==24
@@ -444,6 +444,26 @@ for name in reg["methods"]:
         assert archetype_result["source_native_archetype_serialize"]=="UNVERIFIED"
         assert archetype_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_v227_export_archetype_guard_scoped"]
+        # Shared native audio source chooses TArray for Unreal v1.200
+        # and TLazyArray for UT99/v227. Its new compiled-independent
+        # acceptance covers 35 SHA-pinned genuine original audio exports.
+        audio_test="verify-ue1-o06-g5-native-audio-source-array-decision.php"
+        audio_ev=next((item for item in reversed(events)
+            if item.get("test")==audio_test and item.get("state")=="PASS"),None)
+        assert audio_ev is not None
+        audio_log=ROOT/audio_ev["log"].replace("\\","/")
+        assert sha(audio_log)==audio_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/audio_test)==audio_ev["test_sha256"]
+        assert audio_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        audio_result=read(audio_log)
+        assert audio_result["ok"] and audio_result["checks"]==176
+        assert audio_result["passed"]==176
+        assert audio_result["genuine_real_original_audio_exports"]==35
+        assert audio_result["v1200_TArray_audio_records"]==2
+        assert audio_result["v227_TLazyArray_audio_records"]==33
+        assert audio_result["compilation_engine_reruns"]==0
+        assert audio_result["method_full_decision"]=="BLOCKED"
+        assert reconciliation["source_native_audio_array_type_dispatch_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -468,6 +488,8 @@ for name in reg["methods"]:
         old["v432_Camera_native_original_omissions_sha_reused"]=9
         old["v1200_v54_Camera_not_instantiated_by_source"]=5
         old["remaining_Camera_positive_native_oracle_requirement"]=False
+        old["source_audio_array_type_dispatch"]="C98_TArray_UT99_and_C227_TLazyArray"
+        old["genuine_source_parsed_audio_exports"]=35
         old["v227_FObjectExport_ArchetypeIndex_native_operator"]="UNAVAILABLE"
         old["v227_genuine_original_exports_without_RF_HasArchtype"]=426
         old["v227_source_flagged_ArchetypeIndex_export_guard"]="REFUSES_UNVERIFIED_WIRE"
@@ -515,7 +537,7 @@ for name in reg["methods"]:
       "camera_native_loader_criterion":(
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
-      "new_native_tests_executed":0,"new_test_runs_executed":12 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":13 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -524,7 +546,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":12,"new_test_runs":14,
+ "new_oracle_runs":12,"new_test_runs":15,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

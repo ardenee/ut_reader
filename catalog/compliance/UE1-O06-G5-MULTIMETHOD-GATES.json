@@ -72,7 +72,9 @@
       "remaining_Camera_positive_native_oracle_requirement": false,
       "v227_FObjectExport_ArchetypeIndex_native_operator": "UNAVAILABLE",
       "v227_genuine_original_exports_without_RF_HasArchtype": 426,
-      "v227_source_flagged_ArchetypeIndex_export_guard": "REFUSES_UNVERIFIED_WIRE"
+      "v227_source_flagged_ArchetypeIndex_export_guard": "REFUSES_UNVERIFIED_WIRE",
+      "source_audio_array_type_dispatch": "C98_TArray_UT99_and_C227_TLazyArray",
+      "genuine_source_parsed_audio_exports": 35
     },
     "T99:UClass::Serialize": {
       "criteria": {

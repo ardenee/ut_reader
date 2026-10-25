@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "contract": "Audio archive lazy seek header is source/type dependent, not solely package-version dependent",
+  "source_headers": {
+    "v1200_TArray_audio": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Engine\\Inc\\UnAudio.h",
+      "sha256": "d75d186cdc3c0e7c93c54e8e7b2aff05ddd591810f11bf3558aebbe74194aa97"
+    },
+    "v1200_Serialize_audio": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Engine\\Src\\UnAudio.cpp",
+      "sha256": "ebcac9b857d6462f9f3ff19fc0f8b2d93e14af5948f01b252c28c80cefc99682"
+    },
+    "ut99_v400_TLazyArray_audio": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Inc\\UnAudio.h",
+      "sha256": "ce261cd97165f107294a1c3d66429b974e8aa593329b54a67b243fae38aea278"
+    },
+    "ut99_v400_TLazyArray_operator": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnTemplate.h",
+      "sha256": "1dbc817cece37d1077789422ba4f52723aab3c22d93c64c6d244aabbc6a71024"
+    },
+    "v227_TLazyArray_audio": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Engine\\Inc\\UnAudio.h",
+      "sha256": "d047a1f14413ed87cb5776a627503221560c61976eb8742dc67da565fa6fe4dd"
+    },
+    "v227_TLazyArray_operator": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnTemplate.h",
+      "sha256": "ce9cae7cd664713dab2a39e5445d449dd131e8aeaa63117d5fc34c14597fdf1e"
+    }
+  },
+  "genuine_originals_SHA": {
+    "C98_original_Gold_v61_Sound": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\v1200-original-audio\\2329e33c8600b31e92f672a45c828962.uax",
+      "sha256": "ca2c210c7e4a894c4d05ae525c02f48b6d80c6e78126972b1297e1ac0e41d279",
+      "audio_exports_expected": 1,
+      "source": "epic-ue1"
+    },
+    "C98_original_Gold_v61_Music": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\v1200-original-audio\\75d0a5a68083de056ef40eb006a78f2a.umx",
+      "sha256": "641a02972103a78c62bf170f05658eb95638d383cc0720c0eb7cfa0b877dfa0f",
+      "audio_exports_expected": 1,
+      "source": "epic-ue1"
+    },
+    "C227_original_Gold_v69_Sound_small": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\v227-original-audio\\af02352ada1dbaeaa5ff567610b927df.uax",
+      "sha256": "4b8c2db76fc685337305bb456d88700fa8402d890a1e16518c235dac6a49a384",
+      "audio_exports_expected": 4,
+      "source": "unreal-v227"
+    },
+    "C227_original_Gold_v69_Sound_group": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\v227-original-audio\\e6b50456d2fd343a4a8c50582b35b4dd.uax",
+      "sha256": "680253ba499863a9aceba1d7dd1e84f18f187fb32c94ac256f339c3ea809761c",
+      "audio_exports_expected": 27,
+      "source": "unreal-v227"
+    },
+    "C227_original_Gold_v69_Music_small": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\v227-original-audio\\5cb9ce845375cacc357940dc3b8a20e4.umx",
+      "sha256": "f8a9bbf67a98f2e6dea610ad00860ac717f4ccfc5ee3d2513857547eb6955a85",
+      "audio_exports_expected": 1,
+      "source": "unreal-v227"
+    },
+    "C227_original_Gold_v69_Music": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\v227-original-audio\\f7d8a7cf507ddd248692907bc49b9ff2.umx",
+      "sha256": "2ab117a67179a214674920435c3859ef6e08474eb73a14fe7511cd0dc7b0b040",
+      "audio_exports_expected": 1,
+      "source": "unreal-v227"
+    }
+  },
+  "total_real_original_audio_exports": 35,
+  "real_C98_TArray_records": 2,
+  "real_C227_TLazyArray_records": 33,
+  "v1200_Sound_Music": "TArray<BYTE> at every Ver",
+  "UT99_v400_Sound_Music": "TLazyArray<BYTE> absolute_seek_header_only_when_Ver>61",
+  "Unreal_v227_Sound_Music": "TLazyArray<BYTE> absolute_seek_header_only_when_Ver>61",
+  "v432_compiled_engine_retest": 0,
+  "method_FULL_decision": "BLOCKED",
+  "scope": "Source-defined audio persistent array dispatch and genuine archive bounds, not native loaded audio pointer/OriginalSize or error parity"
+}
