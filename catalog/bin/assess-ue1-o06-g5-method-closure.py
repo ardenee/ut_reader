@@ -74,9 +74,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Native 70 genuine MotionChunk arrays with 540,836 bytes compared, but inherited UObject, other versions and negative cases unverified.",
-  "next":"Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
-  "blocker":"inherited_UObject_and_negative_variants",
+  "reason":"New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Full error-origin/cursor equivalence is still unknown because native C++ catch/exit confirms refusal without exposing archive offset, and other source-legal inherited UObject/tag/older version paths are not covered; do not claim FULL.",
+  "next":"Capture real compiled native ULinkerLoad malformed archive cursor and precise exception origin for the already SHA-pinned eight variants, and independently inspect v432 version/inherited UObject branches. Do not repeat the 3,694 positive loaded field comparisons or the eight malformed rejection oracles.",
+  "blocker":"native_exact_malformed_archive_consumption_exception_origin_and_unverified_inherited_source_legal_variants",
  },
  "T99:USound::Serialize":{
   "result":"BLOCKED",
@@ -910,6 +910,45 @@ for name in reg["methods"]:
         old["compiled_genuine_original_exports_compared"]=33
         old["compiled_original_14_StateFrames_prior_verified"]=True
         gates["current_acceptance_tests"]="VERIFIED"
+    if name=="T99:UAnimation::Serialize":
+        whole_test="verify-ue1-o06-g5-t99-animation-whole-native.php"
+        events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        whole_ev=next((e for e in reversed(events)
+            if e.get("test")==whole_test and e.get("state")=="PASS"),None)
+        assert whole_ev is not None
+        assert whole_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/whole_test)==whole_ev["test_sha256"]
+        whole_log=ROOT/whole_ev["log"].replace("\\","/")
+        assert sha(whole_log)==whole_ev["output_sha256"]
+        whole=read(whole_log)
+        assert whole["ok"] and whole["passed"]==whole["checks"]==176
+        assert whole["native_source_compared_loaded_value_checks"]==3694
+        assert whole["native_source_compared_record_lines"]==3667
+        assert whole["actual_native_nested_array_bytes"]==540836
+        assert whole["compiled_original_native_rejected_mutations"]==8
+        assert whole["original_inherited_empty_UObject_envelopes"]==3
+        assert not whole["native_engine_reexecuted_by_acceptance"]
+        assert whole["full_method_verdict"]=="BLOCKED"
+        artifact=C/"UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json"
+        original=read(artifact)
+        assert original["verdict"]=="BLOCKED"
+        assert not original["negative_result"]["byte_exact_error_cursor_verified"]
+        assert len(original["native_cases"])==3 and len(original["negative_cases"])==8
+        gates["complete_native_field_values_and_references"]="VERIFIED"
+        gates["archive_bytes_and_consumption"]="VERIFIED"
+        gates["current_acceptance_tests"]="VERIFIED"
+        # Native rejection category matches, but source-relative failure
+        # archive cursor/exception origin has NOT been captured.
+        gates["malformed_input_error_semantics"]="OPEN"
+        gates["inherited_and_version_variant_semantics"]="OPEN"
+        gates["independent_full_method_review"]="OPEN"
+        old["native_v432_three_original_animation_full_member_oracle"]="VERIFIED"
+        old["native_v432_all_70_moves_record_values_checked"]=3694
+        old["native_v432_all_nested_key_array_bytes_checked"]=540836
+        old["native_v432_distinct_malformed_rejection_agreements"]=8
+        old["native_v432_malformed_error_cursor_status"]="OPEN"
+        old["native_v432_whole_animation_evidence_manifest"]="catalog/compliance/"+artifact.name
+        old["native_v432_whole_animation_evidence_SHA256"]=sha(artifact)
     assert entry["result"] in ("FULL","BLOCKED","FAILED")
     if entry["result"]=="FULL":
         assert set(gates)==set(criteria)
@@ -930,6 +969,7 @@ for name in reg["methods"]:
         else "FINAL_7_of_7_source_scoped_Font_185_checks" if name=="T99:UFont::Serialize"
         else "current_native_dynamic_count_EOF_21_and_nested_FString_EOF_25_checks_SHA" if name=="T99:UObject::Serialize"
         else "FINAL_7_of_7_source_scoped_audio_inherited_PASS63" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
+        else "whole_v432_native_full_values_3694_and_8_malformed_rejections_cursor_OPEN" if name=="T99:UAnimation::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     decisions[name]={
       "decision":entry["result"],"gate_results":gates,
@@ -955,8 +995,8 @@ for name in reg["methods"]:
          "new_source_edit_isolated_without_prior_native_reruns":
             reconciliation["source_native_array_physical_EOF_scoped"]}
         if name=="T99:UObject::Serialize" else None),
-      "new_native_tests_executed":(3 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-       "new_test_runs_executed":18 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":(3 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 11 if name=="T99:UAnimation::Serialize" else 0),
+       "new_test_runs_executed":18 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name=="T99:UAnimation::Serialize" else 0,
     }
 report={
  "schema":1,
@@ -966,7 +1006,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
-  "new_oracle_runs":27,"new_test_runs":24,
+  "new_oracle_runs":38,"new_test_runs":25,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

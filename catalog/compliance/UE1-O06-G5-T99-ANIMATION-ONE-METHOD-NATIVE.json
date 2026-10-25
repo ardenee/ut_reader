@@ -1,0 +1,367 @@
+{
+  "schema": 1,
+  "created_utc": "2026-10-25T22:05:52.900831+00:00",
+  "scope": "UT99 v432 UAnimation::Serialize file-load method in real original v69 packages with inherited no-stack NAME_None envelope. Not a cross-game or all-version UObject closure.",
+  "method": "T99:UAnimation::Serialize",
+  "original_epic_source": {
+    "v432_skeletal_headers": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament v432/Engine/Inc/UnSkeletalMesh.h",
+      "bytes": 15474,
+      "sha256": "c7b3740bcbfb63c5eacf91c13f17ea0127bd2b372150a9bd4ac8317bb5ce06d1"
+    },
+    "v432_animation_struct_fields": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament v432/Engine/Inc/UnAnim.h",
+      "bytes": 1892,
+      "sha256": "21d4663045887c289fd6b5b07086e494936f0891ca57fca9dad09ff927252276"
+    },
+    "inherited_v400_UObject_method": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnObj.cpp",
+      "bytes": 107155,
+      "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+    },
+    "inherited_v400_TArray_operator": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Inc/UnTemplate.h",
+      "bytes": 40747,
+      "sha256": "1dbc817cece37d1077789422ba4f52723aab3c22d93c64c6d244aabbc6a71024"
+    }
+  },
+  "native_engine_sha": {
+    "Core.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "bytes": 786432,
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "Engine.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "bytes": 1785856,
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+    }
+  },
+  "compiled_probe": {
+    "source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative.cpp",
+      "bytes": 4790,
+      "sha256": "5ccd2cadb76981e9734987e67530950626c8166f8e545eba67ff161875c1e101"
+    },
+    "build_command": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative-build.cmd",
+      "bytes": 647,
+      "sha256": "3fa9bfa97004d41f61ff4057192d1e30f542472692f29065f5b1e50eb593af81"
+    },
+    "executable": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative.exe",
+      "bytes": 80384,
+      "sha256": "cecc5a0b7354642848229ee29387ee5df9fbef1ac8df24eddbbf4b1e54786adc"
+    }
+  },
+  "source_comparison": {
+    "positive_php": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative-compare.php",
+      "bytes": 6100,
+      "sha256": "4619eabfb5b3cd095944664920372732a865237c42b63dd684f47ea8211d9a68"
+    },
+    "negative_php": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative-negative-compare-all.php",
+      "bytes": 2188,
+      "sha256": "5e321b7f14af90f70c367591e99cd840cab5dccbc30bda19ae898c8456551b1c"
+    }
+  },
+  "native_cases": [
+    {
+      "original": "table.u",
+      "source_package": {
+        "path": "C:/Temp/UnrealDB/O06/00a9f59043e94e8879c722c6e521f252.u",
+        "bytes": 413388,
+        "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8"
+      },
+      "compiled_loaded_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative-table.log",
+        "bytes": 3870,
+        "sha256": "e999f745ec18098fcc68431ceaa3c355476a18f89b780df5a20ab6d151960f66"
+      },
+      "native_objects": 1
+    },
+    {
+      "original": "EcoTerror.u",
+      "source_package": {
+        "path": "C:/Temp/UnrealDB/O06/0484bd0af82de2031dd5991c13c2648f.u",
+        "bytes": 899657,
+        "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879"
+      },
+      "compiled_loaded_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative-EcoTerror.log",
+        "bytes": 591041,
+        "sha256": "bb15502a80bb73c3212c158301e8907971225525bdc8bee74b4b5aaee897dca1"
+      },
+      "native_objects": 1
+    },
+    {
+      "original": "d00d.u",
+      "source_package": {
+        "path": "C:/Temp/UnrealDB/O06/04d58f820f84f91b627d53f237226208.u",
+        "bytes": 236154,
+        "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426"
+      },
+      "compiled_loaded_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative-d00d.log",
+        "bytes": 20144,
+        "sha256": "daa9d48e2c37a20317bfe8ec8244c2e8c8882334dd1d63ff6aaffe37967c2ca8"
+      },
+      "native_objects": 1
+    }
+  ],
+  "negative_cases": [
+    {
+      "case": "table-invalid-bone-name",
+      "package": "table",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-table/table.u",
+        "bytes": 413388,
+        "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/table-invalid-bone-name/table.u",
+        "bytes": 413388,
+        "sha256": "82b1d77191ded90d45e20cc6934d0cb4d3c8b5883cb8d795d89346c378e05930"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/table-invalid-bone-name/native-result.txt",
+        "bytes": 208,
+        "sha256": "863c674299d8a7d22013f84e0d697c631f991a367154b8388ef914d8a49e1ac4"
+      },
+      "native_exit": -1073740791,
+      "edits": [
+        {
+          "offset": 210357,
+          "old": 12,
+          "new": 127
+        },
+        {
+          "offset": 210358,
+          "old": 0,
+          "new": 1
+        }
+      ],
+      "trim_bytes": 0
+    },
+    {
+      "case": "EcoTerror-invalid-bone-name",
+      "package": "EcoTerror",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-EcoTerror/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-invalid-bone-name/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "0f350474db8a23a7bfffcaf290e89eb5edc7b80f4cf354b146c1dfb499510313"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-invalid-bone-name/native-result.txt",
+        "bytes": 218,
+        "sha256": "1e76206eddc39074f0a3789db862bd60aa4e423e4362e0ce93d08b1976c68ea1"
+      },
+      "native_exit": -1073740791,
+      "edits": [
+        {
+          "offset": 34391,
+          "old": 37,
+          "new": 127
+        },
+        {
+          "offset": 34392,
+          "old": 0,
+          "new": 2
+        }
+      ],
+      "trim_bytes": 0
+    },
+    {
+      "case": "d00d-invalid-bone-name",
+      "package": "d00d",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-d00d/d00d.u",
+        "bytes": 236154,
+        "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/d00d-invalid-bone-name/d00d.u",
+        "bytes": 236154,
+        "sha256": "59952528187dee28d8d239ccb3e14d0eda2c6c0701d5b28f67ca5d4923a65c3c"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/d00d-invalid-bone-name/native-result.txt",
+        "bytes": 200,
+        "sha256": "149a352d646ff83b7e9b21b9d4bb17cf2d2dfef30596c42cffe46ee2e391ffb9"
+      },
+      "native_exit": -1073740791,
+      "edits": [
+        {
+          "offset": 153321,
+          "old": 21,
+          "new": 127
+        },
+        {
+          "offset": 153322,
+          "old": 0,
+          "new": 2
+        }
+      ],
+      "trim_bytes": 0
+    },
+    {
+      "case": "table-negative-refbones-count",
+      "package": "table",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-table/table.u",
+        "bytes": 413388,
+        "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/table-negative-refbones-count/table.u",
+        "bytes": 413388,
+        "sha256": "5c723150382f6e1b32ad472454f05162033066e12215b903a01995dd4d27e0da"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/table-negative-refbones-count/native-result.txt",
+        "bytes": 214,
+        "sha256": "f75972f58a1d3b3c41d1706e482f5a8e11dc8465f2193f1705b321638def1aaf"
+      },
+      "native_exit": -1073740791,
+      "edits": [
+        {
+          "offset": 210356,
+          "old": 48,
+          "new": 176
+        }
+      ],
+      "trim_bytes": 0
+    },
+    {
+      "case": "d00d-truncated-animation",
+      "package": "d00d",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-d00d/d00d.u",
+        "bytes": 236154,
+        "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/d00d-truncated-animation/d00d.u",
+        "bytes": 236152,
+        "sha256": "ba174a8c046bdf04cc3c343556883926664ec1dd999b1c8ae7f0a72b17bcd24c"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/d00d-truncated-animation/native-result.txt",
+        "bytes": 202,
+        "sha256": "62a88cdb6f929d9da83c6cec742b9b7246610fb7033bcf6a55066a2c5af0e9a6"
+      },
+      "native_exit": 3,
+      "edits": [],
+      "trim_bytes": 2
+    },
+    {
+      "case": "EcoTerror-invalid-sequence-name",
+      "package": "EcoTerror",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-EcoTerror/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-invalid-sequence-name/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "7125a5d850bc5f31e860627a95c7e5ce8315bf1100de2e82ba752fbfe2459f67"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-invalid-sequence-name/native-result.txt",
+        "bytes": 222,
+        "sha256": "e698dedef6b71d8117788ac0534848036a49308a1d4852e98eaff8a288208216"
+      },
+      "native_exit": -1073740791,
+      "edits": [
+        {
+          "offset": 593468,
+          "old": 68,
+          "new": 127
+        }
+      ],
+      "trim_bytes": 0
+    },
+    {
+      "case": "EcoTerror-negative-keyquat-count",
+      "package": "EcoTerror",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-EcoTerror/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-negative-keyquat-count/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "83559eea7d69102cdb9a9481e91f84a2f5ceb4cb7b55b4e4a6d2eb7e779527d9"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-negative-keyquat-count/native-result.txt",
+        "bytes": 223,
+        "sha256": "e28c9abf6e8b1f674f9b15098894b88cf911335614393fc300b7a371540adb18"
+      },
+      "native_exit": -1073740791,
+      "edits": [
+        {
+          "offset": 35048,
+          "old": 10,
+          "new": 138
+        }
+      ],
+      "trim_bytes": 0
+    },
+    {
+      "case": "EcoTerror-negative-animtrack-count",
+      "package": "EcoTerror",
+      "source_original": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/original-EcoTerror/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879"
+      },
+      "corrupted_copied_package": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-negative-animtrack-count/EcoTerror.u",
+        "bytes": 899657,
+        "sha256": "f79f8afe90d6685cf3ea6e875a49c91cfe2c0a7bed4a08df1171cbbd90a96c2b"
+      },
+      "compiled_native_exception_log": {
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-negative/EcoTerror-negative-animtrack-count/native-result.txt",
+        "bytes": 225,
+        "sha256": "9f26f402918b09a933f9257b7c718223048f3b32b8943d302800df9afe9a76e6"
+      },
+      "native_exit": -1073740791,
+      "edits": [
+        {
+          "offset": 35043,
+          "old": 47,
+          "new": 175
+        }
+      ],
+      "trim_bytes": 0
+    }
+  ],
+  "compiled_positive_result": {
+    "current_php_loaded_value_checks": 3694,
+    "all_original_animation_objects_loaded": 3,
+    "native_compared_elements_or_records": 3667,
+    "motion_chunks": 70,
+    "numeric_array_bytes": 540836
+  },
+  "negative_result": {
+    "native_rejected": 8,
+    "php_rejected": 8,
+    "byte_exact_error_cursor_verified": false
+  },
+  "inherited_envelopes": {
+    "native_original_saved_tag_count": 0,
+    "native_original_StateFrame_count": 0,
+    "verified_original_objects": 3
+  },
+  "mandatory_open_gate": "exact malformed archive-byte/exception-origin parity and independent seven-criterion method review; native fastfail after catch does not establish archive cursor",
+  "verdict": "BLOCKED"
+}

@@ -6,8 +6,8 @@
   "fully_epic_verified": 4,
   "failed": 0,
   "blocked": 4,
-  "new_oracle_runs": 27,
-  "new_test_runs": 24,
+  "new_oracle_runs": 38,
+  "new_test_runs": 25,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -148,11 +148,11 @@
       "decision": "BLOCKED",
       "gate_results": {
         "pinned_source_and_dispatch": "VERIFIED",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
       "closure_artifact": null,
@@ -160,14 +160,14 @@
       "existing_native_loaded_valid": true,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
-      "decisive_blocker": "inherited_UObject_and_negative_variants",
-      "reason": "Native 70 genuine MotionChunk arrays with 540,836 bytes compared, but inherited UObject, other versions and negative cases unverified.",
-      "next_action": "Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
+      "decisive_blocker": "native_exact_malformed_archive_consumption_exception_origin_and_unverified_inherited_source_legal_variants",
+      "reason": "New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Full error-origin/cursor equivalence is still unknown because native C++ catch/exit confirms refusal without exposing archive offset, and other source-legal inherited UObject/tag/older version paths are not covered; do not claim FULL.",
+      "next_action": "Capture real compiled native ULinkerLoad malformed archive cursor and precise exception origin for the already SHA-pinned eight variants, and independently inspect v432 version/inherited UObject branches. Do not repeat the 3,694 positive loaded field comparisons or the eight malformed rejection oracles.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "uobject_native_dynamic_array_physical_EOF": null,
-      "new_native_tests_executed": 0,
-      "new_test_runs_executed": 0
+      "new_native_tests_executed": 11,
+      "new_test_runs_executed": 1
     },
     "T99:USound::Serialize": {
       "decision": "FULL",

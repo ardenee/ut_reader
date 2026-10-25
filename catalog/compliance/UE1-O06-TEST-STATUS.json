@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-25T21:22:51.1974798Z",
-    "head_commit":  "7608dc2b",
+    "updated_at_utc":  "2026-10-25T22:08:05.0393786Z",
+    "head_commit":  "2adbe848",
     "current_target":  "DEV",
     "current_source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
     "tests":  [
@@ -723,6 +723,18 @@
                       "run_id":  "20261024T101531600Z-61c1892d",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T101531600Z-61c1892d-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-t99-animation-whole-native.php",
+                      "test":  "verify-ue1-o06-g5-t99-animation-whole-native.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-25T22:08:05.0193795Z",
+                      "source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+                      "test_sha256":  "9306dbfc3eabd77ed7a8466c14b7ca06df959ec702a82e30795d392483b35e8c",
+                      "run_id":  "20261025T220803996Z-8a65f093",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-t99-audio-independent-full-method-review.php",
