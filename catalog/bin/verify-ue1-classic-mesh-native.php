@@ -31,10 +31,11 @@ $body=static function(string $kind,int $ver,array $o=[])use($idx,$prefix,$box,$s
   $num=($o['emptyArrays']??false)?0:($o['countOverride'][$field]??$count);
   $elements=$num===0?'':($num>$count&&$num<=32?str_repeat($bytes,$num):$bytes);
   $prefix=$idx($num);
+  $padding=$o['paddingAfterSeek'][$field]??'';
   $lazyValue=$o['badSeekPos'][$field]??0;
   $seek=$lazy&&$ver>61
-    ?pack('V',$base+strlen($raw)+4+strlen($prefix)+strlen($elements)+$lazyValue):'';
-  $raw.=$seek.$prefix.$elements;
+    ?pack('V',$base+strlen($raw)+4+strlen($prefix)+strlen($elements)+strlen($padding)+$lazyValue):'';
+  $raw.=$seek.$prefix.$elements.$padding;
  };
  $packed=1|(2046<<11)|(3<<22);
  $array('Verts',pack('V',$packed),1,4,$ver>=62);
@@ -49,7 +50,8 @@ $body=static function(string $kind,int $ver,array $o=[])use($idx,$prefix,$box,$s
  $array('Textures',$idx($o['textureRef']??-1),1,1);
  $array('BoundingBoxes',$box(),1,25);
  $array('BoundingSpheres',$sphere($ver,$fullLegacy),1,$ver<=61&&!$fullLegacy?12:16);
- $raw.=pack('V4',20,4,0xff,0x22);
+ // A nonempty ULodMesh RemapAnimVerts must cover every FrameVerts index.
+ $raw.=pack('V4',$kind==='LodMesh'?1:20,4,0xff,0x22);
  $raw.=pack('g6',1,2,3,4,5,6);
  $raw.=pack('V5',100,200,300,5,7);
  if($ver===65){$raw.=pack('g',2.75);}
@@ -94,11 +96,12 @@ $parse=static function(string $kind,int $ver,string $data)use(&$paths,$package):
  $paths[]=$p;file_put_contents($p,$package($kind,$ver,$data));
  $pkg=new Package($p);
  if($pkg->validatePackage()!==[])throw new RuntimeException('Synthetic package validation failed');
- $tags=Tag::inspect($p,$pkg,0);
+ $family=$ver<=61&&$kind==='Mesh'?'epic-ue1':'ut99-v432';
+ $tags=Tag::inspect($p,$pkg,0,$family);
  if(($tags['status']??'')!=='tag_envelope_decoded'){
   throw new RuntimeException('UE1 package UObject property tag envelope invalid');
  }
- return [Native::inspect($p,$pkg,0,$tags),$tags];
+ return [Native::inspect($p,$pkg,0,$tags,$family),$tags];
 };
 $bad=static function(string $kind,int $v,string $data)use($parse):bool{
  try{$parse($kind,$v,$data);return false;}catch(RuntimeException){return true;}
@@ -128,20 +131,14 @@ try{
     &&!isset($legacy['texture_lod']));
  foreach([41,50,61] as $ver){
   [$a]=$parse('Mesh',$ver,$body('Mesh',$ver));
-  [$b]=$parse('Mesh',$ver,$body('Mesh',$ver,['legacyFullSphere'=>true]));
-  $check('legacy_mesh_both_sphere_variants_v'.$ver,
+  $check('epic_v1200_mesh_FSphere_inherits_FVector_v'.$ver,
     $a['status']==='native_mesh_record_complete'
-    &&$a['sphere_wire_layout']==='sphere_xyz_only_12'
     &&$a['mesh_bounding_sphere']['w']===null
-    &&$b['status']==='native_mesh_record_complete'
-    &&$b['sphere_wire_layout']==='sphere_xyz_radius_16'
-    &&$b['mesh_bounding_sphere']['w']===10.0
-    &&$b['bounding_spheres']['records_preview'][0]['w']===10.0
-    &&$b['source_serialized_base_bytes']===41);
-  $check('legacy_mesh_sphere_extra_length_v'.$ver,
-    strlen($body('Mesh',$ver,['legacyFullSphere'=>true]))===
-      strlen($body('Mesh',$ver))+12);
-  $check('legacy_mesh_wrong_trailer_rejected_v'.$ver,
+    &&$a['bounding_spheres']['records_preview'][0]['w']===null
+    &&$a['source_serialized_base_bytes']===37);
+  $check('epic_v1200_wrong_FPlane_sphere_refused_v'.$ver,
+    $bad('Mesh',$ver,$body('Mesh',$ver,['legacyFullSphere'=>true])));
+  $check('epic_v1200_truncated_wrong_sphere_refused_v'.$ver,
     $bad('Mesh',$ver,substr($body('Mesh',$ver,['legacyFullSphere'=>true]),0,-1)));
  }
  [$modern]=$parse('Mesh',69,$body('Mesh',69));
@@ -194,17 +191,26 @@ try{
     &&$lod['remap_anim_verts']['records_preview']===[7]
     &&$lod['old_frame_verts']===11
     &&$lod['runtime_vertex_remap_executed']===false);
- [$partial]=$parse('LodMesh',61,$body('Mesh',61));
- $check('lod_pre62_unverified_not_invented',
-    $partial['status']==='native_lodmesh_source_version_unverified');
+ $check('ut99_v61_incomplete_lodmesh_tail_rejected',
+    $bad('LodMesh',61,$body('Mesh',61)));
  [$extra]=$parse('Mesh',69,$body('Mesh',69,['extension'=>"\xab"]));
  $check('mesh_extension_not_complete',
     $extra['status']==='native_mesh_has_extension'&&$extra['extension_bytes']===1);
  [$extra]=$parse('LodMesh',69,$body('LodMesh',69,['extension'=>"\xcd"]));
  $check('lod_extension_not_complete',
     $extra['status']==='native_lodmesh_has_extension'&&$extra['extension_bytes']===1);
+ foreach(['Mesh','LodMesh'] as $kind){
+  [$padded]=$parse($kind,69,$body($kind,69,[
+    'paddingAfterSeek'=>['Verts'=>"\xA0\xB0\xC0"]]));
+  $check('v69_'.$kind.'_inherited_lazy_forward_padding',
+    $padded['status']==='native_'.strtolower($kind).'_record_complete'
+    &&$padded['verts']['lazy_unused_payload_bytes']===3
+    &&$padded['verts']['lazy_seek_pos']===$padded['verts']['end_offset']+3
+    &&$padded['tris']['count']===1
+    &&$padded['tris']['records_preview'][0]['vertices']===[0,1,2]);
+ }
  $check('reject_invalid_lazy_seekpos',
-    $bad('Mesh',69,$body('Mesh',69,['badSeekPos'=>['Verts'=>1]])));
+    $bad('Mesh',69,$body('Mesh',69,['badSeekPos'=>['Verts'=>100000]])));
  $check('reject_negative_anim_count',
     $bad('Mesh',50,$body('Mesh',50,['countOverride'=>['AnimSeqs'=>-1]])));
  $check('reject_oversize_tri_count',

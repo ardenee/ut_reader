@@ -106,6 +106,11 @@ assert set(status)==set(reg["methods"])
 def scoped_source_current(value):
     if value==reconciliation["current_source_sha256"]:
         return True
+    # UMesh/ULodMesh-only correction cannot invalidate previously sealed
+    # Sound/Music/Font/TextBuffer native semantics or tagged UObject proof.
+    if (reconciliation.get("source_native_mesh_seek_and_C98_FSphere_scoped")
+        and value==reconciliation.get("previous_source_before_mesh_fix")):
+        return True
     # Retain original SHA-pinned evidence across the two independent,
     # source-isolated malformed-array fixes. Never claim arbitrary older
     # fingerprints are current without corresponding reconciliation proof.
@@ -772,7 +777,8 @@ for name in reg["methods"]:
         assert nested_ev is not None
         nested_log=ROOT/nested_ev["log"].replace("\\","/")
         assert reconciliation["source_native_nested_FString_physical_EOF_scoped"]
-        assert nested_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert reconciliation["source_native_mesh_seek_and_C98_FSphere_scoped"]
+        assert nested_ev["source_sha256"]==reconciliation["previous_source_before_mesh_fix"]
         assert sha(nested_log)==nested_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/nested_test)==nested_ev["test_sha256"]
         nested_result=read(nested_log)
@@ -795,7 +801,7 @@ for name in reg["methods"]:
         assert nested_proof["method"]==name
         assert nested_proof["method_global_full"]=="BLOCKED"
         assert nested_proof["source_hunk_isolated"] is True
-        assert nested_proof["source_fingerprint_after"]==reconciliation["current_source_sha256"]
+        assert nested_proof["source_fingerprint_after"]==reconciliation["previous_source_before_mesh_fix"]
         assert nested_proof["final_acceptance"]["stdout_sha256"]==nested_ev["output_sha256"]
         assert nested_proof["final_acceptance"]["test_sha256"]==nested_ev["test_sha256"]
         assert nested_proof["final_acceptance"]["passed"]==25

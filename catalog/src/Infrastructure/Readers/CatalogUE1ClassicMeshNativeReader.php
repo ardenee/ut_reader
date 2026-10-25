@@ -29,7 +29,7 @@ final class CatalogUE1ClassicMeshNativeReader
                 'reason'=>'ULodMesh serializer is defined in UT99 game source'];
         }
         $result=self::inspectWire(
-            $kind,$pkg,$ver,$read,$compact,$uint,$position,$limit,$family);
+            $kind,$pkg,$ver,$read,$compact,$uint,$position,$limit,$family,$seek);
         return $result+[
             'selected_source_family'=>$family,
             'source_selection'=>'explicit-or-epic-engine-baseline',
@@ -40,7 +40,7 @@ final class CatalogUE1ClassicMeshNativeReader
     private static function inspectWire(
         string $kind,CatalogUE1PackageReader $pkg,int $ver,callable $read,
         callable $compact,callable $uint,int &$position,int $limit,
-        string $sourceFamily
+        string $sourceFamily,?callable $seek
     ):array{
         $result=CatalogUE1ClassicPrimitiveNativeReader::readBase(
             $ver,$read,$position,$limit,$sourceFamily);
@@ -55,7 +55,9 @@ final class CatalogUE1ClassicMeshNativeReader
         $sphere=static function()use($vector,$f32,$ver,$sourceFamily):array{
             $r=$vector();
             $ut99=$sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V432;
-            $r['w']=($ut99&&$ver<=61)?null:$f32();
+            // Unreal v1.200 FSphere inherits FVector's 12-byte operator;
+            // only UT99 v400 serializes its FPlane radius after v61.
+            $r['w']=(!$ut99||$ver<=61)?null:$f32();
             return $r;
         };
         $ref=static function(string $field)use($compact,$pkg):int{
@@ -75,9 +77,9 @@ final class CatalogUE1ClassicMeshNativeReader
         };
         $array=static function(
             string $field,callable $item,int $minimumBytes=1,bool $lazy=false
-        )use($uint,$compact,$ver,$limit,&$position):array{
-            $seek=null;
-            if($lazy && $ver>61){$seek=$uint();}
+        )use($uint,$compact,$ver,$limit,&$position,$seek):array{
+            $seekPos=null;
+            if($lazy && $ver>61){$seekPos=$uint();}
             $count=$compact();
             if($count<0||$minimumBytes<1||
                $count>intdiv($limit-$position,$minimumBytes)){
@@ -88,12 +90,19 @@ final class CatalogUE1ClassicMeshNativeReader
                 $row=$item();
                 if($i<16){$items[]=$row;}
             }
-            if($seek!==null && $seek!==$position){
-                throw new RuntimeException('UE1 mesh '.$field.' lazy SeekPos mismatch');
+            $decodedEnd=$position;
+            // Epic TLazyArray operator seeks to its absolute recorded end,
+            // regardless of unused bytes after the decoded TArray elements.
+            if($seekPos!==null&&$seekPos!==$position){
+                if($seek===null){
+                    throw new RuntimeException('UE1 mesh '.$field.' lazy seek callback missing');
+                }
+                $seek($seekPos);
             }
             return ['count'=>$count,'records_preview'=>$items,
-                    'data_offset'=>$start,'end_offset'=>$position,
-                    'lazy_seek_pos'=>$seek,
+                    'data_offset'=>$start,'end_offset'=>$decodedEnd,
+                    'lazy_seek_pos'=>$seekPos,
+                    'lazy_unused_payload_bytes'=>$seekPos===null?0:max(0,$seekPos-$decodedEnd),
                     'preview_truncated'=>$count>count($items)];
         };
         $u8=static fn():int=>ord($read(1));
@@ -150,8 +159,8 @@ final class CatalogUE1ClassicMeshNativeReader
         $result['bounding_boxes']=$array('BoundingBoxes',$box,25);
         $result['bounding_spheres']=$array(
             'BoundingSpheres',$sphere,
-            ($sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V432
-                &&$ver<=61)?12:16);
+            ($sourceFamily!==CatalogUE1ClassicSourceFamily::UT99_V432
+                ||$ver<=61)?12:16);
         $result['frame_verts']=$i32();$result['anim_frames']=$i32();
         $result['and_flags']=$uint();$result['or_flags']=$uint();
         $result['scale']=$vector();$result['origin']=$vector();

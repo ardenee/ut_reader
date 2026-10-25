@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-25T20:56:55+00:00",
+  "updated_at_utc": "2026-10-25T21:22:51+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -5995,14 +5995,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Pinned Epic v1200 Engine/Src/UnFont.cpp::UFont::Serialize invokes UTexture::Serialize(Ar) followed by Ar<<Characters; Engine/Inc/UnTex.h UFont:UTexture and FFontCharacter four INT32. Eight authentic v61 font exports (Engine.u and UNreal.u) read all mips+256 glyphs, 4096 glyph bytes and zero extension, 94/94 DEV corpus PASS. Old UT99 Pages layout erroneously used before; now only for >61.; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned C98 Engine/Src/UnFont.cpp:19 on-disk native archive -> native_font_record_complete; typed source-family branch implemented.",
       "remaining": "Native engine direct compare and earlier historical Font source/version proofs outstanding; v<=61 source-family scope only, glyph rasterization/runtime texture handling not represented. | SOURCE-TO-PHP MAPPED 2026-10-23; engine runtime effects and G5 oracle/corpus verification separately deferred. No missing native serialized fields for selected source family.",
-      "updated_at_utc": "2026-10-23T19:06:09+00:00",
+      "updated_at_utc": "2026-10-25T21:22:51+00:00",
       "last_verification": {
         "target": "DEV",
-        "state": "PASS",
-        "at_utc": "2026-10-23T13:11:34.7406269Z",
+        "state": "FAIL",
+        "at_utc": "2026-10-25T21:22:51.1754745Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+        "log": "catalog\\compliance\\evidence\\o06\\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6257,14 +6257,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Genuine six v61 compiled UE1 script packages and ten UT99 v66-v68 audio archives SHA-pinned in catalog/compliance/inventory/ue1-o06-genuine-compiled-nontexture.json. DEV full 16-package/15194-export 94/94 PASS incl. 342 true v61 Mesh exports, unique complete 16-byte sphere base/inner bounding sphere/count arrays; previous genuine 331 mesh exceptions corrected. Source C98 UnMesh.cpp order, mesh fixture both 12/16 layouts 38/38 DEV PASS.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 C98 Engine/Src/UnMesh.cpp:32 -> CatalogUE1ClassicMeshNativeReader.php complete native archive path.",
       "remaining": "Compiled native comparison of 16-byte sphere and exact source lineage at v61 unresolved; older archives may use 12-byte branch and are selected only by unique full parse; some 342 meshes have huge packed vertex arrays with 16-entry previews. Native animation remapping/postload not simulated. 513 Class default metadata schemas remain unverified (separate source contracts). ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
-      "updated_at_utc": "2026-10-23T19:20:12+00:00",
+      "updated_at_utc": "2026-10-25T21:22:51+00:00",
       "last_verification": {
         "target": "DEV",
-        "state": "PASS",
-        "at_utc": "2026-10-23T13:11:34.7406269Z",
+        "state": "FAIL",
+        "at_utc": "2026-10-25T21:22:51.1754745Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+        "log": "catalog\\compliance\\evidence\\o06\\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -8115,14 +8115,14 @@
       "test": "verify-ue1-o06-genuine-compiled-native.php",
       "evidence": "Epic UT99 v400 Engine/Src/UnFont.cpp shows UFont no UTexture inheritance; Ar<<Pages<<CharactersPerPage and FFontPage texture + glyphs in Engine/Inc/UnTex.h; existing version>=62 pages branch preserved. The genuine corpus shows old C98 alternative cannot be applied to ver61.; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned T99 Engine/Src/UnFont.cpp:19 on-disk native archive -> native_font_record_complete; typed source-family branch implemented. COMPILED_V432_UFONT_DELTA_FOUND 2026-10-23: Engine.dll RVA 0x242D -> 0x846D0; ver>=69 TMap CharRemap then IsRemapped; existing reader omits, re-opened. COMPILED_V432_FONT_REMAP_SOURCE_MAPPED 2026-10-23: Engine.dll SHA256 f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac; UFont::Serialize RVA 0x846D0, TMap pair RVA 0x84D00, ver69+ compact count + WORD key/WORD value pairs + DWORD IsRemapped; legacy version no archive tail; focused positive-negative fixture PASS.",
       "remaining": "UT99 v432 complete FILE archive mapped from authentic compiled method and declared TMap pair operator. Source-ver69+ CharRemap and IsRemapped decoded, legacy versions zero IsRemapped without consuming file bytes. G5 full genuine-package native value comparison and font remap loaded runtime memory still OPEN. O06 source-to-code mapping is not G5 acceptance.",
-      "updated_at_utc": "2026-10-23T21:28:00+00:00",
+      "updated_at_utc": "2026-10-25T21:22:51+00:00",
       "last_verification": {
         "target": "DEV",
-        "state": "PASS",
-        "at_utc": "2026-10-23T13:11:34.7406269Z",
+        "state": "FAIL",
+        "at_utc": "2026-10-25T21:22:51.1754745Z",
         "test_sha256": "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-        "source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+        "source_sha256": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+        "log": "catalog\\compliance\\evidence\\o06\\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "MAPPED_COMPILED_V432_ARCHIVE_METHOD",
@@ -8421,14 +8421,14 @@
       "test": "verify-ue1-classic-mesh-native.php",
       "evidence": "Epic v1.200 Engine/Src/UnMesh.cpp:32-46, Engine/Inc/UnMesh.h; UT99 v400 Engine/Src/UnMesh.cpp:32-52, Engine/Src/ULodMesh.cpp:23-48, Engine/Inc/UnMesh.h, Core/Inc/UnTemplate.h TLazyArray:887-923; 29/29 source-defined UE1 package fixture checks.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 T99 Engine/Src/ULodMesh.cpp:23 -> CatalogUE1ClassicMeshNativeReader.php complete native archive path.",
       "remaining": "Source-ordered UPrimitive inheritance + nonempty Mesh Verts/Tris/AnimSeqs+Notifys/Connects, mesh Bounds/Sphere, VertLinks, Texture refs, BoundingBoxes/Spheres, flags/scale/rot/editor fields, v65 float/v66+ TextureLOD, UT99 absolute lazy SeekPos; LodMesh extra CollapsePoint/FaceLevel/Faces/Wedges/Materials/SpecialFaces/LOD scalars/Remap arrays. 29/29 v35/50/61/62/65/66/69 source fixtures. Genuine real meshes/native engine oracle and all source/branch versions not accepted; arrays over 16 entries only return a typed preview (all entries are still traversed and bounds checked); runtime vertex remapping and LOD rendering are excluded O10/O07. G4 implementation batch: source RemapAnimVerts(v) index bounds enforced when remap nonempty; source-level implementation only, functional verification and PRD deployment deferred. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-25T21:22:49+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T07:37:51.3207681Z",
-        "test_sha256": "3722fe692b8330b3e900d9aebc4181ac14ce6255d7c0bbf25b6e28ca6581fb56",
-        "source_sha256": "557ce439d98b6ca71318f6ac3659c1325fcee3b6651573f3bf41ebe453d22531",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T073750881Z-0248b17f-DEV-verify-ue1-classic-mesh-native.php.txt"
+        "at_utc": "2026-10-25T21:22:48.8490559Z",
+        "test_sha256": "e96443e26cb64d380869d095b55e5356fb80e32a409014f37373c913c1ced092",
+        "source_sha256": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+        "log": "catalog\\compliance\\evidence\\o06\\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -8510,14 +8510,14 @@
       "test": "verify-ue1-classic-mesh-native.php",
       "evidence": "DEV full-package v35/50/61 and v62/65/66/69 synthetic archive verifier 38/38 PASS after adding 12-byte/16-byte old mesh variants; C98 genuine compiled 342 mesh examples 94/94 corpus PASS. UT99 source v400 Ar<<Verts/Tris/AnimSeqs etc.; SOURCE_IMPLEMENTED_MODEL_LEVEL 2026-10-23 T99 Engine/Src/UnMesh.cpp:32 -> CatalogUE1ClassicMeshNativeReader.php complete native archive path.",
       "remaining": "Independent native UT99>=62 real Mesh package with nonempty lazy array and compiled engine oracle missing; source-version family and runtime animation/LOD behaviors remain outstanding. G4 source implementation 2026-10-23 (VERIFICATION DEFERRED): UT99 v400 Engine/Src/UnMesh.cpp::UMesh::Serialize asserts Tris(0).iVertex[0] < Verts.Num() when Tris.Num()>0. Production source-versioned >=62 UMesh and ULodMesh reader now checks the actual decoded first triangle reference against serialized Verts count, while <=61 Unreal v1.200 remains untouched because it lacks this assertion. No new test, gate acceptance or PRD deploy. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. | SERIALIZATION MAPPED 2026-10-23: all source-ordered native archive fields handled; runtime reallocation/postload and G5 compiled engine/genuine-file validation deferred, not a missing file serializer.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-25T21:22:49+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T07:37:51.3207681Z",
-        "test_sha256": "3722fe692b8330b3e900d9aebc4181ac14ce6255d7c0bbf25b6e28ca6581fb56",
-        "source_sha256": "557ce439d98b6ca71318f6ac3659c1325fcee3b6651573f3bf41ebe453d22531",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T073750881Z-0248b17f-DEV-verify-ue1-classic-mesh-native.php.txt"
+        "at_utc": "2026-10-25T21:22:48.8490559Z",
+        "test_sha256": "e96443e26cb64d380869d095b55e5356fb80e32a409014f37373c913c1ced092",
+        "source_sha256": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+        "log": "catalog\\compliance\\evidence\\o06\\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",

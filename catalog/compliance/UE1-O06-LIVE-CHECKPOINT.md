@@ -2,18 +2,24 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uobject-nested-fstring-physical-eof`
-- **Stage:** released-scoped-native-E0F-PASS25-T99-UObject-BLOCKED
-- **Last completed action:** 3374bd23 pushed GitHub main; 19/19 changed files copied DEV->PRD and individually SHA256 equal; compiled v432 native/PHP nested FString physical EOF cursor308; 4 FULL, 4 BLOCKED, 0 FAILED; no PRD PHP execution
-- **Resume at:** STOP further testing of count31 and nested FString count96 physical EOF, stock FString allocation diagnostic, original v61 saved fields and four FULL T99 subclass methods. Next inspect remaining source-legal T99 UObject class/default/tag/postload variants and identify ONE decisive full-method acceptance blocker; stock allocator cannot provide deterministic successful FString value oracle. No C98/C227 dependency.
-- **Active changed at:** 2026-10-25T21:06:43+00:00
-- **Latest DEV test states:** PASS 148; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-skeletalmesh-inherited-lodmesh-lazy-seek`
+- **Stage:** source-corrected-and-G5-method-BLOCKED-release-ready
+- **Last completed action:** Epic v400 TLazyArray SeekPos forward unused payload and v1200 UMesh FVector-only FSphere fixed; 40/40 source verifier, real native existing evidence 733/733; G5 reconciler scoped SHA PASS 827748 array bytes, assessor 4 FULL 4 BLOCKED 0 FAILED; legacy broad corpus FAIL separately journaled without false acceptance
+- **Resume at:** Commit, push and SHA-deploy only verified changed source/tests/status. Next: whole-method compiled native acceptance for SkeletalMesh inherited ULodMesh scalar/value/error paths and UAnimation all moves/sequences, then UObject/UClass; do not replay prior 733 native evidence or four FULL methods.
+- **Active changed at:** 2026-10-25T21:35:59+00:00
+- **Latest DEV test states:** PASS 147; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-25T21:22:51.1754745Z | verify-ue1-o06-genuine-compiled-native.php | FAIL | 482 | catalog\compliance\evidence\o06\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
+| 2026-10-25T21:22:50.3330902Z | verify-ue1-o06-genuine-compiled-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
+| 2026-10-25T21:22:49.9310577Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | PASS | 264 | catalog\compliance\evidence\o06\20261025T212249255Z-e9597530-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
+| 2026-10-25T21:22:49.2550607Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | STARTED |  | catalog\compliance\evidence\o06\20261025T212249255Z-e9597530-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
+| 2026-10-25T21:22:48.8490559Z | verify-ue1-classic-mesh-native.php | PASS | 200 | catalog\compliance\evidence\o06\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt |
+| 2026-10-25T21:22:48.2590912Z | verify-ue1-classic-mesh-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt |
 | 2026-10-25T20:56:55.3398930Z | verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php | PASS | 307 | catalog\compliance\evidence\o06\20261025T205654522Z-4ef6c2cb-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt |
 | 2026-10-25T20:56:54.5318902Z | verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261025T205654522Z-4ef6c2cb-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt |
 | 2026-10-25T20:43:30.2857987Z | verify-ue1-o06-g5-uobject-fstring-conditional-native.php | PASS | 282 | catalog\compliance\evidence\o06\20261025T204329594Z-73ab1922-DEV-verify-ue1-o06-g5-uobject-fstring-conditional-native.php.txt |
@@ -26,12 +32,6 @@
 | 2026-10-25T16:37:28.7562960Z | verify-ue1-o06-g5-t99-textbuffer-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt |
 | 2026-10-25T12:57:05.6259523Z | verify-ue1-o06-g5-t99-audio-independent-full-method-review.php | PASS | 151 | catalog\compliance\evidence\o06\20261025T125705062Z-d637d841-DEV-verify-ue1-o06-g5-t99-audio-independent-full-method-review.php.txt |
 | 2026-10-25T12:57:05.0699784Z | verify-ue1-o06-g5-t99-audio-independent-full-method-review.php | STARTED |  | catalog\compliance\evidence\o06\20261025T125705062Z-d637d841-DEV-verify-ue1-o06-g5-t99-audio-independent-full-method-review.php.txt |
-| 2026-10-25T12:37:43.6373562Z | verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php | PASS | 99 | catalog\compliance\evidence\o06\20261025T123743131Z-8e6a2aef-DEV-verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php.txt |
-| 2026-10-25T12:37:43.1393531Z | verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php | STARTED |  | catalog\compliance\evidence\o06\20261025T123743131Z-8e6a2aef-DEV-verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php.txt |
-| 2026-10-25T11:56:36.0702773Z | verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php | PASS | 93 | catalog\compliance\evidence\o06\20261025T115635564Z-7540c810-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt |
-| 2026-10-25T11:56:35.5712819Z | verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php | STARTED |  | catalog\compliance\evidence\o06\20261025T115635564Z-7540c810-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt |
-| 2026-10-25T11:50:31.8965369Z | verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php | PASS | 95 | catalog\compliance\evidence\o06\20261025T115031386Z-7b05606e-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt |
-| 2026-10-25T11:50:31.3945290Z | verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php | STARTED |  | catalog\compliance\evidence\o06\20261025T115031386Z-7b05606e-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt |
 
 ## Recovery procedure
 

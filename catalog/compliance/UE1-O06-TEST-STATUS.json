@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-25T20:56:55.3668949Z",
-    "head_commit":  "635d6bd9",
+    "updated_at_utc":  "2026-10-25T21:22:51.1974798Z",
+    "head_commit":  "7608dc2b",
     "current_target":  "DEV",
-    "current_source_sha256":  "eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c",
+    "current_source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -189,12 +189,12 @@
                       "test":  "verify-ue1-classic-mesh-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T07:37:51.3207681Z",
-                      "source_sha256":  "557ce439d98b6ca71318f6ac3659c1325fcee3b6651573f3bf41ebe453d22531",
-                      "test_sha256":  "3722fe692b8330b3e900d9aebc4181ac14ce6255d7c0bbf25b6e28ca6581fb56",
-                      "run_id":  "20261023T073750881Z-0248b17f",
+                      "event_at_utc":  "2026-10-25T21:22:48.8490559Z",
+                      "source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+                      "test_sha256":  "e96443e26cb64d380869d095b55e5356fb80e32a409014f37373c913c1ced092",
+                      "run_id":  "20261025T212248252Z-4f1f22fc",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T073750881Z-0248b17f-DEV-verify-ue1-classic-mesh-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-model-native.php",
@@ -705,12 +705,12 @@
                       "test":  "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-24T10:15:31.2143867Z",
-                      "source_sha256":  "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
+                      "event_at_utc":  "2026-10-25T21:22:49.9310577Z",
+                      "source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
                       "test_sha256":  "17f8fb8356d0e57327549d82fcb7dc31f8d62629713219ea90fb1ccc3294dc17",
-                      "run_id":  "20261024T101530481Z-5ee25529",
+                      "run_id":  "20261025T212249255Z-e9597530",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261024T101530481Z-5ee25529-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T212249255Z-e9597530-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-real-skeletal-vector-arrays.php",
@@ -1064,13 +1064,13 @@
                       "key":  "DEV:verify-ue1-o06-genuine-compiled-native.php",
                       "test":  "verify-ue1-o06-genuine-compiled-native.php",
                       "target":  "DEV",
-                      "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T13:11:34.7406269Z",
-                      "source_sha256":  "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
+                      "state":  "FAIL",
+                      "event_at_utc":  "2026-10-25T21:22:51.1754745Z",
+                      "source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
                       "test_sha256":  "ccc4ab6289a3e8874390f8af4ea91b2c8d20f60fb2628de61a81c4a3ea4e8b35",
-                      "run_id":  "20261023T131126724Z-790287d8",
-                      "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T131126724Z-790287d8-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
+                      "run_id":  "20261025T212250332Z-dd9f369a",
+                      "exit_code":  1,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-entry-v61.php",

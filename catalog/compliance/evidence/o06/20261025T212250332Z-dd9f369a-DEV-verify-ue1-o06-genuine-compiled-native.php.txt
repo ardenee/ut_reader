@@ -1,0 +1,373 @@
+﻿{
+    "ok": false,
+    "checks": 94,
+    "passed": 72,
+    "failed": [
+        "no_export_decoder_errors_Core.u",
+        "no_export_decoder_errors_Editor.u",
+        "no_export_decoder_errors_Engine.u",
+        "no_export_decoder_errors_Fire.u",
+        "no_export_decoder_errors_IpDrv.u",
+        "no_export_decoder_errors_UNreal.u",
+        "no_export_decoder_errors_Announcer.uax",
+        "no_export_decoder_errors_BossVoice.uax",
+        "no_export_decoder_errors_CountDown.uax",
+        "no_export_decoder_errors_Female1Voice.uax",
+        "no_export_decoder_errors_Female2Voice.uax",
+        "no_export_decoder_errors_FemaleSounds.uax",
+        "no_export_decoder_errors_LadderSounds.uax",
+        "no_export_decoder_errors_Male1Voice.uax",
+        "no_export_decoder_errors_Male2Voice.uax",
+        "no_export_decoder_errors_malesounds.uax",
+        "all_non_class_exports_native_complete",
+        "genuine_342_native_meshes",
+        "genuine_8_texture_derived_fonts",
+        "genuine_844_native_sound_exports",
+        "unverified_class_default_schema_gap_visible",
+        "schema_free_class_exports_visible"
+    ],
+    "errors": [
+        {
+            "file": "Core.u",
+            "export": 0,
+            "name": "Object",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 1,
+            "name": "Vector",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 2,
+            "name": "ObjectName",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 3,
+            "name": "i",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 4,
+            "name": "E",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 5,
+            "name": "PropValue",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 6,
+            "name": "PropName",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 7,
+            "name": "PropName",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 8,
+            "name": "ProbeFunc",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 9,
+            "name": "ProbeFunc",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 10,
+            "name": "ParentClass",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 11,
+            "name": "TestClass",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 12,
+            "name": "TestState",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 13,
+            "name": "Label",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 14,
+            "name": "NewState",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 15,
+            "name": "PackageName",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 16,
+            "name": "KeyName",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 17,
+            "name": "SectionName",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 18,
+            "name": "S",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 19,
+            "name": "A",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 20,
+            "name": "Tag",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 21,
+            "name": "S",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 22,
+            "name": "B",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 23,
+            "name": "Plane",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 24,
+            "name": "A",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 25,
+            "name": "B",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 26,
+            "name": "A",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 27,
+            "name": "B",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 28,
+            "name": "A",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 29,
+            "name": "B",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 30,
+            "name": "A",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "Core.u",
+            "export": 31,
+            "name": "S",
+            "problem": "UE1 package version 61 has overlapping source profiles [epic-ue1, ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        }
+    ],
+    "totals": {
+        "exports": 15194,
+        "native_complete": 0,
+        "font": 0,
+        "mesh": 0,
+        "sound": 0,
+        "unverified_class_default_schemas": 0,
+        "class_no_script_no_defaults": 0,
+        "tag_count": 0,
+        "native_tail_bytes": 0
+    },
+    "files": [
+        {
+            "file": "Core.u",
+            "version": 61,
+            "exports": 458,
+            "native_complete": 0,
+            "exceptions": 458,
+            "sha256": "6f48d3e0daf0a9c804f56a4b0842a7dfeca816a73ecc7974b194f764c45c1a48"
+        },
+        {
+            "file": "Editor.u",
+            "version": 61,
+            "exports": 90,
+            "native_complete": 0,
+            "exceptions": 90,
+            "sha256": "d428e86d5b0ac88889fd9fc8c4cf36212e8a9a880c940f605978129d9453d71c"
+        },
+        {
+            "file": "Engine.u",
+            "version": 61,
+            "exports": 3619,
+            "native_complete": 0,
+            "exceptions": 3619,
+            "sha256": "6d7c00d5b55a2d00dc5524595d757cebacdceca73aa9d32b66676d2c885e8ce6"
+        },
+        {
+            "file": "Fire.u",
+            "version": 61,
+            "exports": 107,
+            "native_complete": 0,
+            "exceptions": 107,
+            "sha256": "d072d0253046668045687779dfb6575a589bb3c03feb512865dbe416ea5b1b0c"
+        },
+        {
+            "file": "IpDrv.u",
+            "version": 61,
+            "exports": 258,
+            "native_complete": 0,
+            "exceptions": 258,
+            "sha256": "8b36ca40096a92600195558143d2e9d85ebe6b5738623e5a9cebf85be8e2b391"
+        },
+        {
+            "file": "UNreal.u",
+            "version": 61,
+            "exports": 10233,
+            "native_complete": 0,
+            "exceptions": 10233,
+            "sha256": "a1145de5ed67bd7a5457c38cfda70d1ecf61f030c09b78d1089bc51d9d1ea3dd"
+        },
+        {
+            "file": "Announcer.uax",
+            "version": 68,
+            "exports": 39,
+            "native_complete": 0,
+            "exceptions": 39,
+            "sha256": "62f66e0a594362e1037ebabdf3969aefbf094bd99d8a50bd77ea2cae4599dc58"
+        },
+        {
+            "file": "BossVoice.uax",
+            "version": 68,
+            "exports": 64,
+            "native_complete": 0,
+            "exceptions": 64,
+            "sha256": "f89f692a6124fdd84aab3938b4e2dd363c40318ae5a9a0d6612bb8e3977e89f5"
+        },
+        {
+            "file": "CountDown.uax",
+            "version": 66,
+            "exports": 19,
+            "native_complete": 0,
+            "exceptions": 19,
+            "sha256": "70d29e6d0cfa87cfcf93fb590e52cd0cafd355b3ebd6561b050329bbf491bcb2"
+        },
+        {
+            "file": "Female1Voice.uax",
+            "version": 68,
+            "exports": 65,
+            "native_complete": 0,
+            "exceptions": 65,
+            "sha256": "4940ebe2fedef45f5cd09bfec2daad2a3a875ab17787ed566116e582b84acbb1"
+        },
+        {
+            "file": "Female2Voice.uax",
+            "version": 68,
+            "exports": 69,
+            "native_complete": 0,
+            "exceptions": 69,
+            "sha256": "05a9f328efa49b69328f4cd1c92e0f5a80e67010513f83363c054bc35e2d5d90"
+        },
+        {
+            "file": "FemaleSounds.uax",
+            "version": 68,
+            "exports": 20,
+            "native_complete": 0,
+            "exceptions": 20,
+            "sha256": "453e1e537c0714dc3d876352029ad2375ef0f03368a509be3cd232e190e11ce9"
+        },
+        {
+            "file": "LadderSounds.uax",
+            "version": 66,
+            "exports": 6,
+            "native_complete": 0,
+            "exceptions": 6,
+            "sha256": "3b8ec7fc7f6572665470b6a8331e2bf5c867068365251cd86ed942544126b84f"
+        },
+        {
+            "file": "Male1Voice.uax",
+            "version": 68,
+            "exports": 60,
+            "native_complete": 0,
+            "exceptions": 60,
+            "sha256": "11b79e4b376ee10f2f4dc01234f2cd8d1134fe7f0678614da7285631f044647b"
+        },
+        {
+            "file": "Male2Voice.uax",
+            "version": 68,
+            "exports": 68,
+            "native_complete": 0,
+            "exceptions": 68,
+            "sha256": "969a85ff0d653983353e190ea7a8cd16abfb5425f45f281bea6cc27e888ac1f6"
+        },
+        {
+            "file": "malesounds.uax",
+            "version": 68,
+            "exports": 19,
+            "native_complete": 0,
+            "exceptions": 19,
+            "sha256": "1cd6cf6d3d7f8a4a39dec1e5ffe8b69d412e9a66de4b7f2635e7b128b119aebf"
+        }
+    ],
+    "native_statuses": [],
+    "class_counts": [],
+    "pinned_epic_source_sha256": {
+        "Src/UnMesh.cpp": "fd10707fadf6d3d51df26f540889db6a22bee30c653cc51a6fad500a411cab49",
+        "Src/UnFont.cpp": "ddfb70cfecef65ff51af7fb2849aa7b3a14249606a3ea4e71636aaa28e419f7f",
+        "Src/UnTex.cpp": "f35a19b71e4c77a24f474f52bedbd2b594afa0e8a769e86a8736c7650e957374",
+        "Inc/UnTex.h": "5169cdc61c5ed23a742534977eb0bd1a8f5f8ebe13b700dafecb9f1af8d5429b"
+    },
+    "remaining": "513 class-default schemas structurally decoded but source/schema unverified; no compiled native oracle"
+}
