@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 34,
+    "passed": 34,
+    "failed": [],
+    "native_original_v432_DLL_loaded_under_zero_allocator": true,
+    "original_archive_nested_strings_equal_diagnostic_native": 2,
+    "original_archive_nested_vector_scalars_equal_diagnostic_native": 6,
+    "stock_allocator_native_loader_failure_captured": true,
+    "stock_allocator_FString_loaded_value_parity": "NOT_VERIFIED",
+    "T99_UObject_method_full": "BLOCKED",
+    "real_native_executions_repeated_in_this_test": 0
+}

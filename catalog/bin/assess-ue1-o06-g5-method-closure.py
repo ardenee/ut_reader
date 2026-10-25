@@ -32,7 +32,7 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared v60-61 v1200/v432 frame wire is source-equivalent and is not retested; C98 v1200 and C227 v227 must be evaluated independently, NOT used as an inappropriate prerequisite for the T99 v432 UObject method. Camera loader exclusions are CLOSED. Within T99 v432, source-legal nested dynamic FString native loaded values remain NOT_VERIFIED (isolated original compiled Core.dll LoadPackage faults at 0xBAADF00D); independent complete UObject source-legal tag/default/property/postload and malformed stream variants remain OPEN. One new compiled count31 dynamic ArrayProperty physical EOF case is fixed, SHA-verified, and does not close the other branches.",
+  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared v60-61 v1200/v432 frame wire is source-equivalent and is not retested; C98 v1200 and C227 v227 must be evaluated independently, NOT used as an inappropriate prerequisite for the T99 v432 UObject method. Camera loader exclusions are CLOSED. Within T99 v432, source-legal nested dynamic FString stock-native loaded values remain NOT_VERIFIED: canonical malloc yields 0xBAADF00D, but original compiled Core.dll under isolated zero-initializing allocation successfully loads and agrees with two source-archived strings and two FVector structs (allocator-conditioned proof, NOT a stock native full method acceptance); independent complete UObject source-legal tag/default/property/postload and malformed stream variants remain OPEN. One new compiled count31 dynamic ArrayProperty physical EOF case is fixed, SHA-verified, and does not close the other branches.",
   "next":"T99 v432 UObject scope only: close genuinely unverified source-legal nested loaded values (especially dynamic array<FString> native crash/loader outcome), context-specific stream errors and full class/preload/tagged properties behavior before independent seven-gate signoff. C98 v1200 and C227 v227 remain separate O06 source profile contracts, not T99 gate dependencies. DO NOT retest SHA-pinned original v61 308/926/124 properties, prior 113 Entry/43 StateFrames, 6 native dynamic cases, 3 vectors or the new native count31 malformed array EOF; do not redo four already FULL v432 subclass method oracles. PRD untouched.",
   "blocker":"T99_v432_unverified_nonempty_FString_array_native_materialization_other_nested_tagged_property_load_error_variants_and_independent_full_method_review",
  },
@@ -792,7 +792,46 @@ for name in reg["methods"]:
         old["prd_original_verified_u_unr_files_staged"]=239
         old["prd_original_camera_stateframes_source_parsed"]=433
         old["prd_source_native_firetexture_fspark_records"]=4573
+        # Distinct controlled-allocator diagnostic: the SAME unmodified
+        # original compiled v432 Core.dll loads a stock-generated original
+        # package only when the disposable harness zeros allocated memory.
+        # FArray::Add does not initialize FString inner elements; stock
+        # native loader faults on 0xBAADF00D. Never certify stock runtime
+        # loaded value parity from a modified allocation policy.
+        string_test="verify-ue1-o06-g5-uobject-fstring-conditional-native.php"
+        string_ev=next((e for e in reversed(events)
+            if e.get("test")==string_test and e.get("state")=="PASS"),None)
+        assert string_ev is not None
+        string_log=ROOT/string_ev["log"].replace("\\","/")
+        assert sha(string_log)==string_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/string_test)==string_ev["test_sha256"]
+        assert string_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        string_decision=read(string_log)
+        assert string_decision["ok"] and string_decision["checks"]==34
+        assert string_decision["passed"]==34
+        assert string_decision["native_original_v432_DLL_loaded_under_zero_allocator"] is True
+        assert string_decision["original_archive_nested_strings_equal_diagnostic_native"]==2
+        assert string_decision["original_archive_nested_vector_scalars_equal_diagnostic_native"]==6
+        assert string_decision["stock_allocator_native_loader_failure_captured"] is True
+        assert string_decision["stock_allocator_FString_loaded_value_parity"]=="NOT_VERIFIED"
+        assert string_decision["T99_UObject_method_full"]=="BLOCKED"
+        assert string_decision["real_native_executions_repeated_in_this_test"]==0
+        string_manifest=C/"UE1-O06-G5-T99-UOBJECT-FSTRING-ALLOCATOR-CONDITIONAL.json"
+        assert string_manifest.is_file()
+        string_data=read(string_manifest)
+        assert string_data["all_archive_diagnostic_memory_values_match"] is True
+        assert string_data["cpp_native_DLL_untouched"] is True
+        assert string_data["stock_allocator_observed_result"]=="NATIVE_FAILED_INVALID_POINTER_0xBAADF00D_WITHOUT_LOADED_VALUE"
+        assert string_data["T99_UObject_GLOBAL_FULL"]=="BLOCKED"
+        for group in ("native_original_Epic_source_SHA","validation_artifacts_SHA"):
+            for info in string_data[group].values():
+                assert sha(Path(info["path"]))==info["sha256"]
         old["compiled_v432_native_nonempty_FString_load_failed_in_fixture"]=True
+        old["source_generated_original_nonempty_FString_archive_text_decode_verified"]=2
+        old["zero_initialized_allocator_actual_compiled_FString_loaded_values_verified"]=2
+        old["zero_initialized_allocator_actual_compiled_nested_vector_scalars_verified"]=6
+        old["zero_initialized_allocator_test_source_SHA_pinned"]=True
+        old["compiled_v432_stock_FString_heap_materialization_risk"]="UNINITIALIZED_ARRAY_ELEMENTS"
         old["native_FString_loaded_value_parity"]="NOT_VERIFIED"
         old["compiled_native_nested_vector_loaded_values"]=2
         old["compiled_native_nested_vector_invalid_count_offsets_matched"]=2
@@ -849,8 +888,8 @@ for name in reg["methods"]:
          "new_source_edit_isolated_without_prior_native_reruns":
             reconciliation["source_native_array_physical_EOF_scoped"]}
         if name=="T99:UObject::Serialize" else None),
-      "new_native_tests_executed":(1 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-       "new_test_runs_executed":16 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":(2 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
+       "new_test_runs_executed":17 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -860,7 +899,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
-  "new_oracle_runs":25,"new_test_runs":22,
+  "new_oracle_runs":26,"new_test_runs":23,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

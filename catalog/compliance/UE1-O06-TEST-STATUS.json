@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-25T19:59:17.7667146Z",
-    "head_commit":  "0d931131",
+    "updated_at_utc":  "2026-10-25T20:43:30.3138050Z",
+    "head_commit":  "3d7a1343",
     "current_target":  "DEV",
     "current_source_sha256":  "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
     "tests":  [
@@ -855,6 +855,18 @@
                       "run_id":  "20261024T212002584Z-35b1cb0a",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T212002584Z-35b1cb0a-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uobject-fstring-conditional-native.php",
+                      "test":  "verify-ue1-o06-g5-uobject-fstring-conditional-native.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-25T20:43:30.2857987Z",
+                      "source_sha256":  "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+                      "test_sha256":  "edda3ce77d3efa793ac2d9bd4dcc1ff31ebf2bfe3a745f87ad26d03d2a184487",
+                      "run_id":  "20261025T204329594Z-73ab1922",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T204329594Z-73ab1922-DEV-verify-ue1-o06-g5-uobject-fstring-conditional-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-uobject-native-array-physical-eof.php",
