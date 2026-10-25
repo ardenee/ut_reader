@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-font-v432-independent-source-profile-full`
-- **Stage:** T99-UFont-independent-FULL-G5-4FULL-4BLOCKED
-- **Last completed action:** Compiled native v432 UFont actual full values verified for 62 original nonempty Font objects: 1,200,128 glyph bytes, 46,434 TMap pairs, 185,736 remap bytes, 62 exact Texture references. Four original Engine fonts previously fully verified; total 66 inherited UObject envelopes match two-byte NAME_None no StateFrame or tags. Compiled malformed Font cursor Got4116 Expected4112 matches production safely. SHA-pinned sources, native executable and logs, original packages, independent PASS185/185 final journal 20261025T193250550Z-22963d14. All seven G5 gates verified for UT99 v432 source-profile file-reading UFont method; unrelated UObject and Unreal C98/C227 remain blocked. No PRD change.
-- **Resume at:** Do not repeat 66 Font loaded cases or earlier Sound Music TextBuffer native proof. Continue remaining 4 blocked T99 methods UObject, UClass, USkeletalMesh, UAnimation; focus one genuinely missing compiled native or malformed serializer path at a time. PRD untouched.
-- **Active changed at:** 2026-10-25T19:37:17+00:00
-- **Latest DEV test states:** PASS 145; FAIL 0; STARTED 0
+- **Contract:** `g5-t99-uobject-native-dynamic-array-physical-eof`
+- **Stage:** T99-UObject-actual-native-array-physical-EOF-corrected-PASS21-scope-reconciled-method-BLOCKED
+- **Last completed action:** Found actual source semantic mismatch: production v432 dynamic array rejects declared count against export SerialSize; Epic v400 UArrayProperty SerializeItem reads n elements from physical linker stream without export size cap. New one-byte mutation in original compiled v432 SavePackage-produced .u: array<int> count3 changed31 at offset254, genuine compiled v432 Core native ULinkerLoad::Serialize fails at physical package EOF absolute308, previous PHP rejected prematurely with wrong error. Production tagged reader now safe physically bounded fixed-width array, reports native origin and cursor at byte308. Original generated archive restored exact SHA; single DEV focus PASS21/21 journal 20261025T195917055Z-1c992bbe and source/native SHA evidence UE1-O06-G5-T99-UOBJECT-NATIVE-ARRAY-PHYSICAL-EOF.json. Scope of source change proved exactly one dynamic-array count guard hunk against canonical 0d931131; previous four FULL v432 method oracles and old 6 compiled native array cases not rerun; G5 assessor still 4FULL 4BLOCKED 0FAILED. T99 UObject not FULL until other unverified source-legal nested FString native loaded values, context/negative variants and independent 7-gate review. v1200 C98 and licensed v227 C227 separate profiles, not T99 prerequisite. PRD untouched.
+- **Resume at:** STOP this fixed native array count31 test, never rerun it. For T99 UObject next investigate genuinely unverified array<FString> compiled load behavior or other distinct property load/error variant and source-legal output; do not rerun 308 original v61 objects/926 tags/124 XLevel, 113 Entry/43 frames, existing array/ref/cursor fixtures, or four FULL T99 methods. Maintain independently SHA pinned source proof and compile native only if a unique remaining criterion, PRD remains unchanged.
+- **Active changed at:** 2026-10-25T20:09:38+00:00
+- **Latest DEV test states:** PASS 146; FAIL 0; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-25T19:59:17.7467156Z | verify-ue1-o06-g5-uobject-native-array-physical-eof.php | PASS | 284 | catalog\compliance\evidence\o06\20261025T195917055Z-1c992bbe-DEV-verify-ue1-o06-g5-uobject-native-array-physical-eof.php.txt |
+| 2026-10-25T19:59:17.0627495Z | verify-ue1-o06-g5-uobject-native-array-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261025T195917055Z-1c992bbe-DEV-verify-ue1-o06-g5-uobject-native-array-physical-eof.php.txt |
 | 2026-10-25T19:32:51.3018217Z | verify-ue1-o06-g5-t99-font-independent-full.php | PASS | 321 | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
 | 2026-10-25T19:32:50.5588217Z | verify-ue1-o06-g5-t99-font-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
 | 2026-10-25T16:37:29.4722968Z | verify-ue1-o06-g5-t99-textbuffer-independent-full.php | PASS | 307 | catalog\compliance\evidence\o06\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-25T11:27:15.1823565Z | verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261025T112715174Z-6b534c85-DEV-verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php.txt |
 | 2026-10-25T10:28:16.9403881Z | verify-ue1-o06-g5-native-audio-source-array-decision.php | PASS | 118 | catalog\compliance\evidence\o06\20261025T102816392Z-9fc33d4a-DEV-verify-ue1-o06-g5-native-audio-source-array-decision.php.txt |
 | 2026-10-25T10:28:16.3994224Z | verify-ue1-o06-g5-native-audio-source-array-decision.php | STARTED |  | catalog\compliance\evidence\o06\20261025T102816392Z-9fc33d4a-DEV-verify-ue1-o06-g5-native-audio-source-array-decision.php.txt |
-| 2026-10-25T09:34:37.1726627Z | verify-ue1-o06-c227-archetype-native-operator-guard.php | PASS | 104 | catalog\compliance\evidence\o06\20261025T093436644Z-43a655ff-DEV-verify-ue1-o06-c227-archetype-native-operator-guard.php.txt |
-| 2026-10-25T09:34:36.6526595Z | verify-ue1-o06-c227-archetype-native-operator-guard.php | STARTED |  | catalog\compliance\evidence\o06\20261025T093436644Z-43a655ff-DEV-verify-ue1-o06-c227-archetype-native-operator-guard.php.txt |
 
 ## Recovery procedure
 

@@ -251,10 +251,25 @@ final class CatalogUE1ClassicTaggedPropertyReader
                             'UE1 v432 dynamic array negative count at archive offset '
                             .($offset+$position));
                     }
-                    $remaining=$archiveLimit-$position;
-                    if($count>($width>0?intdiv($remaining,$width):$remaining)){
+                    // Epic UArrayProperty::SerializeItem does not bound
+                    // the element count by the export's SerialSize.
+                    // ULinkerLoad reads the physical file stream and reports
+                    // a failure at the actual file cursor. On a compiled
+                    // v432 array<int> count=31 mutation the native linker
+                    // reaches absolute byte 308 (physical EOF), whereas an
+                    // early export-size guard incorrectly rejected the
+                    // count before consuming any elements. For fixed-width
+                    // inners we can establish the same unavoidable physical
+                    // EOF without attempting arbitrary-sized allocations.
+                    // Variable-width inners retain the per-read physical
+                    // bounds from the source-selected archive callback.
+                    if($width>0&&$streamState!==null
+                        &&$count>intdiv(
+                            max(0,(int)$streamState['physical_limit']-$position),
+                            $width)){
                         throw new RuntimeException(
-                            'UE1 v432 dynamic array element count exceeds export SerialSize');
+                            'UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset '
+                            .($offset+(int)$streamState['physical_limit']));
                     }
                     $elements=[];
                     for($item=0;$item<$count;$item++){

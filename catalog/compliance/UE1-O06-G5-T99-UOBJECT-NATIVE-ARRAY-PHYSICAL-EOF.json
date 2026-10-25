@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "source_profile": "UT99_v432_file_loading",
+  "semantic_discrepancy_fixed": "UArrayProperty count preemptive export-SerialSize check replaced by Epic-native physical stream EOF classification for fixed-width Inner arrays",
+  "malformed_original_generated_fixture": "one original compiled v432 SavePackage-generated class/object, count3 altered to31 at absolute file offset254, original restored SHA",
+  "native_compiled_error_origin": "ULinkerLoad::Serialize",
+  "native_compiled_failure_absolute_cursor": 308,
+  "pre_fix_PHP_wrong_failure": "UE1 v432 dynamic array element count exceeds export SerialSize",
+  "post_fix_PHP_exact_failure": "UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset 308",
+  "memory_safety": "preflight fixed-width physical EOF without native-unbounded allocations; variable-size inner codec retains source stream callback physical bounds",
+  "source_previous_fingerprint": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+  "source_current_fingerprint": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+  "isolated_new_source_scope_verified": true,
+  "earlier_full_T99_methods_reused_by_branch_local_source_proof": 4,
+  "native_prior_oracle_reruns": 0,
+  "full_UObject_method_verdict": "BLOCKED_OTHER_SOURCE_VARIANTS",
+  "new_focused_acceptance": {
+    "test": "verify-ue1-o06-g5-uobject-native-array-physical-eof.php",
+    "run_id": "20261025T195917055Z-1c992bbe",
+    "source_sha256": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+    "output_sha256": "f7051e009eb1d05b757831fd14d785e241b99abc5b8051aeefd003b9094901c4",
+    "checks": 21,
+    "passed": 21
+  },
+  "file_sha256": {
+    "native_source_v400_UnProp_UArrayProperty": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+    },
+    "original_compiled_v432_Core_DLL": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "original_native_generated_archive_restored": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5ArrayPayload.u",
+      "sha256": "2436d2545135a8ca02d5f1e71252daf3314be6e5b02c371a7db8ae5450e16ff3"
+    },
+    "compiled_native_load_executable_original": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5-UObject-Native-Array-Load.exe",
+      "sha256": "9a7a7472c501a5e8ab052b18710aa29b66ab76644977c1eb1f5e2f897f2d3ff0"
+    },
+    "previous_original_sealed_6_native_array_cases": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+      "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+    },
+    "DEV_only_one_mutation_native_script": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-native-array-large-count-one-new.py",
+      "sha256": "7908ab70ec9e86223047bdcf6d4d60cef87881a4b288ae6f4e0bf260db471b20"
+    },
+    "new_native_original_stdout": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-Array-Count31-New-Native.txt",
+      "sha256": "5b22df2a609d87803a857c047397a4f9bf6885fddf87cac449c0b63a3889c869"
+    },
+    "new_native_original_stdout_manifest": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-Array-Count31-One-New-Mutation.json",
+      "sha256": "587798b3318e0455b713f5b1ba2c0057be667426b71b97a870647d75c0b176c4"
+    },
+    "DEV_only_pre_post_PHP_comparator": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-uobject-native-count31-php-compare.php",
+      "sha256": "0c3b72ffc0781a9b817293b70df38daa0890d2258f174c54f9fedb3c4dc6426f"
+    },
+    "new_production_tagged_reader": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\src\\Infrastructure\\Readers\\CatalogUE1ClassicTaggedPropertyReader.php",
+      "sha256": "d77394af8fc7959b98a5fcc7582bc78cb48654584b44daae89201c70375ed2da"
+    },
+    "production_source_scope_reconciliation": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\bin\\reconcile-ue1-o06-g5.py",
+      "sha256": "7d7d339082ac9e9c061aa04fd9b44993ebaf8e17aa541da26708d3298ebc1eff"
+    },
+    "independent_G5_method_assessor": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\bin\\assess-ue1-o06-g5-method-closure.py",
+      "sha256": "8dad258e618cb74ae307ce084313610aec8f4efb1d8e61589bb30a9d48c19f3b"
+    },
+    "new_21_DEV_test": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\bin\\verify-ue1-o06-g5-uobject-native-array-physical-eof.php",
+      "sha256": "65a6b052d064cf2b8ca1aa75073132e81353ce430c484767f05f07058d55fb64"
+    },
+    "new_21_DEV_acceptance_log": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\evidence\\o06\\20261025T195917055Z-1c992bbe-DEV-verify-ue1-o06-g5-uobject-native-array-physical-eof.php.txt",
+      "sha256": "f7051e009eb1d05b757831fd14d785e241b99abc5b8051aeefd003b9094901c4"
+    }
+  }
+}

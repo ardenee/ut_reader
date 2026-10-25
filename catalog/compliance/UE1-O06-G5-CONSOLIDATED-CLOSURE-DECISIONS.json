@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+  "source_fingerprint": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
   "method_count": 8,
   "fully_epic_verified": 4,
   "failed": 0,
   "blocked": 4,
-  "new_oracle_runs": 24,
-  "new_test_runs": 21,
+  "new_oracle_runs": 25,
+  "new_test_runs": 22,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -25,9 +25,9 @@
       "existing_native_loaded_valid": true,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
-      "decisive_blocker": "legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
-      "reason": "Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
-      "next_action": "Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, but Camera loader exclusions are source-proven and CLOSED. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
+      "decisive_blocker": "T99_v432_unverified_nonempty_FString_array_native_materialization_other_nested_tagged_property_load_error_variants_and_independent_full_method_review",
+      "reason": "Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared v60-61 v1200/v432 frame wire is source-equivalent and is not retested; C98 v1200 and C227 v227 must be evaluated independently, NOT used as an inappropriate prerequisite for the T99 v432 UObject method. Camera loader exclusions are CLOSED. Within T99 v432, source-legal nested dynamic FString native loaded values remain NOT_VERIFIED (isolated original compiled Core.dll LoadPackage faults at 0xBAADF00D); independent complete UObject source-legal tag/default/property/postload and malformed stream variants remain OPEN. One new compiled count31 dynamic ArrayProperty physical EOF case is fixed, SHA-verified, and does not close the other branches.",
+      "next_action": "T99 v432 UObject scope only: close genuinely unverified source-legal nested loaded values (especially dynamic array<FString> native crash/loader outcome), context-specific stream errors and full class/preload/tagged properties behavior before independent seven-gate signoff. C98 v1200 and C227 v227 remain separate O06 source profile contracts, not T99 gate dependencies. DO NOT retest SHA-pinned original v61 308/926/124 properties, prior 113 Entry/43 StateFrames, 6 native dynamic cases, 3 vectors or the new native count31 malformed array EOF; do not redo four already FULL v432 subclass method oracles. PRD untouched.",
       "uobject_original_v61_saved_tag_fields": {
         "actual_runtime_text_value_matches": 802,
         "transient_text_excluded_by_Epic_Port": 124,
@@ -35,8 +35,14 @@
         "mismatched_fields": 0
       },
       "camera_native_loader_criterion": "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION",
-      "new_native_tests_executed": 0,
-      "new_test_runs_executed": 15
+      "uobject_native_dynamic_array_physical_EOF": {
+        "real_compiled_v432_fatal_cursor": 308,
+        "current_PHP_matches_native_loader_origin": true,
+        "one_new_focused_SHA_verified_checks": 21,
+        "new_source_edit_isolated_without_prior_native_reruns": true
+      },
+      "new_native_tests_executed": 1,
+      "new_test_runs_executed": 16
     },
     "T99:UClass::Serialize": {
       "decision": "BLOCKED",
@@ -59,6 +65,7 @@
       "next_action": "Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
+      "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 0
     },
@@ -83,6 +90,7 @@
       "next_action": "T99 v432 TextBuffer fully accepted. No further original 88 native replay.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
+      "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 2
     },
@@ -107,6 +115,7 @@
       "next_action": "T99 v432 Font complete; do not repeat original 66 fonts. Generic UObject and other source profiles remain separate.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
+      "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 2
     },
@@ -131,6 +140,7 @@
       "next_action": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
+      "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 0
     },
@@ -155,6 +165,7 @@
       "next_action": "Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
+      "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 0
     },
@@ -179,6 +190,7 @@
       "next_action": "T99 v432 Sound/Music method complete. Do not retest. Only general UObject and other source families remain.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
+      "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 9,
       "new_test_runs_executed": 2
     },
@@ -203,6 +215,7 @@
       "next_action": "T99 v432 Sound/Music method complete. Do not retest. Only general UObject and other source families remain.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
+      "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 9,
       "new_test_runs_executed": 2
     }

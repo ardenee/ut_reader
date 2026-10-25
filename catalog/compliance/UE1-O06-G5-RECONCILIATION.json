@@ -1,10 +1,12 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-25T19:36:51.671105+00:00",
-  "head": "8d23fb8b",
-  "previous_runner_head": "8d23fb8b",
-  "previous_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
-  "current_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+  "generated_utc": "2026-10-25T20:26:56.635781+00:00",
+  "head": "0d931131",
+  "previous_runner_head": "0d931131",
+  "previous_source_sha256": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+  "current_source_sha256": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+  "source_native_array_physical_EOF_scoped": true,
+  "previous_source_before_native_array_physical_EOF_change": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
@@ -64,7 +66,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 145
+    "PASS": 146
   },
   "branch_totals": {
     "C227": {
@@ -11378,7 +11380,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
+      "decisive_closure_blocker": "T99_v432_unverified_nonempty_FString_array_native_materialization_other_nested_tagged_property_load_error_variants_and_independent_full_method_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",

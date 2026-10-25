@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 21,
+    "passed": 21,
+    "failed": [],
+    "actual_compiled_native_exit": 1,
+    "native_linker_failure_absolute_offset": 308,
+    "PHP_diagnostic_native_source_origin": "ULinkerLoad::Serialize",
+    "original_archive_restore_SHA_verified": true,
+    "native_binary_reruns_in_verifier": 0,
+    "global_UObject_method_full": "BLOCKED_OTHER_SOURCE_VARIANTS"
+}

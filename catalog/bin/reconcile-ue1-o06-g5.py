@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Read-only G5 evidence reconciliation. Never equate tests or source mapping with native parity."""
-import datetime as dt, hashlib, json, subprocess
+import datetime as dt, hashlib, json, subprocess, difflib
 from pathlib import Path
 from collections import Counter
 ROOT=Path(__file__).resolve().parents[2]
@@ -50,7 +50,75 @@ for s in [r"L:\Source\Games\Unreal\Unreal [v0.84a] [1996-12-11]\Src",
     else: missing.append("MISSING_EPIC_1996_SOURCE" if "0.84a" in s else "MISSING_EPIC_1997_SOURCE")
 signature="\n".join(str(p)+":"+digest(p).upper() for p in sorted(inputs,key=lambda p:str(p).casefold()) if p.is_file())
 if missing: signature += "\n"+"\n".join(missing)
-current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+# A newly verified v432 source-local dynamic ArrayProperty physical-EOF
+# correction touches ONLY the existing tagged reader's count guard.
+# Reconstruct the old proven source signature (git HEAD before this fix)
+# instead of replaying hundreds of unrelated native loader probes.
+# A new 21-check native compiled differential oracle must prove the
+# change is isolated before ANY previous FULL verdict is reusable.
+actual_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+eof_tag=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicTaggedPropertyReader.php"
+eof_previous_bytes=subprocess.check_output(
+    ["git","-C",str(ROOT),"show","0d931131:"+eof_tag.relative_to(ROOT).as_posix()])
+eof_previous_source=eof_previous_bytes.decode("utf-8-sig")
+eof_previous_sha=hashlib.sha256(eof_previous_bytes).hexdigest().upper()
+eof_now=eof_tag.read_text(encoding="utf-8-sig")
+eof_old_line=str(eof_tag)+":"+digest(eof_tag).upper()
+assert signature.count(eof_old_line)==1
+source_before_eof_sig=signature.replace(
+    eof_old_line,str(eof_tag)+":"+eof_previous_sha,1)
+source_before_eof=hashlib.sha256(source_before_eof_sig.encode("utf-8")).hexdigest()
+assert source_before_eof=="52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78"
+tag_deltas=[
+  (eof_previous_source.splitlines(keepends=True)[a:b],
+   eof_now.splitlines(keepends=True)[c:d])
+  for op,a,b,c,d in difflib.SequenceMatcher(
+      None,eof_previous_source.splitlines(keepends=True),
+      eof_now.splitlines(keepends=True),autojunk=False).get_opcodes()
+  if op!="equal"
+]
+eof_old_branch="                    $remaining=$archiveLimit-$position;"
+eof_new_branch="                    // Epic UArrayProperty::SerializeItem does not bound"
+eof_end_branch="                    $elements=[];"
+eof_delta_isolated=(
+    len(tag_deltas)==2
+    and eof_previous_source.count(eof_old_branch)==1
+    and eof_now.count(eof_new_branch)==1
+    and eof_previous_source.count(eof_end_branch)==1
+    and eof_now.count(eof_end_branch)==1
+    and eof_previous_source.split(eof_old_branch,1)[0]
+        ==eof_now.split(eof_new_branch,1)[0]
+    and eof_previous_source.split(eof_end_branch,1)[1]
+        ==eof_now.split(eof_end_branch,1)[1]
+    and "dynamic array element count exceeds export SerialSize"
+        in eof_previous_source.split(eof_old_branch,1)[1].split(eof_end_branch,1)[0]
+    and "ULinkerLoad::Serialize physical EOF at archive offset"
+        in eof_now.split(eof_new_branch,1)[1].split(eof_end_branch,1)[0]
+)
+eof_test="verify-ue1-o06-g5-uobject-native-array-physical-eof.php"
+eof_event=latest.get(eof_test)
+eof_log=ROOT/eof_event["log"] if eof_event and eof_event.get("log") else None
+try: eof_values=read(eof_log) if eof_log and eof_log.exists() else {}
+except Exception: eof_values={}
+eof_scope=bool(
+    eof_delta_isolated
+    and eof_event and eof_event.get("state")=="PASS"
+    and eof_event.get("source_sha256")==actual_current
+    and eof_event.get("output_sha256")==digest(eof_log)
+    and eof_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/eof_test)
+    and eof_values.get("ok") is True
+    and eof_values.get("checks")==21
+    and eof_values.get("passed")==21
+    and eof_values.get("native_linker_failure_absolute_offset")==308
+    and eof_values.get("PHP_diagnostic_native_source_origin")=="ULinkerLoad::Serialize"
+    and eof_values.get("original_archive_restore_SHA_verified") is True
+    and eof_values.get("native_binary_reruns_in_verifier")==0
+    and eof_values.get("global_UObject_method_full")=="BLOCKED_OTHER_SOURCE_VARIANTS"
+)
+if not eof_scope:
+    raise SystemExit("Native original EOF source-isolation proof FAILED: do not reuse earlier FULL methods")
+signature=source_before_eof_sig
+current=source_before_eof
 # Two independently reviewed, branch-local reader changes, with no native
 # retests. Pin the BEFORE/MIDDLE commits and reconstruct their source SHA
 # from ALL current source input hashes, substituting only these two readers.
@@ -83,7 +151,7 @@ new_tag_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicT
 new_schema_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicClassDefaultSchemaReader.php"
 old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
-current_tag=new_tag_file.read_text(encoding="utf-8-sig")
+current_tag=eof_previous_source
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
 # One source-local audio branch delta. Unreal v1.200 USound and UMusic
 # own TArray<BYTE> for EVERY archive version; UT99 v400 and v227
@@ -209,7 +277,7 @@ legacy_guard_scope=(
 before_camera_tag=committed("06ae43e2",new_tag_file)
 previous_camera_source="6dba20b269aa8efc12f97f57ffca9ddd293a06e1a5d2f6b78e285282860929d8"
 sig_before_camera=subst_sig(
-    sig_before_legacy,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_camera_tag))
+    sig_before_legacy,new_tag_file,eof_previous_sha,sha_blob(before_camera_tag))
 camera_test="verify-ue1-o06-g5-camera-source-reachability-decision.php"
 camera_event=latest.get(camera_test)
 camera_log=ROOT/camera_event["log"] if camera_event and camera_event.get("log") else None
@@ -869,8 +937,10 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":current,
-    "fingerprint_changed":bool(current and current!=status.get("current_source_sha256")),
+    "current_source_sha256":actual_current,
+    "source_native_array_physical_EOF_scoped":eof_scope,
+    "previous_source_before_native_array_physical_EOF_change":source_before_eof if eof_scope else None,
+    "fingerprint_changed":bool(actual_current and actual_current!=status.get("current_source_sha256")),
     "source_scope_equivalence_v432_textbuffer_only":scoped_equivalence,
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
@@ -916,7 +986,7 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
 lines=["# UE1 O06 — G5 evidence reconciliation","",
        "Evidence inventory, not O06 acceptance. Generated "+result["generated_utc"]+"; Git "+head+".","",
        "## Counts","",
-       "- 256 MAPPED; 38 EXCLUDED; 0 methods with demonstrated full independent native behaviour across all relevant criteria.",
+       "- 256 MAPPED; 38 EXCLUDED; "+str(summary["full_independent_method_verified"])+" independently accepted T99 v432 file-load method contracts, "+str(summary["g5_blocked_method_decisions"])+" G5 method decisions BLOCKED; do not infer cross-family FULL.",
        "- "+str(len(no_named))+" entries have no named test; 52 of these are R82/R83 early-resource identity mappings.",
        "- "+str(len(natives))+" independent compiled v432 native export comparison slices: "+", ".join(natives)+".",
        "- Compiled v432 method archive-order evidence with no genuine loaded-value evidence: "+(", ".join(sorted(r["id"] for r in rows if r["id"] in COMPILED and not r["native_loaded_evidence_current"])) or "none")+".",
@@ -930,7 +1000,7 @@ lines=["# UE1 O06 — G5 evidence reconciliation","",
        "- Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded)." ,
        "- Latest DEV journal state: "+str(result["latest_DEV_test_states"])+".",
        "- Named tests with current matching source fingerprint: "+str(summary["named_tests_with_current_source_fingerprint"])+" of "+str(summary["with_named_test"])+"; historical PASS is not an automatically current proof.",
-       "- Global source fingerprint in latest status "+str(result["previous_source_sha256"])+"; independently recomputed "+str(current)+".",
+       "- Global source fingerprint in latest status "+str(result["previous_source_sha256"])+"; actual current "+str(actual_current)+"; earlier scoped native proofs reconciled against "+str(current)+" only after exact v432 dynamic-array source isolation and PASS21/21.",
        "", "## Branches","",
        "| Branch | MAPPED | No named test | Native export slices | Compiled method only | Native loaded values subset | Full array element subset |" ,
        "|---|---:|---:|---:|---:|---:|" ]

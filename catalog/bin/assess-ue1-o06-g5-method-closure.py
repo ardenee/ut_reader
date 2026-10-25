@@ -32,9 +32,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
-  "next":"Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, but Camera loader exclusions are source-proven and CLOSED. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
-  "blocker":"legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
+  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags now have positive native loaded-value comparisons: 802 typed ExportProperties fields plus 124 ACTUAL direct compiled AActor::XLevel memory pointers previously text-omitted by the transient Port gate; full class-qualified export-index2 objects match in all 124 actors, zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared v60-61 v1200/v432 frame wire is source-equivalent and is not retested; C98 v1200 and C227 v227 must be evaluated independently, NOT used as an inappropriate prerequisite for the T99 v432 UObject method. Camera loader exclusions are CLOSED. Within T99 v432, source-legal nested dynamic FString native loaded values remain NOT_VERIFIED (isolated original compiled Core.dll LoadPackage faults at 0xBAADF00D); independent complete UObject source-legal tag/default/property/postload and malformed stream variants remain OPEN. One new compiled count31 dynamic ArrayProperty physical EOF case is fixed, SHA-verified, and does not close the other branches.",
+  "next":"T99 v432 UObject scope only: close genuinely unverified source-legal nested loaded values (especially dynamic array<FString> native crash/loader outcome), context-specific stream errors and full class/preload/tagged properties behavior before independent seven-gate signoff. C98 v1200 and C227 v227 remain separate O06 source profile contracts, not T99 gate dependencies. DO NOT retest SHA-pinned original v61 308/926/124 properties, prior 113 Entry/43 StateFrames, 6 native dynamic cases, 3 vectors or the new native count31 malformed array EOF; do not redo four already FULL v432 subclass method oracles. PRD untouched.",
+  "blocker":"T99_v432_unverified_nonempty_FString_array_native_materialization_other_nested_tagged_property_load_error_variants_and_independent_full_method_review",
  },
  "T99:UClass::Serialize":{
   "result":"BLOCKED",
@@ -97,6 +97,17 @@ status={
  },
 }
 assert set(status)==set(reg["methods"])
+# Prior four SHA-pinned FULL T99 method source profiles are unchanged by
+# ONE independently original-compiled, SHA-verified malformed dynamic
+# UArrayProperty count/physical-EOF branch. The 21/21 focused acceptance
+# and exact old/new tagged-reader isolation are independently verified in
+# reconcile-ue1-o06-g5.py; no previously closed native loader replay.
+def scoped_source_current(value):
+    if value==reconciliation["current_source_sha256"]:
+        return True
+    return bool(reconciliation.get("source_native_array_physical_EOF_scoped")
+        and value==reconciliation.get("previous_source_before_native_array_physical_EOF_change"))
+
 decisions={}
 for name in reg["methods"]:
     entry=status[name]
@@ -153,7 +164,7 @@ for name in reg["methods"]:
         native_log=ROOT/native_ev["log"].replace("\\","/")
         assert sha(native_log)==native_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/native_test)==native_ev["test_sha256"]
-        assert native_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(native_ev["source_sha256"])
         assert reconciliation["source_native_audio_compiled_loaded_and_malformed_scoped"]
         result=read(native_log)
         assert result["ok"] and result["checks"]==66 and result["passed"]==66
@@ -189,7 +200,7 @@ for name in reg["methods"]:
         final_log=ROOT/finale["log"].replace("\\","/")
         assert sha(final_log)==finale["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/final_test)==finale["test_sha256"]
-        assert finale["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(finale["source_sha256"])
         verdict=read(final_log)
         assert verdict["ok"] and verdict["checks"]==63 and verdict["passed"]==63
         assert verdict["source_profile"]=="UT99-v432"
@@ -210,7 +221,7 @@ for name in reg["methods"]:
         closure=read(artifact)
         assert closure["decision"]=="FULL" and closure["method"]==name
         assert closure["scope"]=="UT99_v432_T99_source_profile_package_reader_loading_only"
-        assert closure["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(closure["current_production_source_sha256"])
         assert closure["independent_final_acceptance_script_sha256"]==finale["test_sha256"]
         assert closure["independent_final_acceptance_log_sha256"]==finale["output_sha256"]
         assert closure["review_source_manifest_sha256"]==sha(source_review)
@@ -247,7 +258,7 @@ for name in reg["methods"]:
         final_log=ROOT/finale["log"].replace("\\","/")
         assert sha(final_log)==finale["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/final_test)==finale["test_sha256"]
-        assert finale["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(finale["source_sha256"])
         v=read(final_log)
         assert v["ok"] and v["checks"]==302 and v["passed"]==302
         assert v["scope"]=="UT99 v432 file-loading" and v["review"]=="FULL_SOURCE_PROFILE_ONLY"
@@ -268,7 +279,7 @@ for name in reg["methods"]:
         assert closure["decision"]=="FULL"
         assert closure["method"]==name
         assert closure["scope"]=="UT99_v432_T99_source_profile_package_reader_loading_only"
-        assert closure["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(closure["current_production_source_sha256"])
         assert closure["independent_final_acceptance_script_sha256"]==finale["test_sha256"]
         assert closure["independent_final_acceptance_log_sha256"]==finale["output_sha256"]
         assert closure["review_source_manifest_sha256"]==sha(review)
@@ -302,7 +313,7 @@ for name in reg["methods"]:
         logfile=ROOT/ev["log"].replace("\\","/")
         assert sha(logfile)==ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/test)==ev["test_sha256"]
-        assert ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(ev["source_sha256"])
         summary=read(logfile)
         assert summary["ok"] and summary["checks"]==185
         assert summary["passed"]==185 and summary["review"]=="FULL_SOURCE_PROFILE_ONLY"
@@ -323,7 +334,7 @@ for name in reg["methods"]:
         closure=read(artifact)
         assert closure["decision"]=="FULL" and closure["method"]==name
         assert closure["scope"]=="UT99_v432_T99_source_profile_package_reader_loading_only"
-        assert closure["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(closure["current_production_source_sha256"])
         assert closure["independent_final_acceptance_script_sha256"]==ev["test_sha256"]
         assert closure["independent_final_acceptance_log_sha256"]==ev["output_sha256"]
         assert closure["review_source_manifest_sha256"]==sha(manifest)
@@ -682,7 +693,7 @@ for name in reg["methods"]:
         v61_tags_log=ROOT/v61_tags_ev["log"].replace("\\","/")
         assert sha(v61_tags_log)==v61_tags_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/v61_tags_test)==v61_tags_ev["test_sha256"]
-        assert v61_tags_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(v61_tags_ev["source_sha256"])
         v61_tag_values=read(v61_tags_log)
         assert v61_tag_values["ok"] and v61_tag_values["checks"]==30
         assert v61_tag_values["passed"]==30
@@ -709,7 +720,7 @@ for name in reg["methods"]:
         xlevel_log=ROOT/xlevel_ev["log"].replace("\\","/")
         assert sha(xlevel_log)==xlevel_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/xlevel_test)==xlevel_ev["test_sha256"]
-        assert xlevel_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(xlevel_ev["source_sha256"])
         xlevel_values=read(xlevel_log)
         assert xlevel_values["ok"] and xlevel_values["checks"]==25
         assert xlevel_values["passed"]==25
@@ -727,6 +738,25 @@ for name in reg["methods"]:
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
+        eof_event=next((e for e in reversed(events)
+            if e.get("test")=="verify-ue1-o06-g5-uobject-native-array-physical-eof.php"
+               and e.get("state")=="PASS"),None)
+        assert eof_event is not None
+        eof_output=ROOT/eof_event["log"].replace("\\","/")
+        assert sha(eof_output)==eof_event["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/"verify-ue1-o06-g5-uobject-native-array-physical-eof.php")==eof_event["test_sha256"]
+        assert eof_event["source_sha256"]==reconciliation["current_source_sha256"]
+        assert reconciliation["source_native_array_physical_EOF_scoped"]
+        eof_result=read(eof_output)
+        assert eof_result["ok"] and eof_result["checks"]==21 and eof_result["passed"]==21
+        assert eof_result["native_linker_failure_absolute_offset"]==308
+        assert eof_result["PHP_diagnostic_native_source_origin"]=="ULinkerLoad::Serialize"
+        assert eof_result["native_binary_reruns_in_verifier"]==0
+        assert eof_result["global_UObject_method_full"]=="BLOCKED_OTHER_SOURCE_VARIANTS"
+        old["compiled_native_UArrayProperty_physical_EOF_error_current_source"]=True
+        old["compiled_native_UArrayProperty_physical_EOF_cursor"]=308
+        old["compiled_native_UArrayProperty_physical_EOF_decision_checks"]=21
+        old["source_local_UArrayProperty_count_guard_regression_fixed"]=True
         old["compiled_native_malformed_tag_cases_valid"]=4
         old["compiled_native_malformed_tag_outcomes_current_source"]=True
         old["compiled_native_reference_array_struct_cases_valid"]=6
@@ -790,9 +820,9 @@ for name in reg["methods"]:
     old["next_action"]=entry["next"]
     old["reason"]=entry["reason"]
     old["last_consolidated_review"]=(
-        "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
-        else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
-        else "current_method_decision_69_checks_Camera_loader_source_exclusion_closed_native_replay_zero" if name=="T99:UObject::Serialize"
+        "FINAL_7_of_7_source_scoped_TextBuffer_302_checks" if name=="T99:UTextBuffer::Serialize"
+        else "FINAL_7_of_7_source_scoped_Font_185_checks" if name=="T99:UFont::Serialize"
+        else "current_native_dynamic_ArrayProperty_physical_EOF_21_checks_and_prior_Camera_exclusion_SHA" if name=="T99:UObject::Serialize"
         else "FINAL_7_of_7_source_scoped_audio_inherited_PASS63" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
         else "existing_sha_pinned_evidence_only_no_new_tests")
     decisions[name]={
@@ -812,8 +842,15 @@ for name in reg["methods"]:
       "camera_native_loader_criterion":(
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
-      "new_native_tests_executed":(9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "uobject_native_dynamic_array_physical_EOF":(
+        {"real_compiled_v432_fatal_cursor":308,
+         "current_PHP_matches_native_loader_origin":True,
+         "one_new_focused_SHA_verified_checks":21,
+         "new_source_edit_isolated_without_prior_native_reruns":
+            reconciliation["source_native_array_physical_EOF_scoped"]}
+        if name=="T99:UObject::Serialize" else None),
+      "new_native_tests_executed":(1 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
+       "new_test_runs_executed":16 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -823,7 +860,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":24,"new_test_runs":21,
+  "new_oracle_runs":25,"new_test_runs":22,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

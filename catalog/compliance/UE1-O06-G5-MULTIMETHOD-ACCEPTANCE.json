@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, but Camera loader exclusions are source-proven and CLOSED. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
+      "next_closure_work": "T99 v432 UObject scope only: close genuinely unverified source-legal nested loaded values (especially dynamic array<FString> native crash/loader outcome), context-specific stream errors and full class/preload/tagged properties behavior before independent seven-gate signoff. C98 v1200 and C227 v227 remain separate O06 source profile contracts, not T99 gate dependencies. DO NOT retest SHA-pinned original v61 308/926/124 properties, prior 113 Entry/43 StateFrames, 6 native dynamic cases, 3 vectors or the new native count31 malformed array EOF; do not redo four already FULL v432 subclass method oracles. PRD untouched.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -242,7 +242,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
+      "decisive_closure_blocker": "T99_v432_unverified_nonempty_FString_array_native_materialization_other_nested_tagged_property_load_error_variants_and_independent_full_method_review",
       "closure_artifact": null,
       "closure_sha256": null
     },
