@@ -1,0 +1,159 @@
+{
+  "schema": 1,
+  "contract": "T99 Sound and Music compiled v432 loaded field and malformed/archive pointer outcome acceptance",
+  "execution": "DEV game-amd only, isolated x86 C++ original native DLLs, no changes to original Epic sources or production",
+  "engine_source_and_executables": {
+    "UT99_v400_Engine_USound_UMusic_Serialize": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Src\\UnAudio.cpp",
+      "sha256": "c648a3106b1ea910da178b17324ccf8c9d9eaf04b647671277019c61291f7ea8"
+    },
+    "UT99_v400_Core_TLazyArray_operator": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnTemplate.h",
+      "sha256": "1dbc817cece37d1077789422ba4f52723aab3c22d93c64c6d244aabbc6a71024"
+    },
+    "UT99_v432_Engine_UnAudio_class": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Engine\\Inc\\UnAudio.h",
+      "sha256": "91ece5ed340926fa7f5695fb72c1f65faa66523d06e9c5f5aa0bcae941032b65"
+    },
+    "original_v432_Core_binary": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "original_v432_Engine_binary": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+    },
+    "compiled_NATIVE_probe_cpp": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Load-Values.cpp",
+      "sha256": "b23da37424aa5f1f13601c218e473feb6f1e29ff858c01b2ba1abda2fd84e7e6"
+    },
+    "compiled_NATIVE_probe_exe": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Load-Values.exe",
+      "sha256": "41861e658342faf61e6ea030f4d085317e7b6fdd5ceed9c471ff7026eb1b0022"
+    },
+    "compiled_DURATION_probe_cpp": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Load-Values-Duration.cpp",
+      "sha256": "8ed57cfbd04ddd23c5d9c7d908842f4efbc37f2323373f87d203311c79d7deed"
+    },
+    "compiled_DURATION_probe_exe": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Load-Values-Duration.exe",
+      "sha256": "5d608c6a36b6adb1d9c8c24824dda640f79aabb19b717a2a56985dba280fc334"
+    }
+  },
+  "genuine_original_archive": {
+    "DMatch.uax": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Sounds/DMatch.uax",
+      "sha256": "e0e5ef3ceeaf169f790fb696ce49dcfc97df5b17d9de0e2b67f8108878186c3b",
+      "version": 61,
+      "audio_export_count": 4
+    },
+    "Mission.umx": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Mission.umx",
+      "sha256": "10839051ef41ea0145823243e00f3b1016df2a3ddc67d81a7716817158a16a95",
+      "version": 64,
+      "audio_export_count": 1
+    },
+    "G5AudioNewSound.uax": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Sounds/G5AudioNewSound.uax",
+      "sha256": "3b8ec7fc7f6572665470b6a8331e2bf5c867068365251cd86ed942544126b84f",
+      "version": 66,
+      "audio_export_count": 5
+    },
+    "G5AudioOldMusic.umx": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Music/G5AudioOldMusic.umx",
+      "sha256": "641a02972103a78c62bf170f05658eb95638d383cc0720c0eb7cfa0b877dfa0f",
+      "version": 61,
+      "audio_export_count": 1
+    }
+  },
+  "native_loaded_value_stdout_SHA": {
+    "DMatch.uax": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Original-DMatch-native.txt",
+      "sha256": "d32accb72c419b8480dee2a07644c99c4bfd47cd88a5e0523a1c89e27084bc16"
+    },
+    "Mission.umx": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Original-Mission-native.txt",
+      "sha256": "7eaaf2bdaa781891cdd8dae7d0e37dc422dec71bb2cd2f8d73beb531a86e9613"
+    },
+    "G5AudioNewSound.uax": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-G5AudioNewSound.uax.txt",
+      "sha256": "9eb6e29decab2f09ecafed1633a94c2cf43519376d3e8b6258f3239bf71fe001"
+    },
+    "G5AudioOldMusic.umx": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-G5AudioOldMusic.umx.txt",
+      "sha256": "2376c6d9e4bbddd5efc259d38b2483277107ff03ac1fae8b8a012b7ee416fd14"
+    }
+  },
+  "generated_local_comparison": {
+    "archive_manifest": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Archive-Expected-Data-v2.json",
+      "sha256": "578b0a34d877a201590176ddf54dc227cb7ecbc8e13d42a1501bae0835905378"
+    },
+    "native_11_loaded_values": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Loaded-Values-v2.json",
+      "sha256": "4313a5584a9d9ac81b20c68d593c276521c1b3d1cddc122c4e7ea58825ff603d"
+    },
+    "nine_native_Sound_Duration_exact_float_bits": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Duration-Match.json",
+      "sha256": "3938db162787652700b890a05d2817dce89bb4ccdb1dc1f6662869ead23505d5"
+    }
+  },
+  "negative_compiled_stdout_SHA": {
+    "Music_zero_count_compiled_load_ok": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-ZeroCount.txt",
+      "sha256": "307ee9dae104ab9173f3a79915818d0e4298b0da4e2d96bd84eae63d6e98f979"
+    },
+    "Music_invalid_name_compiled_failure": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-G5AudioMusicInvalidFileType.txt",
+      "sha256": "b6ed61c9dd8d063fafbe9ba9bc11de59ee3cdb63d34c21c6464be3001e907a48"
+    },
+    "Music_early_SeekPos_compiled_failure": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-G5AudioMusicLazySeekEarly.txt",
+      "sha256": "65db491ff7a60e92cc80621f4941dbef0f2eee13765475d50aeaddd9e0e76988"
+    },
+    "Sound_invalid_name_compiled_failure": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-G5AudioSoundInvalidFileType.txt",
+      "sha256": "83fba26b9dfd46e89bc2f4447da08c699d7f878873cfeb63afbf881adaac5921"
+    },
+    "Sound_zero_count_cdb_access_violation": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Sound-ZeroCount-CDB.log",
+      "sha256": "0f449a67249cc7a4be10de7090c643db9226ff646ac3d54d8645939fb01b0493"
+    }
+  },
+  "negative_original_derived_DEV_only_sha": [
+    {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\Music\\G5AudioMusicZeroCount.umx",
+      "sha256": "9bd79dd5b95950b98b88eb1c5ca648a3a3cd2ea3fc14d26441a09365a76af0bc"
+    },
+    {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\Music\\G5AudioMusicInvalidFileType.umx",
+      "sha256": "c95d921ae97f6a19f73ca1d12322557007e456a96adf2721006729b3c9b092c1"
+    },
+    {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\Music\\G5AudioMusicLazySeekEarly.umx",
+      "sha256": "b9057dac2c7771ac27de41ad9bfda910409bfa6123f0bcbebf071ed0d9efcda2"
+    },
+    {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\Sounds\\G5AudioSoundZeroCount.uax",
+      "sha256": "012ffd226ac98dd76621b20ccbce7f46d834f0c6c3954174f59425e1d945948e"
+    },
+    {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\Sounds\\G5AudioSoundInvalidFileType.uax",
+      "sha256": "6549889294ac8d9c51778642e22e5c52e467da365160a7e4d832cdf675fc8305"
+    }
+  ],
+  "source_defined_native_behavior": {
+    "Music_zero_byte_lazy_forward_skip": "NATIVE_LOADED_SUCCESS_DATA0_ORIGINALSIZE0",
+    "Music_bad_FileType_index": "NATIVE_LOADER_EXCEPTION",
+    "Music_lazy_seek_behind_decoded_content": "NATIVE_LOADER_EXCEPTION",
+    "Sound_bad_FileType_index": "NATIVE_LOADER_EXCEPTION",
+    "Sound_zero_byte_lazy_WAV": "NATIVE_ENGINE_ACCESS_VIOLATION_WavData_0"
+  },
+  "sound_native_loaded_objects": 9,
+  "music_native_loaded_objects": 2,
+  "combined_native_loaded_bytes_identical": 1216472,
+  "Sound_WAV_Duration_bits_exact": 9,
+  "compiled_native_malformed_distinct_cases": 5,
+  "native_compiled_full_method_decision": "BLOCKED_INHERITED_UObject_FINAL_SEVEN_GATE",
+  "source_specific_audio_fields_and_malformed_slices": "VERIFIED"
+}

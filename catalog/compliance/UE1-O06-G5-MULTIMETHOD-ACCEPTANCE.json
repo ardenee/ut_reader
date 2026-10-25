@@ -730,7 +730,7 @@
         "global_source_inputs_changed",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Capture one complete native Sound load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "next_closure_work": "Native Sound loaded-value and scoped malformed-input work CLOSED: do not retest 9 original Sounds or two negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Sound-specific probes.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -740,7 +740,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "export_output_is_not_loader_native_semantics"
+      "decisive_closure_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review"
     },
     {
       "id": "T99:UMusic::Serialize",
@@ -793,7 +793,7 @@
         "global_source_inputs_changed",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Capture one complete native Music load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "next_closure_work": "Native Music loaded-value and scoped malformed-input work CLOSED: do not retest 2 original Musics or three negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Music-specific probes.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -803,7 +803,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "export_output_is_not_loader_native_semantics"
+      "decisive_closure_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review"
     }
   ],
   "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",

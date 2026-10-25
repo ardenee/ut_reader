@@ -1,0 +1,39 @@
+﻿{
+    "ok": true,
+    "checks": 66,
+    "passed": 66,
+    "failed": [],
+    "compiled_loaded_sound_objects": 9,
+    "compiled_loaded_music_objects": 2,
+    "native_memory_bytes_match": 1216472,
+    "Sound_Duration_exact_bits": 9,
+    "compiled_distinct_malformed_cases": 5,
+    "Music_zero_lazy_skipped_unloaded_bytes": 734772,
+    "native_loaded_and_malformed_acceptance": "VERIFIED_SCOPE",
+    "full_Sound_Music_method": "BLOCKED_SHARED_UOBJECT_AND_FINAL_GATES",
+    "negative_outcomes": [
+        {
+            "file": "G5AudioMusicZeroCount.umx",
+            "status": "native_music_record_complete",
+            "bytes": 0,
+            "skip": 734772,
+            "extension": 0
+        },
+        {
+            "file": "G5AudioMusicInvalidFileType.umx",
+            "error": "Audio FileType FName out of range"
+        },
+        {
+            "file": "G5AudioMusicLazySeekEarly.umx",
+            "error": "Audio lazy SeekPos mismatch"
+        },
+        {
+            "file": "G5AudioSoundInvalidFileType.uax",
+            "error": "Audio FileType FName out of range"
+        },
+        {
+            "file": "G5AudioSoundZeroCount.uax",
+            "error": "UT99 Sound empty Data: native FSoundData::GetPeriod dereferences WavData(0) (observed access violation)"
+        }
+    ]
+}

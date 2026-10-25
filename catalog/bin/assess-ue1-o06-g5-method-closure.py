@@ -79,19 +79,21 @@ status={
  },
  "T99:USound::Serialize":{
   "result":"BLOCKED",
-  "pinned":False,
+  "pinned":True,
   "current":True,
-  "reason":"Independent compiled WAV exporter slice is output parity, not a complete compiled USound::Serialize loaded-value and error oracle.",
-  "next":"Capture one complete native Sound load/error/byte-consumption oracle; one consolidated acceptance test only.",
-  "blocker":"export_output_is_not_loader_native_semantics",
+  "complete_members":True,
+  "reason":"Original compiled UT99 v432 Core+Engine LoadPackage loaded 9 genuine Sound objects at versions61/66. All 424068 Data bytes, FileType, OriginalSize and all 9 duration IEEE754 bit patterns match Epic source and PHP archive. Compiled malformed native Sound invalid FileType fails; zero-size WAV Sound native faults at FWaveModInfo::ReadWaveInfo WavData(0), now fail-closed safely. Sound method-specific native loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
+  "next":"Native Sound loaded-value and scoped malformed-input work CLOSED: do not retest 9 original Sounds or two negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Sound-specific probes.",
+  "blocker":"inherited_UObject_full_method_and_independent_seven_gate_review",
  },
  "T99:UMusic::Serialize":{
   "result":"BLOCKED",
-  "pinned":False,
+  "pinned":True,
   "current":True,
-  "reason":"Independent compiled music exporter slice is output parity, not full compiled UMusic::Serialize lazy-array/negative loader semantics.",
-  "next":"Capture one complete native Music load/error/byte-consumption oracle; one consolidated acceptance test only.",
-  "blocker":"export_output_is_not_loader_native_semantics",
+  "complete_members":True,
+  "reason":"Original compiled UT99 v432 Core+Engine LoadPackage loaded 2 genuine Music objects at versions61/64. All 792404 Data bytes, FileType and OriginalSize match Epic original source and PHP. Three distinct native Music mutations: zero lazy-count with forward skip successfully loads, invalid FileType and backward SeekPos fail. Production reader corrected forward skip, original positives unchanged. Music-specific loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
+  "next":"Native Music loaded-value and scoped malformed-input work CLOSED: do not retest 2 original Musics or three negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Music-specific probes.",
+  "blocker":"inherited_UObject_full_method_and_independent_seven_gate_review",
  },
 }
 assert set(status)==set(reg["methods"])
@@ -142,6 +144,39 @@ for name in reg["methods"]:
         # the WHOLE malformed-input criterion VERIFIED from a single case.
         gates["malformed_input_error_semantics"]="OPEN"
         gates["archive_bytes_and_consumption"]="VERIFIED"
+    if name in ("T99:USound::Serialize","T99:UMusic::Serialize"):
+        events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        native_test="verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php"
+        native_ev=next((item for item in reversed(events)
+            if item.get("test")==native_test and item.get("state")=="PASS"),None)
+        assert native_ev is not None
+        native_log=ROOT/native_ev["log"].replace("\\","/")
+        assert sha(native_log)==native_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/native_test)==native_ev["test_sha256"]
+        assert native_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert reconciliation["source_native_audio_compiled_loaded_and_malformed_scoped"]
+        result=read(native_log)
+        assert result["ok"] and result["checks"]==66 and result["passed"]==66
+        assert result["compiled_loaded_sound_objects"]==9
+        assert result["compiled_loaded_music_objects"]==2
+        assert result["native_memory_bytes_match"]==1216472
+        assert result["Sound_Duration_exact_bits"]==9
+        assert result["compiled_distinct_malformed_cases"]==5
+        assert result["Music_zero_lazy_skipped_unloaded_bytes"]==734772
+        assert result["native_loaded_and_malformed_acceptance"]=="VERIFIED_SCOPE"
+        assert result["full_Sound_Music_method"]=="BLOCKED_SHARED_UOBJECT_AND_FINAL_GATES"
+        assert reconciliation["source_native_audio_array_type_dispatch_scoped"]
+        gates["archive_bytes_and_consumption"]="VERIFIED"
+        gates["malformed_input_error_semantics"]="VERIFIED"
+        gates["current_acceptance_tests"]="VERIFIED"
+        old["method_specific_native_loaded_values"]="VERIFIED"
+        old["method_specific_compiled_native_malformed_cases"]="VERIFIED_SCOPED"
+        old["remaining_shared_full_method_blocker"]="T99:UObject::Serialize"
+        old["genuine_loaded_objects"]=(9 if name=="T99:USound::Serialize" else 2)
+        old["genuine_loaded_bytes"]=(424068 if name=="T99:USound::Serialize" else 792404)
+        old["negative_native_cases"]=(2 if name=="T99:USound::Serialize" else 3)
+        old["original_native_audio_source_SHA_pinned"]=True
+        old["native_compiled_prerequisite_fully_closed"]=False
     if name=="T99:UObject::Serialize":
         events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
         method_test="verify-ue1-o06-g5-uobject-consolidated-acceptance.php"
@@ -454,7 +489,7 @@ for name in reg["methods"]:
         audio_log=ROOT/audio_ev["log"].replace("\\","/")
         assert sha(audio_log)==audio_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/audio_test)==audio_ev["test_sha256"]
-        assert audio_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert audio_ev["source_sha256"]==reconciliation["previous_source_before_audio_loaded_malformed_change"]
         audio_result=read(audio_log)
         assert audio_result["ok"] and audio_result["checks"]==176
         assert audio_result["passed"]==176
@@ -524,6 +559,7 @@ for name in reg["methods"]:
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
         else "current_method_decision_69_checks_Camera_loader_source_exclusion_closed_native_replay_zero" if name=="T99:UObject::Serialize"
+        else "current_audio_native_66_checks_loaded_malformed_closed_inherited_OPEN" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
         else "existing_sha_pinned_evidence_only_no_new_tests")
     assert old["closure_artifact"] is None
     assert old["closure_sha256"] is None
@@ -537,7 +573,8 @@ for name in reg["methods"]:
       "camera_native_loader_criterion":(
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
-      "new_native_tests_executed":0,"new_test_runs_executed":13 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":(9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
+      "new_test_runs_executed":13 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize","T99:USound::Serialize","T99:UMusic::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -546,7 +583,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":12,"new_test_runs":15,
+ "new_oracle_runs":21,"new_test_runs":16,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

@@ -1,15 +1,17 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-25T10:31:13.168527+00:00",
-  "head": "1ca5c902",
-  "previous_runner_head": "1ca5c902",
-  "previous_source_sha256": "30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc",
-  "current_source_sha256": "30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc",
+  "generated_utc": "2026-10-25T11:29:21.174943+00:00",
+  "head": "c8240c18",
+  "previous_runner_head": "c8240c18",
+  "previous_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+  "current_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
   "source_font_branch_equivalence": true,
+  "source_native_audio_compiled_loaded_and_malformed_scoped": true,
+  "previous_source_before_audio_loaded_malformed_change": "30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc",
   "source_native_audio_array_type_dispatch_scoped": true,
   "previous_source_before_audio_array_dispatch": "2610d2ccd252d8cb8b342c8ac2b4aae05640ea0502dd19166e91ade49d368e6f",
   "source_native_v227_export_archetype_guard_scoped": true,
@@ -62,7 +64,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 139
+    "PASS": 140
   },
   "branch_totals": {
     "C227": {

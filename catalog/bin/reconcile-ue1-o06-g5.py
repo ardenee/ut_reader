@@ -92,12 +92,46 @@ current_schema=new_schema_file.read_text(encoding="utf-8-sig")
 # and ALL nonaudio archived handling remain semantically unchanged.
 before_audio_native=committed("1ca5c902",text_reader)
 before_audio_source="2610d2ccd252d8cb8b342c8ac2b4aae05640ea0502dd19166e91ade49d368e6f"
+# The one additional method-specific fix changes only the audio branch:
+# Epic TLazyArray seeks forward to SeekPos even if count consumed fewer
+# bytes. Actual compiled v432 UMusic count-zero loads; empty USound
+# instead faults in the native WAV Duration loader. No other branch
+# or shared UObject implementation has changed.
+before_forward_native=committed("c8240c18",text_reader)
+before_forward_source="30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc"
+sig_before_forward=subst_sig(
+    signature,text_reader,digest(text_reader).upper(),sha_blob(before_forward_native))
+forward_test="verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php"
+forward_ev=latest.get(forward_test)
+forward_log=ROOT/forward_ev["log"] if forward_ev and forward_ev.get("log") else None
+try:
+    forward_values=read(forward_log) if forward_log and forward_log.exists() else {}
+except Exception:
+    forward_values={}
+forward_scope=(
+    hashlib.sha256(sig_before_forward.encode("utf-8")).hexdigest()==before_forward_source
+    and "lazy_forward_skipped_unloaded_bytes" in new_text
+    and "native FSoundData::GetPeriod dereferences WavData(0)" in new_text
+    and forward_ev is not None and forward_ev.get("state")=="PASS"
+    and forward_ev.get("source_sha256")==current
+    and forward_ev.get("output_sha256")==digest(forward_log)
+    and forward_ev.get("test_sha256")==digest(ROOT/"catalog"/"bin"/forward_test)
+    and forward_values.get("ok") is True
+    and forward_values.get("checks")==66 and forward_values.get("passed")==66
+    and forward_values.get("compiled_loaded_sound_objects")==9
+    and forward_values.get("compiled_loaded_music_objects")==2
+    and forward_values.get("native_memory_bytes_match")==1216472
+    and forward_values.get("Sound_Duration_exact_bits")==9
+    and forward_values.get("compiled_distinct_malformed_cases")==5
+    and forward_values.get("native_loaded_and_malformed_acceptance")=="VERIFIED_SCOPE"
+    and forward_values.get("full_Sound_Music_method")=="BLOCKED_SHARED_UOBJECT_AND_FINAL_GATES"
+)
 sig_before_audio=subst_sig(
-    signature,text_reader,digest(text_reader).upper(),sha_blob(before_audio_native))
+    sig_before_forward,text_reader,sha_blob(before_forward_native),sha_blob(before_audio_native))
 audio_start="if($nativeKind==='sound'||$nativeKind==='music'){"
 audio_end="if($nativeKind==='font'&&$family===CatalogUE1ClassicSourceFamily::UT99_V432){"
 audio_part_old=before_audio_native.split(audio_start,1)
-audio_part_new=new_text.split(audio_start,1)
+audio_part_new=before_forward_native.split(audio_start,1)
 audio_branch_isolated=False
 if len(audio_part_old)==2 and len(audio_part_new)==2:
     before_parts=audio_part_old[1].split(audio_end,1)
@@ -114,12 +148,13 @@ try:
 except Exception:
     audio_values={}
 audio_scope=(
-    hashlib.sha256(sig_before_audio.encode("utf-8")).hexdigest()==before_audio_source
+    forward_scope
+    and hashlib.sha256(sig_before_audio.encode("utf-8")).hexdigest()==before_audio_source
     and audio_branch_isolated
     and "$lazyAudio=$family!==CatalogUE1ClassicSourceFamily::EPIC_UE1;" in new_text
     and "$seekEnd=$lazyAudio&&$ver>61?$int():null;" in new_text
     and audio_event is not None and audio_event.get("state")=="PASS"
-    and audio_event.get("source_sha256")==current
+    and audio_event.get("source_sha256")==before_forward_source
     and audio_event.get("output_sha256")==digest(audio_log)
     and audio_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/audio_test)
     and audio_values.get("ok") is True
@@ -657,6 +692,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (forward_scope and f==before_forward_source)
         or (audio_scope and f==before_audio_source)
         or (legacy_guard_scope and f==previous_legacy_source)
         or (camera_scope and f==previous_camera_source)
@@ -839,6 +875,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_audio_compiled_loaded_and_malformed_scoped":forward_scope,
+    "previous_source_before_audio_loaded_malformed_change":before_forward_source if forward_scope else None,
     "source_native_audio_array_type_dispatch_scoped":audio_scope,
     "previous_source_before_audio_array_dispatch":before_audio_source if audio_scope else None,
     "source_native_v227_export_archetype_guard_scoped":legacy_guard_scope,

@@ -417,6 +417,17 @@ final class CatalogUE1ClassicNativeObjectReader
                 $seekEnd=$lazyAudio&&$ver>61?$int():null;
                 $dataSize=$compact();
                 if($dataSize<0||$dataSize>$limit-$pos){throw new RuntimeException('Audio byte array exceeds export bounds');}
+                // Actual UT99 v432 FSoundData::Load invokes GetPeriod();
+                // FWaveModInfo::ReadWaveInfo dereferences WavData(0).
+                // Native original-DMatch zero-count DEV mutation triggers
+                // an Engine.dll access violation. Fail safely rather than
+                // claiming that the native Sound was loaded correctly.
+                // Music uses no WAV duration reader; compiled v432 loaded
+                // the corresponding zero-count UMusic successfully.
+                if($dataSize===0&&$nativeKind==='sound'
+                   &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
+                    throw new RuntimeException('UT99 Sound empty Data: native FSoundData::GetPeriod dereferences WavData(0) (observed access violation)');
+                }
                 $dataStart=$pos;$audioHash=hash_init('sha256');
                 $audioPreview='';
                 $audioRemaining=$dataSize;
@@ -428,7 +439,21 @@ final class CatalogUE1ClassicNativeObjectReader
                     }
                     $audioRemaining-=strlen($part);
                 }
-                if($seekEnd!==null&&$seekEnd!==$pos){throw new RuntimeException('Audio lazy SeekPos mismatch');}
+                // Epic Core/Inc/UnTemplate.h::TLazyArray::operator<<
+                // does NOT compare its absolute SeekPos to the bytes
+                // actually decoded by This.Load(). On loading it seeks
+                // to SeekPos after decoding the declared TArray count.
+                // A shorter declared array may therefore skip archived
+                // unused bytes: confirmed by genuine compiled v432
+                // UMusic::Serialize with a DEV-only count-zero mutation.
+                $lazyForwardSkip=0;
+                if($seekEnd!==null){
+                    if($seekEnd<$pos||$seekEnd>$limit){
+                        throw new RuntimeException('Audio lazy SeekPos mismatch');
+                    }
+                    $lazyForwardSkip=$seekEnd-$pos;
+                    $pos=$seekEnd;
+                }
                 return array_replace($record,['status'=>$pos===$limit?('native_'.$nativeKind.'_record_complete'):('native_'.$nativeKind.'_has_extension'),
                     'file_type_name'=>(string)$names[$nameIndex]['name'],
                     'audio_data_offset'=>$dataStart,'audio_data_bytes'=>$dataSize,
@@ -437,7 +462,9 @@ final class CatalogUE1ClassicNativeObjectReader
                     'selected_source_family'=>$family,
                     'source_audio_array_type'=>$lazyAudio?'TLazyArray<BYTE>':'TArray<BYTE>',
                     'source_lazy_seek_header_present'=>$seekEnd!==null,
-                    'lazy_seek_pos'=>$seekEnd,'extension_bytes'=>$limit-$pos,
+                    'lazy_seek_pos'=>$seekEnd,
+                    'lazy_forward_skipped_unloaded_bytes'=>$lazyForwardSkip,
+                    'extension_bytes'=>$limit-$pos,
                     'audio_data_decoded'=>true,'audio_data_interpreted'=>false]);
             }
             if($nativeKind==='font'&&$family===CatalogUE1ClassicSourceFamily::UT99_V432){

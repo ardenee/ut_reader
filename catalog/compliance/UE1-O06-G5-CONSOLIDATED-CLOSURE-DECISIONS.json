@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc",
+  "source_fingerprint": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
   "method_count": 8,
   "fully_epic_verified": 0,
   "failed": 0,
   "blocked": 8,
-  "new_oracle_runs": 12,
-  "new_test_runs": 15,
+  "new_oracle_runs": 21,
+  "new_test_runs": 16,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -138,44 +138,44 @@
     "T99:USound::Serialize": {
       "decision": "BLOCKED",
       "gate_results": {
-        "pinned_source_and_dispatch": "OPEN",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
       "existing_native_loaded_valid": false,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": true,
-      "decisive_blocker": "export_output_is_not_loader_native_semantics",
-      "reason": "Independent compiled WAV exporter slice is output parity, not a complete compiled USound::Serialize loaded-value and error oracle.",
-      "next_action": "Capture one complete native Sound load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "decisive_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
+      "reason": "Original compiled UT99 v432 Core+Engine LoadPackage loaded 9 genuine Sound objects at versions61/66. All 424068 Data bytes, FileType, OriginalSize and all 9 duration IEEE754 bit patterns match Epic source and PHP archive. Compiled malformed native Sound invalid FileType fails; zero-size WAV Sound native faults at FWaveModInfo::ReadWaveInfo WavData(0), now fail-closed safely. Sound method-specific native loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
+      "next_action": "Native Sound loaded-value and scoped malformed-input work CLOSED: do not retest 9 original Sounds or two negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Sound-specific probes.",
       "camera_native_loader_criterion": "NOT_APPLICABLE",
-      "new_native_tests_executed": 0,
-      "new_test_runs_executed": 0
+      "new_native_tests_executed": 9,
+      "new_test_runs_executed": 1
     },
     "T99:UMusic::Serialize": {
       "decision": "BLOCKED",
       "gate_results": {
-        "pinned_source_and_dispatch": "OPEN",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
       "existing_native_loaded_valid": false,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": true,
-      "decisive_blocker": "export_output_is_not_loader_native_semantics",
-      "reason": "Independent compiled music exporter slice is output parity, not full compiled UMusic::Serialize lazy-array/negative loader semantics.",
-      "next_action": "Capture one complete native Music load/error/byte-consumption oracle; one consolidated acceptance test only.",
+      "decisive_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
+      "reason": "Original compiled UT99 v432 Core+Engine LoadPackage loaded 2 genuine Music objects at versions61/64. All 792404 Data bytes, FileType and OriginalSize match Epic original source and PHP. Three distinct native Music mutations: zero lazy-count with forward skip successfully loads, invalid FileType and backward SeekPos fail. Production reader corrected forward skip, original positives unchanged. Music-specific loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
+      "next_action": "Native Music loaded-value and scoped malformed-input work CLOSED: do not retest 2 original Musics or three negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Music-specific probes.",
       "camera_native_loader_criterion": "NOT_APPLICABLE",
-      "new_native_tests_executed": 0,
-      "new_test_runs_executed": 0
+      "new_native_tests_executed": 9,
+      "new_test_runs_executed": 1
     }
   }
 }
