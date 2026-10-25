@@ -74,9 +74,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Full error-origin/cursor equivalence is still unknown because native C++ catch/exit confirms refusal without exposing archive offset, and other source-legal inherited UObject/tag/older version paths are not covered; do not claim FULL.",
-  "next":"Capture real compiled native ULinkerLoad malformed archive cursor and precise exception origin for the already SHA-pinned eight variants, and independently inspect v432 version/inherited UObject branches. Do not repeat the 3,694 positive loaded field comparisons or the eight malformed rejection oracles.",
-  "blocker":"native_exact_malformed_archive_consumption_exception_origin_and_unverified_inherited_source_legal_variants",
+  "reason":"New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Subsequent original compiled v432 CDB first-chance capture verifies six exact ULinkerLoad archive error cursors against the current source-specific reader (3 FName failures at 153323/34393/593470, 3 source TArray negative-count physical EOF failures at 899657/899657/413388), each fully source/binary/input/log SHA sealed with 91/91 current DEV acceptance; prior eight native rejection outcomes and all 3694 positive loaded fields remain intact. Method-specific malformed-input gate is complete for these applicable FName/TArray and physical EOF failure paths. The independent method remains BLOCKED on source-legal inherited UObject/tagged-property/version variants and final independent method review; do not claim FULL.",
+  "next":"Exact six FName/TArray compiled native cursor differences now CLOSED; reuse pinned CDB logs and the 91/91 focus proof. Next independently resolve applicable inherited UObject tagged/default/StateFrame and archive-version variants for UAnimation and issue final seven-criterion method acceptance, without repeating the 3,694 loaded-value comparisons.",
+  "blocker":"inherited_UObject_tagged_property_StateFrame_version_variants_and_independent_final_method_signoff",
  },
  "T99:USound::Serialize":{
   "result":"BLOCKED",
@@ -105,6 +105,12 @@ assert set(status)==set(reg["methods"])
 # reconcile-ue1-o06-g5.py; no previously closed native loader replay.
 def scoped_source_current(value):
     if value==reconciliation["current_source_sha256"]:
+        return True
+    # Two strictly v432 UAnimation-only source edits, paired with exact
+    # compiled first-chance cursors and original genuine values, cannot
+    # revoke the previously accepted unrelated method proofs.
+    if (reconciliation.get("source_native_animation_exact_error_cursors_scoped")
+        and value==reconciliation.get("previous_source_before_animation_error_cursor_change")):
         return True
     # UMesh/ULodMesh-only correction cannot invalidate previously sealed
     # Sound/Music/Font/TextBuffer native semantics or tagged UObject proof.
@@ -939,19 +945,44 @@ for name in reg["methods"]:
         assert rebuild["new_executable_sha256"]==original["compiled_probe"]["executable"]["sha256"]
         assert len(rebuild["current_rebuilt_native_case_logs"])==11
         assert rebuild["result"]=="11_OF_11_SAME_LOADED_RECORD_TEXT_AND_NATIVE_EXCEPTION_DISPOSITION"
+        cursor_test="verify-ue1-o06-g5-t99-animation-native-error-cursors.php"
+        cursor_ev=next((e for e in reversed(events)
+            if e.get("test")==cursor_test and e.get("state")=="PASS"),None)
+        assert cursor_ev is not None
+        assert cursor_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        cursor_log=ROOT/cursor_ev["log"].replace("\\","/")
+        assert sha(cursor_log)==cursor_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/cursor_test)==cursor_ev["test_sha256"]
+        assert reconciliation["source_native_animation_exact_error_cursors_scoped"]
+        cursor=read(cursor_log)
+        assert cursor["ok"] and cursor["checks"]==cursor["passed"]==91
+        assert cursor["original_native_reexecutions_in_verifier"]==0
+        assert cursor["native_cdb_confirmed_cursors"]==cursor["production_reported_cursors"]
+        assert cursor["native_cdb_confirmed_cursors"]=={
+            "d00d-invalid-bone-name":153323,
+            "EcoTerror-invalid-bone-name":34393,
+            "EcoTerror-invalid-sequence-name":593470,
+            "EcoTerror-negative-animtrack-count":899657,
+            "EcoTerror-negative-keyquat-count":899657,
+            "table-negative-refbones-count":413388}
+        cursor_artifact=C/"UE1-O06-G5-T99-ANIMATION-NATIVE-ERROR-CURSORS.json"
+        assert len(read(cursor_artifact)["exact_cursors"])==6
         gates["complete_native_field_values_and_references"]="VERIFIED"
         gates["archive_bytes_and_consumption"]="VERIFIED"
         gates["current_acceptance_tests"]="VERIFIED"
-        # Native rejection category matches, but source-relative failure
-        # archive cursor/exception origin has NOT been captured.
-        gates["malformed_input_error_semantics"]="OPEN"
+        # The method's source-defined FName errors and negative nested TArray
+        # branches now match original compiled first-chance cursor evidence.
+        # Do not elevate inherited/version variants or independent acceptance.
+        gates["malformed_input_error_semantics"]="VERIFIED"
         gates["inherited_and_version_variant_semantics"]="OPEN"
         gates["independent_full_method_review"]="OPEN"
+        old["compiled_v432_six_native_exception_cursors_verified"]=True
+        old["native_v432_cursor_compiled_manifest_sha256"]=sha(cursor_artifact)
         old["native_v432_three_original_animation_full_member_oracle"]="VERIFIED"
         old["native_v432_all_70_moves_record_values_checked"]=3694
         old["native_v432_all_nested_key_array_bytes_checked"]=540836
         old["native_v432_distinct_malformed_rejection_agreements"]=8
-        old["native_v432_malformed_error_cursor_status"]="OPEN"
+        old["native_v432_malformed_error_cursor_status"]="SIX_COMPILED_EXACT_CURSOR_PARITY_VERIFIED"
         old["native_v432_whole_animation_evidence_manifest"]="catalog/compliance/"+artifact.name
         old["native_v432_whole_animation_evidence_SHA256"]=sha(artifact)
     assert entry["result"] in ("FULL","BLOCKED","FAILED")
@@ -974,7 +1005,7 @@ for name in reg["methods"]:
         else "FINAL_7_of_7_source_scoped_Font_185_checks" if name=="T99:UFont::Serialize"
         else "current_native_dynamic_count_EOF_21_and_nested_FString_EOF_25_checks_SHA" if name=="T99:UObject::Serialize"
         else "FINAL_7_of_7_source_scoped_audio_inherited_PASS63" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
-        else "whole_v432_native_full_values_3694_and_8_malformed_rejections_cursor_OPEN" if name=="T99:UAnimation::Serialize"
+        else "whole_v432_native_full_values_3694_and_6_exact_malformed_native_cursors_91_checks_2_remaining_gates" if name=="T99:UAnimation::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
     decisions[name]={
       "decision":entry["result"],"gate_results":gates,
@@ -1001,7 +1032,7 @@ for name in reg["methods"]:
             reconciliation["source_native_array_physical_EOF_scoped"]}
         if name=="T99:UObject::Serialize" else None),
       "new_native_tests_executed":(3 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 11 if name=="T99:UAnimation::Serialize" else 0),
-       "new_test_runs_executed":18 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name=="T99:UAnimation::Serialize" else 0,
+       "new_test_runs_executed":18 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 2 if name=="T99:UAnimation::Serialize" else 0,
     }
 report={
  "schema":1,
@@ -1011,7 +1042,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
-  "new_oracle_runs":38,"new_test_runs":25,
+  "new_oracle_runs":44,"new_test_runs":26,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

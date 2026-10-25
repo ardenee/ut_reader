@@ -59,7 +59,61 @@ if missing: signature += "\n"+"\n".join(missing)
 # The only later source edit is the shared UMesh/ULodMesh archive reader.
 # Restore its previously accepted blob in the signature when reconciling
 # historical method proofs; keep the TRUE new fingerprint for the dashboard.
-real_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+# The latest two edits are both limited to v432 UAnimation's error path.
+# Verify the original compiled first-chance position proof and genuine native
+# loaded values at the TRUE current source fingerprint, then substitute only
+# the two old reader blobs for inherited already-accepted method evidence.
+animation_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+assert animation_current=="e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896"
+animation_paths=[
+    ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+    ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicV432NativeDeltaReader.php",
+]
+animation_old=[]
+animation_reconstruction=signature
+for animation_file in animation_paths:
+    old_bytes=subprocess.check_output(["git","-C",str(ROOT),"show",
+        "a64a743b:"+animation_file.relative_to(ROOT).as_posix()])
+    old_text=old_bytes.decode("utf-8-sig")
+    now_text=animation_file.read_text(encoding="utf-8-sig")
+    if animation_file.name=="CatalogUE1ClassicV432NativeDeltaReader.php":
+        method="public static function inspectAnimation("
+        end="public static function inspectSkeletalMesh("
+        assert old_text.split(method,1)[0]==now_text.split(method,1)[0]
+        assert old_text.split(end,1)[1]==now_text.split(end,1)[1]
+        assert old_text!=now_text
+    else:
+        hunks=[(old_text.splitlines(keepends=True)[i:j],
+                now_text.splitlines(keepends=True)[k:l])
+            for op,i,j,k,l in difflib.SequenceMatcher(
+                None,old_text.splitlines(keepends=True),
+                now_text.splitlines(keepends=True),autojunk=False).get_opcodes()
+            if op!="equal"]
+        assert len(hunks)==3
+        assert all("animation" in "".join(a+b).lower() for a,b in hunks[:2])
+        assert "$pos,$exportLimit,$limit" in "".join(hunks[2][1])
+    now_line=str(animation_file)+":"+digest(animation_file).upper()
+    old_line=str(animation_file)+":"+hashlib.sha256(old_bytes).hexdigest().upper()
+    assert animation_reconstruction.count(now_line)==1
+    animation_reconstruction=animation_reconstruction.replace(now_line,old_line,1)
+    animation_old.append(old_line)
+real_current=hashlib.sha256(animation_reconstruction.encode("utf-8")).hexdigest()
+assert real_current=="634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50"
+def animation_pass(name,checks):
+    ev=latest.get(name)
+    if not ev or ev.get("state")!="PASS" or ev.get("source_sha256")!=animation_current:
+        return False
+    log=ROOT/ev["log"].replace("\\","/")
+    try: report=read(log)
+    except Exception: return False
+    return (digest(log)==ev["output_sha256"]
+        and digest(ROOT/"catalog"/"bin"/name)==ev["test_sha256"]
+        and report.get("ok") is True and report.get("checks")==checks
+        and report.get("passed")==checks)
+animation_scope=(animation_pass("verify-ue1-o06-g5-t99-animation-native-error-cursors.php",91)
+    and animation_pass("verify-ue1-o06-g5-t99-animation-whole-native.php",212))
+assert animation_scope,"UT99 v432 animation exact native cursor source isolation not established"
+signature=animation_reconstruction
 mesh_path=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1ClassicMeshNativeReader.php"
 mesh_old=subprocess.check_output(["git","-C",str(ROOT),"show",
     "7608dc2b:catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php"])
@@ -215,8 +269,8 @@ def committed(ref,path):
 old_text=committed("e6583f48",text_reader)
 mid_text=committed("97702616",text_reader)
 mid_delta=committed("97702616",delta_reader)
-new_text=text_reader.read_text(encoding="utf-8-sig")
-new_delta=delta_reader.read_text(encoding="utf-8-sig")
+new_text=committed("a64a743b",text_reader)
+new_delta=committed("a64a743b",delta_reader)
 old_fingerprint="834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978"
 middle_fingerprint="8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe"
 def subst_sig(s,path,new_hash,old_hash):
@@ -251,7 +305,7 @@ before_audio_source="2610d2ccd252d8cb8b342c8ac2b4aae05640ea0502dd19166e91ade49d3
 before_forward_native=committed("c8240c18",text_reader)
 before_forward_source="30020059d7876c0d5e078f1ed24942487d002525f89641e70072b5d2467c7dcc"
 sig_before_forward=subst_sig(
-    signature,text_reader,digest(text_reader).upper(),sha_blob(before_forward_native))
+    signature,text_reader,sha_blob(committed("a64a743b",text_reader)),sha_blob(before_forward_native))
 forward_test="verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php"
 forward_ev=latest.get(forward_test)
 forward_log=ROOT/forward_ev["log"] if forward_ev and forward_ev.get("log") else None
@@ -803,7 +857,7 @@ scope_parser=(
 uobject_scope=scope_sha_correct and scope_callsite and scope_parser and region_scope
 sig_middle=subst_sig(
     subst_sig(sig_before_uobject,text_reader,sha_blob(before_audio_native),sha_blob(mid_text)),
-    delta_reader,digest(delta_reader).upper(),sha_blob(mid_delta))
+    delta_reader,sha_blob(committed("a64a743b",delta_reader)),sha_blob(mid_delta))
 font_scope=(hashlib.sha256(sig_middle.encode("utf-8")).hexdigest()==middle_fingerprint)
 # The NativeObjectReader change must be exactly a single font-remap call-site
 # argument update. The positive body after decoding one safe count stays
@@ -843,6 +897,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (animation_scope and f==animation_current)
         or (mesh_scope and f==real_current)
         or (forward_scope and f==before_forward_source)
         or (audio_scope and f==before_audio_source)
@@ -869,7 +924,7 @@ for e in reg["entries"]:
     log=ROOT/ev["log"].replace("\\","/") if ev and ev.get("log") else None
     logvalid=bool(ev and ev.get("state")=="PASS" and ev.get("output_sha256") and digest(log)==ev["output_sha256"])
     scriptvalid=bool(ev and digest(script)==ev.get("test_sha256"))
-    sourcevalid=bool(ev and current and ev.get("source_sha256")==current)
+    sourcevalid=bool(ev and animation_current and ev.get("source_sha256")==animation_current)
     independent=NATIVE.get(ident)
     nv=latest.get(independent)
     nvlog=ROOT/nv["log"].replace("\\","/") if nv and nv.get("log") else None
@@ -1021,14 +1076,16 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":real_current,
+    "current_source_sha256":animation_current,
+    "source_native_animation_exact_error_cursors_scoped":animation_scope,
+    "previous_source_before_animation_error_cursor_change":real_current,
     "source_native_mesh_seek_and_C98_FSphere_scoped":mesh_scope,
     "previous_source_before_mesh_fix":actual_current,
     "source_native_array_physical_EOF_scoped":eof_scope,
     "source_native_nested_FString_physical_EOF_scoped":nested_scope,
     "previous_source_before_native_nested_FString_EOF_change":source_before_nested,
     "previous_source_before_native_array_physical_EOF_change":source_before_eof if eof_scope else None,
-    "fingerprint_changed":bool(real_current and real_current!=status.get("current_source_sha256")),
+    "fingerprint_changed":bool(animation_current and animation_current!=status.get("current_source_sha256")),
     "source_scope_equivalence_v432_textbuffer_only":scoped_equivalence,
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,

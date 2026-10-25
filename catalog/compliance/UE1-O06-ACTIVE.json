@@ -1,7 +1,7 @@
 {
-  "contract": "g5-t99-animation-whole-native-v432",
-  "stage": "deployed-native-evidence-recovered-212PASS",
-  "last_action": "Commit e04a115b pushed; 13 of 13 changed files copied DEV to PRD and SHA equal; regenerated probe results match prior 11 of 11 with retained old/new digests; acceptance verifier 212 PASS.",
-  "next_step": "T99 UAnimation remains 4/7: identify original compiled precise FArchive Tell cursor at malformed FName and remaining source-legal inherited version branches. Then one independent full-method review. Keep other 4 FULL methods frozen.",
-  "updated_at_utc": "2026-10-25T23:00:17+00:00"
+  "contract": "g5-t99-animation-native-error-cursors",
+  "stage": "verified-5of7-release-ready",
+  "last_action": "Compiled v432 error cursor parity six of six; DEV 91 and 212 checks PASS; G5 4 FULL 4 BLOCKED; historical array proof 827748 bytes preserved",
+  "next_step": "Commit push SHA deploy; then resolve inherited UAnimation UObject/version variants and final independent method signoff; do not replay native positive or negative fixtures",
+  "updated_at_utc": "2026-10-25T23:51:34+00:00"
 }

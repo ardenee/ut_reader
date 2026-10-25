@@ -119,13 +119,24 @@ final class CatalogUE1ClassicNativeObjectReader
             }
             return $record;
         }
+        // Compiled v432 UAnimation reads from ULinkerLoad's physical archive,
+        // not an export-local bounded slice; retain export end for acceptance.
+        $exportLimit=$limit;
+        if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+            &&$nativeKind==='animation'){$limit=(int)filesize($path);}
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open native UE1 payload');}
         try{
             if(fseek($fp,$start)!==0){throw new RuntimeException('Cannot seek native UE1 payload');}
             $pos=$start;
-            $read=static function(int $n)use($fp,$limit,&$pos):string{
-                if($n<0||$n>$limit-$pos){throw new RuntimeException('UE1 native data exceeds object SerialSize');}
+            $read=static function(int $n)use($fp,$limit,&$pos,$family,$nativeKind):string{
+                if($n<0||$n>$limit-$pos){
+                    if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                        &&$nativeKind==='animation'){
+                        throw new RuntimeException('UT99 v432 UAnimation native physical EOF cursor='.$limit);
+                    }
+                    throw new RuntimeException('UE1 native data exceeds object SerialSize');
+                }
                 $buffer='';
                 while(strlen($buffer)<$n){
                     $part=fread($fp,$n-strlen($buffer));
@@ -156,7 +167,7 @@ final class CatalogUE1ClassicNativeObjectReader
                 &&$nativeKind==='animation'){
                 return array_replace($record,
                     CatalogUE1ClassicV432NativeDeltaReader::inspectAnimation(
-                        $pkg,$read,$compact,$int,$pos,$limit));
+                        $pkg,$read,$compact,$int,$pos,$exportLimit,$limit));
             }
             if($family===CatalogUE1ClassicSourceFamily::UT99_V432
                 &&$nativeKind==='skeletalmesh'){

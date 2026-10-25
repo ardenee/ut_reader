@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-25T22:56:14.9754799Z",
-    "head_commit":  "5e6626c8",
+    "updated_at_utc":  "2026-10-25T23:40:22.6313954Z",
+    "head_commit":  "a64a743b",
     "current_target":  "DEV",
-    "current_source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+    "current_source_sha256":  "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -725,16 +725,28 @@
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T101531600Z-61c1892d-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt"
                   },
                   {
+                      "key":  "DEV:verify-ue1-o06-g5-t99-animation-native-error-cursors.php",
+                      "test":  "verify-ue1-o06-g5-t99-animation-native-error-cursors.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-25T23:40:21.1854027Z",
+                      "source_sha256":  "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
+                      "test_sha256":  "de31e8ac1d79bf80f7bf713e60c57f0faf135c40f2132c8d0b3f5677196a7af4",
+                      "run_id":  "20261025T234020550Z-a567c1f6",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T234020550Z-a567c1f6-DEV-verify-ue1-o06-g5-t99-animation-native-error-cursors.php.txt"
+                  },
+                  {
                       "key":  "DEV:verify-ue1-o06-g5-t99-animation-whole-native.php",
                       "test":  "verify-ue1-o06-g5-t99-animation-whole-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-25T22:56:14.9514839Z",
-                      "source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+                      "event_at_utc":  "2026-10-25T23:40:22.6113944Z",
+                      "source_sha256":  "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
                       "test_sha256":  "9d6012430afe607db924b707de8cb88b33445fa22874e19f2db3271c63d31170",
-                      "run_id":  "20261025T225613884Z-b54e461e",
+                      "run_id":  "20261025T234021604Z-a3863bee",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T234021604Z-a3863bee-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-t99-audio-independent-full-method-review.php",

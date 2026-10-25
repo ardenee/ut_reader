@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "checks": 91,
+    "passed": 91,
+    "failed": [],
+    "native_cdb_confirmed_cursors": {
+        "d00d-invalid-bone-name": 153323,
+        "EcoTerror-invalid-bone-name": 34393,
+        "EcoTerror-invalid-sequence-name": 593470,
+        "EcoTerror-negative-animtrack-count": 899657,
+        "EcoTerror-negative-keyquat-count": 899657,
+        "table-negative-refbones-count": 413388
+    },
+    "production_reported_cursors": {
+        "d00d-invalid-bone-name": 153323,
+        "EcoTerror-invalid-bone-name": 34393,
+        "EcoTerror-invalid-sequence-name": 593470,
+        "EcoTerror-negative-animtrack-count": 899657,
+        "EcoTerror-negative-keyquat-count": 899657,
+        "table-negative-refbones-count": 413388
+    },
+    "compiled_Engine_modified": false,
+    "original_native_reexecutions_in_verifier": 0,
+    "method_global": "BLOCKED",
+    "scope": "6 original compiled v432 UAnimation malformed first-chance file archive errors"
+}

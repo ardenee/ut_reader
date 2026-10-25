@@ -235,7 +235,7 @@ final class CatalogUE1ClassicV432NativeDeltaReader
      */
     public static function inspectAnimation(
         CatalogUE1PackageReader $pkg,callable $read,callable $compact,
-        callable $uint,int &$position,int $limit
+        callable $uint,int &$position,int $limit,int $physicalLimit
     ):array{
         $initial=$position;
         $i32=static function()use($uint):int{
@@ -245,20 +245,24 @@ final class CatalogUE1ClassicV432NativeDeltaReader
         $vec=static fn():array=>['x'=>$f32(),'y'=>$f32(),'z'=>$f32()];
         $quat=static fn():array=>['x'=>$f32(),'y'=>$f32(),
                                 'z'=>$f32(),'w'=>$f32()];
-        $fname=static function()use($compact,$pkg):array{
+        $fname=static function()use($compact,$pkg,&$position):array{
             $index=$compact();$names=$pkg->getNames();
             if($index<0||!isset($names[$index])){
-                throw new RuntimeException('UT99 v432 animation FName out of range');
+                throw new RuntimeException('UT99 v432 animation FName out of range: ULinkerLoad<<FName cursor='.$position);
             }
             return ['index'=>$index,'text'=>(string)$names[$index]['name']];
         };
         $array=static function(string $label,callable $item,int $minBytes)
-            use($compact,&$position,$limit):array{
-            $count=$compact();
-            if($count<0||$minBytes<1
-                ||$count>intdiv($limit-$position,$minBytes)){
-                throw new RuntimeException(
-                    'UT99 v432 animation '.$label.' array count/bounds');
+            use($compact,&$position,$physicalLimit):array{
+            // Epic v400 TArray::operator<< loads NewNum, calls Empty(NewNum),
+            // then iterates i<NewNum. A negative signed count performs no
+            // element reads; it does NOT trigger a pre-count rejection.
+            $serializedCount=$compact();
+            $count=max(0,$serializedCount);
+            if($minBytes<1||$position>$physicalLimit
+                ||$count>intdiv($physicalLimit-$position,$minBytes)){
+                throw new RuntimeException('UT99 v432 animation '.$label
+                    .' native physical EOF cursor='.$physicalLimit);
             }
             $start=$position;$preview=[];
             for($i=0;$i<$count;$i++){

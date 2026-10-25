@@ -1,10 +1,12 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-25T21:31:59.496033+00:00",
-  "head": "7608dc2b",
-  "previous_runner_head": "7608dc2b",
-  "previous_source_sha256": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
-  "current_source_sha256": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+  "generated_utc": "2026-10-25T23:47:13.661948+00:00",
+  "head": "a64a743b",
+  "previous_runner_head": "a64a743b",
+  "previous_source_sha256": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
+  "current_source_sha256": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
+  "source_native_animation_exact_error_cursors_scoped": true,
+  "previous_source_before_animation_error_cursor_change": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
   "source_native_mesh_seek_and_C98_FSphere_scoped": true,
   "previous_source_before_mesh_fix": "eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c",
   "source_native_array_physical_EOF_scoped": true,
@@ -70,7 +72,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 147,
+    "PASS": 149,
     "FAIL": 1
   },
   "branch_totals": {
@@ -10138,7 +10140,7 @@
       ],
       "native_array_full_element_subset_valid": true,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "inherited_UObject_and_negative_variants",
+      "decisive_closure_blocker": "native_exact_malformed_archive_consumption_exception_origin_and_unverified_inherited_source_legal_variants",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",

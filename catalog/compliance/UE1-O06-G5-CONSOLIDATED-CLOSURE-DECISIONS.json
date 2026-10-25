@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+  "source_fingerprint": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
   "method_count": 8,
   "fully_epic_verified": 4,
   "failed": 0,
   "blocked": 4,
-  "new_oracle_runs": 38,
-  "new_test_runs": 25,
+  "new_oracle_runs": 44,
+  "new_test_runs": 26,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -150,7 +150,7 @@
         "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
-        "malformed_input_error_semantics": "OPEN",
+        "malformed_input_error_semantics": "VERIFIED",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
@@ -160,14 +160,14 @@
       "existing_native_loaded_valid": true,
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
-      "decisive_blocker": "native_exact_malformed_archive_consumption_exception_origin_and_unverified_inherited_source_legal_variants",
-      "reason": "New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Full error-origin/cursor equivalence is still unknown because native C++ catch/exit confirms refusal without exposing archive offset, and other source-legal inherited UObject/tag/older version paths are not covered; do not claim FULL.",
-      "next_action": "Capture real compiled native ULinkerLoad malformed archive cursor and precise exception origin for the already SHA-pinned eight variants, and independently inspect v432 version/inherited UObject branches. Do not repeat the 3,694 positive loaded field comparisons or the eight malformed rejection oracles.",
+      "decisive_blocker": "inherited_UObject_tagged_property_StateFrame_version_variants_and_independent_final_method_signoff",
+      "reason": "New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Subsequent original compiled v432 CDB first-chance capture verifies six exact ULinkerLoad archive error cursors against the current source-specific reader (3 FName failures at 153323/34393/593470, 3 source TArray negative-count physical EOF failures at 899657/899657/413388), each fully source/binary/input/log SHA sealed with 91/91 current DEV acceptance; prior eight native rejection outcomes and all 3694 positive loaded fields remain intact. Method-specific malformed-input gate is complete for these applicable FName/TArray and physical EOF failure paths. The independent method remains BLOCKED on source-legal inherited UObject/tagged-property/version variants and final independent method review; do not claim FULL.",
+      "next_action": "Exact six FName/TArray compiled native cursor differences now CLOSED; reuse pinned CDB logs and the 91/91 focus proof. Next independently resolve applicable inherited UObject tagged/default/StateFrame and archive-version variants for UAnimation and issue final seven-criterion method acceptance, without repeating the 3,694 loaded-value comparisons.",
       "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "uobject_native_dynamic_array_physical_EOF": null,
       "new_native_tests_executed": 11,
-      "new_test_runs_executed": 1
+      "new_test_runs_executed": 2
     },
     "T99:USound::Serialize": {
       "decision": "FULL",

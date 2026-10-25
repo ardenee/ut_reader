@@ -617,12 +617,12 @@
         "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
-        "malformed_input_error_semantics": "OPEN",
+        "malformed_input_error_semantics": "VERIFIED",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 4,
+      "acceptance_criteria_met": 5,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
@@ -674,7 +674,7 @@
         "no_named_test",
         "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open"
       ],
-      "next_closure_work": "Capture real compiled native ULinkerLoad malformed archive cursor and precise exception origin for the already SHA-pinned eight variants, and independently inspect v432 version/inherited UObject branches. Do not repeat the 3,694 positive loaded field comparisons or the eight malformed rejection oracles.",
+      "next_closure_work": "Exact six FName/TArray compiled native cursor differences now CLOSED; reuse pinned CDB logs and the 91/91 focus proof. Next independently resolve applicable inherited UObject tagged/default/StateFrame and archive-version variants for UAnimation and issue final seven-criterion method acceptance, without repeating the 3,694 loaded-value comparisons.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -684,7 +684,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "native_exact_malformed_archive_consumption_exception_origin_and_unverified_inherited_source_legal_variants",
+      "decisive_closure_blocker": "inherited_UObject_tagged_property_StateFrame_version_variants_and_independent_final_method_signoff",
       "closure_artifact": null,
       "closure_sha256": null
     },

@@ -2,18 +2,22 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-animation-whole-native-v432`
-- **Stage:** deployed-native-evidence-recovered-212PASS
-- **Last completed action:** Commit e04a115b pushed; 13 of 13 changed files copied DEV to PRD and SHA equal; regenerated probe results match prior 11 of 11 with retained old/new digests; acceptance verifier 212 PASS.
-- **Resume at:** T99 UAnimation remains 4/7: identify original compiled precise FArchive Tell cursor at malformed FName and remaining source-legal inherited version branches. Then one independent full-method review. Keep other 4 FULL methods frozen.
-- **Active changed at:** 2026-10-25T23:00:17+00:00
-- **Latest DEV test states:** PASS 148; FAIL 1; STARTED 0
+- **Contract:** `g5-t99-animation-native-error-cursors`
+- **Stage:** verified-5of7-release-ready
+- **Last completed action:** Compiled v432 error cursor parity six of six; DEV 91 and 212 checks PASS; G5 4 FULL 4 BLOCKED; historical array proof 827748 bytes preserved
+- **Resume at:** Commit push SHA deploy; then resolve inherited UAnimation UObject/version variants and final independent method signoff; do not replay native positive or negative fixtures
+- **Active changed at:** 2026-10-25T23:51:34+00:00
+- **Latest DEV test states:** PASS 149; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-25T23:40:22.6113944Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 616 | catalog\compliance\evidence\o06\20261025T234021604Z-a3863bee-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
+| 2026-10-25T23:40:21.6054020Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T234021604Z-a3863bee-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
+| 2026-10-25T23:40:21.1854027Z | verify-ue1-o06-g5-t99-animation-native-error-cursors.php | PASS | 212 | catalog\compliance\evidence\o06\20261025T234020550Z-a567c1f6-DEV-verify-ue1-o06-g5-t99-animation-native-error-cursors.php.txt |
+| 2026-10-25T23:40:20.5583948Z | verify-ue1-o06-g5-t99-animation-native-error-cursors.php | STARTED |  | catalog\compliance\evidence\o06\20261025T234020550Z-a567c1f6-DEV-verify-ue1-o06-g5-t99-animation-native-error-cursors.php.txt |
 | 2026-10-25T22:56:14.9514839Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 609 | catalog\compliance\evidence\o06\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
 | 2026-10-25T22:56:13.8924785Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
 | 2026-10-25T22:08:05.0193795Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 579 | catalog\compliance\evidence\o06\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
@@ -28,10 +32,6 @@
 | 2026-10-25T20:56:54.5318902Z | verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261025T205654522Z-4ef6c2cb-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt |
 | 2026-10-25T20:43:30.2857987Z | verify-ue1-o06-g5-uobject-fstring-conditional-native.php | PASS | 282 | catalog\compliance\evidence\o06\20261025T204329594Z-73ab1922-DEV-verify-ue1-o06-g5-uobject-fstring-conditional-native.php.txt |
 | 2026-10-25T20:43:29.6037952Z | verify-ue1-o06-g5-uobject-fstring-conditional-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T204329594Z-73ab1922-DEV-verify-ue1-o06-g5-uobject-fstring-conditional-native.php.txt |
-| 2026-10-25T19:59:17.7467156Z | verify-ue1-o06-g5-uobject-native-array-physical-eof.php | PASS | 284 | catalog\compliance\evidence\o06\20261025T195917055Z-1c992bbe-DEV-verify-ue1-o06-g5-uobject-native-array-physical-eof.php.txt |
-| 2026-10-25T19:59:17.0627495Z | verify-ue1-o06-g5-uobject-native-array-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261025T195917055Z-1c992bbe-DEV-verify-ue1-o06-g5-uobject-native-array-physical-eof.php.txt |
-| 2026-10-25T19:32:51.3018217Z | verify-ue1-o06-g5-t99-font-independent-full.php | PASS | 321 | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
-| 2026-10-25T19:32:50.5588217Z | verify-ue1-o06-g5-t99-font-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
 
 ## Recovery procedure
 

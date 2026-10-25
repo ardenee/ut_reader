@@ -1,6 +1,6 @@
 # UE1 O06 — G5 evidence reconciliation
 
-Evidence inventory, not O06 acceptance. Generated 2026-10-25T21:31:59.496033+00:00; Git 7608dc2b.
+Evidence inventory, not O06 acceptance. Generated 2026-10-25T23:47:13.661948+00:00; Git a64a743b.
 
 ## Counts
 
@@ -16,9 +16,9 @@ Evidence inventory, not O06 acceptance. Generated 2026-10-25T21:31:59.496033+00:
 - NEW third resumable native contract: 70 genuine MotionChunk in-memory scalar/root header and array-length comparisons, 95 full first-Move AnalogTrack header checks plus 732 full first-track key/BoneIndices bytes identical, 598/598 PASS. Remaining KeyQuat/KeyPos/KeyTime buffers from all other tracks still OPEN; did not replay previous PASS evidence.
 - NEW compiled real v432 **full nested MotionChunk memory**: 70 authentic Moves, 3,292 AnalogTracks, 10,156 distinct root/track/bone nested array buffers, 540,836 entire loaded bytes equal every source byte, 21,020 KeyQuat, 9,268 KeyPos and 21,020 KeyTime keys. Microsoft CDB 46MB full-memory MiniDump MEMORY64 oracle for each original package, independent source bounds/float-preview comparisons; focused 29,145/29,145 PASS, one initial test aggregation FAIL preserved. This validates complete nested element values for TWO original v69 package UAnimation exports, not malformed runtime or other source families.
 - Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded).
-- Latest DEV journal state: {'PASS': 147, 'FAIL': 1}.
+- Latest DEV journal state: {'PASS': 149, 'FAIL': 1}.
 - Named tests with current matching source fingerprint: 0 of 197; historical PASS is not an automatically current proof.
-- Global source fingerprint in latest status 634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50; actual current eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c; earlier scoped native proofs reconciled against 52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78 only after exact v432 dynamic-array source isolation and PASS21/21.
+- Global source fingerprint in latest status e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896; actual current eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c; earlier scoped native proofs reconciled against 52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78 only after exact v432 dynamic-array source isolation and PASS21/21.
 
 ## Branches
 
