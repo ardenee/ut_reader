@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g5-t99-animation-whole-native-v432`
-- **Stage:** revalidated-native-evidence-212of212-method-BLOCKED
-- **Last completed action:** Scratch executable regenerated; original digest preserved historically; current digest proven 11/11 byte-equivalent native outcomes; current-source verifier PASS212; G5 remains 4 FULL 4 BLOCKED.
-- **Resume at:** Do not rebuild SHA-pinned executables in place. Continue UAnimation exact compiled malformed error cursor, then inherited/version branches and whole-method independent review. USkeletalMesh positive scalar/remap branches remain unresolved.
-- **Active changed at:** 2026-10-25T22:57:52+00:00
+- **Stage:** deployed-native-evidence-recovered-212PASS
+- **Last completed action:** Commit e04a115b pushed; 13 of 13 changed files copied DEV to PRD and SHA equal; regenerated probe results match prior 11 of 11 with retained old/new digests; acceptance verifier 212 PASS.
+- **Resume at:** T99 UAnimation remains 4/7: identify original compiled precise FArchive Tell cursor at malformed FName and remaining source-legal inherited version branches. Then one independent full-method review. Keep other 4 FULL methods frozen.
+- **Active changed at:** 2026-10-25T23:00:17+00:00
 - **Latest DEV test states:** PASS 148; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
