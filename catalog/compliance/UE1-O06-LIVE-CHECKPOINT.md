@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g5-t99-skeletalmesh-inherited-lodmesh-lazy-seek`
-- **Stage:** source-corrected-and-G5-method-BLOCKED-release-ready
-- **Last completed action:** Epic v400 TLazyArray SeekPos forward unused payload and v1200 UMesh FVector-only FSphere fixed; 40/40 source verifier, real native existing evidence 733/733; G5 reconciler scoped SHA PASS 827748 array bytes, assessor 4 FULL 4 BLOCKED 0 FAILED; legacy broad corpus FAIL separately journaled without false acceptance
-- **Resume at:** Commit, push and SHA-deploy only verified changed source/tests/status. Next: whole-method compiled native acceptance for SkeletalMesh inherited ULodMesh scalar/value/error paths and UAnimation all moves/sequences, then UObject/UClass; do not replay prior 733 native evidence or four FULL methods.
-- **Active changed at:** 2026-10-25T21:35:59+00:00
+- **Stage:** released-source-corrected-G5-4FULL-4BLOCKED
+- **Last completed action:** Commit eaec2a27 pushed to origin/main, 19 of 19 changed files byte-for-byte SHA256 verified on PRD. TLazyArray seek and v1200 sphere fixed. Focus40 and native archive733 PASS. Previous FULL G5 unaffected. Legacy broad checker FAIL preserved, no PRD PHP tests.
+- **Resume at:** Next attempt one complete seven-criterion acceptance of T99 USkeletalMesh with inherited ULodMesh, loaded scalars/default animation/weapon transform and source-error outcomes; next Animation complete Moves/AnimSeqs and UObject/UClass whole-method reviews. Reuse all pinned native arrays. Do not relabel G5 accepted before independent full validation.
+- **Active changed at:** 2026-10-25T21:38:04+00:00
 - **Latest DEV test states:** PASS 147; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
