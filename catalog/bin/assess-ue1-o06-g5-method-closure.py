@@ -32,7 +32,7 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines, NOT individually compared to PHP archived values. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
+  "reason":"Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags are now accounted for: 802 exact typed native loaded-value comparisons and 124 intentionally unexported transient XLevel fields, with zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
   "next":"Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, but Camera loader exclusions are source-proven and CLOSED. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
   "blocker":"legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
  },
@@ -499,6 +499,36 @@ for name in reg["methods"]:
         assert audio_result["compilation_engine_reruns"]==0
         assert audio_result["method_full_decision"]=="BLOCKED"
         assert reconciliation["source_native_audio_array_type_dispatch_scoped"]
+        # Original PRD v61 compiled v432 engine exported 8,515
+        # runtime property text lines. The previously unreviewed 926
+        # SAVED tags have now been reconciled: 802 exact typed native
+        # loaded values, 124 transient XLevel omitted by UProperty::Port
+        # under exact original Epic source. No native engine replay.
+        v61_tags_test="verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php"
+        v61_tags_ev=next((item for item in reversed(events)
+            if item.get("test")==v61_tags_test and item.get("state")=="PASS"),None)
+        assert v61_tags_ev is not None
+        v61_tags_log=ROOT/v61_tags_ev["log"].replace("\\","/")
+        assert sha(v61_tags_log)==v61_tags_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/v61_tags_test)==v61_tags_ev["test_sha256"]
+        assert v61_tags_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        v61_tag_values=read(v61_tags_log)
+        assert v61_tag_values["ok"] and v61_tag_values["checks"]==30
+        assert v61_tag_values["passed"]==30
+        assert v61_tag_values["native_original_v61_export_objects"]==308
+        assert v61_tag_values["saved_tag_properties"]==926
+        assert v61_tag_values["loaded_native_value_matches"]==802
+        assert v61_tag_values["source_defined_XLevel_text_exclusions"]==124
+        assert v61_tag_values["native_value_mismatches"]==0
+        assert v61_tag_values["unaccounted_saved_tags"]==0
+        assert v61_tag_values["compiled_engine_replays"]==0
+        assert v61_tag_values["T99_UObject_independent_FULL"]=="BLOCKED"
+        old["compiled_genuine_original_v61_loaded_saved_values_verified"]=802
+        old["compiled_genuine_original_v61_source_defined_transient_XLevel_export_text_exclusions"]=124
+        old["compiled_genuine_original_v61_saved_tag_value_mismatches"]=0
+        old["compiled_genuine_original_v61_all_saved_tags_accounted"]=926
+        # This closes only the v61 ORIGINAL, not every other class/
+        # version/error path of UObject::Serialize.
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -532,7 +562,8 @@ for name in reg["methods"]:
         old["original_PRD_v61_compiled_loader_native_uninstantiated_Camera"]=4
         old["original_PRD_v61_loaded_tagged_streams_current_source_decoded"]=308
         old["original_PRD_v61_native_class_tails_source_complete"]=184
-        old["original_PRD_v61_native_value_lines_not_field_parity"]=8515
+        old["original_PRD_v61_native_export_text_lines_including_defaults"]=8515
+        old["original_PRD_v61_native_saved_value_fields_current_source_matched"]=802
         old["prd_original_verified_u_unr_files_staged"]=239
         old["prd_original_camera_stateframes_source_parsed"]=433
         old["prd_source_native_firetexture_fspark_records"]=4573
@@ -570,11 +601,17 @@ for name in reg["methods"]:
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
       "decisive_blocker":entry["blocker"],
       "reason":entry["reason"],"next_action":entry["next"],
+      "uobject_original_v61_saved_tag_fields":(
+        {"actual_runtime_text_value_matches":802,
+         "transient_text_excluded_by_Epic_Port":124,
+         "total_archived_tags_accounted":926,
+         "mismatched_fields":0}
+        if name=="T99:UObject::Serialize" else None),
       "camera_native_loader_criterion":(
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
       "new_native_tests_executed":(9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-      "new_test_runs_executed":13 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize","T99:USound::Serialize","T99:UMusic::Serialize") else 0,
+      "new_test_runs_executed":14 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize","T99:USound::Serialize","T99:UMusic::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -583,7 +620,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":21,"new_test_runs":16,
+ "new_oracle_runs":21,"new_test_runs":17,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "scope": "T99:UObject::Serialize original PRD v61 saved tags fully reconciled to compiled UT99 v432 ExportProperties; not overall inherited/version FULL",
+  "source_selected": "UT99 v432, archive version61 original PRD Unreal Gold native compatibility",
+  "sources_SHA": {
+    "Native_ExportProperties_Port_gate": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnObj.cpp",
+      "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+    },
+    "Native_UProperty_Port_cpp": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+    },
+    "Native_Actor_XLevel_transient_uc": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Actor.uc",
+      "sha256": "b736bb6c51b6dc5c439a3c340111449da88c981e8623619dda3b29e382d28c68"
+    },
+    "Native_Brush_CSG_enum_uc": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Brush.uc",
+      "sha256": "5456f72fcf5c3e9f545d2185f3fefebe842e965b17cae131691ebf131dc24fd0"
+    },
+    "Native_FScale_sheer_enum_h": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnMath.h",
+      "sha256": "63377767b1fe7383b799a94b96b1697e807d598dae06d96dd76ea196f455a13e"
+    }
+  },
+  "proof_files_SHA": {
+    "original_sha_copy_v61_map": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v61\\fd0609f727411e4f073fc1e60cc91f49.unr",
+      "sha256": "399057393bb891e832013bda353c686bcc86facc43a5f674db13bb7daaf510a6"
+    },
+    "original_compiled_v432_native_log": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-native-real-PRD-v61-Camera-complete.log",
+      "sha256": "5d4fb17a24285640ecc06071b50ed299ff28841ae7e0f0a4b238a72972ced63b"
+    },
+    "real_current_PHP_saved_tags": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-v61-308-Saved-Tags-For-Native-Value-Comparison.json",
+      "sha256": "7b873c06a6fb3dbd7a3b98276e13810676fc04f3c5edcd3f86889fdc66a54ec8"
+    },
+    "complete_compiled_PHP_value_comparison": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-v61-Original-Compiled-Value-Matches.json",
+      "sha256": "e1f7f56926e6be835e6dcf33e8e718dcdceb7aedf2002ba1cce424e51cb86d6c"
+    },
+    "DEV_only_export_reader_script": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-uobject-308-tags-to-native-manifest.php",
+      "sha256": "c1773b67e860ab164f91417948287dca96b3f830c7ac8b66aa416886d766265c"
+    },
+    "DEV_only_comparison_script": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-uobject-308-independent-native-tag-values.py",
+      "sha256": "eaa501e0557df444e9cd9ebc27cfaee1fe509f6ab9d603dc52c1de1e559368bb"
+    }
+  },
+  "genuine_real_v61_compiled_object_identities": 308,
+  "saved_tags_total": 926,
+  "direct_native_memory_export_property_value_matches": 802,
+  "Epic_Source_Port_Transient_XLevel_intentionally_omitted": 124,
+  "native_compiled_value_mismatches": 0,
+  "untested_saved_tags": 0,
+  "scope_limit": "124 XLevel transient fields do not have compiled exported text values and remain unverified as direct memory pointers; no inference of full UObject positive G5 method or untested engine-version parity",
+  "native_compiled_engine_replays_this_turn": 0,
+  "method_FULL": "BLOCKED",
+  "native_references_compared_by_full_class_qualified_object_paths": true,
+  "point_region_zone_referents_compared_by_full_class_qualified_paths": true,
+  "native_formatted_float_comparison_tolerance": 1e-06,
+  "typed_match_counts": {
+    "MATCH_FloatProperty": 1,
+    "MATCH_StringProperty": 2,
+    "MATCH_ObjectProperty": 149,
+    "SOURCE_DEFINED_NOT_EXPORTED_TRANSIENT_XLEVEL": 124,
+    "MATCH_NameProperty": 124,
+    "MATCH_StructProperty": 418,
+    "MATCH_ByteProperty": 84,
+    "MATCH_IntProperty": 23,
+    "MATCH_BoolProperty": 1
+  }
+}

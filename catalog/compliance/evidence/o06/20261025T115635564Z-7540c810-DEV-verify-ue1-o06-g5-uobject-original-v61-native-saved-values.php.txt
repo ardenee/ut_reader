@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 30,
+    "passed": 30,
+    "failed": [],
+    "native_original_v61_export_objects": 308,
+    "saved_tag_properties": 926,
+    "loaded_native_value_matches": 802,
+    "source_defined_XLevel_text_exclusions": 124,
+    "native_value_mismatches": 0,
+    "unaccounted_saved_tags": 0,
+    "compiled_engine_replays": 0,
+    "T99_UObject_independent_FULL": "BLOCKED"
+}

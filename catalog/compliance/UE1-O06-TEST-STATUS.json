@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-25T11:27:15.7673224Z",
-    "head_commit":  "c8240c18",
+    "updated_at_utc":  "2026-10-25T11:56:36.0892858Z",
+    "head_commit":  "24fdf6d3",
     "current_target":  "DEV",
     "current_source_sha256":  "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
     "tests":  [
@@ -831,6 +831,18 @@
                       "run_id":  "20261024T213654772Z-be2e37be",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T213654772Z-be2e37be-DEV-verify-ue1-o06-g5-uobject-nested-vector-decision.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php",
+                      "test":  "verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-25T11:56:36.0702773Z",
+                      "source_sha256":  "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+                      "test_sha256":  "4c982090c3b70c42c270ce8cf99555f4d697ed625fae48905249bb8ea464ad18",
+                      "run_id":  "20261025T115635564Z-7540c810",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T115635564Z-7540c810-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-uobject-prd-native-string-decision.php",

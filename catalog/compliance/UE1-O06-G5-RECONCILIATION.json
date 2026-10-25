@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-25T11:29:21.174943+00:00",
-  "head": "c8240c18",
-  "previous_runner_head": "c8240c18",
+  "generated_utc": "2026-10-25T11:58:48.248063+00:00",
+  "head": "24fdf6d3",
+  "previous_runner_head": "24fdf6d3",
   "previous_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
   "current_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
   "fingerprint_changed": false,
@@ -64,7 +64,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 140
+    "PASS": 141
   },
   "branch_totals": {
     "C227": {
@@ -11331,7 +11331,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "export_output_is_not_loader_native_semantics",
+      "decisive_closure_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",
@@ -11756,7 +11756,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "export_output_is_not_loader_native_semantics",
+      "decisive_closure_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",

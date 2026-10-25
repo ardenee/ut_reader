@@ -7,7 +7,7 @@
   "failed": 0,
   "blocked": 8,
   "new_oracle_runs": 21,
-  "new_test_runs": 16,
+  "new_test_runs": 17,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -24,11 +24,17 @@
       "existing_native_proof_current_global_fingerprint": true,
       "existing_export_slice_valid": false,
       "decisive_blocker": "legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
-      "reason": "Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines, NOT individually compared to PHP archived values. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
+      "reason": "Original PRD verified UE1 corpus investigated on DEV: 239 original .u/.unr SHA-staged, 150150 real exports with six actual dynamic ArrayProperty schemas, 433 source-decoded Camera frames across archive versions61/63/68/69, plus 43 genuine FireTexture native Sparks tails totalling 4573 source-read FSpark records. NEW actual compiled v432 Core.dll successfully LoadPackage an original PRD v61 map: 312 exports, 308 exact native class/object identity instances; all 308 corresponding source-driven PHP tagged archives parse successfully, including 184/184 native class-specific serialization tails; exactly Camera0/1/2/3 are uninstantiated in the native engine. Compiled v432 exported 8515 property text lines; all 926 actual saved tags are now accounted for: 802 exact typed native loaded-value comparisons and 124 intentionally unexported transient XLevel fields, with zero mismatches. Non-saved default-only runtime text lines are not claimed as saved-value comparisons. Latest current-source v61 original native verdict PASS24/24. Previous native compiled v432 dynamic Int/Name/Object and Core.Vector arrays, malformed exact archive cursors, 113 Entry genuine values and 43 StateFrame checks all source-SHA reused without rerun. Isolated nonempty FString generated archive source decodes correctly but compiled native LoadPackage fails with invalid 0xBAADF00D; source FArray::Add noninit hazard, production marks actual runtime-loaded string parity NOT_VERIFIED. Shared modern v60-61 v1200/v432 frame wire source-equivalent and excluded from retesting; only distinct old v1200 branches, missing v227 native serializer implementation and v227 archetype/flag handling, Camera source-defined linker exclusions CLOSED; distinct nested property loaded values, source variant support and full seven-gate review remain OPEN.",
       "next_action": "Reuse source-equivalent v60-61 frame wire without retesting; investigate only demonstrably distinct early v1.200 branches, v1.227 archetype handling with missing native source, but Camera loader exclusions are source-proven and CLOSED. Do not run repeated 308/308 original v61 loading, earlier 113 Entry positives/43 frames, six dynamic+three Vector, four TagSize/six reference/four property native cases; only address unverified source branches and final independent full-method signoff. PRD deployment requires coordinated, verified dependencies.",
+      "uobject_original_v61_saved_tag_fields": {
+        "actual_runtime_text_value_matches": 802,
+        "transient_text_excluded_by_Epic_Port": 124,
+        "total_archived_tags_accounted": 926,
+        "mismatched_fields": 0
+      },
       "camera_native_loader_criterion": "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION",
       "new_native_tests_executed": 0,
-      "new_test_runs_executed": 13
+      "new_test_runs_executed": 14
     },
     "T99:UClass::Serialize": {
       "decision": "BLOCKED",
@@ -47,6 +53,7 @@
       "decisive_blocker": "inherited_UObject_script_fixups_negative_paths",
       "reason": "All 88 genuine UClass objects and native stored scalar/array/default/inherited values verified; Script bytecode fixups, malformed consumption, source-version variants, and shared UObject not closed.",
       "next_action": "Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
+      "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 0
@@ -68,6 +75,7 @@
       "decisive_blocker": "inherited_UObject_full_method_unverified",
       "reason": "Corrected: original compiled v432 malformed ANSI900 FString attempts Got 912 / Expected 843 and PHP now reports identical virtual archive extent and error without physically reading beyond the export; one consolidated verdict PASS 28/28. Inherited UObject is still BLOCKED.",
       "next_action": "Complete T99:UObject::Serialize full method acceptance, then review T99 UTextBuffer inheritance once; no new TextBuffer scalar or malformed tests.",
+      "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 1
@@ -89,6 +97,7 @@
       "decisive_blocker": "inherited_UObject_full_method_and_other_variant_errors",
       "reason": "Original compiled v432 malformed CharRemap attempted Got4116 / Expected4112 and now PHP models identical logical byte count/error safely; ONE consolidated verdict PASS 23/23 using previous real native glyph/remap proofs. Shared inherited UObject and other malformed/source branches still open.",
       "next_action": "Complete T99:UObject::Serialize full method acceptance, then independently review Font inherited and remaining version/error paths once; do not repeat fonts positive array tests.",
+      "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 1
@@ -110,6 +119,7 @@
       "decisive_blocker": "inherited_ULodMesh_and_negative_cases",
       "reason": "Native bone/vertex arrays covered, but inherited ULodMesh and other scalar/error branches unverified.",
       "next_action": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
+      "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 0
@@ -131,6 +141,7 @@
       "decisive_blocker": "inherited_UObject_and_negative_variants",
       "reason": "Native 70 genuine MotionChunk arrays with 540,836 bytes compared, but inherited UObject, other versions and negative cases unverified.",
       "next_action": "Resolve shared UObject prerequisite and negative/variant cases before one final full Animation decision.",
+      "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "new_native_tests_executed": 0,
       "new_test_runs_executed": 0
@@ -152,6 +163,7 @@
       "decisive_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
       "reason": "Original compiled UT99 v432 Core+Engine LoadPackage loaded 9 genuine Sound objects at versions61/66. All 424068 Data bytes, FileType, OriginalSize and all 9 duration IEEE754 bit patterns match Epic source and PHP archive. Compiled malformed native Sound invalid FileType fails; zero-size WAV Sound native faults at FWaveModInfo::ReadWaveInfo WavData(0), now fail-closed safely. Sound method-specific native loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
       "next_action": "Native Sound loaded-value and scoped malformed-input work CLOSED: do not retest 9 original Sounds or two negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Sound-specific probes.",
+      "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "new_native_tests_executed": 9,
       "new_test_runs_executed": 1
@@ -173,6 +185,7 @@
       "decisive_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
       "reason": "Original compiled UT99 v432 Core+Engine LoadPackage loaded 2 genuine Music objects at versions61/64. All 792404 Data bytes, FileType and OriginalSize match Epic original source and PHP. Three distinct native Music mutations: zero lazy-count with forward skip successfully loads, invalid FileType and backward SeekPos fail. Production reader corrected forward skip, original positives unchanged. Music-specific loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
       "next_action": "Native Music loaded-value and scoped malformed-input work CLOSED: do not retest 2 original Musics or three negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Music-specific probes.",
+      "uobject_original_v61_saved_tag_fields": null,
       "camera_native_loader_criterion": "NOT_APPLICABLE",
       "new_native_tests_executed": 9,
       "new_test_runs_executed": 1
