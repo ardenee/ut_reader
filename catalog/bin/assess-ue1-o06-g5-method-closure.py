@@ -233,6 +233,61 @@ for name in reg["methods"]:
         old["remaining_shared_full_method_blocker"]=None
         old["method_scoped_inherited_super_closed"]=True
         old["native_compiled_prerequisite_fully_closed"]=True
+    if name=="T99:UTextBuffer::Serialize":
+        # Independent complete T99 v432 source-profile method read
+        # contract: 88 original native TextBuffer objects, all 88
+        # no-stack/no-tag actual inherited archive envelopes (compact
+        # NAME_None 0x5034 two physical bytes), 88 loaded Pos/Top/Text
+        # values and three compiled positive + one native negative.
+        # Does NOT infer generic UObject or C98/C227 closure.
+        final_test="verify-ue1-o06-g5-t99-textbuffer-independent-full.php"
+        finale=next((r for r in reversed(events)
+            if r.get("test")==final_test and r.get("state")=="PASS"),None)
+        assert finale is not None, "Missing TextBuffer independent method acceptance"
+        final_log=ROOT/finale["log"].replace("\\","/")
+        assert sha(final_log)==finale["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/final_test)==finale["test_sha256"]
+        assert finale["source_sha256"]==reconciliation["current_source_sha256"]
+        v=read(final_log)
+        assert v["ok"] and v["checks"]==302 and v["passed"]==302
+        assert v["scope"]=="UT99 v432 file-loading" and v["review"]=="FULL_SOURCE_PROFILE_ONLY"
+        assert v["observed_genuine_native_loaded_objects"]==88
+        assert v["original_native_memory_UTF16_bytes"]==1007796
+        assert v["inherited_real_source_compact_name_None_2bytes"]==88
+        assert v["compiled_native_positive_variants"]==3
+        assert v["compiled_native_negative_variants"]==1
+        assert v["native_overlong_cursor"]=="Got 912, Expected 843"
+        assert v["compiled_native_reruns"]==0
+        assert v["generic_T99_UObject"]=="BLOCKED_INDEPENDENTLY"
+        assert set(v["seven_gates"])==set(criteria)
+        assert all(x=="VERIFIED" for x in v["seven_gates"].values())
+        review=C/"UE1-O06-G5-T99-TEXTBUFFER-INHERITED-88-SUPER-REVIEW.json"
+        artifact=C/"UE1-O06-G5-UTEXTBUFFER-SOURCE-PROFILE-FULL-ACCEPTANCE.json"
+        assert artifact.is_file() and review.is_file()
+        closure=read(artifact)
+        assert closure["decision"]=="FULL"
+        assert closure["method"]==name
+        assert closure["scope"]=="UT99_v432_T99_source_profile_package_reader_loading_only"
+        assert closure["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert closure["independent_final_acceptance_script_sha256"]==finale["test_sha256"]
+        assert closure["independent_final_acceptance_log_sha256"]==finale["output_sha256"]
+        assert closure["review_source_manifest_sha256"]==sha(review)
+        assert closure["seven_verified_criteria"]==v["seven_gates"]
+        assert closure["native_engine_reruns_in_final_review"]==0
+        assert closure["general_T99_UObject_method_decision"]=="BLOCKED_SEPARATELY"
+        assert entry["current"] and entry["complete_members"]
+        gates.update(v["seven_gates"])
+        entry["result"]="FULL"
+        entry["blocker"]=None
+        entry["reason"]=("Independently FULL UT99 v432 T99 TextBuffer file-read "
+            "method: original 88 Pos/Top/Text native values, 88 original "
+            "two-byte compact NAME_None inherited envelopes, 3 native "
+            "positive mutations and matching native oversized failed "
+            "cursor. General UObject and C98/C227 remain BLOCKED.")
+        entry["next"]="T99 v432 TextBuffer fully accepted. No further original 88 native replay."
+        old["closure_artifact"]=str(artifact.relative_to(ROOT)).replace("\\","/")
+        old["closure_sha256"]=sha(artifact)
+        old["inherited_T99_TextBuffer_source_specific_branch_complete"]=True
     if name=="T99:UObject::Serialize":
         events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
         method_test="verify-ue1-o06-g5-uobject-consolidated-acceptance.php"
@@ -698,7 +753,7 @@ for name in reg["methods"]:
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
       "new_native_tests_executed":(9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -708,7 +763,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":22,"new_test_runs":19,
+ "new_oracle_runs":22,"new_test_runs":20,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

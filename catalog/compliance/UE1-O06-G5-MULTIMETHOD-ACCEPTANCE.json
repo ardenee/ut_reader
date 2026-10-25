@@ -6,9 +6,9 @@
   "scanner_sha256": "b63f8a998f37841e79794d6bf66a49f89776236fea3f6f24a00a4342f7c50f19",
   "packages_scanned": 7,
   "packages_expected": 7,
-  "distinct_fully_accepted_methods": 2,
+  "distinct_fully_accepted_methods": 3,
   "target_method_count": 8,
-  "target_method_acceptance_completed": 2,
+  "target_method_acceptance_completed": 3,
   "total_examined_export_rows": 5469,
   "ignored_nonserialized_NAME_None_export_rows": 43,
   "total_production_export_ranges_inspected": 115,
@@ -351,20 +351,20 @@
     },
     {
       "id": "T99:UTextBuffer::Serialize",
-      "full_G5_method_acceptance": "BLOCKED",
+      "full_G5_method_acceptance": "FULL",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
-        "independent_full_method_review": "OPEN"
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
       },
-      "acceptance_criteria_met": 3,
+      "acceptance_criteria_met": 7,
       "acceptance_criteria_total": 7,
-      "closure_artifact_verified": false,
+      "closure_artifact_verified": true,
       "compiled_same_real_load_dispatch_calls": 90,
       "source_RF_HasStack_positive_frame_exports": 0,
       "source_RF_HasStack_decoded_frames": 0,
@@ -445,7 +445,7 @@
         "inherited_UObject_full_method_and_compiled_oversized_FString_consumed_bytes_differ_open",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Complete T99:UObject::Serialize full method acceptance, then review T99 UTextBuffer inheritance once; no new TextBuffer scalar or malformed tests.",
+      "next_closure_work": "T99 v432 TextBuffer fully accepted. No further original 88 native replay.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -455,9 +455,9 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_full_method_unverified",
-      "closure_artifact": null,
-      "closure_sha256": null
+      "decisive_closure_blocker": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UTEXTBUFFER-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "4695cb15ad662296475072f3c37812bd0fa2be44988d36359d6f76506fff0caf"
     },
     {
       "id": "T99:UFont::Serialize",
@@ -824,5 +824,5 @@
   ],
   "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",
   "failed_method_decisions": 0,
-  "blocked_method_decisions": 6
+  "blocked_method_decisions": 5
 }

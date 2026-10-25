@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "method": "T99:UTextBuffer::Serialize",
+  "scope": "UT99_v432_T99_source_profile_package_reader_loading_only",
+  "decision": "FULL",
+  "limitations": "Independent T99 v432 read-contract only. Not general UObject::Serialize FULL; no C98 v1200 or C227 v227 or arbitrary source-family coverage.",
+  "seven_verified_criteria": {
+    "pinned_source_and_dispatch": "VERIFIED",
+    "complete_native_field_values_and_references": "VERIFIED",
+    "archive_bytes_and_consumption": "VERIFIED",
+    "malformed_input_error_semantics": "VERIFIED",
+    "inherited_and_version_variant_semantics": "VERIFIED",
+    "current_acceptance_tests": "VERIFIED",
+    "independent_full_method_review": "VERIFIED"
+  },
+  "positive_native_values": {
+    "original_real_objects": 88,
+    "actual_native_UTF16_bytes": 1007796
+  },
+  "inherited_actual_archives": {
+    "original_TextBuffers": 88,
+    "RF_HasStack": 0,
+    "serialized_tags": 0,
+    "original_compact_None_bytes_per_export": 2,
+    "None_hex": "5034"
+  },
+  "compiled_native_mutations": {
+    "positive": 3,
+    "negative": 1,
+    "native_error": "Got 912, Expected 843"
+  },
+  "current_production_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+  "independent_final_acceptance_script": "catalog/bin/verify-ue1-o06-g5-t99-textbuffer-independent-full.php",
+  "independent_final_acceptance_script_sha256": "d570bf7d9691194744957ce1afc5395f72f0edc5b5255405654f9a84c0047159",
+  "independent_final_acceptance_log": "catalog\\compliance\\evidence\\o06\\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt",
+  "independent_final_acceptance_log_sha256": "f8b8160e28fd9017fe8b835248de59d7a08a21d7c70e3703ee49831221fa73cc",
+  "review_source_manifest": "catalog/compliance/UE1-O06-G5-T99-TEXTBUFFER-INHERITED-88-SUPER-REVIEW.json",
+  "review_source_manifest_sha256": "a668f0683c0f43ebf37eae788c435a9f8127ecceeb33e73fcb279188c9c81878",
+  "native_engine_reruns_in_final_review": 0,
+  "general_T99_UObject_method_decision": "BLOCKED_SEPARATELY"
+}

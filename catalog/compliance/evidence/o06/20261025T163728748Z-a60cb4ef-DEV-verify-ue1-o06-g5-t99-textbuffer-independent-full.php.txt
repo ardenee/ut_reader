@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "checks": 302,
+    "passed": 302,
+    "failed": [],
+    "method": "T99:UTextBuffer::Serialize",
+    "scope": "UT99 v432 file-loading",
+    "observed_genuine_native_loaded_objects": 88,
+    "original_native_memory_UTF16_bytes": 1007796,
+    "inherited_real_source_compact_name_None_2bytes": 88,
+    "compiled_native_positive_variants": 3,
+    "compiled_native_negative_variants": 1,
+    "native_overlong_cursor": "Got 912, Expected 843",
+    "review": "FULL_SOURCE_PROFILE_ONLY",
+    "seven_gates": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
+    },
+    "generic_T99_UObject": "BLOCKED_INDEPENDENTLY",
+    "compiled_native_reruns": 0
+}

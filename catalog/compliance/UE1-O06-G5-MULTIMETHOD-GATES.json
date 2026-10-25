@@ -109,19 +109,20 @@
         "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
-        "independent_full_method_review": "OPEN"
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
       },
-      "closure_artifact": null,
-      "closure_sha256": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UTEXTBUFFER-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "4695cb15ad662296475072f3c37812bd0fa2be44988d36359d6f76506fff0caf",
       "blocker_summary": "Compiled all 88 Engine.u TextBuffer loaded values match; inherited UObject and oversize error-byte path unresolved.",
-      "decision": "BLOCKED",
-      "decisive_blocker": "inherited_UObject_full_method_unverified",
-      "next_action": "Complete T99:UObject::Serialize full method acceptance, then review T99 UTextBuffer inheritance once; no new TextBuffer scalar or malformed tests.",
-      "reason": "Corrected: original compiled v432 malformed ANSI900 FString attempts Got 912 / Expected 843 and PHP now reports identical virtual archive extent and error without physically reading beyond the export; one consolidated verdict PASS 28/28. Inherited UObject is still BLOCKED.",
-      "last_consolidated_review": "current_single_full_method_verdict_28_checks"
+      "decision": "FULL",
+      "decisive_blocker": null,
+      "next_action": "T99 v432 TextBuffer fully accepted. No further original 88 native replay.",
+      "reason": "Independently FULL UT99 v432 T99 TextBuffer file-read method: original 88 Pos/Top/Text native values, 88 original two-byte compact NAME_None inherited envelopes, 3 native positive mutations and matching native oversized failed cursor. General UObject and C98/C227 remain BLOCKED.",
+      "last_consolidated_review": "current_single_full_method_verdict_28_checks",
+      "inherited_T99_TextBuffer_source_specific_branch_complete": true
     },
     "T99:UFont::Serialize": {
       "criteria": {
