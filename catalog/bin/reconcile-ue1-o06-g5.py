@@ -847,7 +847,7 @@ for b in sorted({r["branch"] for r in rows}):
 no_named=[r["id"] for r in rows if not r["named_test"]]
 natives=[r["id"] for r in rows if r["native_slice_evidence_valid"]]
 summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
-         "full_independent_method_verified":0,
+         "full_independent_method_verified":sum(r["full_G5_method_acceptance"]=="FULL" for r in rows),
          "g5_failed_method_decisions":sum(r["full_G5_method_acceptance"]=="FAILED" for r in rows),
          "g5_blocked_method_decisions":sum(r["full_G5_method_acceptance"]=="BLOCKED" for r in rows),
          "native_partial_slice_evidence":len(natives),

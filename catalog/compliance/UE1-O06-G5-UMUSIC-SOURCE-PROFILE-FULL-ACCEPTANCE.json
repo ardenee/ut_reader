@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "method": "T99:UMusic::Serialize",
+  "scope": "UT99_v432_T99_source_profile_package_reader_loading_only",
+  "decision": "FULL",
+  "limitations": "No assertion of unrelated general UObject::Serialize FULL, nor Unreal v1200 C98, v227 C227, other engines, native object-saving or uncooked games. Exactly the independently source-reviewed T99 method archive loading contract.",
+  "seven_verified_criteria": {
+    "pinned_source_and_dispatch": "VERIFIED",
+    "complete_native_field_values_and_references": "VERIFIED",
+    "archive_bytes_and_consumption": "VERIFIED",
+    "malformed_input_error_semantics": "VERIFIED",
+    "inherited_and_version_variant_semantics": "VERIFIED",
+    "current_acceptance_tests": "VERIFIED",
+    "independent_full_method_review": "VERIFIED"
+  },
+  "positive_compiled_loaded_values": {
+    "objects": 2,
+    "source_memory_bytes": 792404
+  },
+  "distinct_native_negative_outcomes": 3,
+  "inherited_serializer_actual_positive": "Source Super::Serialize first, 11 complete original no-stack/no-tag one-byte NAME_None envelopes at v61/v64/v66; independent v432 UObject StateFrame/tagged archive and malformed proof sealed",
+  "current_production_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
+  "independent_final_acceptance_script": "catalog/bin/verify-ue1-o06-g5-t99-audio-independent-full-method-review.php",
+  "independent_final_acceptance_script_sha256": "1f690a429988d9a7cc7742c6a6e72dc7e727ecec7f74197a9cd3b2b11e86a9b0",
+  "independent_final_acceptance_log": "catalog\\compliance\\evidence\\o06\\20261025T125705062Z-d637d841-DEV-verify-ue1-o06-g5-t99-audio-independent-full-method-review.php.txt",
+  "independent_final_acceptance_log_sha256": "1d3e86a969dac21530abfcc646371170b14189ccdba27057727a3e9bbfd71610",
+  "review_source_manifest": "catalog/compliance/UE1-O06-G5-T99-AUDIO-INHERITED-SUPER-REVIEW.json",
+  "review_source_manifest_sha256": "2cd53763b600ee1a0fea4335d636111a24467e55e3ba1d6026aa1607da945fc2",
+  "compiled_engine_reruns_in_final_review": 0,
+  "general_T99_UObject_method_decision": "BLOCKED_SEPARATELY"
+}

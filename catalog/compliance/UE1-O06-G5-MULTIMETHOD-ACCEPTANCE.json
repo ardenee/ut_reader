@@ -2,13 +2,13 @@
   "schema": 1,
   "updated_utc": "2026-10-24T13:58:10+00:00",
   "source_profile": "ut99-v432",
-  "classification": "DISCOVERY_AND_FULL_METHOD_ACCEPTANCE_QUEUE_NOT_NATIVE_PROOF",
+  "classification": "DISCOVERY_PLUS_INDEPENDENT_SHA_VERIFIED_SOURCE_PROFILE_CLOSURES",
   "scanner_sha256": "b63f8a998f37841e79794d6bf66a49f89776236fea3f6f24a00a4342f7c50f19",
   "packages_scanned": 7,
   "packages_expected": 7,
-  "distinct_fully_accepted_methods": 0,
+  "distinct_fully_accepted_methods": 2,
   "target_method_count": 8,
-  "target_method_acceptance_completed": 0,
+  "target_method_acceptance_completed": 2,
   "total_examined_export_rows": 5469,
   "ignored_nonserialized_NAME_None_export_rows": 43,
   "total_production_export_ranges_inspected": 115,
@@ -85,15 +85,15 @@
       "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 2,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
@@ -242,14 +242,16 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review"
+      "decisive_closure_blocker": "legacy_v1200_version_gates_v227_native_implementation_and_archetype_unavailable_other_nested_property_values_and_independent_full_method_review",
+      "closure_artifact": null,
+      "closure_sha256": null
     },
     {
       "id": "T99:UClass::Serialize",
       "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
@@ -257,7 +259,7 @@
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 1,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": 90,
@@ -343,22 +345,24 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_script_fixups_negative_paths"
+      "decisive_closure_blocker": "inherited_UObject_script_fixups_negative_paths",
+      "closure_artifact": null,
+      "closure_sha256": null
     },
     {
       "id": "T99:UTextBuffer::Serialize",
       "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 3,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": 90,
@@ -451,22 +455,24 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_full_method_unverified"
+      "decisive_closure_blocker": "inherited_UObject_full_method_unverified",
+      "closure_artifact": null,
+      "closure_sha256": null
     },
     {
       "id": "T99:UFont::Serialize",
       "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
+        "archive_bytes_and_consumption": "VERIFIED",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 2,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": 4,
@@ -518,14 +524,16 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_full_method_and_other_variant_errors"
+      "decisive_closure_blocker": "inherited_UObject_full_method_and_other_variant_errors",
+      "closure_artifact": null,
+      "closure_sha256": null
     },
     {
       "id": "T99:USkeletalMesh::Serialize",
       "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
@@ -533,7 +541,7 @@
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 1,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
@@ -597,14 +605,16 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_ULodMesh_and_negative_cases"
+      "decisive_closure_blocker": "inherited_ULodMesh_and_negative_cases",
+      "closure_artifact": null,
+      "closure_sha256": null
     },
     {
       "id": "T99:UAnimation::Serialize",
       "full_G5_method_acceptance": "BLOCKED",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
+        "pinned_source_and_dispatch": "VERIFIED",
         "complete_native_field_values_and_references": "OPEN",
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
@@ -612,7 +622,7 @@
         "current_acceptance_tests": "OPEN",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 1,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
@@ -674,24 +684,26 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_and_negative_variants"
+      "decisive_closure_blocker": "inherited_UObject_and_negative_variants",
+      "closure_artifact": null,
+      "closure_sha256": null
     },
     {
       "id": "T99:USound::Serialize",
-      "full_G5_method_acceptance": "BLOCKED",
+      "full_G5_method_acceptance": "FULL",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
-        "independent_full_method_review": "OPEN"
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 7,
       "acceptance_criteria_total": 7,
-      "closure_artifact_verified": false,
+      "closure_artifact_verified": true,
       "compiled_same_real_load_dispatch_calls": null,
       "source_RF_HasStack_positive_frame_exports": 0,
       "source_RF_HasStack_decoded_frames": 0,
@@ -730,7 +742,7 @@
         "global_source_inputs_changed",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Native Sound loaded-value and scoped malformed-input work CLOSED: do not retest 9 original Sounds or two negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Sound-specific probes.",
+      "next_closure_work": "T99 v432 Sound/Music method complete. Do not retest. Only general UObject and other source families remain.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -740,24 +752,26 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review"
+      "decisive_closure_blocker": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-USOUND-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "db21279b36be9743d3c8032f2e785792fe58dfdcbd8ae90104a8e3f71c869ee5"
     },
     {
       "id": "T99:UMusic::Serialize",
-      "full_G5_method_acceptance": "BLOCKED",
+      "full_G5_method_acceptance": "FULL",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
-        "pinned_source_and_dispatch": "OPEN",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
-        "independent_full_method_review": "OPEN"
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
       },
-      "acceptance_criteria_met": 0,
+      "acceptance_criteria_met": 7,
       "acceptance_criteria_total": 7,
-      "closure_artifact_verified": false,
+      "closure_artifact_verified": true,
       "compiled_same_real_load_dispatch_calls": null,
       "source_RF_HasStack_positive_frame_exports": 0,
       "source_RF_HasStack_decoded_frames": 0,
@@ -793,7 +807,7 @@
         "global_source_inputs_changed",
         "native_export_slice_only"
       ],
-      "next_closure_work": "Native Music loaded-value and scoped malformed-input work CLOSED: do not retest 2 original Musics or three negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Music-specific probes.",
+      "next_closure_work": "T99 v432 Sound/Music method complete. Do not retest. Only general UObject and other source families remain.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -803,10 +817,12 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review"
+      "decisive_closure_blocker": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UMUSIC-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "65b43d41defacc754b9105ffe1d579a2300755f6bf5e0fa0afab9ba47fbb02f4"
     }
   ],
   "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",
   "failed_method_decisions": 0,
-  "blocked_method_decisions": 8
+  "blocked_method_decisions": 6
 }

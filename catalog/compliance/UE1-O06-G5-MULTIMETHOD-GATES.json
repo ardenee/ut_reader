@@ -186,26 +186,27 @@
         "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
         "malformed_input_error_semantics": "VERIFIED",
-        "inherited_and_version_variant_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "VERIFIED",
         "current_acceptance_tests": "VERIFIED",
-        "independent_full_method_review": "OPEN"
+        "independent_full_method_review": "VERIFIED"
       },
-      "closure_artifact": null,
-      "closure_sha256": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-USOUND-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "db21279b36be9743d3c8032f2e785792fe58dfdcbd8ae90104a8e3f71c869ee5",
       "blocker_summary": "Compiled native WAV export slice only; full semantics and error handling open.",
-      "decision": "BLOCKED",
-      "decisive_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
-      "next_action": "Native Sound loaded-value and scoped malformed-input work CLOSED: do not retest 9 original Sounds or two negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Sound-specific probes.",
-      "reason": "Original compiled UT99 v432 Core+Engine LoadPackage loaded 9 genuine Sound objects at versions61/66. All 424068 Data bytes, FileType, OriginalSize and all 9 duration IEEE754 bit patterns match Epic source and PHP archive. Compiled malformed native Sound invalid FileType fails; zero-size WAV Sound native faults at FWaveModInfo::ReadWaveInfo WavData(0), now fail-closed safely. Sound method-specific native loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
-      "last_consolidated_review": "current_audio_native_66_checks_loaded_malformed_closed_inherited_OPEN",
+      "decision": "FULL",
+      "decisive_blocker": null,
+      "next_action": "T99 v432 Sound/Music method complete. Do not retest. Only general UObject and other source families remain.",
+      "reason": "Independently FULL UT99 v432 T99 source-profile file-read acceptance: actual original compiled native loaded data and inherited no-stack/no-tag UObject::Serialize branch, versions <=61 and >61, 5 observed native errors, 7/7 SHA-current gates. General UObject/C98/C227 remains separate.",
+      "last_consolidated_review": "FINAL_7_of_7_source_scoped_audio_inherited_PASS63",
       "method_specific_native_loaded_values": "VERIFIED",
       "method_specific_compiled_native_malformed_cases": "VERIFIED_SCOPED",
-      "remaining_shared_full_method_blocker": "T99:UObject::Serialize",
+      "remaining_shared_full_method_blocker": null,
       "genuine_loaded_objects": 9,
       "genuine_loaded_bytes": 424068,
       "negative_native_cases": 2,
       "original_native_audio_source_SHA_pinned": true,
-      "native_compiled_prerequisite_fully_closed": false
+      "native_compiled_prerequisite_fully_closed": true,
+      "method_scoped_inherited_super_closed": true
     },
     "T99:UMusic::Serialize": {
       "criteria": {
@@ -213,26 +214,27 @@
         "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
         "malformed_input_error_semantics": "VERIFIED",
-        "inherited_and_version_variant_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "VERIFIED",
         "current_acceptance_tests": "VERIFIED",
-        "independent_full_method_review": "OPEN"
+        "independent_full_method_review": "VERIFIED"
       },
-      "closure_artifact": null,
-      "closure_sha256": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UMUSIC-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "65b43d41defacc754b9105ffe1d579a2300755f6bf5e0fa0afab9ba47fbb02f4",
       "blocker_summary": "Compiled native music export slice only; full lazy-array and error semantics open.",
-      "decision": "BLOCKED",
-      "decisive_blocker": "inherited_UObject_full_method_and_independent_seven_gate_review",
-      "next_action": "Native Music loaded-value and scoped malformed-input work CLOSED: do not retest 2 original Musics or three negative oracles. Only shared UObject inherited seven-gate acceptance and independent whole-method signoff remain; avoid redundant Music-specific probes.",
-      "reason": "Original compiled UT99 v432 Core+Engine LoadPackage loaded 2 genuine Music objects at versions61/64. All 792404 Data bytes, FileType and OriginalSize match Epic original source and PHP. Three distinct native Music mutations: zero lazy-count with forward skip successfully loads, invalid FileType and backward SeekPos fail. Production reader corrected forward skip, original positives unchanged. Music-specific loaded and tested negative criteria VERIFIED; inherited UObject full method and final seven-gate independent signoff still OPEN.",
-      "last_consolidated_review": "current_audio_native_66_checks_loaded_malformed_closed_inherited_OPEN",
+      "decision": "FULL",
+      "decisive_blocker": null,
+      "next_action": "T99 v432 Sound/Music method complete. Do not retest. Only general UObject and other source families remain.",
+      "reason": "Independently FULL UT99 v432 T99 source-profile file-read acceptance: actual original compiled native loaded data and inherited no-stack/no-tag UObject::Serialize branch, versions <=61 and >61, 5 observed native errors, 7/7 SHA-current gates. General UObject/C98/C227 remains separate.",
+      "last_consolidated_review": "FINAL_7_of_7_source_scoped_audio_inherited_PASS63",
       "method_specific_native_loaded_values": "VERIFIED",
       "method_specific_compiled_native_malformed_cases": "VERIFIED_SCOPED",
-      "remaining_shared_full_method_blocker": "T99:UObject::Serialize",
+      "remaining_shared_full_method_blocker": null,
       "genuine_loaded_objects": 2,
       "genuine_loaded_bytes": 792404,
       "negative_native_cases": 3,
       "original_native_audio_source_SHA_pinned": true,
-      "native_compiled_prerequisite_fully_closed": false
+      "native_compiled_prerequisite_fully_closed": true,
+      "method_scoped_inherited_super_closed": true
     }
   }
 }

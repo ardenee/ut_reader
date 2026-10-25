@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "independent_source_profile": "UT99 v432 T99 ONLY, file reader load path, do not generalize Unreal v1200 or Unreal v227",
+  "methods": [
+    "T99:USound::Serialize",
+    "T99:UMusic::Serialize"
+  ],
+  "inherited_Super_branch_review": "11 original loaded objects: zero RF_HasStack, no UObject script tags, one-byte NAME_None; real compiled core and engine load already succeeded",
+  "version_gate_completeness": "<=61 non-lazy-SeekPos and >61 lazy-SeekPos, Sound v61+66 and Music v61+64 native compiled loads",
+  "bad_input_scope": "2 USound native failures and 3 UMusic native outcomes including native Music empty array forward skip and Sound empty WAV native fatal, reader safely refuses dangerous input",
+  "archive_positive_native_field_values": "9 Sound 424068 loaded bytes with 9 exact Duration 32bit, 2 Music 792404 loaded bytes; FileType and OriginalSize exact",
+  "independent_methods_review": "PENDING_CONSOLIDATED_FINAL_EVIDENCE_CHECK",
+  "shared_T99_UObject_general_method_status": "BLOCKED_DIFFERENT_OBJECT_PROFILES",
+  "native_engine_rerun_count": 0,
+  "native_originals": {
+    "DMatch.uax": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Sounds/DMatch.uax",
+      "sha256": "e0e5ef3ceeaf169f790fb696ce49dcfc97df5b17d9de0e2b67f8108878186c3b",
+      "version": 61,
+      "loaded_records": 4
+    },
+    "Mission.umx": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Mission.umx",
+      "sha256": "10839051ef41ea0145823243e00f3b1016df2a3ddc67d81a7716817158a16a95",
+      "version": 64,
+      "loaded_records": 1
+    },
+    "G5AudioNewSound.uax": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Sounds/G5AudioNewSound.uax",
+      "sha256": "3b8ec7fc7f6572665470b6a8331e2bf5c867068365251cd86ed942544126b84f",
+      "version": 66,
+      "loaded_records": 5
+    },
+    "G5AudioOldMusic.umx": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/Music/G5AudioOldMusic.umx",
+      "sha256": "641a02972103a78c62bf170f05658eb95638d383cc0720c0eb7cfa0b877dfa0f",
+      "version": 61,
+      "loaded_records": 1
+    }
+  },
+  "reviewed_11_inherited_envelopes": [
+    {
+      "native_object": "Sound DMatch.1234.Three",
+      "source_archive": "DMatch.uax",
+      "version": 61,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 44478
+    },
+    {
+      "native_object": "Sound DMatch.1234.Four",
+      "source_archive": "DMatch.uax",
+      "version": 61,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 44222
+    },
+    {
+      "native_object": "Sound DMatch.1234.One",
+      "source_archive": "DMatch.uax",
+      "version": 61,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 44158
+    },
+    {
+      "native_object": "Sound DMatch.1234.Two",
+      "source_archive": "DMatch.uax",
+      "version": 61,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 44286
+    },
+    {
+      "native_object": "Music Mission.Mission",
+      "source_archive": "Mission.umx",
+      "version": 64,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 734778
+    },
+    {
+      "native_object": "Sound G5AudioNewSound.LadderSounds.lsChange1",
+      "source_archive": "G5AudioNewSound.uax",
+      "version": 66,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 88938
+    },
+    {
+      "native_object": "Sound G5AudioNewSound.LadderSounds.lcursorMove",
+      "source_archive": "G5AudioNewSound.uax",
+      "version": 66,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 12650
+    },
+    {
+      "native_object": "Sound G5AudioNewSound.LadderSounds.ldoorsopen1b",
+      "source_archive": "G5AudioNewSound.uax",
+      "version": 66,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 108836
+    },
+    {
+      "native_object": "Sound G5AudioNewSound.LadderSounds.lface1",
+      "source_archive": "G5AudioNewSound.uax",
+      "version": 66,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 4469
+    },
+    {
+      "native_object": "Sound G5AudioNewSound.LadderSounds.ladvance",
+      "source_archive": "G5AudioNewSound.uax",
+      "version": 66,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 32086
+    },
+    {
+      "native_object": "Music G5AudioOldMusic.Hypn",
+      "source_archive": "G5AudioOldMusic.umx",
+      "version": 61,
+      "UObject_super": "None_Tag_1byte_NoStack",
+      "sound_music_tail_bytes": 57638
+    }
+  ],
+  "sources_SHA": {
+    "Epic_original_v400_method_USound_UMusic": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Src\\UnAudio.cpp",
+      "sha256": "c648a3106b1ea910da178b17324ccf8c9d9eaf04b647671277019c61291f7ea8"
+    },
+    "Epic_original_v400_UObject_super": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnObj.cpp",
+      "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+    },
+    "Epic_original_v400_lazy_array_operator": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnTemplate.h",
+      "sha256": "1dbc817cece37d1077789422ba4f52723aab3c22d93c64c6d244aabbc6a71024"
+    },
+    "Epic_v432_binary_header_USound_UMusic": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Engine\\Inc\\UnAudio.h",
+      "sha256": "91ece5ed340926fa7f5695fb72c1f65faa66523d06e9c5f5aa0bcae941032b65"
+    },
+    "original_binary_Core": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "original_binary_Engine": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+    }
+  },
+  "proof_SHA": {
+    "source_inherited_11_envelopes": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-11-Source-Inherited-UObject-Envelope.json",
+      "sha256": "88667cb19f7fd8b314387f5ac4e964dab09535fb93eb77da003de6c0ab6ec8cb"
+    },
+    "original_existing_11_native_load_value_bytes": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Loaded-Values-v2.json",
+      "sha256": "4313a5584a9d9ac81b20c68d593c276521c1b3d1cddc122c4e7ea58825ff603d"
+    },
+    "original_native_sound_duration_bits": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-Audio-Native-Duration-Match.json",
+      "sha256": "3938db162787652700b890a05d2817dce89bb4ccdb1dc1f6662869ead23505d5"
+    },
+    "original_native_malformed_manifest": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-AUDIO-NATIVE-LOADED-AND-MALFORMED-ACCEPTANCE.json",
+      "sha256": "23c8d68bed38c0dbd0125c8ed02a6d3fb73115381ec9519e287e7925cdf1c78b"
+    },
+    "original_66_test_native_acceptance": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\evidence\\o06\\20261025T112715174Z-6b534c85-DEV-verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php.txt",
+      "sha256": "ef96414840dcbd6b672bd7b6ad9a77cfd6190703c6c845d510e59972951cca74"
+    },
+    "original_66_test_code": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\bin\\verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php",
+      "sha256": "f5e2ca3e8ebe3d423531cac59093a73188d6027f450d883d238991d4f53a271a"
+    },
+    "source_UE1_object_reader": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\src\\Infrastructure\\Readers\\CatalogUE1ClassicTaggedPropertyReader.php",
+      "sha256": "559e72ad5dbfab748cda95ab583b297d4ec54d89f369e4472cacd8c70c74f39d"
+    },
+    "source_UE1_native_audio_reader": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\src\\Infrastructure\\Readers\\CatalogUE1ClassicNativeObjectReader.php",
+      "sha256": "dacc000ce7a2bbf2f1df725de49289398d3ef1b3a842eff7c188060a4797724a"
+    }
+  },
+  "method_gate_reviews": {
+    "pinned_source_and_dispatch": "VERIFIED",
+    "complete_native_field_values_and_references": "VERIFIED",
+    "archive_bytes_and_consumption": "VERIFIED",
+    "malformed_input_error_semantics": "VERIFIED_SCOPED",
+    "inherited_and_version_variant_semantics": "VERIFIED_FOR_NO_STACK_NO_PROPERTY_GENUINE_SUBCLASS_BRANCH",
+    "current_acceptance_tests": "VERIFIED",
+    "independent_full_method_review": "PENDING_NEW_FINAL_CHECK"
+  }
+}

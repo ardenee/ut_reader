@@ -177,6 +177,62 @@ for name in reg["methods"]:
         old["negative_native_cases"]=(2 if name=="T99:USound::Serialize" else 3)
         old["original_native_audio_source_SHA_pinned"]=True
         old["native_compiled_prerequisite_fully_closed"]=False
+    if name in ("T99:USound::Serialize","T99:UMusic::Serialize"):
+        # Independent complete source-profile method closure. T99 v432
+        # USound/UMusic inherit the specific no-stack/no-tag UObject
+        # branch observed by original compiled loader, NOT every possible
+        # UObject subclass or C98/C227 native version behavior.
+        final_test="verify-ue1-o06-g5-t99-audio-independent-full-method-review.php"
+        finale=next((r for r in reversed(events)
+            if r.get("test")==final_test and r.get("state")=="PASS"),None)
+        assert finale is not None, "Missing method-scoped independent seven-gate decision"
+        final_log=ROOT/finale["log"].replace("\\","/")
+        assert sha(final_log)==finale["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/final_test)==finale["test_sha256"]
+        assert finale["source_sha256"]==reconciliation["current_source_sha256"]
+        verdict=read(final_log)
+        assert verdict["ok"] and verdict["checks"]==63 and verdict["passed"]==63
+        assert verdict["source_profile"]=="UT99-v432"
+        assert verdict["native_loaded_Sound"]==9 and verdict["native_loaded_Music"]==2
+        assert verdict["source_inherited_validated_objects"]==11
+        assert verdict["native_byte_values_matched"]==1216472
+        assert verdict["native_negative_distinct_cases"]==5
+        assert verdict["native_engine_replays_this_test"]==0
+        assert verdict["general_T99_UObject_FULL"]=="BLOCKED_INDEPENDENTLY"
+        assert set(verdict["seven_gates"])==set(criteria)
+        assert all(v=="VERIFIED" for v in verdict["seven_gates"].values())
+        assert verdict["method_decisions"][name]=="FULL_T99_V432_SOURCE_PROFILE_ONLY"
+        source_review=C/"UE1-O06-G5-T99-AUDIO-INHERITED-SUPER-REVIEW.json"
+        assert source_review.is_file()
+        class_label="USOUND" if name=="T99:USound::Serialize" else "UMUSIC"
+        artifact=C/("UE1-O06-G5-"+class_label+"-SOURCE-PROFILE-FULL-ACCEPTANCE.json")
+        assert artifact.is_file()
+        closure=read(artifact)
+        assert closure["decision"]=="FULL" and closure["method"]==name
+        assert closure["scope"]=="UT99_v432_T99_source_profile_package_reader_loading_only"
+        assert closure["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert closure["independent_final_acceptance_script_sha256"]==finale["test_sha256"]
+        assert closure["independent_final_acceptance_log_sha256"]==finale["output_sha256"]
+        assert closure["review_source_manifest_sha256"]==sha(source_review)
+        assert closure["seven_verified_criteria"]==verdict["seven_gates"]
+        assert closure["compiled_engine_reruns_in_final_review"]==0
+        assert closure["general_T99_UObject_method_decision"]=="BLOCKED_SEPARATELY"
+        assert reconciliation["source_native_audio_compiled_loaded_and_malformed_scoped"]
+        assert reconciliation["source_native_audio_array_type_dispatch_scoped"]
+        assert entry["current"] and entry["complete_members"]
+        gates.update(verdict["seven_gates"])
+        entry["result"]="FULL"
+        entry["reason"]=("Independently FULL UT99 v432 T99 source-profile file-read acceptance: "
+            "actual original compiled native loaded data and inherited no-stack/no-tag "
+            "UObject::Serialize branch, versions <=61 and >61, 5 observed native errors, "
+            "7/7 SHA-current gates. General UObject/C98/C227 remains separate.")
+        entry["blocker"]=None
+        entry["next"]="T99 v432 Sound/Music method complete. Do not retest. Only general UObject and other source families remain."
+        old["closure_artifact"]=str(artifact.relative_to(ROOT)).replace("\\","/")
+        old["closure_sha256"]=sha(artifact)
+        old["remaining_shared_full_method_blocker"]=None
+        old["method_scoped_inherited_super_closed"]=True
+        old["native_compiled_prerequisite_fully_closed"]=True
     if name=="T99:UObject::Serialize":
         events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
         method_test="verify-ue1-o06-g5-uobject-consolidated-acceptance.php"
@@ -603,8 +659,16 @@ for name in reg["methods"]:
         old["compiled_genuine_original_exports_compared"]=33
         old["compiled_original_14_StateFrames_prior_verified"]=True
         gates["current_acceptance_tests"]="VERIFIED"
-    assert entry["result"] in ("BLOCKED","FAILED")
-    assert any(v!="VERIFIED" for v in gates.values())
+    assert entry["result"] in ("FULL","BLOCKED","FAILED")
+    if entry["result"]=="FULL":
+        assert set(gates)==set(criteria)
+        assert all(v=="VERIFIED" for v in gates.values()),name
+        assert old["closure_artifact"] and old["closure_sha256"]
+        assert sha(ROOT/old["closure_artifact"])==old["closure_sha256"]
+    else:
+        assert any(v!="VERIFIED" for v in gates.values())
+        assert old["closure_artifact"] is None
+        assert old["closure_sha256"] is None
     old["criteria"]=gates
     old["decision"]=entry["result"]
     old["decisive_blocker"]=entry["blocker"]
@@ -614,12 +678,11 @@ for name in reg["methods"]:
         "current_single_full_method_verdict_28_checks" if name=="T99:UTextBuffer::Serialize"
         else "current_single_full_method_verdict_23_checks" if name=="T99:UFont::Serialize"
         else "current_method_decision_69_checks_Camera_loader_source_exclusion_closed_native_replay_zero" if name=="T99:UObject::Serialize"
-        else "current_audio_native_66_checks_loaded_malformed_closed_inherited_OPEN" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
+        else "FINAL_7_of_7_source_scoped_audio_inherited_PASS63" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
         else "existing_sha_pinned_evidence_only_no_new_tests")
-    assert old["closure_artifact"] is None
-    assert old["closure_sha256"] is None
     decisions[name]={
       "decision":entry["result"],"gate_results":gates,
+      "closure_artifact":old["closure_artifact"],"closure_sha256":old["closure_sha256"],
       "existing_native_loaded_valid":evidence["native_loaded_evidence_current"],
       "existing_native_proof_current_global_fingerprint":entry["current"],
       "existing_export_slice_valid":evidence["native_slice_evidence_valid"],
@@ -635,16 +698,17 @@ for name in reg["methods"]:
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
       "new_native_tests_executed":(9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize","T99:USound::Serialize","T99:UMusic::Serialize") else 0,
+      "new_test_runs_executed":15 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
  "policy":"Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
  "source_fingerprint":reconciliation["current_source_sha256"],
- "method_count":len(decisions),"fully_epic_verified":0,
+ "method_count":len(decisions),
+ "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":22,"new_test_runs":18,
+ "new_oracle_runs":22,"new_test_runs":19,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
@@ -659,12 +723,20 @@ for item in acceptance["methods"]:
     item["full_G5_method_acceptance"]=result["decision"]
     item["decisive_closure_blocker"]=result["decisive_blocker"]
     item["next_closure_work"]=result["next_action"]
+    item["acceptance_criteria"]=result["gate_results"]
+    item["acceptance_criteria_met"]=sum(v=="VERIFIED" for v in result["gate_results"].values())
+    item["closure_artifact_verified"]=(result["decision"]=="FULL")
+    item["closure_artifact"]=result["closure_artifact"]
+    item["closure_sha256"]=result["closure_sha256"]
 acceptance["failed_method_decisions"]=report["failed"]
 acceptance["blocked_method_decisions"]=report["blocked"]
-assert acceptance["distinct_fully_accepted_methods"]==0
+acceptance["distinct_fully_accepted_methods"]=report["fully_epic_verified"]
+acceptance["target_method_acceptance_completed"]=report["fully_epic_verified"]
+if report["fully_epic_verified"]>0:
+    acceptance["classification"]="DISCOVERY_PLUS_INDEPENDENT_SHA_VERIFIED_SOURCE_PROFILE_CLOSURES"
 acceptance_path.write_text(json.dumps(acceptance,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")
 print(json.dumps({"report":str(OUT.relative_to(ROOT)).replace("\\","/"),
- "methods":len(decisions),"FULL":0,"FAILED":report["failed"],"BLOCKED":report["blocked"],
+ "methods":len(decisions),"FULL":report["fully_epic_verified"],"FAILED":report["failed"],"BLOCKED":report["blocked"],
  "new_test_runs":report["new_test_runs"],
  "failed_methods":[k for k,v in decisions.items() if v["decision"]=="FAILED"],
  "first_prerequisite":"T99:UObject::Serialize"},indent=2))
