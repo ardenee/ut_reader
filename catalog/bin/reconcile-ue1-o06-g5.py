@@ -37,7 +37,8 @@ for e in events:
     if e.get("target","DEV")=="DEV": latest[e["test"]]=e
 head=subprocess.check_output(["git","-C",str(ROOT),"rev-parse","--short=8","HEAD"],text=True).strip()
 inputs=list((ROOT/"catalog"/"src"/"Infrastructure"/"Readers").glob("CatalogUE1*.php"))
-inputs += [ROOT/"catalog"/"src"/"Infrastructure"/"Unverified"/"CatalogUE1OriginalStagingMetadata.php",
+inputs += [ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogLegacyPackageReader.php",
+           ROOT/"catalog"/"src"/"Infrastructure"/"Unverified"/"CatalogUE1OriginalStagingMetadata.php",
            ROOT/"catalog"/"bin"/"inspect-unreal-file.php",
            C/"evidence"/"o06"/"ue1-1996-msvc-abi.cpp",
            C/"evidence"/"o06"/"ue1-1996-actor-layout.cpp"]
@@ -84,6 +85,42 @@ old_latest_tag=committed("36bae778",new_tag_file)
 old_latest_schema=committed("36bae778",new_schema_file)
 current_tag=new_tag_file.read_text(encoding="utf-8-sig")
 current_schema=new_schema_file.read_text(encoding="utf-8-sig")
+# The shared classic export-map decoder was a missing fingerprint input:
+# it is transitive input for every UE1 native/source verdict, so pin it
+# from this point forward. Its only behavioral delta guards confirmed
+# v69/licensee227 exports carrying RF_HasArchtype, whose native
+# FObjectExport archive operator is not part of the public v227 source.
+legacy_reader=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogLegacyPackageReader.php"
+old_legacy=committed("dff8840a",legacy_reader)
+new_legacy=legacy_reader.read_text(encoding="utf-8-sig")
+previous_legacy_source="694bd853341a6a44afafced6d91635f008147f88668c9281b730a5c310310320"
+legacy_sig_line=str(legacy_reader)+":"+digest(legacy_reader).upper()
+sig_before_legacy="\n".join(line for line in signature.split("\n")
+    if line!=legacy_sig_line)
+legacy_guard_test="verify-ue1-o06-c227-archetype-native-operator-guard.php"
+legacy_event=latest.get(legacy_guard_test)
+legacy_log=ROOT/legacy_event["log"] if legacy_event and legacy_event.get("log") else None
+try:
+    legacy_values=read(legacy_log) if legacy_log and legacy_log.exists() else {}
+except Exception:
+    legacy_values={}
+legacy_guard_scope=(
+    signature.count(legacy_sig_line)==1
+    and hashlib.sha256(sig_before_legacy.encode("utf-8")).hexdigest()==previous_legacy_source
+    and "CatalogLegacyPackageReader.php" in str(legacy_reader)
+    and "requires unverified native ArchetypeIndex" in new_legacy
+    and "requires unverified native ArchetypeIndex" not in old_legacy
+    and legacy_event is not None and legacy_event.get("state")=="PASS"
+    and legacy_event.get("source_sha256")==current
+    and legacy_event.get("output_sha256")==digest(legacy_log)
+    and legacy_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/legacy_guard_test)
+    and legacy_values.get("ok") is True
+    and legacy_values.get("checks")==24 and legacy_values.get("passed")==24
+    and legacy_values.get("genuine_export_rows_unmodified")==426
+    and legacy_values.get("dev_only_single_flag_mutations_rejected")==3
+    and legacy_values.get("compiled_native_replays")==0
+    and legacy_values.get("full_method_decision")=="BLOCKED"
+)
 # Camera is an intentional source-defined ULinkerLoad::CreateExport
 # exclusion (v1200 Ver<57, UT99 inherited v400 all versions). A real
 # compiled v432 native loader already omitted the four v61 and five
@@ -91,7 +128,7 @@ current_schema=new_schema_file.read_text(encoding="utf-8-sig")
 before_camera_tag=committed("06ae43e2",new_tag_file)
 previous_camera_source="6dba20b269aa8efc12f97f57ffca9ddd293a06e1a5d2f6b78e285282860929d8"
 sig_before_camera=subst_sig(
-    signature,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_camera_tag))
+    sig_before_legacy,new_tag_file,digest(new_tag_file).upper(),sha_blob(before_camera_tag))
 camera_test="verify-ue1-o06-g5-camera-source-reachability-decision.php"
 camera_event=latest.get(camera_test)
 camera_log=ROOT/camera_event["log"] if camera_event and camera_event.get("log") else None
@@ -100,13 +137,14 @@ try:
 except Exception:
     camera_result={}
 camera_scope=(
-    hashlib.sha256(sig_before_camera.encode("utf-8")).hexdigest()==previous_camera_source
+    legacy_guard_scope
+    and hashlib.sha256(sig_before_camera.encode("utf-8")).hexdigest()==previous_camera_source
     and "native_loader_class_excluded_by_epic_source" in current_tag
     and "native_loader_UObject_serialize_invoked" in current_tag
     and "v1200_Camera_skipped_before_version57" in current_tag
     and "UT99_v400_inherited_Camera_CreateExport_returns_NULL" in current_tag
     and camera_event is not None and camera_event.get("state")=="PASS"
-    and camera_event.get("source_sha256")==current
+    and camera_event.get("source_sha256")==previous_legacy_source
     and camera_event.get("output_sha256")==digest(camera_log)
     and camera_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/camera_test)
     and camera_result.get("ok") is True
@@ -573,6 +611,7 @@ def source_compatible(ev,ident):
     if not ev:return False
     f=ev.get("source_sha256")
     return (f==current
+        or (legacy_guard_scope and f==previous_legacy_source)
         or (camera_scope and f==previous_camera_source)
         or (primitive_scope and f==previous_primitive_source)
         or (v227_script_scope and f==previous_v227_script_source)
@@ -753,6 +792,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "prior_unchanged_branch_source_sha256":old_fingerprint if scoped_equivalence else None,
     "middle_unmodified_branch_source_sha256":middle_fingerprint if font_scope else None,
     "source_font_branch_equivalence":font_scope,
+    "source_native_v227_export_archetype_guard_scoped":legacy_guard_scope,
+    "previous_source_before_v227_export_guard":previous_legacy_source if legacy_guard_scope else None,
     "source_native_Camera_loader_skip_change_scoped":camera_scope,
     "previous_source_before_Camera_loader_skip_change":previous_camera_source if camera_scope else None,
     "source_native_genuine_v54_v1200_FSphere_change_scoped":primitive_scope,

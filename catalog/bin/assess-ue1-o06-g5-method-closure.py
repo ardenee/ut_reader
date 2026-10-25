@@ -412,7 +412,7 @@ for name in reg["methods"]:
         camera_log=ROOT/camera_ev["log"].replace("\\","/")
         assert sha(camera_log)==camera_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/camera_test)==camera_ev["test_sha256"]
-        assert camera_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert camera_ev["source_sha256"]==reconciliation["previous_source_before_v227_export_guard"]
         camera_result=read(camera_log)
         assert camera_result["ok"] and camera_result["checks"]==69
         assert camera_result["passed"]==69
@@ -423,6 +423,27 @@ for name in reg["methods"]:
         assert camera_result["compiled_native_oracle_replays"]==0
         assert camera_result["full_method_decision"]=="BLOCKED"
         assert reconciliation["source_native_Camera_loader_skip_change_scoped"]
+        # v227 FObjectExport adds a persistent ArchetypeIndex. Its compiled
+        # native archive implementation is not in public Epic source:
+        # never infer the wire format or accept a flagged export as zero.
+        archetype_test="verify-ue1-o06-c227-archetype-native-operator-guard.php"
+        archetype_ev=next((item for item in reversed(events)
+            if item.get("test")==archetype_test and item.get("state")=="PASS"),None)
+        assert archetype_ev is not None
+        archetype_log=ROOT/archetype_ev["log"].replace("\\","/")
+        assert sha(archetype_log)==archetype_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/archetype_test)==archetype_ev["test_sha256"]
+        assert archetype_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        archetype_result=read(archetype_log)
+        assert archetype_result["ok"] and archetype_result["checks"]==24
+        assert archetype_result["passed"]==24
+        assert archetype_result["genuine_export_rows_unmodified"]==426
+        assert archetype_result["real_RF_HasArchtype_positives"]==0
+        assert archetype_result["dev_only_single_flag_mutations_rejected"]==3
+        assert archetype_result["compiled_native_replays"]==0
+        assert archetype_result["source_native_archetype_serialize"]=="UNVERIFIED"
+        assert archetype_result["full_method_decision"]=="BLOCKED"
+        assert reconciliation["source_native_v227_export_archetype_guard_scoped"]
         # These 113 values are a fully validated genuine v68 package slice,
         # NOT enough to mark every UObject serializer value path VERIFIED.
         old["compiled_genuine_original_loaded_tags_verified"]=113
@@ -447,6 +468,9 @@ for name in reg["methods"]:
         old["v432_Camera_native_original_omissions_sha_reused"]=9
         old["v1200_v54_Camera_not_instantiated_by_source"]=5
         old["remaining_Camera_positive_native_oracle_requirement"]=False
+        old["v227_FObjectExport_ArchetypeIndex_native_operator"]="UNAVAILABLE"
+        old["v227_genuine_original_exports_without_RF_HasArchtype"]=426
+        old["v227_source_flagged_ArchetypeIndex_export_guard"]="REFUSES_UNVERIFIED_WIRE"
         old["original_PRD_v61_compiled_native_loaded_object_identities"]=308
         old["original_PRD_v61_compiled_loader_native_uninstantiated_Camera"]=4
         old["original_PRD_v61_loaded_tagged_streams_current_source_decoded"]=308
@@ -491,7 +515,7 @@ for name in reg["methods"]:
       "camera_native_loader_criterion":(
         "CLOSED_EPIC_SOURCE_DEFINED_CREATEEXPORT_EXCLUSION"
         if name=="T99:UObject::Serialize" else "NOT_APPLICABLE"),
-      "new_native_tests_executed":0,"new_test_runs_executed":11 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":0,"new_test_runs_executed":12 if name=="T99:UObject::Serialize" else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -500,7 +524,7 @@ report={
  "method_count":len(decisions),"fully_epic_verified":0,
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
- "new_oracle_runs":12,"new_test_runs":13,
+ "new_oracle_runs":12,"new_test_runs":14,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

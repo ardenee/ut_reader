@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 24,
+    "passed": 24,
+    "failed": [],
+    "native_v227_export_operator_complete": false,
+    "genuine_licensee_227_files": 3,
+    "genuine_export_rows_unmodified": 426,
+    "real_RF_HasArchtype_positives": 0,
+    "dev_only_single_flag_mutations_rejected": 3,
+    "compiled_native_replays": 0,
+    "source_native_archetype_serialize": "UNVERIFIED",
+    "full_method_decision": "BLOCKED"
+}

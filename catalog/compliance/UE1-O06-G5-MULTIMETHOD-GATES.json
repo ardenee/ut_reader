@@ -69,7 +69,10 @@
       "genuine_Camera_archived_exports_not_instantiated": 14,
       "v432_Camera_native_original_omissions_sha_reused": 9,
       "v1200_v54_Camera_not_instantiated_by_source": 5,
-      "remaining_Camera_positive_native_oracle_requirement": false
+      "remaining_Camera_positive_native_oracle_requirement": false,
+      "v227_FObjectExport_ArchetypeIndex_native_operator": "UNAVAILABLE",
+      "v227_genuine_original_exports_without_RF_HasArchtype": 426,
+      "v227_source_flagged_ArchetypeIndex_export_guard": "REFUSES_UNVERIFIED_WIRE"
     },
     "T99:UClass::Serialize": {
       "criteria": {

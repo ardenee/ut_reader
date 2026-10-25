@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "contract": "v227 FObjectExport.ArchetypeIndex out-of-line operator guarded",
+  "Epic_source_distinction": "FObjectExport persistent ArchetypeIndex; RF_HasArchtype=0x100; UObject::SetArchetype mutates flag; absent from UT99 v432",
+  "actual_ArchetypeIndex_operator_source": "UNAVAILABLE",
+  "implemented": "guard 69/licensee227 source-flagged export from false archive interpretation; do NOT invent bytes",
+  "v227_compile_native": "UNAVAILABLE",
+  "source_headers": {
+    "epic_v227_FObjectExport": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnLinker.h",
+      "sha256": "8d6d35d95c0427c8e30ef94198e2214da41a0b90b39453667980d2316ec2d02e"
+    },
+    "epic_v227_RF_HasArchtype": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h",
+      "sha256": "de50501bfbc22980d6e932bcc328aa3de725f6358587ca06eb320a3da30c8b2a"
+    },
+    "original_v432_FObjectExport": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h",
+      "sha256": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0"
+    }
+  },
+  "originals_and_negative_fixtures": [
+    {
+      "unchanged_verified_PRD_original_sha256": "c47b33858610760db17c485f27d3fe1364988cf5ec910209731ed649fd6c2a33",
+      "dev_staged_file": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v69\\1b8db32202b89cca7a58c152b2671fac.u",
+      "dev_only_one_bit_flag_negative": "C:\\Temp\\UnrealDB\\O06\\g5-v227-flag-archetype-mutation-0.u",
+      "mutated_sha256": "a341e309eaba130b7382657cf77cf1d854492e3816d97f0fe6b5d3d46efff537",
+      "first_export_flags_physical_offset": 272801
+    },
+    {
+      "unchanged_verified_PRD_original_sha256": "1b5543532e4df6007bbc4ae37e3476da876edacd9c64a3174f1aeef9299ed826",
+      "dev_staged_file": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v69\\46cb9714c451de667c2a39cfacf868e6.u",
+      "dev_only_one_bit_flag_negative": "C:\\Temp\\UnrealDB\\O06\\g5-v227-flag-archetype-mutation-1.u",
+      "mutated_sha256": "86e0f720fdc8f969cb080dd68a526e8a200e6b752f4f183692b0e29a7a6c9b4d",
+      "first_export_flags_physical_offset": 22094
+    },
+    {
+      "unchanged_verified_PRD_original_sha256": "445706a00af3ca46b16b1f2d28342cb295b3d3b1dec56b7e1309756cea86133a",
+      "dev_staged_file": "C:\\Temp\\UnrealDB\\O06\\prd-ue1-selected\\unrealgold\\v69\\12f69674cadf6c7c30ef0f879a2d6e1a.u",
+      "dev_only_one_bit_flag_negative": "C:\\Temp\\UnrealDB\\O06\\g5-v227-flag-archetype-mutation-2.u",
+      "mutated_sha256": "426630975b05a962343de21a3f81eb0ea487fd00bea0dc37d46eb4cbba4464f0",
+      "first_export_flags_physical_offset": 208855
+    }
+  ],
+  "genuine_original_exports_unmodified": 426,
+  "original_archived_RF_HasArchtype_positives": 0,
+  "negative_one_bit_DEV_only_flags_rejected": 3,
+  "source_fingerprint_expanded_to_include_shared_package_reader": true,
+  "O06_focus_acceptance": {
+    "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\evidence\\o06\\20261025T093436644Z-43a655ff-DEV-verify-ue1-o06-c227-archetype-native-operator-guard.php.txt",
+    "sha256": "37c23f3cb7d6492e0cee0093c6f9d00b9a0d2927382c2987b8421bae08049a44",
+    "checks": 24,
+    "passed": 24
+  },
+  "compiled_native_oracle_reruns": 0,
+  "G5_FULL_method_decision": "BLOCKED",
+  "source_scope_limit": "A diagnostic fail-closed boundary, not a native-positive archetype-encoding implementation. Cannot prove encoding or flags position for an actual archived positive v227 case."
+}

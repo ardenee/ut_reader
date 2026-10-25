@@ -32,6 +32,7 @@ function Get-TextSha([string]$value){
 }
 $inputs=@(Get-ChildItem -LiteralPath (Join-Path $testRoot 'catalog\src\Infrastructure\Readers') -Filter 'CatalogUE1*.php' -File |
  Select-Object -ExpandProperty FullName)
+$inputs+=@(Join-Path $testRoot 'catalog\src\Infrastructure\Readers\CatalogLegacyPackageReader.php')
 $inputs+=@(Join-Path $testRoot 'catalog\src\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata.php')
 $inputs+=@(Join-Path $testRoot 'catalog\bin\inspect-unreal-file.php')
 # Compiler fixture is executable acceptance input; changing it must invalidate

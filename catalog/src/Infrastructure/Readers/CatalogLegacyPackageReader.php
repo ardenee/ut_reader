@@ -542,6 +542,22 @@ abstract class CatalogLegacyPackageReaderBase
                     : $reader->i32();
                 $objectName = $reader->packageIndex($version);
                 $flags = $reader->u32();
+                // Unreal v1.227 Core/Inc/UnLinker.h::FObjectExport
+                // declares an additional persistent ArchetypeIndex, but
+                // its out-of-line archive operator is not in the published
+                // source. Never silently present a source-flagged archive
+                // as having no archetype merely because the older UT99
+                // export layout lacks that field. A genuine v227 archive
+                // without RF_HasArchtype is parsed unchanged.
+                $v227ArchetypeProfile = $this->engineKey === 'UE1'
+                    && $version === 69
+                    && (int)($this->header['licenseeVersion']??0) === 227;
+                if ($v227ArchetypeProfile && ($flags & 0x00000100) !== 0) {
+                    throw new RuntimeException(
+                        'Unreal v227 FObjectExport RF_HasArchtype (0x100)'
+                        .' requires unverified native ArchetypeIndex'
+                        .' archive layout; refusing unsupported export');
+                }
                 $serialSize = $reader->packageIndex($version);
                 // Unreal v1.200 UE1, Unreal II v69 and generic UE2/Warfare
                 // v126 all test truthiness: any non-zero serialized size is
