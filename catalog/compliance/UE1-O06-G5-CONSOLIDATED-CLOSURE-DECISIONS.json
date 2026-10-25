@@ -1,13 +1,13 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+  "source_fingerprint": "eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c",
   "method_count": 8,
   "fully_epic_verified": 4,
   "failed": 0,
   "blocked": 4,
-  "new_oracle_runs": 26,
-  "new_test_runs": 23,
+  "new_oracle_runs": 27,
+  "new_test_runs": 24,
   "methods": {
     "T99:UObject::Serialize": {
       "decision": "BLOCKED",
@@ -41,8 +41,8 @@
         "one_new_focused_SHA_verified_checks": 21,
         "new_source_edit_isolated_without_prior_native_reruns": true
       },
-      "new_native_tests_executed": 2,
-      "new_test_runs_executed": 17
+      "new_native_tests_executed": 3,
+      "new_test_runs_executed": 18
     },
     "T99:UClass::Serialize": {
       "decision": "BLOCKED",

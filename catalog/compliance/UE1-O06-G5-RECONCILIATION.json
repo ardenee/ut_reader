@@ -1,11 +1,13 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-25T20:47:24.323960+00:00",
-  "head": "3d7a1343",
-  "previous_runner_head": "3d7a1343",
-  "previous_source_sha256": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
-  "current_source_sha256": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+  "generated_utc": "2026-10-25T20:58:13.861638+00:00",
+  "head": "635d6bd9",
+  "previous_runner_head": "635d6bd9",
+  "previous_source_sha256": "eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c",
+  "current_source_sha256": "eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c",
   "source_native_array_physical_EOF_scoped": true,
+  "source_native_nested_FString_physical_EOF_scoped": true,
+  "previous_source_before_native_nested_FString_EOF_change": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
   "previous_source_before_native_array_physical_EOF_change": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
   "fingerprint_changed": false,
   "source_scope_equivalence_v432_textbuffer_only": true,
@@ -66,7 +68,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 147
+    "PASS": 148
   },
   "branch_totals": {
     "C227": {

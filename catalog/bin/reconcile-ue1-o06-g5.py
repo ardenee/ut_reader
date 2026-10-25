@@ -62,8 +62,61 @@ eof_previous_bytes=subprocess.check_output(
     ["git","-C",str(ROOT),"show","0d931131:"+eof_tag.relative_to(ROOT).as_posix()])
 eof_previous_source=eof_previous_bytes.decode("utf-8-sig")
 eof_previous_sha=hashlib.sha256(eof_previous_bytes).hexdigest().upper()
-eof_now=eof_tag.read_text(encoding="utf-8-sig")
+# Preserve BOTH verified native source changes separately:
+# 0d931131 -> 635d6bd9 physical-EOF count first, then
+# 635d6bd9 -> current nested FString physical-EOF only.
+middle_eof_bytes=subprocess.check_output(
+    ["git","-C",str(ROOT),"show",
+     "635d6bd9:"+eof_tag.relative_to(ROOT).as_posix()])
+eof_now=middle_eof_bytes.decode("utf-8-sig")
+nested_now=eof_tag.read_text(encoding="utf-8-sig")
+middle_eof_hash=hashlib.sha256(middle_eof_bytes).hexdigest().upper()
 eof_old_line=str(eof_tag)+":"+digest(eof_tag).upper()
+source_before_nested_sig=signature.replace(
+    eof_old_line,str(eof_tag)+":"+middle_eof_hash,1)
+source_before_nested=hashlib.sha256(
+    source_before_nested_sig.encode("utf-8")).hexdigest()
+assert source_before_nested=="b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46"
+string_old_segment="                            if(abs($n)>intdiv($archiveLimit-$position,$unit)){"
+string_new_segment="                            // Epic UStrProperty::SerializeItem calls the"
+string_end_segment="                            $segment.=$read(abs($n)*$unit);"
+nested_isolated=(
+    eof_now.count(string_old_segment)==1
+    and nested_now.count(string_new_segment)==1
+    and eof_now.count(string_end_segment)==1
+    and nested_now.count(string_end_segment)==1
+    and eof_now.split(string_old_segment,1)[0]
+        ==nested_now.split(string_new_segment,1)[0]
+    and eof_now.split(string_end_segment,1)[1]
+        ==nested_now.split(string_end_segment,1)[1]
+    and "dynamic array FString exceeds export SerialSize"
+        in eof_now.split(string_old_segment,1)[1].split(string_end_segment,1)[0]
+    and "ULinkerLoad::Serialize physical EOF at archive offset"
+        in nested_now.split(string_new_segment,1)[1].split(string_end_segment,1)[0]
+)
+nested_test="verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"
+nested_event=latest.get(nested_test)
+nested_log=ROOT/nested_event["log"] if nested_event and nested_event.get("log") else None
+try: nested_values=read(nested_log) if nested_log and nested_log.exists() else {}
+except Exception: nested_values={}
+nested_scope=bool(
+    nested_isolated and nested_event
+    and nested_event.get("state")=="PASS"
+    and nested_event.get("source_sha256")==actual_current
+    and nested_event.get("output_sha256")==digest(nested_log)
+    and nested_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/nested_test)
+    and nested_values.get("ok") is True
+    and nested_values.get("checks")==25
+    and nested_values.get("passed")==25
+    and nested_values.get("native_mutation_physical_EOF_byte")==308
+    and nested_values.get("production_physical_EOF_cursor")==308
+    and nested_values.get("native_mutation_exception_origin")=="ULinkerLoad::Serialize <- FString<<"
+    and nested_values.get("stock_native_loaded_FString_parity")=="NOT_VERIFIED"
+    and nested_values.get("general_T99_UObject_METHOD")=="BLOCKED"
+)
+if not nested_scope:
+    raise SystemExit("Original compiled v432 nested FString physical-EOF source-scope proof FAILED")
+
 assert signature.count(eof_old_line)==1
 source_before_eof_sig=signature.replace(
     eof_old_line,str(eof_tag)+":"+eof_previous_sha,1)
@@ -103,7 +156,7 @@ except Exception: eof_values={}
 eof_scope=bool(
     eof_delta_isolated
     and eof_event and eof_event.get("state")=="PASS"
-    and eof_event.get("source_sha256")==actual_current
+    and eof_event.get("source_sha256")==source_before_nested
     and eof_event.get("output_sha256")==digest(eof_log)
     and eof_event.get("test_sha256")==digest(ROOT/"catalog"/"bin"/eof_test)
     and eof_values.get("ok") is True
@@ -939,6 +992,8 @@ result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "previous_source_sha256":status.get("current_source_sha256"),
     "current_source_sha256":actual_current,
     "source_native_array_physical_EOF_scoped":eof_scope,
+    "source_native_nested_FString_physical_EOF_scoped":nested_scope,
+    "previous_source_before_native_nested_FString_EOF_change":source_before_nested,
     "previous_source_before_native_array_physical_EOF_change":source_before_eof if eof_scope else None,
     "fingerprint_changed":bool(actual_current and actual_current!=status.get("current_source_sha256")),
     "source_scope_equivalence_v432_textbuffer_only":scoped_equivalence,

@@ -284,9 +284,21 @@ final class CatalogUE1ClassicTaggedPropertyReader
                             // FString signed count, not array Tag.Size.
                             [$n,$segment]=$readLinkerIndex();
                             $unit=(ord($segment[0])&128)!==0?2:1;
-                            if(abs($n)>intdiv($archiveLimit-$position,$unit)){
+                            // Epic UStrProperty::SerializeItem calls the
+                            // FString archive operator; its linker reads the
+                            // *physical* package stream, even if Tag.Size or
+                            // the current export's SerialSize is exhausted.
+                            // A genuine compiled v432 overlong nested FString
+                            // reaches ULinkerLoad::Serialize at physical EOF,
+                            // not this previous preemptive export-size error.
+                            $physicalRemaining=max(0,
+                                (int)($streamState['physical_limit']??$archiveLimit)
+                                -$position);
+                            if(abs($n)>intdiv($physicalRemaining,$unit)){
                                 throw new RuntimeException(
-                                    'UE1 v432 dynamic array FString exceeds export SerialSize');
+                                    'UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset '
+                                    .($offset+(int)($streamState['physical_limit']??$archiveLimit))
+                                    .' during FString<<');
                             }
                             $segment.=$read(abs($n)*$unit);
                             $p=0;

@@ -10,6 +10,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -104,6 +105,12 @@ assert set(status)==set(reg["methods"])
 # reconcile-ue1-o06-g5.py; no previously closed native loader replay.
 def scoped_source_current(value):
     if value==reconciliation["current_source_sha256"]:
+        return True
+    # Retain original SHA-pinned evidence across the two independent,
+    # source-isolated malformed-array fixes. Never claim arbitrary older
+    # fingerprints are current without corresponding reconciliation proof.
+    if (reconciliation.get("source_native_nested_FString_physical_EOF_scoped")
+        and value==reconciliation.get("previous_source_before_native_nested_FString_EOF_change")):
         return True
     return bool(reconciliation.get("source_native_array_physical_EOF_scoped")
         and value==reconciliation.get("previous_source_before_native_array_physical_EOF_change"))
@@ -745,8 +752,8 @@ for name in reg["methods"]:
         eof_output=ROOT/eof_event["log"].replace("\\","/")
         assert sha(eof_output)==eof_event["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/"verify-ue1-o06-g5-uobject-native-array-physical-eof.php")==eof_event["test_sha256"]
-        assert eof_event["source_sha256"]==reconciliation["current_source_sha256"]
         assert reconciliation["source_native_array_physical_EOF_scoped"]
+        assert eof_event["source_sha256"]==reconciliation["previous_source_before_native_nested_FString_EOF_change"]
         eof_result=read(eof_output)
         assert eof_result["ok"] and eof_result["checks"]==21 and eof_result["passed"]==21
         assert eof_result["native_linker_failure_absolute_offset"]==308
@@ -757,6 +764,47 @@ for name in reg["methods"]:
         old["compiled_native_UArrayProperty_physical_EOF_cursor"]=308
         old["compiled_native_UArrayProperty_physical_EOF_decision_checks"]=21
         old["source_local_UArrayProperty_count_guard_regression_fixed"]=True
+        # One separate, current-source, original compiled v432 malformed
+        # nested FString case; no original engine execution during replay.
+        nested_test="verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"
+        nested_ev=next((e for e in reversed(events)
+            if e.get("test")==nested_test and e.get("state")=="PASS"),None)
+        assert nested_ev is not None
+        nested_log=ROOT/nested_ev["log"].replace("\\","/")
+        assert reconciliation["source_native_nested_FString_physical_EOF_scoped"]
+        assert nested_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert sha(nested_log)==nested_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/nested_test)==nested_ev["test_sha256"]
+        nested_result=read(nested_log)
+        assert nested_result["ok"] and nested_result["checks"]==25
+        assert nested_result["passed"]==25 and nested_result["failed"]==[]
+        assert nested_result["native_unchanged_compiled_DLL"] is True
+        assert nested_result["native_conditioned_allocator_origin_explicit"] is True
+        assert nested_result["native_mutation_physical_EOF_byte"]==308
+        assert nested_result["production_physical_EOF_cursor"]==308
+        assert nested_result["native_mutation_exception_origin"]=="ULinkerLoad::Serialize <- FString<<"
+        assert nested_result["stock_native_loaded_FString_parity"]=="NOT_VERIFIED"
+        assert nested_result["general_T99_UObject_METHOD"]=="BLOCKED"
+        assert nested_result["native_engine_reruns_in_verifier"]==0
+        old["compiled_native_nested_FString_physical_EOF_current_source"]=True
+        old["compiled_native_nested_FString_physical_EOF_cursor"]=308
+        old["compiled_native_nested_FString_EOF_decision_checks"]=25
+        nested_manifest=C/"UE1-O06-G5-T99-UOBJECT-NESTED-FSTRING-PHYSICAL-EOF.json"
+        assert nested_manifest.is_file()
+        nested_proof=read(nested_manifest)
+        assert nested_proof["method"]==name
+        assert nested_proof["method_global_full"]=="BLOCKED"
+        assert nested_proof["source_hunk_isolated"] is True
+        assert nested_proof["source_fingerprint_after"]==reconciliation["current_source_sha256"]
+        assert nested_proof["final_acceptance"]["stdout_sha256"]==nested_ev["output_sha256"]
+        assert nested_proof["final_acceptance"]["test_sha256"]==nested_ev["test_sha256"]
+        assert nested_proof["final_acceptance"]["passed"]==25
+        assert nested_proof["old_native_loader_oracles_repeated"]==0
+        assert nested_proof["new_native_engine_invocations"]==1
+        for info in nested_proof["proof_SHA"].values():
+            assert sha(Path(info["path"]))==info["sha256"]
+        old["compiled_native_nested_FString_evidence_artifact"]=str(nested_manifest.relative_to(ROOT)).replace("\\","/")
+        old["compiled_native_nested_FString_evidence_SHA"]=sha(nested_manifest)
         old["compiled_native_malformed_tag_cases_valid"]=4
         old["compiled_native_malformed_tag_outcomes_current_source"]=True
         old["compiled_native_reference_array_struct_cases_valid"]=6
@@ -805,7 +853,8 @@ for name in reg["methods"]:
         string_log=ROOT/string_ev["log"].replace("\\","/")
         assert sha(string_log)==string_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/string_test)==string_ev["test_sha256"]
-        assert string_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert reconciliation["source_native_nested_FString_physical_EOF_scoped"]
+        assert string_ev["source_sha256"]==reconciliation["previous_source_before_native_nested_FString_EOF_change"]
         string_decision=read(string_log)
         assert string_decision["ok"] and string_decision["checks"]==34
         assert string_decision["passed"]==34
@@ -825,7 +874,19 @@ for name in reg["methods"]:
         assert string_data["T99_UObject_GLOBAL_FULL"]=="BLOCKED"
         for group in ("native_original_Epic_source_SHA","validation_artifacts_SHA"):
             for info in string_data[group].values():
-                assert sha(Path(info["path"]))==info["sha256"]
+                historic_php=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
+                if (Path(info["path"]).resolve()==historic_php.resolve()
+                    and info["sha256"]!=sha(historic_php)):
+                    # This conditional native proof was made BEFORE the
+                    # later nested-FString physical EOF repair. Verify its
+                    # actual committed PHP source, never substitute the
+                    # current file's different SHA for historical evidence.
+                    assert reconciliation["source_native_nested_FString_physical_EOF_scoped"]
+                    prior=subprocess.check_output(["git","-C",str(ROOT),"show",
+                        "635d6bd9:catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"])
+                    assert hashlib.sha256(prior).hexdigest()==info["sha256"]
+                else:
+                    assert sha(Path(info["path"]))==info["sha256"]
         old["compiled_v432_native_nonempty_FString_load_failed_in_fixture"]=True
         old["source_generated_original_nonempty_FString_archive_text_decode_verified"]=2
         old["zero_initialized_allocator_actual_compiled_FString_loaded_values_verified"]=2
@@ -861,7 +922,7 @@ for name in reg["methods"]:
     old["last_consolidated_review"]=(
         "FINAL_7_of_7_source_scoped_TextBuffer_302_checks" if name=="T99:UTextBuffer::Serialize"
         else "FINAL_7_of_7_source_scoped_Font_185_checks" if name=="T99:UFont::Serialize"
-        else "current_native_dynamic_ArrayProperty_physical_EOF_21_checks_and_prior_Camera_exclusion_SHA" if name=="T99:UObject::Serialize"
+        else "current_native_dynamic_count_EOF_21_and_nested_FString_EOF_25_checks_SHA" if name=="T99:UObject::Serialize"
         else "FINAL_7_of_7_source_scoped_audio_inherited_PASS63" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
         else "existing_sha_pinned_evidence_only_no_new_tests")
     decisions[name]={
@@ -888,8 +949,8 @@ for name in reg["methods"]:
          "new_source_edit_isolated_without_prior_native_reruns":
             reconciliation["source_native_array_physical_EOF_scoped"]}
         if name=="T99:UObject::Serialize" else None),
-      "new_native_tests_executed":(2 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
-       "new_test_runs_executed":17 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
+      "new_native_tests_executed":(3 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 0),
+       "new_test_runs_executed":18 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 1 if name in ("T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 0,
     }
 report={
  "schema":1,
@@ -899,7 +960,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
-  "new_oracle_runs":26,"new_test_runs":23,
+  "new_oracle_runs":27,"new_test_runs":24,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

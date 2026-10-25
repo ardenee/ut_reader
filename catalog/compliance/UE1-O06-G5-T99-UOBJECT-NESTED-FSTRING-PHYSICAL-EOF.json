@@ -1,0 +1,88 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "decision": "PARTIAL_CORRECTION_COMPILED_ERROR_PARITY",
+  "source_profile": "UT99 v432, only source-defined dynamic array FString physical overrun, diagnostic original compiled DLL with custom zero-initializing host allocator",
+  "original_archive_generated_and_restored_sha256": "680f56fd730b1f61d9d1b25a8c8bc8f0aaff95f4e7ce8900753159b24b6e2e5c",
+  "single_byte_mutation": {
+    "offset": 224,
+    "old": 13,
+    "new": 96,
+    "changed_byte_count": 1
+  },
+  "actual_native_Epic_compiled_DLL_failure": "ULinkerLoad::Serialize <- FString<< at absolute physical end byte308",
+  "previous_production_UE1_failure": "UE1 v432 dynamic array FString exceeds export SerialSize",
+  "corrected_production_UE1_failure": "UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset 308 during FString<<",
+  "native_load_context": "modified diagnostic host allocator, NOT stock FMallocAnsi; stock loaded-value parity stays NOT_VERIFIED",
+  "original_compiled_engine_sources_untouched": true,
+  "old_scoped_dynamic_array_count_proof_reconciled": true,
+  "four_previously_FULL_v432_method_proofs_reused_no_replay": true,
+  "source_fingerprint_before": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
+  "source_fingerprint_after": "eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c",
+  "source_hunk_isolated": true,
+  "final_acceptance": {
+    "run_id": "20261025T205654522Z-4ef6c2cb",
+    "source_sha256": "eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c",
+    "test_sha256": "adedc839d33547e54ca7b9e6a9e4bbfbd5613ed20ed5c3f73fad8e904345ca00",
+    "stdout_sha256": "b64c264ea972a47fe9dbabfd1cb068d015a24afa55f1f163e62c4412751f0211",
+    "passed": 25,
+    "checks": 25
+  },
+  "new_native_engine_invocations": 1,
+  "old_native_loader_oracles_repeated": 0,
+  "method_global_full": "BLOCKED",
+  "proof_SHA": {
+    "original_Epic_UnProp.cpp": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+    },
+    "original_unmodified_compiled_Core_DLL": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "original_SavePackage_generated_UE1_v69": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G5StringPayload.u",
+      "sha256": "680f56fd730b1f61d9d1b25a8c8bc8f0aaff95f4e7ce8900753159b24b6e2e5c"
+    },
+    "controlled_allocator_native_executable": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-String-Load-ZeroAllocator.exe",
+      "sha256": "ea45993b88dd2c6cfff43095cf4b2f35fcc876e032cca578923c8249444ae894"
+    },
+    "controlled_allocator_native_source": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-String-Load-ZeroAllocator.cpp",
+      "sha256": "aa8f3b9d8be8c59ff47fce071ea5e65ba5227a4b8d84d96e9cfe22cfc23dcf75"
+    },
+    "controlled_allocator_native_overlong_stdout": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-Nested-FString-Count96-PhysicalEOF.txt",
+      "sha256": "9e0ac12fac20df2933bf0e6c9c4000c9f9a0eb73b69f800b4ce5f34a1d679786"
+    },
+    "controlled_allocator_native_overlong_manifest": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G5-UObject-Native-Nested-FString-Count96-PhysicalEOF.json",
+      "sha256": "f03ea5e9f445ff242a62923671c35143b0ec7bfac392d591511084dc5186337a"
+    },
+    "one_new_diagnostic_native_mutator": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-uobject-nested-fstring-physical-eof-native.py",
+      "sha256": "259f09d99e4d9e975dd5e2678e6aebe6e158252de7e21e9c6ad307485b765bdc"
+    },
+    "independent_PHP_archive_comparator": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\g5-uobject-nested-fstring-physical-eof-php.php",
+      "sha256": "875b8327b0b9981ec6e3c8fdf382d0a1de26262d0342bbbf6f61055426047ab5"
+    },
+    "current_production_UE1_tagged_archive": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\src\\Infrastructure\\Readers\\CatalogUE1ClassicTaggedPropertyReader.php",
+      "sha256": "a28cc3952dec65557c6a10c4e5c976e9fb75ab8881402b8cbb8d40c8b04d74d0"
+    },
+    "final_25_check_verifier": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\bin\\verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php",
+      "sha256": "adedc839d33547e54ca7b9e6a9e4bbfbd5613ed20ed5c3f73fad8e904345ca00"
+    },
+    "actual_run_acceptance_stdout": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\evidence\\o06\\20261025T205654522Z-4ef6c2cb-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt",
+      "sha256": "b64c264ea972a47fe9dbabfd1cb068d015a24afa55f1f163e62c4412751f0211"
+    },
+    "previous_two_real_FString_values_conditional_native_evidence": {
+      "path": "C:\\Users\\arden\\source\\repos\\ut_reader\\catalog\\compliance\\UE1-O06-G5-T99-UOBJECT-FSTRING-ALLOCATOR-CONDITIONAL.json",
+      "sha256": "dba4760cf32bf9daa6378684ae2ee66ed1ecd91ee8ab7d32ec9419590a0052f2"
+    }
+  }
+}
