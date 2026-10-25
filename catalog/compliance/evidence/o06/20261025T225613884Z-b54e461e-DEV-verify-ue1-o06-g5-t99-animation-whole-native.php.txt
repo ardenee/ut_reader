@@ -1,0 +1,15 @@
+﻿{
+    "ok": true,
+    "checks": 212,
+    "passed": 212,
+    "failed": [],
+    "original_compiled_loaded_animation_objects": 3,
+    "native_source_compared_loaded_value_checks": 3694,
+    "native_source_compared_record_lines": 3667,
+    "actual_native_nested_array_bytes": 540836,
+    "compiled_original_native_rejected_mutations": 8,
+    "original_inherited_empty_UObject_envelopes": 3,
+    "native_engine_reexecuted_by_acceptance": false,
+    "full_method_verdict": "BLOCKED",
+    "remaining": "Native exact malformed archive cursor/exception origin and other applicable source-legal inherited UObject/variant paths unverified"
+}

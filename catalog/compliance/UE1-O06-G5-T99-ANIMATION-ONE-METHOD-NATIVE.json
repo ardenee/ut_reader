@@ -51,8 +51,9 @@
     "executable": {
       "path": "C:/Temp/UnrealDB/O06/G5-T99-Animation-WholeNative.exe",
       "bytes": 80384,
-      "sha256": "cecc5a0b7354642848229ee29387ee5df9fbef1ac8df24eddbbf4b1e54786adc"
-    }
+      "sha256": "7d09e20fbf39720107ac9f5fab3003a1592b59c1283c28eee351622040f26952"
+    },
+    "historical_initial_executable_sha256": "cecc5a0b7354642848229ee29387ee5df9fbef1ac8df24eddbbf4b1e54786adc"
   },
   "source_comparison": {
     "positive_php": {
@@ -363,5 +364,91 @@
     "verified_original_objects": 3
   },
   "mandatory_open_gate": "exact malformed archive-byte/exception-origin parity and independent seven-criterion method review; native fastfail after catch does not establish archive cursor",
-  "verdict": "BLOCKED"
+  "verdict": "BLOCKED",
+  "native_rebuild_revalidation": {
+    "cause": "Disposable compiled probe was regenerated during archive-layout investigation; original executable binary SHA no longer on disk",
+    "date_utc": "2026-10-25T22:54:13.968157+00:00",
+    "old_executable_sha256": "cecc5a0b7354642848229ee29387ee5df9fbef1ac8df24eddbbf4b1e54786adc",
+    "new_executable_sha256": "7d09e20fbf39720107ac9f5fab3003a1592b59c1283c28eee351622040f26952",
+    "result": "11_OF_11_SAME_LOADED_RECORD_TEXT_AND_NATIVE_EXCEPTION_DISPOSITION",
+    "current_rebuilt_native_case_logs": [
+      {
+        "case": "positive",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/0.stdout",
+        "sha256": "2d389bc247b64c9db2e4847a6f7faac9407baf554aa74d299220109960fdfcf3",
+        "new_exit": 0,
+        "original_exit": 0
+      },
+      {
+        "case": "positive",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/1.stdout",
+        "sha256": "07c8effe706e6b6db525c24672fb4cf2f3cb20f5dac51295955303f5aca7e778",
+        "new_exit": 0,
+        "original_exit": 0
+      },
+      {
+        "case": "positive",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/2.stdout",
+        "sha256": "1644b689558cc487259a391eb83962d0a1b84bf46f23f8716c47cff01dbf1485",
+        "new_exit": 0,
+        "original_exit": 0
+      },
+      {
+        "case": "table-invalid-bone-name",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/3.stdout",
+        "sha256": "ce793be20933dcc0d498d9fd89c44c36cc45891af8d4014cd5356e3e6caeff98",
+        "new_exit": 3221226505,
+        "original_exit": -1073740791
+      },
+      {
+        "case": "EcoTerror-invalid-bone-name",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/4.stdout",
+        "sha256": "b815d7a0307c1275e10ea4f35a65526190704f7f7d144ed633fa78a12d74ba19",
+        "new_exit": 3221226505,
+        "original_exit": -1073740791
+      },
+      {
+        "case": "d00d-invalid-bone-name",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/5.stdout",
+        "sha256": "b72e1fa1ca5c9b92f4d954a669668a2a0a7647fa611aeaf7d7da24906e20fd00",
+        "new_exit": 3221226505,
+        "original_exit": -1073740791
+      },
+      {
+        "case": "table-negative-refbones-count",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/6.stdout",
+        "sha256": "45ed21b85212a9ed43df15293e1ec94aad16dceba5308ca0ef8a30e639003d8e",
+        "new_exit": 3221226505,
+        "original_exit": -1073740791
+      },
+      {
+        "case": "d00d-truncated-animation",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/7.stdout",
+        "sha256": "1f0adeed91ccea302bba466052ced5ddb6ebc285e8b7aab4e35fb7ad70b253e8",
+        "new_exit": 3,
+        "original_exit": 3
+      },
+      {
+        "case": "EcoTerror-invalid-sequence-name",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/8.stdout",
+        "sha256": "23f101819d5605951bbbcb80f505336602f3a6b8110afa2133f9b416940cee92",
+        "new_exit": 3221226505,
+        "original_exit": -1073740791
+      },
+      {
+        "case": "EcoTerror-negative-keyquat-count",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/9.stdout",
+        "sha256": "43992a136ef046987e5c7811b96f452ab0fac16077bd320b51ae0992128d6685",
+        "new_exit": 3221226505,
+        "original_exit": -1073740791
+      },
+      {
+        "case": "EcoTerror-negative-animtrack-count",
+        "path": "C:/Temp/UnrealDB/O06/g5-animation-rebuild-crosscheck/10.stdout",
+        "sha256": "04d155b89f91de9fe275e537783e84d74b67eda57b8011daa89007b6ec23c3ba",
+        "new_exit": 3221226505,
+        "original_exit": -1073740791
+      }
+    ]
+  }
 }

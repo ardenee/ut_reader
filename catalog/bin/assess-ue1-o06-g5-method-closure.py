@@ -921,7 +921,7 @@ for name in reg["methods"]:
         whole_log=ROOT/whole_ev["log"].replace("\\","/")
         assert sha(whole_log)==whole_ev["output_sha256"]
         whole=read(whole_log)
-        assert whole["ok"] and whole["passed"]==whole["checks"]==176
+        assert whole["ok"] and whole["passed"]==whole["checks"]==212
         assert whole["native_source_compared_loaded_value_checks"]==3694
         assert whole["native_source_compared_record_lines"]==3667
         assert whole["actual_native_nested_array_bytes"]==540836
@@ -934,6 +934,11 @@ for name in reg["methods"]:
         assert original["verdict"]=="BLOCKED"
         assert not original["negative_result"]["byte_exact_error_cursor_verified"]
         assert len(original["native_cases"])==3 and len(original["negative_cases"])==8
+        rebuild=original["native_rebuild_revalidation"]
+        assert rebuild["old_executable_sha256"]=="cecc5a0b7354642848229ee29387ee5df9fbef1ac8df24eddbbf4b1e54786adc"
+        assert rebuild["new_executable_sha256"]==original["compiled_probe"]["executable"]["sha256"]
+        assert len(rebuild["current_rebuilt_native_case_logs"])==11
+        assert rebuild["result"]=="11_OF_11_SAME_LOADED_RECORD_TEXT_AND_NATIVE_EXCEPTION_DISPOSITION"
         gates["complete_native_field_values_and_references"]="VERIFIED"
         gates["archive_bytes_and_consumption"]="VERIFIED"
         gates["current_acceptance_tests"]="VERIFIED"

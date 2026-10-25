@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g5-t99-animation-whole-native-v432`
-- **Stage:** full-native-loaded-values-and-8-malformed-rejections-PASS176-method-4of7-BLOCKED
-- **Last completed action:** Original compiled v432 whole UAnimation method positive: 3 native-loaded v69 originals, 3694 source-current field/reference comparisons, 70 full MotionChunks, 540836 numeric array bytes, 3 inherited no-tag no-stack UObject paths. 8 distinct disposable negatives agree in native/PHP rejection. SHA pinned manifest and focused verifier 176/176 PASS. G5 4 FULL 4 BLOCKED 0 FAILED; UAnimation 4/7 criteria verified.
-- **Resume at:** Do not repeat full UAnimation positive or negative fixtures. Next decisive UAnimation gap: compiled native exact malformed ULinkerLoad consumed archive cursor/exception origin and any applicable inherited/version branch, then independent 7-gate signoff. For USkeletalMesh, complete actual inherited ULodMesh nonempty remap, scalar loaded values, and malformed outcomes.
-- **Active changed at:** 2026-10-25T22:12:29+00:00
+- **Stage:** revalidated-native-evidence-212of212-method-BLOCKED
+- **Last completed action:** Scratch executable regenerated; original digest preserved historically; current digest proven 11/11 byte-equivalent native outcomes; current-source verifier PASS212; G5 remains 4 FULL 4 BLOCKED.
+- **Resume at:** Do not rebuild SHA-pinned executables in place. Continue UAnimation exact compiled malformed error cursor, then inherited/version branches and whole-method independent review. USkeletalMesh positive scalar/remap branches remain unresolved.
+- **Active changed at:** 2026-10-25T22:57:52+00:00
 - **Latest DEV test states:** PASS 148; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
@@ -14,6 +14,8 @@
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-25T22:56:14.9514839Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 609 | catalog\compliance\evidence\o06\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
+| 2026-10-25T22:56:13.8924785Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
 | 2026-10-25T22:08:05.0193795Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 579 | catalog\compliance\evidence\o06\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
 | 2026-10-25T22:08:04.0043854Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
 | 2026-10-25T21:22:51.1754745Z | verify-ue1-o06-genuine-compiled-native.php | FAIL | 482 | catalog\compliance\evidence\o06\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-25T19:59:17.0627495Z | verify-ue1-o06-g5-uobject-native-array-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261025T195917055Z-1c992bbe-DEV-verify-ue1-o06-g5-uobject-native-array-physical-eof.php.txt |
 | 2026-10-25T19:32:51.3018217Z | verify-ue1-o06-g5-t99-font-independent-full.php | PASS | 321 | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
 | 2026-10-25T19:32:50.5588217Z | verify-ue1-o06-g5-t99-font-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt |
-| 2026-10-25T16:37:29.4722968Z | verify-ue1-o06-g5-t99-textbuffer-independent-full.php | PASS | 307 | catalog\compliance\evidence\o06\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt |
-| 2026-10-25T16:37:28.7562960Z | verify-ue1-o06-g5-t99-textbuffer-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt |
 
 ## Recovery procedure
 

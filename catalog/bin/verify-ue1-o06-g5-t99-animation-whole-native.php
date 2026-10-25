@@ -32,7 +32,9 @@ $check('not_false_full_verdict',($m['verdict']??'')==='BLOCKED'
  &&($m['negative_result']['byte_exact_error_cursor_verified']??true)===false);
 foreach($m['original_epic_source'] as $key=>$row)$pin($row,'epic_'.$key);
 foreach($m['native_engine_sha'] as $key=>$row)$pin($row,'dll_'.$key);
-foreach($m['compiled_probe'] as $key=>$row)$pin($row,'compiled_probe_'.$key);
+foreach($m['compiled_probe'] as $key=>$row){
+ if(is_array($row))$pin($row,'compiled_probe_'.$key);
+}
 foreach($m['source_comparison'] as $key=>$row)$pin($row,'comparator_'.$key);
 foreach($m['native_cases'] as $i=>$row){
  $pin($row['source_package'],'original_'.$i);
@@ -56,6 +58,19 @@ foreach($m['negative_cases'] as $i=>$row){
  $check('native_load_error_'.$i,
    str_contains($log,'ANIM_PACKAGE_EXCEPTION')
    &&str_contains($log,'ANIM_END success=0'));
+}
+$rebuild=$m['native_rebuild_revalidation'];
+$check('retained_pre_rebuild_original_hash',$rebuild['old_executable_sha256']===$m['compiled_probe']['historical_initial_executable_sha256']);
+$check('rebuilt_executable_current_hash',$rebuild['new_executable_sha256']===$m['compiled_probe']['executable']['sha256']);
+$check('rebuilt_eleven_logs_present',count($rebuild['current_rebuilt_native_case_logs'])===11);
+$oldLogs=array_merge(array_column($m['native_cases'],'compiled_loaded_log'),array_column($m['negative_cases'],'compiled_native_exception_log'));
+foreach($rebuild['current_rebuilt_native_case_logs'] as $i=>$f){
+ $new=@file_get_contents($f['path']);
+ $old=@file_get_contents($oldLogs[$i]['path']);
+ $clean=static fn($s)=>trim(str_replace("\r",'',ltrim((string)$s,"\xEF\xBB\xBF")));
+ $check('new_native_log_SHA_'.$i,is_string($new)&&hash('sha256',$new)===$f['sha256']);
+ $check('old_new_native_semantics_identical_'.$i,is_string($new)&&is_string($old)&&$clean($new)===$clean($old));
+ $check('same_native_exit_'.$i,(((int)$f['new_exit'])&0xffffffff)===(((int)$f['original_exit'])&0xffffffff));
 }
 $execComparator=static function(array $record)use($check):array{
  $pipes=[];$descs=[
