@@ -36,13 +36,13 @@ $paths=[];$cases=[];$fail=[];
 $check=static function(string $name,bool $ok)use(&$cases,&$fail):void{
  $cases[$name]=$ok;if(!$ok)$fail[]=$name;
 };
-$inspect=static function(int $ver,string $tail,string $physicalTail='')use(&$paths,$build):array {
+$inspect=static function(int $ver,string $tail,string $physicalTail='',?string $selectedFamily=null)use(&$paths,$build):array {
  $path=tempnam(sys_get_temp_dir(),'ue1const');
  if($path===false)throw new RuntimeException('No fixture file');
  $paths[]=$path;file_put_contents($path,$build($ver,$tail).$physicalTail);
  $pkg=new Package($path);
  if($pkg->validatePackage()!==[])throw new RuntimeException('Package fixture invalid');
- $family=$ver>=62?'ut99-v432':'epic-ue1'; // Explicit source of this fixture, not version-based dispatch.
+ $family=$selectedFamily??($ver>=62?'ut99-v432':'epic-ue1'); // Explicit source, including overlapping v61.
  $props=Tags::inspect($path,$pkg,0,$family);
  if(($props['status']??'')!=='tag_envelope_decoded')throw new RuntimeException('Inherited UObject envelope unavailable');
  return [Native::inspect($path,$pkg,0,$props,$family),$props];
@@ -84,6 +84,22 @@ try{
  $check('extension_not_accepted_complete',($ext['status']??'')==='native_const_has_extension'
   &&$ext['extension_bytes']===1);
  $check('wide_not_allowed_old_ver',$bad(50,$basic.$compact(-2)."X\0\0\0"));
+ // Identical package version cannot choose the source family: original
+ // UT99 FString wide LOAD is unconditional on Ar.Ver(), C98 uses char array.
+ $wideOmega=pack('v2',0x03a9,0);
+ [$t99v61]=$inspect(61,$basic.$compact(-2).$wideOmega,'','ut99-v432');
+ $check('t99_v61_wide_FString_even_before_version64',
+    $t99v61['status']==='native_const_record_complete'
+    &&$t99v61['value']==="\u{03A9}"
+    &&$t99v61['string_terminated']===true
+    &&$t99v61['value_count']===2);
+ [$t99v63]=$inspect(63,$basic.$compact(-2).$wideOmega,'','ut99-v432');
+ $check('t99_v63_last_pre64_wide_FString',
+    $t99v63['status']==='native_const_record_complete'
+    &&$t99v63['value']==="\u{03A9}");
+ $c98Reject=false;
+ try{$inspect(61,$basic.$compact(-2).$wideOmega,'','epic-ue1');}catch(RuntimeException){$c98Reject=true;}
+ $check('c98_v61_not_an_inherited_t99_utf16_serializer',$c98Reject);
  $check('positive_ref_oob',$bad(69,$compact(2).$compact(0).$compact(0)));
  $check('negative_ref_oob',$bad(69,$compact(-2).$compact(0).$compact(0)));
  $check('positive_count_exceeds_bounds',$bad(69,$basic.$compact(18)."A\0"));

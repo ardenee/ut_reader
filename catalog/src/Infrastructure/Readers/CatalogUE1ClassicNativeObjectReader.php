@@ -327,8 +327,11 @@ final class CatalogUE1ClassicNativeObjectReader
                 };
                 $superField=$ref();$nextField=$ref();
                 $signedCount=$compact();$wide=$signedCount<0;
-                if($wide&&$ver<64){
-                    throw new RuntimeException('UConst wide FString not valid in ANSI-only version');
+                // UT99 v400 UnMisc.cpp FString<< has NO Ar.Ver() gate on
+                // its signed UTF-16 branch, including overlapping v60-63.
+                // C98 uses TArray<char>; C227 Core implementation is unknown.
+                if($wide&&$ver<64&&$family!==CatalogUE1ClassicSourceFamily::UT99_V432){
+                    throw new RuntimeException('UConst wide FString unverified for selected legacy source family');
                 }
                 $count=abs($signedCount);
                 // The file-backed linker reads FString bytes through physical

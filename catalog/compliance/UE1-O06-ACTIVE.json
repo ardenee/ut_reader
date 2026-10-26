@@ -1,7 +1,7 @@
 {
-  "contract": "g3-06-uconst-fstring-source-raw-units",
-  "stage": "G3-06-UCONST-SOURCE-VERIFIED-RELEASE-PENDING",
-  "last_action": "Original C98 Core.h and T99 UnMisc.cpp source no FString NUL/UTF16 scalar archive validation. UConst now retains exact bytes and explicitly marks nonrenderable text unverified; UT99 single-unit LOAD clear modeled. 21/21 UConst cases PASS and all four scoped affected DEV tests PASS/reused; no original compiled C98/C227 loaded-memory oracle.",
-  "next_step": "Commit/push verified reader, fixture and checkpoint; SHA-verify changed files on PRD. Continue G3 only with distinct source-backed error or original C98/C227 compiled native loaded-value evidence.",
-  "updated_at_utc": "2026-10-26T18:32:31+00:00"
+  "contract": "g3-06-t99-legacy-wide-fstring-source-overlap",
+  "stage": "G3-06-SOURCE-PROVEN-RELEASE-PENDING",
+  "last_action": "Verified original v400 UnMisc.cpp UTF16 FString negative branch has no package version gate; source-selected T99 v61/63 wide values load, distinct C98 v61 fixed byte array. UConst 24/24 DEV PASS, four affected scripts pass/reused; no compiled native C98/C227 parity claimed.",
+  "next_step": "Commit/push the original Unicode provenance gate fix, SHA-verify DEV->PRD changed files, then search for authenticated original C98 and C227 native oracles instead of repeating passed G3 tests.",
+  "updated_at_utc": "2026-10-26T18:37:31+00:00"
 }
