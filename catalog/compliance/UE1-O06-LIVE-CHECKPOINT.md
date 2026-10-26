@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-classic-raw-string-and-fixedarray-count-source`
-- **Stage:** G3-08-11-SIGNED-COUNTS-42PASS-SOURCE159PASS-READY
-- **Last completed action:** Two real original source archive divergence fixes: C98 UStringProperty signed StringSize, T99 UFixedArrayProperty signed Count without false positivity rejection at Serialize stage; original C++ pinned. One DEV property 42/42 PASS and source/24 historical SHA verifier 159/159 PASS; existing 23 other classic and G5 native tests NOT rerun. Source/method, reader before and after and current log SHA pinned, G3 source matrix updated, full G3 remains 0/16 due unproven compiled original C98/C227 stock loader values. Commit/push and PRD SHA deployment pending.
-- **Resume at:** Commit/push changed source/property fixture/status and two logs, SHA verify DEV PRD; then investigate a distinct remaining Core serializer source discrepancy or original v227j native Core DLL. Preserve prior native evidence and do not claim runtime success for invalid signed counts.
-- **Active changed at:** 2026-10-26T17:07:35+00:00
+- **Stage:** G3-08-11-SIGNED-COUNTS-RELEASED-4965d6e5-PRD-SHA16of16
+- **Last completed action:** Two original Epic Core per-method archive errors corrected: C98 UStringProperty signed StringSize 0/-1 preserved; inherited UT99 v400 UFixedArrayProperty signed Count 0/-1 preserved with checkSlow only on Inner; no premature PHP positivity FArchive error. One DEV property 42/42 PASS and affected original CPP SHA verifier 159/159 PASS logged, previous G3 23 other tests and original G5 compiled native tests not rerun. Source hashes, previous/changed reader, output hash and 91-row G3 source matrix pinned. GitHub commit 4965d6e5 pushed. DEV to PRD changed implementation/evidence files 16/16 SHA verified; protected config/storage untouched. G3-08/G3-11 archive subbranches accepted, full G3 0/16, C98/C227 native loaded-value and other G3 original method branches remain unverified.
+- **Resume at:** Do not retest 42/42 or 159/159 unless source/reader changes. Investigate next distinct G3-03/04/05/07 Epic source method versus PHP rejection or obtain authentic v227j and Unreal v1.200 Core native loaded-value engines. Validate one full source method per behavior, then update status. Do NOT claim runtime linkage for zero/negative signed fields. Commit/push this deployment checkpoint and copy SHA to PRD.
+- **Active changed at:** 2026-10-26T17:09:37+00:00
 - **Latest DEV test states:** PASS 161; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
