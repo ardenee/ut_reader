@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T02:02:23.3601711Z",
-    "head_commit":  "dd773bb0",
+    "updated_at_utc":  "2026-10-26T02:49:45.2539890Z",
+    "head_commit":  "2aa8257f",
     "current_target":  "DEV",
-    "current_source_sha256":  "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+    "current_source_sha256":  "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -189,12 +189,12 @@
                       "test":  "verify-ue1-classic-mesh-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-25T21:22:48.8490559Z",
-                      "source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
-                      "test_sha256":  "e96443e26cb64d380869d095b55e5356fb80e32a409014f37373c913c1ced092",
-                      "run_id":  "20261025T212248252Z-4f1f22fc",
+                      "event_at_utc":  "2026-10-26T02:49:43.9969892Z",
+                      "source_sha256":  "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
+                      "test_sha256":  "05e0af534ea59db504283f95582e6371e69c81507f5fa473f2afd1ffbaab30e3",
+                      "run_id":  "20261026T024943382Z-092dae6f",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T024943382Z-092dae6f-DEV-verify-ue1-classic-mesh-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-model-native.php",
@@ -705,12 +705,12 @@
                       "test":  "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-25T21:22:49.9310577Z",
-                      "source_sha256":  "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
+                      "event_at_utc":  "2026-10-26T02:49:45.1990132Z",
+                      "source_sha256":  "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
                       "test_sha256":  "17f8fb8356d0e57327549d82fcb7dc31f8d62629713219ea90fb1ccc3294dc17",
-                      "run_id":  "20261025T212249255Z-e9597530",
+                      "run_id":  "20261026T024944405Z-8b711502",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261025T212249255Z-e9597530-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T024944405Z-8b711502-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-real-skeletal-vector-arrays.php",
@@ -783,6 +783,18 @@
                       "run_id":  "20261025T193250550Z-22963d14",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261025T193250550Z-22963d14-DEV-verify-ue1-o06-g5-t99-font-independent-full.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-t99-skeletal-independent-full.php",
+                      "test":  "verify-ue1-o06-g5-t99-skeletal-independent-full.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T02:49:25.5454931Z",
+                      "source_sha256":  "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
+                      "test_sha256":  "814b99eded79ee3a8c64b02f67f5cf3b92b6a1dbf1871d1783bbd9b67c28218d",
+                      "run_id":  "20261026T024924990Z-ff30e76a",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T024924990Z-ff30e76a-DEV-verify-ue1-o06-g5-t99-skeletal-independent-full.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php",

@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "generated_utc": "2026-10-26T02:52:48.751199+00:00",
+  "method": "T99:USkeletalMesh::Serialize",
+  "decision": "FULL",
+  "accepted_scope": "UT99 v432 compiled UE1 native USkeletalMesh::Serialize archive version 69 package loader, positive source-defined remap and normal five original objects. Other engines C98/C227 and generic all-class UObject are separate.",
+  "seven_verified_criteria": {
+    "pinned_source_and_dispatch": "VERIFIED",
+    "complete_native_field_values_and_references": "VERIFIED",
+    "archive_bytes_and_consumption": "VERIFIED",
+    "malformed_input_error_semantics": "VERIFIED",
+    "inherited_and_version_variant_semantics": "VERIFIED",
+    "current_acceptance_tests": "VERIFIED",
+    "independent_full_method_review": "VERIFIED"
+  },
+  "new_native_source_loaded_vertex_comparisons": 10,
+  "native_source_profile_variants": {
+    "zero_remap_legacy_original": 5,
+    "nonempty_identity_reversal": 1,
+    "nonempty_multiframe_duplicate_and_discard": 1,
+    "short_remap_compiled_undefined_value_no_false_rejection": 1
+  },
+  "exact_new_compiled_load_manifest_sha256": "835a87d98e1a8a15ca930a5a0f17eec43d5f0c6e15e83a92d2a6f4740392674d",
+  "original_five_stock_native_loaded_and_error_evidence_sha256": "2115652dc9926e60907b551f624490da01a7c08da38252c7221983beaca4556a",
+  "original_2895_genuine_archive_census_sha256": "28d51c7fd0ea0153c2ab388c62b82df4b1205c357c947daff180353cb7a5fb0d",
+  "previous_282956_native_array_bytes_reused": 282956,
+  "compiled_malformed_DefaultAnimation_archive_cursor": 412679,
+  "independent_final_acceptance_script_sha256": "814b99eded79ee3a8c64b02f67f5cf3b92b6a1dbf1871d1783bbd9b67c28218d",
+  "independent_final_acceptance_log_sha256": "d8ab9994197562dc605bca61fae8599c12b0b04c10c6744e7cf341c1f95897f9",
+  "current_production_source_sha256": "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
+  "native_engine_reruns_during_acceptance": 0,
+  "generic_UObject_Serialize_full": "BLOCKED_SEPARATELY",
+  "undefined_short_remap_native_loaded_bytes_fabricated": false
+}

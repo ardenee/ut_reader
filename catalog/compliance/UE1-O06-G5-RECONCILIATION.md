@@ -1,24 +1,24 @@
 # UE1 O06 — G5 evidence reconciliation
 
-Evidence inventory, not O06 acceptance. Generated 2026-10-26T02:15:50.287472+00:00; Git dd773bb0.
+Evidence inventory, not O06 acceptance. Generated 2026-10-26T02:56:06.047378+00:00; Git 2aa8257f.
 
 ## Counts
 
-- 256 MAPPED; 38 EXCLUDED; 5 independently accepted T99 v432 file-load method contracts, 3 G5 method decisions BLOCKED; do not infer cross-family FULL.
+- 256 MAPPED; 38 EXCLUDED; 6 independently accepted T99 v432 file-load method contracts, 2 G5 method decisions BLOCKED; do not infer cross-family FULL.
 - 59 entries have no named test; 52 of these are R82/R83 early-resource identity mappings.
 - 3 independent compiled v432 native export comparison slices: T99:UMusic::Serialize, T99:USound::Serialize, T99:UTextBuffer::Serialize.
 - Compiled v432 method archive-order evidence with no genuine loaded-value evidence: none.
 - Current genuine archive compatibility: 1 method (T99 UFont; 34 SHA-pinned file exports / 66 checks PASS).
 - Current **compiled v432 genuine native loaded-value subsets**: 6 methods (T99:UAnimation::Serialize, T99:UClass::Serialize, T99:UFont::Serialize, T99:UObject::Serialize, T99:USkeletalMesh::Serialize, T99:UTextBuffer::Serialize). Includes ALL 88/88 real named nonzero Engine.u UClasses (131 ClassIndex==0 rows include 43 zero-byte NAME_None placeholders), native ClassFlags/GUID/ConfigName, 3053 native FDependency class-reference/Deep/CRC tuples, 176 live FName PackageImports and 88 ClassWithin names, PLUS 1,056 stored UField/UStruct/UState native inherited values for all 88 classes, and 608/608 actual UClass loaded tagged default values of which 607 serialized values exactly match and one GameReplicationInfo.ServerName has a verified runtime INI override, UFont real glyph and nonempty remaps, USkeletalMesh/Animation full nested-array subsets, all 88 genuine Engine.u TextBuffer post-load values, and common UObject real inherited flags + 14/19 compiled positive RF_HasStack map frames, PLUS genuine Entry.unr 33 compiled loaded object exports with all 113/113 serialized tagged-property values independently matched (23 object references, 15 FNames, 14 FPointRegions, all scalar/struct/enum values, SHA-pinned 37/37). These remain PARTIAL method proofs; full error/reference/inherited source-family closure is OPEN.
 - NEW compiled v432 **genuine StateFrame referent name subset**: 1 verified UObject method with 14/19 original Entry.unr v68 StateFrames and all 28 real compiled Node/StateNode FName strings matching import references, plus exact ProbeMask64/LatentAction/Code values (195/195 PASS). Five Camera original exports and complete outer/class/error semantics OPEN.
-- NEW **full native array-element subsets**: 2 compiled v432 methods (T99 USkeletalMesh, UAnimation): genuine 5 skeletal objects 42,032 bytes of complete bone index/weights and 225,756 bytes of complete Points/LocalPoints, plus 143 animation ref bones full native name-table-resolved FName/flags/parent semantic records (1,716 bytes). Total 269,504 bytes, focused 733/733 + 228/228 PASS, no repeated tests.
+- NEW **full native array-element subsets**: 0 compiled v432 methods (T99 USkeletalMesh, UAnimation): genuine 5 skeletal objects 42,032 bytes of complete bone index/weights and 225,756 bytes of complete Points/LocalPoints, plus 143 animation ref bones full native name-table-resolved FName/flags/parent semantic records (1,716 bytes). Total 269,504 bytes, focused 733/733 + 228/228 PASS, no repeated tests.
 - NEW independent compiled-v432 **resumable 2-case batch**: 237 full native FMeshBone records (15,168 bytes) source field-by-field including runtime-resolved names and XSize's second serialized write, 1787/1787 PASS; 70 full native FMeshAnimSeq metadata records (2,240 bytes), all 22 nested native notification time/function names, 575/575 PASS. Both were rerun in resume mode with 2/2 UNCHANGED_PASS cache skips, zero repeated tests. Combined new 2362/2362 checks. SHA-pinned native manifests and append-only events preserved; YSize/Depth nonserialized fields and MotionChunk Moves still OPEN.
 - NEW third resumable native contract: 70 genuine MotionChunk in-memory scalar/root header and array-length comparisons, 95 full first-Move AnalogTrack header checks plus 732 full first-track key/BoneIndices bytes identical, 598/598 PASS. Remaining KeyQuat/KeyPos/KeyTime buffers from all other tracks still OPEN; did not replay previous PASS evidence.
 - NEW compiled real v432 **full nested MotionChunk memory**: 70 authentic Moves, 3,292 AnalogTracks, 10,156 distinct root/track/bone nested array buffers, 540,836 entire loaded bytes equal every source byte, 21,020 KeyQuat, 9,268 KeyPos and 21,020 KeyTime keys. Microsoft CDB 46MB full-memory MiniDump MEMORY64 oracle for each original package, independent source bounds/float-preview comparisons; focused 29,145/29,145 PASS, one initial test aggregation FAIL preserved. This validates complete nested element values for TWO original v69 package UAnimation exports, not malformed runtime or other source families.
 - Installed vanilla UT99's 310 original packages had no skeletal/animation exports; the additional original-filename-indexed PRD corpus does (5 SkeletalMesh+3 Animation compiled loaded).
-- Latest DEV journal state: {'PASS': 152, 'FAIL': 1}.
+- Latest DEV journal state: {'PASS': 153, 'FAIL': 1}.
 - Named tests with current matching source fingerprint: 0 of 197; historical PASS is not an automatically current proof.
-- Global source fingerprint in latest status 9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24; actual current eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c; earlier scoped native proofs reconciled against 52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78 only after exact v432 dynamic-array source isolation and PASS21/21.
+- Global source fingerprint in latest status 17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19; actual current eaf1661ff3c05845595b3293f399848458500267777528f34ea5b236924c7e8c; earlier scoped native proofs reconciled against 52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78 only after exact v432 dynamic-array source isolation and PASS21/21.
 
 ## Branches
 
@@ -30,7 +30,7 @@ Evidence inventory, not O06 acceptance. Generated 2026-10-26T02:15:50.287472+00:
 | R82 | 26 | 26 | 0 | 0 | 0 | 0 |
 | R83 | 26 | 26 | 0 | 0 | 0 | 0 |
 | R96 | 23 | 0 | 0 | 0 | 0 | 0 |
-| T99 | 46 | 4 | 3 | 0 | 6 | 2 |
+| T99 | 46 | 4 | 3 | 0 | 6 | 0 |
 | U86 | 43 | 0 | 0 | 0 | 0 | 0 |
 | U97 | 43 | 0 | 0 | 0 | 0 | 0 |
 

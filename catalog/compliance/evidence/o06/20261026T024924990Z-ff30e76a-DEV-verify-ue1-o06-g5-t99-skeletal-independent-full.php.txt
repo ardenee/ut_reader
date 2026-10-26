@@ -1,0 +1,25 @@
+﻿{
+    "ok": true,
+    "checks": 55,
+    "passed": 55,
+    "failed": [],
+    "decision": "FULL_UT99_V432_V69_SOURCE_PROFILE_ONLY",
+    "method": "T99:USkeletalMesh::Serialize",
+    "seven_gates": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
+    },
+    "native_compiled_remap_vertices_compared": 10,
+    "native_stock_short_remap_reads_outside_array": true,
+    "source_invalid_loaded_values_not_fabricated": true,
+    "reused_original_compiled_skeletal_array_bytes": 282956,
+    "reused_original_native_objects": 5,
+    "reused_actual_compiled_malformed_reference_cursor": 412679,
+    "native_engine_invocations_by_verifier": 0,
+    "generic_UObject_method_full": "NOT_CLAIMED"
+}

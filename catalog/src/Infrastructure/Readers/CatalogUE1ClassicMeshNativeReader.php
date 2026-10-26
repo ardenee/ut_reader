@@ -195,16 +195,81 @@ final class CatalogUE1ClassicMeshNativeReader
             $result['old_frame_verts']=$i32();
             // UT99 v400 ULodMesh::Serialize uses RemapAnimVerts(v) for
             // every v < FrameVerts whenever its array is nonempty.
-            // FArray::operator() bounds-checks that source index.
-            if($result['remap_anim_verts']['count']>0
-                &&$result['remap_anim_verts']['count']<$result['frame_verts']){
-                throw new RuntimeException(
-                    'UT99 ULodMesh animation remap shorter than FrameVerts');
+            // v432 TArray<T>::operator() uses checkSlow(i<=ArrayNum),
+            // not a persistent-archive count error. With FrameVerts
+            // beyond remap array elements, compiled release loading may
+            // read allocator memory; never fabricate a fatal file error
+            // or deterministic vertex value for that undefined access.
+            $remapTooShort=$result['remap_anim_verts']['count']>0
+                &&$result['anim_frames']>0
+                &&$result['remap_anim_verts']['count']<$result['frame_verts'];
+            $result['runtime_remap_array_index_validated']=!$remapTooShort;
+            // Original UT99 ULodMesh.cpp executes the following after the
+            // archive operator sequence, while Ar.IsLoading():
+            // Verts.Load(); NewVerts.Add(FrameVerts * AnimFrames);
+            // NewVerts[f*FrameVerts+v]=Verts[RemapAnimVerts[v]+f*OldFrameVerts];
+            // ExchangeArray(Verts,NewVerts); RemapAnimVerts.Empty().
+            // The archived Verts/Remap values remain preserved above; expose
+            // the distinct *loaded* values as an independently hashed stream.
+            // No heuristic permutations or invented vertex data.
+            $result['runtime_vertex_remap_executed']=$remapTooShort?null:false;
+            if($result['remap_anim_verts']['count']>0){
+                if($remapTooShort){
+                    $result['runtime_vertex_remap_status']=
+                        'native_remap_out_of_bounds_memory_value_undefined';
+                }elseif($seek===null){
+                    $result['runtime_vertex_remap_status']=
+                        'source_load_permutation_requires_archive_seek';
+                }else{
+                    $frames=$result['anim_frames'];$perFrame=$result['frame_verts'];
+                    $oldPerFrame=$result['old_frame_verts'];
+                    $archived=$result['verts']['count'];
+                    if($frames<0||$perFrame<0||$oldPerFrame<0
+                        ||($perFrame!==0 && $frames>intdiv(PHP_INT_MAX,$perFrame))){
+                        throw new RuntimeException('UT99 ULodMesh invalid runtime frame dimensions');
+                    }
+                    // Save the post-ULodMesh cursor: the skeletal subclass
+                    // must resume its own six arrays at the identical byte.
+                    $resume=$position;$hash=hash_init('sha256');$first=[];
+                    $invalidVertexIndex=false;
+                    $remapAt=$result['remap_anim_verts']['data_offset'];
+                    $vertsAt=$result['verts']['data_offset'];
+                    for($f=0;$f<$frames;$f++){
+                        for($v=0;$v<$perFrame;$v++){
+                            $seek($remapAt+$v*2);
+                            $from=(int)unpack('v',$read(2))[1];
+                            $index=$from+$f*$oldPerFrame;
+                            if($index<0||$index >= $archived){
+                                $invalidVertexIndex=true;
+                                break 2;
+                            }
+                            $seek($vertsAt+$index*4);
+                            $packed=$read(4);
+                            hash_update($hash,$packed);
+                            if(count($first)<16){
+                                $first[]=str_pad(dechex((int)unpack('V',$packed)[1]),
+                                    8,'0',STR_PAD_LEFT);
+                            }
+                        }
+                    }
+                    $seek($resume);
+                    if($invalidVertexIndex){
+                        $result['runtime_vertex_remap_executed']=null;
+                        $result['runtime_vertex_remap_status']=
+                            'native_verts_out_of_bounds_memory_value_undefined';
+                    }else{
+                        $result['runtime_vertex_remap_executed']=true;
+                        $result['loaded_verts']=[
+                            'count'=>$frames*$perFrame,
+                            'packed_dword_preview_hex'=>$first,
+                            'packed_bytes_sha256'=>hash_final($hash),
+                            'source'=>'ULodMesh::Serialize Ar.IsLoading vertex permutation',
+                        ];
+                        $result['loaded_remap_anim_verts_count']=0;
+                        $result['runtime_vertex_remap_status']='epic_load_permutation_complete';
+                    }
+                }
             }
-            $result['runtime_remap_array_index_validated']=true;
-            // Load-time vertex permutations and the discarded temporary
-            // RemapAnimVerts list are O10 runtime behavior, not extra bytes.
-            $result['runtime_vertex_remap_executed']=false;
         }
         $result['status']=$position===$limit
             ?'native_'.$kind.'_record_complete':'native_'.$kind.'_has_extension';

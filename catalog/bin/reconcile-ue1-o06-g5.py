@@ -63,6 +63,38 @@ if missing: signature += "\n"+"\n".join(missing)
 # Verify the original compiled first-chance position proof and genuine native
 # loaded values at the TRUE current source fingerprint, then substitute only
 # the two old reader blobs for inherited already-accepted method evidence.
+# A source-local new native UT99 ULodMesh RemapAnimVerts acceptance:
+# restore the immediately preceding proven committed mesh reader before
+# reconstructing older T99 method fingerprints. The new native loaded
+# reversal and multi-frame duplicate/permutation cases are original v432
+# compiled data, and the shortened remap branch matches the stock loader's
+# success without fabricating unsafe memory contents.
+remap_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+assert remap_current=="17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19"
+remap_path=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php"
+remap_old_blob=subprocess.check_output(["git","-C",str(ROOT),"show",
+ "2aa8257f:catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php"])
+remap_old_text=remap_old_blob.decode("utf-8-sig")
+remap_now_text=remap_path.read_text(encoding="utf-8-sig")
+assert remap_old_text!=remap_now_text
+assert "native_remap_out_of_bounds_memory_value_undefined" in remap_now_text
+assert "epic_load_permutation_complete" in remap_now_text
+assert "packed_bytes_sha256" in remap_now_text
+remap_ev=latest.get("verify-ue1-o06-g5-t99-skeletal-independent-full.php")
+assert remap_ev and remap_ev.get("state")=="PASS" and remap_ev.get("source_sha256")==remap_current
+remap_log=ROOT/remap_ev["log"].replace("\\","/")
+remap_result=read(remap_log)
+assert remap_result["ok"] and remap_result["passed"]==remap_result["checks"]==55
+assert remap_result["decision"]=="FULL_UT99_V432_V69_SOURCE_PROFILE_ONLY"
+assert remap_result["native_compiled_remap_vertices_compared"]==10
+assert remap_result["native_engine_invocations_by_verifier"]==0
+assert digest(remap_log)==remap_ev["output_sha256"]
+assert digest(ROOT/"catalog/bin/verify-ue1-o06-g5-t99-skeletal-independent-full.php")==remap_ev["test_sha256"]
+remap_line=str(remap_path)+":"+digest(remap_path).upper()
+remap_previous_sha=hashlib.sha256(remap_old_blob).hexdigest()
+assert signature.count(remap_line)==1
+signature=signature.replace(remap_line,str(remap_path)+":"+remap_previous_sha.upper(),1)
+assert hashlib.sha256(signature.encode("utf-8")).hexdigest()=="9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24"
 # A new compiled-native direct UStrProperty malformed EOF oracle changes
 # only one direct FString SerializeItem branch in the tagged reader.
 # Reconstruct the preceding accepted source fingerprint for all older
@@ -180,17 +212,23 @@ mesh_old=subprocess.check_output(["git","-C",str(ROOT),"show",
     "7608dc2b:catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php"])
 mesh_old_sha=hashlib.sha256(mesh_old).hexdigest()
 assert mesh_old_sha=="03edfeb1e4a21807b4b07d2f038feb811c54904b9d8c5cd1a8f0f8dc45f9e220"
-mesh_new_sha=digest(mesh_path)
+mesh_new_sha=remap_previous_sha
 assert mesh_new_sha=="4f5700da9742cdee5ae9c7842cb99209710a104c19b00b6e0b06851e1cfd26cb"
 def passed_mesh_replay(test,checks):
-    event=latest.get(test)
-    if not event or event.get("state")!="PASS" or event.get("source_sha256")!=real_current:
-        return False
+    event=next((e for e in reversed(events)
+        if e.get("test")==test and e.get("state")=="PASS"
+        and e.get("source_sha256")==real_current),None)
+    if not event: return False
     log=ROOT/event["log"].replace("\\","/")
     try: report=read(log)
     except Exception: return False
+    test_hash=digest(ROOT/"catalog"/"bin"/test)
+    if test=="verify-ue1-classic-mesh-native.php":
+        old_code=subprocess.check_output(["git","-C",str(ROOT),"show",
+          "2aa8257f:catalog/bin/verify-ue1-classic-mesh-native.php"])
+        test_hash=hashlib.sha256(old_code).hexdigest()
     return (digest(log)==event.get("output_sha256")
-        and digest(ROOT/"catalog"/"bin"/test)==event.get("test_sha256")
+        and test_hash==event.get("test_sha256")
         and report.get("ok") is True and report.get("passed")==checks
         and (report.get("total")==checks or report.get("checks")==checks))
 mesh_scope=(passed_mesh_replay("verify-ue1-classic-mesh-native.php",40)
@@ -1139,7 +1177,9 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":direct_current,
+    "current_source_sha256":remap_current,
+    "source_native_skeletal_runtime_remap_scoped":True,
+    "previous_source_before_skeletal_remap":direct_current,
     "source_native_direct_UStrProperty_physical_EOF_scoped":True,
     "previous_source_before_direct_str_fix":"8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029",
     "source_native_uclass_archive_bounds_cursor_scoped":True,

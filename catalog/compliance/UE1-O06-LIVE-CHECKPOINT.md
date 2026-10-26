@@ -2,18 +2,24 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uobject-direct-str-physical-error`
-- **Stage:** verified-release-ready
-- **Last completed action:** Actual stock compiled v432 direct Headline FString success; original-derived count byte232 21->75 real compiled EOF 283+1/283, PHP now matches archive error origin. Focus 24/24, affected 59/59+154/154+historical nested25/25 PASS, SHA native evidence pinned; final source-isolated reconcile and G5 assessment success, 5 FULL 3 BLOCKED 0 FAILED.
-- **Resume at:** Commit/push/SHA deploy current verified source once. Do NOT repeat direct UStrProperty, previously native nested array FString or 88 UClass proofs. Remaining decisive UObject: allocator-dependent nested FString runtime loaded values, other source-legal property/context/default/error branches, one complete 7/7 method acceptance; skeletal remap separate.
-- **Active changed at:** 2026-10-26T02:15:46+00:00
-- **Latest DEV test states:** PASS 152; FAIL 1; STARTED 0
+- **Contract:** `g5-t99-skeletalmesh-independent-full`
+- **Stage:** method-full-verified-7-of-7-release-ready
+- **Last completed action:** Actual compiled v432 source nonempty ULodMesh remap 4/4 reversal and 6/6 multiframe duplicate/discard FMeshVert loaded exact, stock short-count remap native succeeds with undefined read so PHP now safely records unverified loaded value not false rejection. 55/55 independent FULL seven-gate reviewer, 40/40 mesh affected and 733/733 original skeletal/animation array affected PASS. 5 genuine loaded scalar oracles, 282956 native skeletal array bytes, first-chance malformed DefaultAnimation cursor412679 SHA reused. G5 6 FULL 2 BLOCKED 0 FAILED; original v432 engine source and binaries unchanged.
+- **Resume at:** Commit, GitHub push, hash-only PRD deploy. DO NOT rescan 10131 .u files, repeat five original compiled SkeletalMesh loads, reconstruct remap proof or rerun UAnimation. Next decisive separate T99 UObject and UClass whole-method source/native acceptance.
+- **Active changed at:** 2026-10-26T02:56:39+00:00
+- **Latest DEV test states:** PASS 153; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-26T02:49:45.1990132Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | PASS | 414 | catalog\compliance\evidence\o06\20261026T024944405Z-8b711502-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
+| 2026-10-26T02:49:44.4050249Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | STARTED |  | catalog\compliance\evidence\o06\20261026T024944405Z-8b711502-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
+| 2026-10-26T02:49:43.9969892Z | verify-ue1-classic-mesh-native.php | PASS | 197 | catalog\compliance\evidence\o06\20261026T024943382Z-092dae6f-DEV-verify-ue1-classic-mesh-native.php.txt |
+| 2026-10-26T02:49:43.3900242Z | verify-ue1-classic-mesh-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T024943382Z-092dae6f-DEV-verify-ue1-classic-mesh-native.php.txt |
+| 2026-10-26T02:49:25.5454931Z | verify-ue1-o06-g5-t99-skeletal-independent-full.php | PASS | 153 | catalog\compliance\evidence\o06\20261026T024924990Z-ff30e76a-DEV-verify-ue1-o06-g5-t99-skeletal-independent-full.php.txt |
+| 2026-10-26T02:49:24.9974878Z | verify-ue1-o06-g5-t99-skeletal-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261026T024924990Z-ff30e76a-DEV-verify-ue1-o06-g5-t99-skeletal-independent-full.php.txt |
 | 2026-10-26T02:02:23.3392110Z | verify-ue1-classic-array-inner-values.php | PASS | 233 | catalog\compliance\evidence\o06\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt |
 | 2026-10-26T02:02:22.7062046Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt |
 | 2026-10-26T02:01:50.8472023Z | verify-ue1-classic-array-inner-values.php | FAIL | 359 | catalog\compliance\evidence\o06\20261026T020150122Z-20e6d80a-DEV-verify-ue1-classic-array-inner-values.php.txt |
@@ -26,12 +32,6 @@
 | 2026-10-26T02:01:08.4049378Z | verify-ue1-classic-fstring-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T020108397Z-59ebda52-DEV-verify-ue1-classic-fstring-archive.php.txt |
 | 2026-10-26T01:59:59.0028665Z | verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php | PASS | 294 | catalog\compliance\evidence\o06\20261026T015958333Z-daeb5c88-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt |
 | 2026-10-26T01:59:58.3338133Z | verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015958333Z-daeb5c88-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt |
-| 2026-10-26T01:59:57.9058176Z | verify-ue1-classic-array-inner-values.php | FAIL | 98 | catalog\compliance\evidence\o06\20261026T015957433Z-cd096312-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-26T01:59:57.4338512Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015957433Z-cd096312-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-26T01:59:57.0098508Z | verify-ue1-classic-fstring-archive.php | FAIL | 108 | catalog\compliance\evidence\o06\20261026T015956489Z-df832cb1-DEV-verify-ue1-classic-fstring-archive.php.txt |
-| 2026-10-26T01:59:56.4978551Z | verify-ue1-classic-fstring-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015956489Z-df832cb1-DEV-verify-ue1-classic-fstring-archive.php.txt |
-| 2026-10-26T01:59:36.5490745Z | verify-ue1-o06-g5-uobject-direct-str-physical-eof.php | PASS | 273 | catalog\compliance\evidence\o06\20261026T015935871Z-a3fb2398-DEV-verify-ue1-o06-g5-uobject-direct-str-physical-eof.php.txt |
-| 2026-10-26T01:59:35.8820692Z | verify-ue1-o06-g5-uobject-direct-str-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015935871Z-a3fb2398-DEV-verify-ue1-o06-g5-uobject-direct-str-physical-eof.php.txt |
 
 ## Recovery procedure
 

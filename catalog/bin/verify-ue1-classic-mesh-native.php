@@ -190,7 +190,8 @@ try{
     &&$lod['lod_morph']===1.25&&$lod['lod_z_displace']===2.5
     &&$lod['remap_anim_verts']['records_preview']===[7]
     &&$lod['old_frame_verts']===11
-    &&$lod['runtime_vertex_remap_executed']===false);
+    &&$lod['runtime_vertex_remap_executed']===null
+    &&$lod['runtime_vertex_remap_status']==='native_verts_out_of_bounds_memory_value_undefined');
  $check('ut99_v61_incomplete_lodmesh_tail_rejected',
     $bad('LodMesh',61,$body('Mesh',61)));
  [$extra]=$parse('Mesh',69,$body('Mesh',69,['extension'=>"\xab"]));

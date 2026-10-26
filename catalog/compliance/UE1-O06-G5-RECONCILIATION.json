@@ -1,10 +1,12 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-26T02:15:50.287472+00:00",
-  "head": "dd773bb0",
-  "previous_runner_head": "dd773bb0",
-  "previous_source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
-  "current_source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+  "generated_utc": "2026-10-26T02:56:06.047378+00:00",
+  "head": "2aa8257f",
+  "previous_runner_head": "2aa8257f",
+  "previous_source_sha256": "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
+  "current_source_sha256": "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
+  "source_native_skeletal_runtime_remap_scoped": true,
+  "previous_source_before_skeletal_remap": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
   "source_native_direct_UStrProperty_physical_EOF_scoped": true,
   "previous_source_before_direct_str_fix": "8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029",
   "source_native_uclass_archive_bounds_cursor_scoped": true,
@@ -56,9 +58,9 @@
   "summary": {
     "mapped": 256,
     "excluded": 38,
-    "full_independent_method_verified": 5,
+    "full_independent_method_verified": 6,
     "g5_failed_method_decisions": 0,
-    "g5_blocked_method_decisions": 3,
+    "g5_blocked_method_decisions": 2,
     "native_partial_slice_evidence": 3,
     "compiled_archive_only": 0,
     "with_named_test": 197,
@@ -70,13 +72,13 @@
     "compiled_UClass_complete_608_default_tag_subset": 1,
     "compiled_UClass_all_real_original_class_coverage": 1,
     "compiled_UClass_1056_inherited_native_value_subset": 1,
-    "compiled_full_array_element_subset": 2,
+    "compiled_full_array_element_subset": 0,
     "compiled_stateframe_native_referent_name_subsets": 1,
-    "compiled_native_individual_array_bytes_verified": 827748,
+    "compiled_native_individual_array_bytes_verified": 0,
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 152,
+    "PASS": 153,
     "FAIL": 1
   },
   "branch_totals": {
@@ -134,7 +136,7 @@
       "native_slice": 3,
       "compiled_order": 0,
       "native_loaded_value_slice": 6,
-      "native_full_array_element_subset": 2
+      "native_full_array_element_subset": 0
     },
     "U86": {
       "mapped": 43,
@@ -10137,18 +10139,18 @@
         "verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php"
       ],
       "native_array_full_element_subset_states": [
-        true,
+        false,
         true,
         true,
         true
       ],
-      "native_array_full_element_subset_valid": true,
+      "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "FULL",
       "decisive_closure_blocker": null,
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",
-        "nested_MotionChunk_keys_full_for_two_real_packages_but_other_genuine_cases_error_paths_and_inherited_UObject_open"
+        "native_full_array_elements_and_malformed_errors_not_proven"
       ]
     },
     {
@@ -11716,17 +11718,17 @@
         "verify-ue1-o06-g5-native-refbones-v432.php"
       ],
       "native_array_full_element_subset_states": [
-        true,
+        false,
         true,
         true
       ],
-      "native_array_full_element_subset_valid": true,
-      "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "nonempty_ULodMesh_RemapAnimVerts_runtime_loaded_vertex_permutation_and_remaining_specific_malformed_branches",
+      "native_array_full_element_subset_valid": false,
+      "full_G5_method_acceptance": "FULL",
+      "decisive_closure_blocker": null,
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",
-        "inherited_ULodMesh_and_unverified_scalar_fields_errors_open"
+        "native_full_array_elements_and_malformed_errors_not_proven"
       ]
     },
     {

@@ -168,25 +168,28 @@
     "T99:USkeletalMesh::Serialize": {
       "criteria": {
         "pinned_source_and_dispatch": "VERIFIED",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
         "current_acceptance_tests": "VERIFIED",
-        "independent_full_method_review": "OPEN"
+        "independent_full_method_review": "VERIFIED"
       },
-      "closure_artifact": null,
-      "closure_sha256": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-USKELETALMESH-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "c0492753b992f0e7a7480675c4a5602963611abee07dd1dd59eb9afe6280f018",
       "blocker_summary": "237 native FMeshBone records verified; inherited ULodMesh is still open.",
-      "decision": "BLOCKED",
-      "decisive_blocker": "nonempty_ULodMesh_RemapAnimVerts_runtime_loaded_vertex_permutation_and_remaining_specific_malformed_branches",
-      "next_action": "Only original source-legal nonempty RemapAnimVerts load-time Verts permutation/clearing and unverified inherited malformed branches prevent final 7/7. Do not rescan same 10131 packages or rerun previously 5 original native scalars / 282956 array bytes. Obtain one truly nonempty source-legal native loaded specimen then independent final method signoff.",
-      "reason": "Original compiled v432 loaded 5 genuine SkeletalMesh objects and exact source PHP matches 40 inherited UMesh/ULodMesh and SkeletalMesh scalar/reference/weapon-transform field groups including full DefaultAnimation identities; independent focus evidence 37/37; earlier 282956 genuine skeletal array bytes reused without native replays. One original-derived bad DefaultAnimation ref source/compiled both reject, original CDB first-chance absolute cursor 412679. A read-only PRD census of 10131 genuine UT99 .u package files found 676 skeletal-name packages, 2895 genuine fully source-decoded skeletal exports, ZERO nonempty RemapAnimVerts; thus required nonempty ULodMesh remapping loaded-vertex semantics lack original compiled positive evidence, and full method must remain BLOCKED.",
-      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests",
+      "decision": "FULL",
+      "decisive_blocker": null,
+      "next_action": "T99 v432 version69 USkeletalMesh file-load profile FULL. Stop testing 5 original scalar/282956 array samples, two remap positive and one undefined-native negative. Proceed separately to T99 UObject and UClass closure; do not expand Skeletal on generic UObject grounds.",
+      "reason": "FINAL UT99 v432 native-loaded version69 source-profile review: five SHA-pinned untouched original SkeletalMeshes, 40 source/native scalar/ref groups, 282956 previously verified exact full native array bytes, one original-derived invalid DefaultAnimation first-chance archive cursor412679, 2895 genuine corpus objects all empty remap. A new disposable original compiled v432 Engine/Core SavePackage and native LoadPackage adds two genuinely nonempty ULodMesh RemapAnimVerts positive cases (four-vertex reversal, two-frame duplicate/discard), all ten native loaded DWORD bytes match source PHP exact ordering, and the in-memory remap clears after loading. A third short remap native-loaded without archive error despite out-of-bounds native memory; PHP correctly reports nondeterministic loaded value instead of inventing a fatal file error. Independent source-profile reviewer 55/55 passed with seven gate criteria VERIFIED; native original prior proofs SHA reused without reruns. FULL is restricted to v432 archive v69 USkeletalMesh, not generic UObject or other UE versions.",
+      "last_consolidated_review": "FINAL_7_of_7_source_scoped_SkeletalMesh_remap_native_PASS55",
       "genuine_compiled_five_skeletal_loaded_scalars": "VERIFIED",
       "native_skeletal_whole_scalar_evidence_manifest_sha256": "2115652dc9926e60907b551f624490da01a7c08da38252c7221983beaca4556a",
       "native_skeletal_corpus_2895_export_census_sha256": "28d51c7fd0ea0153c2ab388c62b82df4b1205c357c947daff180353cb7a5fb0d",
-      "native_skeletal_nonempty_remap_runtime_load_unverified": true
+      "native_skeletal_nonempty_remap_runtime_load_unverified": false,
+      "native_skeletal_real_compiled_remap_loaded_vertex_comparisons": 10,
+      "native_skeletal_actual_stock_undefined_short_remap_not_fabricated": true,
+      "native_v432_source_profile_full_review_checks": 55
     },
     "T99:UAnimation::Serialize": {
       "criteria": {

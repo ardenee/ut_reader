@@ -63,12 +63,12 @@ status={
   "blocker":"inherited_UObject_full_method_and_other_variant_errors",
  },
  "T99:USkeletalMesh::Serialize":{
-  "result":"BLOCKED",
+  "result":"FULL",
   "pinned":True,
   "current":True,
-  "reason":"Original compiled v432 loaded 5 genuine SkeletalMesh objects and exact source PHP matches 40 inherited UMesh/ULodMesh and SkeletalMesh scalar/reference/weapon-transform field groups including full DefaultAnimation identities; independent focus evidence 37/37; earlier 282956 genuine skeletal array bytes reused without native replays. One original-derived bad DefaultAnimation ref source/compiled both reject, original CDB first-chance absolute cursor 412679. A read-only PRD census of 10131 genuine UT99 .u package files found 676 skeletal-name packages, 2895 genuine fully source-decoded skeletal exports, ZERO nonempty RemapAnimVerts; thus required nonempty ULodMesh remapping loaded-vertex semantics lack original compiled positive evidence, and full method must remain BLOCKED.",
-  "next":"Only original source-legal nonempty RemapAnimVerts load-time Verts permutation/clearing and unverified inherited malformed branches prevent final 7/7. Do not rescan same 10131 packages or rerun previously 5 original native scalars / 282956 array bytes. Obtain one truly nonempty source-legal native loaded specimen then independent final method signoff.",
-  "blocker":"nonempty_ULodMesh_RemapAnimVerts_runtime_loaded_vertex_permutation_and_remaining_specific_malformed_branches",
+  "reason":"FINAL UT99 v432 native-loaded version69 source-profile review: five SHA-pinned untouched original SkeletalMeshes, 40 source/native scalar/ref groups, 282956 previously verified exact full native array bytes, one original-derived invalid DefaultAnimation first-chance archive cursor412679, 2895 genuine corpus objects all empty remap. A new disposable original compiled v432 Engine/Core SavePackage and native LoadPackage adds two genuinely nonempty ULodMesh RemapAnimVerts positive cases (four-vertex reversal, two-frame duplicate/discard), all ten native loaded DWORD bytes match source PHP exact ordering, and the in-memory remap clears after loading. A third short remap native-loaded without archive error despite out-of-bounds native memory; PHP correctly reports nondeterministic loaded value instead of inventing a fatal file error. Independent source-profile reviewer 55/55 passed with seven gate criteria VERIFIED; native original prior proofs SHA reused without reruns. FULL is restricted to v432 archive v69 USkeletalMesh, not generic UObject or other UE versions.",
+  "next":"T99 v432 version69 USkeletalMesh file-load profile FULL. Stop testing 5 original scalar/282956 array samples, two remap positive and one undefined-native negative. Proceed separately to T99 UObject and UClass closure; do not expand Skeletal on generic UObject grounds.",
+  "blocker":None,
  },
  "T99:UAnimation::Serialize":{
   "result":"FULL",
@@ -105,6 +105,9 @@ assert set(status)==set(reg["methods"])
 # reconcile-ue1-o06-g5.py; no previously closed native loader replay.
 def scoped_source_current(value):
     if value==reconciliation["current_source_sha256"]:
+        return True
+    if (reconciliation.get("source_native_skeletal_runtime_remap_scoped")
+        and value==reconciliation.get("previous_source_before_skeletal_remap")):
         return True
     # Two source-isolated repairs with newly pinned native error evidence:
     # one historical UClass archive physical bound / trailer seek and one
@@ -844,7 +847,7 @@ for name in reg["methods"]:
         direct_test="verify-ue1-o06-g5-uobject-direct-str-physical-eof.php"
         direct_ev=next((e for e in reversed(events)
             if e.get("test")==direct_test and e.get("state")=="PASS"),None)
-        assert direct_ev and direct_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert direct_ev and scoped_source_current(direct_ev["source_sha256"])
         direct_log=ROOT/direct_ev["log"].replace("\\","/")
         assert sha(direct_log)==direct_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/direct_test)==direct_ev["test_sha256"]
@@ -1021,9 +1024,57 @@ for name in reg["methods"]:
         old["genuine_compiled_five_skeletal_loaded_scalars"]="VERIFIED"
         old["native_skeletal_whole_scalar_evidence_manifest_sha256"]=sha(package)
         old["native_skeletal_corpus_2895_export_census_sha256"]=sha(census)
-        old["native_skeletal_nonempty_remap_runtime_load_unverified"]=True
-        # Do not promote the whole method; five successfully loaded original
-        # objects do not demonstrate source-legal nonempty vertex remapping.
+        # New compiled-native v432 positive nonempty remap and malformed
+        # short-array memory case now close the *source profile* once;
+        # previous five original objects and array oracles are SHA reused.
+        test="verify-ue1-o06-g5-t99-skeletal-independent-full.php"
+        full_ev=next((e for e in reversed(event_rows)
+            if e.get("test")==test and e.get("state")=="PASS"),None)
+        assert full_ev and full_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        full_path=ROOT/"catalog"/"bin"/test
+        full_log=ROOT/full_ev["log"].replace("\\","/")
+        assert sha(full_path)==full_ev["test_sha256"]
+        assert sha(full_log)==full_ev["output_sha256"]
+        full_result=read(full_log)
+        assert full_result["ok"] and full_result["checks"]==full_result["passed"]==55
+        assert full_result["decision"]=="FULL_UT99_V432_V69_SOURCE_PROFILE_ONLY"
+        assert full_result["native_compiled_remap_vertices_compared"]==10
+        assert full_result["native_engine_invocations_by_verifier"]==0
+        assert full_result["source_invalid_loaded_values_not_fabricated"] is True
+        assert full_result["reused_original_compiled_skeletal_array_bytes"]==282956
+        remap_manifest=C/"UE1-O06-G5-T99-SKELETAL-REMAP-NATIVE-LOADED.json"
+        manifest=read(remap_manifest)
+        assert manifest["method"]==name and len(manifest["native_cases"])==3
+        assert manifest["source_valid_loaded_vertices_verified"]==10
+        for group in ("source","compiled","reused_previous_evidence"):
+            for info in manifest[group].values():
+                assert sha(Path(info["path"]))==info["sha256"]
+        for native in manifest["native_cases"]:
+            for key in ("package","native_loaded_log","native_producer_source",
+                        "native_producer_executable"):
+                info=native[key]
+                assert sha(Path(info["path"]))==info["sha256"]
+        closure=C/"UE1-O06-G5-USKELETALMESH-SOURCE-PROFILE-FULL-ACCEPTANCE.json"
+        sealed=read(closure)
+        assert sealed["method"]==name and sealed["decision"]=="FULL"
+        assert sealed["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert sealed["exact_new_compiled_load_manifest_sha256"]==sha(remap_manifest)
+        assert sealed["independent_final_acceptance_script_sha256"]==sha(full_path)
+        assert sealed["independent_final_acceptance_log_sha256"]==sha(full_log)
+        assert sealed["original_five_stock_native_loaded_and_error_evidence_sha256"]==sha(package)
+        assert sealed["original_2895_genuine_archive_census_sha256"]==sha(census)
+        assert sealed["native_engine_reruns_during_acceptance"]==0
+        assert sealed["generic_UObject_Serialize_full"]=="BLOCKED_SEPARATELY"
+        assert sealed["seven_verified_criteria"]==full_result["seven_gates"]
+        assert len(full_result["seven_gates"])==7
+        assert all(v=="VERIFIED" for v in full_result["seven_gates"].values())
+        gates.update(full_result["seven_gates"])
+        old["closure_artifact"]="catalog/compliance/"+closure.name
+        old["closure_sha256"]=sha(closure)
+        old["native_skeletal_nonempty_remap_runtime_load_unverified"]=False
+        old["native_skeletal_real_compiled_remap_loaded_vertex_comparisons"]=10
+        old["native_skeletal_actual_stock_undefined_short_remap_not_fabricated"]=True
+        old["native_v432_source_profile_full_review_checks"]=55
     if name=="T99:UAnimation::Serialize":
         whole_test="verify-ue1-o06-g5-t99-animation-whole-native.php"
         events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
@@ -1141,6 +1192,7 @@ for name in reg["methods"]:
         "FINAL_7_of_7_source_scoped_TextBuffer_302_checks" if name=="T99:UTextBuffer::Serialize"
         else "FINAL_7_of_7_source_scoped_Font_185_checks" if name=="T99:UFont::Serialize"
         else "current_native_dynamic_count_EOF_21_and_nested_FString_EOF_25_checks_SHA" if name=="T99:UObject::Serialize"
+        else "FINAL_7_of_7_source_scoped_SkeletalMesh_remap_native_PASS55" if name=="T99:USkeletalMesh::Serialize"
         else "FINAL_7_of_7_source_scoped_audio_inherited_PASS63" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
         else "whole_v432_native_full_values_3694_and_6_exact_malformed_native_cursors_91_checks_2_remaining_gates" if name=="T99:UAnimation::Serialize"
         else "existing_sha_pinned_evidence_only_no_new_tests")
@@ -1168,8 +1220,8 @@ for name in reg["methods"]:
          "new_source_edit_isolated_without_prior_native_reruns":
             reconciliation["source_native_array_physical_EOF_scoped"]}
         if name=="T99:UObject::Serialize" else None),
-      "new_native_tests_executed":(3 if name=="T99:UObject::Serialize" else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 11 if name=="T99:UAnimation::Serialize" else 0),
-       "new_test_runs_executed":18 if name=="T99:UObject::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 2 if name=="T99:UAnimation::Serialize" else 0,
+      "new_native_tests_executed":(3 if name in ("T99:UObject::Serialize","T99:USkeletalMesh::Serialize") else 9 if name in ("T99:USound::Serialize","T99:UMusic::Serialize") else 11 if name=="T99:UAnimation::Serialize" else 0),
+       "new_test_runs_executed":18 if name=="T99:UObject::Serialize" else 3 if name=="T99:USkeletalMesh::Serialize" else 2 if name in ("T99:USound::Serialize","T99:UMusic::Serialize","T99:UTextBuffer::Serialize","T99:UFont::Serialize") else 2 if name=="T99:UAnimation::Serialize" else 0,
     }
 report={
  "schema":1,
@@ -1179,7 +1231,7 @@ report={
  "fully_epic_verified":sum(d["decision"]=="FULL" for d in decisions.values()),
  "failed":sum(d["decision"]=="FAILED" for d in decisions.values()),
  "blocked":sum(d["decision"]=="BLOCKED" for d in decisions.values()),
-  "new_oracle_runs":44,"new_test_runs":26,
+  "new_oracle_runs":47,"new_test_runs":29,
  "methods":decisions,
 }
 OUT.write_text(json.dumps(report,ensure_ascii=False,indent=2)+"\n",encoding="utf-8",newline="\n")

@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "method": "T99:USkeletalMesh::Serialize",
+  "scope": "actual compiled UT99 v432 code path for archive v69 USkeletalMesh load including inherited UMesh, ULodMesh and the six skeletal arrays; does not imply stock historical source v1200/v227 or unrelated generic UObject full",
+  "source": {
+    "epic_v400_lodmesh_cpp": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Engine/Src/ULodMesh.cpp",
+      "sha256": "87119bee280f3ea8f7dd625131152eff7e494daaf47c6b169123a2a02489b33c",
+      "bytes": 10373
+    },
+    "epic_v432_tarray_header": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament v432/Core/Inc/UnTemplate.h",
+      "sha256": "00bbde592c0e461199f613bdb08b70b04f93d5968818c91fe06073b38e9d0975",
+      "bytes": 46839
+    },
+    "php_mesh_reader": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php",
+      "sha256": "3beba2e20a99696278eda16b0935579c5da308f6e2073967569cae2041994f83",
+      "bytes": 14642
+    }
+  },
+  "compiled": {
+    "core_dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432
+    },
+    "engine_dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+      "bytes": 1785856
+    },
+    "new_loaded_probe_source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapNative-Load.cpp",
+      "sha256": "4bc9c89a9d8aa3d221e23a7b781e21a56bcf81d379ede165127b519952e4eacd",
+      "bytes": 5632
+    },
+    "new_loaded_probe_executable": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapNative-Load.exe",
+      "sha256": "09bed379e7c4a8ec46e5d89a43f34ec209656eae0ce99146a3358014f3787ba5",
+      "bytes": 80384
+    }
+  },
+  "reused_previous_evidence": {
+    "five_original_skeletal_scalar_values_and_native_DefaultAnimation_bad_ref": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-SKELETAL-NATIVE-SCALAR-AND-ERROR.json",
+      "sha256": "2115652dc9926e60907b551f624490da01a7c08da38252c7221983beaca4556a",
+      "bytes": 5671
+    },
+    "full_2895_original_skeletal_export_census": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-SKELETAL-REMAP-CORPUS.json",
+      "sha256": "28d51c7fd0ea0153c2ab388c62b82df4b1205c357c947daff180353cb7a5fb0d",
+      "bytes": 2208
+    }
+  },
+  "native_cases": [
+    {
+      "package_name": "G5RemapPayload",
+      "package": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5RemapPayload.u",
+        "sha256": "02703c35eee5f19ad3a970b2aba5f6cc0bc149f039be233f6540bf4de45f13df",
+        "bytes": 503
+      },
+      "native_loaded_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapNative-Load-PASS.log",
+        "sha256": "83eef8a7e5e68ceec6799d67e899038eda6ef553a9b6aee92e1ea860e891b715",
+        "bytes": 1336
+      },
+      "native_producer_source": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapNative-Generate.cpp",
+        "sha256": "1fa02e7650e0ab265735e5c7bbfc9eca2931ca20495e2eca05f11068f5fc5e7a",
+        "bytes": 2344
+      },
+      "native_producer_executable": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapNative-Generate.exe",
+        "sha256": "31f841380de417440106735a9a3e408d933a60aae5ad6ead688c68e4ac2a7115",
+        "bytes": 77824
+      },
+      "archived_remap_count": 4,
+      "native_loaded_vert_count": 4,
+      "native_loaded_vert_dwords_hex": [
+        "ff40282c",
+        "ff802021",
+        "ffc01816",
+        "0000100b"
+      ],
+      "native_loaded_remap_count": 0,
+      "archive_version": 69,
+      "compiled_engine_success": true,
+      "source_valid_memory_permutation": true,
+      "source_invalid_memory_access_unpredictable": false
+    },
+    {
+      "package_name": "G5RemapFramesPayload",
+      "package": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5RemapFramesPayload.u",
+        "sha256": "90f83353a902b6728c2dd6e2c67495e315aebc28cd58e64e37f674447a566850",
+        "bytes": 523
+      },
+      "native_loaded_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapFramesNative-Load-PASS.log",
+        "sha256": "bceaa0cdf9530ccbf536da6bbe2852212cf7a63d10692b987d647d3e41d21128",
+        "bytes": 1486
+      },
+      "native_producer_source": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapFramesNative-Generate.cpp",
+        "sha256": "c75993b3fcfee83ebe03237d61179b29f92b87979d4b448274571f5f63fb985c",
+        "bytes": 2349
+      },
+      "native_producer_executable": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapFramesNative-Generate.exe",
+        "sha256": "62edaf8a4b22ba478ac946a1db40ed698b7538fb245766c6c1cda3d454241708",
+        "bytes": 77824
+      },
+      "archived_remap_count": 3,
+      "native_loaded_vert_count": 6,
+      "native_loaded_vert_dwords_hex": [
+        "ff40282c",
+        "ffc01816",
+        "ffc01816",
+        "fe404858",
+        "fec03842",
+        "fec03842"
+      ],
+      "native_loaded_remap_count": 0,
+      "archive_version": 69,
+      "compiled_engine_success": true,
+      "source_valid_memory_permutation": true,
+      "source_invalid_memory_access_unpredictable": false
+    },
+    {
+      "package_name": "G5RemapShortPayload",
+      "package": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5RemapShortPayload.u",
+        "sha256": "4571b2417a771e0a6e3caa22e5aa876c3422d6daa72a31aa1e3ea17fa1901992",
+        "bytes": 506
+      },
+      "native_loaded_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapShortNative-Load-FAIL.log",
+        "sha256": "ab6dcd1e50dcaff464bd64462ca94646ac7ec6c3085bf8fa1d05358839113037",
+        "bytes": 1391
+      },
+      "native_producer_source": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapShortNative-Generate.cpp",
+        "sha256": "a1678259c05490d4f0a41fd3f330084f968fd7236d438c9500d35240b8b38c7d",
+        "bytes": 2347
+      },
+      "native_producer_executable": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-RemapShortNative-Generate.exe",
+        "sha256": "b6068b154b41b34fd94d9014c1bde0896819701b563fd9156bb03a38f40feb96",
+        "bytes": 77824
+      },
+      "archived_remap_count": 3,
+      "native_loaded_vert_count": 4,
+      "native_loaded_vert_dwords_hex": [
+        "ff40282c",
+        "ff802021",
+        "ffc01816",
+        "0000100b"
+      ],
+      "native_loaded_remap_count": 0,
+      "archive_version": 69,
+      "compiled_engine_success": true,
+      "source_valid_memory_permutation": false,
+      "source_invalid_memory_access_unpredictable": true
+    }
+  ],
+  "source_valid_loaded_vertices_verified": 10,
+  "original_native_full_skeletal_array_bytes_reused": 282956,
+  "five_genuine_original_compiled_skeletal_mesh_objects_reused": 5,
+  "one_exact_native_malformed_DefaultAnimation_error_cursor_reused": 412679,
+  "stock_engine_undefined_short_remap_result": "compiled v432 loader continues with out-of-range TArray<_WORD> access; PHP must not invent fatal error or deterministic value",
+  "native_engine_reruns_in_acceptance": 0
+}
