@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T12:33:56.8889684Z",
-    "head_commit":  "c9d749a9",
+    "updated_at_utc":  "2026-10-26T13:14:43.8729628Z",
+    "head_commit":  "bb009383",
     "current_target":  "DEV",
     "current_source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
     "tests":  [
@@ -507,6 +507,30 @@
                       "run_id":  "20261026T122225190Z-00c61c1b",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261026T122225190Z-00c61c1b-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+                      "test":  "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T13:09:27.7377676Z",
+                      "source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+                      "test_sha256":  "ae54df5862dbd79199aaf682d832ea9d257c25b26c1e2ccd2770e74179461207",
+                      "run_id":  "20261026T130927237Z-7776af6d",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T130927237Z-7776af6d-DEV-verify-ue1-o06-g3-c227-compiled-core-symbols.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-c98-t99-source-inventory.php",
+                      "test":  "verify-ue1-o06-g3-c98-t99-source-inventory.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T13:14:43.8509364Z",
+                      "source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+                      "test_sha256":  "c64249ea702be83f6ad790b7c4c8ea34188dfdd54fee9165fe765eee3f90e10a",
+                      "run_id":  "20261026T131443340Z-fa6907cf",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T131443340Z-fa6907cf-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php",

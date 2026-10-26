@@ -1,0 +1,480 @@
+{
+  "schema": 1,
+  "generated_utc": "2026-10-26T13:07:17.950728+00:00",
+  "source": "original Unreal 227 Core.lib original binary import-member exported decorated symbol names",
+  "pinned_227_Core_lib": {
+    "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\BuildTmp\\Win32Release\\Core.lib",
+    "bytes": 798086,
+    "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a"
+  },
+  "pinned_227_UnType_header": {
+    "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+    "sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69"
+  },
+  "G3_relevant_exported_decorated_symbols": [
+    {
+      "class": "UArrayProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UBoolProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UButtonProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UButtonProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UByteProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UClass",
+      "method": "Serialize",
+      "decorated": "?Serialize@UClass@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-05",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UClassProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UConst",
+      "method": "Serialize",
+      "decorated": "?Serialize@UConst@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-06",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UEnum",
+      "method": "Serialize",
+      "decorated": "?Serialize@UEnum@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-06",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UField",
+      "method": "Serialize",
+      "decorated": "?Serialize@UField@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-03",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UFixedArrayProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UFunction",
+      "method": "Serialize",
+      "decorated": "?Serialize@UFunction@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-04",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UMapProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UObject",
+      "method": "Serialize",
+      "decorated": "?Serialize@UObject@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-13",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UObjectProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UPackage",
+      "method": "Serialize",
+      "decorated": "?Serialize@UPackage@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-13",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-07",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UState",
+      "method": "Serialize",
+      "decorated": "?Serialize@UState@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-04",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStrProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStruct",
+      "method": "Serialize",
+      "decorated": "?Serialize@UStruct@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-03",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStructProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z",
+      "owner_contract": "G3-10",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UAnyProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UAnyProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UArrayProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UArrayProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UBoolProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UBoolProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UButtonProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UButtonProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UByteProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UByteProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UClassProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UClassProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UFixedArrayProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UFixedArrayProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UFloatProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UFloatProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UIntProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UIntProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UMapProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UMapProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UNameProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UNameProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UObjectProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UObjectProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UPointerProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStrProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UStrProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStructProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UStructProperty@@UBEXAAVFArchive@@PAX@Z",
+      "owner_contract": "G3-10",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UAnyProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UAnyProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UArrayProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UBoolProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UBoolProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UButtonProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UButtonProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UByteProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UByteProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UClassProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UClassProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UFixedArrayProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UFixedArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UFloatProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UFloatProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UIntProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UIntProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UMapProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UMapProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UObjectProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UObjectProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UPointerProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-07",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStrProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UStrProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-08",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStructProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UStructProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "owner_contract": "G3-10",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UArrayProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UArrayProperty@@UBEHPBEH@Z",
+      "owner_contract": "G3-11",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UClassProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UClassProperty@@UBEHPBEH@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UObjectProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UObjectProperty@@UBEHPBEH@Z",
+      "owner_contract": "G3-09",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UProperty@@UBEHPBEH@Z",
+      "owner_contract": "G3-07",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStruct",
+      "method": "SerializeBin",
+      "decorated": "?SerializeBin@UStruct@@UAEXAAVFArchive@@PAE@Z",
+      "owner_contract": "G3-03",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStruct",
+      "method": "SerializeTaggedProperties",
+      "decorated": "?SerializeTaggedProperties@UStruct@@UAEXAAVFArchive@@PAEPAVUClass@@1H@Z",
+      "owner_contract": "G3-03",
+      "c227_core_class_property_register_present": false
+    },
+    {
+      "class": "UStruct",
+      "method": "SerializeExpr",
+      "decorated": "?SerializeExpr@UStruct@@UAE?AW4EExprToken@@AAHAAVFArchive@@@Z",
+      "owner_contract": "G3-03",
+      "c227_core_class_property_register_present": false
+    }
+  ],
+  "G3_relevant_exported_symbol_count": 57,
+  "G3_relevant_distinct_classes": [
+    "UAnyProperty",
+    "UArrayProperty",
+    "UBoolProperty",
+    "UButtonProperty",
+    "UByteProperty",
+    "UClass",
+    "UClassProperty",
+    "UConst",
+    "UEnum",
+    "UField",
+    "UFixedArrayProperty",
+    "UFloatProperty",
+    "UFunction",
+    "UIntProperty",
+    "UMapProperty",
+    "UNameProperty",
+    "UObject",
+    "UObjectProperty",
+    "UPackage",
+    "UPointerProperty",
+    "UProperty",
+    "UState",
+    "UStrProperty",
+    "UStruct",
+    "UStructProperty"
+  ],
+  "G3_relevant_distinct_class_count": 25,
+  "missing_C227_G3_register_rows": 57,
+  "new_227_licensee_derived_properties": {
+    "UPointerProperty": {
+      "declared_C227_in_UnType_h": true,
+      "GetID": "NAME_IntProperty",
+      "source_has_explicit_SerializeItem": true,
+      "source_has_explicit_Serialize": false,
+      "body_sha256": "db5b81afe46c19cc3d0a104fafdf16ebbef71af9433803bd061387679056865c"
+    },
+    "UButtonProperty": {
+      "declared_C227_in_UnType_h": true,
+      "GetID": "NAME_IntProperty",
+      "source_has_explicit_SerializeItem": true,
+      "source_has_explicit_Serialize": false,
+      "body_sha256": "854693f07416b97bb4a1450c79b3fbd6fb3e254823d643b71e1e7b5c7d7bfe01"
+    },
+    "UAnyProperty": {
+      "declared_C227_in_UnType_h": true,
+      "GetID": "NAME_VectorProperty",
+      "source_has_explicit_SerializeItem": true,
+      "source_has_explicit_Serialize": false,
+      "body_sha256": "7572909954829e4dbf8f48f42a8cfd615dbba71a4984d028d475b8f7ece8c708"
+    }
+  },
+  "C227_new_classes_not_in_UE1_C98_or_T99_registered": [
+    "UAnyProperty",
+    "UButtonProperty",
+    "UFloatProperty",
+    "UIntProperty",
+    "UNameProperty",
+    "UPointerProperty"
+  ],
+  "does_not_prove_function_body_or_actual_loaded_value": true,
+  "C227_original_Core_Src_UnClass_UnProp_available": false,
+  "G3_contract_status": "SOURCE_SYMBOL_DECLARATION_VERIFIED_IMPLEMENTATION_AND_ORACLE_OPEN",
+  "next": "Map C227 compiled Core symbols as distinct source-family profile and locate real DLL/PDB or source bodies before all G3 source/full-native gates. GetID header aliases are proven but SerializeItem and all values remain unknown."
+}

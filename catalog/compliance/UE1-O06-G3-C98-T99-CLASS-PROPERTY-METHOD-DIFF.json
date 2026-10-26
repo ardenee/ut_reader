@@ -1,0 +1,321 @@
+{
+  "schema": 1,
+  "scope": "C98 v1.200 original code vs v400 inherited UT99 body ONLY, v432 compiled behavior not inferred",
+  "source_file_sha256": {
+    "C98": {
+      "UnClass.cpp": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+      "UnProp.cpp": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b",
+      "UnObj.cpp": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462"
+    },
+    "T99_inherited_v400": {
+      "UnClass.cpp": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+      "UnProp.cpp": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+      "UnObj.cpp": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2"
+    }
+  },
+  "method_signature_source_lexical_inventory": [
+    {
+      "symbol": "UField::Serialize",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "98e0c036dc85903bc053fd3e1c374e557b7b260b257954f2bb9695f47303f138",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "0d79b52697583a5a04648a15d2aeaaf5fb4d40b4ae70f8001e53b2aab28cb20d",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStruct::Serialize",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "1adb3ead7c9e72b5ef6a2e4a8496c49b58b1c6faef103b2e4731f26b02a1a0fc",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "285fff7d2d9c5940c4aaa16a40cd18b17aae3a9f35d5adbd299bbea6ec265fc3",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStruct::SerializeBin",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "0ead8eb60304acd83a30d498ed48b8a3b02376995ac53c200c5b0b5c6fd9b316",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "1c5bcb3934e57a69913e0559ee0695935008955f02ab9beb1b7cdaafdd765969",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStruct::SerializeTaggedProperties",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "4ff74644d618bd092cf57a559ea03fe653616e56182b0db2fc1f29028a4ae75d",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "1623c123e7d6764a2190f26fe76099658a3c6474d05a70fbe5f0aebb9258f43c",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStruct::SerializeExpr",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "75a406414e90949cfbc3ec9c6147b9e37270a82b5de40a2a975529e900ac540e",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "c418c0c3802fd0f0872def8fc649e3e392e3b200ae413a9b28a9dfdc8e540405",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UState::Serialize",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "2ce968a1da200eac8adc6abf74a2242cb22a915c0561bb3ca578d0c2c9e91a1a",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UFunction::Serialize",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "e342958f6bfd01a9aa0a22f76f9f0be6145b77d113d754166109408915679f0f",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "0196aba41b2fcddf154ea23b369d97176fa87b0a769ade422cf09bbd38f7692f",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UClass::Serialize",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "f70f130997902c84732e7175e436368cf5ffafb553a6f2450ce4cac38ce8e9d8",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "8a713a24e33eb84eef3ef35a08625bf10e248ab0c835fa482a17a1721daa08cb",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UConst::Serialize",
+      "C98_implementation_file": "UnClass.cpp",
+      "C98_method_source_sha256": "8ae87101d5cf089aae4ef7e07bd0e78a5259caf2af96075859fe0a20a05a6c11",
+      "T99_inherited_v400_implementation_file": "UnClass.cpp",
+      "T99_inherited_v400_method_source_sha256": "b73d497fa6832320ff32d93742ad4686fe805df5d2a9b62eacdde02cd62796a0",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UEnum::Serialize",
+      "C98_implementation_file": "UnObj.cpp",
+      "C98_method_source_sha256": "5ff39d416763da5e215ad43f267b70c513a06b9f7a60793348e11efe835b52d4",
+      "T99_inherited_v400_implementation_file": "UnObj.cpp",
+      "T99_inherited_v400_method_source_sha256": "327fc9475963cd7389e19adaa5dcca3f7a18e839ae9a516bb85e78cf0546ceae",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UProperty::Serialize",
+      "C98_implementation_file": "UnProp.cpp",
+      "C98_method_source_sha256": "95206c93d3f5bbc598aee550630bdcb4a465172987d0576b8048cd9293542724",
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "0b8eb65b6442a959eb5cb920f362baca2748a89b9ec86868d4c398d3a1a94719",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UBoolProperty::Serialize",
+      "C98_implementation_file": "UnProp.cpp",
+      "C98_method_source_sha256": "10f2f00d943d2673bb4f22e47f9dabd95032f9b347b259484aed6edeea16dfec",
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "a135226248b9e74e666a72add84dfffb07b65b2702c2e717b47ffc2132d82c3b",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UBoolProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "0445f10db43cf05e4a3a2d149899dbe8e5979e0d0022a3dc0253919ea4578bac",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UByteProperty::Serialize",
+      "C98_implementation_file": "UnProp.cpp",
+      "C98_method_source_sha256": "882492ebbd7970a87910f2e7d6d44e0895c7b0fd0e86176019405fba841ba6b9",
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "82e72c924392a1afc220670ff74a2860e7e0d0c104ba482848367cd22999573f",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UByteProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "2b97906893d8d93f108a3928fb4315ec763e566b9bf2283a2bb19cb3c318238e",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UObjectProperty::Serialize",
+      "C98_implementation_file": "UnProp.cpp",
+      "C98_method_source_sha256": "a956345ff605196ad157728bd2f92f636bbd652c86c3dd42ee97e9374261062a",
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "5b2db1288983c85b1a5282b626bf842918d045e7ee73246b8826ff57ed24c546",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UObjectProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "0c0689769ef3a47036289d3c37da10539340588ce974ab31b724e52059a2c2b1",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UClassProperty::Serialize",
+      "C98_implementation_file": "UnProp.cpp",
+      "C98_method_source_sha256": "48f559276fc329076f39439c66284bd3e638bdfd6c8e03079313ba229ed7ba14",
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "a21addf6bec6afb9748e34a51b8202c28ca698a386d6e2bea7aeb3fb9d81573c",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStructProperty::Serialize",
+      "C98_implementation_file": "UnProp.cpp",
+      "C98_method_source_sha256": "758232149faf797ebb799cd5169c1b8a83fd5b9bfae3500debd97fcba86b62fd",
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "b5edc6c555921184656f7cc8326b6c1de470946d75b69b7e74357d596d363ba4",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStructProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "d4c576e57ca9b392df67effdb1fc17dc091b2bed638032a14efc81e0429aa3f9",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStrProperty::Serialize",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "17a9653d42ff0a13667fc04b570aa0667238b3b9adb34f635e9e7190f9eeabcb",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStrProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "ea42ed8475bb694a18308ecd3953bf8d66e21279244dcd3381aae040b18b90f3",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UStringProperty::Serialize",
+      "C98_implementation_file": "UnProp.cpp",
+      "C98_method_source_sha256": "cb63b1077b64da14b3c0cf388e716bbddb33ad724227596df9612987b0a15fed",
+      "T99_inherited_v400_implementation_file": null,
+      "T99_inherited_v400_method_source_sha256": null,
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UArrayProperty::Serialize",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "96cd09ffb60cdecceb0766cf95b2862dd51704ef9ccad0e750142f7ab838c9cf",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UArrayProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "949cdc989c857ab31d5542ff5886e514f25e005d7028ce3668de3045e50a4b43",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UFixedArrayProperty::Serialize",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "c22282f95faae18f2437b202896728b86d4db85d7b3dcbc3206e56c01b37ada0",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UFixedArrayProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "7d99d912bc2412bd7d0ccc7e5b84272225dfd871b327017820ccf057997d5ffd",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UMapProperty::Serialize",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "9bef16516f25782049213af8e6961fd7a57a1b578ec324457b265d187d319bd4",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UMapProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "67bc7d95d1349270ac6bf993e1f6c1ab11f90243a3c7abbbda37490087f45589",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UIntProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "5d6b7401b9330f685b4d545aa63414b4441a8042c421c8679966b09421f8b5f2",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UFloatProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "d9f12071c63fc94c078ff169dd95fd42462543efde228a35d252760dfa3841ff",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UNameProperty::SerializeItem",
+      "C98_implementation_file": null,
+      "C98_method_source_sha256": null,
+      "T99_inherited_v400_implementation_file": "UnProp.cpp",
+      "T99_inherited_v400_method_source_sha256": "02420ffb2dd7678fd9ee716c36d921824fb622520d42cbcb6bfe14d6e6a9fd9a",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    },
+    {
+      "symbol": "UObject::Serialize",
+      "C98_implementation_file": "UnObj.cpp",
+      "C98_method_source_sha256": "8a8b43502479860bc3ab326825a3b7923edb0505931a2e0ce8ed51ecd6a7a0b4",
+      "T99_inherited_v400_implementation_file": "UnObj.cpp",
+      "T99_inherited_v400_method_source_sha256": "88602e222f51b8747cd57c24db1a51fbe6fd043b70c5a015a05415565240c996",
+      "trivial_whitespace_equivalence_not_full_parity": false,
+      "same_raw_text": false
+    }
+  ],
+  "counts": {
+    "both": 16,
+    "whitespace_identical": 0,
+    "different_or_missing": 33
+  },
+  "warning": "Lexer-based whitespace-normalized method bodies do not establish compiled identity; version gates, macros, linkers, class types and actual v432 compiled behavior still require separate verification."
+}

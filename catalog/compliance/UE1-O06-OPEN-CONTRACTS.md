@@ -2,6 +2,10 @@
 
 Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation IDs. The canonical operation remains O06. Use the append-only UE1-O06-TEST-EVENTS.jsonl and latest UE1-O06-TEST-STATUS.json; do not rerun matching PASS tests just to reconstruct progress.
 
+## G3 source discovery checkpoint — 403/403 new tests (2026-10-26)
+
+G3 **NOT ACCEPTED**. Two final source-discovery-focused tests passed (244/244 C227 original compiled Core.lib import symbols and original header aliases; 159/159 C98 v1.200 and inherited T99 v400 source method navigation and historical PASS test/output hashes). 57 previously missing C227 Core method declarations across 25 actual compiled types are now in the expanded 91-row machine matrix. These original compiled import symbols DO NOT certify the C227 implementation code or native loaded values; the v227 source tree has no original UnClass.cpp or UnProp.cpp and the inspected build artifacts contain Core.lib without Core.dll. G3's 16 full contract acceptances still await source/native coverage, principally G3-01/02/08/15. No G3 production reader changes, no repeat of the sealed T99 G5 tests.
+
 ## G3 complete pre-execution requirements (2026-10-26)
 
 **G3 PLANNED, NOT ACCEPTED. Exactly 16 source/native acceptance contracts** recorded in [UE1-O06-G3-ACCEPTANCE-PLAN.md](UE1-O06-G3-ACCEPTANCE-PLAN.md), with a SHA-aware [34-row matrix](UE1-O06-G3-ACCEPTANCE-MATRIX.json): 14 C98/Unreal v1.200 currently mapped Core class/property symbols, 18 T99/UT99 v432 mapped symbols, and 2 distinct C227/Unreal v1.227 **MISSING Core implementation/source-register prerequisites**. The canonical v227 Core currently has Classes/Inc but not UnClass.cpp or UnProp.cpp; obtain real native proof/source, do not borrow T99/C98 logic just because package version 69 overlaps.

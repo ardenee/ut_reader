@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 244,
+    "passed": 244,
+    "failed": [],
+    "scope": "C227 Core.lib authentic compiled IMPORT SYMBOL inventory and original header-only property GetID aliases",
+    "method_symbols": 57,
+    "classes": 25,
+    "new_source_defined_raw_type_aliases": {
+        "UPointerProperty": "NAME_IntProperty",
+        "UButtonProperty": "NAME_IntProperty",
+        "UAnyProperty": "NAME_VectorProperty"
+    },
+    "C227_native_loaded_value_proven": false,
+    "C227_serialization_CPP_source_available": false,
+    "G3_full_gate_decision": "OPEN",
+    "previous_24_historical_CLASSIC_tests_executed": 0
+}

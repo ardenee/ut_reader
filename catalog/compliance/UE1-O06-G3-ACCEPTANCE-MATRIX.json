@@ -3,7 +3,7 @@
   "kind": "G3_PRE_EXECUTION_ACCEPTANCE_REQUIREMENTS_NOT_RESULTS",
   "generated_utc": "2026-10-26T12:56:47.547485+00:00",
   "plan": "catalog/compliance/UE1-O06-G3-ACCEPTANCE-PLAN.md",
-  "register_sha256": "3d838539855151623005388b492f09488cf7106b9c276d2826aefd820d4852d4",
+  "register_sha256": "d3ab7705a626413dac406ad72c8186363882297f6f89ac97a2e15140bbe98a04",
   "gate_status": "G3_OPEN_PLAN_ONLY_NO_G3_GATE_TESTS_EXECUTED",
   "required_tests_count": 16,
   "contracts": [
@@ -95,7 +95,7 @@
   },
   "core_source_missing_C227_prerequisites": 2,
   "mapped_register_rows": 32,
-  "tracked_acceptance_rows_including_missing_C227": 34,
+  "tracked_acceptance_rows_including_missing_C227": 91,
   "source_files_and_sha": {
     "C98": {
       "Core/Src/UnClass.cpp": {
@@ -718,6 +718,1032 @@
       "registered_test": null,
       "candidate_test_source_sha256": null,
       "acceptance": "BLOCKED_MISSING_ORIGINAL_CORE_CPP_AND_REGISTER"
+    },
+    {
+      "register_id": "C227-COMPILED:UArrayProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UArrayProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UBoolProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UBoolProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UButtonProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UButtonProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UButtonProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UByteProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UByteProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UClass::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UClass::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-05",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UClass@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UClassProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UClassProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UConst::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UConst::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-06",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UConst@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UEnum::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UEnum::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-06",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UEnum@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UField::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UField::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UField@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UFixedArrayProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UFixedArrayProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UFunction::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UFunction::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-04",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UFunction@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UMapProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UMapProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UObject::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UObject::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-13",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UObject@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UObjectProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UObjectProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UPackage::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UPackage::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-13",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UPackage@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-07",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UState::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UState::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-04",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UState@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStrProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UStrProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStruct::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UStruct::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UStruct@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStructProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UStructProperty::Serialize",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-10",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UAnyProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UAnyProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UAnyProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UArrayProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UArrayProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UArrayProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UBoolProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UBoolProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UBoolProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UButtonProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UButtonProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UButtonProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UByteProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UByteProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UByteProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UClassProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UClassProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UClassProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UFixedArrayProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UFixedArrayProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UFixedArrayProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UFloatProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UFloatProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UFloatProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UIntProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UIntProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UIntProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UMapProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UMapProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UMapProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UNameProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UNameProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UNameProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UObjectProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UObjectProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UObjectProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UPointerProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UPointerProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStrProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UStrProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UStrProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStructProperty::SerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UStructProperty::SerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-10",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeItem@UStructProperty@@UBEXAAVFArchive@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UAnyProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UAnyProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UAnyProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UArrayProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UArrayProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UBoolProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UBoolProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UBoolProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UButtonProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UButtonProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UButtonProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UByteProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UByteProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UByteProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UClassProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UClassProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UClassProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UFixedArrayProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UFixedArrayProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UFixedArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UFloatProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UFloatProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UFloatProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UIntProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UIntProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UIntProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UMapProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UMapProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UMapProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UObjectProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UObjectProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UObjectProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UPointerProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UPointerProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-07",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStrProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UStrProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UStrProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStructProperty::NetSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UStructProperty::NetSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-10",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?NetSerializeItem@UStructProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UArrayProperty::ShouldSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UArrayProperty::ShouldSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?ShouldSerializeItem@UArrayProperty@@UBEHPBEH@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UClassProperty::ShouldSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UClassProperty::ShouldSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?ShouldSerializeItem@UClassProperty@@UBEHPBEH@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UObjectProperty::ShouldSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UObjectProperty::ShouldSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?ShouldSerializeItem@UObjectProperty@@UBEHPBEH@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UProperty::ShouldSerializeItem",
+      "branch": "C227",
+      "epic_symbol": "UProperty::ShouldSerializeItem",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-07",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?ShouldSerializeItem@UProperty@@UBEHPBEH@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStruct::SerializeBin",
+      "branch": "C227",
+      "epic_symbol": "UStruct::SerializeBin",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeBin@UStruct@@UAEXAAVFArchive@@PAE@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStruct::SerializeTaggedProperties",
+      "branch": "C227",
+      "epic_symbol": "UStruct::SerializeTaggedProperties",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeTaggedProperties@UStruct@@UAEXAAVFArchive@@PAEPAVUClass@@1H@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
+    },
+    {
+      "register_id": "C227-COMPILED:UStruct::SerializeExpr",
+      "branch": "C227",
+      "epic_symbol": "UStruct::SerializeExpr",
+      "current_register_status": "COMPILED_IMPORTED_SYMBOL_NOT_IN_SERIALIZER_REGISTER",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "BuildTmp/Win32Release/Core.lib",
+          "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a",
+          "compiler_mangled_symbol": "?SerializeExpr@UStruct@@UAE?AW4EExprToken@@AAHAAVFArchive@@@Z"
+        }
+      ],
+      "reader": "UNRESOLVED C227 compiled Core method body and native observable semantics",
+      "registered_test": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "acceptance": "ORIGINAL_COMPILED_SYMBOL_VERIFIED_SERIALIZATION_BEHAVIOR_OPEN",
+      "native_loader_values": null
     }
   ],
   "existing_candidate_tests": {
@@ -918,5 +1944,126 @@
     "C227 Emitter native/game overrides in G5",
     "G4 geometry/mesh/level/audio",
     "G6 final O06 certification"
-  ]
+  ],
+  "C227_original_exported_methods_requiring_implementation_or_exclusion": 57,
+  "C227_original_class_property_types_exposed": 25,
+  "C227_compiled_import_surface_sha256": "d24855bda01eb5516c1d201758e02431c67d7f073fe135872e9867544ede075c",
+  "C98_T99_original_cpp_lexical_diff_manifest_sha256": "4ad3929f2572cb2d63121516e1963f6b39d5f00fca2096948195a838cdd01772",
+  "source_navigation_C98_T99_method_signature_count": 33,
+  "source_navigation_both_profile_body_present": 16,
+  "source_navigation_C98_T99_whitespace_identical": 0,
+  "G3_02_inventory_status": "C98_14_T99_18_MAPPED; C227_57_COMPILED_IMPORT_SYMBOLS_VERIFIED_UNREGISTERED_BODY_NOT_CERTIFIED",
+  "G3_01_source_status": "C98_CoreCPP_PINNED T99_v400CPP_v432_HEADER_PINNED C227_DECLARATIONS_AND_IMPORTS_PINNED C227_CPP_AND_DLL_LOADED_VALUE_MISSING",
+  "scope_warning": "57 v227 import declarations prove existence of methods but NOT implementation equivalence, native loaded values, or that they are all serialized to a game package. 91 rows is initial34 including 2 generic C227 gaps plus57 discovered method dependencies; still exactly16 acceptance contracts.",
+  "register_semantically_stable_except_timestamp_sha256": "40c99ba4bc353e19727e06e1238758381c4792fa193cb3d9bb5f886cfc5b8b00",
+  "register_semantic_fingerprint_rule": "File content with only root updated_at_utc replaced by <IGNORED_TIMESTAMP> (runner may update timestamp on test event). All actual serializer entries must match byte-for-byte.",
+  "contract_state_2026_10_26": {
+    "G3-01": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [
+        "Original C98 and T99 C++ pinned; C227 UnType.h and original Core.lib pinned"
+      ],
+      "decisive_remaining_requirement": "C227 original Core implementation DLL/CPP and chosen version/load profile missing"
+    },
+    "G3-02": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [
+        "57 C227 compiled imported methods across 25 property/class types pinned; C98 14, T99 18 original register rows pinned"
+      ],
+      "decisive_remaining_requirement": "All C227 57 missing source-specific method implementations/entry dispositions, no C227 load oracle"
+    },
+    "G3-03": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-04": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-05": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-06": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-07": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-08": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [
+        "C227 UPointerProperty and UButtonProperty have NAME_IntProperty wire IDs, UAnyProperty NAME_VectorProperty explicitly in Core/Inc/UnType.h"
+      ],
+      "decisive_remaining_requirement": "C227 compiled SerializeItem loaded bytes/underlying source and differences missing"
+    },
+    "G3-09": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-10": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-11": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-12": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-13": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-14": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [],
+      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+    },
+    "G3-15": {
+      "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
+      "pinned_current_subproofs": [
+        "Existing T99 compiled UClass/UObject native proof SHA reused, 24 class tests reusable"
+      ],
+      "decisive_remaining_requirement": "C98 and C227 native loader actual loaded fields not available in examined original source BuildTmp"
+    },
+    "G3-16": {
+      "verdict": "BLOCKED_PENDING_G3_01_TO_15",
+      "pinned_current_subproofs": [
+        "Current G3 index documented, no source-wide 16-contract full method acceptance attempted"
+      ],
+      "decisive_remaining_requirement": "Prerequisite 15 complete contracts currently unavailable"
+    }
+  },
+  "G3_source_subproofs_conclusively_PASS": {
+    "C227_original_Core_imports": {
+      "script": "verify-ue1-o06-g3-c227-compiled-core-symbols.php",
+      "assertions": 244,
+      "symbols": 57,
+      "classes": 25,
+      "scope": "real imported compiled symbol existence/headers ONLY"
+    },
+    "C98_T99_original_CPP_inventory": {
+      "script": "verify-ue1-o06-g3-c98-t99-source-inventory.php",
+      "assertions": 159,
+      "original_method_signatures": 33,
+      "bodies_found_in_both": 16,
+      "prior_test_script_log_reused_without_execution": 24,
+      "scope": "exact source C++ file SHA and method lexical navigation ONLY"
+    }
+  }
 }
