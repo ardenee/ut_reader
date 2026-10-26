@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "method": "T99:UAnimation::Serialize",
+  "scope": "UT99_v432_T99_source_profile_package_reader_loading_only",
+  "decision": "FULL",
+  "limitations": "Does not assert general UObject all-class FULL, C98 v1200, C227 v227, other engines, editor transaction/saving archives, or arbitrary subclass custom serializers.",
+  "seven_verified_criteria": {
+    "pinned_source_and_dispatch": "VERIFIED",
+    "complete_native_field_values_and_references": "VERIFIED",
+    "archive_bytes_and_consumption": "VERIFIED",
+    "malformed_input_error_semantics": "VERIFIED",
+    "inherited_and_version_variant_semantics": "VERIFIED",
+    "current_acceptance_tests": "VERIFIED",
+    "independent_full_method_review": "VERIFIED"
+  },
+  "genuine_native_loaded_original_objects": 3,
+  "source_native_fields_verified": 3694,
+  "source_native_nested_numeric_array_bytes_verified": 540836,
+  "native_malformed_cases_compared": 8,
+  "compiled_CDB_exact_failure_cursors": 6,
+  "compiled_engine_reruns_for_final_review": 0,
+  "generic_inherited_UObject_Serialize_all_class_FULL": "BLOCKED_SEPARATELY",
+  "current_production_source_sha256": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
+  "independent_final_acceptance_script": "catalog/bin/verify-ue1-o06-g5-t99-animation-independent-full.php",
+  "independent_final_acceptance_script_sha256": "355768cdb2b373750d1854a450ceda8c3ebd54468eea2bbf1371cf2535f371e3",
+  "independent_final_acceptance_log": "catalog\\compliance\\evidence\\o06\\20261026T002728732Z-cdd1c4ca-DEV-verify-ue1-o06-g5-t99-animation-independent-full.php.txt",
+  "independent_final_acceptance_log_sha256": "7566e768bcf26dd8e355a42097b038e53254bd0dbbda53d55d87fb0ee03b1a37",
+  "original_compiled_loaded_value_manifest": "catalog/compliance/UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json",
+  "original_compiled_loaded_value_manifest_sha256": "5ed5fb1bc07be93b1fa8e5a5b6dee271cf724b83981e8ab50b37665e18a2abe2",
+  "compiled_native_error_cursor_manifest": "catalog/compliance/UE1-O06-G5-T99-ANIMATION-NATIVE-ERROR-CURSORS.json",
+  "compiled_native_error_cursor_manifest_sha256": "54048200d4036b703006e53390bc47ff3c697556f62f7253bbdb4ab75bcf99e5",
+  "source_compiled_version_rule": "Compiled v432 UAnimation derived method has unconditional inherited UObject then RefBones, Moves, AnimSeqs; UAnimation own field operators have no Ar.Ver gate; generic shared UObject gates have separate native proof. This certifies the v432 loader source profile, not another engine.",
+  "relevant_original_inherited_verification": [
+    "UE1-O06-G5-MULTIMETHOD-STATEFRAME-V68-NATIVE.json",
+    "UE1-O06-G5-UOBJECT-NATIVE-TAG-NEGATIVE-4.json"
+  ],
+  "relevant_original_inherited_verification_sha256": {
+    "UE1-O06-G5-MULTIMETHOD-STATEFRAME-V68-NATIVE.json": "b99191eb6ffa2252033a8d289f8b59a07beb923f30e2794d76ad400ea79c91d0",
+    "UE1-O06-G5-UOBJECT-NATIVE-TAG-NEGATIVE-4.json": "0cd2de769a06cf2f1ce8c498553e361cf8ea0b1b5bf7e516021be31a2c5f7bc3"
+  }
+}

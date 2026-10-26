@@ -1,0 +1,25 @@
+﻿{
+    "ok": true,
+    "checks": 90,
+    "passed": 90,
+    "failed": [],
+    "method": "T99:UAnimation::Serialize",
+    "decision": "FULL_UT99_V432_SOURCE_PROFILE_ONLY",
+    "seven_gates": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
+    },
+    "original_compiled_whole_loaded_objects": 3,
+    "original_native_value_comparisons": 3694,
+    "native_matched_numeric_array_bytes": 540836,
+    "distinct_native_malformed_outcomes": 8,
+    "compiled_exact_native_error_cursors": 6,
+    "native_engine_reruns_this_review": 0,
+    "general_T99_UObject_full": "NOT_CLAIMED",
+    "limitations": "UT99 v432 package-loading subclass serializer only; generic UObject all-class and C98/C227, saving/transaction archives excluded"
+}

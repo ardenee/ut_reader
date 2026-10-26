@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-25T23:40:22.6313954Z",
-    "head_commit":  "a64a743b",
+    "updated_at_utc":  "2026-10-26T00:27:29.3561274Z",
+    "head_commit":  "32e4f2e1",
     "current_target":  "DEV",
     "current_source_sha256":  "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
     "tests":  [
@@ -723,6 +723,18 @@
                       "run_id":  "20261024T101531600Z-61c1892d",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261024T101531600Z-61c1892d-DEV-verify-ue1-o06-g5-real-skeletal-vector-arrays.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-t99-animation-independent-full.php",
+                      "test":  "verify-ue1-o06-g5-t99-animation-independent-full.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T00:27:29.3361220Z",
+                      "source_sha256":  "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
+                      "test_sha256":  "355768cdb2b373750d1854a450ceda8c3ebd54468eea2bbf1371cf2535f371e3",
+                      "run_id":  "20261026T002728732Z-cdd1c4ca",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T002728732Z-cdd1c4ca-DEV-verify-ue1-o06-g5-t99-animation-independent-full.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-t99-animation-native-error-cursors.php",

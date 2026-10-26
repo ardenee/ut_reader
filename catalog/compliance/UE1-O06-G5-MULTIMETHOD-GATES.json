@@ -186,27 +186,28 @@
         "complete_native_field_values_and_references": "VERIFIED",
         "archive_bytes_and_consumption": "VERIFIED",
         "malformed_input_error_semantics": "VERIFIED",
-        "inherited_and_version_variant_semantics": "OPEN",
+        "inherited_and_version_variant_semantics": "VERIFIED",
         "current_acceptance_tests": "VERIFIED",
-        "independent_full_method_review": "OPEN"
+        "independent_full_method_review": "VERIFIED"
       },
-      "closure_artifact": null,
-      "closure_sha256": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UANIMATION-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "663a697eedcc7677b6ec7fef292a073b07f94d5553a98a23899d092780be4b7b",
       "blocker_summary": "Complete nested keys for two genuine animation packages; inheritance and malformed variants remain.",
-      "decision": "BLOCKED",
-      "decisive_blocker": "inherited_UObject_tagged_property_StateFrame_version_variants_and_independent_final_method_signoff",
-      "next_action": "Exact six FName/TArray compiled native cursor differences now CLOSED; reuse pinned CDB logs and the 91/91 focus proof. Next independently resolve applicable inherited UObject tagged/default/StateFrame and archive-version variants for UAnimation and issue final seven-criterion method acceptance, without repeating the 3,694 loaded-value comparisons.",
-      "reason": "New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Subsequent original compiled v432 CDB first-chance capture verifies six exact ULinkerLoad archive error cursors against the current source-specific reader (3 FName failures at 153323/34393/593470, 3 source TArray negative-count physical EOF failures at 899657/899657/413388), each fully source/binary/input/log SHA sealed with 91/91 current DEV acceptance; prior eight native rejection outcomes and all 3694 positive loaded fields remain intact. Method-specific malformed-input gate is complete for these applicable FName/TArray and physical EOF failure paths. The independent method remains BLOCKED on source-legal inherited UObject/tagged-property/version variants and final independent method review; do not claim FULL.",
+      "decision": "FULL",
+      "decisive_blocker": null,
+      "next_action": "This v432 UAnimation serializer source profile is FULL; stop testing this method. Continue the remaining three G5 methods: UObject, UClass, USkeletalMesh.",
+      "reason": "New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Subsequent original compiled v432 CDB first-chance capture verifies six exact ULinkerLoad archive error cursors against the current source-specific reader (3 FName failures at 153323/34393/593470, 3 source TArray negative-count physical EOF failures at 899657/899657/413388), each fully source/binary/input/log SHA sealed with 91/91 current DEV acceptance; prior eight native rejection outcomes and all 3694 positive loaded fields remain intact. Method-specific malformed-input gate is complete for these applicable FName/TArray and physical EOF failure paths. The subsequent one-time independent 90/90 v432 source-profile acceptance confirms all seven subclass method criteria with inherited generic UObject variants reusing original SHA-pinned native proofs, without rerunning any compiled object loads. FULL only for v432 UAnimation package-loading profile; general UObject, C98 and C227 remain independently BLOCKED.",
       "last_consolidated_review": "whole_v432_native_full_values_3694_and_6_exact_malformed_native_cursors_91_checks_2_remaining_gates",
       "native_v432_three_original_animation_full_member_oracle": "VERIFIED",
       "native_v432_all_70_moves_record_values_checked": 3694,
       "native_v432_all_nested_key_array_bytes_checked": 540836,
       "native_v432_distinct_malformed_rejection_agreements": 8,
-      "native_v432_malformed_error_cursor_status": "SIX_COMPILED_EXACT_CURSOR_PARITY_VERIFIED",
+      "native_v432_malformed_error_cursor_status": "CLOSED_SHA_PINNED",
       "native_v432_whole_animation_evidence_manifest": "catalog/compliance/UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json",
       "native_v432_whole_animation_evidence_SHA256": "5ed5fb1bc07be93b1fa8e5a5b6dee271cf724b83981e8ab50b37665e18a2abe2",
       "compiled_v432_six_native_exception_cursors_verified": true,
-      "native_v432_cursor_compiled_manifest_sha256": "54048200d4036b703006e53390bc47ff3c697556f62f7253bbdb4ab75bcf99e5"
+      "native_v432_cursor_compiled_manifest_sha256": "54048200d4036b703006e53390bc47ff3c697556f62f7253bbdb4ab75bcf99e5",
+      "native_v432_source_profile_full_review_checks": 90
     },
     "T99:USound::Serialize": {
       "criteria": {

@@ -71,12 +71,12 @@ status={
   "blocker":"inherited_ULodMesh_and_negative_cases",
  },
  "T99:UAnimation::Serialize":{
-  "result":"BLOCKED",
+  "result":"FULL",
   "pinned":True,
   "current":True,
-  "reason":"New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Subsequent original compiled v432 CDB first-chance capture verifies six exact ULinkerLoad archive error cursors against the current source-specific reader (3 FName failures at 153323/34393/593470, 3 source TArray negative-count physical EOF failures at 899657/899657/413388), each fully source/binary/input/log SHA sealed with 91/91 current DEV acceptance; prior eight native rejection outcomes and all 3694 positive loaded fields remain intact. Method-specific malformed-input gate is complete for these applicable FName/TArray and physical EOF failure paths. The independent method remains BLOCKED on source-legal inherited UObject/tagged-property/version variants and final independent method review; do not claim FULL.",
-  "next":"Exact six FName/TArray compiled native cursor differences now CLOSED; reuse pinned CDB logs and the 91/91 focus proof. Next independently resolve applicable inherited UObject tagged/default/StateFrame and archive-version variants for UAnimation and issue final seven-criterion method acceptance, without repeating the 3,694 loaded-value comparisons.",
-  "blocker":"inherited_UObject_tagged_property_StateFrame_version_variants_and_independent_final_method_signoff",
+  "reason":"New original v432 Core.dll+Engine.dll native whole-method comparison used actual LoadPackage/StaticLoadObject on three genuine v69 UAnimation exports with 0/2/68 Moves, 0/2/68 AnimSeqs and all 143 FNamedBone source referents. Current production source reader agrees on 3,694 individually reviewed native fields/records (3,667 emitted object/record lines), all 70 MotionChunk arrays, and 540,836 original numeric key/index bytes; archive fully consumed in all three, with zero source errors. All three inherit exactly RF_HasStack=0, saved tag count 0. Eight distinct disposable original-corruption cases (RefBone FName invalid, AnimSeq FName invalid, negative parent and nested array counts, truncated original) are rejected by original native compiled v432 and source PHP, with every source, DLL, executable, original, mutation, log SHA pinned in UE1-O06-G5-T99-ANIMATION-ONE-METHOD-NATIVE.json. Subsequent original compiled v432 CDB first-chance capture verifies six exact ULinkerLoad archive error cursors against the current source-specific reader (3 FName failures at 153323/34393/593470, 3 source TArray negative-count physical EOF failures at 899657/899657/413388), each fully source/binary/input/log SHA sealed with 91/91 current DEV acceptance; prior eight native rejection outcomes and all 3694 positive loaded fields remain intact. Method-specific malformed-input gate is complete for these applicable FName/TArray and physical EOF failure paths. The subsequent one-time independent 90/90 v432 source-profile acceptance confirms all seven subclass method criteria with inherited generic UObject variants reusing original SHA-pinned native proofs, without rerunning any compiled object loads. FULL only for v432 UAnimation package-loading profile; general UObject, C98 and C227 remain independently BLOCKED.",
+  "next":"This v432 UAnimation serializer source profile is FULL; stop testing this method. Continue the remaining three G5 methods: UObject, UClass, USkeletalMesh.",
+  "blocker":None,
  },
  "T99:USound::Serialize":{
   "result":"BLOCKED",
@@ -985,6 +985,35 @@ for name in reg["methods"]:
         old["native_v432_malformed_error_cursor_status"]="SIX_COMPILED_EXACT_CURSOR_PARITY_VERIFIED"
         old["native_v432_whole_animation_evidence_manifest"]="catalog/compliance/"+artifact.name
         old["native_v432_whole_animation_evidence_SHA256"]=sha(artifact)
+        final_test="verify-ue1-o06-g5-t99-animation-independent-full.php"
+        final_ev=next((e for e in reversed(events)
+            if e.get("test")==final_test and e.get("state")=="PASS"),None)
+        assert final_ev is not None
+        assert final_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/final_test)==final_ev["test_sha256"]
+        final_log=ROOT/final_ev["log"].replace("\\","/")
+        assert sha(final_log)==final_ev["output_sha256"]
+        final_result=read(final_log)
+        assert final_result["ok"] and final_result["checks"]==final_result["passed"]==90
+        assert final_result["decision"]=="FULL_UT99_V432_SOURCE_PROFILE_ONLY"
+        assert final_result["native_engine_reruns_this_review"]==0
+        assert final_result["general_T99_UObject_full"]=="NOT_CLAIMED"
+        closure=C/"UE1-O06-G5-UANIMATION-SOURCE-PROFILE-FULL-ACCEPTANCE.json"
+        done=read(closure)
+        assert done["method"]==name and done["decision"]=="FULL"
+        assert done["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert done["independent_final_acceptance_script_sha256"]==sha(ROOT/"catalog"/"bin"/final_test)
+        assert done["independent_final_acceptance_log_sha256"]==sha(final_log)
+        assert done["original_compiled_loaded_value_manifest_sha256"]==sha(artifact)
+        assert done["compiled_native_error_cursor_manifest_sha256"]==sha(cursor_artifact)
+        assert done["seven_verified_criteria"]==final_result["seven_gates"]
+        assert all(v=="VERIFIED" for v in final_result["seven_gates"].values())
+        assert done["generic_inherited_UObject_Serialize_all_class_FULL"]=="BLOCKED_SEPARATELY"
+        gates.update(final_result["seven_gates"])
+        old["closure_artifact"]="catalog/compliance/"+closure.name
+        old["closure_sha256"]=sha(closure)
+        old["native_v432_malformed_error_cursor_status"]="CLOSED_SHA_PINNED"
+        old["native_v432_source_profile_full_review_checks"]=90
     assert entry["result"] in ("FULL","BLOCKED","FAILED")
     if entry["result"]=="FULL":
         assert set(gates)==set(criteria)
