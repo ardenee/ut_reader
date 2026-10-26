@@ -1,0 +1,11 @@
+﻿{
+    "ok": false,
+    "passed": 36,
+    "total": 40,
+    "failures": [
+        "v22_July_invalid_bound_validity_rejected",
+        "v22_May_invalid_bound_validity_rejected",
+        "v23_July_invalid_bound_validity_rejected",
+        "v23_May_invalid_bound_validity_rejected"
+    ]
+}

@@ -76,7 +76,7 @@ $check('php_bool_variable_bin_guard',
 $check('source_checked_label_table_alignment',
     str_contains($body,'checkState((iCode&3)==0)'));
 $check('php_checked_label_table_alignment',
-    str_contains($php,'($start+1)%4!==0'));
+    str_contains($php,'($codeStart+1)%4!==0'));
 $check('source_recurses_until_end_params',
     (bool)preg_match('/while\s*\(\s*SerializeExpr\(\s*Script\s*,\s*iCode\s*,\s*Ar\s*\)\s*!=\s*EX_EndFunctionParms\s*\)/',$body));
 $check('php_recurses_until_end_params',

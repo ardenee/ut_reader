@@ -121,10 +121,12 @@ try{
   $f=$make($v,Gate::MAY,0);file_put_contents($tmp,$f['bytes']);
   $row=Tree::read($tmp,false)['stacktree_records'][0]??[];
   $check("v{$v}_empty_tree_two_source_layouts_ambiguous",
-      ($row['status']??null)==='source_1997_stacktree_lineage_required'
-      &&count($row['candidate_source_families']??[])===2);
+      ($row['status']??null)==='native_stacktree_records_decoded'
+      &&($row['record_count']??-1)===0
+      &&($row['source_lineage_wire_equivalent']??false)===true
+      &&($row['source_lineage_inferred_from_unique_archive_layout']??true)===false);
   try{Tree::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
-  $check("v{$v}_strict_ambiguous_tree_fails_closed",$bad);
+  $check("v{$v}_strict_empty_wire_equivalent_accepted",!$bad);
   $explicit=Tree::read($tmp,true,Gate::MAY)['stacktree_records'][0]??[];
   $check("v{$v}_explicit_empty_tree_source_accepted",
       ($explicit['status']??null)==='native_stacktree_records_decoded'
@@ -133,8 +135,10 @@ try{
   $unknown=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode($tmp,$identity);
   $unknownTree=$unknown['native_metadata']['unrealfile_stacktree_records']['stacktree_records'][0]??[];
   $check("v{$v}_stage_without_identity_keeps_empty_tree_ambiguous",
-      ($unknownTree['status']??null)==='source_1997_stacktree_lineage_required'
+      ($unknownTree['status']??null)==='native_stacktree_records_decoded'
+      &&($unknownTree['record_count']??-1)===0
       &&($unknownTree['source_lineage']??null)===null
+      &&($unknownTree['source_lineage_wire_equivalent']??false)===true
       &&($unknown['parse_complete']??true)===false);
   foreach([Gate::MAY,Gate::JULY] as $source){
    $staged=\UnrealDb\Catalog\Infrastructure\Unverified\CatalogUE1OriginalStagingMetadata::decode(

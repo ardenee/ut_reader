@@ -1,0 +1,12 @@
+﻿
+Fatal error: Uncaught RuntimeException: Original UScript expression exceeds in-memory Num in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php:311
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php(315): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::exact(Array, 1)
+#1 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php(138): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::byte(Array)
+#2 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php(141): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::expression(Array, 1)
+#3 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php(285): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::{closure:UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::expression():140}()
+#4 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php(125): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::expression(Array, 0)
+#5 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php(63): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::parseStream('\x1D\xD6\xFF\xFF\xFF#\x00\x00\xC0?\x00\x00\x00\xC0\x00...', 71, 1, 3, 'unreal_1997_jul...')
+#6 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-original-unrealfile-script-expressions.php(102): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader::read('C:\\Users\\arden\\...', true, 'unreal_1997_jul...')
+#7 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1OriginalUnrealfileScriptExpressionReader.php on line 311

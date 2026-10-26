@@ -68,8 +68,10 @@ try{
   try{Mesh::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
   $check("v{$v}_{$family}_out_of_bounds_resmap_rejected",$bad);
   file_put_contents($tmp,substr_replace($f['bytes'],"\x03",$f['native']+24,1));
-  try{Mesh::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
-  $check("v{$v}_{$family}_invalid_bbox_flag_rejected",$bad);
+  $flag=Mesh::read($tmp,true)['mesh_headers'][0]??[];
+  $check("v{$v}_{$family}_raw_bbox_validity_byte_preserved",
+      ($flag['local_bound']['is_valid']??null)===3
+      &&($flag['status']??null)==='native_mesh_header_decoded');
   file_put_contents($tmp,substr_replace($f['bytes'],pack('V',0xffffffff),$f['native']+73,4));
   try{Mesh::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
   $check("v{$v}_{$family}_negative_vertex_count_rejected",$bad);

@@ -1,0 +1,117 @@
+﻿{
+    "ok": true,
+    "decision": "G2_ACCEPTED_SOURCE_ARCHIVE_PROFILE_ONLY",
+    "scope": "May v0.86x/July v0.867 build-selected original UE1 Unrealfile v22/23 source and source-derived archive values; excludes missing original native runtime/genuine-all-assets oracles",
+    "total_checks": 692,
+    "passed": 692,
+    "failed": [],
+    "contracts": {
+        "G2-01": {
+            "checks": 10,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-02": {
+            "checks": 403,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-03": {
+            "checks": 6,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-04": {
+            "checks": 9,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-05": {
+            "checks": 12,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-06": {
+            "checks": 6,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-07": {
+            "checks": 11,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-08": {
+            "checks": 9,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-09": {
+            "checks": 7,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-10": {
+            "checks": 3,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-11": {
+            "checks": 6,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-12": {
+            "checks": 4,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-13": {
+            "checks": 10,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-14": {
+            "checks": 13,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-15": {
+            "checks": 7,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-16": {
+            "checks": 3,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-17": {
+            "checks": 26,
+            "failed": [],
+            "status": "VERIFIED"
+        },
+        "G2-18": {
+            "checks": 147,
+            "failed": [],
+            "status": "VERIFIED"
+        }
+    },
+    "registered_source_pairs": 98,
+    "mapped_source_pairs": 86,
+    "source_exclusions": 12,
+    "unique_existing_test_proofs": 29,
+    "source_build_sha256": {
+        "U86": {
+            "Engine.dsp": "a6af540ba870c311ad28f9620627af245f20abb99c72046b7c0e22c57c8d74fd",
+            "UnObj.cpp": "ad0f42f85f6e2f074b429ec890337d1aac9bb0f51ff73221dfa5bf9f917f52ff"
+        },
+        "U97": {
+            "Engine.dsp": "180bfccabb25ded64e351f98c9620c571dfbd39ca42d7f27518d58c32e8ff3b7",
+            "UnObj.cpp": "bbd4f3ca569e6aa38f9979e97a2bcfe7d4ce8c14cd200392e1cd08466fcf5b33"
+        }
+    },
+    "actual_original_native_loaded_values_certified": false,
+    "g5_v432_method_results_modified": false,
+    "other_engine_families_certified": false
+}

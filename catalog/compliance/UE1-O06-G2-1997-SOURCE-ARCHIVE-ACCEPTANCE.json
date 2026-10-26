@@ -1,0 +1,293 @@
+{
+  "schema": 1,
+  "generated_utc": "2026-10-26T12:36:12.044388+00:00",
+  "operation": "O06",
+  "gate": "G2",
+  "decision": "ACCEPTED_SOURCE_ARCHIVE_SCOPE_ONLY",
+  "applicable_source_versions": {
+    "U86": "May 1997 Unreal v0.86x",
+    "U97": "July 1997 Unreal v0.867",
+    "archive_versions": [
+      22,
+      23
+    ]
+  },
+  "scope": "Build-selected original Epic 1997 C++ source and Unrealfile v22/23 source-defined archive values, class reader dispatch, record bytes, property/script differences, negative fixtures and provenance; stock compiled original native game loaded-value runtime and all-genuine-asset parity NOT asserted; O06 broader OPEN",
+  "accepted_contracts": {
+    "G2-01": {
+      "checks": 10,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-02": {
+      "checks": 403,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-03": {
+      "checks": 6,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-04": {
+      "checks": 9,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-05": {
+      "checks": 12,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-06": {
+      "checks": 6,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-07": {
+      "checks": 11,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-08": {
+      "checks": 9,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-09": {
+      "checks": 7,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-10": {
+      "checks": 3,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-11": {
+      "checks": 6,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-12": {
+      "checks": 4,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-13": {
+      "checks": 10,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-14": {
+      "checks": 13,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-15": {
+      "checks": 7,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-16": {
+      "checks": 3,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-17": {
+      "checks": 26,
+      "failed": [],
+      "status": "VERIFIED"
+    },
+    "G2-18": {
+      "checks": 147,
+      "failed": [],
+      "status": "VERIFIED"
+    }
+  },
+  "accepted_contract_count": 18,
+  "final_independent_checks": 692,
+  "registered_source_pairs": 98,
+  "source_saveable_mapped_pairs": 86,
+  "source_unsaveable_exclusions": 12,
+  "native_serializer_group_negative_coverage": 11,
+  "supporting_DEV_named_test_scripts": 30,
+  "supporting_named_test_sha_and_logs": {
+    "verify-ue1-o06-1997-bounds-raw-byte.php": {
+      "test_sha256": "4060a6c4e25d1bc002cfe48e6d54ff3e830bf078b7f906a883e16221013ae271",
+      "log_sha256": "001258b5fd27d560d9f971adfe70f41b560944f455d3c1670dd924c3d9d712cc",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-o06-1997-build-selected-source.php": {
+      "test_sha256": "e39ff9cb6f41680a98daa7e8c6af938e277f21be2bf55be77ed31a903cb45ee4",
+      "log_sha256": "cf33dc72fee89bebfcfeae3e1e932572d3b1c12799006566202f96fabed7fb51",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-o06-g2-camera-transient.php": {
+      "test_sha256": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+      "log_sha256": "c6d9bcb0cbe417a662e3e7a5711457fbcacade39b96a494c9cfab63d54233139",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-o06-g2-rotation-bin-lineage.php": {
+      "test_sha256": "f5da8cd56bb7c6880b41f7b7461bc5eceda7a5b92e61ce52d008e8d0aa87b842",
+      "log_sha256": "b678e3817ea732efb074eb6a6543a8e81c5dc4ee3fa3fff2a1d9788c4039f11c",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-o06-g2-shared-transient.php": {
+      "test_sha256": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
+      "log_sha256": "10631f2ea33452ab462afdebf1ecdcf0371725adfb6a8a0a562c3e33228947cf",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-o06-g2-stacknode-may-july.php": {
+      "test_sha256": "5d889aee4f9043f2063e234ce89b0eaa87f327eb9ef85f084d1b9222a9de2f8f",
+      "log_sha256": "7ec108b677b5f77683101577990875b8d2fb4271758a6319ff9ab344b603bf8f",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-audio.php": {
+      "test_sha256": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+      "log_sha256": "2ce015b0500bd43129f257be03a9fefc5e35e41cf7c34ae0eadfd0a5c3389896",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-bit-archives.php": {
+      "test_sha256": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+      "log_sha256": "d4f30b276afecf26230b6612d01a9dfc09a0b1242fddf97554663d7793442de0",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-bsp-records.php": {
+      "test_sha256": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+      "log_sha256": "192702548c6b5aa82e2587ae2fd458a22b9ec32fd52706a0bada07f3bf3dd6fc",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-class-schemas.php": {
+      "test_sha256": "83e43df0b6a19eef075b85c22b27cfafc4e74cc3856c9d7798ee2fdbacd851bf",
+      "log_sha256": "fcfee1d29879fc6d858994a663f4a87da523a219f7943c27e527068c9867d26e",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-database-records.php": {
+      "test_sha256": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "log_sha256": "d4f30b276afecf26230b6612d01a9dfc09a0b1242fddf97554663d7793442de0",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-expression-token-inventory.php": {
+      "test_sha256": "25f93c301c40536ff203b4fb41e5f57ef3d2c6623bdabae90d0f82c737c6dd6e",
+      "log_sha256": "7a0573d4ca455bff3fa5bda34e72c2bb44d2aedb6fe650ea250e7645ce8a2961",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-external-schemas.php": {
+      "test_sha256": "ea038ed3a1a88c39fa3acf580e780413df6d81d5c81d5ecbdae2102687e7512e",
+      "log_sha256": "d40496ee4ebca31c2c534141e6c4e7687fa44c3229ea7fd983b7b1bd8dcb256b",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-inheritance.php": {
+      "test_sha256": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "log_sha256": "7aa4da69a0b504d3201ab924ffc92d0127dbada01674b8170a262fdc682eabad",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-level.php": {
+      "test_sha256": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
+      "log_sha256": "d4f43adafdb16c5fca2b96f3bb868c98d1fd77467ff517449b5d26e8a1141af7",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-lightmesh-data.php": {
+      "test_sha256": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
+      "log_sha256": "2ce015b0500bd43129f257be03a9fefc5e35e41cf7c34ae0eadfd0a5c3389896",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-mesh-records.php": {
+      "test_sha256": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "log_sha256": "f2d2fdd59c0d0122cee6e7b190c35b653161c39937c99585e0b45d8156977bb6",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-mesh.php": {
+      "test_sha256": "ddff67e356e96091173ff7cb838544c40168833855d8818550b9516db8b2e90a",
+      "log_sha256": "7b577de25298c2edd39e0ea3dbafb2104768b509f0a47ff32920b857c24509ed",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-metadata.php": {
+      "test_sha256": "54bac6e977b059aec0adee78266f9f5ddf8de903f6b83d526f32a54f7356122d",
+      "log_sha256": "888e44af91e9500aebce7be15a9b36baca94538a944df16abe0a9ba06bf5e7e5",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-model.php": {
+      "test_sha256": "577bcf1760ca359426b97ead24820722df6468605f1b2349ff664a097587b4e3",
+      "log_sha256": "41b8ce3fb1bb207f63b379134c0a674d6377e034d507cd39c59c6ee0b56227bf",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-object-bases.php": {
+      "test_sha256": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
+      "log_sha256": "5932efd5b8becce13a90009edc353683e22788993b1337072a3ba85b1a1b6f7a",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-polys-data.php": {
+      "test_sha256": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
+      "log_sha256": "00b39a951a206bb105cc40979d5a545bd23132657cb33bdad81d457b1aabf25f",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-primitive.php": {
+      "test_sha256": "438e4a07907500c06bf62478dcbb1095e85019b8f6043c0eac3089b0ab351cdb",
+      "log_sha256": "f2370a030a2b10d0030777e054c4c62aa4b8bf0c8996d3287b8d784975eb3ce5",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-properties.php": {
+      "test_sha256": "8fe6ed2f26743f1a91f3dc35c124ba0f09b7bde43a1e0014d9ac36828a7caf58",
+      "log_sha256": "f2370a030a2b10d0030777e054c4c62aa4b8bf0c8996d3287b8d784975eb3ce5",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-script-expressions.php": {
+      "test_sha256": "213cbe072fb3e37fef48322970d87f482ba4e351697feec7f35d01983e321d55",
+      "log_sha256": "20b67bf547631329d9fde3550bf73a24214245fd7db65194193374fc76be4f5a",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-script-may-july.php": {
+      "test_sha256": "27884cb436283ba27a4f85b997ede868eca1b41906a718312cba64244ed61b85",
+      "log_sha256": "e4ecdfc427879e5e79c433d8f48216a5315ed4b1a2767ed37ae02be3cfa685bc",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-special-headers.php": {
+      "test_sha256": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+      "log_sha256": "dfb105bc47ad1125f96a92c78ff489bc84396568591c3323340f80f1e9ba847c",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-stack-prefix.php": {
+      "test_sha256": "3d3a48154b3aec8a8c64bc92a69507fb965411f4570d9055cd7c538351eadf54",
+      "log_sha256": "32b307be5b14b8ef2ae4126251c01c43e57691bc2f65ce66ab8948a87089a5f9",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-stacktree-data.php": {
+      "test_sha256": "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
+      "log_sha256": "00b39a951a206bb105cc40979d5a545bd23132657cb33bdad81d457b1aabf25f",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    },
+    "verify-ue1-original-unrealfile-texture.php": {
+      "test_sha256": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
+      "log_sha256": "70146f559e7da4493f093852aacc2fea2678982deaa21b45a00208201275bd7c",
+      "source_fingerprint_at_acceptance": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+    }
+  },
+  "epic_source_build_selected_sha256": {
+    "U86": {
+      "Engine.dsp": "a6af540ba870c311ad28f9620627af245f20abb99c72046b7c0e22c57c8d74fd",
+      "UnObj.cpp": "ad0f42f85f6e2f074b429ec890337d1aac9bb0f51ff73221dfa5bf9f917f52ff"
+    },
+    "U97": {
+      "Engine.dsp": "180bfccabb25ded64e351f98c9620c571dfbd39ca42d7f27518d58c32e8ff3b7",
+      "UnObj.cpp": "bbd4f3ca569e6aa38f9979e97a2bcfe7d4ce8c14cd200392e1cd08466fcf5b33"
+    }
+  },
+  "frozen_plan_sha256": "a68225f498e5a82db01fe2c0594f8ba78f9f06dd207b816632abc295849f13e4",
+  "class_matrix_sha256": "f56f85ab097f71b9f5fcecc9845594b4ef66ffe40f91daaa6930cdba8cc60193",
+  "register_source_snapshot_sha256": "3d838539855151623005388b492f09488cf7106b9c276d2826aefd820d4852d4",
+  "independent_gate_script_sha256": "2ff604694da321365235771cd383f3923f33279be887367183dd990fbdaca4ec",
+  "independent_gate_log_sha256": "768ab59209b83009821ec11fa933a3b486424afa1affb0e6f257590809712ef3",
+  "gate_source_fingerprint": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+  "previous_original_G5_v432_oracles_rerun": false,
+  "source_native_1997_compiled_game_loaded_values_proven": false,
+  "early_G2_builds_licensee_ancestors_certified": false,
+  "other_O06_gates_accepted_by_this_release": false,
+  "pending_next_gates": [
+    "G3",
+    "G4",
+    "G5_remaining_non_T99_profiles",
+    "G6"
+  ]
+}

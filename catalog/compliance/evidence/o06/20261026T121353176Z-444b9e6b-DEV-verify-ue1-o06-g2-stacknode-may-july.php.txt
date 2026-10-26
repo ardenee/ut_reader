@@ -1,0 +1,18 @@
+﻿{
+    "ok": false,
+    "checks": 56,
+    "passed": 50,
+    "failed": [
+        "v22_empty_tree_two_source_layouts_ambiguous",
+        "v22_strict_ambiguous_tree_fails_closed",
+        "v22_stage_without_identity_keeps_empty_tree_ambiguous",
+        "v23_empty_tree_two_source_layouts_ambiguous",
+        "v23_strict_ambiguous_tree_fails_closed",
+        "v23_stage_without_identity_keeps_empty_tree_ambiguous"
+    ],
+    "epic_source_sha256": {
+        "unreal_1997_may": "53206d12c814e9f0b04aa5cb278957ba8abdb5772faf504b59db6cafc67e7bb7",
+        "unreal_1997_july": "674629bf9d54a07046b03749465792bcc66387a7d6f6d7c2660cbdb80bf172d2"
+    },
+    "limitations": "May/July source-defined disk layout only; no original compiled oracle or source-of-file identity proof"
+}

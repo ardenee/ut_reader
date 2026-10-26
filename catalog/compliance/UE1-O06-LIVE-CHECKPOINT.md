@@ -2,36 +2,36 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-original-1997-acceptance-preflight`
-- **Stage:** G2-PRETEST-18-contracts-98-class-pairs-PLANNED
-- **Last completed action:** Ahead of G2 work, inventoried original build-selected May U86 and July U97 1997 source register: 49 registrations each, 43 mapped plus 6 excluded each; 86 mapped source-class pairs and12 source-proven transient exclusions. Authored fixed 18-contract Epic source-specific acceptance plan catalog/compliance/UE1-O06-G2-ACCEPTANCE-PLAN.md and machine-verified 98-row coverage matrix catalog/compliance/UE1-O06-G2-ACCEPTANCE-MATRIX.json. Identified 30 existing candidate G2 tests,29 with historical PASS and current test SHA, 1 original metadata lacks reusable central journal PASS. ZERO G2 tests run, ZERO serializer changes, ZERO gate promotion. G2 remains OPEN, G5 eight v432 method profiles accepted independently.
-- **Resume at:** Review/approve fixed G2-C01..G2-C18 test matrix before any G2 source modifications. Reuse old named fixture PASS only after verifying source+reader+test/log transitive hashes; for each distinct May/July build selected serializer fill exact byte/field/negative source gaps. Existing v22/v23 ambiguous provenance must fail closed. Do not expand list without newly identified Epic source function. Final ONE independent G2-18 gate when contracts ready; PHP DEV only, PRD SHA deployment only.
-- **Active changed at:** 2026-10-26T12:06:16+00:00
-- **Latest DEV test states:** PASS 157; FAIL 1; STARTED 0
+- **Contract:** `g2-original-1997-source-acceptance-18`
+- **Stage:** G2-SOURCE-ACCEPTED-18of18-692of692-release-ready
+- **Last completed action:** G2 original May U86/July U97 source-defined v22/v23 archive gate 18/18 accepted, independent 692/692 PASS DEV, 30 current fixture tests PASS and SHA validated, 98 registrations, 86 mapped 12 excluded. All seven historical initial fixture failures corrected against selected Epic source; FAIL events retained, no production serializer modified. Original May/July compiled native runtime values and whole O06 not accepted. Report and source SHA sealed. Commit push PRD SHA pending.
+- **Resume at:** Commit push and deploy verified changed G2 files with SHA equality PRD, then move to separate G3/G4/G5 and final G6. Do not replay 30 source-accepted tests or previously sealed eight G5 v432 method oracles.
+- **Active changed at:** 2026-10-26T12:38:36+00:00
+- **Latest DEV test states:** PASS 159; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
-| 2026-10-26T10:23:53.5573457Z | verify-ue1-classic-array-inner-values.php | PASS | 236 | catalog\compliance\evidence\o06\20261026T102352948Z-162253b5-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-26T10:23:52.9483318Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T102352948Z-162253b5-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-26T10:23:52.4603384Z | verify-ue1-classic-fstring-archive.php | PASS | 137 | catalog\compliance\evidence\o06\20261026T102351953Z-e9946ffe-DEV-verify-ue1-classic-fstring-archive.php.txt |
-| 2026-10-26T10:23:51.9533316Z | verify-ue1-classic-fstring-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T102351953Z-e9946ffe-DEV-verify-ue1-classic-fstring-archive.php.txt |
-| 2026-10-26T10:23:51.5343339Z | verify-ue1-o06-g5-t99-uobject-independent-full.php | PASS | 349 | catalog\compliance\evidence\o06\20261026T102350748Z-13c4b582-DEV-verify-ue1-o06-g5-t99-uobject-independent-full.php.txt |
-| 2026-10-26T10:23:50.7553333Z | verify-ue1-o06-g5-t99-uobject-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261026T102350748Z-13c4b582-DEV-verify-ue1-o06-g5-t99-uobject-independent-full.php.txt |
-| 2026-10-26T09:08:58.9476388Z | verify-ue1-classic-legacy-string-upgrade.php | PASS | 113 | catalog\compliance\evidence\o06\20261026T090858415Z-b5e79810-DEV-verify-ue1-classic-legacy-string-upgrade.php.txt |
-| 2026-10-26T09:08:58.4236784Z | verify-ue1-classic-legacy-string-upgrade.php | STARTED |  | catalog\compliance\evidence\o06\20261026T090858415Z-b5e79810-DEV-verify-ue1-classic-legacy-string-upgrade.php.txt |
-| 2026-10-26T09:06:33.0758628Z | verify-ue1-o06-g5-uobject-direct-str-physical-eof.php | PASS | 270 | catalog\compliance\evidence\o06\20261026T090632439Z-82767d69-DEV-verify-ue1-o06-g5-uobject-direct-str-physical-eof.php.txt |
-| 2026-10-26T09:06:32.4398336Z | verify-ue1-o06-g5-uobject-direct-str-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261026T090632439Z-82767d69-DEV-verify-ue1-o06-g5-uobject-direct-str-physical-eof.php.txt |
-| 2026-10-26T09:06:32.0228613Z | verify-ue1-classic-array-inner-values.php | PASS | 268 | catalog\compliance\evidence\o06\20261026T090631387Z-c9e3b0ca-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-26T09:06:31.3878337Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T090631387Z-c9e3b0ca-DEV-verify-ue1-classic-array-inner-values.php.txt |
-| 2026-10-26T09:06:31.0048698Z | verify-ue1-classic-fstring-archive.php | PASS | 151 | catalog\compliance\evidence\o06\20261026T090630486Z-b4cf10af-DEV-verify-ue1-classic-fstring-archive.php.txt |
-| 2026-10-26T09:06:30.4868349Z | verify-ue1-classic-fstring-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T090630486Z-b4cf10af-DEV-verify-ue1-classic-fstring-archive.php.txt |
-| 2026-10-26T09:06:30.0298354Z | verify-ue1-classic-legacy-string-upgrade.php | FAIL | 104 | catalog\compliance\evidence\o06\20261026T090629558Z-cb017747-DEV-verify-ue1-classic-legacy-string-upgrade.php.txt |
-| 2026-10-26T09:06:29.5588638Z | verify-ue1-classic-legacy-string-upgrade.php | STARTED |  | catalog\compliance\evidence\o06\20261026T090629558Z-cb017747-DEV-verify-ue1-classic-legacy-string-upgrade.php.txt |
-| 2026-10-26T09:06:29.1558663Z | verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php | PASS | 265 | catalog\compliance\evidence\o06\20261026T090628483Z-a2b8a06d-DEV-verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php.txt |
-| 2026-10-26T09:06:28.4908352Z | verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php | STARTED |  | catalog\compliance\evidence\o06\20261026T090628483Z-a2b8a06d-DEV-verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php.txt |
+| 2026-10-26T12:33:56.8619660Z | verify-ue1-o06-g2-source-acceptance.php | PASS | 193 | catalog\compliance\evidence\o06\20261026T123356158Z-fa483e89-DEV-verify-ue1-o06-g2-source-acceptance.php.txt |
+| 2026-10-26T12:33:56.1689671Z | verify-ue1-o06-g2-source-acceptance.php | STARTED |  | catalog\compliance\evidence\o06\20261026T123356158Z-fa483e89-DEV-verify-ue1-o06-g2-source-acceptance.php.txt |
+| 2026-10-26T12:22:30.3443432Z | verify-ue1-original-unrealfile-script-expressions.php | PASS | 143 | catalog\compliance\evidence\o06\20261026T122229843Z-f1898066-DEV-verify-ue1-original-unrealfile-script-expressions.php.txt |
+| 2026-10-26T12:22:29.8433436Z | verify-ue1-original-unrealfile-script-expressions.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122229843Z-f1898066-DEV-verify-ue1-original-unrealfile-script-expressions.php.txt |
+| 2026-10-26T12:22:29.4633303Z | verify-ue1-original-unrealfile-primitive.php | PASS | 132 | catalog\compliance\evidence\o06\20261026T122228974Z-04114338-DEV-verify-ue1-original-unrealfile-primitive.php.txt |
+| 2026-10-26T12:22:28.9743461Z | verify-ue1-original-unrealfile-primitive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122228974Z-04114338-DEV-verify-ue1-original-unrealfile-primitive.php.txt |
+| 2026-10-26T12:22:28.5843376Z | verify-ue1-original-unrealfile-model.php | PASS | 173 | catalog\compliance\evidence\o06\20261026T122228049Z-8e2e9123-DEV-verify-ue1-original-unrealfile-model.php.txt |
+| 2026-10-26T12:22:28.0493437Z | verify-ue1-original-unrealfile-model.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122228049Z-8e2e9123-DEV-verify-ue1-original-unrealfile-model.php.txt |
+| 2026-10-26T12:22:27.6653248Z | verify-ue1-original-unrealfile-mesh.php | PASS | 179 | catalog\compliance\evidence\o06\20261026T122227062Z-10f55d91-DEV-verify-ue1-original-unrealfile-mesh.php.txt |
+| 2026-10-26T12:22:27.0623449Z | verify-ue1-original-unrealfile-mesh.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122227062Z-10f55d91-DEV-verify-ue1-original-unrealfile-mesh.php.txt |
+| 2026-10-26T12:22:26.6723375Z | verify-ue1-original-unrealfile-expression-token-inventory.php | PASS | 89 | catalog\compliance\evidence\o06\20261026T122226221Z-45f475b5-DEV-verify-ue1-original-unrealfile-expression-token-inventory.php.txt |
+| 2026-10-26T12:22:26.2213455Z | verify-ue1-original-unrealfile-expression-token-inventory.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122226221Z-45f475b5-DEV-verify-ue1-original-unrealfile-expression-token-inventory.php.txt |
+| 2026-10-26T12:22:25.8123097Z | verify-ue1-o06-g2-stacknode-may-july.php | PASS | 262 | catalog\compliance\evidence\o06\20261026T122225190Z-00c61c1b-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
+| 2026-10-26T12:22:25.1903098Z | verify-ue1-o06-g2-stacknode-may-july.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122225190Z-00c61c1b-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt |
+| 2026-10-26T12:22:24.8053405Z | verify-ue1-o06-g2-shared-transient.php | PASS | 98 | catalog\compliance\evidence\o06\20261026T122224285Z-5a6b2628-DEV-verify-ue1-o06-g2-shared-transient.php.txt |
+| 2026-10-26T12:22:24.2923393Z | verify-ue1-o06-g2-shared-transient.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122224285Z-5a6b2628-DEV-verify-ue1-o06-g2-shared-transient.php.txt |
+| 2026-10-26T12:14:19.9479015Z | verify-ue1-original-unrealfile-texture.php | PASS | 262 | catalog\compliance\evidence\o06\20261026T121419320Z-f2f37872-DEV-verify-ue1-original-unrealfile-texture.php.txt |
+| 2026-10-26T12:14:19.3209373Z | verify-ue1-original-unrealfile-texture.php | STARTED |  | catalog\compliance\evidence\o06\20261026T121419320Z-f2f37872-DEV-verify-ue1-original-unrealfile-texture.php.txt |
 
 ## Recovery procedure
 

@@ -82,8 +82,10 @@ try{
   try{Model::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
   $check("v{$version}_{$family}_invalid_resmap_rejected",$rejected);
   file_put_contents($tmp,substr_replace($fx['bytes'],"\x03",$fx['member']+24,1));
-  try{Model::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}
-  $check("v{$version}_{$family}_invalid_bound_validity_rejected",$rejected);
+  $flag=Model::read($tmp,true)['model_headers'][0]??[];
+  $check("v{$version}_{$family}_raw_bound_validity_byte_preserved",
+      ($flag['local_bound']['is_valid']??null)===3
+      &&($flag['status']??null)==='native_model_header_decoded');
   file_put_contents($tmp,substr_replace($fx['bytes'],pack('V',($may?252:258)),$fx['table']+20,4));
   $partial=Model::read($tmp,false)['model_headers'][0]??[];
   try{Model::read($tmp,true);$rejected=false;}catch(RuntimeException){$rejected=true;}

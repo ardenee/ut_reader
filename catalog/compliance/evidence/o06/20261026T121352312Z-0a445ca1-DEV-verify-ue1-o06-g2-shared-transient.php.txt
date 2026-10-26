@@ -1,0 +1,47 @@
+﻿{
+    "ok": false,
+    "gate": "UE1-O06-G2-native-shared-and-transient-classification",
+    "sources": [
+        "U86",
+        "U97"
+    ],
+    "actors_inherited": [
+        "AActor",
+        "ABrush",
+        "AMover",
+        "APawn"
+    ],
+    "source_excluded_transient": [
+        "ULinker",
+        "ULinkerLoad",
+        "ULinkerSave",
+        "UPlayer"
+    ],
+    "passed": 38,
+    "total": 46,
+    "failures": [
+        "U86_AActor_is_partial_shared_handler",
+        "U86_ABrush_is_partial_shared_handler",
+        "U86_AMover_is_partial_shared_handler",
+        "U86_APawn_is_partial_shared_handler",
+        "U97_AActor_is_partial_shared_handler",
+        "U97_ABrush_is_partial_shared_handler",
+        "U97_AMover_is_partial_shared_handler",
+        "U97_APawn_is_partial_shared_handler"
+    ],
+    "source_sha256": {
+        "U86": {
+            "Inc/Root.h": "417bb13ab73e0803db7a886f66a52a8bae95387143c619a6e7743ca08a0daab0",
+            "Engine/UnObj.cpp": "ad0f42f85f6e2f074b429ec890337d1aac9bb0f51ff73221dfa5bf9f917f52ff",
+            "Inc/UnLinker.h": "d02f727406ed2148c285c64d8aab2deb69e648cb388f00034404d5f071af2f1c",
+            "Inc/UnServer.h": "ad2879292951ff41a21b7065b5ea474153d9ab50e66af28030fb3fd8ec7bff02"
+        },
+        "U97": {
+            "Inc/Root.h": "57751fd7d5dd08185aeb906649e188827cd52c3ae3f3d2e5db209b72bdda8af0",
+            "Engine/UnObj.cpp": "bbd4f3ca569e6aa38f9979e97a2bcfe7d4ce8c14cd200392e1cd08466fcf5b33",
+            "Inc/UnLinker.h": "d02f727406ed2148c285c64d8aab2deb69e648cb388f00034404d5f071af2f1c",
+            "Inc/UnServer.h": "fd50dc71342675f45890eec9f3acc38be91060ac9d7545e428cc6929aefc8cf6"
+        }
+    },
+    "remaining": "Other U86/U97 class/source branches; real G2 v22/v23 packages; separate SerializeBin/default/expr and source families"
+}

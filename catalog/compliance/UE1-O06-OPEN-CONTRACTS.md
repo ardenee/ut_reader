@@ -2,7 +2,16 @@
 
 Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation IDs. The canonical operation remains O06. Use the append-only UE1-O06-TEST-EVENTS.jsonl and latest UE1-O06-TEST-STATUS.json; do not rerun matching PASS tests just to reconstruct progress.
 
-## G2 pre-agreed acceptance checklist (2026-10-26)
+## G2 accepted May/July source/archive (2026-10-26)
+
+G2 source/archive ACCEPTED, 18/18 required predeclared contracts and one independent 692/692 verification. All 98 class/engine source pairs reconciled (86 mapped with handlers, 12 source-proven transient exclusions), thirty distinct supporting test scripts currently pass on DEV; all output and script SHA256 validated. Sealed file UE1-O06-G2-1997-SOURCE-ARCHIVE-ACCEPTANCE.json. Original plan UE1-O06-G2-ACCEPTANCE-PLAN.md and matrix UE1-O06-G2-ACCEPTANCE-MATRIX.json remain pre-run evidence.
+
+The initial batch had 23 PASS and 7 FAIL. Source review corrected six old test expectation errors and the null-stack-pointer Script memory Num fixture, followed by all seven passing. The failing entries remain in the append-only journal. No production reader change was needed; no original UT99 native oracles rerun.
+
+G2 ACCEPTANCE LIMIT: only 1997 Epic build-selected source-defined v22/v23 persisted archive values and representative negative fixtures. Original May/July compiled native runtime loaded values, complete genuine corpus, pointer fixups, other UE1 families and G3-G6 are NOT accepted by this gate. Entire O06 is OPEN. Do not rerun the thirty completed G2 tests without an invalidating source or reader change.
+
+## G2 pre-agreed acceptance checklist (historical initial plan, now source-only accepted)
+
 
 Before starting May/July 1997 G2 tests, follow **[UE1-O06-G2-ACCEPTANCE-PLAN.md](UE1-O06-G2-ACCEPTANCE-PLAN.md)** and the frozen **[UE1-O06-G2-ACCEPTANCE-MATRIX.json](UE1-O06-G2-ACCEPTANCE-MATRIX.json)**: 18 acceptance contracts covering all 49 May and 49 July registered classes (86 mapped source-family pairs, 12 source-excluded pairs). Existing named test fixtures have candidate PASS results and must be SHA-reused when valid, not blindly rerun. A G2-specific independent whole-gate verdict has NOT been run or accepted. No source or reader modifications and no G2 test execution were part of this planning step. May/July v22/23 archive-source parity is distinct from G5 genuine compiled runtime loaded-value parity, the previously sealed UT99 v432 G5 methods, and O10 runtime linking. Any new Epic-source branch missing from the frozen matrix must be identified and documented before adding tests.
 

@@ -29,7 +29,10 @@ $make=static function(int $version,bool $nullFinal=false):array{
  $nameOff=56;
  $headerOff=$nameOff+strlen($names);
  $header=pack('V2',0,0).str_repeat("\xff",8)
-    .pack('V3',strlen($data),strlen($data),0);
+    // Original null FStackNodePtr archives Class=0 without iNode, but the
+    // compiled x86 Script buffer retains the full 8-byte in-memory pointer
+    // record. Num and Max are MEMORY bytes, not saved archive bytes.
+    .pack('V3',strlen($data)+($nullFinal?4:0),strlen($data)+($nullFinal?4:0),0);
  $dataOff=$headerOff+strlen($header);
  $objectOff=$dataOff+strlen($data);
  $objects=pack('vvVV',2,1,0,$headerOff)

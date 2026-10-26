@@ -1,0 +1,17 @@
+﻿{
+    "ok": true,
+    "passed": 16,
+    "total": 16,
+    "failures": [],
+    "source_hashes": {
+        "may": {
+            "UnMath.h": "4f9ccd6a4a1fc29a99e1608db524a87ac15b5ec4437d3a37640a7368ba123b19",
+            "UnObj.h": "19fa806c2f236321508c8b1c9e06d0f078472a552106d9a34bd900ab4cb9f0a0"
+        },
+        "july": {
+            "UnMath.h": "787acbe94803e97417960f083275ed56702e1f104cce8e4435b95be78e687d1b",
+            "UnObj.h": "4094fdef4a93ccce66d1c377a69d04bf6dee3564f985de5052f331cbacc1aebc"
+        }
+    },
+    "scope": "Same on-disk layout; no source-family determination, no runtime bool normalization"
+}

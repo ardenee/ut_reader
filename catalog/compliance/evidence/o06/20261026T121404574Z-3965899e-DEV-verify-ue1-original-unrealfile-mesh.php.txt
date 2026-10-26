@@ -1,0 +1,11 @@
+﻿{
+    "ok": false,
+    "passed": 40,
+    "total": 44,
+    "failures": [
+        "v22_July_invalid_bbox_flag_rejected",
+        "v22_May_invalid_bbox_flag_rejected",
+        "v23_July_invalid_bbox_flag_rejected",
+        "v23_May_invalid_bbox_flag_rejected"
+    ]
+}

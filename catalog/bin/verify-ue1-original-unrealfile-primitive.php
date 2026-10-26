@@ -49,8 +49,10 @@ try{
        &&($sp['native_member_bytes']??null)===41
        &&($staged['parse_complete']??true)===false);
    file_put_contents($tmp,substr_replace($f['bytes'],"\x02",$f['bound']+24,1));
-   try{Primitive::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}
-   $check($key.'_reject_non_boolean_byte_flag',$bad);
+   $raw=Primitive::read($tmp,true)['primitive_headers'][0]??[];
+   $check($key.'_source_raw_byte_validity_not_boolean',
+       ($raw['local_bound']['is_valid']??null)===2
+       &&($raw['status']??null)==='native_primitive_header_decoded');
    file_put_contents($tmp,substr_replace($f['bytes'],pack('V',56),$f['table']+20,4));
    $loose=Primitive::read($tmp,false)['primitive_headers'][0]??[];
    try{Primitive::read($tmp,true);$bad=false;}catch(RuntimeException){$bad=true;}

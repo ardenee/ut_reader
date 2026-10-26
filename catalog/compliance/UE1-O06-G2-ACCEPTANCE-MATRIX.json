@@ -3,8 +3,8 @@
   "kind": "PRE_EXECUTION_G2_ACCEPTANCE_CLASS_MATRIX",
   "plan": "catalog/compliance/UE1-O06-G2-ACCEPTANCE-PLAN.md",
   "register": "catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json",
-  "register_sha256": "64cc4304facf3afd0ca8576e598058d29aece49239ef3af81a10e07d483aac58",
-  "date_utc": "2026-10-26T12:03:54.449504+00:00",
+  "register_sha256": "1c4d26db0b1f300659588b2293e6dbb40fd59d655b53cef319e38e528c63755a",
+  "date_utc": "2026-10-26T12:32:49.453678+00:00",
   "source_builds": {
     "U86": "L:/Source/Games/Unreal/Unreal [v0.86x] [1997-05-25]/Src",
     "U97": "L:/Source/Games/Unreal/Unreal [v0.867] [1997-07-25]/Src"
@@ -160,7 +160,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-inheritance.php",
       "sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "7aa4da69a0b504d3201ab924ffc92d0127dbada01674b8170a262fdc682eabad",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -168,7 +168,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-database-records.php",
       "sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "02f02cbeb62f65eacabf13b71586a9eff96cd14b2f095edee6b8771fcee6ae92",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "d4f30b276afecf26230b6612d01a9dfc09a0b1242fddf97554663d7793442de0",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -176,7 +176,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-bit-archives.php",
       "sha256_current": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "d4f30b276afecf26230b6612d01a9dfc09a0b1242fddf97554663d7793442de0",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -184,7 +184,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-mesh-records.php",
       "sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "f2d2fdd59c0d0122cee6e7b190c35b653161c39937c99585e0b45d8156977bb6",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -192,7 +192,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-bsp-records.php",
       "sha256_current": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "192702548c6b5aa82e2587ae2fd458a22b9ec32fd52706a0bada07f3bf3dd6fc",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -200,7 +200,7 @@
       "path": "catalog/bin/verify-ue1-o06-g2-camera-transient.php",
       "sha256_current": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "c6d9bcb0cbe417a662e3e7a5711457fbcacade39b96a494c9cfab63d54233139",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -208,7 +208,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-class-schemas.php",
       "sha256_current": "83e43df0b6a19eef075b85c22b27cfafc4e74cc3856c9d7798ee2fdbacd851bf",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "fcfee1d29879fc6d858994a663f4a87da523a219f7943c27e527068c9867d26e",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -216,7 +216,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-special-headers.php",
       "sha256_current": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "dfb105bc47ad1125f96a92c78ff489bc84396568591c3323340f80f1e9ba847c",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -224,7 +224,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-level.php",
       "sha256_current": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "d4f43adafdb16c5fca2b96f3bb868c98d1fd77467ff517449b5d26e8a1141af7",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -232,31 +232,31 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-lightmesh-data.php",
       "sha256_current": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "2ce015b0500bd43129f257be03a9fefc5e35e41cf7c34ae0eadfd0a5c3389896",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
     "verify-ue1-o06-g2-shared-transient.php": {
       "path": "catalog/bin/verify-ue1-o06-g2-shared-transient.php",
-      "sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "e3123005100866d48ea718e786eefc3069d3ae404fd0c2c9fde3a899919151cc",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "10631f2ea33452ab462afdebf1ecdcf0371725adfb6a8a0a562c3e33228947cf",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
     "verify-ue1-original-unrealfile-mesh.php": {
       "path": "catalog/bin/verify-ue1-original-unrealfile-mesh.php",
-      "sha256_current": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+      "sha256_current": "ddff67e356e96091173ff7cb838544c40168833855d8818550b9516db8b2e90a",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "7b577de25298c2edd39e0ea3dbafb2104768b509f0a47ff32920b857c24509ed",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
     "verify-ue1-original-unrealfile-model.php": {
       "path": "catalog/bin/verify-ue1-original-unrealfile-model.php",
-      "sha256_current": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+      "sha256_current": "577bcf1760ca359426b97ead24820722df6468605f1b2349ff664a097587b4e3",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "41b8ce3fb1bb207f63b379134c0a674d6377e034d507cd39c59c6ee0b56227bf",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -264,7 +264,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-audio.php",
       "sha256_current": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "2ce015b0500bd43129f257be03a9fefc5e35e41cf7c34ae0eadfd0a5c3389896",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -272,7 +272,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-object-bases.php",
       "sha256_current": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "5932efd5b8becce13a90009edc353683e22788993b1337072a3ba85b1a1b6f7a",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -280,15 +280,15 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-polys-data.php",
       "sha256_current": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "00b39a951a206bb105cc40979d5a545bd23132657cb33bdad81d457b1aabf25f",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
     "verify-ue1-original-unrealfile-primitive.php": {
       "path": "catalog/bin/verify-ue1-original-unrealfile-primitive.php",
-      "sha256_current": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+      "sha256_current": "438e4a07907500c06bf62478dcbb1095e85019b8f6043c0eac3089b0ab351cdb",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "f2370a030a2b10d0030777e054c4c62aa4b8bf0c8996d3287b8d784975eb3ce5",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -296,7 +296,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-external-schemas.php",
       "sha256_current": "ea038ed3a1a88c39fa3acf580e780413df6d81d5c81d5ecbdae2102687e7512e",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "d40496ee4ebca31c2c534141e6c4e7687fa44c3229ea7fd983b7b1bd8dcb256b",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -304,7 +304,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-script-may-july.php",
       "sha256_current": "27884cb436283ba27a4f85b997ede868eca1b41906a718312cba64244ed61b85",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "e4ecdfc427879e5e79c433d8f48216a5315ed4b1a2767ed37ae02be3cfa685bc",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -312,7 +312,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-stacktree-data.php",
       "sha256_current": "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "00b39a951a206bb105cc40979d5a545bd23132657cb33bdad81d457b1aabf25f",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     },
@@ -320,7 +320,7 @@
       "path": "catalog/bin/verify-ue1-original-unrealfile-texture.php",
       "sha256_current": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
       "historical_pass_test_sha_current": true,
-      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
       "historical_pass_output_sha256": "70146f559e7da4493f093852aacc2fea2678982deaa21b45a00208201275bd7c",
       "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
     }
@@ -969,7 +969,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -1002,7 +1002,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -1035,7 +1035,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -1063,7 +1063,7 @@
       ],
       "production_reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
       "existing_candidate_test": "verify-ue1-original-unrealfile-mesh.php",
-      "candidate_test_script_sha256_current": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+      "candidate_test_script_sha256_current": "ddff67e356e96091173ff7cb838544c40168833855d8818550b9516db8b2e90a",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -1231,7 +1231,7 @@
       ],
       "production_reader": "CatalogUE1OriginalUnrealfileModelHeaderReader.php",
       "existing_candidate_test": "verify-ue1-original-unrealfile-model.php",
-      "candidate_test_script_sha256_current": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+      "candidate_test_script_sha256_current": "577bcf1760ca359426b97ead24820722df6468605f1b2349ff664a097587b4e3",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -1353,7 +1353,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -1409,7 +1409,7 @@
       ],
       "production_reader": "CatalogUE1OriginalUnrealfilePrimitiveHeaderReader.php",
       "existing_candidate_test": "verify-ue1-original-unrealfile-primitive.php",
-      "candidate_test_script_sha256_current": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+      "candidate_test_script_sha256_current": "438e4a07907500c06bf62478dcbb1095e85019b8f6043c0eac3089b0ab351cdb",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -2368,7 +2368,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -2396,7 +2396,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -2424,7 +2424,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -2452,7 +2452,7 @@
       ],
       "production_reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
       "existing_candidate_test": "verify-ue1-original-unrealfile-mesh.php",
-      "candidate_test_script_sha256_current": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+      "candidate_test_script_sha256_current": "ddff67e356e96091173ff7cb838544c40168833855d8818550b9516db8b2e90a",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -2620,7 +2620,7 @@
       ],
       "production_reader": "CatalogUE1OriginalUnrealfileModelHeaderReader.php",
       "existing_candidate_test": "verify-ue1-original-unrealfile-model.php",
-      "candidate_test_script_sha256_current": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+      "candidate_test_script_sha256_current": "577bcf1760ca359426b97ead24820722df6468605f1b2349ff664a097587b4e3",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -2737,7 +2737,7 @@
       ],
       "production_reader": "",
       "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
-      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "candidate_test_script_sha256_current": "7514a2138ba3c6383ac9298a4172a02f7d1506c9c59079fd263d7bde534bb8ac",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [
@@ -2793,7 +2793,7 @@
       ],
       "production_reader": "CatalogUE1OriginalUnrealfilePrimitiveHeaderReader.php",
       "existing_candidate_test": "verify-ue1-original-unrealfile-primitive.php",
-      "candidate_test_script_sha256_current": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+      "candidate_test_script_sha256_current": "438e4a07907500c06bf62478dcbb1095e85019b8f6043c0eac3089b0ab351cdb",
       "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
       "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
       "required_proof": [

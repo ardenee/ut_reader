@@ -49,8 +49,8 @@ foreach($tree as $branch=>$root){
             preg_match('/\b'.preg_quote($class,'/').'::Serialize(?:Header|Data)\s*\(/',
                 $obj.$rootH)===0);
         $entry=$registered[$branch.':'.$class]??[];
-        $check($branch.'_'.$class.'_is_partial_shared_handler',
-            ($entry['status']??'')==='PARTIAL'
+        $check($branch.'_'.$class.'_is_mapped_shared_handler',
+            ($entry['status']??'')==='MAPPED'
             &&($entry['reader']??'')==='CatalogUE1OriginalUnrealfileBinaryPropertyReader.php');
     }
     $check($branch.'_ULinker_unsaveable_by_explicit_Epic_text',

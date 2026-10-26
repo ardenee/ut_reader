@@ -1,0 +1,16 @@
+﻿{
+    "ok": false,
+    "passed": 67,
+    "total": 68,
+    "source_case_count": 50,
+    "source_unique_case_count": 50,
+    "php_explicit_case_count": 50,
+    "missing_epic_dispatches": [],
+    "unmapped_epic_case_names": [],
+    "source_sha256": "674629bf9d54a07046b03749465792bcc66387a7d6f6d7c2660cbdb80bf172d2",
+    "enum_sha256": "c543c1f127e5fd8c3da0ce3b6bedecc8fb6e38bba9f2d0181936b1da99fa9841",
+    "reader_sha256": "65dfcccce2e4be9309296300534d2b997d7a121952e3d74c55ea322bbb11ceb1",
+    "failures": [
+        "php_checked_label_table_alignment"
+    ]
+}

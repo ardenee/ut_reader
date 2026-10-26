@@ -1,0 +1,9 @@
+﻿{
+    "ok": false,
+    "passed": 12,
+    "total": 14,
+    "failures": [
+        "v22_reject_non_boolean_byte_flag",
+        "v23_reject_non_boolean_byte_flag"
+    ]
+}
