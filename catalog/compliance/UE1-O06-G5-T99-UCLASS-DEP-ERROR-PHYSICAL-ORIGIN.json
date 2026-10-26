@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "method": "T99:UClass::Serialize",
+  "scope": "UT99-v432 compiled FDependency-class-reference malformed archive origin",
+  "original": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/UWindow.u",
+    "sha256": "0a4e185da507717170c46cd2689f260293fa732f37992ca33199255b9322c3a2",
+    "bytes": 650600
+  },
+  "mutated_one_byte_copy": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UClass-Diagnostic-Mutated/UWindow.u",
+    "sha256": "310e50ff05c9f2288406ae77597d5686f405f949844df87b22149b37a1ce5777",
+    "bytes": 650600
+  },
+  "mutated_absolute_offset": 27973,
+  "original_encoded_dependency_count": 5,
+  "mutated_encoded_dependency_count": 63,
+  "original_export_index": 4,
+  "original_export_name": "UWindowLookAndFeel",
+  "original_native_core": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+    "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "bytes": 786432
+  },
+  "native_loader_probe": {
+    "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ErrorNative.exe",
+    "sha256": "e513f422cc322f6277e6d6f0b1d7da7f2c8f9fbf6a14da6b3cd443a7e4b7f855",
+    "bytes": 77824
+  },
+  "native_probe_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ErrorNative.cpp",
+    "sha256": "a03812515cb42d489f13be4591fa44da1ea184484fcf8d797fa46b28b03464f5",
+    "bytes": 3288
+  },
+  "native_first_chance_cdb_log": {
+    "path": "C:/Temp/UnrealDB/O06/g5-uclass-fatal-firstchance.log",
+    "sha256": "9cdf97d55822a9db8af9738f4ed6784e72202b119a8a3c9d7bd68dce7ad7a6bc",
+    "bytes": 5582
+  },
+  "native_debugger_script": {
+    "path": "C:/Temp/UnrealDB/O06/g5-uclass-fatal-firstchance.cdb",
+    "sha256": "25c0955575db6ba960a9c139232fcf152dcf307b6d78fc126b00473426ea9d03",
+    "bytes": 149
+  },
+  "result": "Original compiled stock Core.dll loader throws C++ exception after mutated dependency count; source PHP must read physical package bytes and fail on invalid FDependency.Class reference, not preemptively reject based on export SerialSize",
+  "no_conclusion_about_total_UClass_full_method": true
+}

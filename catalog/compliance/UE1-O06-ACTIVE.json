@@ -1,7 +1,7 @@
 {
-  "contract": "g5-t99-skeletalmesh-whole-loaded-scalars",
-  "stage": "release-ready",
-  "last_action": "5 genuine native skeletal scalars 40/40; one invalid animation referent CDB cursor 412679; 37/37 focus; PRD corpus 2895 genuine SkeletalMesh export records all remap empty; still BLOCKED.",
-  "next_step": "Commit and SHA deploy. Next unique test must use genuine nonempty RemapAnimVerts and Epic runtime permutation; no repeat corpus or previous native values.",
-  "updated_at_utc": "2026-10-26T01:03:02+00:00"
+  "contract": "g5-t99-uclass-physical-error-origin",
+  "stage": "verified-87-of-87-and-58-of-58-release-ready",
+  "last_action": "Corrected physical FArchive EOF vs export-bound UClass dependency checks and pre-v57 class default/trailer file cursor; genuine stock v432 exception documented. Focus 87/87 PASS and six genuine UT99 UClass script corpus 58/58 PASS; G5 still 5 FULL 3 BLOCKED 0 FAILED. No native object replay.",
+  "next_step": "Commit, push, PRD SHA deploy once. Remaining UClass blocker actual runtime Script pointer/FName fixups and class default/config effects; no repeat 88 genuine loaded class oracles.",
+  "updated_at_utc": "2026-10-26T01:42:51+00:00"
 }

@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-skeletalmesh-whole-loaded-scalars`
-- **Stage:** release-ready
-- **Last completed action:** 5 genuine native skeletal scalars 40/40; one invalid animation referent CDB cursor 412679; 37/37 focus; PRD corpus 2895 genuine SkeletalMesh export records all remap empty; still BLOCKED.
-- **Resume at:** Commit and SHA deploy. Next unique test must use genuine nonempty RemapAnimVerts and Epic runtime permutation; no repeat corpus or previous native values.
-- **Active changed at:** 2026-10-26T01:03:02+00:00
+- **Contract:** `g5-t99-uclass-physical-error-origin`
+- **Stage:** verified-87-of-87-and-58-of-58-release-ready
+- **Last completed action:** Corrected physical FArchive EOF vs export-bound UClass dependency checks and pre-v57 class default/trailer file cursor; genuine stock v432 exception documented. Focus 87/87 PASS and six genuine UT99 UClass script corpus 58/58 PASS; G5 still 5 FULL 3 BLOCKED 0 FAILED. No native object replay.
+- **Resume at:** Commit, push, PRD SHA deploy once. Remaining UClass blocker actual runtime Script pointer/FName fixups and class default/config effects; no repeat 88 genuine loaded class oracles.
+- **Active changed at:** 2026-10-26T01:42:51+00:00
 - **Latest DEV test states:** PASS 151; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
@@ -14,6 +14,12 @@
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-26T01:36:58.5237126Z | verify-ue1-o06-genuine-ut99-script-archive.php | PASS | 8243 | catalog\compliance\evidence\o06\20261026T013649874Z-552da0f7-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
+| 2026-10-26T01:36:49.8825727Z | verify-ue1-o06-genuine-ut99-script-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T013649874Z-552da0f7-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
+| 2026-10-26T01:36:23.4687079Z | verify-ue1-o06-genuine-ut99-script-archive.php | FAIL | 1025 | catalog\compliance\evidence\o06\20261026T013622037Z-4ff4d317-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
+| 2026-10-26T01:36:22.0439994Z | verify-ue1-o06-genuine-ut99-script-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T013622037Z-4ff4d317-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
+| 2026-10-26T01:34:42.1624932Z | verify-ue1-classic-class-metadata.php | PASS | 346 | catalog\compliance\evidence\o06\20261026T013441419Z-7a14e99f-DEV-verify-ue1-classic-class-metadata.php.txt |
+| 2026-10-26T01:34:41.4264794Z | verify-ue1-classic-class-metadata.php | STARTED |  | catalog\compliance\evidence\o06\20261026T013441419Z-7a14e99f-DEV-verify-ue1-classic-class-metadata.php.txt |
 | 2026-10-26T00:43:48.7602816Z | verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php | PASS | 460 | catalog\compliance\evidence\o06\20261026T004347901Z-98af7b7b-DEV-verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php.txt |
 | 2026-10-26T00:43:47.9082704Z | verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php | STARTED |  | catalog\compliance\evidence\o06\20261026T004347901Z-98af7b7b-DEV-verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php.txt |
 | 2026-10-26T00:27:29.3361220Z | verify-ue1-o06-g5-t99-animation-independent-full.php | PASS | 202 | catalog\compliance\evidence\o06\20261026T002728732Z-cdd1c4ca-DEV-verify-ue1-o06-g5-t99-animation-independent-full.php.txt |
@@ -26,12 +32,6 @@
 | 2026-10-25T22:56:13.8924785Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
 | 2026-10-25T22:08:05.0193795Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 579 | catalog\compliance\evidence\o06\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
 | 2026-10-25T22:08:04.0043854Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
-| 2026-10-25T21:22:51.1754745Z | verify-ue1-o06-genuine-compiled-native.php | FAIL | 482 | catalog\compliance\evidence\o06\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
-| 2026-10-25T21:22:50.3330902Z | verify-ue1-o06-genuine-compiled-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T212250332Z-dd9f369a-DEV-verify-ue1-o06-genuine-compiled-native.php.txt |
-| 2026-10-25T21:22:49.9310577Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | PASS | 264 | catalog\compliance\evidence\o06\20261025T212249255Z-e9597530-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
-| 2026-10-25T21:22:49.2550607Z | verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php | STARTED |  | catalog\compliance\evidence\o06\20261025T212249255Z-e9597530-DEV-verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php.txt |
-| 2026-10-25T21:22:48.8490559Z | verify-ue1-classic-mesh-native.php | PASS | 200 | catalog\compliance\evidence\o06\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt |
-| 2026-10-25T21:22:48.2590912Z | verify-ue1-classic-mesh-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T212248252Z-4f1f22fc-DEV-verify-ue1-classic-mesh-native.php.txt |
 
 ## Recovery procedure
 

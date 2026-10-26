@@ -43,11 +43,16 @@ final class CatalogUE1ClassicClassMetadataReader
         }
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open UE1 class export');}
+        // Epic ULinkerLoad FArchive can read beyond an export's declared
+        // SerialSize before its outer Preload logic reports a mismatch.
+        // Use physical package EOF for reads, retain $end for final archive
+        // completion; never conflate export bounds with FArchive EOF.
+        $physicalSize=filesize($path);
         try {
             if(fseek($fp,$start)!==0){throw new RuntimeException('Cannot seek class export');}
             $position=$start;
-            $read=static function(int $n)use($fp,$end,&$position):string{
-                if($n<0||$n>$end-$position){throw new RuntimeException('UE1 UClass archive overrun');}
+            $read=static function(int $n)use($fp,$physicalSize,&$position):string{
+                if($n<0||$n>$physicalSize-$position){throw new RuntimeException('UE1 UClass archive overrun at physical package EOF');}
                 $bytes='';
                 while(strlen($bytes)<$n){
                     $part=fread($fp,$n-strlen($bytes));
@@ -184,7 +189,7 @@ final class CatalogUE1ClassicClassMetadataReader
             // TArray<FDependency>, FDependency::operator<<:
             // UObject* Class, UBOOL Deep, DWORD ScriptTextCRC.
             $depCount=$compact();
-            if($depCount<0||$depCount>intdiv($end-$position,9)){
+            if($depCount<0||$depCount>intdiv($physicalSize-$position,9)){
                 throw new RuntimeException('Invalid UClass dependency count');
             }
             $deps=[];
@@ -194,7 +199,7 @@ final class CatalogUE1ClassicClassMetadataReader
             }
             $record['dependencies']=$deps;
             $importCount=$compact();
-            if($importCount<0||$importCount>$end-$position){
+            if($importCount<0||$importCount>$physicalSize-$position){
                 throw new RuntimeException('Invalid UClass PackageImports count');
             }
             $imports=[];
@@ -229,6 +234,13 @@ final class CatalogUE1ClassicClassMetadataReader
             $defaults=CatalogUE1ClassicTaggedPropertyReader::inspectClassDefaults(
                 $path,$pkg,$position,$end,$version,$family);
             $position=$defaults['tag_end_offset'];
+            // inspectClassDefaults uses its own file handle. Restore this
+            // reader's physical cursor before the legacy v<57 trailer:
+            // updating the logical offset alone replays the tag bytes as
+            // the two trailing FNames on nonempty class defaults.
+            if(fseek($fp,$position)!==0){
+                throw new RuntimeException('Cannot seek after UClass default tags');
+            }
             if($version<57 && $family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
                 // Epic Unreal v1.200 Core/Src/UnClass.cpp::UClass::Serialize
                 // archives TWO trailing FName values AFTER the tagged

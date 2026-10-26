@@ -55,7 +55,10 @@ $body=static function(int $ver,array $opt=[])use($compact):string{
       .(($opt['importCount']??1)===1?$compact((int)($opt['importName']??3)):'');
     $within=$ver>=62?$compact((int)($opt['within']??1)).$compact((int)($opt['config']??5)):'';
     $defaults=$opt['defaultRaw']??$compact((int)($opt['firstDefault']??0));
-    return $prefix.$state.$native.$dependencies.$packageImports.$within.$defaults.($opt['extension']??'');
+    // Unreal v1.200 archives two FNames after class defaults when Ver<57.
+    // They are not part of the NAME_None-terminated tagged-default stream.
+    $legacyTrailer=$ver<57?$compact(0).$compact(0):'';
+    return $prefix.$state.$native.$dependencies.$packageImports.$within.$defaults.$legacyTrailer.($opt['extension']??'');
 };
 $paths=[];$checks=[];$fail=[];
 $check=static function(string $key,bool $ok)use(&$checks,&$fail):void{
@@ -68,12 +71,15 @@ $parse=static function(int $ver,string $data,int $flags=0)use($build,&$paths):ar
     file_put_contents($tmp,$build($ver,$data,$flags));
     $pkg=new Package($tmp);
     if($pkg->validatePackage()!==[]){throw new RuntimeException('Synthetic UClass package invalid');}
-    $tags=Tag::inspect($tmp,$pkg,0);
-    $native=Native::inspect($tmp,$pkg,0,$tags);
+    // Archive version does not establish game lineage; these fixtures
+    // explicitly select either the UE1 base or the v432 game source.
+    $sourceFamily=$ver<=61?'epic-ue1':'ut99-v432';
+    $tags=Tag::inspect($tmp,$pkg,0,$sourceFamily);
+    $native=Native::inspect($tmp,$pkg,0,$tags,$sourceFamily);
     return [$tags,$native];
 };
-$bad=static function(int $ver,string $data)use($parse):bool{
-    try{$parse($ver,$data);return false;}catch(RuntimeException){return true;}
+$bad=static function(int $ver,string $data,int $flags=0)use($parse):bool{
+    try{$parse($ver,$data,$flags);return false;}catch(RuntimeException){return true;}
 };
 try{
     [$f,$n]=$parse(50,$body(50));
@@ -238,6 +244,7 @@ try{
     $check('class_default_metadata_preserves_native_tail',
         $de['class_guid_raw_hex']==='01000000020000000300000004000000'
         &&$de['script_size']===0&&$de['unparsed_bytes']===0);
+    // BoolProperty's high bit carries the value; no extra array index.
     $boolTag=$compact(8)."\x83".$compact(0);
     [$bool]=$parse(50,$body(50,['defaultRaw'=>$boolTag]));
     $check('class_default_bool_tag_no_payload',
@@ -271,9 +278,10 @@ try{
     [$ex]=$parse(69,$body(69,['extension'=>"\xab"]));
     $check('unexpected_extension_not_complete',
         $ex['status']==='class_metadata_has_extension' &&$ex['extension_bytes']===1);
-    [$stack]=$parse(69,$body(69),0x02000000);
-    $check('RF_HasStack_not_guessed',
-        $stack['status']==='class_state_frame_unimplemented');
+    // A flagged class must actually carry its serialized StateFrame.
+    // This fixture deliberately omits that archive; Epic rejects it.
+    $check('RF_HasStack_missing_frame_rejected',
+        $bad(69,$body(69),0x02000000));
     $check('bad_super_ref_rejected',$bad(69,$body(69,['super'=>2])));
     $check('bad_children_ref_rejected',$bad(69,$body(69,['children'=>-2])));
     $check('friendly_None_rejected',$bad(69,$body(69,['friendly'=>0])));
@@ -285,6 +293,48 @@ try{
     $check('invalid_class_within',$bad(69,$body(69,['within'=>2])));
     $check('negative_package_import_count',$bad(69,$body(69,['importCount'=>-1])));
     $check('truncated_body_rejected',$bad(69,substr($body(69),0,5)));
+    // One actual stock compiled v432 malformed UClass package copy:
+    // FArchive consumes physical file bytes; SerialSize is not an early
+    // FDependency count guard. Do not rerun the native engine for this proof.
+    $manifest=dirname(__DIR__).'/compliance/UE1-O06-G5-T99-UCLASS-DEP-ERROR-PHYSICAL-ORIGIN.json';
+    $m=json_decode((string)file_get_contents($manifest),true,512,JSON_THROW_ON_ERROR);
+    $pin=static function(array $p):bool{
+        return is_file($p['path'])
+            &&hash_file('sha256',$p['path'])===$p['sha256']
+            &&filesize($p['path'])===$p['bytes'];
+    };
+    foreach(['original','mutated_one_byte_copy','original_native_core',
+       'native_loader_probe','native_probe_source',
+       'native_first_chance_cdb_log','native_debugger_script'] as $key){
+        $check('g5_v432_uclass_original_native_sha_'.$key,$pin($m[$key]));
+    }
+    $source=file_get_contents($m['original']['path']);
+    $mutant=file_get_contents($m['mutated_one_byte_copy']['path']);
+    $off=$m['mutated_absolute_offset'];
+    $check('g5_v432_uclass_single_byte_mutation_only',
+        $source[$off]===chr($m['original_encoded_dependency_count'])
+        &&$mutant[$off]===chr($m['mutated_encoded_dependency_count'])
+        &&substr($source,0,$off)===substr($mutant,0,$off)
+        &&substr($source,$off+1)===substr($mutant,$off+1));
+    $rawLog=file_get_contents($m['native_first_chance_cdb_log']['path']);
+    $nativeLog=mb_convert_encoding(substr($rawLog,2),'UTF-8','UTF-16LE');
+    $check('g5_v432_compiled_stock_native_first_chance_exists',
+        str_contains($nativeLog,'UCLASS_COMPILED_FIRST_THROW')
+        &&str_contains($nativeLog,'Core!'));
+    $pkg=new Package($m['original']['path']);
+    $valid=\UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicClassMetadataReader::inspect(
+        $m['original']['path'],$pkg,$m['original_export_index'],false,'ut99-v432');
+    $check('g5_v432_original_class_five_dependencies_complete',
+        count($valid['dependencies'])===5
+        &&$valid['status']==='class_metadata_no_script_no_defaults_complete');
+    $mutpkg=new Package($m['mutated_one_byte_copy']['path']);
+    $failure='';
+    try{
+        \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicClassMetadataReader::inspect(
+            $m['mutated_one_byte_copy']['path'],$mutpkg,$m['original_export_index'],false,'ut99-v432');
+    }catch(RuntimeException $e){$failure=$e->getMessage();}
+    $check('g5_v432_native_equivalent_reference_error_not_early_export_count',
+        $failure==='Invalid UClass FDependency.Class reference');
 }finally{foreach($paths as $p){@unlink($p);}}
 $ok=$fail===[];
 echo json_encode(['ok'=>$ok,'passed'=>count($checks)-count($fail),

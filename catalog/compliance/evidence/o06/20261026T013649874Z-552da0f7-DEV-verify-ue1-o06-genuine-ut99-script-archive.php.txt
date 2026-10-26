@@ -1,0 +1,81 @@
+﻿{
+    "ok": true,
+    "checks": 58,
+    "passed": 58,
+    "failed": [],
+    "totals": {
+        "files": 6,
+        "classes": 3194,
+        "default_tags": 11366,
+        "exception_count": 0,
+        "label_tables": 1,
+        "genuine_exports": 33693
+    },
+    "files": [
+        {
+            "file": "Core.u",
+            "version": 69,
+            "exports": 669,
+            "classes": 7,
+            "default_tags": 16,
+            "exceptions": 0,
+            "sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70"
+        },
+        {
+            "file": "Engine.u",
+            "version": 69,
+            "exports": 5370,
+            "classes": 131,
+            "default_tags": 608,
+            "exceptions": 0,
+            "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+        },
+        {
+            "file": "UWindow.u",
+            "version": 69,
+            "exports": 3423,
+            "classes": 101,
+            "default_tags": 149,
+            "exceptions": 0,
+            "sha256": "0a4e185da507717170c46cd2689f260293fa732f37992ca33199255b9322c3a2"
+        },
+        {
+            "file": "UTMenu.u",
+            "version": 69,
+            "exports": 3065,
+            "classes": 303,
+            "default_tags": 599,
+            "exceptions": 0,
+            "sha256": "d2350634d009b8c0b76157612201eb8c57b4f80bf012bd6fb104e7b9f927fde5"
+        },
+        {
+            "file": "UnrealShare.u",
+            "version": 68,
+            "exports": 8773,
+            "classes": 360,
+            "default_tags": 3491,
+            "exceptions": 0,
+            "sha256": "d75a7a5a4dbdcbcbfc363eadae810f99dfc4030c203032ed2dc88d255811155d"
+        },
+        {
+            "file": "BotPack.u",
+            "version": 69,
+            "exports": 12393,
+            "classes": 2292,
+            "default_tags": 6503,
+            "exceptions": 0,
+            "sha256": "101127c7025bdbfd1a0d6fc5856ed93784e7f1da653b9b108c7ed3638acd20c7"
+        }
+    ],
+    "exception_examples": [],
+    "epic_source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+    "repro": {
+        "file": "Engine.u",
+        "absolute_archive_offset": 318020,
+        "first_label": "Begin",
+        "terminal_name_index": 3344,
+        "terminal_resolved_FName": "None",
+        "epic_comparison": "E->Name == NAME_None, NOT archive local index === 0"
+    },
+    "remaining": "No actual UT99 native execution or independently instrumented archive oracle performed. Only six pinned installed genuine .u packages tested; runtime object memory, bytecode execution, v400 vs installed binary compiler differences remain unverified."
+}

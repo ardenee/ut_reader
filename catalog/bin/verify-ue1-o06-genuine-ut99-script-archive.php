@@ -49,7 +49,8 @@ foreach($manifest['files'] as $row){
   if((int)$ex['classIndex']!==0){continue;}
   ++$classes;
   try{
-   $r=Tags::inspect($path,$pkg,(int)$ex['index']);
+   // These are pinned installed UT99 files; source provenance is known.
+   $r=Tags::inspect($path,$pkg,(int)$ex['index'],'ut99-v432');
    $tagCount+=count($r['default_property_tags']??[]);
   }catch(Throwable $e){
    $fails++;$totals['exception_count']++;

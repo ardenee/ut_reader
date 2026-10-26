@@ -41,9 +41,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"All 88 genuine UClass objects and native stored scalar/array/default/inherited values verified; Script bytecode fixups, malformed consumption, source-version variants, and shared UObject not closed.",
-  "next":"Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
-  "blocker":"inherited_UObject_script_fixups_negative_paths",
+  "reason":"All 88 genuine v432 UClass compiled scalar/default/inherited value groups remain SHA-pinned. NEW actual compiled v432 UWindowLookAndFeel original-copy malformed dependency count (one byte 5 to 63) demonstrates FArchive continues beyond export SerialSize before failing during FDependency.Class resolution; source PHP physical-EOF handling corrected. Also fixed distinct Unreal v1.200 pre-v57 UClass archive cursor after second-handle tagged defaults before two trailing FNames. Source-class focused verifier 87/87 DEV PASS, genuine six package script/class sample 3194 original classes/11366 tags current-source PASS without reloading native class oracles. Complete script bytecode loaded pointer/fixup values, other source-legal malformed/class-default runtime side effects and independent seven-gate FULL acceptance remain OPEN.",
+  "next":"Stop old 88 native scalar/default/inherited tests. Next UClass decision-critical work: source-accurate runtime script pointer/FName fixups and class default object initialization/config effects, remaining genuine malformed archive paths and one final 7/7 independent method acceptance. Preserve original dependency count mutation/CDB and six-package DEV acceptance; no duplicate oracle run.",
+  "blocker":"native_loaded_UClass_Script_fixups_default_runtime_effects_and_remaining_malformed_source_variants",
  },
  "T99:UTextBuffer::Serialize":{
   "result":"BLOCKED",

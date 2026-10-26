@@ -335,7 +335,7 @@
         "global_source_inputs_changed",
         "compiled_ALL88_REAL_UClass_43_NAME_None_zero_byte_placeholders_not_unvisited_3053_dependencies_176_imports_608_defaults_plus_1056_inherited_UField_UStruct_UState_stored_members_verified_but_Script_bytecode_fixups_malformed_errors_version_variants_OPEN"
       ],
-      "next_closure_work": "Resolve shared UObject prerequisite and full native bytecode/negative paths once in one final method-level test, not more scalar partials.",
+      "next_closure_work": "Stop old 88 native scalar/default/inherited tests. Next UClass decision-critical work: source-accurate runtime script pointer/FName fixups and class default object initialization/config effects, remaining genuine malformed archive paths and one final 7/7 independent method acceptance. Preserve original dependency count mutation/CDB and six-package DEV acceptance; no duplicate oracle run.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -345,7 +345,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_UObject_script_fixups_negative_paths",
+      "decisive_closure_blocker": "native_loaded_UClass_Script_fixups_default_runtime_effects_and_remaining_malformed_source_variants",
       "closure_artifact": null,
       "closure_sha256": null
     },
