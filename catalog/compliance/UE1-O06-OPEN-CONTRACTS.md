@@ -2,6 +2,10 @@
 
 Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation IDs. The canonical operation remains O06. Use the append-only UE1-O06-TEST-EVENTS.jsonl and latest UE1-O06-TEST-STATUS.json; do not rerun matching PASS tests just to reconstruct progress.
 
+## G3-07 real production source correction (2026-10-26)
+
+Source-defined archive field discrepancy FIXED, but G3-07 full native method remains OPEN. Original C98 v1.200 and inherited T99 v400 UProperty::Serialize both read signed ArrayDim verbatim, with no positivity/range guard in that method. Old UnrealDB invented an early FArchive rejection for 0/-1; PHP now decodes them as signed archive values and consumes the remaining property fields. Actual later native UProperty::Link success is NOT claimed. Original C98 preserves archived PropertyFlags 0x00080060; UT99 v400 for version <=61 clears obsolete net flags to 0x20. The existing fixture was corrected to select the intended game source explicitly. Actual current DEV 40/40 property tests PASS plus 159/159 refreshed source SHA and 24 test-log evidence checks PASS. No G5 native tests and no 23 other historical G3 tests rerun. See UE1-O06-G3-C98-T99-UPROPERTY-SIGNED-ARRAYDIM-SOURCE.json.
+
 ## G3 source discovery checkpoint — 403/403 new tests (2026-10-26)
 
 G3 **NOT ACCEPTED**. Two final source-discovery-focused tests passed (244/244 C227 original compiled Core.lib import symbols and original header aliases; 159/159 C98 v1.200 and inherited T99 v400 source method navigation and historical PASS test/output hashes). 57 previously missing C227 Core method declarations across 25 actual compiled types are now in the expanded 91-row machine matrix. These original compiled import symbols DO NOT certify the C227 implementation code or native loaded values; the v227 source tree has no original UnClass.cpp or UnProp.cpp and the inspected build artifacts contain Core.lib without Core.dll. G3's 16 full contract acceptances still await source/native coverage, principally G3-01/02/08/15. No G3 production reader changes, no repeat of the sealed T99 G5 tests.

@@ -62,9 +62,12 @@ final class CatalogUE1ClassicPropertyNativeReader
         $arrayDimRaw = (int)$u32();
         $arrayDim = $arrayDimRaw >= 0x80000000
             ? $arrayDimRaw - 0x100000000 : $arrayDimRaw;
-        if ($arrayDim <= 0) {
-            throw new RuntimeException('Invalid UProperty ArrayDim');
-        }
+        // Epic C98 v1.200 and inherited UT99 v400 UProperty::Serialize
+        // archives ArrayDim verbatim (Ar << ArrayDim) and does not perform
+        // a positivity check here. The later UProperty::Link/instance
+        // construction outcome is independent and NOT verified by an
+        // archive-only reader. Rejecting 0 or negative here invents an
+        // earlier native FArchive error that is absent from these methods.
         $flags = (int)$u32();
         $categoryIndex = (int)$compact();
         $nameMap = $pkg->getNames();
@@ -133,6 +136,7 @@ final class CatalogUE1ClassicPropertyNativeReader
             'super_field_reference' => $superField,
             'next_field_reference' => $nextField,
             'array_dim' => $arrayDim,
+            'archive_array_dim_preserved_without_linkage_validation' => true,
             'property_flags' => $flags,
             'effective_property_flags' => $family===CatalogUE1ClassicSourceFamily::UT99_V432
                 ?$ut99LegacyEffectiveFlags:$flags,

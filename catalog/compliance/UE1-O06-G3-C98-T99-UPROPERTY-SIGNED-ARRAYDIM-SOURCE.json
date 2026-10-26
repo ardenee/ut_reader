@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "time_utc": "2026-10-26T16:52:44.422827+00:00",
+  "G3_contract": "G3-07",
+  "proof": "C98_v1200_and_inherited_T99_v400_UProperty::Serialize_archive_ArrayDim_NO_range_guard",
+  "original_source_cpp": {
+    "C98_v1200": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnProp.cpp",
+      "source_sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b",
+      "first_line": 101,
+      "method_archive_has_no_ArrayDim_range_guard": true,
+      "method_excerpt_SHA256": "83121fab920ffdabb940c8f35acb14a895aa2b4fc700010182fbf8d4fddec53d"
+    },
+    "T99_inherited_v400": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "source_sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+      "first_line": 117,
+      "method_archive_has_no_ArrayDim_range_guard": true,
+      "method_excerpt_SHA256": "c3a8ea8a411a0b993a9ea71f9eeb8f0db0b23b3aa12072c0e44605b9576fb450"
+    }
+  },
+  "actual_PHP_reader_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+  "prior_git_HEAD_reader_sha256": "e4ccaaaa0b7e576dde3c63c22325337343bda9c23af719b645363e1a48c48e9b",
+  "current_production_reader_sha256": "e809815e4d5f533dc1aed57c3293130c5c37d895e15ad93142ca2c583a3a403f",
+  "prior_unjustified_error": "Invalid UProperty ArrayDim",
+  "corrected_load_archive_semantics": "Signed int 0 and -1 are retained from archive and subsequent serialized PropertyFlags/Category are consumed; no early native FArchive error invented. Runtime UProperty::Link and stock original compiled runtime not validated.",
+  "original_source_specific_old_net_flags": {
+    "C98_v1200": "preserve archived 0x00080060",
+    "T99_v400_when_Version_at_most_61": "clear 0x00080040 from archived 0x00080060 to effective 0x20",
+    "overlapping_archive_versions_are_not_game_identity": true
+  },
+  "current_DEV_test": {
+    "name": "verify-ue1-classic-property-native.php",
+    "script_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+    "result_path": "catalog/compliance/evidence/o06/20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt",
+    "result_sha256": "409e3402f795e7bba31657e7924d9def02f2b8825c02338fb349593c7c39a5dd",
+    "result_assertions": 40,
+    "actual_test_cases": [
+      "v69_source_persists_zero_ArrayDim_without_early_archive_error",
+      "v50_source_persists_negative_ArrayDim_without_early_archive_error",
+      "v50_replication_and_old_flags"
+    ]
+  },
+  "G3_full_acceptance": false,
+  "C227_raw_zero_dim_native_loader_behavior_unknown": true,
+  "compiled_original_C98_T99_native_property_link_executed": false,
+  "previous_G5_8_source_profiles_reexecuted": false
+}

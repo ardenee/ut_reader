@@ -52,11 +52,15 @@ $parse=static function(string $kind,int $ver,string $tail)use(&$paths,$build):ar
     $paths[]=$path;file_put_contents($path,$build($kind,$ver,$tail));
     $pkg=new Package($path);
     if($pkg->validatePackage()!==[]){throw new RuntimeException('UE1 package fixture malformed');}
-    $tags=Tagged::inspect($path,$pkg,0);
+    // The synthetic archive has no genuine producer identity. Versions
+    // 60/61 and 69 overlap engines; select the intended original C++
+    // source for this fixture explicitly, never infer from version alone.
+    $family=$ver>=62?'ut99-v432':'epic-ue1';
+    $tags=Tagged::inspect($path,$pkg,0,$family);
     if(($tags['status']??null)!=='tag_envelope_decoded'){
         throw new RuntimeException('Inherited tagged property stream not decoded');
     }
-    return [Native::inspect($path,$pkg,0,$tags),$tags];
+    return [Native::inspect($path,$pkg,0,$tags,$family),$tags];
 };
 $reject=static function(string $kind,int $ver,string $body)use($parse):bool {
     try{$parse($kind,$ver,$body);return false;}catch(RuntimeException){return true;}
@@ -104,7 +108,11 @@ try {
     $check('v50_replication_and_old_flags',($p['status']??'')==='native_property_record_complete'
         &&$p['array_dim']===3&&$p['rep_offset']===65534
         &&$p['property_flags']===0x00080060
-        &&$p['effective_property_flags']===0x20
+        // Explicit v1.200 source preserves the saved flags verbatim.
+        // UT99's v400 legacy loader instead clears 0x00080040.
+        &&$p['effective_property_flags']===0x00080060
+        &&$p['effective_property_flags_if_ut99_v400_load']===0x20
+        &&$p['source_dependent_legacy_net_flags']===true
         &&$p['super_field_reference']===-1&&$p['next_field_reference']===1
         &&$p['subclass_fields']['enum_reference']===1);
     $check('v50_inherited_old_UObject_envelope',
@@ -119,8 +127,23 @@ try {
         $p['status']==='native_property_has_extension'
         &&$p['extension_bytes']===1
         &&$p['runtime_bool_bitmask_linked']===false);
-    $check('reject_zero_ArrayDim',$reject('IntProperty',69,$base(0)));
-    $check('reject_negative_ArrayDim',$reject('IntProperty',50,$base(-1)));
+    // Neither original C98 nor T99 UProperty::Serialize checks ArrayDim
+    // positivity at the archived field; native post-load Link semantics
+    // remain separate and must not be fabricated as an FArchive exception.
+    [$zero]=$parse('IntProperty',69,$base(0));
+    $check('v69_source_persists_zero_ArrayDim_without_early_archive_error',
+        $zero['status']==='native_property_record_complete'
+        &&$zero['array_dim']===0
+        &&$zero['archive_array_dim_preserved_without_linkage_validation']===true
+        &&$zero['extension_bytes']===0
+        &&$zero['runtime_property_offsets_linked']===false);
+    [$negative]=$parse('IntProperty',50,$base(-1));
+    $check('v50_source_persists_negative_ArrayDim_without_early_archive_error',
+        $negative['status']==='native_property_record_complete'
+        &&$negative['array_dim']===-1
+        &&$negative['archive_array_dim_preserved_without_linkage_validation']===true
+        &&$negative['extension_bytes']===0
+        &&$negative['runtime_property_offsets_linked']===false);
     $check('reject_invalid_name_index',$reject('BoolProperty',69,$base(1,0,40)));
     $check('reject_negative_name_index',$reject('IntProperty',69,$base(1,0,-1)));
     $check('reject_positive_super_ref',$reject('IntProperty',69,$base(1,0,5,2)));

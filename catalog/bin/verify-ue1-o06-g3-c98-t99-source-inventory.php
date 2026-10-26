@@ -40,10 +40,21 @@ foreach($rows as $x){
       &&is_string($sha)&&preg_match('/^[0-9a-f]{64}$/',$sha)===1));
  }
 }
-$currentRegister=file_get_contents($c.'/UE1-O06-SERIALIZER-REGISTER.json');
-$stableRegister=str_replace(["\r\n","\r"],"\n",preg_replace('/("updated_at_utc":\s*")[^"]+(")/','$1<IGNORED_TIMESTAMP>$2',$currentRegister,1));
-$check('stable registered-source entries SHA, ignoring only event timestamp',
- $m['register_semantically_stable_except_timestamp_sha256']===hash('sha256',$stableRegister));
+// The acceptance runner updates each affected row's last_verification
+// and timestamps after every DEV test. Those are test HISTORY, not a
+// change to the original serializer source mapping. Hash only stable
+// source declarations and retain all immutable class/reader/test fields.
+$register=json_decode((string)file_get_contents(
+ $c.'/UE1-O06-SERIALIZER-REGISTER.json'),true,512,JSON_THROW_ON_ERROR);
+unset($register['updated_at_utc']);
+foreach($register['entries'] as &$entry){
+ unset($entry['updated_at_utc'],$entry['last_verification']);
+}
+unset($entry);
+$stableRegister=json_encode($register,
+ JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES|JSON_PRESERVE_ZERO_FRACTION);
+$check('stable original registered-source SHA ignoring only mutable journal history',
+ $m['register_immutable_source_mapping_except_test_history_sha256']===hash('sha256',$stableRegister));
 $names=0;$ready=0;$logReady=0;
 foreach($m['existing_candidate_tests'] as $name=>$t){
  $names++;$f=$root.'/'.$t['path'];

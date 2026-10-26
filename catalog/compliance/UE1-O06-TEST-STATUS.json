@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T13:14:43.8729628Z",
-    "head_commit":  "bb009383",
+    "updated_at_utc":  "2026-10-26T16:55:20.5599447Z",
+    "head_commit":  "ff1af39b",
     "current_target":  "DEV",
-    "current_source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+    "current_source_sha256":  "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -249,12 +249,12 @@
                       "test":  "verify-ue1-classic-property-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T11:03:57.1605909Z",
-                      "source_sha256":  "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-                      "test_sha256":  "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
-                      "run_id":  "20261023T110356728Z-a3c43925",
+                      "event_at_utc":  "2026-10-26T16:50:12.7845330Z",
+                      "source_sha256":  "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
+                      "test_sha256":  "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+                      "run_id":  "20261026T165012180Z-c00d3deb",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T110356728Z-a3c43925-DEV-verify-ue1-classic-property-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-struct-alias-lineage.php",
@@ -525,12 +525,12 @@
                       "test":  "verify-ue1-o06-g3-c98-t99-source-inventory.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-26T13:14:43.8509364Z",
-                      "source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
-                      "test_sha256":  "c64249ea702be83f6ad790b7c4c8ea34188dfdd54fee9165fe765eee3f90e10a",
-                      "run_id":  "20261026T131443340Z-fa6907cf",
+                      "event_at_utc":  "2026-10-26T16:55:20.5449461Z",
+                      "source_sha256":  "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
+                      "test_sha256":  "85e0be911e95623edd3919f80e1a65cbdc684a2b3ad41d7307e54ebfead23423",
+                      "run_id":  "20261026T165520032Z-32894944",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T131443340Z-fa6907cf-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T165520032Z-32894944-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php",
