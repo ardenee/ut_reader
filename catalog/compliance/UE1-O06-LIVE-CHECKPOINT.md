@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-c98-may1998-uproperty-loaded-1536-identities`
-- **Stage:** G3-C98-MAY1998-UPROPERTY-1536-REAL-NATIVE-IDENTITIES-PASS-RELEASE-PENDING
-- **Last completed action:** New genuine May17 compiled C98 Core.dll UProperty::Serialize after-LOAD 1536 captured individually identified linker+0based export property objects matched original PHP persisted field values Core.u 326/327, Engine.u 1162/2493, UnrealI.u 48/4576, 0 mismatches; 107 source CPF_Net RepOffset matches and 1536 loaded Offset zero, original FName appStricmp covers six native bird1/archive Bird1 case aliases. Native stock CDB logs, original May binary/unmodified 3 packages, original Epic source and disassembly SHA pinned; independent DEV focused verifier 18477/18477 PASS; no code reader changes, no prior sealed G5 or other source family native repetitions. Core ExecVtbl/remaining unobserved exports and negative/malformed/version branches remain OPEN; G3 full 0/16.
-- **Resume at:** Commit and push SHA pinned original May property 1536 loaded identities; PRD SHA verify, update deployed checkpoint. Then investigate next unverified UProperty subclass loaded fields and G3 exact archive error paths, not repeating current 1536 loaded proof.
-- **Active changed at:** 2026-10-26T22:56:07+00:00
+- **Stage:** G3-C98-MAY1998-UPROPERTY-1536-REAL-NATIVE-IDENTITIES-PRD-SHA-VERIFIED
+- **Last completed action:** Completed original May17 C98 compiled UProperty 1536 exact loaded identity source-native matches: Core 326/327 Engine 1162/2493 UnrealI 48/4576; original FName equivalence 6 bird1 spelling variants, 107 CPF_Net RepOffsets, all 1536 Offset zero, 18477/18477 independent DEV PASS; original stock CDB log and 5 Epic source files SHA pinned. Commit a187c87f pushed GitHub main, 19/19 PRD changed files SHA256 verified and protected config/storage untouched. No production parser change or repeat previous G5/Const/Enum tests. Unobserved exports including Core ExecVtbl and all malformed/version/subclass behaviors OPEN, G3 full 0/16.
+- **Resume at:** Distinct G3-08 subclass native serializer fields, starting actual original May UStringProperty::StringSize loaded value after its own compiled Serialize function, source and archived record identity. Do not recapture UProperty 1536 or previous native Const/Enum/G5 source tests.
+- **Active changed at:** 2026-10-26T22:57:17+00:00
 - **Latest DEV test states:** PASS 166; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
