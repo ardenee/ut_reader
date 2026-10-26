@@ -1,0 +1,25 @@
+﻿{
+    "ok": true,
+    "checks": 1342,
+    "passed": 1342,
+    "failed": [],
+    "method": "T99:UClass::Serialize",
+    "decision": "FULL_SOURCE_PROFILE_UT99_V432_ENGINE_U_V69",
+    "method_scope": "UT99-v432 original selected Core/Engine compiled loader, genuine Engine.u archive version69 named serialized UClass exports (88/88), normal nontransactional file loading, not all UE1 source families nor hypothetical unknown native class layouts",
+    "seven_gates": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
+    },
+    "original_classes_loaded_native": 88,
+    "original_saved_class_defaults": 608,
+    "native_scripted_classes_compared": 16,
+    "loaded_script_known_bytes": 989,
+    "loaded_Script_pointer_and_FName_fixups": 130,
+    "stock_native_executions_in_acceptance_verifier": 0,
+    "all_UE1_game_families_FULL": false
+}

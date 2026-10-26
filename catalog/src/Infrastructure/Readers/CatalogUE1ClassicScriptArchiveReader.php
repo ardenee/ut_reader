@@ -38,6 +38,16 @@ final class CatalogUE1ClassicScriptArchiveReader
         $unsupported = null;
         $preview = [];
         $relocations = []; $relocationCount=0;
+        // Source XFER byte-for-byte reconstruction: native pointers and
+        // global FName handles are unknown process addresses/indices. Mask
+        // those four-byte words, never falsely compare them as archive ints.
+        $memoryBytes='';$memoryKnownMask='';
+        $remember=static function(string $raw,bool $known=true)use(
+            &$memoryBytes,&$memoryKnownMask,$scriptSize):void{
+            if($scriptSize>8192)return; // Avoid large per-class previews.
+            $memoryBytes.=$raw;
+            $memoryKnownMask.=str_repeat($known?"\x01":"\x00",strlen($raw));
+        };
         $lastToken = null; $lastTokenArchiveOffset = null;
         // Unreal v227 UnStack.h and UT99 v432 UnStack.h share all
         // common basic VM tokens; Unreal v1.200 is NOT the right
@@ -62,17 +72,17 @@ final class CatalogUE1ClassicScriptArchiveReader
                 ));
             }
         };
-        $byte = static function() use ($read, $mem): int {
-            $v = ord($read(1)); $mem(1); return $v;
+        $byte = static function() use ($read, $mem, $remember): int {
+            $v = ord($read(1)); $mem(1); $remember(chr($v)); return $v;
         };
-        $word = static function() use ($read, $mem): int {
-            $v = (int)unpack('v', $read(2))[1]; $mem(2); return $v;
+        $word = static function() use ($read, $mem, $remember): int {
+            $v = (int)unpack('v', $read(2))[1]; $mem(2); $remember(pack('v',$v)); return $v;
         };
-        $dword = static function() use ($read, $mem): int {
-            $v = (int)unpack('V', $read(4))[1]; $mem(4); return $v;
+        $dword = static function() use ($read, $mem, $remember): int {
+            $v = (int)unpack('V', $read(4))[1]; $mem(4); $remember(pack('V',$v)); return $v;
         };
         $ref = static function() use ($compact, $pkg, $mem, &$iCode,
-            &$relocations, &$relocationCount): int {
+            &$relocations, &$relocationCount, $remember): int {
             $v = $compact();
             $exports=$pkg->getExports();$imports=$pkg->getImports();
             if (($v < 0 && -$v > count($imports)) ||
@@ -81,6 +91,7 @@ final class CatalogUE1ClassicScriptArchiveReader
             }
             $slot=$iCode;
             $mem(4); // C++ XFER(UObject*) or XFER(UProperty*) is sizeof(ptr).
+            $remember(pack('V',0),false);
             // The stock compiled linker replaces the archived object index
             // with a four-byte native pointer at this memory offset.
             // Preserve file index AND source identity; never fabricate the
@@ -97,7 +108,7 @@ final class CatalogUE1ClassicScriptArchiveReader
             return $v;
         };
         $fname = static function() use ($compact, $pkg, $mem, &$iCode,
-            &$relocations, &$relocationCount): array {
+            &$relocations, &$relocationCount, $remember): array {
             $id = $compact();
             $names = $pkg->getNames();
             if ($id < 0 || !isset($names[$id])) {
@@ -105,6 +116,7 @@ final class CatalogUE1ClassicScriptArchiveReader
             }
             $slot=$iCode;
             $mem(4); // C++ XFER(FName) increments iCode by sizeof(FName).
+            $remember(pack('V',0),false);
             ++$relocationCount;
             if(count($relocations)<128){
                 $relocations[]=['kind'=>'fname','memory_offset'=>$slot,
@@ -366,6 +378,9 @@ final class CatalogUE1ClassicScriptArchiveReader
             'native_load_relocation_preview_truncated'=>
                 $relocationCount>count($relocations),
             'native_pointer_addresses_fabricated'=>false,
+            'source_memory_full_byte_reconstruction'=>$scriptSize<=8192 && strlen($memoryBytes)===$iCode,
+            'source_memory_bytes_hex'=>$scriptSize<=8192?bin2hex($memoryBytes):null,
+            'source_memory_known_mask_hex'=>$scriptSize<=8192?bin2hex($memoryKnownMask):null,
             'unsupported_branch' => $unsupported,
             'bytecode_executed' => false,
             'runtime_refs_resolved' => false,

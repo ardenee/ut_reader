@@ -38,12 +38,12 @@ status={
   "blocker":"T99_v432_unverified_nonempty_FString_array_native_materialization_other_nested_tagged_property_load_error_variants_and_independent_full_method_review",
  },
  "T99:UClass::Serialize":{
-  "result":"BLOCKED",
+  "result":"FULL",
   "pinned":True,
   "current":True,
-  "reason":"All 88 genuine v432 UClass compiled scalar/default/inherited value groups remain SHA-pinned. NEW actual compiled v432 UWindowLookAndFeel original-copy malformed dependency count (one byte 5 to 63) demonstrates FArchive continues beyond export SerialSize before failing during FDependency.Class resolution; source PHP physical-EOF handling corrected. Also fixed distinct Unreal v1.200 pre-v57 UClass archive cursor after second-handle tagged defaults before two trailing FNames. Source-class focused verifier 87/87 DEV PASS, genuine six package script/class sample 3194 original classes/11366 tags current-source PASS without reloading native class oracles. NEW compiled stock v432 native Engine.Actor, Pawn and LevelInfo have Script.Num 767/314/11; source script XFER relocation memory and 57 opcode slots match loaded bytecode. Three live UObject* referents all resolve ByteProperty Engine.Actor.Role, and Pawn FName at memory281 resolves PlayerPawn (archived name-index15 versus native global-ID893). CDO Role4, GroundSpeed320 and TimeDilation1 match saved default tags. Focus verifier 47/47 PASS and original 30-package script class regression 4199 classes/17700 tags PASS; prior 88 compiled native class comparisons not repeated. Remaining complete XFER FName/object variants, config/localized default effects and source-legal malformed error cases keep this method BLOCKED.",
-  "next":"Stop old 88 native scalar/default/inherited tests. Next UClass decision-critical work: verify the outstanding full script XFER reference/FName relocation variants, CDO config/localized source effects and remaining precise malformed archive cases, then one independent 7/7 method acceptance. Do not repeat the compiled original Actor/Pawn/LevelInfo or earlier 88 compiled classes. Preserve original dependency count mutation/CDB and six-package DEV acceptance; no duplicate oracle run.",
-  "blocker":"remaining_UClass_script_XFER_variants_config_localized_default_side_effects_and_malformed_source_errors",
+  "reason":"All 88 genuine v432 UClass compiled scalar/default/inherited value groups remain SHA-pinned. NEW actual compiled v432 UWindowLookAndFeel original-copy malformed dependency count (one byte 5 to 63) demonstrates FArchive continues beyond export SerialSize before failing during FDependency.Class resolution; source PHP physical-EOF handling corrected. Also fixed distinct Unreal v1.200 pre-v57 UClass archive cursor after second-handle tagged defaults before two trailing FNames. Source-class focused verifier 87/87 DEV PASS, genuine six package script/class sample 3194 original classes/11366 tags current-source PASS without reloading native class oracles. NEW compiled stock v432 native Engine.Actor, Pawn and LevelInfo have Script.Num 767/314/11; source script XFER relocation memory and 57 opcode slots match loaded bytecode. Three live UObject* referents all resolve ByteProperty Engine.Actor.Role, and Pawn FName at memory281 resolves PlayerPawn (archived name-index15 versus native global-ID893). CDO Role4, GroundSpeed320 and TimeDilation1 match saved default tags. Focus verifier 47/47 PASS and original 30-package script class regression 4199 classes/17700 tags PASS; prior 88 compiled native class comparisons not repeated. FINAL UT99 v432 original version69 Engine.u source-profile 7/7 independent method FULL: 88/88 named serialized native classes and complete source archive consumption, 608 original tagged class default values including one actual v432 INI runtime override, all 3053 FDependency elements and 1056 inherited fields SHA-reused. ALL 16 original script-bearing UClasses now have complete actual loaded Script memory comparison: 989/989 known bytes + 130/130 resolved native pointer/FName locations over 1509 bytes, with no mismatch; 13 new classes tested in ONE native loader process, 3 prior original native logs SHA-reused. One native original malformed FDependency count error and source-specific class archive correction pinned. Independent final reviewer 1342/1342, 7 of 7 VERIFIED. Does not claim all UE1 source families or Config/Localized external contexts verified.",
+  "next":"T99 UClass exact UT99-v432 Engine.u archive version69 source-profile FULL 7/7. Stop all 88 native class/default comparisons, 16 original scripted class full memory and 130 relocations, and the original class dependency negative. No automatic generalization to Unreal C98/C227, other UClass packages or external localized/config environments. Now resolve separate T99 UObject global method.",
+  "blocker":None,
  },
  "T99:UTextBuffer::Serialize":{
   "result":"BLOCKED",
@@ -108,6 +108,9 @@ def scoped_source_current(value):
         return True
     # Native-loaded v432 UClass script fixups change only the source
     # relocation presentation, not prior six FULL method serializers.
+    if (reconciliation.get("source_native_uclass_complete_script_memory_scoped")
+        and value==reconciliation.get("previous_source_before_uclass_complete_memory")):
+        return True
     if (reconciliation.get("source_native_uclass_script_load_relocations_scoped")
         and value==reconciliation.get("previous_source_before_uclass_script_relocations")):
         return True
@@ -1009,7 +1012,7 @@ for name in reg["methods"]:
         native_test="verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php"
         native_ev=next((e for e in reversed(events)
             if e.get("test")==native_test and e.get("state")=="PASS"),None)
-        assert native_ev and native_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert native_ev and scoped_source_current(native_ev["source_sha256"])
         native_log=ROOT/native_ev["log"].replace("\\","/")
         assert sha(native_log)==native_ev["output_sha256"]
         assert sha(ROOT/"catalog/bin"/native_test)==native_ev["test_sha256"]
@@ -1049,8 +1052,48 @@ for name in reg["methods"]:
         old["actual_native_UClass_loaded_object_pointer_fixups"]=3
         old["actual_native_UClass_LoadConfig_CDO_primitive_values"]=3
         old["native_uclass_script_load_proof_SHA"]=sha(manifest)
-        # Method remains BLOCKED: this is not every legal FName/object
-        # relocation nor the complete class-default/config load contract.
+        # Closure is restricted to actual compiled v432 Engine.u v69
+        # source-profile. The original 88 compiled native tests, full 16
+        # Script classes and selected malformed dependency are sealed.
+        full_test="verify-ue1-o06-g5-t99-uclass-independent-full.php"
+        full_ev=next((e for e in reversed(events)
+            if e.get("test")==full_test and e.get("state")=="PASS"),None)
+        assert full_ev and full_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        full_log=ROOT/full_ev["log"].replace("\\","/")
+        assert sha(full_log)==full_ev["output_sha256"]
+        assert sha(ROOT/"catalog/bin"/full_test)==full_ev["test_sha256"]
+        final=read(full_log)
+        assert final["ok"] and final["checks"]==final["passed"]==1342
+        assert final["decision"]=="FULL_SOURCE_PROFILE_UT99_V432_ENGINE_U_V69"
+        assert final["native_scripted_classes_compared"]==16
+        assert final["loaded_script_known_bytes"]==989
+        assert final["loaded_Script_pointer_and_FName_fixups"]==130
+        assert final["stock_native_executions_in_acceptance_verifier"]==0
+        assert final["all_UE1_game_families_FULL"] is False
+        scoped_manifest=C/"UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json"
+        manifest=read(scoped_manifest)
+        assert manifest["method"]==name
+        assert manifest["expected"]["fully_source_consumed_class_records"]==88
+        assert manifest["expected"]["native_loaded_script_relocations"]==130
+        closure=C/"UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json"
+        accepted=read(closure)
+        assert accepted["method"]==name and accepted["decision"]=="FULL"
+        assert accepted["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert accepted["method_oracle_manifest_sha256"]==sha(scoped_manifest)
+        assert accepted["acceptance_test_sha256"]==sha(ROOT/"catalog/bin"/full_test)
+        assert accepted["acceptance_output_sha256"]==sha(full_log)
+        assert accepted["seven_gates"]==final["seven_gates"]
+        assert len(final["seven_gates"])==7 and all(v=="VERIFIED" for v in final["seven_gates"].values())
+        assert not accepted["source_families_C98_and_C227_FULL"]
+        assert accepted["uobject_global_method_FULL"]=="BLOCKED_SEPARATELY"
+        gates.update(final["seven_gates"])
+        old["closure_artifact"]="catalog/compliance/"+closure.name
+        old["closure_sha256"]=sha(closure)
+        old["native_UClass_original_Engine_v69_classes"]=88
+        old["native_UClass_full_loaded_script_classes"]=16
+        old["native_UClass_source_loaded_memory_byte_matches"]=989
+        old["native_UClass_all_script_relocations_verified"]=130
+        old["native_UClass_final_independent_method_checks"]=1342
     if name=="T99:USkeletalMesh::Serialize":
         focus="verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php"
         event_rows=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
@@ -1246,6 +1289,7 @@ for name in reg["methods"]:
         "FINAL_7_of_7_source_scoped_TextBuffer_302_checks" if name=="T99:UTextBuffer::Serialize"
         else "FINAL_7_of_7_source_scoped_Font_185_checks" if name=="T99:UFont::Serialize"
         else "current_native_dynamic_count_EOF_21_and_nested_FString_EOF_25_checks_SHA" if name=="T99:UObject::Serialize"
+        else "FINAL_7_of_7_source_scoped_UClass_original_Engine_v69_PASS1342" if name=="T99:UClass::Serialize"
         else "FINAL_7_of_7_source_scoped_SkeletalMesh_remap_native_PASS55" if name=="T99:USkeletalMesh::Serialize"
         else "FINAL_7_of_7_source_scoped_audio_inherited_PASS63" if name in ("T99:USound::Serialize","T99:UMusic::Serialize")
         else "whole_v432_native_full_values_3694_and_6_exact_malformed_native_cursors_91_checks_2_remaining_gates" if name=="T99:UAnimation::Serialize"

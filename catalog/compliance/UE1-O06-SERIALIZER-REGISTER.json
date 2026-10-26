@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-26T03:24:07+00:00",
+  "updated_at_utc": "2026-10-26T04:00:20+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -7587,14 +7587,14 @@
       "test": "verify-ue1-o06-genuine-ut99-script-archive.php",
       "evidence": "Epic UT99 v400 Core/Src/UnClass.cpp::UStruct::SerializeExpr EX_LabelTable serializes FLabelEntry and stops when resolved E->Name==NAME_None, NOT when package-local compact FName NameMap index is 0. SHA-pinned genuine installed Engine.u at byte 318020 stores Begin then terminal NAME_None via local name index 3344 (NameMap index 0 also None). Existing reader checked index===0 and overran real 72-byte script; fixed to compare resolved FName name. Six pinned installed .u v68/69 class archives 3194/3194 and 11366 tags, 58/58 focused checks PASS DEV, 20261023T131028993Z-00f114c6. Expanded 30 unchanged installed .u (113065333 bytes, 50250 exports) 4199/4199 UClass and 17700 default tags 0 errors, pinned 246/246 DEV PASS 20261023T131616365Z-482253ed; 5 affected/gate tests PASS reused (4 executed in prior selected gate, no unnecessary reruns). All genuine script archive source hits, but NOT actual compiled native engine runtime execution; O06 acceptance remains OPEN. SOURCE_ARCHIVE_MAPPED 2026-10-23: pinned source UClass::Serialize inherited and class-specific FArchive operations implemented in ClassMetadata + Script + TaggedProperties + ClassDefaultSchema + recursive StructArray reader, including UT99 legacy flags and ClassWithin load outcome, C98 fixed string bytes and v<57 trailer. G5/O10 separate and deferred.",
       "remaining": "NO OPEN SOURCE UClass FILE-ARCHIVE FIELD/ORDER WORK IN THE MAPPED SCOPE. Nonarchive native runtime effects are separately OPEN: DefaultObject InitProperties/InitClassDefaultObject, LoadConfig/Localized, link-time class assignability, imported missing packages, and compiled Epic loaded-value G5 oracle. Raw known/unknown default payloads preserve offsets/sizes/identity and unresolved fields report explicit unverified outcomes rather than invented values. O06 MAPPED does NOT mean G5 ACCEPTED or PRD deployed.",
-      "updated_at_utc": "2026-10-26T03:14:34+00:00",
+      "updated_at_utc": "2026-10-26T04:00:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T03:14:34.6798385Z",
+        "at_utc": "2026-10-26T04:00:03.2793638Z",
         "test_sha256": "0839fdb803751187f5f0bc9579a36c4a32695007c8498176a7b60de4abf40753",
-        "source_sha256": "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T031425997Z-2b54c267-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt"
+        "source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T035954131Z-0b8a49a6-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED_FILE_SERIALIZATION",
@@ -9276,14 +9276,14 @@
       "test": "verify-ue1-o06-genuine-ut99-script-archive.php",
       "evidence": "Epic UT99 v400 Core/Src/UnClass.cpp::UStruct::SerializeExpr EX_LabelTable serializes FLabelEntry and stops when resolved E->Name==NAME_None, NOT when package-local compact FName NameMap index is 0. SHA-pinned genuine installed Engine.u at byte 318020 stores Begin then terminal NAME_None via local name index 3344 (NameMap index 0 also None). Existing reader checked index===0 and overran real 72-byte script; fixed to compare resolved FName name. Six pinned installed .u v68/69 class archives 3194/3194 and 11366 tags, 58/58 focused checks PASS DEV, 20261023T131028993Z-00f114c6. Expanded 30 unchanged installed .u (113065333 bytes, 50250 exports) 4199/4199 UClass and 17700 default tags 0 errors, pinned 246/246 DEV PASS 20261023T131616365Z-482253ed; 5 affected/gate tests PASS reused (4 executed in prior selected gate, no unnecessary reruns). All genuine script archive source hits, but NOT actual compiled native engine runtime execution; O06 acceptance remains OPEN.; SOURCE_ARCHIVE_MAPPED 2026-10-23: T99 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-scope only: UT99 v400 semantic NAME_None terminator and pinned installed v68/69 archive parser. Differences between v400 source and installed later binaries, bytecode native VM execution, linker runtime object fixups, source build-selection G2 and other O06 G3-G6 gates remain unverified. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-26T03:14:34+00:00",
+      "updated_at_utc": "2026-10-26T04:00:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T03:14:34.6798385Z",
+        "at_utc": "2026-10-26T04:00:03.2793638Z",
         "test_sha256": "0839fdb803751187f5f0bc9579a36c4a32695007c8498176a7b60de4abf40753",
-        "source_sha256": "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T031425997Z-2b54c267-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt"
+        "source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T035954131Z-0b8a49a6-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",

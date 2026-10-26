@@ -72,6 +72,39 @@ if missing: signature += "\n"+"\n".join(missing)
 # Additional source-isolated UClass compiled live Script relocation view.
 # The prior six FULL subclass readers are unchanged; source-correct metadata
 # adds only the original XFER(UObject*)/XFER(FName) memory offsets and targets.
+# Independent complete v432 UClass original Engine.u source-profile closure
+# adds exact XFER reconstructed memory *views*, without modifying prior
+# compiled-native object serialization semantics. Pin the old source blob,
+# verify the new 1342-check seven-gate method decision, and reconstruct
+# previous fingerprints rather than rerunning six already FULL methods.
+class_memory_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+assert class_memory_current=="44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3"
+class_full_test="verify-ue1-o06-g5-t99-uclass-independent-full.php"
+class_full_ev=latest.get(class_full_test)
+assert class_full_ev and class_full_ev["state"]=="PASS"
+assert class_full_ev["source_sha256"]==class_memory_current
+class_full_log=ROOT/class_full_ev["log"].replace("\\","/")
+class_full_report=read(class_full_log)
+assert class_full_report["ok"] and class_full_report["checks"]==class_full_report["passed"]==1342
+assert class_full_report["decision"]=="FULL_SOURCE_PROFILE_UT99_V432_ENGINE_U_V69"
+assert len(class_full_report["seven_gates"])==7
+assert all(v=="VERIFIED" for v in class_full_report["seven_gates"].values())
+assert class_full_report["loaded_script_known_bytes"]==989
+assert class_full_report["loaded_Script_pointer_and_FName_fixups"]==130
+assert digest(class_full_log)==class_full_ev["output_sha256"]
+assert digest(ROOT/"catalog/bin"/class_full_test)==class_full_ev["test_sha256"]
+class_memory_path=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php"
+class_memory_old=subprocess.check_output(["git","-C",str(ROOT),"show",
+ "858a0d1a:catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php"])
+class_memory_old_sha=hashlib.sha256(class_memory_old).hexdigest()
+class_memory_text=class_memory_path.read_text(encoding="utf-8-sig")
+assert "source_memory_known_mask_hex" in class_memory_text
+assert "source_memory_known_mask_hex" not in class_memory_old.decode("utf-8-sig")
+memory_line=str(class_memory_path)+":"+digest(class_memory_path).upper()
+assert signature.count(memory_line)==1
+signature=signature.replace(memory_line,
+ str(class_memory_path)+":"+class_memory_old_sha.upper(),1)
+assert hashlib.sha256(signature.encode("utf-8")).hexdigest()=="f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3"
 script_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
 assert script_current=="f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3"
 script_path=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php"
@@ -97,7 +130,7 @@ assert uclass_report["native_loaded_fname_fixup_matches"] is True
 assert uclass_report["native_engines_run_by_verifier"]==0
 assert digest(uclass_log)==uclass_ev["output_sha256"]
 assert digest(ROOT/"catalog/bin"/uclass_test)==uclass_ev["test_sha256"]
-script_new_line=str(script_path)+":"+digest(script_path).upper()
+script_new_line=str(script_path)+":"+class_memory_old_sha.upper()
 script_prev_sha=hashlib.sha256(script_old_blob).hexdigest()
 assert signature.count(script_new_line)==1
 signature=signature.replace(script_new_line,str(script_path)+":"+script_prev_sha.upper(),1)
@@ -180,9 +213,16 @@ assert len(cls_diff)==5
 assert "physicalSize" in "".join(b for a,b in cls_diff)
 assert "Cannot seek after UClass default tags" in "".join(b for a,b in cls_diff)
 assert "serialsize" in "".join((a+b).lower() for a,b in cls_diff)
-cls_ev=latest.get("verify-ue1-classic-class-metadata.php")
-assert cls_ev and cls_ev.get("state")=="PASS"
-assert cls_ev["source_sha256"]=="8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029"
+cls_ev=next((e for e in reversed(events)
+    if e.get("test")=="verify-ue1-classic-class-metadata.php"
+    and e.get("state")=="PASS"
+    and e.get("source_sha256")=="8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029"),None)
+assert cls_ev is not None
+# The current full-class source change also has its own journaled
+# current-source 87/87 acceptance; retain both exact original proofs.
+cls_current=latest.get("verify-ue1-classic-class-metadata.php")
+assert cls_current and cls_current["state"]=="PASS"
+assert cls_current["source_sha256"]==class_memory_current
 cls_out=read(ROOT/cls_ev["log"].replace("\\","/"))
 assert cls_out["ok"] and cls_out["total"]==cls_out["passed"]==87
 cls_now_line=str(cls_path)+":"+digest(cls_path).upper()
@@ -1210,7 +1250,9 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":script_current,
+    "current_source_sha256":class_memory_current,
+    "source_native_uclass_complete_script_memory_scoped":True,
+    "previous_source_before_uclass_complete_memory":script_current,
     "source_native_uclass_script_load_relocations_scoped":True,
     "previous_source_before_uclass_script_relocations":remap_current,
     "source_native_skeletal_runtime_remap_scoped":True,

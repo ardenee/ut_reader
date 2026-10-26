@@ -1,0 +1,183 @@
+{
+  "schema": 1,
+  "method": "T99:UClass::Serialize",
+  "accepted_scope": "UT99-v432 original selected Core/Engine compiled loader, genuine Engine.u archive version69 named serialized UClass exports (88/88), normal nontransactional file loading, not all UE1 source families nor hypothetical unknown native class layouts",
+  "epic_source": {
+    "UClass_Serialize": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+      "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+      "bytes": 36351
+    },
+    "UClass_v432_header": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament v432/Core/Inc/UnClass.h",
+      "sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+      "bytes": 14220
+    }
+  },
+  "original_compiled": {
+    "Core.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432
+    },
+    "Engine.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+      "bytes": 1785856
+    },
+    "Engine.u": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "bytes": 1149560
+    }
+  },
+  "new_native": {
+    "script_all_oracle_source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptAll.cpp",
+      "sha256": "bfd881660756052dafd701a5203674a3bc216a9e19998e703f6f0bb3da789fbe",
+      "bytes": 9608
+    },
+    "script_all_oracle_exe": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptAll.exe",
+      "sha256": "685511cab7c1755f3d42be806f586f371e507b563ba617fcac95643a54ba1015",
+      "bytes": 84992
+    },
+    "native_loaded_13_new_original_Engine_classes": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptAll-native.log",
+      "sha256": "2f9a686c19f52be6e9866eac1fb521d42bc479f073510fbcc397a6d317843a11",
+      "bytes": 17460
+    },
+    "source_transcript_16_native_classes": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptAll-Source.json",
+      "sha256": "e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67",
+      "bytes": 38624
+    },
+    "prior_three_native_memory_logs": {
+      "Actor": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptFull-Actor.log",
+        "sha256": "b13debaed9ab6e8d5cf3d47b21c838aeaa2f7494c0e9077dcb784f9c08165b9e",
+        "bytes": 9376
+      },
+      "Pawn": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptFull-Pawn.log",
+        "sha256": "4de2849090d8f76137cca84414fdd32713d8e747f11795300d84cafad8c39178",
+        "bytes": 5147
+      },
+      "LevelInfo": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptFull-LevelInfo.log",
+        "sha256": "bba1c27ec1be9dab5805e80e767f98c8598142c7564c0f2a7b20dc5feb0e5d67",
+        "bytes": 922
+      }
+    },
+    "prior_three_native_probe_source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptFull.cpp",
+      "sha256": "3e2e8a1b85860459a43bb3c39e02aee83de1cb4b5a01342b8ab2f1caa48f0983",
+      "bytes": 8331
+    },
+    "prior_three_native_probe_exe": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptFull.exe",
+      "sha256": "9ea9e047b4e40e6538beb75fa9f4c8069bba7a746dbac17642602b42e6ab898e",
+      "bytes": 83968
+    }
+  },
+  "historic_original_native_verified_subsets": {
+    "verify-ue1-o06-g5-uclass-defaults-native-608.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uclass-defaults-native-608.php",
+        "sha256": "62d7f69c747a5f4c1b0fe430d76caab882cdb87e70839fb025cf27c69e8f1738",
+        "bytes": 10553
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T134028040Z-eeac5ddd-DEV-verify-ue1-o06-g5-uclass-defaults-native-608.php.txt",
+        "sha256": "4b61d1e46ca5d4ff0457f441e56cccbd1462383c8244b0b1be709ebc6336aded",
+        "bytes": 855
+      },
+      "historic_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978"
+    },
+    "verify-ue1-o06-g5-uclass-inherited-native-88.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uclass-inherited-native-88.php",
+        "sha256": "60711d73f1ecde71caaf62eb270f69b7e0d2ae03e36c331a2261236c80a7cdb4",
+        "bytes": 8191
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T135516193Z-60662b9c-DEV-verify-ue1-o06-g5-uclass-inherited-native-88.php.txt",
+        "sha256": "3e086b9f02717fec3b502c7c8bf9b99d978cc3be8aff38a33ac521d3d34390ae",
+        "bytes": 816
+      },
+      "historic_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978"
+    },
+    "verify-ue1-o06-g5-uclass-all-native-nested-memory.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uclass-all-native-nested-memory.php",
+        "sha256": "6364311c349de10d9a7a788e7d02302e702793eb06c2299edae57660638caa8b",
+        "bytes": 9110
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T134024084Z-52991fa8-DEV-verify-ue1-o06-g5-uclass-all-native-nested-memory.php.txt",
+        "sha256": "45d324f8ce9504ad79c63cf9dec3e558053d1a84a05bc74c3ca352c2e55baafa",
+        "bytes": 790
+      },
+      "historic_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978"
+    },
+    "verify-ue1-o06-g5-v432-uclass-real-export-coverage.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-v432-uclass-real-export-coverage.php",
+        "sha256": "1bc6dd046972821bc846b2ed24d0a6e305508681810d485341ff894496900668",
+        "bytes": 3414
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T133819230Z-4a3eca8d-DEV-verify-ue1-o06-g5-v432-uclass-real-export-coverage.php.txt",
+        "sha256": "0063441fe7d994b5ba854a428b05bb2987f179b22c889c7d349471cfe3fa7852",
+        "bytes": 546
+      },
+      "historic_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978"
+    },
+    "verify-ue1-classic-class-metadata.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-classic-class-metadata.php",
+        "sha256": "9a93f04dbc4481183330689685da77052136b5802a90d58d43eb7f3936fdf72f",
+        "bytes": 21301
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261026T013441419Z-7a14e99f-DEV-verify-ue1-classic-class-metadata.php.txt",
+        "sha256": "5343e94622cd7887cd756ed1a5d59439bbd2eaf1af8e1f034f49ac67709a44ea",
+        "bytes": 5335
+      },
+      "historic_source_sha256": "8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029"
+    }
+  },
+  "original_compiled_malformed_dependency": {
+    "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-UCLASS-DEP-ERROR-PHYSICAL-ORIGIN.json",
+    "sha256": "288f5aa0f92231171674bed36bc7328b80f14dc719839afeb8e20fb205acff21",
+    "bytes": 2097
+  },
+  "expected": {
+    "source_exact_named_classes": 88,
+    "placeholder_class_entries": 43,
+    "fully_source_consumed_class_records": 88,
+    "original_serialized_default_tags": 608,
+    "scripted_classes": 16,
+    "total_loaded_script_bytes": 1509,
+    "deterministic_native_loaded_script_bytes": 989,
+    "native_loaded_script_relocations": 130,
+    "prior_exact_native_class_defaults": 607,
+    "prior_real_config_override": 1,
+    "prior_native_dependency_elements": 3053,
+    "prior_compiled_inherited_fields": 1056,
+    "source_native_equivalent_stored_v69": true,
+    "compiled_engine_native_reruns_in_acceptance": 0
+  },
+  "independent_seven_gates": [
+    "pinned_source_and_dispatch",
+    "complete_native_field_values_and_references",
+    "archive_bytes_and_consumption",
+    "malformed_input_error_semantics",
+    "inherited_and_version_variant_semantics",
+    "current_acceptance_tests",
+    "independent_full_method_review"
+  ],
+  "source_reconstructed_runtime_native_pointers": "source-relative identities, do not invent transient pointer addresses",
+  "other_historic_profiles": "Unreal v1200/C98 and v227/C227 independently OPEN",
+  "unknown_configs": "actual installed v432 Engine.u native INI and localized environment only; other config files not proven"
+}

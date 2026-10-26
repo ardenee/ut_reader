@@ -1,0 +1,198 @@
+﻿{
+    "ok": true,
+    "checks": 246,
+    "passed": 246,
+    "failed": [],
+    "totals": {
+        "packages": 30,
+        "exports": 50250,
+        "classes": 4199,
+        "tags": 17700,
+        "exceptions": 0
+    },
+    "files": [
+        {
+            "name": "BotPack.u",
+            "classes": 2292,
+            "tags": 6503,
+            "exceptions": 0
+        },
+        {
+            "name": "ChaosUT.u",
+            "classes": 112,
+            "tags": 1814,
+            "exceptions": 0
+        },
+        {
+            "name": "ChaosUTMedia1.u",
+            "classes": 1,
+            "tags": 1,
+            "exceptions": 0
+        },
+        {
+            "name": "ChaosUTMedia2.u",
+            "classes": 1,
+            "tags": 0,
+            "exceptions": 0
+        },
+        {
+            "name": "ChaosUTMiscMuts.u",
+            "classes": 3,
+            "tags": 3,
+            "exceptions": 0
+        },
+        {
+            "name": "ChaosUTRHUD.u",
+            "classes": 3,
+            "tags": 1,
+            "exceptions": 0
+        },
+        {
+            "name": "Core.u",
+            "classes": 7,
+            "tags": 16,
+            "exceptions": 0
+        },
+        {
+            "name": "Editor.u",
+            "classes": 26,
+            "tags": 86,
+            "exceptions": 0
+        },
+        {
+            "name": "Engine.u",
+            "classes": 131,
+            "tags": 608,
+            "exceptions": 0
+        },
+        {
+            "name": "Fire.u",
+            "classes": 6,
+            "tags": 0,
+            "exceptions": 0
+        },
+        {
+            "name": "IpDrv.u",
+            "classes": 5,
+            "tags": 9,
+            "exceptions": 0
+        },
+        {
+            "name": "IpServer.u",
+            "classes": 6,
+            "tags": 7,
+            "exceptions": 0
+        },
+        {
+            "name": "RocketArena.u",
+            "classes": 125,
+            "tags": 785,
+            "exceptions": 0
+        },
+        {
+            "name": "RocketArenaMedia.u",
+            "classes": 3,
+            "tags": 0,
+            "exceptions": 0
+        },
+        {
+            "name": "RocketArenaMultiMesh.u",
+            "classes": 13,
+            "tags": 206,
+            "exceptions": 0
+        },
+        {
+            "name": "UBrowser.u",
+            "classes": 96,
+            "tags": 226,
+            "exceptions": 0
+        },
+        {
+            "name": "UMenu.u",
+            "classes": 312,
+            "tags": 1073,
+            "exceptions": 0
+        },
+        {
+            "name": "UTBrowser.u",
+            "classes": 8,
+            "tags": 16,
+            "exceptions": 0
+        },
+        {
+            "name": "UTChaosMap.u",
+            "classes": 11,
+            "tags": 76,
+            "exceptions": 0
+        },
+        {
+            "name": "UTMenu.u",
+            "classes": 303,
+            "tags": 599,
+            "exceptions": 0
+        },
+        {
+            "name": "UTServerAdmin.u",
+            "classes": 4,
+            "tags": 31,
+            "exceptions": 0
+        },
+        {
+            "name": "UWeb.u",
+            "classes": 9,
+            "tags": 5,
+            "exceptions": 0
+        },
+        {
+            "name": "UWindow.u",
+            "classes": 101,
+            "tags": 149,
+            "exceptions": 0
+        },
+        {
+            "name": "UnrealI.u",
+            "classes": 146,
+            "tags": 1540,
+            "exceptions": 0
+        },
+        {
+            "name": "UnrealShare.u",
+            "classes": 360,
+            "tags": 3491,
+            "exceptions": 0
+        },
+        {
+            "name": "de.u",
+            "classes": 16,
+            "tags": 40,
+            "exceptions": 0
+        },
+        {
+            "name": "epiccustommodels.u",
+            "classes": 4,
+            "tags": 0,
+            "exceptions": 0
+        },
+        {
+            "name": "multimesh.u",
+            "classes": 21,
+            "tags": 275,
+            "exceptions": 0
+        },
+        {
+            "name": "relics.u",
+            "classes": 73,
+            "tags": 137,
+            "exceptions": 0
+        },
+        {
+            "name": "relicsbindings.u",
+            "classes": 1,
+            "tags": 3,
+            "exceptions": 0
+        }
+    ],
+    "errors": [],
+    "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+    "limit": "On-disk parser and SHA-pinned corpus only; not independent compiled Epic runtime execution."
+}

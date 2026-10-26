@@ -1,10 +1,12 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-26T03:28:19.449348+00:00",
-  "head": "af9b0c05",
-  "previous_runner_head": "af9b0c05",
-  "previous_source_sha256": "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
-  "current_source_sha256": "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
+  "generated_utc": "2026-10-26T04:03:05.371983+00:00",
+  "head": "858a0d1a",
+  "previous_runner_head": "858a0d1a",
+  "previous_source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+  "current_source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+  "source_native_uclass_complete_script_memory_scoped": true,
+  "previous_source_before_uclass_complete_memory": "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
   "source_native_uclass_script_load_relocations_scoped": true,
   "previous_source_before_uclass_script_relocations": "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
   "source_native_skeletal_runtime_remap_scoped": true,
@@ -80,7 +82,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 154,
+    "PASS": 155,
     "FAIL": 1
   },
   "branch_totals": {
