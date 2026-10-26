@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g5-t99-uclass-native-script-loaded-relocations`
-- **Stage:** verified-native-script-pointer-fname-defaults-PASS47-G5-6FULL-2BLOCKED
-- **Last completed action:** Actual compiled unchanged v432 Engine.u loaded Actor/Pawn/LevelInfo Script sizes767/314/11, 57 memory opcode values, 3 native pointer names ByteProperty Engine.Actor.Role, Pawn memory281 FName global893 PlayerPawn versus local15; three actual CDO defaults Role4/GroundSpeed320/TimeDilation1. Production XFER script source mapping implemented; focused 47/47 native SHA verifier PASS. Existing UT99 six package 3194 classes and 30 package 4199 classes source regressions PASS. Preserved earlier invalid profile FAIL. No repeat prior 88 class or six FULL method native probes.
-- **Resume at:** Finish UClass remaining distinct Script pointer/FName XFER forms, Config/Localized/default cases and archive-negative branches in one FULL acceptance, or UObject separate allocator-dependent nested FString and tagged contexts. Stop all prior class scalar and current compiled Actor/Pawn/LevelInfo tests.
-- **Active changed at:** 2026-10-26T03:28:15+00:00
+- **Stage:** released-4cea8c28-DEV-PRD-SHA25of25
+- **Last completed action:** Actual compiled v432 Engine.Actor/Pawn/LevelInfo UClass Script 767/314/11 loaded, 57 opcode positions exact, 3 live UObject pointer referents, real Pawn FName local15 vs global893 resolves PlayerPawn, 3 CDO values matched; focused native evidence 47/47 PASS and affected genuine UT99 classes 3194 and 4199 PASS. Release 4cea8c28 pushed GitHub main; 25/25 changed files DEV PRD SHA identical; Git clean. G5 6 FULL, 2 BLOCKED, 0 FAILED, no six method native reruns.
+- **Resume at:** Stop repeating Actor/Pawn/LevelInfo loaded script and prior 88 class scalar/default comparisons. Need complete remaining UClass script FName/UObject fixups and Config/Localized plus exact malformed errors, or separately T99 UObject allocator-dependent array<FString> stock native/corrupt path and seven-gate method acceptance. Do not close global method on partial native proof.
+- **Active changed at:** 2026-10-26T03:29:45+00:00
 - **Latest DEV test states:** PASS 154; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
