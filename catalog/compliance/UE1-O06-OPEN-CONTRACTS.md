@@ -2,6 +2,10 @@
 
 Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation IDs. The canonical operation remains O06. Use the append-only UE1-O06-TEST-EVENTS.jsonl and latest UE1-O06-TEST-STATUS.json; do not rerun matching PASS tests just to reconstruct progress.
 
+## G2 pre-agreed acceptance checklist (2026-10-26)
+
+Before starting May/July 1997 G2 tests, follow **[UE1-O06-G2-ACCEPTANCE-PLAN.md](UE1-O06-G2-ACCEPTANCE-PLAN.md)** and the frozen **[UE1-O06-G2-ACCEPTANCE-MATRIX.json](UE1-O06-G2-ACCEPTANCE-MATRIX.json)**: 18 acceptance contracts covering all 49 May and 49 July registered classes (86 mapped source-family pairs, 12 source-excluded pairs). Existing named test fixtures have candidate PASS results and must be SHA-reused when valid, not blindly rerun. A G2-specific independent whole-gate verdict has NOT been run or accepted. No source or reader modifications and no G2 test execution were part of this planning step. May/July v22/23 archive-source parity is distinct from G5 genuine compiled runtime loaded-value parity, the previously sealed UT99 v432 G5 methods, and O10 runtime linking. Any new Epic-source branch missing from the frozen matrix must be identified and documented before adding tests.
+
 ## Latest G5 closure boundary (2026-10-26)
 
 **G5 T99: 8 FULL / 0 BLOCKED / 0 FAILED ONLY FOR THE EXACT SOURCE/COMPILED PROFILES DOCUMENTED IN THEIR INDIVIDUAL SEALED ACCEPTANCE MANIFESTS.** T99 UObject::Serialize independent final method reviewer 98/98, seven VERIFIED, original 308 stock-loaded v61 instances and 926 native saved values reused. Real v432 compiled native G5CaptionRecord FString+Int field saved as an ordinary struct and as an array element. Stock native loads Direct-Record/71; malformed direct string read fails exactly at physical EOF309. Diagnostic zero allocator, not stock allocator, loads nested array Nested-Record/84 and reaches physical EOF285 on one-byte malformed length; stock FArray::Add unconstructed FString heap crash is explicitly **EXCLUDED as native undefined** and has **no successful stock loaded-value claim**.

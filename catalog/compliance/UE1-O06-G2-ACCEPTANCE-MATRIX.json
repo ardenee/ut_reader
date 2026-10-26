@@ -1,0 +1,3163 @@
+{
+  "schema": 1,
+  "kind": "PRE_EXECUTION_G2_ACCEPTANCE_CLASS_MATRIX",
+  "plan": "catalog/compliance/UE1-O06-G2-ACCEPTANCE-PLAN.md",
+  "register": "catalog/compliance/UE1-O06-SERIALIZER-REGISTER.json",
+  "register_sha256": "64cc4304facf3afd0ca8576e598058d29aece49239ef3af81a10e07d483aac58",
+  "date_utc": "2026-10-26T12:03:54.449504+00:00",
+  "source_builds": {
+    "U86": "L:/Source/Games/Unreal/Unreal [v0.86x] [1997-05-25]/Src",
+    "U97": "L:/Source/Games/Unreal/Unreal [v0.867] [1997-07-25]/Src"
+  },
+  "source_package_versions": [
+    22,
+    23
+  ],
+  "counts": {
+    "registrations_total": 98,
+    "registered_names_per_build": 49,
+    "mapped_pairs": 86,
+    "source_excluded_pairs": 12,
+    "distinct_serializer_owner_groups": 12,
+    "existing_per_register_candidate_scripts": 21,
+    "existing_register_candidate_scripts_with_unchanged_test_SHA_historical_PASS": 21
+  },
+  "status": "G2_PLANNED_NOT_ACCEPTED",
+  "policy": {
+    "archive_version_does_not_choose_build": true,
+    "source_equal_variants_share_evidence_only_if_source_proven": true,
+    "run_new_tests_only_on_DEV": true,
+    "old_PASS_not_equivalent_to_whole_G2_parity": true,
+    "final_method_acceptance_review_only_once_when_all_required_contracts_ready": true,
+    "excluded_classes_have_compiled_source_proof": true,
+    "runtime_native_loaded_parity_is_G5_not_automatically_G2": true
+  },
+  "serializer_groups": [
+    {
+      "id": "G2-06_actor_inheritance",
+      "symbols": [
+        "AActor",
+        "ABrush",
+        "AMover",
+        "APawn"
+      ],
+      "pairs": 8
+    },
+    {
+      "id": "G2-10_generic_database",
+      "symbols": [
+        "UArray",
+        "UBuffer",
+        "UDatabase",
+        "UDependencies",
+        "UEnumDef",
+        "UFloats",
+        "UInts",
+        "UReachSpecs",
+        "UTextBuffer",
+        "UTextureSet",
+        "UVectors",
+        "UWords"
+      ],
+      "pairs": 24
+    },
+    {
+      "id": "G2-11_mesh_records_bounds",
+      "symbols": [
+        "UBounds",
+        "UMeshVerts",
+        "UMeshTris",
+        "UMeshAnimSeqs",
+        "UMeshAnimNotifys",
+        "UMeshVertConnects",
+        "UPalette"
+      ],
+      "pairs": 14
+    },
+    {
+      "id": "G2-12_bit_data",
+      "symbols": [
+        "UBitArray",
+        "UBitMatrix"
+      ],
+      "pairs": 4
+    },
+    {
+      "id": "G2-13_bsp_polys_light",
+      "symbols": [
+        "UBspNodes",
+        "UBspSurfs",
+        "UPolys",
+        "ULightMesh"
+      ],
+      "pairs": 8
+    },
+    {
+      "id": "G2-05_object_class_properties",
+      "symbols": [
+        "UObject",
+        "UClass",
+        "UProperties"
+      ],
+      "pairs": 6
+    },
+    {
+      "id": "G2-08_script",
+      "symbols": [
+        "UScript"
+      ],
+      "pairs": 2
+    },
+    {
+      "id": "G2-09_stacktree",
+      "symbols": [
+        "UStackTree"
+      ],
+      "pairs": 2
+    },
+    {
+      "id": "G2-14_mesh_model_level_primitive",
+      "symbols": [
+        "UMesh",
+        "UModel",
+        "ULevel",
+        "UPrimitive"
+      ],
+      "pairs": 8
+    },
+    {
+      "id": "G2-15_texture_font_verts",
+      "symbols": [
+        "UTexture",
+        "UFont",
+        "UVerts"
+      ],
+      "pairs": 6
+    },
+    {
+      "id": "G2-16_sound_music",
+      "symbols": [
+        "USound",
+        "UMusic"
+      ],
+      "pairs": 4
+    },
+    {
+      "id": "G2-02_source_exclusions",
+      "symbols": [
+        "UCamera",
+        "ULinker",
+        "ULinkerLoad",
+        "ULinkerSave",
+        "UPlayer",
+        "UTransBuffer"
+      ],
+      "pairs": 12
+    }
+  ],
+  "candidate_tests": {
+    "verify-ue1-original-unrealfile-inheritance.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-inheritance.php",
+      "sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_output_sha256": "7aa4da69a0b504d3201ab924ffc92d0127dbada01674b8170a262fdc682eabad",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-database-records.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-database-records.php",
+      "sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "02f02cbeb62f65eacabf13b71586a9eff96cd14b2f095edee6b8771fcee6ae92",
+      "historical_pass_output_sha256": "d4f30b276afecf26230b6612d01a9dfc09a0b1242fddf97554663d7793442de0",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-bit-archives.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-bit-archives.php",
+      "sha256_current": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_output_sha256": "d4f30b276afecf26230b6612d01a9dfc09a0b1242fddf97554663d7793442de0",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-mesh-records.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-mesh-records.php",
+      "sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_output_sha256": "f2d2fdd59c0d0122cee6e7b190c35b653161c39937c99585e0b45d8156977bb6",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-bsp-records.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-bsp-records.php",
+      "sha256_current": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_output_sha256": "192702548c6b5aa82e2587ae2fd458a22b9ec32fd52706a0bada07f3bf3dd6fc",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-o06-g2-camera-transient.php": {
+      "path": "catalog/bin/verify-ue1-o06-g2-camera-transient.php",
+      "sha256_current": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "e6a0b387959e171e29390b9f17a6b0d1d0a7d9ae2ef8f0d241d95ae7d0ce46d1",
+      "historical_pass_output_sha256": "c6d9bcb0cbe417a662e3e7a5711457fbcacade39b96a494c9cfab63d54233139",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-class-schemas.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-class-schemas.php",
+      "sha256_current": "83e43df0b6a19eef075b85c22b27cfafc4e74cc3856c9d7798ee2fdbacd851bf",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_output_sha256": "fcfee1d29879fc6d858994a663f4a87da523a219f7943c27e527068c9867d26e",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-special-headers.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-special-headers.php",
+      "sha256_current": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+      "historical_pass_output_sha256": "dfb105bc47ad1125f96a92c78ff489bc84396568591c3323340f80f1e9ba847c",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-level.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-level.php",
+      "sha256_current": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_output_sha256": "d4f43adafdb16c5fca2b96f3bb868c98d1fd77467ff517449b5d26e8a1141af7",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-lightmesh-data.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-lightmesh-data.php",
+      "sha256_current": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_output_sha256": "2ce015b0500bd43129f257be03a9fefc5e35e41cf7c34ae0eadfd0a5c3389896",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-o06-g2-shared-transient.php": {
+      "path": "catalog/bin/verify-ue1-o06-g2-shared-transient.php",
+      "sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "e3123005100866d48ea718e786eefc3069d3ae404fd0c2c9fde3a899919151cc",
+      "historical_pass_output_sha256": "10631f2ea33452ab462afdebf1ecdcf0371725adfb6a8a0a562c3e33228947cf",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-mesh.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-mesh.php",
+      "sha256_current": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_output_sha256": "7b577de25298c2edd39e0ea3dbafb2104768b509f0a47ff32920b857c24509ed",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-model.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-model.php",
+      "sha256_current": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_output_sha256": "41b8ce3fb1bb207f63b379134c0a674d6377e034d507cd39c59c6ee0b56227bf",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-audio.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-audio.php",
+      "sha256_current": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_output_sha256": "2ce015b0500bd43129f257be03a9fefc5e35e41cf7c34ae0eadfd0a5c3389896",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-object-bases.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-object-bases.php",
+      "sha256_current": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_output_sha256": "5932efd5b8becce13a90009edc353683e22788993b1337072a3ba85b1a1b6f7a",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-polys-data.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-polys-data.php",
+      "sha256_current": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_output_sha256": "00b39a951a206bb105cc40979d5a545bd23132657cb33bdad81d457b1aabf25f",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-primitive.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-primitive.php",
+      "sha256_current": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "76c5c5df80180b98a5def56ab9e07a874aebf6cedc3187a9450735b6d5d2460b",
+      "historical_pass_output_sha256": "f2370a030a2b10d0030777e054c4c62aa4b8bf0c8996d3287b8d784975eb3ce5",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-external-schemas.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-external-schemas.php",
+      "sha256_current": "ea038ed3a1a88c39fa3acf580e780413df6d81d5c81d5ecbdae2102687e7512e",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "6ad0b569e220d6ca3e315db70874d4d5890c689d8061fe1ae7e380eeded5d7a2",
+      "historical_pass_output_sha256": "d40496ee4ebca31c2c534141e6c4e7687fa44c3229ea7fd983b7b1bd8dcb256b",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-script-may-july.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-script-may-july.php",
+      "sha256_current": "27884cb436283ba27a4f85b997ede868eca1b41906a718312cba64244ed61b85",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_output_sha256": "e4ecdfc427879e5e79c433d8f48216a5315ed4b1a2767ed37ae02be3cfa685bc",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-stacktree-data.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-stacktree-data.php",
+      "sha256_current": "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "cbf0d62b558152ca637a3f1fb072cfba1dd5ce1e593ae425861040b4fb8c6efc",
+      "historical_pass_output_sha256": "00b39a951a206bb105cc40979d5a545bd23132657cb33bdad81d457b1aabf25f",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    },
+    "verify-ue1-original-unrealfile-texture.php": {
+      "path": "catalog/bin/verify-ue1-original-unrealfile-texture.php",
+      "sha256_current": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
+      "historical_pass_test_sha_current": true,
+      "historical_pass_source_sha256": "0245b1a2515f82114de7285dc9073908dc069e89a1a242623c37baa81e8f1199",
+      "historical_pass_output_sha256": "70146f559e7da4493f093852aacc2fea2678982deaa21b45a00208201275bd7c",
+      "claim": "TEST_HASH_ONLY_REUSE_CANDIDATE_NOT_G2_SOURCE_PARITY_ACCEPTED"
+    }
+  },
+  "source_class_matrix": [
+    {
+      "register_id": "U86:AActor",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "AActor",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Engine/UnActor.cpp",
+          "line": 17,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:ABrush",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "ABrush",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Engine/UnDynBsp.cpp",
+          "line": 66,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:AMover",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "AMover",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Game/UnMover.cpp",
+          "line": 18
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:APawn",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "APawn",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Game/UnPawn.cpp",
+          "line": 19
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UArray",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UArray",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2241,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2216,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UBitArray",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UBitArray",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-12",
+      "serializer_group": "G2-12_bit_data",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2623,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2584,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "candidate_test_script_sha256_current": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UBitMatrix",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UBitMatrix",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-12",
+      "serializer_group": "G2-12_bit_data",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2624,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2585,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "candidate_test_script_sha256_current": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UBounds",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UBounds",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 129,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UBspNodes",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UBspNodes",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 51,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "candidate_test_script_sha256_current": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UBspSurfs",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UBspSurfs",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 87,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "candidate_test_script_sha256_current": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UBuffer",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UBuffer",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2390,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2365,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UCamera",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UCamera",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnCamera.cpp",
+          "line": 51,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-camera-transient.php",
+      "candidate_test_script_sha256_current": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UClass",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UClass",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-05",
+      "serializer_group": "G2-05_object_class_properties",
+      "source_locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 405,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileClassSchemaReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-class-schemas.php",
+      "candidate_test_script_sha256_current": "83e43df0b6a19eef075b85c22b27cfafc4e74cc3856c9d7798ee2fdbacd851bf",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UDatabase",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UDatabase",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 854,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 861,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UDependencies",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UDependencies",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 849,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UEnumDef",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UEnumDef",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2348,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2323,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UFloats",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UFloats",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 105,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UFont",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UFont",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-15",
+      "serializer_group": "G2-15_texture_font_verts",
+      "source_locations": [
+        {
+          "path": "Engine/UnFont.cpp",
+          "line": 517,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-special-headers.php",
+      "candidate_test_script_sha256_current": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UInts",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UInts",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2617,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2578,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:ULevel",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "ULevel",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnLevel.cpp",
+          "line": 375,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileLevelReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-level.php",
+      "candidate_test_script_sha256_current": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:ULightMesh",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "ULightMesh",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 93,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileLightMeshDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-lightmesh-data.php",
+      "candidate_test_script_sha256_current": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:ULinker",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "ULinker",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2608,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2569,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:ULinkerLoad",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "ULinkerLoad",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2609,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2570,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:ULinkerSave",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "ULinkerSave",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2610,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2571,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UMesh",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UMesh",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 91,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh.php",
+      "candidate_test_script_sha256_current": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UMeshAnimNotifys",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UMeshAnimNotifys",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 23,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UMeshAnimSeqs",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UMeshAnimSeqs",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 22,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UMeshTris",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UMeshTris",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 21,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UMeshVertConnects",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UMeshVertConnects",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 24,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UMeshVerts",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UMeshVerts",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 20,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UModel",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UModel",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 261,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileModelHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-model.php",
+      "candidate_test_script_sha256_current": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UMusic",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UMusic",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-16",
+      "serializer_group": "G2-16_sound_music",
+      "source_locations": [
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 191,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 459,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-audio.php",
+      "candidate_test_script_sha256_current": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UObject",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UObject",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-05",
+      "serializer_group": "G2-05_object_class_properties",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 693,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 700,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileObjectBaseReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-object-bases.php",
+      "candidate_test_script_sha256_current": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UPalette",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UPalette",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 1270,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UPlayer",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UPlayer",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnServer.cpp",
+          "line": 308,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UPolys",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UPolys",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnFPoly.cpp",
+          "line": 725,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfilePolysDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-polys-data.php",
+      "candidate_test_script_sha256_current": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UPrimitive",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UPrimitive",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 17,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfilePrimitiveHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-primitive.php",
+      "candidate_test_script_sha256_current": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UProperties",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UProperties",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-05",
+      "serializer_group": "G2-05_object_class_properties",
+      "source_locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 817,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-external-schemas.php",
+      "candidate_test_script_sha256_current": "ea038ed3a1a88c39fa3acf580e780413df6d81d5c81d5ecbdae2102687e7512e",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UReachSpecs",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UReachSpecs",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnRoute.cpp",
+          "line": 21,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UScript",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UScript",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-08",
+      "serializer_group": "G2-08_script",
+      "source_locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 4518,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-script-may-july.php",
+      "candidate_test_script_sha256_current": "27884cb436283ba27a4f85b997ede868eca1b41906a718312cba64244ed61b85",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:USound",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "USound",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-16",
+      "serializer_group": "G2-16_sound_music",
+      "source_locations": [
+        {
+          "path": "Engine/UnSound.cpp",
+          "line": 220,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-audio.php",
+      "candidate_test_script_sha256_current": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UStackTree",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UStackTree",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-09",
+      "serializer_group": "G2-09_stacktree",
+      "source_locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 4560,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileStackTreeDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-stacktree-data.php",
+      "candidate_test_script_sha256_current": "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UTextBuffer",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UTextBuffer",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2178,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2153,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UTexture",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UTexture",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-15",
+      "serializer_group": "G2-15_texture_font_verts",
+      "source_locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 496,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileTextureHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-texture.php",
+      "candidate_test_script_sha256_current": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UTextureSet",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UTextureSet",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 502,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UTransBuffer",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UTransBuffer",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Editor/UnEdTran.cpp",
+          "line": 882
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-camera-transient.php",
+      "candidate_test_script_sha256_current": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UVectors",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UVectors",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 99,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UVerts",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UVerts",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-15",
+      "serializer_group": "G2-15_texture_font_verts",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 123,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-special-headers.php",
+      "candidate_test_script_sha256_current": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U86:UWords",
+      "source_branch": "U86",
+      "source_name": "May v0.86x build",
+      "registered_symbol": "UWords",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2616,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnRes.cpp",
+          "line": 2577,
+          "build_selected": false
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:AActor",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "AActor",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Engine/UnActor.cpp",
+          "line": 17,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:ABrush",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "ABrush",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Engine/UnDynBsp.cpp",
+          "line": 66,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:AMover",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "AMover",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Game/UnMover.cpp",
+          "line": 18
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:APawn",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "APawn",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-06",
+      "serializer_group": "G2-06_actor_inheritance",
+      "source_locations": [
+        {
+          "path": "Game/UnPawn.cpp",
+          "line": 19
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBinaryPropertyReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-inheritance.php",
+      "candidate_test_script_sha256_current": "87c98b7a809b230839fbb1f8815718f3db9075a648666a02a7a3a911051f73be",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UArray",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UArray",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2287,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UBitArray",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UBitArray",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-12",
+      "serializer_group": "G2-12_bit_data",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2670,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "candidate_test_script_sha256_current": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UBitMatrix",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UBitMatrix",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-12",
+      "serializer_group": "G2-12_bit_data",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2671,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bit-archives.php",
+      "candidate_test_script_sha256_current": "f4273d23fdf75913da0157a2b33f6d34208fad1b7f1d551583c86c973915d0f2",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UBounds",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UBounds",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 123,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UBspNodes",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UBspNodes",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 45,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "candidate_test_script_sha256_current": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UBspSurfs",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UBspSurfs",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 81,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileBspRecordsReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-bsp-records.php",
+      "candidate_test_script_sha256_current": "9a3d95016580d070a48220241f035dcda25ba1d23d267cbd463c0baa29e67d87",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UBuffer",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UBuffer",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2437,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UCamera",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UCamera",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnCamera.cpp",
+          "line": 50,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-camera-transient.php",
+      "candidate_test_script_sha256_current": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UClass",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UClass",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-05",
+      "serializer_group": "G2-05_object_class_properties",
+      "source_locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 405,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileClassSchemaReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-class-schemas.php",
+      "candidate_test_script_sha256_current": "83e43df0b6a19eef075b85c22b27cfafc4e74cc3856c9d7798ee2fdbacd851bf",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UDatabase",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UDatabase",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 897,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UDependencies",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UDependencies",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 864,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UEnumDef",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UEnumDef",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2394,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UFloats",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UFloats",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 99,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UFont",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UFont",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-15",
+      "serializer_group": "G2-15_texture_font_verts",
+      "source_locations": [
+        {
+          "path": "Engine/UnFont.cpp",
+          "line": 517,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-special-headers.php",
+      "candidate_test_script_sha256_current": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UInts",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UInts",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2664,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:ULevel",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "ULevel",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnLevel.cpp",
+          "line": 391,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileLevelReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-level.php",
+      "candidate_test_script_sha256_current": "210dc098d203e6a631e5e6444f00ada446e7c4d555346270590fb8aa25d765f5",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:ULightMesh",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "ULightMesh",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 87,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileLightMeshDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-lightmesh-data.php",
+      "candidate_test_script_sha256_current": "f03a8996d689148064d661365028952053199154894fa172eb732756e805bde0",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:ULinker",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "ULinker",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2655,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:ULinkerLoad",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "ULinkerLoad",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2656,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:ULinkerSave",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "ULinkerSave",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2657,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UMesh",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UMesh",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 90,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileMeshHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh.php",
+      "candidate_test_script_sha256_current": "515b56377e562a5697afe6ca9e76543f92fe35b1f2c2bbba43e63abc4d2e15ec",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UMeshAnimNotifys",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UMeshAnimNotifys",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 23,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UMeshAnimSeqs",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UMeshAnimSeqs",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 22,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UMeshTris",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UMeshTris",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 21,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UMeshVertConnects",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UMeshVertConnects",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 24,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UMeshVerts",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UMeshVerts",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnMesh.cpp",
+          "line": 20,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UModel",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UModel",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 252,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileModelHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-model.php",
+      "candidate_test_script_sha256_current": "a11eb3b8dcb36d7cfa85104223ae6fc5eafe7b5a7a98fcbeae10616449cad803",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UMusic",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UMusic",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-16",
+      "serializer_group": "G2-16_sound_music",
+      "source_locations": [
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 191,
+          "build_selected": true
+        },
+        {
+          "path": "Engine/UnMusic.cpp",
+          "line": 459,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-audio.php",
+      "candidate_test_script_sha256_current": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UObject",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UObject",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-05",
+      "serializer_group": "G2-05_object_class_properties",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 736,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileObjectBaseReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-object-bases.php",
+      "candidate_test_script_sha256_current": "6e122a2d14ee687750eb5c1f6584e35d4ddf6a4eac6907a139fad33d43a5759b",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UPalette",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UPalette",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-11",
+      "serializer_group": "G2-11_mesh_records_bounds",
+      "source_locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 1295,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-mesh-records.php",
+      "candidate_test_script_sha256_current": "65f484b5c0da521fa134e3f359f0e801a8119a5c89dd87972114c7e54885dccb",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UPlayer",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UPlayer",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Engine/UnServer.cpp",
+          "line": 307,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-shared-transient.php",
+      "candidate_test_script_sha256_current": "563bdca9295a3cfc8051f01fe018fdb77afaa5e652ec03eb74f45ca2457979df",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UPolys",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UPolys",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-13",
+      "serializer_group": "G2-13_bsp_polys_light",
+      "source_locations": [
+        {
+          "path": "Engine/UnFPoly.cpp",
+          "line": 697,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfilePolysDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-polys-data.php",
+      "candidate_test_script_sha256_current": "ef529ccfa1b2ef5c63860aeb84231ff00aa117df4d8e2a84d4b0ae3e434f0563",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UPrimitive",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UPrimitive",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-14",
+      "serializer_group": "G2-14_mesh_model_level_primitive",
+      "source_locations": [
+        {
+          "path": "Engine/UnPrim.cpp",
+          "line": 17,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfilePrimitiveHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-primitive.php",
+      "candidate_test_script_sha256_current": "53e187cb2b4f44b6f79eef0077e98d844e4c66fc53370546c6ccfc8718a04811",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UProperties",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UProperties",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-05",
+      "serializer_group": "G2-05_object_class_properties",
+      "source_locations": [
+        {
+          "path": "Engine/UnClass.cpp",
+          "line": 832,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-external-schemas.php",
+      "candidate_test_script_sha256_current": "ea038ed3a1a88c39fa3acf580e780413df6d81d5c81d5ecbdae2102687e7512e",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UReachSpecs",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UReachSpecs",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnRoute.cpp",
+          "line": 21,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UScript",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UScript",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-08",
+      "serializer_group": "G2-08_script",
+      "source_locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 5158,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileScriptExpressionReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-script-may-july.php",
+      "candidate_test_script_sha256_current": "27884cb436283ba27a4f85b997ede868eca1b41906a718312cba64244ed61b85",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:USound",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "USound",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-16",
+      "serializer_group": "G2-16_sound_music",
+      "source_locations": [
+        {
+          "path": "Engine/UnSound.cpp",
+          "line": 220,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileAudioReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-audio.php",
+      "candidate_test_script_sha256_current": "7644e182f22de167a71cd2257484162d40582770058d21ceb8ed9efa754a4856",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UStackTree",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UStackTree",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-09",
+      "serializer_group": "G2-09_stacktree",
+      "source_locations": [
+        {
+          "path": "Engine/UnScript.cpp",
+          "line": 5200,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileStackTreeDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-stacktree-data.php",
+      "candidate_test_script_sha256_current": "ace6cdb05c6ad9a456e3d2aeddc361a4af04f71d4acddd168d0ff64ac8a028e0",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UTextBuffer",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UTextBuffer",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2224,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UTexture",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UTexture",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-15",
+      "serializer_group": "G2-15_texture_font_verts",
+      "source_locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 513,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileTextureHeaderReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-texture.php",
+      "candidate_test_script_sha256_current": "85707097e0a55ed5abeaf7a9488998fa0f2de2936765c4d114804009c07af949",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UTextureSet",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UTextureSet",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnTex.cpp",
+          "line": 519,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UTransBuffer",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UTransBuffer",
+      "register_mapping_status": "EXCLUDED",
+      "serializer_contract_id": "G2-02",
+      "serializer_group": "G2-02_source_exclusions",
+      "source_locations": [
+        {
+          "path": "Editor/UnEdTran.cpp",
+          "line": 882
+        }
+      ],
+      "production_reader": "",
+      "existing_candidate_test": "verify-ue1-o06-g2-camera-transient.php",
+      "candidate_test_script_sha256_current": "3673ee60d8f0cb3df20786373e0c00417422d1acc8d78a080f581d8c7261846b",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UVectors",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UVectors",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 93,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UVerts",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UVerts",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-15",
+      "serializer_group": "G2-15_texture_font_verts",
+      "source_locations": [
+        {
+          "path": "Engine/UnModel.cpp",
+          "line": 117,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileSpecialHeadersReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-special-headers.php",
+      "candidate_test_script_sha256_current": "a68bd09362e13dbee5dbb41710adee3d27e87d3d18b7a71f57442bbd4c49bb47",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    },
+    {
+      "register_id": "U97:UWords",
+      "source_branch": "U97",
+      "source_name": "July v0.867 build",
+      "registered_symbol": "UWords",
+      "register_mapping_status": "MAPPED",
+      "serializer_contract_id": "G2-10",
+      "serializer_group": "G2-10_generic_database",
+      "source_locations": [
+        {
+          "path": "Engine/UnObj.cpp",
+          "line": 2663,
+          "build_selected": true
+        }
+      ],
+      "production_reader": "CatalogUE1OriginalUnrealfileDatabaseDataReader.php",
+      "existing_candidate_test": "verify-ue1-original-unrealfile-database-records.php",
+      "candidate_test_script_sha256_current": "c5898b4c3125c734717435ddb020d8eca6abeb5621dca2683ff2db1b767ac964",
+      "existing_test_evidence": "RECORDED_PASS_TEST_SHA_MATCH",
+      "acceptance_state": "PLANNED_NOT_SOURCE_GATE_ACCEPTED",
+      "required_proof": [
+        "verified_build_selected_Epic_Cpp_and_headers",
+        "exact_archive_bytes_fields_and_consumption_for_source",
+        "positive_and_negative_input_source_branch",
+        "selected_version_22_23_gate_or_explicit_Epic_exclusion",
+        "current_reader_and_fixture_SHA_journal_and_independent_final_review"
+      ]
+    }
+  ],
+  "gate_acceptance_contracts": [
+    "G2-01",
+    "G2-02",
+    "G2-03",
+    "G2-04",
+    "G2-05",
+    "G2-06",
+    "G2-07",
+    "G2-08",
+    "G2-09",
+    "G2-10",
+    "G2-11",
+    "G2-12",
+    "G2-13",
+    "G2-14",
+    "G2-15",
+    "G2-16",
+    "G2-17",
+    "G2-18"
+  ]
+}
