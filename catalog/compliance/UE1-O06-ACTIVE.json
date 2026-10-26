@@ -1,7 +1,7 @@
 {
-  "contract": "g3-native-class-property-physical-archive-boundary",
-  "stage": "G3-03-04-07-SOURCE-VERIFIED-RELEASE-PENDING",
-  "last_action": "Original C98 and inherited T99 original linker archive-then-SerialSize semantics corrected. Eight new Field/IntProperty cross-export/physical EOF fixture cases; four affected DEV scripts PASS or matching journaled PASS; PHP syntax and JSON validation pass. No new compiled C98/C227 oracle, G3 remains 0/16.",
-  "next_step": "Commit verified changes, push GitHub main, deploy changed files to PRD with SHA-256; investigate next distinct G3-06 source mismatch (UConst/UEnum premature export count limit), while original stock C98/C227 compiled loaded values remain blocked.",
-  "updated_at_utc": "2026-10-26T18:01:34+00:00"
+  "contract": "g3-06-uconst-uenum-physical-archive-boundary",
+  "stage": "G3-06-SOURCE-VERIFIED-RELEASE-PENDING",
+  "last_action": "Source original C98 v1.200 and inherited T99 v400 physical archive-then-size-check restored for UConst FString and UEnum TArray Names; 8 added regressions, all 4 selected affected DEV scripts pass, PHP syntax/plan JSON pass, G3 still 0/16.",
+  "next_step": "Commit/push verified G3-06 patch and hash-deploy DEV changes to PRD; next look for genuine C98/C227 Core DLL or original implementation, do not infer source from import library.",
+  "updated_at_utc": "2026-10-26T18:07:24+00:00"
 }

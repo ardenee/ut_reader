@@ -36,10 +36,10 @@ $paths=[];$cases=[];$fail=[];
 $check=static function(string $name,bool $ok)use(&$cases,&$fail):void{
  $cases[$name]=$ok;if(!$ok)$fail[]=$name;
 };
-$inspect=static function(int $ver,string $tail)use(&$paths,$build):array {
+$inspect=static function(int $ver,string $tail,string $physicalTail='')use(&$paths,$build):array {
  $path=tempnam(sys_get_temp_dir(),'ue1const');
  if($path===false)throw new RuntimeException('No fixture file');
- $paths[]=$path;file_put_contents($path,$build($ver,$tail));
+ $paths[]=$path;file_put_contents($path,$build($ver,$tail).$physicalTail);
  $pkg=new Package($path);
  if($pkg->validatePackage()!==[])throw new RuntimeException('Package fixture invalid');
  $family=$ver>=62?'ut99-v432':'epic-ue1'; // Explicit source of this fixture, not version-based dispatch.
@@ -52,6 +52,17 @@ $bad=static function(int $ver,string $tail)use($inspect):bool{
 };
 try{
  $basic=$compact(0).$compact(0);
+ foreach([50,69] as $v){
+  $whole=$basic.$compact(5)."Test\0";
+  [$cross]=$inspect($v,substr($whole,0,-1),substr($whole,-1));
+  $check('v'.$v.'_UConst_physical_read_then_serial_size_mismatch',
+   $cross['status']==='native_export_serial_size_mismatch'
+   &&$cross['serial_size_overrun_bytes']===1
+   &&$cross['source_serial_size_check_failed']===true);
+  $check('v'.$v.'_UConst_physical_EOF',
+   $bad($v,substr($whole,0,-1)));
+ }
+
  [$a,$p]=$inspect(50,$basic.$compact(7)."TRUE42\0");
  $check('v50_ansi_and_refs',($a['status']??'')==='native_const_record_complete'
   && $a['value']==='TRUE42' && $a['value_count']===7

@@ -127,6 +127,7 @@ final class CatalogUE1ClassicNativeObjectReader
         // C98 LoadObject and UT99 Preload archive through the file-backed linker,
         // then compare Tell() with SerialSize. SerialSize is not a read barrier.
         $g3Native=in_array($nativeKind,[
+            'enum','const',
             ...CatalogUE1ClassicPropertyNativeReader::KINDS,
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true);
@@ -185,15 +186,9 @@ final class CatalogUE1ClassicNativeObjectReader
                     CatalogUE1ClassicV432NativeDeltaReader::inspectSkeletalMesh(
                         $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
             }
-            if($g3Native){
-                $detail=in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
-                    ?CatalogUE1ClassicPropertyNativeReader::inspect(
-                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family)
-                    :CatalogUE1ClassicStructNativeReader::inspect(
-                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
+            $completeG3=static function(array $detail)use($record,&$pos,$exportLimit):array{
                 if($pos>$exportLimit){
-                    // Both original linkers compare Tell() to SerialSize
-                    // AFTER Serialize; reaching a later byte is not a pass.
+                    // Both original linkers compare Tell() to SerialSize AFTER Serialize.
                     $detail['status']='native_export_serial_size_mismatch';
                     $detail['source_serial_size_check_failed']=true;
                     $detail['archive_cursor']=$pos;
@@ -202,6 +197,15 @@ final class CatalogUE1ClassicNativeObjectReader
                     $detail['extension_bytes']=0;
                 }
                 return array_replace($record,$detail);
+            };
+            if(in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
+                ||in_array($nativeKind,CatalogUE1ClassicStructNativeReader::KINDS,true)){
+                $detail=in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
+                    ?CatalogUE1ClassicPropertyNativeReader::inspect(
+                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family)
+                    :CatalogUE1ClassicStructNativeReader::inspect(
+                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
+                return $completeG3($detail);
             }
             if($nativeKind==='primitive'){
                 return array_replace($record,CatalogUE1ClassicPrimitiveNativeReader::inspect(
@@ -287,9 +291,11 @@ final class CatalogUE1ClassicNativeObjectReader
                 };
                 $superField=$objectRef();$nextField=$objectRef();
                 $numNames=$compact();
-                if($numNames<0||$numNames>$limit-$pos){
-                    throw new RuntimeException('Enum FName array exceeds native export bounds');
+                if($numNames<0){
+                    throw new RuntimeException('Negative Enum FName count cannot initialize original array');
                 }
+                // Epic reads each FName from the physical archive; the
+                // export byte-count comparison belongs after Serialize.
                 $names=$pkg->getNames();$enumNames=[];
                 for($i=0;$i<$numNames;$i++){
                     $nameIndex=$compact();
@@ -299,7 +305,7 @@ final class CatalogUE1ClassicNativeObjectReader
                     $enumNames[]=['name_index'=>$nameIndex,
                         'name'=>(string)$names[$nameIndex]['name']];
                 }
-                return array_replace($record,[
+                return $completeG3([
                     'status'=>$pos===$limit?'native_enum_record_complete':'native_enum_has_extension',
                     'super_field_reference'=>$superField,'next_field_reference'=>$nextField,
                     'name_count'=>$numNames,'names'=>$enumNames,
@@ -325,10 +331,8 @@ final class CatalogUE1ClassicNativeObjectReader
                     throw new RuntimeException('UConst wide FString not valid in ANSI-only version');
                 }
                 $count=abs($signedCount);
-                $remaining=$limit-$pos;
-                if($count>($wide?intdiv($remaining,2):$remaining)){
-                    throw new RuntimeException('UConst value exceeds export SerialSize');
-                }
+                // The file-backed linker reads FString bytes through physical
+                // EOF, then checks the final consumed export SerialSize.
                 $raw=$read($count*($wide?2:1));
                 if($count>0){
                     $ending=$wide?"\x00\x00":"\x00";
@@ -343,7 +347,7 @@ final class CatalogUE1ClassicNativeObjectReader
                     ?@iconv('UTF-16LE','UTF-8',$chars)
                     :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($chars));
                 if($value===false){throw new RuntimeException('UConst invalid character encoding');}
-                return array_replace($record,[
+                return $completeG3([
                     'status'=>$pos===$limit?'native_const_record_complete':'native_const_has_extension',
                     'super_field_reference'=>$superField,'next_field_reference'=>$nextField,
                     'value'=>$value,'value_encoding'=>$wide?'UTF-16LE':'Epic-FromAnsi-bytewise',

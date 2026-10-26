@@ -37,11 +37,11 @@ $paths=[];$tests=[];$failed=[];
 $check=static function(string $label,bool $ok)use(&$tests,&$failed):void {
     $tests[$label]=$ok;if(!$ok){$failed[]=$label;}
 };
-$parse=static function(int $version,string $body)use($build,&$paths):array {
+$parse=static function(int $version,string $body,string $physicalTail='')use($build,&$paths):array {
     $path=tempnam(sys_get_temp_dir(),'uenum-g3');
     if($path===false){throw new RuntimeException('No temp package');}
     $paths[]=$path;
-    file_put_contents($path,$build($version,$body));
+    file_put_contents($path,$build($version,$body).$physicalTail);
     $pkg=new Package($path);
     if($pkg->validatePackage()!==[]){throw new RuntimeException('UE1 package layout invalid');}
     $family=$version>=62?'ut99-v432':'epic-ue1'; // Known fixture provenance, not file dispatch.
@@ -55,6 +55,16 @@ $bad=static function(int $ver,string $body)use($parse):bool{
     try{$parse($ver,$body);return false;}catch(RuntimeException){return true;}
 };
 try{
+    foreach([50,69] as $ver){
+        $whole=$compact(0).$compact(0).$compact(2).$compact(6).$compact(7);
+        [$cross]=$parse($ver,substr($whole,0,-1),substr($whole,-1));
+        $check('v'.$ver.'_UEnum_physical_read_then_serial_size_mismatch',
+            $cross['status']==='native_export_serial_size_mismatch'
+            &&$cross['source_serial_size_check_failed']===true
+            &&$cross['serial_size_overrun_bytes']===1);
+        $check('v'.$ver.'_UEnum_physical_EOF',
+            $bad($ver,substr($whole,0,-1)));
+    }
     [$a,$tags]=$parse(50,$compact(0).$compact(0).$compact(2).$compact(6).$compact(7));
     $check('v50_super_next_and_two_names',($a['status']??null)==='native_enum_record_complete'
         && $a['super_field_reference']===0&&$a['next_field_reference']===0
