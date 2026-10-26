@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-06-t99-legacy-wide-fstring-source-overlap`
-- **Stage:** G3-06-SOURCE-PROVEN-RELEASE-PENDING
-- **Last completed action:** Verified original v400 UnMisc.cpp UTF16 FString negative branch has no package version gate; source-selected T99 v61/63 wide values load, distinct C98 v61 fixed byte array. UConst 24/24 DEV PASS, four affected scripts pass/reused; no compiled native C98/C227 parity claimed.
-- **Resume at:** Commit/push the original Unicode provenance gate fix, SHA-verify DEV->PRD changed files, then search for authenticated original C98 and C227 native oracles instead of repeating passed G3 tests.
-- **Active changed at:** 2026-10-26T18:37:31+00:00
+- **Stage:** G3-06-VERIFIED-PRD-SHA-DEPLOYED
+- **Last completed action:** Corrected T99 v61/v63 signed wide UConst original FString version overlap and retained C98 v61 source difference. 24/24 focused and four affected DEV tests pass/reused, release 9bdbe107 pushed; PRD 16/16 changed-file SHA256 matched, config/storage preserved. Previous c0cd78ee source-unit release similarly SHA-deployed. No original C98/C227 compiled stock native oracle; G3 full still 0/16.
+- **Resume at:** Investigate authenticated original C98 v200 compiled DLL/demo and exact C227 matching original Core.dll/SHA; source/compiled body provenance first, then native loaded-value parity. Do not re-run SHA-current T99 G5 or 4 G3 source tests.
+- **Active changed at:** 2026-10-26T18:38:33+00:00
 - **Latest DEV test states:** PASS 161; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
