@@ -334,24 +334,31 @@ final class CatalogUE1ClassicNativeObjectReader
                 // The file-backed linker reads FString bytes through physical
                 // EOF, then checks the final consumed export SerialSize.
                 $raw=$read($count*($wide?2:1));
-                if($count>0){
-                    $ending=$wide?"\x00\x00":"\x00";
-                    if(!str_ends_with($raw,$ending)){
-                        throw new RuntimeException('UConst Value FString missing NUL terminator');
-                    }
-                    $chars=substr($raw,0,-strlen($ending));
-                }else{$chars='';}
-                // Epic FromAnsi maps every archived ANSI byte directly to
-                // its TCHAR codepoint; no host Windows codepage guessing.
-                $value=$chars===''?'':($wide
+                // Original C98 TArray<char> and UT99 FString::operator<<
+                // archive all elements without validating a trailing NUL or
+                // UTF-16 scalar sequence. Do not invent an FArchive error.
+                $ending=$wide?"\x00\x00":"\x00";
+                $terminated=$count===0||str_ends_with($raw,$ending);
+                $chars=$count===0?'':($terminated
+                    ?substr($raw,0,-strlen($ending)):$raw);
+                // On UT99 LOAD FString::operator<< empties single-unit arrays.
+                $singleCleared=$family===CatalogUE1ClassicSourceFamily::UT99_V432&&$count===1;
+                $value=$singleCleared||$chars===''?'':($wide
                     ?@iconv('UTF-16LE','UTF-8',$chars)
                     :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($chars));
-                if($value===false){throw new RuntimeException('UConst invalid character encoding');}
+                $textVerified=$singleCleared||($terminated&&$value!==false);
+                if(!$textVerified){$value=null;}
                 return $completeG3([
-                    'status'=>$pos===$limit?'native_const_record_complete':'native_const_has_extension',
+                    'status'=>!$textVerified
+                        ?'native_const_archive_complete_text_unverified'
+                        :($pos===$limit?'native_const_record_complete':'native_const_has_extension'),
                     'super_field_reference'=>$superField,'next_field_reference'=>$nextField,
                     'value'=>$value,'value_encoding'=>$wide?'UTF-16LE':'Epic-FromAnsi-bytewise',
                     'value_count'=>$count,'value_sha256'=>hash('sha256',$raw),
+                    'string_terminated'=>$terminated,
+                    'source_text_value_verified'=>$textVerified,
+                    'ut99_single_unit_cleared_on_load'=>$singleCleared,
+                    'unverified_value_bytes_preview_hex'=>!$textVerified?bin2hex(substr($raw,0,64)):null,
                     'extension_bytes'=>$limit-$pos,
                 ]);
             }

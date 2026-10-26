@@ -1,0 +1,35 @@
+﻿{
+    "ok": true,
+    "passed": 21,
+    "total": 21,
+    "failed": [],
+    "cases": {
+        "v50_UConst_physical_read_then_serial_size_mismatch": true,
+        "v50_UConst_physical_EOF": true,
+        "v69_UConst_physical_read_then_serial_size_mismatch": true,
+        "v69_UConst_physical_EOF": true,
+        "v50_ansi_and_refs": true,
+        "v50_legacy_uobject_names": true,
+        "v69_source_ansi_EpicFromAnsi": true,
+        "v69_wide_UTF16": true,
+        "UField_refs_inherited_and_retained": true,
+        "extension_not_accepted_complete": true,
+        "wide_not_allowed_old_ver": true,
+        "positive_ref_oob": true,
+        "negative_ref_oob": true,
+        "positive_count_exceeds_bounds": true,
+        "negative_count_exceeds_bounds": true,
+        "c98_unterminated_char_array_source_archive_not_fatal": true,
+        "t99_unterminated_utf16_units_source_archive_not_fatal": true,
+        "t99_lone_surrogate_code_unit_source_archive_not_fatal": true,
+        "t99_single_ansi_unit_cleared_after_load_even_without_nul": true,
+        "t99_unterminated_ansi_does_not_drop_last_archive_byte": true,
+        "truncated_UField_ref": true
+    },
+    "epic_source": [
+        "v1.200 Core/Src/UnClass.cpp:1463-1469",
+        "v1.200 Core/Inc/UnClass.h:470-476",
+        "UT99 v400 Core/Src/UnClass.cpp:1438-1444",
+        "UT99 v400 Core/Inc/UnClass.h:506-513"
+    ]
+}

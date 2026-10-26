@@ -88,9 +88,37 @@ try{
  $check('negative_ref_oob',$bad(69,$compact(-2).$compact(0).$compact(0)));
  $check('positive_count_exceeds_bounds',$bad(69,$basic.$compact(18)."A\0"));
  $check('negative_count_exceeds_bounds',$bad(69,$basic.$compact(-18)."\0\0"));
- $check('ansi_missing_terminator',$bad(50,$basic.$compact(2)."AB"));
- $check('wide_missing_terminator',$bad(69,$basic.$compact(-2)."\x41\0\x42\0"));
- $check('malformed_utf16_surrogate',$bad(69,$basic.$compact(-2)."\0\xd8\0\0"));
+ // Original archive accepts these source-legal byte streams even
+ // though treating the result as a NUL-terminated C string is unsafe.
+ [$notTerminated]=$inspect(50,$basic.$compact(2)."AB");
+ $check('c98_unterminated_char_array_source_archive_not_fatal',
+    $notTerminated['status']==='native_const_archive_complete_text_unverified'
+    &&$notTerminated['string_terminated']===false
+    &&$notTerminated['source_text_value_verified']===false
+    &&$notTerminated['value']===null
+    &&$notTerminated['unverified_value_bytes_preview_hex']==='4142');
+ [$notTerminatedWide]=$inspect(69,$basic.$compact(-2)."\x41\0\x42\0");
+ $check('t99_unterminated_utf16_units_source_archive_not_fatal',
+    $notTerminatedWide['status']==='native_const_archive_complete_text_unverified'
+    &&$notTerminatedWide['string_terminated']===false
+    &&$notTerminatedWide['unverified_value_bytes_preview_hex']==='41004200');
+ [$invalidUnit]=$inspect(69,$basic.$compact(-2)."\0\xd8\0\0");
+ $check('t99_lone_surrogate_code_unit_source_archive_not_fatal',
+    $invalidUnit['status']==='native_const_archive_complete_text_unverified'
+    &&$invalidUnit['string_terminated']===true
+    &&$invalidUnit['source_text_value_verified']===false
+    &&$invalidUnit['unverified_value_bytes_preview_hex']==='00d80000');
+ [$single]=$inspect(69,$basic.$compact(1)."X");
+ $check('t99_single_ansi_unit_cleared_after_load_even_without_nul',
+    $single['status']==='native_const_record_complete'
+    &&$single['string_terminated']===false
+    &&$single['ut99_single_unit_cleared_on_load']===true
+    &&$single['value']==='');
+ [$sourceAnsi]=$inspect(69,$basic.$compact(3)."ABZ");
+ $check('t99_unterminated_ansi_does_not_drop_last_archive_byte',
+    $sourceAnsi['unverified_value_bytes_preview_hex']==='41425a'
+    &&$sourceAnsi['value_count']===3
+    &&$sourceAnsi['value_sha256']===hash('sha256',"ABZ"));
  $check('truncated_UField_ref',$bad(69,$compact(0)));
 }finally{foreach($paths as $p){@unlink($p);}}
 $ok=$fail===[];

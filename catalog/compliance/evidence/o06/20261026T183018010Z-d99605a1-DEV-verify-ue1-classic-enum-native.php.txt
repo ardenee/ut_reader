@@ -1,0 +1,31 @@
+﻿{
+    "ok": true,
+    "passed": 17,
+    "total": 17,
+    "cases": {
+        "v50_UEnum_physical_read_then_serial_size_mismatch": true,
+        "v50_UEnum_physical_EOF": true,
+        "v69_UEnum_physical_read_then_serial_size_mismatch": true,
+        "v69_UEnum_physical_EOF": true,
+        "v50_super_next_and_two_names": true,
+        "v50_legacy_UObject_names_before_UField": true,
+        "v69_single_name": true,
+        "object_refs_retained_but_not_linked": true,
+        "extension_does_not_count_as_complete": true,
+        "out_of_range_negative_object_ref": true,
+        "out_of_range_positive_object_ref": true,
+        "negative_array_count_rejected": true,
+        "oversized_array_count_rejected": true,
+        "negative_name_index_rejected": true,
+        "out_of_range_name_index_rejected": true,
+        "truncated_array_data_rejected": true,
+        "truncated_UField_refs_rejected": true
+    },
+    "failures": [],
+    "source": [
+        "v1.200 Core/Src/UnClass.cpp:236-245",
+        "v1.200 Core/Src/UnObj.cpp:3076-3082",
+        "UT99 v400 Core/Src/UnClass.cpp:239-248",
+        "UT99 v400 Core/Src/UnObj.cpp:3604-3610"
+    ]
+}
