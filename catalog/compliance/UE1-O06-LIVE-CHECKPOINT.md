@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-c98-may1998-ustring-66-loaded-string-size`
-- **Stage:** G3-C98-MAY1998-USTRING-66-STOCK-LOADED-SOURCE-VERIFIED-RELEASE-PENDING
-- **Last completed action:** Original May17 compiled stock Core.dll UStringProperty::Serialize 0x101439c0 reads inherited UProperty and source StringSize this+0x48; original CDB after native 4byte LOAD at 0x101439fe shows all 66 distinctive StringProperty native loaded objects Core.u 38 and Engine.u 28 with zero exact original persisted StringSize mismatches. Original CDB command/disassembly, original binary and v1.200 UnProp.cpp/UnType.h pinned; DEV independent focus verifier 555/555 PASS. G3-08 full OPEN due malformed/negative unproven and other versions; no production serializer modified nor parent 1536, prior 227i/G5/Const/Enum oracles rerun; G3 FULL 0/16.
-- **Resume at:** Commit/push authenticated UStringProperty 66 source/native positive proof, PRD SHA verify. Unmount temporary original US disc ISO. Then next distinct G3-08/09 subtype class reference or G3 malformed error behavior, not repeat loaded UString positives.
-- **Active changed at:** 2026-10-26T23:05:34+00:00
+- **Stage:** G3-C98-MAY1998-USTRING-66-REAL-COMPILED-LOAD-PRD-SHA-VERIFIED
+- **Last completed action:** Original authentic May17 x86 Core.dll UStringProperty::Serialize compiled 0x101439c0 +0x48 StringSize after archive 0x101439fe; 66 real native loaded objects matched original Core.u 38 and Engine.u 28, DEV independent 555/555 PASS, SHA original stock CDB/source/packages sealed. Commit a62d6b25 pushed GitHub origin/main, PRD all 19/19 modified files SHA256 matched with catalog/config.php and storage untouched. Original US retail CD ISO detached, no Unreal/CDB debugging process left. No production serializer changed, parent 1536 test not rerun, malformed/negative size and other version G3-08 branches remain open. G3 full still 0/16.
+- **Resume at:** Next distinct G3-08/09 true original compiled UByteProperty::Enum reference or UStructProperty::Struct object reference identity, source native 1998 May loaded values, then malformed archive precise errors. Do not repeat 1536 UProperty or 66 UString positive tests and never promote G3 full before missing contracts.
+- **Active changed at:** 2026-10-26T23:06:30+00:00
 - **Latest DEV test states:** PASS 167; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
