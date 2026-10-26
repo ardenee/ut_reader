@@ -69,6 +69,39 @@ if missing: signature += "\n"+"\n".join(missing)
 # reversal and multi-frame duplicate/permutation cases are original v432
 # compiled data, and the shortened remap branch matches the stock loader's
 # success without fabricating unsafe memory contents.
+# Additional source-isolated UClass compiled live Script relocation view.
+# The prior six FULL subclass readers are unchanged; source-correct metadata
+# adds only the original XFER(UObject*)/XFER(FName) memory offsets and targets.
+script_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+assert script_current=="f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3"
+script_path=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php"
+script_old_blob=subprocess.check_output(["git","-C",str(ROOT),"show",
+ "af9b0c05:catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php"])
+script_old=script_old_blob.decode("utf-8-sig")
+script_new=script_path.read_text(encoding="utf-8-sig")
+assert script_old!=script_new
+assert "native_load_relocation_count" in script_new
+assert "native_pointer_addresses_fabricated" in script_new
+assert "native_load_relocation_count" not in script_old
+uclass_test="verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php"
+uclass_ev=latest.get(uclass_test)
+assert uclass_ev and uclass_ev.get("state")=="PASS"
+assert uclass_ev["source_sha256"]==script_current
+uclass_log=ROOT/uclass_ev["log"].replace("\\","/")
+uclass_report=read(uclass_log)
+assert uclass_report["ok"] and uclass_report["checks"]==uclass_report["passed"]==47
+assert uclass_report["native_loaded_pointer_referents_matched"]==3
+assert uclass_report["native_loaded_script_opcode_slots_identical"]==57
+assert uclass_report["native_loaded_class_default_values_matched"]==3
+assert uclass_report["native_loaded_fname_fixup_matches"] is True
+assert uclass_report["native_engines_run_by_verifier"]==0
+assert digest(uclass_log)==uclass_ev["output_sha256"]
+assert digest(ROOT/"catalog/bin"/uclass_test)==uclass_ev["test_sha256"]
+script_new_line=str(script_path)+":"+digest(script_path).upper()
+script_prev_sha=hashlib.sha256(script_old_blob).hexdigest()
+assert signature.count(script_new_line)==1
+signature=signature.replace(script_new_line,str(script_path)+":"+script_prev_sha.upper(),1)
+assert hashlib.sha256(signature.encode("utf-8")).hexdigest()=="17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19"
 remap_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
 assert remap_current=="17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19"
 remap_path=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php"
@@ -585,7 +618,7 @@ v227_script_file=ROOT/"catalog"/"src"/"Infrastructure"/"Readers"/"CatalogUE1Clas
 before_v227_script=committed("b7a7254f",v227_script_file)
 previous_v227_script_source="323f493f971869e5a635f03597daf15cda317bf7ca58521178fc2b3d56a771e0"
 sig_before_v227_script=subst_sig(
-    sig_before_primitive,v227_script_file,digest(v227_script_file).upper(),sha_blob(before_v227_script))
+    sig_before_primitive,v227_script_file,script_prev_sha.upper(),sha_blob(before_v227_script))
 v227_script_test="verify-ue1-o06-c227-genuine-script-source-decision.php"
 v227_script_event=latest.get(v227_script_test)
 v227_script_log=ROOT/v227_script_event["log"] if v227_script_event and v227_script_event.get("log") else None
@@ -1177,7 +1210,9 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":remap_current,
+    "current_source_sha256":script_current,
+    "source_native_uclass_script_load_relocations_scoped":True,
+    "previous_source_before_uclass_script_relocations":remap_current,
     "source_native_skeletal_runtime_remap_scoped":True,
     "previous_source_before_skeletal_remap":direct_current,
     "source_native_direct_UStrProperty_physical_EOF_scoped":True,

@@ -1,0 +1,348 @@
+﻿{
+    "ok": false,
+    "checks": 246,
+    "passed": 188,
+    "failed": [
+        "BotPack.u_no_script_exceptions",
+        "BotPack.u_tags",
+        "ChaosUT.u_no_script_exceptions",
+        "ChaosUT.u_tags",
+        "ChaosUTMedia1.u_no_script_exceptions",
+        "ChaosUTMedia1.u_tags",
+        "ChaosUTMedia2.u_no_script_exceptions",
+        "ChaosUTMiscMuts.u_no_script_exceptions",
+        "ChaosUTMiscMuts.u_tags",
+        "ChaosUTRHUD.u_no_script_exceptions",
+        "ChaosUTRHUD.u_tags",
+        "Core.u_no_script_exceptions",
+        "Core.u_tags",
+        "Editor.u_no_script_exceptions",
+        "Editor.u_tags",
+        "Engine.u_no_script_exceptions",
+        "Engine.u_tags",
+        "Fire.u_no_script_exceptions",
+        "IpDrv.u_no_script_exceptions",
+        "IpDrv.u_tags",
+        "IpServer.u_no_script_exceptions",
+        "IpServer.u_tags",
+        "RocketArena.u_no_script_exceptions",
+        "RocketArena.u_tags",
+        "RocketArenaMedia.u_no_script_exceptions",
+        "RocketArenaMultiMesh.u_no_script_exceptions",
+        "RocketArenaMultiMesh.u_tags",
+        "UBrowser.u_no_script_exceptions",
+        "UBrowser.u_tags",
+        "UMenu.u_no_script_exceptions",
+        "UMenu.u_tags",
+        "UTBrowser.u_no_script_exceptions",
+        "UTBrowser.u_tags",
+        "UTChaosMap.u_no_script_exceptions",
+        "UTChaosMap.u_tags",
+        "UTMenu.u_no_script_exceptions",
+        "UTMenu.u_tags",
+        "UTServerAdmin.u_no_script_exceptions",
+        "UTServerAdmin.u_tags",
+        "UWeb.u_no_script_exceptions",
+        "UWeb.u_tags",
+        "UWindow.u_no_script_exceptions",
+        "UWindow.u_tags",
+        "UnrealI.u_no_script_exceptions",
+        "UnrealI.u_tags",
+        "UnrealShare.u_no_script_exceptions",
+        "UnrealShare.u_tags",
+        "de.u_no_script_exceptions",
+        "de.u_tags",
+        "epiccustommodels.u_no_script_exceptions",
+        "multimesh.u_no_script_exceptions",
+        "multimesh.u_tags",
+        "relics.u_no_script_exceptions",
+        "relics.u_tags",
+        "relicsbindings.u_no_script_exceptions",
+        "relicsbindings.u_tags",
+        "all_17700_tags",
+        "zero_script_exceptions"
+    ],
+    "totals": {
+        "packages": 30,
+        "exports": 50250,
+        "classes": 4199,
+        "tags": 0,
+        "exceptions": 1821
+    },
+    "files": [
+        {
+            "name": "BotPack.u",
+            "classes": 2292,
+            "tags": 0,
+            "exceptions": 505
+        },
+        {
+            "name": "ChaosUT.u",
+            "classes": 112,
+            "tags": 0,
+            "exceptions": 112
+        },
+        {
+            "name": "ChaosUTMedia1.u",
+            "classes": 1,
+            "tags": 0,
+            "exceptions": 1
+        },
+        {
+            "name": "ChaosUTMedia2.u",
+            "classes": 1,
+            "tags": 0,
+            "exceptions": 1
+        },
+        {
+            "name": "ChaosUTMiscMuts.u",
+            "classes": 3,
+            "tags": 0,
+            "exceptions": 3
+        },
+        {
+            "name": "ChaosUTRHUD.u",
+            "classes": 3,
+            "tags": 0,
+            "exceptions": 3
+        },
+        {
+            "name": "Core.u",
+            "classes": 7,
+            "tags": 0,
+            "exceptions": 7
+        },
+        {
+            "name": "Editor.u",
+            "classes": 26,
+            "tags": 0,
+            "exceptions": 12
+        },
+        {
+            "name": "Engine.u",
+            "classes": 131,
+            "tags": 0,
+            "exceptions": 88
+        },
+        {
+            "name": "Fire.u",
+            "classes": 6,
+            "tags": 0,
+            "exceptions": 6
+        },
+        {
+            "name": "IpDrv.u",
+            "classes": 5,
+            "tags": 0,
+            "exceptions": 5
+        },
+        {
+            "name": "IpServer.u",
+            "classes": 6,
+            "tags": 0,
+            "exceptions": 2
+        },
+        {
+            "name": "RocketArena.u",
+            "classes": 125,
+            "tags": 0,
+            "exceptions": 125
+        },
+        {
+            "name": "RocketArenaMedia.u",
+            "classes": 3,
+            "tags": 0,
+            "exceptions": 3
+        },
+        {
+            "name": "RocketArenaMultiMesh.u",
+            "classes": 13,
+            "tags": 0,
+            "exceptions": 13
+        },
+        {
+            "name": "UBrowser.u",
+            "classes": 96,
+            "tags": 0,
+            "exceptions": 59
+        },
+        {
+            "name": "UMenu.u",
+            "classes": 312,
+            "tags": 0,
+            "exceptions": 107
+        },
+        {
+            "name": "UTBrowser.u",
+            "classes": 8,
+            "tags": 0,
+            "exceptions": 8
+        },
+        {
+            "name": "UTChaosMap.u",
+            "classes": 11,
+            "tags": 0,
+            "exceptions": 11
+        },
+        {
+            "name": "UTMenu.u",
+            "classes": 303,
+            "tags": 0,
+            "exceptions": 91
+        },
+        {
+            "name": "UTServerAdmin.u",
+            "classes": 4,
+            "tags": 0,
+            "exceptions": 4
+        },
+        {
+            "name": "UWeb.u",
+            "classes": 9,
+            "tags": 0,
+            "exceptions": 7
+        },
+        {
+            "name": "UWindow.u",
+            "classes": 101,
+            "tags": 0,
+            "exceptions": 78
+        },
+        {
+            "name": "UnrealI.u",
+            "classes": 146,
+            "tags": 0,
+            "exceptions": 146
+        },
+        {
+            "name": "UnrealShare.u",
+            "classes": 360,
+            "tags": 0,
+            "exceptions": 360
+        },
+        {
+            "name": "de.u",
+            "classes": 16,
+            "tags": 0,
+            "exceptions": 16
+        },
+        {
+            "name": "epiccustommodels.u",
+            "classes": 4,
+            "tags": 0,
+            "exceptions": 4
+        },
+        {
+            "name": "multimesh.u",
+            "classes": 21,
+            "tags": 0,
+            "exceptions": 21
+        },
+        {
+            "name": "relics.u",
+            "classes": 73,
+            "tags": 0,
+            "exceptions": 22
+        },
+        {
+            "name": "relicsbindings.u",
+            "classes": 1,
+            "tags": 0,
+            "exceptions": 1
+        }
+    ],
+    "errors": [
+        {
+            "file": "BotPack.u",
+            "class": "Bot",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "TournamentConsole",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "LadderInventory",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "DeathMatchPlus",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "TournamentPlayer",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "RatedMatchInfo",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "CTFFlag",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "ControlPoint",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "BotReplicationInfo",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "FortStandard",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "FontInfo",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "ut_Decoration",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "TournamentGameReplicationInfo",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "TeamGamePlus",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "UT_BloodBurst",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "Enforcer",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "RatedTeamInfo",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        },
+        {
+            "file": "BotPack.u",
+            "class": "TournamentWeapon",
+            "error": "UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates"
+        }
+    ],
+    "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+    "limit": "On-disk parser and SHA-pinned corpus only; not independent compiled Epic runtime execution."
+}

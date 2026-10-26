@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "method": "T99:UClass::Serialize",
+  "source_profile": "ut99-v432",
+  "source_package_version": 69,
+  "source_script_semantics": "UStruct::SerializeExpr XFER(UProperty*) translates local package export reference to live object pointer in Script memory; native UClass::Serialize loads Class Default Object then applies tagged defaults",
+  "native_dlls": {
+    "Core.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432
+    },
+    "Engine.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+      "bytes": 1785856
+    }
+  },
+  "actual_original_source_engine_archive": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+    "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+    "bytes": 1149560
+  },
+  "native_cpp_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLive.cpp",
+    "sha256": "7d0304953a572f717d51d53592a2178754d4393f440b05aaa4696f01349061f2",
+    "bytes": 5249
+  },
+  "native_probe_exe": {
+    "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLive.exe",
+    "sha256": "16f09959d12829af5026b35576dad8786cf61e4f3019bc428361f09fefbe8c93",
+    "bytes": 79872
+  },
+  "native_cases": [
+    {
+      "name": "Actor",
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLive-Actor.log",
+        "sha256": "26452acb0a11fce983b2b379b8870be3dad1b96796fcf4b3d08f52ff0443234e",
+        "bytes": 1662
+      },
+      "script_memory_size": 767,
+      "native_script_fixup_slot": 3,
+      "native_script_pointer_referent": "ByteProperty Engine.Actor.Role",
+      "native_default_property": "Role",
+      "native_default_type": "ByteProperty",
+      "native_default_value": 4
+    },
+    {
+      "name": "Pawn",
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLive-Pawn.log",
+        "sha256": "2cfa8b9ad64c6f5e4cb4a095c980f6c471e8613b5160490a4463eb74aababad0",
+        "bytes": 1727
+      },
+      "script_memory_size": 314,
+      "native_script_fixup_slot": 3,
+      "native_script_pointer_referent": "ByteProperty Engine.Actor.Role",
+      "native_default_property": "GroundSpeed",
+      "native_default_type": "FloatProperty",
+      "native_default_value": 320
+    },
+    {
+      "name": "LevelInfo",
+      "native_log": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLive-LevelInfo.log",
+        "sha256": "e0b93d7f1d9f4aa0133e57c3094fc2662e6973af949caf4030664a8b0cff3ae0",
+        "bytes": 778
+      },
+      "script_memory_size": 11,
+      "native_script_fixup_slot": 3,
+      "native_script_pointer_referent": "ByteProperty Engine.Actor.Role",
+      "native_default_property": "TimeDilation",
+      "native_default_type": "FloatProperty",
+      "native_default_value": 1
+    }
+  ],
+  "prior_88_native_class_scalar_oracles_reexecuted": false,
+  "verdict": "SOURCE_SCOPED_LOADED_SCRIPT_POINTER_AND_SELECTED_DEFAULTS_PROVEN_UClass_OVERALL_BLOCKED",
+  "remaining": "Other saved class default value types, complete script ref/name fixups, malformed source variants and complete v432 method seven-criterion review",
+  "native_fname_case": {
+    "class": "Pawn",
+    "memory_slot": 281,
+    "original_archive_fname_map_slot": 15,
+    "source_resolved_name": "PlayerPawn",
+    "actual_native_global_fname_index": 893,
+    "new_native_cpp_source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLiveFName.cpp",
+      "sha256": "10ddecd44c17abf43b5de0fd9d3c1662c08dcaea71b075cf169809c8ea03908f",
+      "bytes": 5576
+    },
+    "new_native_exe": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLiveFName.exe",
+      "sha256": "f5e0c728e304d71f7dae5ba9ee39fa9cd3bc76d0eb8c9f80a82d72ffd87bb617",
+      "bytes": 80384
+    },
+    "native_loaded_log": {
+      "path": "C:/Temp/UnrealDB/O06/G5-T99-UClass-ScriptLiveFName-Pawn.log",
+      "sha256": "d1b40c208d043d1526f564c5048578e231e1342222e442f04db5ad9917a941be",
+      "bytes": 1808
+    },
+    "prior_native_UClass_scalar_tests_reexecuted": false
+  }
+}

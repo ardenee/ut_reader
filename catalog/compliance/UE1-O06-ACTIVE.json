@@ -1,7 +1,7 @@
 {
-  "contract": "g5-t99-skeletalmesh-independent-full",
-  "stage": "released-7a3bc32a-DEV-PRD-24of24-SHA",
-  "last_action": "Seven of seven criteria FULL for UT99 v432 version69 USkeletalMesh. Commit 7a3bc32a pushed; 24/24 files copied and SHA matched on PRD; 55/55 final acceptance and 40/40 plus733/733 regressions passed DEV. G5 six FULL two BLOCKED.",
-  "next_step": "Stop SkeletalMesh verification. Next T99 UObject nonempty FString and general source variants; next UClass script fixups and runtime defaults. Avoid repeating accepted native probes.",
-  "updated_at_utc": "2026-10-26T02:58:18+00:00"
+  "contract": "g5-t99-uclass-native-script-loaded-relocations",
+  "stage": "verified-native-script-pointer-fname-defaults-PASS47-G5-6FULL-2BLOCKED",
+  "last_action": "Actual compiled unchanged v432 Engine.u loaded Actor/Pawn/LevelInfo Script sizes767/314/11, 57 memory opcode values, 3 native pointer names ByteProperty Engine.Actor.Role, Pawn memory281 FName global893 PlayerPawn versus local15; three actual CDO defaults Role4/GroundSpeed320/TimeDilation1. Production XFER script source mapping implemented; focused 47/47 native SHA verifier PASS. Existing UT99 six package 3194 classes and 30 package 4199 classes source regressions PASS. Preserved earlier invalid profile FAIL. No repeat prior 88 class or six FULL method native probes.",
+  "next_step": "Finish UClass remaining distinct Script pointer/FName XFER forms, Config/Localized/default cases and archive-negative branches in one FULL acceptance, or UObject separate allocator-dependent nested FString and tagged contexts. Stop all prior class scalar and current compiled Actor/Pawn/LevelInfo tests.",
+  "updated_at_utc": "2026-10-26T03:28:15+00:00"
 }

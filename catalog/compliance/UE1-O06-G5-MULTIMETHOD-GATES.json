@@ -110,17 +110,26 @@
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
       "closure_artifact": null,
       "closure_sha256": null,
       "blocker_summary": "Compiled v432 Core UClass::Serialize loaded ALL 88/88 genuine nonempty Engine.u UClasses; 43 extra ClassIndex==0 entries are zero-sized NAME_None placeholders and not class exports. Full real native loaded-value proofs current: ClassFlags/GUID/array counts/ConfigName (719/719), all 3,053 full native FDependency elements, 176 PackageImports FNames and 88 ClassWithin referents (9,878/9,878), all 608 tagged defaults (607 exact + one SHA-pinned runtime GameReplicationInfo.ServerName INI override, 1,672/1,672), and 12 inherited UField/UStruct/UState real in-memory stored fields per each of 88 classes (1,056 values, 1,334/1,334 checks). All verifiers are SHA-pinned genuine v432 compiled engine comparisons. Full inherited method closure still requires complete Script bytecode element/fixup values, UObject remaining variants, malformed/error archive consumption and other selected source family boundaries; method FULL remains OPEN.",
       "decision": "BLOCKED",
-      "decisive_blocker": "native_loaded_UClass_Script_fixups_default_runtime_effects_and_remaining_malformed_source_variants",
-      "next_action": "Stop old 88 native scalar/default/inherited tests. Next UClass decision-critical work: source-accurate runtime script pointer/FName fixups and class default object initialization/config effects, remaining genuine malformed archive paths and one final 7/7 independent method acceptance. Preserve original dependency count mutation/CDB and six-package DEV acceptance; no duplicate oracle run.",
-      "reason": "All 88 genuine v432 UClass compiled scalar/default/inherited value groups remain SHA-pinned. NEW actual compiled v432 UWindowLookAndFeel original-copy malformed dependency count (one byte 5 to 63) demonstrates FArchive continues beyond export SerialSize before failing during FDependency.Class resolution; source PHP physical-EOF handling corrected. Also fixed distinct Unreal v1.200 pre-v57 UClass archive cursor after second-handle tagged defaults before two trailing FNames. Source-class focused verifier 87/87 DEV PASS, genuine six package script/class sample 3194 original classes/11366 tags current-source PASS without reloading native class oracles. Complete script bytecode loaded pointer/fixup values, other source-legal malformed/class-default runtime side effects and independent seven-gate FULL acceptance remain OPEN.",
-      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
+      "decisive_blocker": "remaining_UClass_script_XFER_variants_config_localized_default_side_effects_and_malformed_source_errors",
+      "next_action": "Stop old 88 native scalar/default/inherited tests. Next UClass decision-critical work: verify the outstanding full script XFER reference/FName relocation variants, CDO config/localized source effects and remaining precise malformed archive cases, then one independent 7/7 method acceptance. Do not repeat the compiled original Actor/Pawn/LevelInfo or earlier 88 compiled classes. Preserve original dependency count mutation/CDB and six-package DEV acceptance; no duplicate oracle run.",
+      "reason": "All 88 genuine v432 UClass compiled scalar/default/inherited value groups remain SHA-pinned. NEW actual compiled v432 UWindowLookAndFeel original-copy malformed dependency count (one byte 5 to 63) demonstrates FArchive continues beyond export SerialSize before failing during FDependency.Class resolution; source PHP physical-EOF handling corrected. Also fixed distinct Unreal v1.200 pre-v57 UClass archive cursor after second-handle tagged defaults before two trailing FNames. Source-class focused verifier 87/87 DEV PASS, genuine six package script/class sample 3194 original classes/11366 tags current-source PASS without reloading native class oracles. NEW compiled stock v432 native Engine.Actor, Pawn and LevelInfo have Script.Num 767/314/11; source script XFER relocation memory and 57 opcode slots match loaded bytecode. Three live UObject* referents all resolve ByteProperty Engine.Actor.Role, and Pawn FName at memory281 resolves PlayerPawn (archived name-index15 versus native global-ID893). CDO Role4, GroundSpeed320 and TimeDilation1 match saved default tags. Focus verifier 47/47 PASS and original 30-package script class regression 4199 classes/17700 tags PASS; prior 88 compiled native class comparisons not repeated. Remaining complete XFER FName/object variants, config/localized default effects and source-legal malformed error cases keep this method BLOCKED.",
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests",
+      "actual_native_UClass_loaded_script_sizes": [
+        767,
+        314,
+        11
+      ],
+      "actual_native_UClass_loaded_script_opcode_slots": 57,
+      "actual_native_UClass_loaded_object_pointer_fixups": 3,
+      "actual_native_UClass_LoadConfig_CDO_primitive_values": 3,
+      "native_uclass_script_load_proof_SHA": "c340a499388fb0d9917d27e6b928ccba61a9af8ab354b093d671b84597676055"
     },
     "T99:UTextBuffer::Serialize": {
       "criteria": {

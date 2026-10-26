@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 47,
+    "passed": 47,
+    "failures": [],
+    "native_loaded_original_classes": 3,
+    "native_loaded_pointer_referents_matched": 3,
+    "native_loaded_script_opcode_slots_identical": 57,
+    "native_loaded_class_default_values_matched": 3,
+    "native_loaded_fname_fixup_matches": true,
+    "native_engines_run_by_verifier": 0,
+    "uclass_method_decision": "BLOCKED"
+}

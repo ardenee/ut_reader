@@ -256,10 +256,10 @@
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 1,
+      "acceptance_criteria_met": 2,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": 90,
@@ -335,7 +335,7 @@
         "global_source_inputs_changed",
         "compiled_ALL88_REAL_UClass_43_NAME_None_zero_byte_placeholders_not_unvisited_3053_dependencies_176_imports_608_defaults_plus_1056_inherited_UField_UStruct_UState_stored_members_verified_but_Script_bytecode_fixups_malformed_errors_version_variants_OPEN"
       ],
-      "next_closure_work": "Stop old 88 native scalar/default/inherited tests. Next UClass decision-critical work: source-accurate runtime script pointer/FName fixups and class default object initialization/config effects, remaining genuine malformed archive paths and one final 7/7 independent method acceptance. Preserve original dependency count mutation/CDB and six-package DEV acceptance; no duplicate oracle run.",
+      "next_closure_work": "Stop old 88 native scalar/default/inherited tests. Next UClass decision-critical work: verify the outstanding full script XFER reference/FName relocation variants, CDO config/localized source effects and remaining precise malformed archive cases, then one independent 7/7 method acceptance. Do not repeat the compiled original Actor/Pawn/LevelInfo or earlier 88 compiled classes. Preserve original dependency count mutation/CDB and six-package DEV acceptance; no duplicate oracle run.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -345,7 +345,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "native_loaded_UClass_Script_fixups_default_runtime_effects_and_remaining_malformed_source_variants",
+      "decisive_closure_blocker": "remaining_UClass_script_XFER_variants_config_localized_default_side_effects_and_malformed_source_errors",
       "closure_artifact": null,
       "closure_sha256": null
     },

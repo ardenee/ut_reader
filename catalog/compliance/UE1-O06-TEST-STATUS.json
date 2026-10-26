@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T02:49:45.2539890Z",
-    "head_commit":  "2aa8257f",
+    "updated_at_utc":  "2026-10-26T03:24:07.5201620Z",
+    "head_commit":  "af9b0c05",
     "current_target":  "DEV",
-    "current_source_sha256":  "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
+    "current_source_sha256":  "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -821,6 +821,18 @@
                       "log":  "catalog\\compliance\\evidence\\o06\\20261025T163728748Z-a60cb4ef-DEV-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.txt"
                   },
                   {
+                      "key":  "DEV:verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php",
+                      "test":  "verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T03:24:07.5001612Z",
+                      "source_sha256":  "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
+                      "test_sha256":  "378341b226becca9b720aadb8de8077ea38251192f6e9a12dc084c0317ab1382",
+                      "run_id":  "20261026T032406697Z-5492b77a",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T032406697Z-5492b77a-DEV-verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php.txt"
+                  },
+                  {
                       "key":  "DEV:verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php",
                       "test":  "verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php",
                       "target":  "DEV",
@@ -1161,24 +1173,24 @@
                       "test":  "verify-ue1-o06-genuine-ut99-full-scripts.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T13:16:28.6810071Z",
-                      "source_sha256":  "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
-                      "test_sha256":  "c0792f23521f6647a439b8650dfe525df70d758e7aa2ed73e7654ae5de43e027",
-                      "run_id":  "20261023T131616365Z-482253ed",
+                      "event_at_utc":  "2026-10-26T03:15:32.0180550Z",
+                      "source_sha256":  "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
+                      "test_sha256":  "fb51692d83f9595c98eecb884d60e02bc8b3c7bf2917ac95ee2fc387815c939f",
+                      "run_id":  "20261026T031516783Z-f91af16d",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T131616365Z-482253ed-DEV-verify-ue1-o06-genuine-ut99-full-scripts.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T031516783Z-f91af16d-DEV-verify-ue1-o06-genuine-ut99-full-scripts.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-genuine-ut99-script-archive.php",
                       "test":  "verify-ue1-o06-genuine-ut99-script-archive.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-26T01:36:58.5237126Z",
-                      "source_sha256":  "8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029",
+                      "event_at_utc":  "2026-10-26T03:14:34.6798385Z",
+                      "source_sha256":  "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
                       "test_sha256":  "0839fdb803751187f5f0bc9579a36c4a32695007c8498176a7b60de4abf40753",
-                      "run_id":  "20261026T013649874Z-552da0f7",
+                      "run_id":  "20261026T031425997Z-2b54c267",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T013649874Z-552da0f7-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T031425997Z-2b54c267-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-native-ut99-music-all.php",

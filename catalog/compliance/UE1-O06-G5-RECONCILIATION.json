@@ -1,10 +1,12 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-26T02:56:06.047378+00:00",
-  "head": "2aa8257f",
-  "previous_runner_head": "2aa8257f",
-  "previous_source_sha256": "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
-  "current_source_sha256": "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
+  "generated_utc": "2026-10-26T03:28:19.449348+00:00",
+  "head": "af9b0c05",
+  "previous_runner_head": "af9b0c05",
+  "previous_source_sha256": "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
+  "current_source_sha256": "f561ab57ae5322d8494cc00d4eee3c20580849720ddec957d93d992e9d7d7be3",
+  "source_native_uclass_script_load_relocations_scoped": true,
+  "previous_source_before_uclass_script_relocations": "17c0cdc09733266793b486cc07ecce1616c7f8528036e69d7353d24ea75f6c19",
   "source_native_skeletal_runtime_remap_scoped": true,
   "previous_source_before_skeletal_remap": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
   "source_native_direct_UStrProperty_physical_EOF_scoped": true,
@@ -78,7 +80,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 153,
+    "PASS": 154,
     "FAIL": 1
   },
   "branch_totals": {
@@ -10469,7 +10471,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "native_loaded_UClass_Script_fixups_default_runtime_effects_and_remaining_malformed_source_variants",
+      "decisive_closure_blocker": "remaining_UClass_script_XFER_variants_config_localized_default_side_effects_and_malformed_source_errors",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",

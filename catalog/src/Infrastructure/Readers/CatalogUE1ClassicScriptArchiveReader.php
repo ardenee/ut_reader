@@ -37,6 +37,7 @@ final class CatalogUE1ClassicScriptArchiveReader
         $count = 0;
         $unsupported = null;
         $preview = [];
+        $relocations = []; $relocationCount=0;
         $lastToken = null; $lastTokenArchiveOffset = null;
         // Unreal v227 UnStack.h and UT99 v432 UnStack.h share all
         // common basic VM tokens; Unreal v1.200 is NOT the right
@@ -70,22 +71,48 @@ final class CatalogUE1ClassicScriptArchiveReader
         $dword = static function() use ($read, $mem): int {
             $v = (int)unpack('V', $read(4))[1]; $mem(4); return $v;
         };
-        $ref = static function() use ($compact, $pkg, $mem): int {
+        $ref = static function() use ($compact, $pkg, $mem, &$iCode,
+            &$relocations, &$relocationCount): int {
             $v = $compact();
-            if (($v < 0 && -$v > count($pkg->getImports())) ||
-                ($v > 0 && $v > count($pkg->getExports()))) {
+            $exports=$pkg->getExports();$imports=$pkg->getImports();
+            if (($v < 0 && -$v > count($imports)) ||
+                ($v > 0 && $v > count($exports))) {
                 throw new RuntimeException('UE1 SerializeExpr invalid object reference');
             }
+            $slot=$iCode;
             $mem(4); // C++ XFER(UObject*) or XFER(UProperty*) is sizeof(ptr).
+            // The stock compiled linker replaces the archived object index
+            // with a four-byte native pointer at this memory offset.
+            // Preserve file index AND source identity; never fabricate the
+            // process-address value, cross-package object or class lifetime.
+            ++$relocationCount;
+            if(count($relocations)<128){
+                $target=$v>0?($exports[$v-1]??null):
+                    ($v<0?($imports[-$v-1]??null):null);
+                $relocations[]=['kind'=>'object_pointer','memory_offset'=>$slot,
+                    'archive_index'=>$v,
+                    'target_source'=>$v>0?'export':($v<0?'import':'null'),
+                    'target_name'=>$target['objectNameText']??null];
+            }
             return $v;
         };
-        $fname = static function() use ($compact, $pkg, $mem): array {
+        $fname = static function() use ($compact, $pkg, $mem, &$iCode,
+            &$relocations, &$relocationCount): array {
             $id = $compact();
             $names = $pkg->getNames();
             if ($id < 0 || !isset($names[$id])) {
                 throw new RuntimeException('UE1 SerializeExpr invalid name index');
             }
+            $slot=$iCode;
             $mem(4); // C++ XFER(FName) increments iCode by sizeof(FName).
+            ++$relocationCount;
+            if(count($relocations)<128){
+                $relocations[]=['kind'=>'fname','memory_offset'=>$slot,
+                    'archive_index'=>$id,
+                    // Native FName global table IDs can differ from disk
+                    // indices; the resolved name text is authoritative.
+                    'resolved_name'=>(string)$names[$id]['name']];
+            }
             return ['index' => $id, 'name' => (string)$names[$id]['name']];
         };
 
@@ -334,6 +361,11 @@ final class CatalogUE1ClassicScriptArchiveReader
             'expression_count' => $count,
             'expression_preview' => $preview,
             'expression_preview_truncated' => $count > count($preview),
+            'native_load_relocation_count'=>$relocationCount,
+            'native_load_relocation_preview'=>$relocations,
+            'native_load_relocation_preview_truncated'=>
+                $relocationCount>count($relocations),
+            'native_pointer_addresses_fabricated'=>false,
             'unsupported_branch' => $unsupported,
             'bytecode_executed' => false,
             'runtime_refs_resolved' => false,

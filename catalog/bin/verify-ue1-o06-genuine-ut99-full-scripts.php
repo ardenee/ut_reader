@@ -29,7 +29,10 @@ foreach($m['files'] as $row){
   if((int)$ex['classIndex']!==0)continue;
   $num++;
   try{
-   $class=T::inspect($path,$p,(int)$ex['index']);
+   // This SHA-pinned inventory consists of installed UT99 script packages.
+   // Archive v69 is shared with Unreal 227; select the known source, not
+   // a guessed engine lineage from the version number alone.
+   $class=T::inspect($path,$p,(int)$ex['index'],'ut99-v432');
    $tags+=count($class['default_property_tags']??[]);
   }catch(Throwable $e){
    $bad++;$counts['exceptions']++;
