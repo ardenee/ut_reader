@@ -168,17 +168,21 @@
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
       "closure_artifact": null,
       "closure_sha256": null,
       "blocker_summary": "237 native FMeshBone records verified; inherited ULodMesh is still open.",
       "decision": "BLOCKED",
-      "decisive_blocker": "inherited_ULodMesh_and_negative_cases",
-      "next_action": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
-      "reason": "Native bone/vertex arrays covered, but inherited ULodMesh and other scalar/error branches unverified.",
-      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests"
+      "decisive_blocker": "nonempty_ULodMesh_RemapAnimVerts_runtime_loaded_vertex_permutation_and_remaining_specific_malformed_branches",
+      "next_action": "Only original source-legal nonempty RemapAnimVerts load-time Verts permutation/clearing and unverified inherited malformed branches prevent final 7/7. Do not rescan same 10131 packages or rerun previously 5 original native scalars / 282956 array bytes. Obtain one truly nonempty source-legal native loaded specimen then independent final method signoff.",
+      "reason": "Original compiled v432 loaded 5 genuine SkeletalMesh objects and exact source PHP matches 40 inherited UMesh/ULodMesh and SkeletalMesh scalar/reference/weapon-transform field groups including full DefaultAnimation identities; independent focus evidence 37/37; earlier 282956 genuine skeletal array bytes reused without native replays. One original-derived bad DefaultAnimation ref source/compiled both reject, original CDB first-chance absolute cursor 412679. A read-only PRD census of 10131 genuine UT99 .u package files found 676 skeletal-name packages, 2895 genuine fully source-decoded skeletal exports, ZERO nonempty RemapAnimVerts; thus required nonempty ULodMesh remapping loaded-vertex semantics lack original compiled positive evidence, and full method must remain BLOCKED.",
+      "last_consolidated_review": "existing_sha_pinned_evidence_only_no_new_tests",
+      "genuine_compiled_five_skeletal_loaded_scalars": "VERIFIED",
+      "native_skeletal_whole_scalar_evidence_manifest_sha256": "2115652dc9926e60907b551f624490da01a7c08da38252c7221983beaca4556a",
+      "native_skeletal_corpus_2895_export_census_sha256": "28d51c7fd0ea0153c2ab388c62b82df4b1205c357c947daff180353cb7a5fb0d",
+      "native_skeletal_nonempty_remap_runtime_load_unverified": true
     },
     "T99:UAnimation::Serialize": {
       "criteria": {

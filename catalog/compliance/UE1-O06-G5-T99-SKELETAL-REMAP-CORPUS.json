@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "recorded_utc": "2026-10-26T01:00:31.499074+00:00",
+  "scope": "Original UT99 .u PRD verified corpus read-only via DEV UNC; only genuine classic archive version 60\u201369 package files with SkeletalMesh name-table references then real SkeletalMesh import/export class resolution",
+  "source_files_scanned": 10131,
+  "name_table_candidates": 676,
+  "true_skeletal_exports_source_decoded": 2895,
+  "failed_skeletal_decodes": 0,
+  "source_serialized_nonempty_RemapAnimVerts_instances": 0,
+  "epic_native_source": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Engine/Src/ULodMesh.cpp",
+    "sha256": "87119bee280f3ea8f7dd625131152eff7e494daaf47c6b169123a2a02489b33c",
+    "bytes": 10373
+  },
+  "source_archive_reader": {
+    "path": "C:/Users/arden/source/repos/ut_reader/catalog/src/Infrastructure/Readers/CatalogUE1ClassicMeshNativeReader.php",
+    "sha256": "4f5700da9742cdee5ae9c7842cb99209710a104c19b00b6e0b06851e1cfd26cb",
+    "bytes": 10798
+  },
+  "candidate_scan": {
+    "source": {
+      "path": "C:/Temp/UnrealDB/O06/g5-scan-prd-ut99-skeletal-names.py",
+      "sha256": "cc7a1a972e746fd927d2094f2dfe1e2c5758c137f4fd305403e82ec7500e576d",
+      "bytes": 1474
+    },
+    "results": {
+      "path": "C:/Temp/UnrealDB/O06/g5-ut99-skeletal-name-candidates.json",
+      "sha256": "01da0e143caab03b2009cd0bb95eec7e5216cdd0ca72b55fbe035f15d2a86bb3",
+      "bytes": 143866
+    }
+  },
+  "full_native_reader_scan": {
+    "source": {
+      "path": "C:/Temp/UnrealDB/O06/g5-scan-ut99-skeletal-remap.php",
+      "sha256": "07a706f16e7841da968f3f24b367bd267e57f17ccb7c687a699cb881c2ecffc6",
+      "bytes": 2508
+    },
+    "results": {
+      "path": "C:/Temp/UnrealDB/O06/g5-ut99-skeletal-corpus-result.json",
+      "sha256": "4beae26deab3244f8ceb5643829614629c82d0aec39a3e7fc7da3cb9a5745003",
+      "bytes": 221
+    }
+  },
+  "method_decision": "BLOCKED",
+  "remaining_native_case": "nonempty RemapAnimVerts source-defined ULodMesh load-time vertex permutation has no original compiled loaded case among 2,895 genuine skeletal objects. Do not claim native full positive remap parity or repeat scans without new corpus."
+}

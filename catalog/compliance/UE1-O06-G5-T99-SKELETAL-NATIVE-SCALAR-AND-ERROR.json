@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "method": "T99:USkeletalMesh::Serialize",
+  "source_profile": "ut99-v432",
+  "scope": "Five original native skeletal whole-object scalar field loads, original nonempty LOD unsupported; one distinct malformed DefaultAnimation index original-copy variant with exact compiled first-chance ULinkerLoad position.",
+  "original_native_DLLs": {
+    "Core.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432
+    },
+    "Engine.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+      "bytes": 1785856
+    }
+  },
+  "compiled_probe_source": {
+    "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-WholeNative.cpp",
+    "sha256": "ffa2f9b0275fa5c925189bb69433812b545cbc99daefd2639ea933b7e085765d",
+    "bytes": 5314
+  },
+  "compiled_probe_exe": {
+    "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-WholeNative.exe",
+    "sha256": "b3946aa5be79a72a113cc76b3b8650bdb528eb74088b9e11a6045798e1f311a4",
+    "bytes": 79872
+  },
+  "positive_php_comparator": {
+    "path": "C:/Temp/UnrealDB/O06/g5-t99-skeletal-scalars-native-compare.php",
+    "sha256": "a4e6be6389754a527f6984678e3ecbc29233d08de19073f875c14f0b121a9003",
+    "bytes": 4243
+  },
+  "originals": [
+    {
+      "package": "table",
+      "object_name": "Table",
+      "original": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/table.u",
+        "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+        "bytes": 413388
+      },
+      "native_load": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-WholeNative-table-Table.log",
+        "sha256": "1e2a458f1fa609302f764948fcf9bb3b2594d7c00629a7e1a9b2b113d61b392d",
+        "bytes": 994
+      }
+    },
+    {
+      "package": "table",
+      "object_name": "Selectiontable",
+      "original": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/table.u",
+        "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+        "bytes": 413388
+      },
+      "native_load": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-WholeNative-table-Selectiontable.log",
+        "sha256": "3855405d3ab865847b26f92d7cb338276d6de24097e10979f6b62a73cfe27846",
+        "bytes": 1080
+      }
+    },
+    {
+      "package": "EcoTerror",
+      "object_name": "EcoTerror",
+      "original": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/EcoTerror.u",
+        "sha256": "bd01f0574fed3ba37cd1b6625966ea55eb8420716916c0b309da182c83d3f879",
+        "bytes": 899657
+      },
+      "native_load": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-WholeNative-EcoTerror-EcoTerror.log",
+        "sha256": "c2f97f4894ee39d8273b378346286ed08fba71c7c5a14c5571fd283928d778e9",
+        "bytes": 1072
+      }
+    },
+    {
+      "package": "d00d",
+      "object_name": "d00d",
+      "original": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/d00d.u",
+        "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+        "bytes": 236154
+      },
+      "native_load": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-WholeNative-d00d-d00d.log",
+        "sha256": "e0d59325911965d5b78fae95575e4a8dcebf3bf83c81e4c19bd3467c12b434b6",
+        "bytes": 971
+      }
+    },
+    {
+      "package": "d00d",
+      "object_name": "selectd00d",
+      "original": {
+        "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/d00d.u",
+        "sha256": "e77ae69555ec87d64b1fef4806ccbe771281b86eac4f228a042f53bd352f1426",
+        "bytes": 236154
+      },
+      "native_load": {
+        "path": "C:/Temp/UnrealDB/O06/G5-T99-SkeletalMesh-WholeNative-d00d-selectd00d.log",
+        "sha256": "1cfe7c42631e072186cbdb35afc069e7a3c77eb56c98e5599b4da6ac8bf423df",
+        "bytes": 1021
+      }
+    }
+  ],
+  "negative": {
+    "original": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/table.u",
+      "sha256": "f977f58d84e54c1ef816efb6cb5cff38c6521b0bbdebaddf296df632d3601ba8",
+      "bytes": 413388
+    },
+    "mutation": {
+      "path": "C:/Temp/UnrealDB/O06/g5-skeletal-bad-animation-ref/table.u",
+      "sha256": "edd22828bc6dde55541ec24c4ff0d075712267674a6ad956808a47b68180ad0d",
+      "bytes": 413388
+    },
+    "byte_offset": 412678,
+    "before": 24,
+    "after": 63,
+    "first_chance_cursor": 412679,
+    "compiled_CDB_log": {
+      "path": "C:/Temp/UnrealDB/O06/g5-skeletal-error-firstchance.log",
+      "sha256": "9499b4994ddf89e26d857f50b40007964873e6b20f8e5c0e594ad821893722e0",
+      "bytes": 6872
+    },
+    "compiled_debugger_script": {
+      "path": "C:/Temp/UnrealDB/O06/g5-skeletal-error-firstchance.cdb",
+      "sha256": "6bca7c274b1db035f8923e2a83396519d6075fe39ba54a58597ff5742046dab9",
+      "bytes": 348
+    },
+    "compiled_exception_disposition": {
+      "path": "C:/Temp/UnrealDB/O06/g5-skeletal-bad-animation-ref/native-result.txt",
+      "sha256": "cf0f55c8dd8612aab93894e3cf1822cacea8bbd90ff296720ea919426734e80c",
+      "bytes": 191
+    },
+    "production_rejection_script": {
+      "path": "C:/Temp/UnrealDB/O06/g5-skeletal-malformed-check.php",
+      "sha256": "850e4877faf111b4eb997b3b739c754f73a07a0805cda851adb18092f4507068",
+      "bytes": 723
+    }
+  },
+  "compiled_positive_scalar_checks": 40,
+  "original_native_array_comparison_bytes_reused": 282956,
+  "remap_nonempty_compiled_loaded_case_count": 0,
+  "method_verdict": "BLOCKED"
+}

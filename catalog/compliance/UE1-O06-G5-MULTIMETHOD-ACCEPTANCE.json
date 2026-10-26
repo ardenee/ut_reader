@@ -538,10 +538,10 @@
         "archive_bytes_and_consumption": "OPEN",
         "malformed_input_error_semantics": "OPEN",
         "inherited_and_version_variant_semantics": "OPEN",
-        "current_acceptance_tests": "OPEN",
+        "current_acceptance_tests": "VERIFIED",
         "independent_full_method_review": "OPEN"
       },
-      "acceptance_criteria_met": 1,
+      "acceptance_criteria_met": 2,
       "acceptance_criteria_total": 7,
       "closure_artifact_verified": false,
       "compiled_same_real_load_dispatch_calls": null,
@@ -595,7 +595,7 @@
         "no_named_test",
         "inherited_ULodMesh_and_unverified_scalar_fields_errors_open"
       ],
-      "next_closure_work": "Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
+      "next_closure_work": "Only original source-legal nonempty RemapAnimVerts load-time Verts permutation/clearing and unverified inherited malformed branches prevent final 7/7. Do not rescan same 10131 packages or rerun previously 5 original native scalars / 282956 array bytes. Obtain one truly nonempty source-legal native loaded specimen then independent final method signoff.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -605,7 +605,7 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "inherited_ULodMesh_and_negative_cases",
+      "decisive_closure_blocker": "nonempty_ULodMesh_RemapAnimVerts_runtime_loaded_vertex_permutation_and_remaining_specific_malformed_branches",
       "closure_artifact": null,
       "closure_sha256": null
     },

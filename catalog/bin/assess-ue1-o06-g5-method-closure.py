@@ -66,9 +66,9 @@ status={
   "result":"BLOCKED",
   "pinned":True,
   "current":True,
-  "reason":"Native bone/vertex arrays covered, but inherited ULodMesh and other scalar/error branches unverified.",
-  "next":"Resolve inherited ULodMesh from compiled engine and controlled negative cases in one complete method acceptance run.",
-  "blocker":"inherited_ULodMesh_and_negative_cases",
+  "reason":"Original compiled v432 loaded 5 genuine SkeletalMesh objects and exact source PHP matches 40 inherited UMesh/ULodMesh and SkeletalMesh scalar/reference/weapon-transform field groups including full DefaultAnimation identities; independent focus evidence 37/37; earlier 282956 genuine skeletal array bytes reused without native replays. One original-derived bad DefaultAnimation ref source/compiled both reject, original CDB first-chance absolute cursor 412679. A read-only PRD census of 10131 genuine UT99 .u package files found 676 skeletal-name packages, 2895 genuine fully source-decoded skeletal exports, ZERO nonempty RemapAnimVerts; thus required nonempty ULodMesh remapping loaded-vertex semantics lack original compiled positive evidence, and full method must remain BLOCKED.",
+  "next":"Only original source-legal nonempty RemapAnimVerts load-time Verts permutation/clearing and unverified inherited malformed branches prevent final 7/7. Do not rescan same 10131 packages or rerun previously 5 original native scalars / 282956 array bytes. Obtain one truly nonempty source-legal native loaded specimen then independent final method signoff.",
+  "blocker":"nonempty_ULodMesh_RemapAnimVerts_runtime_loaded_vertex_permutation_and_remaining_specific_malformed_branches",
  },
  "T99:UAnimation::Serialize":{
   "result":"FULL",
@@ -916,6 +916,36 @@ for name in reg["methods"]:
         old["compiled_genuine_original_exports_compared"]=33
         old["compiled_original_14_StateFrames_prior_verified"]=True
         gates["current_acceptance_tests"]="VERIFIED"
+    if name=="T99:USkeletalMesh::Serialize":
+        focus="verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php"
+        event_rows=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        skev=next((e for e in reversed(event_rows)
+            if e.get("test")==focus and e.get("state")=="PASS"),None)
+        assert skev and skev["source_sha256"]==reconciliation["current_source_sha256"]
+        testfile=ROOT/"catalog"/"bin"/focus
+        log=ROOT/skev["log"].replace("\\","/")
+        assert sha(testfile)==skev["test_sha256"] and sha(log)==skev["output_sha256"]
+        report=read(log)
+        assert report["ok"] and report["checks"]==report["passed"]==37
+        assert report["original_native_loaded_skeletal_objects"]==5
+        assert report["native_scalar_and_inherited_field_checks"]==40
+        assert report["new_native_bad_animation_ref_cursor"]==412679
+        assert report["previous_native_skeletal_array_bytes_reused"]==282956
+        assert not report["real_nonempty_remap_covered"]
+        assert report["method_decision"]=="BLOCKED"
+        package=C/"UE1-O06-G5-T99-SKELETAL-NATIVE-SCALAR-AND-ERROR.json"
+        census=C/"UE1-O06-G5-T99-SKELETAL-REMAP-CORPUS.json"
+        assert read(package)["method"]==name
+        scan=read(census)
+        assert scan["true_skeletal_exports_source_decoded"]==2895
+        assert scan["source_serialized_nonempty_RemapAnimVerts_instances"]==0
+        gates["current_acceptance_tests"]="VERIFIED"
+        old["genuine_compiled_five_skeletal_loaded_scalars"]="VERIFIED"
+        old["native_skeletal_whole_scalar_evidence_manifest_sha256"]=sha(package)
+        old["native_skeletal_corpus_2895_export_census_sha256"]=sha(census)
+        old["native_skeletal_nonempty_remap_runtime_load_unverified"]=True
+        # Do not promote the whole method; five successfully loaded original
+        # objects do not demonstrate source-legal nonempty vertex remapping.
     if name=="T99:UAnimation::Serialize":
         whole_test="verify-ue1-o06-g5-t99-animation-whole-native.php"
         events=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]

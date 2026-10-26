@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 37,
+    "passed": 37,
+    "failed": [],
+    "original_native_loaded_skeletal_objects": 5,
+    "native_scalar_and_inherited_field_checks": 40,
+    "original_native_scalar_comparisons_verified": true,
+    "new_native_bad_animation_ref_cursor": 412679,
+    "previous_native_skeletal_array_bytes_reused": 282956,
+    "real_nonempty_remap_covered": false,
+    "method_decision": "BLOCKED",
+    "new_native_engine_execution_by_verifier": 0
+}
