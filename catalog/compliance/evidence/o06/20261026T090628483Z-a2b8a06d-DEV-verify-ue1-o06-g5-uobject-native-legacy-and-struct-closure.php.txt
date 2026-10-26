@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 35,
+    "passed": 35,
+    "failed": [],
+    "original_compiled_stock_loaded_legacy_fstring": "QAlpha-direct-FString",
+    "nested_struct_FString_EOF_source_origin_corrected": true,
+    "stock_native_array_FString_loaded_value": "NOT_VERIFIED",
+    "global_T99_UObject_method": "BLOCKED",
+    "native_stock_runtime_reexecutions_in_verifier": 0,
+    "prior_seven_FULL_methods_reexecuted": 0
+}

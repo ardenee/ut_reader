@@ -77,6 +77,39 @@ if missing: signature += "\n"+"\n".join(missing)
 # compiled-native object serialization semantics. Pin the old source blob,
 # verify the new 1342-check seven-gate method decision, and reconstruct
 # previous fingerprints rather than rerunning six already FULL methods.
+# Last source-scoped v432 UObject two native-defined branches:
+# the original UClass/StringProperty-to-StrProperty loader conversion and
+# inner UStruct string physical FArchive EOF (no early export-size guard).
+# All seven previously FULL methods remain bound to immutable old source
+# IDs. One NEW compiled stock original-derived legacy-string package and
+# the previously SHA-pinned direct/nested FString EOF evidence establish the
+# exact two edited branches; never replay original class/native oracles.
+uobject_new_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+assert uobject_new_current=="8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5"
+uobject_test="verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php"
+uobject_ev=latest.get(uobject_test)
+assert uobject_ev and uobject_ev["state"]=="PASS"
+assert uobject_ev["source_sha256"]==uobject_new_current
+uobject_log=ROOT/uobject_ev["log"].replace("\\","/")
+uobject_result=read(uobject_log)
+assert uobject_result["ok"] and uobject_result["checks"]==uobject_result["passed"]==35
+assert uobject_result["native_stock_runtime_reexecutions_in_verifier"]==0
+assert uobject_result["global_T99_UObject_method"]=="BLOCKED"
+assert digest(uobject_log)==uobject_ev["output_sha256"]
+assert digest(ROOT/"catalog/bin"/uobject_test)==uobject_ev["test_sha256"]
+uobject_src=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
+before_uobject_tag=subprocess.check_output(["git","-C",str(ROOT),"show",
+ "0d74c3b6:catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"])
+before_uobject_sha=hashlib.sha256(before_uobject_tag).hexdigest()
+after_uobject_text=uobject_src.read_text(encoding="utf-8-sig")
+assert "native_source_fixed_StringProperty_to_StrProperty_upgrade" in after_uobject_text
+assert "during nested struct FString<<" in after_uobject_text
+assert "native_source_fixed_StringProperty_to_StrProperty_upgrade" not in before_uobject_tag.decode("utf-8-sig")
+tag_current_line=str(uobject_src)+":"+digest(uobject_src).upper()
+assert signature.count(tag_current_line)==1
+signature=signature.replace(tag_current_line,
+ str(uobject_src)+":"+before_uobject_sha.upper(),1)
+assert hashlib.sha256(signature.encode("utf-8")).hexdigest()=="44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3"
 class_memory_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
 assert class_memory_current=="44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3"
 class_full_test="verify-ue1-o06-g5-t99-uclass-independent-full.php"
@@ -171,7 +204,7 @@ direct_tag=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPrope
 direct_old_bytes=subprocess.check_output(["git","-C",str(ROOT),"show",
   "dd773bb0:catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"])
 direct_old=direct_old_bytes.decode("utf-8-sig")
-direct_new=direct_tag.read_text(encoding="utf-8-sig")
+direct_new=before_uobject_tag.decode("utf-8-sig")
 direct_hunks=[("".join(direct_old.splitlines(keepends=True)[i:j]),
                "".join(direct_new.splitlines(keepends=True)[k:l]))
     for op,i,j,k,l in difflib.SequenceMatcher(
@@ -183,14 +216,17 @@ assert "FString SerializeItem exceeds export SerialSize" in "".join(a for a,b in
 assert "physical EOF at archive offset" in "".join(b for a,b in direct_hunks)
 assert "$streamState['allow_overread']=true" in "".join(b for a,b in direct_hunks)
 assert all("FString" in (a+b) or "physicalLimit" in (a+b) for a,b in direct_hunks)
-direct_ev=latest.get("verify-ue1-o06-g5-uobject-direct-str-physical-eof.php")
-assert direct_ev and direct_ev.get("state")=="PASS" and direct_ev.get("source_sha256")==direct_current
+direct_ev=next((e for e in reversed(events)
+    if e.get("test")=="verify-ue1-o06-g5-uobject-direct-str-physical-eof.php"
+    and e.get("state")=="PASS"
+    and e.get("source_sha256")==direct_current),None)
+assert direct_ev is not None
 direct_out=read(ROOT/direct_ev["log"].replace("\\","/"))
 assert direct_out["ok"] and direct_out["passed"]==direct_out["checks"]==24
 assert direct_out["compiled_malformed_eof_cursor"]==283
 assert digest(ROOT/direct_ev["log"].replace("\\","/"))==direct_ev["output_sha256"]
 assert digest(ROOT/"catalog/bin/verify-ue1-o06-g5-uobject-direct-str-physical-eof.php")==direct_ev["test_sha256"]
-direct_current_line=str(direct_tag)+":"+digest(direct_tag).upper()
+direct_current_line=str(direct_tag)+":"+before_uobject_sha.upper()
 direct_old_line=str(direct_tag)+":"+hashlib.sha256(direct_old_bytes).hexdigest().upper()
 assert signature.count(direct_current_line)==1
 signature=signature.replace(direct_current_line,direct_old_line,1)
@@ -1250,7 +1286,9 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":class_memory_current,
+    "current_source_sha256":uobject_new_current,
+    "source_native_uobject_legacy_String_upgrade_and_struct_physical_EOF_scoped":True,
+    "previous_source_before_uobject_legacy_and_struct":class_memory_current,
     "source_native_uclass_complete_script_memory_scoped":True,
     "previous_source_before_uclass_complete_memory":script_current,
     "source_native_uclass_script_load_relocations_scoped":True,

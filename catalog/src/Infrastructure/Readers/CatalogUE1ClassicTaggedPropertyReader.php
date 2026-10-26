@@ -115,6 +115,12 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
                     $expectedType=strtolower((string)($declaration['kind']??''));
                     $actualType=strtolower($kind);
+                    // Epic UT99 UStruct::SerializeTaggedProperties handles
+                    // historical NAME_StringProperty -> UStrProperty
+                    // BEFORE ordinary type, array-index and persistence
+                    // checks. It must not be treated as a warning/skip.
+                    $legacyFixedToDynamic=$declaration!==null
+                        &&$type===7&&$expectedType==='strproperty';
                     $matching=$declaration!==null
                         &&($actualType===$expectedType
                             ||($actualType==='objectproperty'
@@ -127,7 +133,9 @@ final class CatalogUE1ClassicTaggedPropertyReader
                                 (string)($declaration['struct_name']??'')
                             )===0)
                         &&(((int)($declaration['property_flags']??0))&0x00003000)===0;
-                    if(!$matching){
+                    if($legacyFixedToDynamic){
+                        $loadPolicy='native_source_fixed_StringProperty_to_StrProperty_upgrade';
+                    }elseif(!$matching){
                         // UStruct::SerializeTaggedProperties: unknown name,
                         // type mismatch, invalid array index or incompatible
                         // struct -> warn then skip exactly Tag.Size bytes.
@@ -149,12 +157,35 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $loadPolicy='native_warning_skip_invalid_tag_type';
                 }
                 $legacyRef=null;$arrayDecoded=null;
+                $legacyFixedStringRisk=null;
                 // Genuine UE1 v35 package evidence (DProj*, Palette tag):
                 // the original tag declares a native 4-byte UObject slot,
                 // but the payload is a compact serialized package reference.
                 // This compatibility gate is observed corpus behaviour,
                 // NOT claimed to be documented by the later v1.200 source.
-                if($version===35 && ($type===5||$type===8) && $tagSize===4){
+                if($loadPolicy==='native_source_fixed_StringProperty_to_StrProperty_upgrade'){
+                    // Original compiled UT99 v432 UnClass.cpp:
+                    // TCHAR Temp[255]; MaxCount=Tag.Size ? Tag.Size+1 : 255;
+                    // read ANSI bytes one by one, stopping at NUL. A short
+                    // value does NOT skip the unconsumed Tag.Size padding.
+                    // The original loader reads on ULinkerLoad's physical
+                    // archive and can cross the export SerialSize.
+                    if($streamState!==null)$streamState['allow_overread']=true;
+                    $countLimit=$tagSize!==0?$tagSize:254;
+                    $raw='';
+                    for($i=0;$i<min(255,$countLimit);$i++){
+                        $ch=$read(1);$raw.=$ch;
+                        if($ch==="\0")break;
+                    }
+                    if($countLimit>=255&&substr($raw,-1)!=="\0"){
+                        // Epic writes Temp[Count]=0 after the loop,
+                        // even when Count reaches 255, past Temp[254].
+                        // This malformed native stack write is undefined,
+                        // not a deterministic loaded FString value.
+                        $legacyFixedStringRisk=
+                            'v432 native fixed StringProperty Temp[255] out-of-bounds write';
+                    }
+                }elseif($version===35 && ($type===5||$type===8) && $tagSize===4){
                     $legacyRef=$compact();
                     $raw='';
                 }elseif($loadPolicy==='native_source_property_SerializeItem'
@@ -329,10 +360,21 @@ final class CatalogUE1ClassicTaggedPropertyReader
                                     }elseif($memberKind==='strproperty'){
                                         [$chars,$part]=$readLinkerIndex();
                                         $unit=(ord($part[0])&128)!==0?2:1;
+                                        // UArrayProperty -> inner UStruct
+                                        // SerializeBin -> UStrProperty::SerializeItem
+                                        // delegates FString<< to the original
+                                        // ULinkerLoad. The compiled engine
+                                        // does NOT stop at this export SerialSize;
+                                        // the physical package EOF is the
+                                        // source-defined archive boundary.
+                                        $physicalLimit=(int)($streamState['physical_limit']
+                                            ??$archiveLimit);
                                         if(abs($chars)>intdiv(
-                                            $archiveLimit-$position,$unit)){
+                                            max(0,$physicalLimit-$position),$unit)){
                                             throw new RuntimeException(
-                                                'UE1 v432 struct string exceeds export SerialSize');
+                                                'UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset '
+                                                .($offset+$physicalLimit)
+                                                .' during nested struct FString<<');
                                         }
                                         $part.=$read(abs($chars)*$unit);
                                     }else{
@@ -535,13 +577,19 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         $value=$negative?-$ref:$ref;$valueKind=$type===6?'fname_index':'package_object_index';
                     }
                 }
+                if($legacyFixedStringRisk!==null){
+                    $value=null;
+                    $valueKind='native_undefined_fixed_string_upgrade';
+                }
                 $tags[]=['name'=>$property['text'],'name_index'=>$property['index'],
                     'type'=>$kind,'type_id'=>$type,'info'=>$info,'array_index'=>$arrayIndex,
                     'bool_value'=>$type===3?$arrayPresent:null,
                     'struct_name'=>$struct,'serialized_size'=>$tagSize,
                     'on_disk_value_bytes'=>$offset+$position-$dataOffset,
                     'tag_offset'=>$offset+$start,'value_offset'=>$dataOffset,
-                    'native_load_policy'=>$loadPolicy,'value_kind'=>$valueKind,
+                    'native_load_policy'=>$loadPolicy,
+                    'legacy_fixed_string_native_runtime_risk'=>$legacyFixedStringRisk,
+                    'value_kind'=>$valueKind,
                     'value'=>$value,'value_sha256'=>$raw!==''?hash('sha256',$raw):null];
             }
             if(!$end){throw new RuntimeException('UE1 property tags have no NAME_None terminator within archive bounds');}

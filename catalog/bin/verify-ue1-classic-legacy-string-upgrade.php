@@ -59,15 +59,15 @@ $inspect=static function(string $value,int $flags=0,bool $nul=true)
   file_put_contents($p,$make($value,$flags,$nul));
   $pkg=new Package($p);
   $check('valid_v69_package_'.count($samples),$pkg->validatePackage()===[]);
-  $tagEnvelope=Tags::inspect($p,$pkg,0);
-  $native=Native::inspect($p,$pkg,0,$tagEnvelope);
+  $tagEnvelope=Tags::inspect($p,$pkg,0,'ut99-v432');
+  $native=Native::inspect($p,$pkg,0,$tagEnvelope,'ut99-v432');
   $check('source_registered_StrProperty_'.count($samples),
     $native['status']==='native_property_record_complete'
     &&$native['property_kind']==='strproperty'
     &&$native['array_dim']===1);
   $tag=$tagEnvelope['tags'][0];
   $class=['export_index'=>0,'children_reference'=>1,'super_field_reference'=>0];
-  $result=Schema::inspect($p,$pkg,$class,$tagEnvelope['tags']);
+  $result=Schema::inspect($p,$pkg,$class,$tagEnvelope['tags'],'ut99-v432');
   $samples[]=['value_hex'=>bin2hex($value),'flags'=>$flags,
     'tag_kind'=>$tag['value_kind'],'status'=>$result['status'],
     'upgrade_count'=>$result['legacy_fixed_string_to_dynamic_upgrades']];
@@ -97,7 +97,9 @@ $check('v69_upgrade_precedes_ShouldSerialize_flag_branch',
  &&$transient['report']['known_incompatible_tags_skipped']===0);
 $missingNul=$inspect('Broken',0,false);
 $check('v69_missing_nul_legacy_value_explicitly_unverified',
- $missingNul['tag']['value_kind']==='opaque'
+ $missingNul['tag']['value_kind']==='legacy_ansi_cstring_bytes'
+ &&$missingNul['tag']['value']['raw_ansi_bytes_hex']===bin2hex('Broken')
+ &&$missingNul['tag']['value']['nul_inserted_in_memory']===true
  &&$missingNul['report']['status']==='legacy_fixed_string_upgrade_unverified'
  &&$missingNul['report']['legacy_fixed_string_upgrade_unverified']===1
  &&$missingNul['report']['known_incompatible_tags_skipped']===0);
@@ -106,16 +108,16 @@ $check('v69_missing_nul_legacy_value_explicitly_unverified',
 $path=tempnam(sys_get_temp_dir(),'u1strm');
 try{
  file_put_contents($path,$make('Bounds'));
- $pkg=new Package($path);$envelope=Tags::inspect($path,$pkg,0);
+ $pkg=new Package($path);$envelope=Tags::inspect($path,$pkg,0,'ut99-v432');
  $class=['export_index'=>0,'children_reference'=>1,'super_field_reference'=>0];
  $mutated=$envelope['tags'];$mutated[0]['array_index']=10;
- $report=Schema::inspect($path,$pkg,$class,$mutated);
+ $report=Schema::inspect($path,$pkg,$class,$mutated,'ut99-v432');
  $check('v69_upgrade_out_of_array_source_does_not_warn_skip',
    $report['status']==='legacy_fixed_string_upgrade_unverified'
    &&$report['known_incompatible_tags_skipped']===0
    &&$report['legacy_fixed_string_upgrade_unverified']===1);
  $mutated=$envelope['tags'];$mutated[0]['type']='IntProperty';
- $report=Schema::inspect($path,$pkg,$class,$mutated);
+ $report=Schema::inspect($path,$pkg,$class,$mutated,'ut99-v432');
  $check('v69_other_incompatible_tag_recoverably_skipped',
    $report['status']==='known_incompatible_tags_skipped'
    &&$report['known_incompatible_tags_skipped']===1);

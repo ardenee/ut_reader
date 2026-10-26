@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "source_profile": "ut99-v432",
+  "version": 69,
+  "reason": "Original v400 inherited tagged-property native fixed StringProperty tag upgrading an actual StrProperty (before ordinary type match/array bounds/ShouldSerializeValue). A true original v432 Core-generated direct StrProperty 283-byte package was altered by exactly two bytes to make the identical source valid oldver fixed StringProperty value while preserving Header/NameMap/imported declaration/native package envelope. Actual compiled stock v432 loader loaded and exported the final string.",
+  "source_CPP": {
+    "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+    "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+    "bytes": 36351
+  },
+  "original_compiled_DLL": {
+    "Core.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432
+    },
+    "Engine.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+      "bytes": 1785856
+    }
+  },
+  "native_compiled_original_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5DirectStringPayload.u",
+    "sha256": "e494caf1c9eb86b5fb2fcf4f7af1e0e91c5b5b214066c670ef4917dc7a2cd933",
+    "bytes": 283
+  },
+  "original_derived_two_byte_legacy_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5DirectStringLegacyPayload.u",
+    "sha256": "cb737f15004d37f0a49458acf5adf14fcfd2344a7624c07826ff924cc44c4ecc",
+    "bytes": 283
+  },
+  "native_compiled_exe": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-LegacyString-Load.exe",
+    "sha256": "11d161f5bcd1b5d4ea4104315591d9f2f315c4c494d861f6e5676d7c34a55509",
+    "bytes": 78336
+  },
+  "native_compiled_Cpp": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-LegacyString-Load.cpp",
+    "sha256": "81c9ebd6226fba034ebbc65356ec7191bca14c8cc9099861e7855a9e6eee0820",
+    "bytes": 2816
+  },
+  "native_loaded_log": {
+    "path": "C:/Temp/UnrealDB/O06/G5-UObject-LegacyString-Native-Loaded.txt",
+    "sha256": "2733758f8a5eb4ebb54af189b4275def046ca40f5a44e20df855e4df1198b281",
+    "bytes": 1795
+  },
+  "fixed_tag_absolute_info_offset": 230,
+  "tag_type_before": 13,
+  "tag_type_after": 7,
+  "fixed_value_absolute_offset": 232,
+  "original_fstring_count_byte": 21,
+  "new_original_derived_fixed_ascii_leading_byte": 81,
+  "expected_loaded_value": "QAlpha-direct-FString",
+  "native_stock_compiled_loaded_success": true,
+  "source_nested_struct_FString_physical_EOF_fix": {
+    "prior_source": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+      "sha256": "448ae9e48ca8735cb38b09e8772b14dc19c589e366e1f60f4d6060abdc36fb8b",
+      "bytes": 49608
+    },
+    "native_rule": "UStrProperty::SerializeItem is FString<< against ULinkerLoad physical archive, regardless of Tag.Size or SerialSize; nested UStruct via UArray must not preemptively reject at export.SerialSize"
+  },
+  "previous_native_stable_array_and_string_evidence": {
+    "direct_string_manifest": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json",
+      "sha256": "3a47f8f88889df8e8cef3cba03c4310877ad78edc1d0d2059f18e8e13c20859b",
+      "bytes": 3381
+    },
+    "nested_string_manifest": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-UOBJECT-NESTED-FSTRING-PHYSICAL-EOF.json",
+      "sha256": "26b3b82f248f604b61fccf9db9c7f6e6567365053d0032ddda3fd7cf3bb5637b",
+      "bytes": 5193
+    },
+    "stock_allocator_hazard_manifest": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-UOBJECT-FSTRING-ALLOCATOR-CONDITIONAL.json",
+      "sha256": "dba4760cf32bf9daa6378684ae2ee66ed1ecd91ee8ab7d32ec9419590a0052f2",
+      "bytes": 4941
+    }
+  },
+  "stock_array_FString_nondeterministic_native_loaded_value": "NOT_VERIFIED",
+  "source_scope_pending": "UStruct nested FString physical EOF via actual compiled native, full source-legal default/tag inheritance beyond original selected successful profiles, original v432 stock heap unconstructed nested FString allocation; do not claim generic UObject FULL",
+  "new_native_executions": 1,
+  "full_global_method_decision": "BLOCKED"
+}
