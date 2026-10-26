@@ -1,7 +1,7 @@
 {
   "contract": "g3-c227i-original-uenum-compiled-loaded-twelve",
-  "stage": "G3-C227I-TWO-ORIGINAL-NATIVE-CLASS-READERS-PASS-RELEASE-PENDING",
-  "last_action": "Original SHA-authenticated stock 227i x86 Core DLL, UCC and Core.u recovered. UConst real compiled loaded 8/8 values and Num/Max match source PHP; 88/88 independent DEV checks. UEnum real compiled 2/2 arrays and 12 original FName global-name resolutions match on-disk PHP; 41/41 independent DEV checks. Separate UProperty 668 native tuple values subset of 673 archive tuple records, aggregate only, NOT individual object matching. 14 of 57 newer C227 Core.lib symbols differ from 227i DLL. C98 compiled v200 still unavailable; G3 0/16 FULL.",
-  "next_step": "Commit/push and PRD SHA-verify source/profile-specific native evidence. Next exact G3 blocker: recover C98 v200 compiled loader or reconcile native 227i UProperty object identities and malformed archive-error behavior; never treat 668 aggregate matches as named object parity and do not repeat G5.",
-  "updated_at_utc": "2026-10-26T19:21:20+00:00"
+  "stage": "G3-C227I-REAL-NATIVE-UCONST-UENUM-PRD-SHA-VERIFIED",
+  "last_action": "Authenticated original OldUnreal 227i compiled runtime executed. C227i UConst 8/8 genuine loaded original Core.u values, independent 88/88 DEV PASS; UEnum 2/2 genuine loaded arrays of total 12 resolved FNames, independent 41/41 DEV PASS; actual UProperty compiled 668 pairs multiset subset of 673 source PHP records DIAGNOSTIC ONLY no individual identities. 43/57 current source-tree C227 Core.lib ABI exports match 227i DLL; remaining 14 differ, and C98 v200 compiled oracle unavailable. Release a9cfe1ba pushed origin/main, PRD deployment all 28/28 changed files SHA-256 identical, catalog/config.php and storage preserved. No prior T99 G5 retests, G3 0/16 FULL.",
+  "next_step": "Recover authenticated C98 v200 Core.dll/binaries or source-defined exclusion and compare real loaded methods; reconcile remaining 14 C227 ABI variations and unresolved UProperty object identities; perform distinct malformed native error tests, then independently review 16 G3 contracts only once mandatory native coverage complete.",
+  "updated_at_utc": "2026-10-26T19:22:30+00:00"
 }
