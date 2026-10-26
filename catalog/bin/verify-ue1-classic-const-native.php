@@ -42,9 +42,10 @@ $inspect=static function(int $ver,string $tail)use(&$paths,$build):array {
  $paths[]=$path;file_put_contents($path,$build($ver,$tail));
  $pkg=new Package($path);
  if($pkg->validatePackage()!==[])throw new RuntimeException('Package fixture invalid');
- $props=Tags::inspect($path,$pkg,0);
+ $family=$ver>=62?'ut99-v432':'epic-ue1'; // Explicit source of this fixture, not version-based dispatch.
+ $props=Tags::inspect($path,$pkg,0,$family);
  if(($props['status']??'')!=='tag_envelope_decoded')throw new RuntimeException('Inherited UObject envelope unavailable');
- return [Native::inspect($path,$pkg,0,$props),$props];
+ return [Native::inspect($path,$pkg,0,$props,$family),$props];
 };
 $bad=static function(int $ver,string $tail)use($inspect):bool{
  try{$inspect($ver,$tail);return false;}catch(RuntimeException){return true;}
@@ -58,8 +59,8 @@ try{
  $check('v50_legacy_uobject_names',($p['legacy_state_name']['text']??null)==='None'
   && ($p['legacy_group_name']['text']??null)==='None');
  [$b]=$inspect(69,$basic.$compact(5)."Caf\xe9\0");
- $check('v69_source_ansi_CP1252',($b['value']??null)==="Caf\u{00e9}"
-  && $b['value_encoding']==='Windows-1252');
+ $check('v69_source_ansi_EpicFromAnsi',($b['value']??null)==="Caf\u{00e9}"
+  && $b['value_encoding']==='Epic-FromAnsi-bytewise');
  $wide=iconv('UTF-8','UTF-16LE',"\u{03a9}K\0");
  if(!is_string($wide))throw new RuntimeException('No UTF16 fixture');
  [$c]=$inspect(69,$basic.$compact(-3).$wide);

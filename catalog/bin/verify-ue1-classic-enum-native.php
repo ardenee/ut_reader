@@ -44,11 +44,12 @@ $parse=static function(int $version,string $body)use($build,&$paths):array {
     file_put_contents($path,$build($version,$body));
     $pkg=new Package($path);
     if($pkg->validatePackage()!==[]){throw new RuntimeException('UE1 package layout invalid');}
-    $tags=Tag::inspect($path,$pkg,0);
+    $family=$version>=62?'ut99-v432':'epic-ue1'; // Known fixture provenance, not file dispatch.
+    $tags=Tag::inspect($path,$pkg,0,$family);
     if(($tags['status']??'')!=='tag_envelope_decoded'){
         throw new RuntimeException('UEnum inherited UObject property envelope unavailable');
     }
-    return [Native::inspect($path,$pkg,0,$tags),$tags,$pkg];
+    return [Native::inspect($path,$pkg,0,$tags,$family),$tags,$pkg];
 };
 $bad=static function(int $ver,string $body)use($parse):bool{
     try{$parse($ver,$body);return false;}catch(RuntimeException){return true;}

@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T17:06:07.0819009Z",
-    "head_commit":  "8fc0b577",
+    "updated_at_utc":  "2026-10-26T17:58:01.7103612Z",
+    "head_commit":  "07167335",
     "current_target":  "DEV",
-    "current_source_sha256":  "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+    "current_source_sha256":  "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -81,12 +81,12 @@
                       "test":  "verify-ue1-classic-const-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:54:48.0412637Z",
-                      "source_sha256":  "d116476b8d406216dc956ffc1ffb632a9b7204caf8ebd8ea2cc0a6362da760f4",
-                      "test_sha256":  "a2ff9bdf008c9f193b245807b2420aa9bc6b6ed94fab068735bbdc7cce055aea",
-                      "run_id":  "20261022T145447767Z-4c4f7caf",
+                      "event_at_utc":  "2026-10-26T17:58:01.6854038Z",
+                      "source_sha256":  "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+                      "test_sha256":  "56136c994bbf52d680dfb9e213a26712da2c2368a8cd0d9e37797cc7dbf66bb3",
+                      "run_id":  "20261026T175801116Z-2c867f5b",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145447767Z-4c4f7caf-DEV-verify-ue1-classic-const-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T175801116Z-2c867f5b-DEV-verify-ue1-classic-const-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-editor-native.php",
@@ -105,12 +105,12 @@
                       "test":  "verify-ue1-classic-enum-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-22T14:54:48.4852043Z",
-                      "source_sha256":  "d116476b8d406216dc956ffc1ffb632a9b7204caf8ebd8ea2cc0a6362da760f4",
-                      "test_sha256":  "11d649ddc4b008f3b25a0730c7aadd8b5be732b5e9d940971b364684c37475c6",
-                      "run_id":  "20261022T145448216Z-875cb1d4",
+                      "event_at_utc":  "2026-10-26T17:56:37.9260961Z",
+                      "source_sha256":  "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+                      "test_sha256":  "726832c444bf3c7ab7007bf45cf5db72be5fb7c528528bea0949f7cab1a266c7",
+                      "run_id":  "20261026T175637330Z-7eba872e",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261022T145448216Z-875cb1d4-DEV-verify-ue1-classic-enum-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T175637330Z-7eba872e-DEV-verify-ue1-classic-enum-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-fstring-archive.php",
@@ -249,12 +249,12 @@
                       "test":  "verify-ue1-classic-property-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-26T17:05:03.3833085Z",
-                      "source_sha256":  "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+                      "event_at_utc":  "2026-10-26T17:55:50.0008596Z",
+                      "source_sha256":  "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
                       "test_sha256":  "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-                      "run_id":  "20261026T170502735Z-52447bf4",
+                      "run_id":  "20261026T175549353Z-7572345c",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-struct-alias-lineage.php",
@@ -273,12 +273,12 @@
                       "test":  "verify-ue1-classic-struct-native.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-23T11:03:56.5177687Z",
-                      "source_sha256":  "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-                      "test_sha256":  "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-                      "run_id":  "20261023T110356082Z-12620903",
+                      "event_at_utc":  "2026-10-26T17:55:34.9052677Z",
+                      "source_sha256":  "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+                      "test_sha256":  "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
+                      "run_id":  "20261026T175534146Z-dbfe54c6",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T175534146Z-dbfe54c6-DEV-verify-ue1-classic-struct-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-tagged-properties.php",

@@ -51,21 +51,40 @@ $files=[];$cases=[];$fail=[];
 $check=static function(string $label,bool $pass)use(&$cases,&$fail):void {
     $cases[$label]=$pass;if(!$pass)$fail[]=$label;
 };
-$inspect=static function(string $kind,int $ver,string $body)use($build,&$files):array{
+$inspect=static function(string $kind,int $ver,string $body,string $physicalTail='')use($build,&$files):array{
     $p=tempnam(sys_get_temp_dir(),'ue1-struct');
     if(!$p){throw new RuntimeException('No temp file');}
     $files[]=$p;
-    file_put_contents($p,$build($kind,$ver,$body));
+    file_put_contents($p,$build($kind,$ver,$body).$physicalTail);
     $pkg=new Package($p);
     if($pkg->validatePackage()!==[]){throw new RuntimeException('Malformed UE1 fixture summary');}
-    $tags=Tags::inspect($p,$pkg,0);
+    // Fixture provenance is intentionally selected; file version alone
+    // cannot distinguish real C98, UT99 and Unreal v227 loaders.
+    $family=$ver>=62?'ut99-v432':'epic-ue1';
+    $tags=Tags::inspect($p,$pkg,0,$family);
     if(($tags['status']??'')!=='tag_envelope_decoded'){throw new RuntimeException('UObject tag envelope unavailable');}
-    return [Native::inspect($p,$pkg,0,$tags),$tags];
+    return [Native::inspect($p,$pkg,0,$tags,$family),$tags];
 };
 $reject=static function(string $type,int $ver,string $bytes)use($inspect):bool{
     try{$inspect($type,$ver,$bytes);return false;}catch(RuntimeException){return true;}
 };
 try{
+    // Both Epic linkers read the physical archive first and only then
+    // reject a consumed-byte count that differs from Export.SerialSize.
+    foreach([50,69] as $ver){
+        foreach(['Field'=>$field(),
+                 'IntProperty'=>$field().pack('V2',1,0).$compact(3)] as $kind=>$bytes){
+            $inside=substr($bytes,0,-1);
+            [$overrun]=$inspect($kind,$ver,$inside,substr($bytes,-1));
+            $check('v'.$ver.'_'.$kind.'_physical_read_then_serial_size_mismatch',
+                $overrun['status']==='native_export_serial_size_mismatch'
+                &&$overrun['source_serial_size_check_failed']===true
+                &&$overrun['serial_size_overrun_bytes']===1
+                &&$overrun['archive_cursor']===$overrun['expected_export_end']+1);
+            $check('v'.$ver.'_'.$kind.'_real_physical_eof_rejected',
+                $reject($kind,$ver,$inside));
+        }
+    }
     [$f,$tags]=$inspect('Field',50,$field(-1,1));
     $check('v50_UField_inherited_refs',$f['status']==='native_field_record_complete'
         &&$f['super_field_reference']===-1&&$f['next_field_reference']===1

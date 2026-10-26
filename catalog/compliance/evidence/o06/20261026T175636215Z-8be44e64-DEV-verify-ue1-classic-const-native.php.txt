@@ -1,0 +1,31 @@
+﻿{
+    "ok": false,
+    "passed": 14,
+    "total": 15,
+    "failed": [
+        "v69_source_ansi_CP1252"
+    ],
+    "cases": {
+        "v50_ansi_and_refs": true,
+        "v50_legacy_uobject_names": true,
+        "v69_source_ansi_CP1252": false,
+        "v69_wide_UTF16": true,
+        "UField_refs_inherited_and_retained": true,
+        "extension_not_accepted_complete": true,
+        "wide_not_allowed_old_ver": true,
+        "positive_ref_oob": true,
+        "negative_ref_oob": true,
+        "positive_count_exceeds_bounds": true,
+        "negative_count_exceeds_bounds": true,
+        "ansi_missing_terminator": true,
+        "wide_missing_terminator": true,
+        "malformed_utf16_surrogate": true,
+        "truncated_UField_ref": true
+    },
+    "epic_source": [
+        "v1.200 Core/Src/UnClass.cpp:1463-1469",
+        "v1.200 Core/Inc/UnClass.h:470-476",
+        "UT99 v400 Core/Src/UnClass.cpp:1438-1444",
+        "UT99 v400 Core/Inc/UnClass.h:506-513"
+    ]
+}

@@ -1,7 +1,7 @@
 {
-  "contract": "g3-classic-raw-string-and-fixedarray-count-source",
-  "stage": "G3-08-11-SIGNED-COUNTS-RELEASED-4965d6e5-PRD-SHA16of16",
-  "last_action": "Two original Epic Core per-method archive errors corrected: C98 UStringProperty signed StringSize 0/-1 preserved; inherited UT99 v400 UFixedArrayProperty signed Count 0/-1 preserved with checkSlow only on Inner; no premature PHP positivity FArchive error. One DEV property 42/42 PASS and affected original CPP SHA verifier 159/159 PASS logged, previous G3 23 other tests and original G5 compiled native tests not rerun. Source hashes, previous/changed reader, output hash and 91-row G3 source matrix pinned. GitHub commit 4965d6e5 pushed. DEV to PRD changed implementation/evidence files 16/16 SHA verified; protected config/storage untouched. G3-08/G3-11 archive subbranches accepted, full G3 0/16, C98/C227 native loaded-value and other G3 original method branches remain unverified.",
-  "next_step": "Do not retest 42/42 or 159/159 unless source/reader changes. Investigate next distinct G3-03/04/05/07 Epic source method versus PHP rejection or obtain authentic v227j and Unreal v1.200 Core native loaded-value engines. Validate one full source method per behavior, then update status. Do NOT claim runtime linkage for zero/negative signed fields. Commit/push this deployment checkpoint and copy SHA to PRD.",
-  "updated_at_utc": "2026-10-26T17:09:37+00:00"
+  "contract": "g3-native-class-property-physical-archive-boundary",
+  "stage": "G3-03-04-07-SOURCE-VERIFIED-RELEASE-PENDING",
+  "last_action": "Original C98 and inherited T99 original linker archive-then-SerialSize semantics corrected. Eight new Field/IntProperty cross-export/physical EOF fixture cases; four affected DEV scripts PASS or matching journaled PASS; PHP syntax and JSON validation pass. No new compiled C98/C227 oracle, G3 remains 0/16.",
+  "next_step": "Commit verified changes, push GitHub main, deploy changed files to PRD with SHA-256; investigate next distinct G3-06 source mismatch (UConst/UEnum premature export count limit), while original stock C98/C227 compiled loaded values remain blocked.",
+  "updated_at_utc": "2026-10-26T18:01:34+00:00"
 }

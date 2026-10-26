@@ -124,13 +124,23 @@ final class CatalogUE1ClassicNativeObjectReader
         $exportLimit=$limit;
         if($family===CatalogUE1ClassicSourceFamily::UT99_V432
             &&$nativeKind==='animation'){$limit=(int)filesize($path);}
+        // C98 LoadObject and UT99 Preload archive through the file-backed linker,
+        // then compare Tell() with SerialSize. SerialSize is not a read barrier.
+        $g3Native=in_array($nativeKind,[
+            ...CatalogUE1ClassicPropertyNativeReader::KINDS,
+            ...CatalogUE1ClassicStructNativeReader::KINDS,
+        ],true);
+        $archiveLimit=$g3Native?(int)filesize($path):$limit;
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open native UE1 payload');}
         try{
             if(fseek($fp,$start)!==0){throw new RuntimeException('Cannot seek native UE1 payload');}
             $pos=$start;
-            $read=static function(int $n)use($fp,$limit,&$pos,$family,$nativeKind):string{
-                if($n<0||$n>$limit-$pos){
+            $read=static function(int $n)use($fp,$limit,$archiveLimit,$g3Native,&$pos,$family,$nativeKind):string{
+                if($n<0||$n>$archiveLimit-$pos){
+                    if($g3Native){
+                        throw new RuntimeException('UE1 G3 native physical archive EOF cursor='.$archiveLimit);
+                    }
                     if($family===CatalogUE1ClassicSourceFamily::UT99_V432
                         &&$nativeKind==='animation'){
                         throw new RuntimeException('UT99 v432 UAnimation native physical EOF cursor='.$limit);
@@ -175,13 +185,23 @@ final class CatalogUE1ClassicNativeObjectReader
                     CatalogUE1ClassicV432NativeDeltaReader::inspectSkeletalMesh(
                         $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
             }
-            if(in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)){
-                return array_replace($record,CatalogUE1ClassicPropertyNativeReader::inspect(
-                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family));
-            }
-            if(in_array($nativeKind,CatalogUE1ClassicStructNativeReader::KINDS,true)){
-                return array_replace($record,CatalogUE1ClassicStructNativeReader::inspect(
-                    $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family));
+            if($g3Native){
+                $detail=in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
+                    ?CatalogUE1ClassicPropertyNativeReader::inspect(
+                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family)
+                    :CatalogUE1ClassicStructNativeReader::inspect(
+                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
+                if($pos>$exportLimit){
+                    // Both original linkers compare Tell() to SerialSize
+                    // AFTER Serialize; reaching a later byte is not a pass.
+                    $detail['status']='native_export_serial_size_mismatch';
+                    $detail['source_serial_size_check_failed']=true;
+                    $detail['archive_cursor']=$pos;
+                    $detail['expected_export_end']=$exportLimit;
+                    $detail['serial_size_overrun_bytes']=$pos-$exportLimit;
+                    $detail['extension_bytes']=0;
+                }
+                return array_replace($record,$detail);
             }
             if($nativeKind==='primitive'){
                 return array_replace($record,CatalogUE1ClassicPrimitiveNativeReader::inspect(

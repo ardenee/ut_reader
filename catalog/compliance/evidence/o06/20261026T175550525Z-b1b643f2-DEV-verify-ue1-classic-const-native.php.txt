@@ -1,0 +1,9 @@
+﻿
+Fatal error: Uncaught InvalidArgumentException: UE1 package version 69 has overlapping source profiles [ut99-v432, unreal-v227]; select known loader provenance or compare candidates in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1ClassicSourceFamily.php:87
+Stack trace:
+#0 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1ClassicSourceFamily.php(159): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::select(69, NULL)
+#1 C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader.php(790): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily::selectFromHeader(Array, NULL)
+#2 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-const-native.php(45): UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader::inspect('C:\\Users\\arden\\...', Object(UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader), 0)
+#3 C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-const-native.php(60): {closure:C:\Users\arden\source\repos\ut_reader\catalog\bin\verify-ue1-classic-const-native.php:39}(69, '\x00\x00\x05Caf\xE9\x00')
+#4 {main}
+  thrown in C:\Users\arden\source\repos\ut_reader\catalog\src\Infrastructure\Readers\CatalogUE1ClassicSourceFamily.php on line 87

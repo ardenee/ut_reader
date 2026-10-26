@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-26T17:06:07+00:00",
+  "updated_at_utc": "2026-10-26T17:58:01+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -5513,14 +5513,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:298, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T17:05:03+00:00",
+      "updated_at_utc": "2026-10-26T17:55:50+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "at_utc": "2026-10-26T17:55:50.0008596Z",
         "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -5651,14 +5651,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:208, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T17:05:03+00:00",
+      "updated_at_utc": "2026-10-26T17:55:50+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "at_utc": "2026-10-26T17:55:50.0008596Z",
         "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -5728,14 +5728,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:460, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T17:05:03+00:00",
+      "updated_at_utc": "2026-10-26T17:55:50+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "at_utc": "2026-10-26T17:55:50.0008596Z",
         "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -5789,14 +5789,14 @@
       "test": "verify-ue1-classic-const-native.php",
       "evidence": "v1.200 Core/Src/UnClass.cpp:1463-1469 Core/Inc/UnClass.h:470-476; UT99 v400 Core/Src/UnClass.cpp:1438-1444 Core/Inc/UnClass.h:506-513; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned C98 Core/Src/UnClass.cpp:1463 on-disk native archive -> native_const_record_complete; typed source-family branch implemented.",
       "remaining": "Native UField SuperField/Next and UConst FString Value now decoded; 15/15 v50/v69 source-synthetic positive/negative cases pass. Genuine UConst object fixture, full G3 classIndex=0 metadata and remaining legacy version gates still need evidence. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. | SOURCE-TO-PHP MAPPED 2026-10-23; engine runtime effects and G5 oracle/corpus verification separately deferred. No missing native serialized fields for selected source family.",
-      "updated_at_utc": "2026-10-23T19:06:09+00:00",
+      "updated_at_utc": "2026-10-26T17:58:01+00:00",
       "last_verification": {
-        "target": "PRD",
+        "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:15.4267867Z",
-        "test_sha256": "a2ff9bdf008c9f193b245807b2420aa9bc6b6ed94fab068735bbdc7cce055aea",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145515147Z-5e54b006-PRD-verify-ue1-classic-const-native.php.txt"
+        "at_utc": "2026-10-26T17:58:01.6854038Z",
+        "test_sha256": "56136c994bbf52d680dfb9e213a26712da2c2368a8cd0d9e37797cc7dbf66bb3",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175801116Z-2c867f5b-DEV-verify-ue1-classic-const-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -5909,14 +5909,14 @@
       "test": "verify-ue1-classic-enum-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236-245, Core/Src/UnObj.cpp:3076-3082; UT99 Core/Src/UnClass.cpp:239-248, Core/Src/UnObj.cpp:3604-3610; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned C98 Core/Src/UnObj.cpp:3076 on-disk native archive -> native_enum_record_complete; typed source-family branch implemented.",
       "remaining": "Source-defined UField references and UEnum TArray<FName> implemented; 13/13 synthetic package checks PASS v50/v69; genuine enum corpus, other legacy versions and complete inherited class metadata contract still unverified. | SOURCE-TO-PHP MAPPED 2026-10-23; engine runtime effects and G5 oracle/corpus verification separately deferred. No missing native serialized fields for selected source family.",
-      "updated_at_utc": "2026-10-23T19:06:09+00:00",
+      "updated_at_utc": "2026-10-26T17:56:38+00:00",
       "last_verification": {
-        "target": "PRD",
+        "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:15.8798188Z",
-        "test_sha256": "11d649ddc4b008f3b25a0730c7aadd8b5be732b5e9d940971b364684c37475c6",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145515605Z-e2557956-PRD-verify-ue1-classic-enum-native.php.txt"
+        "at_utc": "2026-10-26T17:56:37.9260961Z",
+        "test_sha256": "726832c444bf3c7ab7007bf45cf5db72be5fb7c528528bea0949f7cab1a266c7",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175637330Z-7eba872e-DEV-verify-ue1-classic-enum-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -5944,14 +5944,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures; SOURCE_IMPLEMENTED_CLASSIC_SHARED 2026-10-23: C98 Core/Src/UnClass.cpp:236 native archive => CatalogUE1ClassicStructNativeReader.php.",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23. Native archive mapped; independent runtime/class instance oracle G5 deferred.",
-      "updated_at_utc": "2026-10-23T19:10:11+00:00",
+      "updated_at_utc": "2026-10-26T17:55:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T11:03:56.5177687Z",
-        "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-26T17:55:34.9052677Z",
+        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175534146Z-dbfe54c6-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6030,14 +6030,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: C98 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 implementation batch: v1.200 archived parameter ABI retained rather than replaced by later engine; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-23T19:36:43+00:00",
+      "updated_at_utc": "2026-10-26T17:55:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T11:03:56.5177687Z",
-        "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-26T17:55:34.9052677Z",
+        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175534146Z-dbfe54c6-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6449,14 +6449,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:390, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T17:05:03+00:00",
+      "updated_at_utc": "2026-10-26T17:55:50+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "at_utc": "2026-10-26T17:55:50.0008596Z",
         "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6719,14 +6719,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: C98 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-23T19:36:43+00:00",
+      "updated_at_utc": "2026-10-26T17:55:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T11:03:56.5177687Z",
-        "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-26T17:55:34.9052677Z",
+        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175534146Z-dbfe54c6-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6829,14 +6829,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:577, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T17:05:03+00:00",
+      "updated_at_utc": "2026-10-26T17:55:50+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "at_utc": "2026-10-26T17:55:50.0008596Z",
         "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -7680,14 +7680,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:743, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T17:05:03+00:00",
+      "updated_at_utc": "2026-10-26T17:55:50+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "at_utc": "2026-10-26T17:55:50.0008596Z",
         "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -7759,14 +7759,14 @@
       "test": "verify-ue1-classic-const-native.php",
       "evidence": "v1.200 Core/Src/UnClass.cpp:1463-1469 Core/Inc/UnClass.h:470-476; UT99 v400 Core/Src/UnClass.cpp:1438-1444 Core/Inc/UnClass.h:506-513; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned T99 Core/Src/UnClass.cpp:1438 on-disk native archive -> native_const_record_complete; typed source-family branch implemented.",
       "remaining": "Native UField SuperField/Next and UConst FString Value now decoded; 15/15 v50/v69 source-synthetic positive/negative cases pass. Genuine UConst object fixture, full G3 classIndex=0 metadata and remaining legacy version gates still need evidence. G4 source implementation 2026-10-23 (verification deferred): Epic UT99 v400 Core/Src/UnMisc.cpp::FString load applies FromAnsi to each unsigned ANSI octet, not Windows-1252; native Level/Const/TextBuffer/editor readers now use existing CatalogUE1AnsiName::fromBytes, retaining exact codepoints 0x80..0x9F. No functional tests, no PRD deploy, no acceptance promotion. | SOURCE-TO-PHP MAPPED 2026-10-23; engine runtime effects and G5 oracle/corpus verification separately deferred. No missing native serialized fields for selected source family.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T17:58:01+00:00",
       "last_verification": {
-        "target": "PRD",
+        "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:15.4267867Z",
-        "test_sha256": "a2ff9bdf008c9f193b245807b2420aa9bc6b6ed94fab068735bbdc7cce055aea",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145515147Z-5e54b006-PRD-verify-ue1-classic-const-native.php.txt"
+        "at_utc": "2026-10-26T17:58:01.6854038Z",
+        "test_sha256": "56136c994bbf52d680dfb9e213a26712da2c2368a8cd0d9e37797cc7dbf66bb3",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175801116Z-2c867f5b-DEV-verify-ue1-classic-const-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -7871,14 +7871,14 @@
       "test": "verify-ue1-classic-enum-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236-245, Core/Src/UnObj.cpp:3076-3082; UT99 Core/Src/UnClass.cpp:239-248, Core/Src/UnObj.cpp:3604-3610; SOURCE_IMPLEMENTED_CLASSIC_NATIVE 2026-10-23: pinned T99 Core/Src/UnObj.cpp:3604 on-disk native archive -> native_enum_record_complete; typed source-family branch implemented.",
       "remaining": "Source-defined UField references and UEnum TArray<FName> implemented; 13/13 synthetic package checks PASS v50/v69; genuine enum corpus, other legacy versions and complete inherited class metadata contract still unverified. | SOURCE-TO-PHP MAPPED 2026-10-23; engine runtime effects and G5 oracle/corpus verification separately deferred. No missing native serialized fields for selected source family.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T17:56:38+00:00",
       "last_verification": {
-        "target": "PRD",
+        "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-22T14:55:15.8798188Z",
-        "test_sha256": "11d649ddc4b008f3b25a0730c7aadd8b5be732b5e9d940971b364684c37475c6",
-        "source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
-        "log": "catalog\\compliance\\evidence\\o06\\20261022T145515605Z-e2557956-PRD-verify-ue1-classic-enum-native.php.txt"
+        "at_utc": "2026-10-26T17:56:37.9260961Z",
+        "test_sha256": "726832c444bf3c7ab7007bf45cf5db72be5fb7c528528bea0949f7cab1a266c7",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175637330Z-7eba872e-DEV-verify-ue1-classic-enum-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -8001,14 +8001,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures; SOURCE_IMPLEMENTED_CLASSIC_SHARED 2026-10-23: T99 Core/Src/UnClass.cpp:239 native archive => CatalogUE1ClassicStructNativeReader.php.",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23. Native archive mapped; independent runtime/class instance oracle G5 deferred.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T17:55:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T11:03:56.5177687Z",
-        "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-26T17:55:34.9052677Z",
+        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175534146Z-dbfe54c6-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -8176,14 +8176,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: T99 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 implementation batch: UT99 recomputes parameter ABI from child fields after reset; wire and unresolved runtime distinction retained; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T17:55:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T11:03:56.5177687Z",
-        "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-26T17:55:34.9052677Z",
+        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175534146Z-dbfe54c6-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -9043,14 +9043,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:117, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T17:05:03+00:00",
+      "updated_at_utc": "2026-10-26T17:55:50+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "at_utc": "2026-10-26T17:55:50.0008596Z",
         "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
-        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175549353Z-7572345c-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -9185,14 +9185,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: T99 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T17:55:35+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T11:03:56.5177687Z",
-        "test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
-        "source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T110356082Z-12620903-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-26T17:55:34.9052677Z",
+        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
+        "source_sha256": "797aaef6cd1cd139cbde306d212f9b8cf2af285561623a57749b6478e43ed441",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T175534146Z-dbfe54c6-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
