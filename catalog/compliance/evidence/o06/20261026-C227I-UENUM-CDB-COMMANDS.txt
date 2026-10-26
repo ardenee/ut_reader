@@ -1,0 +1,3 @@
+bp 1013f70d ".echo G3_C227_NATIVE_ENUM_LOADED; dd @esi L3; dd poi(@esi) L8; .echo G3_C227_GLOBAL_NAMES_FROM_ORIGINAL_FNAME_TABLE; du poi(poi(104d0490)+4*4ce)+0xc L24; du poi(poi(104d0490)+4*4cc)+0xc L24; du poi(poi(104d0490)+4*4d1)+0xc L24; du poi(poi(104d0490)+4*4d9)+0xc L24; du poi(poi(104d0490)+4*4d5)+0xc L24; du poi(poi(104d0490)+4*3ea)+0xc L24; du poi(poi(104d0490)+4*3eb)+0xc L24; du poi(poi(104d0490)+4*3ec)+0xc L24; du poi(poi(104d0490)+4*3ed)+0xc L24; du poi(poi(104d0490)+4*3ee)+0xc L24; du poi(poi(104d0490)+4*3ef)+0xc L24; du poi(poi(104d0490)+4*3f0)+0xc L24; gc"
+g
+q

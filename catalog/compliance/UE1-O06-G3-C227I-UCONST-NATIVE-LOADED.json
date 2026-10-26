@@ -1,0 +1,214 @@
+{
+  "schema": 1,
+  "date": "2026-10-26",
+  "scope": "C227 OldUnreal 227i Windows x86 original Core.dll and Core.u: eight compiled UConst::Serialize loaded-value parity against UnrealDB",
+  "status": "C227I_UCONST_EIGHT_NATIVE_LOADED_VALUES_VERIFIED_NOT_FULL_G3",
+  "source_notice": "227i is a sealed 2012 runtime. Current v227 source-tree Win32Release Core.lib differs for 14 of 57 relevant method exports; do not infer compiled body compatibility or certify global C227 source profile.",
+  "original_227i_files": {
+    "archive_227i_7z": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\patch_227i.7z",
+      "bytes": 86125808,
+      "sha256": "85e8f13e10eafefb2ddac8e077763f2b225d1c86cbd2af2cefa99d0f74201176"
+    },
+    "self_extractor": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\UnrealGoldPatch227i.exe",
+      "bytes": 238834626,
+      "sha256": "7af3fb5c33e774e349ed07c5e825f937a2352bc2797d09e02e0e915018f052a8"
+    },
+    "Core_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+      "bytes": 901120,
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+    },
+    "Engine_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Engine.dll",
+      "bytes": 1658880,
+      "sha256": "96c53e7a109fefb2166955e3f83f92a0ad87250a191758782199f84f56d0b929"
+    },
+    "UCC_exe": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\UCC.exe",
+      "bytes": 135680,
+      "sha256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672"
+    },
+    "Core_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+      "bytes": 81184,
+      "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"
+    }
+  },
+  "official_sha256_reference": "https://www.oldunreal.com/patch/unreal/oldunreal/227i_sha256.pdf",
+  "archive_mirror": "https://archive.thedatadungeon.com/unreal_1998/distributions/microsoft_windows_v227i_patch/patch_227i.7z",
+  "sealed_proof": {
+    "uconst_cdb_log": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UCONST-STOCK-LOADED-CDB.txt",
+      "sha256": "4f2981264465766ced9eac692ac6b2eb5a197a26a29fdd6552c55d568f2794dc",
+      "bytes": 16794
+    },
+    "method_call_cdb_log": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-G3-FOUR-NATIVE-CALLS-CDB.txt",
+      "sha256": "a48161da162affd5583ee0230e382c86dc99d90b43f233b070f155bf6a3121ce",
+      "bytes": 18982
+    },
+    "uconst_cdb_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UCONST-STOCK-CDB-COMMANDS.txt",
+      "sha256": "44c10e40ebba90fff3fd7e4360a5b3df7528dbb0b47882b35ef5d9bf147d1af1",
+      "bytes": 87
+    },
+    "method_cdb_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-G3-CDB-COMMANDS.txt",
+      "sha256": "9e90f2c2465052306d0763c5614817c7cd1ed07add78e9151e9f8159475a9e04",
+      "bytes": 273
+    }
+  },
+  "native_core_export_symbols_total": 2222,
+  "source_tree_227_Core_lib_g3_exports": 57,
+  "g3_exact_export_name_matches_in_227i_dll": 43,
+  "g3_export_names_absent_or_changed_in_227i": [
+    {
+      "class": "UButtonProperty",
+      "method": "Serialize",
+      "decorated": "?Serialize@UButtonProperty@@UAEXAAVFArchive@@@Z"
+    },
+    {
+      "class": "UAnyProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UAnyProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UButtonProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UButtonProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UClassProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UClassProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UPointerProperty",
+      "method": "SerializeItem",
+      "decorated": "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UAnyProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UAnyProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UButtonProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UButtonProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UPointerProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UStrProperty",
+      "method": "NetSerializeItem",
+      "decorated": "?NetSerializeItem@UStrProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UArrayProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UArrayProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UClassProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UClassProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UObjectProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UObjectProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UProperty",
+      "method": "ShouldSerializeItem",
+      "decorated": "?ShouldSerializeItem@UProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UStruct",
+      "method": "SerializeTaggedProperties",
+      "decorated": "?SerializeTaggedProperties@UStruct@@UAEXAAVFArchive@@PAEPAVUClass@@1H@Z"
+    }
+  ],
+  "compiled_native_serialize_breakpoint_hits": [
+    "UStruct::Serialize",
+    "UField::Serialize",
+    "UProperty::Serialize",
+    "UConst::Serialize"
+  ],
+  "native_loaded_UConst": [
+    {
+      "memory_address": "02686884",
+      "data_pointer": "02686a58",
+      "loaded_array_num": 20,
+      "loaded_array_max": 20,
+      "native_loaded_text": " 3.1415926535897932",
+      "matched_Core_u_export_name": "Pi"
+    },
+    {
+      "memory_address": "02686a2c",
+      "data_pointer": "02671a88",
+      "loaded_array_num": 12,
+      "loaded_array_max": 12,
+      "native_loaded_text": " 0x7fffffff",
+      "matched_Core_u_export_name": "MaxInt"
+    },
+    {
+      "memory_address": "026871ec",
+      "data_pointer": "026872f8",
+      "loaded_array_num": 12,
+      "loaded_array_max": 12,
+      "native_loaded_text": " 0x00400000",
+      "matched_Core_u_export_name": "RF_NotForEdit"
+    },
+    {
+      "memory_address": "026872cc",
+      "data_pointer": "02687390",
+      "loaded_array_num": 12,
+      "loaded_array_max": 12,
+      "native_loaded_text": " 0x00200000",
+      "matched_Core_u_export_name": "RF_NotForServer"
+    },
+    {
+      "memory_address": "02687364",
+      "data_pointer": "02687428",
+      "loaded_array_num": 12,
+      "loaded_array_max": 12,
+      "native_loaded_text": " 0x00100000",
+      "matched_Core_u_export_name": "RF_NotForClient"
+    },
+    {
+      "memory_address": "026873fc",
+      "data_pointer": "026874c0",
+      "loaded_array_num": 12,
+      "loaded_array_max": 12,
+      "native_loaded_text": " 0x00004000",
+      "matched_Core_u_export_name": "RF_Transient"
+    },
+    {
+      "memory_address": "02687494",
+      "data_pointer": "02687558",
+      "loaded_array_num": 12,
+      "loaded_array_max": 12,
+      "native_loaded_text": " 0x00000004",
+      "matched_Core_u_export_name": "RF_Public"
+    },
+    {
+      "memory_address": "0268752c",
+      "data_pointer": "02687610",
+      "loaded_array_num": 12,
+      "loaded_array_max": 12,
+      "native_loaded_text": " 0x00000001",
+      "matched_Core_u_export_name": "RF_Transactional"
+    }
+  ],
+  "php_parser_source_family": "unreal-v227",
+  "comparison_limit": "Eight genuine Core.u UConst loaded string values and Num/Max match PHP decoded archive values, not UConst runtime behavior for all version gates, errors, imports or C98; 227i binary not proven compiled from the available later v227 source tree.",
+  "C98_original_compiled_oracle_available": false,
+  "G3_full_contracts_accepted": 0
+}

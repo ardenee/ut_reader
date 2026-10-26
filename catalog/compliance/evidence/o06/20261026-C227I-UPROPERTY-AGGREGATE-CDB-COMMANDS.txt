@@ -1,0 +1,3 @@
+bp 10148182 ".echo C227_G3_UPROPERTY; du poi(poi(104d0490)+4*poi(@esi+14))+0xc L32; dd @esi+34 L5; gc"
+g
+q

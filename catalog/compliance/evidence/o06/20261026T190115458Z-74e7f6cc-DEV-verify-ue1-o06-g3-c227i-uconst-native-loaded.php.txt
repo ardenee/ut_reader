@@ -1,0 +1,62 @@
+﻿{
+    "ok": true,
+    "checks": 88,
+    "passed": 88,
+    "failed": [],
+    "source_profile": "OldUnreal 227i original compiled Windows x86, eight Core.u Const objects only",
+    "native_loaded_values": {
+        "MaxInt": {
+            "export_index": 294,
+            "native": " 0x7fffffff",
+            "archive_sha256": "2bf46e32a92b8420d44c6e7d7f70cad0bc99f38b1144b563d0910ffce0f223b6",
+            "loaded_array_num": 12
+        },
+        "RF_NotForEdit": {
+            "export_index": 311,
+            "native": " 0x00400000",
+            "archive_sha256": "c77f1c8e3198096e5bb64c8f0c88a32fe22f81ff2d7f0418b8cb2aa31fcdba42",
+            "loaded_array_num": 12
+        },
+        "RF_NotForServer": {
+            "export_index": 314,
+            "native": " 0x00200000",
+            "archive_sha256": "8596130cf3c8dc337727c6b2f7ac679720af46a9c801952d815488dff8289014",
+            "loaded_array_num": 12
+        },
+        "RF_Public": {
+            "export_index": 317,
+            "native": " 0x00000004",
+            "archive_sha256": "b00334ab9952b48056821d7bab3768085738a1576f11ad30bf393824e80e04c2",
+            "loaded_array_num": 12
+        },
+        "Pi": {
+            "export_index": 518,
+            "native": " 3.1415926535897932",
+            "archive_sha256": "66423212426f795cf93b7ad106148bb3df2cb3696cc9307fdc9e486db1120d6a",
+            "loaded_array_num": 20
+        },
+        "RF_Transient": {
+            "export_index": 602,
+            "native": " 0x00004000",
+            "archive_sha256": "99f7d6b0ecc07779b06ca905333a40fef69073c9916ec84294cd25b3c3851dce",
+            "loaded_array_num": 12
+        },
+        "RF_NotForClient": {
+            "export_index": 605,
+            "native": " 0x00100000",
+            "archive_sha256": "b443ae1b5108e342641d4f61a0f47f7a0200fdf6523937f86d99779bf56205e9",
+            "loaded_array_num": 12
+        },
+        "RF_Transactional": {
+            "export_index": 612,
+            "native": " 0x00000001",
+            "archive_sha256": "360ea541e1f98ed294972a79bd14bbebda356c909b51c7d9d7cba69d1b70836d",
+            "loaded_array_num": 12
+        }
+    },
+    "original_227i_Core_dll_sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+    "C227_abi_method_matches": 43,
+    "C227_abi_method_mismatches": 14,
+    "original_C98_loaded_value_proven": false,
+    "G3_FULL": false
+}

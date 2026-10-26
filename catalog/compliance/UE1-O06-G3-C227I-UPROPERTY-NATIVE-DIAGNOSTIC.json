@@ -1,0 +1,68 @@
+{
+  "schema": 1,
+  "status": "ORIGINAL_COMPILED_227I_UPROPERTY_AGGREGATE_DIAGNOSTIC_NO_OBJECT_IDENTITY",
+  "date": "2026-10-26",
+  "explicit_limit": "Exact multiset inclusion only. 668 original native UProperty Serialize field value pairs match a subset of 673 PHP original Core.u export pairs. Object identities and unloaded exceptions were NOT resolved. This is NOT 668 named object loaded-value parity; do not accept any G3 full contract from this diagnostic.",
+  "original_227i_Core_dll_SHA256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+  "original_227i_Core_u_SHA256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b",
+  "native_compiled_Method": "UProperty::Serialize",
+  "native_breakpoint_after_archive_address": "0x10148182",
+  "native_property_field_offsets": {
+    "ArrayDim": "this+0x34",
+    "PropertyFlags": "this+0x3c"
+  },
+  "original_compiled_native_calls": 668,
+  "original_Core_u_PHP_property_exports": 673,
+  "pair_multiset_included": true,
+  "archive_pairs_not_observed_in_native": [
+    {
+      "array_dim": 1,
+      "property_flags": 0,
+      "count": 1
+    },
+    {
+      "array_dim": 1,
+      "property_flags": 1408,
+      "count": 1
+    },
+    {
+      "array_dim": 1,
+      "property_flags": 4098,
+      "count": 1
+    },
+    {
+      "array_dim": 1,
+      "property_flags": 4194304,
+      "count": 1
+    },
+    {
+      "array_dim": 1,
+      "property_flags": 4194432,
+      "count": 1
+    }
+  ],
+  "no_class_member_identity_proved": true,
+  "php_reader_sha256": {
+    "CatalogUE1ClassicNativeObjectReader.php": "409acf9c0221a6a45d03b8a6343e2e53892fd450e7d68f1a2dd2eb95f3317441",
+    "CatalogUE1ClassicPropertyNativeReader.php": "9aea57974d5300cdb6bd061798bfbab7f05cd52bf62666b1859362c10da50af7",
+    "CatalogUE1ClassicTaggedPropertyReader.php": "7143d55c937c73cfd4381e79db6655540d8c23b4f9cd72594841f4515ce20c11"
+  },
+  "sealed_proof": {
+    "native_cdb_log": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UPROPERTY-AGGREGATE-CDB.txt",
+      "bytes": 210910,
+      "sha256": "a1d8d88262b92473f1093d46eab39e32a923789e03d3019969c209b21acfc821"
+    },
+    "native_cdb_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UPROPERTY-AGGREGATE-CDB-COMMANDS.txt",
+      "bytes": 108,
+      "sha256": "ca361dc56a66106d479c39f9ce820b2f2a4fd826cf5bb95ed3b3167e5ad83e5e"
+    },
+    "PHP_Core_u_snapshot": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-CORE-U-PROPERTY-ARCHIVE-SNAPSHOT.txt",
+      "bytes": 473212,
+      "sha256": "32f1e4326f4ea3005e1099c6e8a083a89ab0609962fc8f2e376f56f920a4b018"
+    }
+  },
+  "G3_full_contracts_accepted": 0
+}

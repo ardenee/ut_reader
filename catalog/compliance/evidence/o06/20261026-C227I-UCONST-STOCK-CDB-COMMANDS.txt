@@ -1,0 +1,3 @@
+bp 10116faa ".echo G3_C227_NATIVE_CONST_LOADED; dd @esi L3; du poi(@esi) L32; gc"
+g
+q

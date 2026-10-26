@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T18:36:20.1515001Z",
-    "head_commit":  "c0cd78ee",
+    "updated_at_utc":  "2026-10-26T19:11:08.7799795Z",
+    "head_commit":  "1518bb17",
     "current_target":  "DEV",
     "current_source_sha256":  "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
     "tests":  [
@@ -519,6 +519,30 @@
                       "run_id":  "20261026T130927237Z-7776af6d",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261026T130927237Z-7776af6d-DEV-verify-ue1-o06-g3-c227-compiled-core-symbols.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-c227i-uconst-native-loaded.php",
+                      "test":  "verify-ue1-o06-g3-c227i-uconst-native-loaded.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T19:01:16.3234844Z",
+                      "source_sha256":  "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
+                      "test_sha256":  "44f467a8b467559e7cd38c464cfb5c2b770a2b2088695c30554cd7e04d38d4e4",
+                      "run_id":  "20261026T190115458Z-74e7f6cc",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T190115458Z-74e7f6cc-DEV-verify-ue1-o06-g3-c227i-uconst-native-loaded.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-c227i-uenum-native-loaded.php",
+                      "test":  "verify-ue1-o06-g3-c227i-uenum-native-loaded.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T19:11:08.7569438Z",
+                      "source_sha256":  "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
+                      "test_sha256":  "6518be3b4ff07d41614d79b8f3bc46c7d6fc12b4eeb20e4ac1222f329147d649",
+                      "run_id":  "20261026T191108223Z-d3884fef",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T191108223Z-d3884fef-DEV-verify-ue1-o06-g3-c227i-uenum-native-loaded.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-c98-t99-source-inventory.php",

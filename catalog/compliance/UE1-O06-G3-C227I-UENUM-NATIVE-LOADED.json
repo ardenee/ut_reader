@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "date": "2026-10-26",
+  "scope": "One sealed original compiled OldUnreal 227i UEnum two Core.u objects twelve FName values loaded in memory and verified through FName::Names",
+  "status": "C227I_UENUM_TWO_NATIVE_LOADED_ARRAYS_TWELVE_NAMES_VERIFIED_NOT_FULL_G3",
+  "source_notice": "Native 227i Core.dll compiled implementation used; C227 source repo Core.lib ABI overlap 43/57 is incomplete and no source identity across 14 missing methods assumed.",
+  "original_Core_dll": {
+    "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+    "bytes": 901120,
+    "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+  },
+  "original_Core_u": {
+    "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+    "bytes": 81184,
+    "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"
+  },
+  "original_UCC_exe": {
+    "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\UCC.exe",
+    "bytes": 135680,
+    "sha256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672"
+  },
+  "original_227i_core_hash_reference": "https://www.oldunreal.com/patch/unreal/oldunreal/227i_sha256.pdf",
+  "native_debugger_evidence": {
+    "native_enum_log": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UENUM-STOCK-NAMES-CDB.txt",
+      "sha256": "cd2d159e519b6e9cee5f20e0844ba47e966af41c8a7301a1048ffef45178a57f",
+      "bytes": 18278
+    },
+    "native_enum_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UENUM-CDB-COMMANDS.txt",
+      "sha256": "6cf6416455f106a28c6ba2423d020b022d65f5c4ae4e4b85fcc10c503be62cd7",
+      "bytes": 585
+    },
+    "native_enum_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UENUM-COMPILED-DISASM-CDB.txt",
+      "sha256": "47cfe30322c0e60b738c527d9b854cf58b0ff850f10b05e52f060a48b6fe3868",
+      "bytes": 18732
+    },
+    "native_enum_disasm_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-UENUM-DISASM-COMMANDS.txt",
+      "sha256": "c5f34ec57cc01cc52a062cda824a034bf2db7d6a76a4e1b628e1ee99df337b23",
+      "bytes": 19
+    }
+  },
+  "binary_UEnum_Serialize_export_address": "1013f6c0",
+  "binary_UEnum_names_member_address": "this+0x34",
+  "global_FName_Names_array_address": "104d0490",
+  "global_FNameEntry_Name_offset": "0x0c",
+  "native_global_FName_resolution_table": [
+    {
+      "global_index": 1230,
+      "resolved_name": "ANE_Equal"
+    },
+    {
+      "global_index": 1228,
+      "resolved_name": "ANE_Greater"
+    },
+    {
+      "global_index": 1233,
+      "resolved_name": "ANE_Less"
+    },
+    {
+      "global_index": 1241,
+      "resolved_name": "ANE_GreaterOrEqual"
+    },
+    {
+      "global_index": 1237,
+      "resolved_name": "ANE_LessOrEqual"
+    },
+    {
+      "global_index": 1002,
+      "resolved_name": "SHEER_None"
+    },
+    {
+      "global_index": 1003,
+      "resolved_name": "SHEER_XY"
+    },
+    {
+      "global_index": 1004,
+      "resolved_name": "SHEER_XZ"
+    },
+    {
+      "global_index": 1005,
+      "resolved_name": "SHEER_YX"
+    },
+    {
+      "global_index": 1006,
+      "resolved_name": "SHEER_YZ"
+    },
+    {
+      "global_index": 1007,
+      "resolved_name": "SHEER_ZX"
+    },
+    {
+      "global_index": 1008,
+      "resolved_name": "SHEER_ZY"
+    }
+  ],
+  "native_loaded_UEnum": [
+    {
+      "matched_Core_u_enum": "eAnimNotifyEval",
+      "loaded_array_num": 5,
+      "loaded_array_max": 5,
+      "loaded_global_FName_indices": [
+        1230,
+        1228,
+        1233,
+        1241,
+        1237
+      ],
+      "loaded_resolved_FName_text": [
+        "ANE_Equal",
+        "ANE_Greater",
+        "ANE_Less",
+        "ANE_GreaterOrEqual",
+        "ANE_LessOrEqual"
+      ]
+    },
+    {
+      "matched_Core_u_enum": "ESheerAxis",
+      "loaded_array_num": 7,
+      "loaded_array_max": 7,
+      "loaded_global_FName_indices": [
+        1002,
+        1003,
+        1004,
+        1005,
+        1006,
+        1007,
+        1008
+      ],
+      "loaded_resolved_FName_text": [
+        "SHEER_None",
+        "SHEER_XY",
+        "SHEER_XZ",
+        "SHEER_YX",
+        "SHEER_YZ",
+        "SHEER_ZX",
+        "SHEER_ZY"
+      ]
+    }
+  ],
+  "comparison_limit": "Exactly two genuine 227i Core.u UEnum native loaded arrays, 5+7 original global FName values, not native C98, all errors, unloaded branches or ABI-mismatched 227 source",
+  "G3_full_contracts_accepted": 0
+}

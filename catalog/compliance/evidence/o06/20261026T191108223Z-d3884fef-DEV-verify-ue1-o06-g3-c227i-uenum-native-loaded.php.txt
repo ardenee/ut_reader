@@ -1,0 +1,52 @@
+﻿{
+    "ok": true,
+    "checks": 41,
+    "passed": 41,
+    "failed": [],
+    "scope": "Original compiled 227i UEnum two loaded arrays and twelve resolved native global FNames",
+    "native_comparison": {
+        "ESheerAxis": {
+            "export_index": 46,
+            "loaded_array_num": 7,
+            "global_FName_indices": [
+                1002,
+                1003,
+                1004,
+                1005,
+                1006,
+                1007,
+                1008
+            ],
+            "names": [
+                "SHEER_None",
+                "SHEER_XY",
+                "SHEER_XZ",
+                "SHEER_YX",
+                "SHEER_YZ",
+                "SHEER_ZX",
+                "SHEER_ZY"
+            ]
+        },
+        "eAnimNotifyEval": {
+            "export_index": 916,
+            "loaded_array_num": 5,
+            "global_FName_indices": [
+                1230,
+                1228,
+                1233,
+                1241,
+                1237
+            ],
+            "names": [
+                "ANE_Equal",
+                "ANE_Greater",
+                "ANE_Less",
+                "ANE_GreaterOrEqual",
+                "ANE_LessOrEqual"
+            ]
+        }
+    },
+    "C227_other_methods_full_source_parity_proven": false,
+    "C98_original_native_proven": false,
+    "G3_FULL": false
+}

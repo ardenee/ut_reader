@@ -1,0 +1,6 @@
+bp /1 10116850 ".echo G3_C227_NATIVE_UFIELD_HIT; r ecx; kb 3; gc"
+bp /1 101480f0 ".echo G3_C227_NATIVE_UPROPERTY_HIT; r ecx; kb 3; gc"
+bp /1 10116f60 ".echo G3_C227_NATIVE_UCONST_HIT; r ecx; kb 3; gc"
+bp /1 101177f0 ".echo G3_C227_NATIVE_USTRUCT_HIT; r ecx; kb 3; gc"
+g
+q

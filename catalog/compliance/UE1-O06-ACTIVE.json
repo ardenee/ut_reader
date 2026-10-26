@@ -1,7 +1,7 @@
 {
-  "contract": "g3-06-t99-legacy-wide-fstring-source-overlap",
-  "stage": "G3-06-VERIFIED-PRD-SHA-DEPLOYED",
-  "last_action": "Corrected T99 v61/v63 signed wide UConst original FString version overlap and retained C98 v61 source difference. 24/24 focused and four affected DEV tests pass/reused, release 9bdbe107 pushed; PRD 16/16 changed-file SHA256 matched, config/storage preserved. Previous c0cd78ee source-unit release similarly SHA-deployed. No original C98/C227 compiled stock native oracle; G3 full still 0/16.",
-  "next_step": "Investigate authenticated original C98 v200 compiled DLL/demo and exact C227 matching original Core.dll/SHA; source/compiled body provenance first, then native loaded-value parity. Do not re-run SHA-current T99 G5 or 4 G3 source tests.",
-  "updated_at_utc": "2026-10-26T18:38:33+00:00"
+  "contract": "g3-c227i-original-uenum-compiled-loaded-twelve",
+  "stage": "G3-C227I-TWO-ORIGINAL-NATIVE-CLASS-READERS-PASS-RELEASE-PENDING",
+  "last_action": "Original SHA-authenticated stock 227i x86 Core DLL, UCC and Core.u recovered. UConst real compiled loaded 8/8 values and Num/Max match source PHP; 88/88 independent DEV checks. UEnum real compiled 2/2 arrays and 12 original FName global-name resolutions match on-disk PHP; 41/41 independent DEV checks. Separate UProperty 668 native tuple values subset of 673 archive tuple records, aggregate only, NOT individual object matching. 14 of 57 newer C227 Core.lib symbols differ from 227i DLL. C98 compiled v200 still unavailable; G3 0/16 FULL.",
+  "next_step": "Commit/push and PRD SHA-verify source/profile-specific native evidence. Next exact G3 blocker: recover C98 v200 compiled loader or reconcile native 227i UProperty object identities and malformed archive-error behavior; never treat 668 aggregate matches as named object parity and do not repeat G5.",
+  "updated_at_utc": "2026-10-26T19:21:20+00:00"
 }
