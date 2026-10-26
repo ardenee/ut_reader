@@ -1,0 +1,10 @@
+﻿{
+    "ok": true,
+    "checks": 24,
+    "passed": 24,
+    "failures": [],
+    "direct_native_original_loaded": true,
+    "compiled_malformed_eof_cursor": 283,
+    "native_reexecutions_by_verifier": 0,
+    "method_decision": "BLOCKED"
+}

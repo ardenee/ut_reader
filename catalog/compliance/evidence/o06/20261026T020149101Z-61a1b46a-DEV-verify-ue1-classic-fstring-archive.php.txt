@@ -1,0 +1,97 @@
+﻿{
+    "ok": true,
+    "checks": 59,
+    "passed": 59,
+    "failed": [],
+    "samples": [
+        {
+            "test": "ansi_hello",
+            "version": 69,
+            "on_disk_bytes": 7,
+            "kind": "fstring_ansi_archive",
+            "signed_count": 6
+        },
+        {
+            "test": "ansi_nonascii",
+            "version": 69,
+            "on_disk_bytes": 3,
+            "kind": "fstring_ansi_archive",
+            "signed_count": 2
+        },
+        {
+            "test": "unicode_two_chars",
+            "version": 69,
+            "on_disk_bytes": 7,
+            "kind": "fstring_utf16_archive",
+            "signed_count": -3
+        },
+        {
+            "test": "unicode_ascii",
+            "version": 69,
+            "on_disk_bytes": 7,
+            "kind": "fstring_utf16_archive",
+            "signed_count": -3
+        },
+        {
+            "test": "unicode_empty",
+            "version": 69,
+            "on_disk_bytes": 3,
+            "kind": "fstring_utf16_archive",
+            "signed_count": -1
+        },
+        {
+            "test": "ansi_zero_count_empty",
+            "version": 69,
+            "on_disk_bytes": 1,
+            "kind": "fstring_ansi_archive",
+            "signed_count": 0
+        },
+        {
+            "test": "ansi_nul_only_empty",
+            "version": 69,
+            "on_disk_bytes": 2,
+            "kind": "fstring_ansi_archive",
+            "signed_count": 1
+        },
+        {
+            "test": "ansi_over_255_byte_tag",
+            "version": 69,
+            "on_disk_bytes": 303,
+            "kind": "fstring_ansi_archive",
+            "signed_count": 301
+        },
+        {
+            "test": "bad_count_length",
+            "version": 69,
+            "on_disk_bytes": 3,
+            "kind": "opaque",
+            "signed_count": null
+        },
+        {
+            "test": "bad_unicode_count_length",
+            "version": 69,
+            "on_disk_bytes": 3,
+            "kind": "opaque",
+            "signed_count": null
+        },
+        {
+            "test": "bad_missing_ansi_terminator",
+            "version": 69,
+            "on_disk_bytes": 4,
+            "kind": "opaque",
+            "signed_count": null
+        },
+        {
+            "test": "bad_missing_unicode_terminator",
+            "version": 69,
+            "on_disk_bytes": 5,
+            "kind": "opaque",
+            "signed_count": null
+        }
+    ],
+    "source_sha256": {
+        "UnMisc.cpp": "6daaf8be3b1b1d00d0a97105e5bb3723f1fc871adf5197884f1e50ff8fb1cb2d",
+        "UnProp.cpp": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+    },
+    "remaining": "FString character count/data binary archive verified source-wise, but ANSI/Unicode runtime character conversion, memory allocation and actual compiled engine parity remain unverified."
+}

@@ -2,36 +2,36 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g5-t99-uclass-physical-error-origin`
-- **Stage:** verified-87-of-87-and-58-of-58-release-ready
-- **Last completed action:** Corrected physical FArchive EOF vs export-bound UClass dependency checks and pre-v57 class default/trailer file cursor; genuine stock v432 exception documented. Focus 87/87 PASS and six genuine UT99 UClass script corpus 58/58 PASS; G5 still 5 FULL 3 BLOCKED 0 FAILED. No native object replay.
-- **Resume at:** Commit, push, PRD SHA deploy once. Remaining UClass blocker actual runtime Script pointer/FName fixups and class default/config effects; no repeat 88 genuine loaded class oracles.
-- **Active changed at:** 2026-10-26T01:42:51+00:00
-- **Latest DEV test states:** PASS 151; FAIL 1; STARTED 0
+- **Contract:** `g5-t99-uobject-direct-str-physical-error`
+- **Stage:** verified-release-ready
+- **Last completed action:** Actual stock compiled v432 direct Headline FString success; original-derived count byte232 21->75 real compiled EOF 283+1/283, PHP now matches archive error origin. Focus 24/24, affected 59/59+154/154+historical nested25/25 PASS, SHA native evidence pinned; final source-isolated reconcile and G5 assessment success, 5 FULL 3 BLOCKED 0 FAILED.
+- **Resume at:** Commit/push/SHA deploy current verified source once. Do NOT repeat direct UStrProperty, previously native nested array FString or 88 UClass proofs. Remaining decisive UObject: allocator-dependent nested FString runtime loaded values, other source-legal property/context/default/error branches, one complete 7/7 method acceptance; skeletal remap separate.
+- **Active changed at:** 2026-10-26T02:15:46+00:00
+- **Latest DEV test states:** PASS 152; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
-| 2026-10-26T01:36:58.5237126Z | verify-ue1-o06-genuine-ut99-script-archive.php | PASS | 8243 | catalog\compliance\evidence\o06\20261026T013649874Z-552da0f7-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
-| 2026-10-26T01:36:49.8825727Z | verify-ue1-o06-genuine-ut99-script-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T013649874Z-552da0f7-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
-| 2026-10-26T01:36:23.4687079Z | verify-ue1-o06-genuine-ut99-script-archive.php | FAIL | 1025 | catalog\compliance\evidence\o06\20261026T013622037Z-4ff4d317-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
-| 2026-10-26T01:36:22.0439994Z | verify-ue1-o06-genuine-ut99-script-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T013622037Z-4ff4d317-DEV-verify-ue1-o06-genuine-ut99-script-archive.php.txt |
-| 2026-10-26T01:34:42.1624932Z | verify-ue1-classic-class-metadata.php | PASS | 346 | catalog\compliance\evidence\o06\20261026T013441419Z-7a14e99f-DEV-verify-ue1-classic-class-metadata.php.txt |
-| 2026-10-26T01:34:41.4264794Z | verify-ue1-classic-class-metadata.php | STARTED |  | catalog\compliance\evidence\o06\20261026T013441419Z-7a14e99f-DEV-verify-ue1-classic-class-metadata.php.txt |
-| 2026-10-26T00:43:48.7602816Z | verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php | PASS | 460 | catalog\compliance\evidence\o06\20261026T004347901Z-98af7b7b-DEV-verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php.txt |
-| 2026-10-26T00:43:47.9082704Z | verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php | STARTED |  | catalog\compliance\evidence\o06\20261026T004347901Z-98af7b7b-DEV-verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php.txt |
-| 2026-10-26T00:27:29.3361220Z | verify-ue1-o06-g5-t99-animation-independent-full.php | PASS | 202 | catalog\compliance\evidence\o06\20261026T002728732Z-cdd1c4ca-DEV-verify-ue1-o06-g5-t99-animation-independent-full.php.txt |
-| 2026-10-26T00:27:28.7401271Z | verify-ue1-o06-g5-t99-animation-independent-full.php | STARTED |  | catalog\compliance\evidence\o06\20261026T002728732Z-cdd1c4ca-DEV-verify-ue1-o06-g5-t99-animation-independent-full.php.txt |
-| 2026-10-25T23:40:22.6113944Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 616 | catalog\compliance\evidence\o06\20261025T234021604Z-a3863bee-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
-| 2026-10-25T23:40:21.6054020Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T234021604Z-a3863bee-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
-| 2026-10-25T23:40:21.1854027Z | verify-ue1-o06-g5-t99-animation-native-error-cursors.php | PASS | 212 | catalog\compliance\evidence\o06\20261025T234020550Z-a567c1f6-DEV-verify-ue1-o06-g5-t99-animation-native-error-cursors.php.txt |
-| 2026-10-25T23:40:20.5583948Z | verify-ue1-o06-g5-t99-animation-native-error-cursors.php | STARTED |  | catalog\compliance\evidence\o06\20261025T234020550Z-a567c1f6-DEV-verify-ue1-o06-g5-t99-animation-native-error-cursors.php.txt |
-| 2026-10-25T22:56:14.9514839Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 609 | catalog\compliance\evidence\o06\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
-| 2026-10-25T22:56:13.8924785Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T225613884Z-b54e461e-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
-| 2026-10-25T22:08:05.0193795Z | verify-ue1-o06-g5-t99-animation-whole-native.php | PASS | 579 | catalog\compliance\evidence\o06\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
-| 2026-10-25T22:08:04.0043854Z | verify-ue1-o06-g5-t99-animation-whole-native.php | STARTED |  | catalog\compliance\evidence\o06\20261025T220803996Z-8a65f093-DEV-verify-ue1-o06-g5-t99-animation-whole-native.php.txt |
+| 2026-10-26T02:02:23.3392110Z | verify-ue1-classic-array-inner-values.php | PASS | 233 | catalog\compliance\evidence\o06\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T02:02:22.7062046Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T02:01:50.8472023Z | verify-ue1-classic-array-inner-values.php | FAIL | 359 | catalog\compliance\evidence\o06\20261026T020150122Z-20e6d80a-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T02:01:50.1222011Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T020150122Z-20e6d80a-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T02:01:49.7072387Z | verify-ue1-classic-fstring-archive.php | PASS | 199 | catalog\compliance\evidence\o06\20261026T020149101Z-61a1b46a-DEV-verify-ue1-classic-fstring-archive.php.txt |
+| 2026-10-26T02:01:49.1102025Z | verify-ue1-classic-fstring-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T020149101Z-61a1b46a-DEV-verify-ue1-classic-fstring-archive.php.txt |
+| 2026-10-26T02:01:09.8069031Z | verify-ue1-classic-array-inner-values.php | FAIL | 99 | catalog\compliance\evidence\o06\20261026T020109336Z-161cc491-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T02:01:09.3379039Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T020109336Z-161cc491-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T02:01:08.9079039Z | verify-ue1-classic-fstring-archive.php | FAIL | 99 | catalog\compliance\evidence\o06\20261026T020108397Z-59ebda52-DEV-verify-ue1-classic-fstring-archive.php.txt |
+| 2026-10-26T02:01:08.4049378Z | verify-ue1-classic-fstring-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T020108397Z-59ebda52-DEV-verify-ue1-classic-fstring-archive.php.txt |
+| 2026-10-26T01:59:59.0028665Z | verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php | PASS | 294 | catalog\compliance\evidence\o06\20261026T015958333Z-daeb5c88-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt |
+| 2026-10-26T01:59:58.3338133Z | verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015958333Z-daeb5c88-DEV-verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php.txt |
+| 2026-10-26T01:59:57.9058176Z | verify-ue1-classic-array-inner-values.php | FAIL | 98 | catalog\compliance\evidence\o06\20261026T015957433Z-cd096312-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T01:59:57.4338512Z | verify-ue1-classic-array-inner-values.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015957433Z-cd096312-DEV-verify-ue1-classic-array-inner-values.php.txt |
+| 2026-10-26T01:59:57.0098508Z | verify-ue1-classic-fstring-archive.php | FAIL | 108 | catalog\compliance\evidence\o06\20261026T015956489Z-df832cb1-DEV-verify-ue1-classic-fstring-archive.php.txt |
+| 2026-10-26T01:59:56.4978551Z | verify-ue1-classic-fstring-archive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015956489Z-df832cb1-DEV-verify-ue1-classic-fstring-archive.php.txt |
+| 2026-10-26T01:59:36.5490745Z | verify-ue1-o06-g5-uobject-direct-str-physical-eof.php | PASS | 273 | catalog\compliance\evidence\o06\20261026T015935871Z-a3fb2398-DEV-verify-ue1-o06-g5-uobject-direct-str-physical-eof.php.txt |
+| 2026-10-26T01:59:35.8820692Z | verify-ue1-o06-g5-uobject-direct-str-physical-eof.php | STARTED |  | catalog\compliance\evidence\o06\20261026T015935871Z-a3fb2398-DEV-verify-ue1-o06-g5-uobject-direct-str-physical-eof.php.txt |
 
 ## Recovery procedure
 

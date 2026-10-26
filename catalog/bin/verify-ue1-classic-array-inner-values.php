@@ -93,14 +93,14 @@ $run=static function(string $label,string $innerClass,string $bytes,
   file_put_contents($file,$build(69,$innerClass,$bytes,$fixed,$fixedCount));
   $pkg=new P($file);
   $check($label.'_valid_UE1_package',$pkg->validatePackage()===[]);
-  $tag=T::inspect($file,$pkg,0);
+  $tag=T::inspect($file,$pkg,0,'ut99-v432');
   $check($label.'_source_tag_record',
     $tag['status']==='tag_envelope_decoded'
     &&$tag['tags'][0]['type']===($fixed?'FixedArrayProperty':'ArrayProperty')
     &&$tag['tags'][0]['serialized_size']===strlen($bytes));
-  $outer=N::inspect($file,$pkg,0,$tag);
-  $innerTag=T::inspect($file,$pkg,1);
-  $inner=N::inspect($file,$pkg,1,$innerTag);
+  $outer=N::inspect($file,$pkg,0,$tag,'ut99-v432');
+  $innerTag=T::inspect($file,$pkg,1,'ut99-v432');
+  $inner=N::inspect($file,$pkg,1,$innerTag,'ut99-v432');
   $check($label.'_source_native_parent_inner',
     $outer['status']==='native_property_record_complete'
     &&$outer['property_kind']===($fixed?'fixedarrayproperty':'arrayproperty')
@@ -108,7 +108,7 @@ $run=static function(string $label,string $innerClass,string $bytes,
     &&$outer['subclass_fields']['inner_reference']===2
     &&$inner['status']==='native_property_record_complete');
   $fakeClass=['export_index'=>0,'children_reference'=>1,'super_field_reference'=>0];
-  $report=S::inspect($file,$pkg,$fakeClass,$tag['tags']);
+  $report=S::inspect($file,$pkg,$fakeClass,$tag['tags'],'ut99-v432');
   $sample=$report['array_value_samples'][0]??[];
   $status=$sample['status']??'';
   $check($label.'_source_array_result',
@@ -232,11 +232,11 @@ foreach([
  try{
   file_put_contents($file,$build(69,$kind,$bytes));
   $pkg=new P($file);
-  $meta=T::inspect($file,$pkg,0);
+  $meta=T::inspect($file,$pkg,0,'ut99-v432');
   $fake=['export_index'=>0,'children_reference'=>1,
     'super_field_reference'=>0];
   $caught=false;
-  try{S::inspect($file,$pkg,$fake,$meta['tags']);}
+  try{S::inspect($file,$pkg,$fake,$meta['tags'],'ut99-v432');}
   catch(RuntimeException $e){$caught=str_contains($e->getMessage(),$reason);}
   $check($label.'_epic_linker_fatal',$caught);
  }finally{unlink($file);}

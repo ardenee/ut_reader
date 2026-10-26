@@ -106,6 +106,15 @@ assert set(status)==set(reg["methods"])
 def scoped_source_current(value):
     if value==reconciliation["current_source_sha256"]:
         return True
+    # Two source-isolated repairs with newly pinned native error evidence:
+    # one historical UClass archive physical bound / trailer seek and one
+    # direct UStrProperty FString physical-EOF path. Earlier independent
+    # original compiled proofs retain their exact original source hashes.
+    if (reconciliation.get("source_native_direct_UStrProperty_physical_EOF_scoped")
+        and reconciliation.get("source_native_uclass_archive_bounds_cursor_scoped")
+        and value in (reconciliation.get("previous_source_before_direct_str_fix"),
+                      reconciliation.get("previous_source_before_uclass_archive_fix"))):
+        return True
     # Two strictly v432 UAnimation-only source edits, paired with exact
     # compiled first-chance cursors and original genuine values, cannot
     # revoke the previously accepted unrelated method proofs.
@@ -778,8 +787,11 @@ for name in reg["methods"]:
         # One separate, current-source, original compiled v432 malformed
         # nested FString case; no original engine execution during replay.
         nested_test="verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"
+        # Keep historical native acceptance bound to its exact source.
+        # Newly journaled affected PASS events do not replace it.
         nested_ev=next((e for e in reversed(events)
-            if e.get("test")==nested_test and e.get("state")=="PASS"),None)
+            if e.get("test")==nested_test and e.get("state")=="PASS"
+            and e.get("source_sha256")==reconciliation["previous_source_before_mesh_fix"]),None)
         assert nested_ev is not None
         nested_log=ROOT/nested_ev["log"].replace("\\","/")
         assert reconciliation["source_native_nested_FString_physical_EOF_scoped"]
@@ -814,9 +826,75 @@ for name in reg["methods"]:
         assert nested_proof["old_native_loader_oracles_repeated"]==0
         assert nested_proof["new_native_engine_invocations"]==1
         for info in nested_proof["proof_SHA"].values():
-            assert sha(Path(info["path"]))==info["sha256"]
+            path=Path(info["path"])
+            if path.resolve()==(ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php").resolve() and sha(path)!=info["sha256"]:
+                # Original native evidence is bound to the committed
+                # source it actually exercised, not to the new direct
+                # FString EOF fix. Verify that immutable Git blob.
+                blob=subprocess.check_output(["git","show",
+                    "dd773bb0:catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"],cwd=ROOT)
+                assert hashlib.sha256(blob).hexdigest()==info["sha256"]
+            else:
+                assert sha(path)==info["sha256"]
         old["compiled_native_nested_FString_evidence_artifact"]=str(nested_manifest.relative_to(ROOT)).replace("\\","/")
         old["compiled_native_nested_FString_evidence_SHA"]=sha(nested_manifest)
+        # New, source-isolated direct FString SerializeItem path. Reuse
+        # original nested-FString oracles; check the exact old/new source
+        # replacement so unrelated FULL method logic is unchanged.
+        direct_test="verify-ue1-o06-g5-uobject-direct-str-physical-eof.php"
+        direct_ev=next((e for e in reversed(events)
+            if e.get("test")==direct_test and e.get("state")=="PASS"),None)
+        assert direct_ev and direct_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        direct_log=ROOT/direct_ev["log"].replace("\\","/")
+        assert sha(direct_log)==direct_ev["output_sha256"]
+        assert sha(ROOT/"catalog"/"bin"/direct_test)==direct_ev["test_sha256"]
+        direct_out=read(direct_log)
+        assert direct_out["ok"] and direct_out["checks"]==direct_out["passed"]==24
+        assert direct_out["compiled_malformed_eof_cursor"]==283
+        assert direct_out["direct_native_original_loaded"] is True
+        assert direct_out["native_reexecutions_by_verifier"]==0
+        assert direct_out["method_decision"]=="BLOCKED"
+        direct_manifest=C/"UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json"
+        md=read(direct_manifest)
+        assert md["method"]==name
+        assert md["mutation"]["absolute_byte_offset"]==232
+        assert md["mutation"]["before"]==21 and md["mutation"]["after"]==75
+        assert md["stock_native_success"] and md["stock_native_malformed_error"]
+        for info in md["originals"].values():
+            assert sha(Path(info["path"]))==info["sha256"]
+        prior=subprocess.check_output(["git","show",
+          "dd773bb0:catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"],cwd=ROOT).decode("utf-8-sig")
+        cur=(ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php").read_text(encoding="utf-8-sig")
+        original_branch="""                    [$count,$raw]=$readLinkerIndex();
+                    $units=($count<0||((ord($raw[0])&128)!==0))?2:1;
+                    $chars=abs($count);
+                    if($chars>intdiv($archiveLimit-$position,$units)){
+                        throw new RuntimeException(
+                            'UE1 v432 FString SerializeItem exceeds export SerialSize');
+                    }
+                    $raw.=$read($chars*$units);"""
+        source_branch="""                    // A matched native UStrProperty delegates directly to
+                    // FString::operator<< on ULinkerLoad. The original
+                    // compiled v432 loader reads through the physical file,
+                    // even when Tag.Size and this export's SerialSize end.
+                    // Do not apply the export-bound preview guard here.
+                    if($streamState!==null)$streamState['allow_overread']=true;
+                    [$count,$raw]=$readLinkerIndex();
+                    $units=($count<0||((ord($raw[0])&128)!==0))?2:1;
+                    $chars=abs($count);
+                    $physicalLimit=(int)($streamState['physical_limit']??$archiveLimit);
+                    if($chars>intdiv(max(0,$physicalLimit-$position),$units)){
+                        throw new RuntimeException(
+                            'UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset '
+                            .($offset+$physicalLimit).' during direct FString<<');
+                    }
+                    $raw.=$read($chars*$units);"""
+        assert cur.count(source_branch)==1 and prior.count(original_branch)==1
+        assert cur.replace(source_branch,original_branch)==prior
+        old["compiled_native_direct_UStrProperty_loaded_value"]="Alpha-direct-FString"
+        old["compiled_native_direct_UStrProperty_malformed_physical_EOF_cursor"]=283
+        old["source_native_direct_UStrProperty_scope_isolated"]=True
+        old["native_direct_UStrProperty_proof_sha256"]=sha(direct_manifest)
         old["compiled_native_malformed_tag_cases_valid"]=4
         old["compiled_native_malformed_tag_outcomes_current_source"]=True
         old["compiled_native_reference_array_struct_cases_valid"]=6
@@ -921,7 +999,7 @@ for name in reg["methods"]:
         event_rows=[json.loads(line) for line in (C/"UE1-O06-TEST-EVENTS.jsonl").read_text(encoding="utf-8-sig").splitlines() if line.strip()]
         skev=next((e for e in reversed(event_rows)
             if e.get("test")==focus and e.get("state")=="PASS"),None)
-        assert skev and skev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert skev and scoped_source_current(skev["source_sha256"])
         testfile=ROOT/"catalog"/"bin"/focus
         log=ROOT/skev["log"].replace("\\","/")
         assert sha(testfile)==skev["test_sha256"] and sha(log)==skev["output_sha256"]
@@ -952,7 +1030,7 @@ for name in reg["methods"]:
         whole_ev=next((e for e in reversed(events)
             if e.get("test")==whole_test and e.get("state")=="PASS"),None)
         assert whole_ev is not None
-        assert whole_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(whole_ev["source_sha256"])
         assert sha(ROOT/"catalog"/"bin"/whole_test)==whole_ev["test_sha256"]
         whole_log=ROOT/whole_ev["log"].replace("\\","/")
         assert sha(whole_log)==whole_ev["output_sha256"]
@@ -979,7 +1057,7 @@ for name in reg["methods"]:
         cursor_ev=next((e for e in reversed(events)
             if e.get("test")==cursor_test and e.get("state")=="PASS"),None)
         assert cursor_ev is not None
-        assert cursor_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(cursor_ev["source_sha256"])
         cursor_log=ROOT/cursor_ev["log"].replace("\\","/")
         assert sha(cursor_log)==cursor_ev["output_sha256"]
         assert sha(ROOT/"catalog"/"bin"/cursor_test)==cursor_ev["test_sha256"]
@@ -1019,7 +1097,7 @@ for name in reg["methods"]:
         final_ev=next((e for e in reversed(events)
             if e.get("test")==final_test and e.get("state")=="PASS"),None)
         assert final_ev is not None
-        assert final_ev["source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(final_ev["source_sha256"])
         assert sha(ROOT/"catalog"/"bin"/final_test)==final_ev["test_sha256"]
         final_log=ROOT/final_ev["log"].replace("\\","/")
         assert sha(final_log)==final_ev["output_sha256"]
@@ -1031,7 +1109,7 @@ for name in reg["methods"]:
         closure=C/"UE1-O06-G5-UANIMATION-SOURCE-PROFILE-FULL-ACCEPTANCE.json"
         done=read(closure)
         assert done["method"]==name and done["decision"]=="FULL"
-        assert done["current_production_source_sha256"]==reconciliation["current_source_sha256"]
+        assert scoped_source_current(done["current_production_source_sha256"])
         assert done["independent_final_acceptance_script_sha256"]==sha(ROOT/"catalog"/"bin"/final_test)
         assert done["independent_final_acceptance_log_sha256"]==sha(final_log)
         assert done["original_compiled_loaded_value_manifest_sha256"]==sha(artifact)

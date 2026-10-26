@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "method": "T99:UObject::Serialize",
+  "scope": "one new native v432 direct UProperty StrProperty, not a repeated nested array<FString> case",
+  "originals": {
+    "core_dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432
+    },
+    "engine_dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+      "bytes": 1785856
+    },
+    "compiled_script_package": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5DirectStringProbe.u",
+      "sha256": "256b312328cb223e6bb02775ccbd339a63d5e2f5c55e6ddbeb96711a5b5a38e2",
+      "bytes": 546
+    },
+    "script_class_source": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/G5DirectStringProbe/Classes/G5DirectStringProbeActor.uc",
+      "sha256": "9761ea3424b55c6451b58eca43563b8dc46f68bdd435cdb23680b34be33de9e1",
+      "bytes": 71
+    },
+    "native_generated_original": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5DirectStringPayload.u",
+      "sha256": "e494caf1c9eb86b5fb2fcf4f7af1e0e91c5b5b214066c670ef4917dc7a2cd933",
+      "bytes": 283
+    },
+    "native_original_generated_archive_producer_source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-DirectString-Generate.cpp",
+      "sha256": "7daabe72cd839a257075d3138bcb9d77350e95f0723db5b41bfa902a964cda72",
+      "bytes": 2269
+    },
+    "native_archive_producer": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-DirectString-Generate.exe",
+      "sha256": "05e20a06f637cd44d8b3b5de17ce0b47f7acd8cf2046e95709d8114dd6c6defd",
+      "bytes": 77824
+    },
+    "native_loader_source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-DirectString-Load.cpp",
+      "sha256": "751a7f46f0c2060f3cd89bfb3729494f525321c8fad83ff1f6379211c851afd5",
+      "bytes": 2804
+    },
+    "native_loader": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-Native-DirectString-Load.exe",
+      "sha256": "6c3f9e4988dcfaca63975d6bc7385d033a2f94674fc829470a7eed36c6b080a2",
+      "bytes": 78336
+    },
+    "native_original_loaded_log": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-DirectString-Native-Valid.txt",
+      "sha256": "74fcc01646c50e85182381de0eb1b368c25fd731dbed812b537f4922e2db5182",
+      "bytes": 1782
+    },
+    "native_mutated_error_log": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-DirectString-Native-Malformed.txt",
+      "sha256": "8bdd114a9bdc48d7a780ff31863dbae25b7826288cdc8cb7ffc742b8fd5589a1",
+      "bytes": 676
+    },
+    "malformed_one_byte_copy": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5DirectStringPayloadBad.u",
+      "sha256": "6ddf59b77ba21e9ede85ac84505fd6c281b6b0225454a5b51f3a9a622c6b0277",
+      "bytes": 283
+    }
+  },
+  "mutation": {
+    "absolute_byte_offset": 232,
+    "before": 21,
+    "after": 75,
+    "package_physical_eof": 283,
+    "stock_native_error": "ReadFile beyond EOF 283+1/283"
+  },
+  "expected_loaded_value": "Alpha-direct-FString",
+  "verdict": "DIRECT_UStrProperty_PHYSICAL_FARCHIVE_EOF_CORRECTED_NOT_GLOBAL_UOBJECT_FULL",
+  "stock_native_success": true,
+  "stock_native_malformed_error": true,
+  "prior_native_arrays_reused_no_reruns": true
+}

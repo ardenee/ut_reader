@@ -397,12 +397,20 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     // character count followed by count ANSI bytes (or
                     // twice that for Unicode). Tag.Size is advisory for
                     // a valid property and MUST NOT control this read.
+                    // A matched native UStrProperty delegates directly to
+                    // FString::operator<< on ULinkerLoad. The original
+                    // compiled v432 loader reads through the physical file,
+                    // even when Tag.Size and this export's SerialSize end.
+                    // Do not apply the export-bound preview guard here.
+                    if($streamState!==null)$streamState['allow_overread']=true;
                     [$count,$raw]=$readLinkerIndex();
                     $units=($count<0||((ord($raw[0])&128)!==0))?2:1;
                     $chars=abs($count);
-                    if($chars>intdiv($archiveLimit-$position,$units)){
+                    $physicalLimit=(int)($streamState['physical_limit']??$archiveLimit);
+                    if($chars>intdiv(max(0,$physicalLimit-$position),$units)){
                         throw new RuntimeException(
-                            'UE1 v432 FString SerializeItem exceeds export SerialSize');
+                            'UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset '
+                            .($offset+$physicalLimit).' during direct FString<<');
                     }
                     $raw.=$read($chars*$units);
                 }else{

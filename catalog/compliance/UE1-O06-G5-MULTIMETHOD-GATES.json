@@ -97,7 +97,11 @@
       "compiled_native_nested_FString_physical_EOF_cursor": 308,
       "compiled_native_nested_FString_EOF_decision_checks": 25,
       "compiled_native_nested_FString_evidence_artifact": "catalog/compliance/UE1-O06-G5-T99-UOBJECT-NESTED-FSTRING-PHYSICAL-EOF.json",
-      "compiled_native_nested_FString_evidence_SHA": "26b3b82f248f604b61fccf9db9c7f6e6567365053d0032ddda3fd7cf3bb5637b"
+      "compiled_native_nested_FString_evidence_SHA": "26b3b82f248f604b61fccf9db9c7f6e6567365053d0032ddda3fd7cf3bb5637b",
+      "compiled_native_direct_UStrProperty_loaded_value": "Alpha-direct-FString",
+      "compiled_native_direct_UStrProperty_malformed_physical_EOF_cursor": 283,
+      "source_native_direct_UStrProperty_scope_isolated": true,
+      "native_direct_UStrProperty_proof_sha256": "3a47f8f88889df8e8cef3cba03c4310877ad78edc1d0d2059f18e8e13c20859b"
     },
     "T99:UClass::Serialize": {
       "criteria": {

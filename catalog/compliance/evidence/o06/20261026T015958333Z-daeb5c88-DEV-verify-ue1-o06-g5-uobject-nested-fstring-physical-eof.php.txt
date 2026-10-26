@@ -1,0 +1,15 @@
+﻿{
+    "ok": true,
+    "checks": 25,
+    "passed": 25,
+    "failed": [],
+    "native_unchanged_compiled_DLL": true,
+    "native_conditioned_allocator_origin_explicit": true,
+    "native_mutation_physical_EOF_byte": 308,
+    "native_mutation_exception_origin": "ULinkerLoad::Serialize <- FString<<",
+    "production_physical_EOF_cursor": 308,
+    "source_generated_archive_restored": true,
+    "stock_native_loaded_FString_parity": "NOT_VERIFIED",
+    "general_T99_UObject_METHOD": "BLOCKED",
+    "native_engine_reruns_in_verifier": 0
+}

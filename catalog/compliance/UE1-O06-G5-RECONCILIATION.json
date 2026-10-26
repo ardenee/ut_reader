@@ -1,10 +1,14 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-25T23:47:13.661948+00:00",
-  "head": "a64a743b",
-  "previous_runner_head": "a64a743b",
-  "previous_source_sha256": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
-  "current_source_sha256": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
+  "generated_utc": "2026-10-26T02:15:50.287472+00:00",
+  "head": "dd773bb0",
+  "previous_runner_head": "dd773bb0",
+  "previous_source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+  "current_source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+  "source_native_direct_UStrProperty_physical_EOF_scoped": true,
+  "previous_source_before_direct_str_fix": "8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029",
+  "source_native_uclass_archive_bounds_cursor_scoped": true,
+  "previous_source_before_uclass_archive_fix": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
   "source_native_animation_exact_error_cursors_scoped": true,
   "previous_source_before_animation_error_cursor_change": "634602f01e77e5f77f423e298a8be35ed14ad90ad825582e1181c60dc3494d50",
   "source_native_mesh_seek_and_C98_FSphere_scoped": true,
@@ -13,7 +17,7 @@
   "source_native_nested_FString_physical_EOF_scoped": true,
   "previous_source_before_native_nested_FString_EOF_change": "b8126477daaa07c7a39d3ef75f8bfa1d2201730f67dfab170baa7e981711ed46",
   "previous_source_before_native_array_physical_EOF_change": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78",
-  "fingerprint_changed": false,
+  "fingerprint_changed": true,
   "source_scope_equivalence_v432_textbuffer_only": true,
   "prior_unchanged_branch_source_sha256": "834dac6fe9b5fc71c3d8cfb04667bd01046dc258e5c93b57655dfb01831c4978",
   "middle_unmodified_branch_source_sha256": "8d8a18f37e2e7085af64f630de1fea3b5f35d30d60cbbfd8520ce879880269fe",
@@ -52,9 +56,9 @@
   "summary": {
     "mapped": 256,
     "excluded": 38,
-    "full_independent_method_verified": 4,
+    "full_independent_method_verified": 5,
     "g5_failed_method_decisions": 0,
-    "g5_blocked_method_decisions": 4,
+    "g5_blocked_method_decisions": 3,
     "native_partial_slice_evidence": 3,
     "compiled_archive_only": 0,
     "with_named_test": 197,
@@ -72,7 +76,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 149,
+    "PASS": 152,
     "FAIL": 1
   },
   "branch_totals": {
@@ -10139,8 +10143,8 @@
         true
       ],
       "native_array_full_element_subset_valid": true,
-      "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "native_exact_malformed_archive_consumption_exception_origin_and_unverified_inherited_source_legal_variants",
+      "full_G5_method_acceptance": "FULL",
+      "decisive_closure_blocker": null,
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",
@@ -10463,7 +10467,7 @@
       "native_array_full_element_subset_states": [],
       "native_array_full_element_subset_valid": false,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "inherited_UObject_script_fixups_negative_paths",
+      "decisive_closure_blocker": "native_loaded_UClass_Script_fixups_default_runtime_effects_and_remaining_malformed_source_variants",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "global_source_inputs_changed",
@@ -11718,7 +11722,7 @@
       ],
       "native_array_full_element_subset_valid": true,
       "full_G5_method_acceptance": "BLOCKED",
-      "decisive_closure_blocker": "inherited_ULodMesh_and_negative_cases",
+      "decisive_closure_blocker": "nonempty_ULodMesh_RemapAnimVerts_runtime_loaded_vertex_permutation_and_remaining_specific_malformed_branches",
       "gaps": [
         "complete_native_fields_values_references_bytes_errors_not_proven",
         "no_named_test",

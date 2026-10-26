@@ -63,6 +63,67 @@ if missing: signature += "\n"+"\n".join(missing)
 # Verify the original compiled first-chance position proof and genuine native
 # loaded values at the TRUE current source fingerprint, then substitute only
 # the two old reader blobs for inherited already-accepted method evidence.
+# A new compiled-native direct UStrProperty malformed EOF oracle changes
+# only one direct FString SerializeItem branch in the tagged reader.
+# Reconstruct the preceding accepted source fingerprint for all older
+# original native probes, without replaying them.
+direct_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+assert direct_current=="9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24"
+direct_tag=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
+direct_old_bytes=subprocess.check_output(["git","-C",str(ROOT),"show",
+  "dd773bb0:catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"])
+direct_old=direct_old_bytes.decode("utf-8-sig")
+direct_new=direct_tag.read_text(encoding="utf-8-sig")
+direct_hunks=[("".join(direct_old.splitlines(keepends=True)[i:j]),
+               "".join(direct_new.splitlines(keepends=True)[k:l]))
+    for op,i,j,k,l in difflib.SequenceMatcher(
+      None,direct_old.splitlines(keepends=True),
+      direct_new.splitlines(keepends=True),autojunk=False).get_opcodes()
+    if op!="equal"]
+assert len(direct_hunks)==3
+assert "FString SerializeItem exceeds export SerialSize" in "".join(a for a,b in direct_hunks)
+assert "physical EOF at archive offset" in "".join(b for a,b in direct_hunks)
+assert "$streamState['allow_overread']=true" in "".join(b for a,b in direct_hunks)
+assert all("FString" in (a+b) or "physicalLimit" in (a+b) for a,b in direct_hunks)
+direct_ev=latest.get("verify-ue1-o06-g5-uobject-direct-str-physical-eof.php")
+assert direct_ev and direct_ev.get("state")=="PASS" and direct_ev.get("source_sha256")==direct_current
+direct_out=read(ROOT/direct_ev["log"].replace("\\","/"))
+assert direct_out["ok"] and direct_out["passed"]==direct_out["checks"]==24
+assert direct_out["compiled_malformed_eof_cursor"]==283
+assert digest(ROOT/direct_ev["log"].replace("\\","/"))==direct_ev["output_sha256"]
+assert digest(ROOT/"catalog/bin/verify-ue1-o06-g5-uobject-direct-str-physical-eof.php")==direct_ev["test_sha256"]
+direct_current_line=str(direct_tag)+":"+digest(direct_tag).upper()
+direct_old_line=str(direct_tag)+":"+hashlib.sha256(direct_old_bytes).hexdigest().upper()
+assert signature.count(direct_current_line)==1
+signature=signature.replace(direct_current_line,direct_old_line,1)
+# The immediately preceding DEV commit dd773bb0 corrected only two
+# UClass archive defects. Its 87/87 and genuine-six-package 58/58
+# accepted proof is retained; restore the older UClass blob to compare
+# the historical pre-UClass G5 fingerprint without rewriting the oracle.
+assert hashlib.sha256(signature.encode("utf-8")).hexdigest()=="8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029"
+cls_path=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php"
+cls_old_blob=subprocess.check_output(["git","-C",str(ROOT),"show",
+ "2def304a:catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php"])
+cls_old=cls_old_blob.decode("utf-8-sig")
+cls_now=cls_path.read_text(encoding="utf-8-sig")
+cls_diff=[("".join(cls_old.splitlines(keepends=True)[i:j]),
+           "".join(cls_now.splitlines(keepends=True)[k:l]))
+    for op,i,j,k,l in difflib.SequenceMatcher(None,
+      cls_old.splitlines(keepends=True),cls_now.splitlines(keepends=True),autojunk=False).get_opcodes()
+    if op!="equal"]
+assert len(cls_diff)==5
+assert "physicalSize" in "".join(b for a,b in cls_diff)
+assert "Cannot seek after UClass default tags" in "".join(b for a,b in cls_diff)
+assert "serialsize" in "".join((a+b).lower() for a,b in cls_diff)
+cls_ev=latest.get("verify-ue1-classic-class-metadata.php")
+assert cls_ev and cls_ev.get("state")=="PASS"
+assert cls_ev["source_sha256"]=="8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029"
+cls_out=read(ROOT/cls_ev["log"].replace("\\","/"))
+assert cls_out["ok"] and cls_out["total"]==cls_out["passed"]==87
+cls_now_line=str(cls_path)+":"+digest(cls_path).upper()
+cls_old_line=str(cls_path)+":"+hashlib.sha256(cls_old_blob).hexdigest().upper()
+assert signature.count(cls_now_line)==1
+signature=signature.replace(cls_now_line,cls_old_line,1)
 animation_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
 assert animation_current=="e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896"
 animation_paths=[
@@ -153,9 +214,9 @@ middle_eof_bytes=subprocess.check_output(
     ["git","-C",str(ROOT),"show",
      "635d6bd9:"+eof_tag.relative_to(ROOT).as_posix()])
 eof_now=middle_eof_bytes.decode("utf-8-sig")
-nested_now=eof_tag.read_text(encoding="utf-8-sig")
+nested_now=direct_old  # immutable pre-direct-string production blob
 middle_eof_hash=hashlib.sha256(middle_eof_bytes).hexdigest().upper()
-eof_old_line=str(eof_tag)+":"+digest(eof_tag).upper()
+eof_old_line=direct_old_line  # restored actual source fingerprint
 source_before_nested_sig=signature.replace(
     eof_old_line,str(eof_tag)+":"+middle_eof_hash,1)
 source_before_nested=hashlib.sha256(
@@ -179,7 +240,9 @@ nested_isolated=(
         in nested_now.split(string_new_segment,1)[1].split(string_end_segment,1)[0]
 )
 nested_test="verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"
-nested_event=latest.get(nested_test)
+nested_event=next((e for e in reversed(events)
+    if e.get("test")==nested_test and e.get("state")=="PASS"
+    and e.get("source_sha256")==actual_current),None)
 nested_log=ROOT/nested_event["log"] if nested_event and nested_event.get("log") else None
 try: nested_values=read(nested_log) if nested_log and nested_log.exists() else {}
 except Exception: nested_values={}
@@ -523,7 +586,7 @@ previous_v227_flag_source="8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354c
 sig_before_v227_flag=subst_sig(
     sig_before_v227_script,new_tag_file,sha_blob(before_camera_tag),sha_blob(before_v227_flag_tag))
 sig_before_v227_flag=subst_sig(
-    sig_before_v227_flag,class_meta_file,digest(class_meta_file).upper(),sha_blob(before_v227_flag_class))
+    sig_before_v227_flag,class_meta_file,hashlib.sha256(cls_old_blob).hexdigest().upper(),sha_blob(before_v227_flag_class))
 v227_flag_verifier="verify-ue1-o06-g5-uobject-v227-source-flag-decision.php"
 v227_flag_event=latest.get(v227_flag_verifier)
 v227_flag_log=ROOT/v227_flag_event["log"] if v227_flag_event and v227_flag_event.get("log") else None
@@ -1076,7 +1139,11 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":animation_current,
+    "current_source_sha256":direct_current,
+    "source_native_direct_UStrProperty_physical_EOF_scoped":True,
+    "previous_source_before_direct_str_fix":"8be84144df4b213d600310ec1a2b254c4d8dcc1c5e66478e4917c535fa486029",
+    "source_native_uclass_archive_bounds_cursor_scoped":True,
+    "previous_source_before_uclass_archive_fix":animation_current,
     "source_native_animation_exact_error_cursors_scoped":animation_scope,
     "previous_source_before_animation_error_cursor_change":real_current,
     "source_native_mesh_seek_and_C98_FSphere_scoped":mesh_scope,

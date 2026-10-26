@@ -69,20 +69,20 @@ $run=static function(string $label,int $version,string $bytes,
   file_put_contents($path,$build($version,$bytes));
   $pkg=new P($path);
   $check($label.'_valid_package',$pkg->validatePackage()===[]);
-  $tagInfo=T::inspect($path,$pkg,0);
+  $tagInfo=T::inspect($path,$pkg,0,'ut99-v432');
   $tag=$tagInfo['tags'][0];
   $check($label.'_source_tag_kind_and_size',
     $tag['type']==='StrProperty'
     &&$tag['serialized_size']===strlen($bytes)
     &&$tag['value_kind']===$expectKind
     &&$tag['value_sha256']===hash('sha256',$bytes));
-  $native=N::inspect($path,$pkg,0,$tagInfo);
+  $native=N::inspect($path,$pkg,0,$tagInfo,'ut99-v432');
   $check($label.'_real_UStrProperty_native_fields',
     $native['status']==='native_property_record_complete'
     &&$native['property_kind']==='strproperty'
     &&$native['array_dim']===1);
   $class=['export_index'=>0,'children_reference'=>1,'super_field_reference'=>0];
-  $schema=S::inspect($path,$pkg,$class,$tagInfo['tags']);
+  $schema=S::inspect($path,$pkg,$class,$tagInfo['tags'],'ut99-v432');
   $check($label.'_schema_uses_correct_counted_archive',
     $expectKind==='opaque'?
       ($schema['status']==='dynamic_fstring_archive_unverified'

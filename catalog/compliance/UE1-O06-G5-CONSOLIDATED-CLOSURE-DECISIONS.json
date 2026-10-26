@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "policy": "Exactly one FINAL, SHA-current compiled-method acceptance decision per method. No further partial proof tests: only address listed decisive blocker, then run one complete acceptance test for the affected method. No automatic FULL from prior partial checks.",
-  "source_fingerprint": "e0e2acef48cae9f109e217240399bcd3da38841cd2556b5156be7723114b5896",
+  "source_fingerprint": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
   "method_count": 8,
   "fully_epic_verified": 5,
   "failed": 0,

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-26T01:36:58+00:00",
+  "updated_at_utc": "2026-10-26T02:02:23+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -7411,14 +7411,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "DEV 2026-10-23 new real full-version-69 .u fixture verify-ue1-classic-array-inner-values.php 67/67 PASS (latest run 20261023T100951265Z-78e554cd). UT99 v400 Core/Src/UnProp.cpp::UArrayProperty::SerializeItem loads signed AR_INDEX(n) then loops Inner->SerializeItem; Inner declaration read through actual UArrayProperty.Inner linker ref from original installed native archive. Production CatalogUE1ClassicArrayValueReader reconstructs and validates values for Byte (BYTE), Int (signed INT32), Float (IEEE754), Bool (BYTE nonzero true), FName (compact NameMap index) and UObject (compact signed import/export index) inner serializers; exact byte-count/count, original tag SHA-256, full segment exhaustion, 32-value preview and complete element traversal; invalid inner NameMap/ImportMap/ExportMap indices fatal like Epic linker. Empty arrays, negative counts, truncation, trailing extra bytes, unknown nested Str/Struct kinds explicitly guarded. All 11 affected DEV regression scripts PASS, including authentic 16-package native sweep, 92-file classic corpus, class defaults and malformed archives. No PRD tests.; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:475, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. Untested genuine late UT99 class default arrays and compiled native engine parity; nested StructProperty, StrProperty, arbitrary subarray, generic MapProperty and value assignment remain unverified, by design. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T02:02:23+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:10.6998891Z",
-        "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124010205Z-1d84fab0-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "at_utc": "2026-10-26T02:02:23.3392110Z",
+        "test_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+        "source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -7542,14 +7542,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "DEV 2026-10-23 new real full-version-69 .u fixture verify-ue1-classic-array-inner-values.php 67/67 PASS (latest run 20261023T100951265Z-78e554cd). UT99 v400 Core/Src/UnProp.cpp::UArrayProperty::SerializeItem loads signed AR_INDEX(n) then loops Inner->SerializeItem; Inner declaration read through actual UArrayProperty.Inner linker ref from original installed native archive. Production CatalogUE1ClassicArrayValueReader reconstructs and validates values for Byte (BYTE), Int (signed INT32), Float (IEEE754), Bool (BYTE nonzero true), FName (compact NameMap index) and UObject (compact signed import/export index) inner serializers; exact byte-count/count, original tag SHA-256, full segment exhaustion, 32-value preview and complete element traversal; invalid inner NameMap/ImportMap/ExportMap indices fatal like Epic linker. Empty arrays, negative counts, truncation, trailing extra bytes, unknown nested Str/Struct kinds explicitly guarded. All 11 affected DEV regression scripts PASS, including authentic 16-package native sweep, 92-file classic corpus, class defaults and malformed archives. No PRD tests.; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:324, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. Untested genuine late UT99 class default arrays and compiled native engine parity; nested StructProperty, StrProperty, arbitrary subarray, generic MapProperty and value assignment remain unverified, by design. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T02:02:23+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:10.6998891Z",
-        "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124010205Z-1d84fab0-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "at_utc": "2026-10-26T02:02:23.3392110Z",
+        "test_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+        "source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -8756,14 +8756,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "DEV 2026-10-23 new real full-version-69 .u fixture verify-ue1-classic-array-inner-values.php 67/67 PASS (latest run 20261023T100951265Z-78e554cd). UT99 v400 Core/Src/UnProp.cpp::UArrayProperty::SerializeItem loads signed AR_INDEX(n) then loops Inner->SerializeItem; Inner declaration read through actual UArrayProperty.Inner linker ref from original installed native archive. Production CatalogUE1ClassicArrayValueReader reconstructs and validates values for Byte (BYTE), Int (signed INT32), Float (IEEE754), Bool (BYTE nonzero true), FName (compact NameMap index) and UObject (compact signed import/export index) inner serializers; exact byte-count/count, original tag SHA-256, full segment exhaustion, 32-value preview and complete element traversal; invalid inner NameMap/ImportMap/ExportMap indices fatal like Epic linker. Empty arrays, negative counts, truncation, trailing extra bytes, unknown nested Str/Struct kinds explicitly guarded. All 11 affected DEV regression scripts PASS, including authentic 16-package native sweep, 92-file classic corpus, class defaults and malformed archives. No PRD tests.; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:673, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. Untested genuine late UT99 class default arrays and compiled native engine parity; nested StructProperty, StrProperty, arbitrary subarray, generic MapProperty and value assignment remain unverified, by design. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T02:02:23+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:10.6998891Z",
-        "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124010205Z-1d84fab0-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "at_utc": "2026-10-26T02:02:23.3392110Z",
+        "test_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+        "source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -9231,14 +9231,14 @@
       "test": "verify-ue1-classic-array-inner-values.php",
       "evidence": "Epic UT99 v400 Core/Src/UnProp.cpp::UStrProperty::SerializeItem (Ar << FString), UArrayProperty::SerializeItem (AR_INDEX(n), Inner->SerializeItem), UFixedArrayProperty::SerializeItem (exact Count, no prefix), plus Core/Src/UnMisc.cpp::operator<<(FArchive&,FString&) (signed compact ANSI or UTF16 count) are now unified in real production source: CatalogUE1ClassicFStringArchiveReader::decodeAt validates counted segments/terminators and preserves raw bytes; CatalogUE1ClassicTaggedPropertyReader uses it for standalone values; CatalogUE1ClassicArrayValueReader uses exactly the same decoder for nested StrProperty in source-typed dynamic and fixed arrays, with independent per-element sign/count, archive bounds, 32-value preview only after complete traversal. Latest DEV verify-ue1-classic-array-inner-values.php 154/154 PASS (20261023T103029593Z-a545fe94) including source checks and 40-element preview bound; verify-ue1-classic-fstring-archive.php 59/59 PASS with refactored shared reader. 12 other DEV regressions PASS, one unchanged PASS skipped per journal, genuine 92 UE1 and 16 UT99 corpus preserved. Source struct element UStructProperty::SerializeItem calls Struct->SerializeBin; no unsupported name-based Struct decoding fabricated. Native TCHAR codepage, heap allocation and compiled UT99 runtime oracle not verified.; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:859, shared native metadata fields and version/source flags implemented.",
       "remaining": "On-disk primitives/references and nested dynamic/fixed FString byte streams are source-decoded, but genuine v69 class-default arrays, independently compiled UT99 native oracle, fully linked UProperty runtime offsets, nested UStructProperty.SerializeBin using actual declarations, arbitrary recursive container graphs, native TCHAR conversions and memory application are not verified. No universal UE1 source-family closure claimed. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-23T20:57:00+00:00",
+      "updated_at_utc": "2026-10-26T02:02:23+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-23T12:40:10.6998891Z",
-        "test_sha256": "e5d3e7e118fe2db79d31df68fc0fd1416ebb032656380cf04f99e33228a611b7",
-        "source_sha256": "2b858f72b59dd67d3617ccbc0733e7c21f5e75ff5062c881da3f0f940b032852",
-        "log": "catalog\\compliance\\evidence\\o06\\20261023T124010205Z-1d84fab0-DEV-verify-ue1-classic-array-inner-values.php.txt"
+        "at_utc": "2026-10-26T02:02:23.3392110Z",
+        "test_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+        "source_sha256": "9e475134c8cabe0c99d061ce538c7aa1cc5f4411e5653ef332f01bec6a452f24",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T020222698Z-2a1b6d77-DEV-verify-ue1-classic-array-inner-values.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",

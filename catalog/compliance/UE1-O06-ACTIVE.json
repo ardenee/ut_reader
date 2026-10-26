@@ -1,7 +1,7 @@
 {
-  "contract": "g5-t99-uclass-physical-error-origin",
-  "stage": "verified-87-of-87-and-58-of-58-release-ready",
-  "last_action": "Corrected physical FArchive EOF vs export-bound UClass dependency checks and pre-v57 class default/trailer file cursor; genuine stock v432 exception documented. Focus 87/87 PASS and six genuine UT99 UClass script corpus 58/58 PASS; G5 still 5 FULL 3 BLOCKED 0 FAILED. No native object replay.",
-  "next_step": "Commit, push, PRD SHA deploy once. Remaining UClass blocker actual runtime Script pointer/FName fixups and class default/config effects; no repeat 88 genuine loaded class oracles.",
-  "updated_at_utc": "2026-10-26T01:42:51+00:00"
+  "contract": "g5-t99-uobject-direct-str-physical-error",
+  "stage": "verified-release-ready",
+  "last_action": "Actual stock compiled v432 direct Headline FString success; original-derived count byte232 21->75 real compiled EOF 283+1/283, PHP now matches archive error origin. Focus 24/24, affected 59/59+154/154+historical nested25/25 PASS, SHA native evidence pinned; final source-isolated reconcile and G5 assessment success, 5 FULL 3 BLOCKED 0 FAILED.",
+  "next_step": "Commit/push/SHA deploy current verified source once. Do NOT repeat direct UStrProperty, previously native nested array FString or 88 UClass proofs. Remaining decisive UObject: allocator-dependent nested FString runtime loaded values, other source-legal property/context/default/error branches, one complete 7/7 method acceptance; skeletal remap separate.",
+  "updated_at_utc": "2026-10-26T02:15:46+00:00"
 }
