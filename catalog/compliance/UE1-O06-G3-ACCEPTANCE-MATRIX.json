@@ -165,7 +165,7 @@
       ],
       "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "registered_test": "verify-ue1-classic-property-native.php",
-      "candidate_test_source_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "candidate_test_source_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
     },
     {
@@ -182,7 +182,7 @@
       ],
       "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "registered_test": "verify-ue1-classic-property-native.php",
-      "candidate_test_source_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "candidate_test_source_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
     },
     {
@@ -216,7 +216,7 @@
       ],
       "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "registered_test": "verify-ue1-classic-property-native.php",
-      "candidate_test_source_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "candidate_test_source_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
     },
     {
@@ -301,7 +301,7 @@
       ],
       "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "registered_test": "verify-ue1-classic-property-native.php",
-      "candidate_test_source_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "candidate_test_source_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
     },
     {
@@ -386,7 +386,7 @@
       ],
       "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "registered_test": "verify-ue1-classic-property-native.php",
-      "candidate_test_source_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "candidate_test_source_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
     },
     {
@@ -488,7 +488,7 @@
       ],
       "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "registered_test": "verify-ue1-classic-property-native.php",
-      "candidate_test_source_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "candidate_test_source_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
     },
     {
@@ -624,7 +624,7 @@
       ],
       "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
       "registered_test": "verify-ue1-classic-property-native.php",
-      "candidate_test_source_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "candidate_test_source_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
     },
     {
@@ -1797,12 +1797,12 @@
     },
     "verify-ue1-classic-property-native.php": {
       "path": "catalog/bin/verify-ue1-classic-property-native.php",
-      "current_test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
+      "current_test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
       "historical_pass_script_sha_equal": true,
       "historical_pass_log_sha_equal": true,
-      "historical_pass_source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-      "evidence_status": "SOURCE_CHANGED_DEV_PASS_40_WITH_CURRENT_SOURCE_FINGERPRINT_G3_07_SUBBRANCH_ONLY",
-      "latest_pass_output_sha256": "409e3402f795e7bba31657e7924d9def02f2b8825c02338fb349593c7c39a5dd"
+      "historical_pass_source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+      "evidence_status": "SOURCE_CHANGED_DEV_PASS_42_G3_08_11_BRANCHES_ONLY",
+      "latest_pass_output_sha256": "55dab0b09a8777700e4d087f050942ce9529348f338f2b91107933bcc786038e"
     },
     "verify-ue1-classic-array-inner-values.php": {
       "path": "catalog/bin/verify-ue1-classic-array-inner-values.php",
@@ -2003,9 +2003,10 @@
     "G3-08": {
       "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
       "pinned_current_subproofs": [
-        "C227 UPointerProperty and UButtonProperty have NAME_IntProperty wire IDs, UAnyProperty NAME_VectorProperty explicitly in Core/Inc/UnType.h"
+        "C227 UPointerProperty and UButtonProperty have NAME_IntProperty wire IDs, UAnyProperty NAME_VectorProperty explicitly in Core/Inc/UnType.h",
+        "Source archival signed StringSize/Count, 42/42 current DEV PASS, pinned UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json"
       ],
-      "decisive_remaining_requirement": "C227 compiled SerializeItem loaded bytes/underlying source and differences missing"
+      "decisive_remaining_requirement": "Complete original source profile semantics, runtime loaded values and C227 compiled method proof remain; signed archived field subbranch alone is source verified."
     },
     "G3-09": {
       "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
@@ -2019,8 +2020,10 @@
     },
     "G3-11": {
       "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
-      "pinned_current_subproofs": [],
-      "decisive_remaining_requirement": "Exact C98/T99/C227 version-specific source reader, genuine compiled native loaded values, archive byte/error or source-defined exclusion not yet accepted in one full method decision"
+      "pinned_current_subproofs": [
+        "Source archival signed StringSize/Count, 42/42 current DEV PASS, pinned UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json"
+      ],
+      "decisive_remaining_requirement": "Complete original source profile semantics, runtime loaded values and C227 compiled method proof remain; signed archived field subbranch alone is source verified."
     },
     "G3-12": {
       "verdict": "OPEN_UNVERIFIED_FULL_METHOD",
@@ -2081,5 +2084,15 @@
     "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
     "passed": 159,
     "other_23_historical_tests_reexecuted": 0
+  },
+  "G3_08_11_source_count_subproof_sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17",
+  "G3_08_11_affected_DEV_log_SHA": "55dab0b09a8777700e4d087f050942ce9529348f338f2b91107933bcc786038e",
+  "G3_08_11_refreshed_159_check_verifier": {
+    "script": "verify-ue1-o06-g3-c98-t99-source-inventory.php",
+    "script_sha256": "85e0be911e95623edd3919f80e1a65cbdc684a2b3ad41d7307e54ebfead23423",
+    "log_sha256": "48e941ea9813a9c1f3beb22ab52bf2064c2f234231b940c9074081a8db0e5ede",
+    "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+    "passed": 159,
+    "G5_original_native_tests_rerun": 0
   }
 }

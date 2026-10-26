@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-26T16:55:20+00:00",
+  "updated_at_utc": "2026-10-26T17:06:07+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -5513,14 +5513,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:298, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T16:50:12+00:00",
+      "updated_at_utc": "2026-10-26T17:05:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T16:50:12.7845330Z",
-        "test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
-        "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
+        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -5651,14 +5651,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:208, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T16:50:12+00:00",
+      "updated_at_utc": "2026-10-26T17:05:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T16:50:12.7845330Z",
-        "test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
-        "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
+        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -5728,14 +5728,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:460, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T16:50:12+00:00",
+      "updated_at_utc": "2026-10-26T17:05:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T16:50:12.7845330Z",
-        "test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
-        "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
+        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6449,14 +6449,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:390, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T16:50:12+00:00",
+      "updated_at_utc": "2026-10-26T17:05:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T16:50:12.7845330Z",
-        "test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
-        "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
+        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6829,14 +6829,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned C98 Core/Src/UnProp.cpp:577, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T16:50:12+00:00",
+      "updated_at_utc": "2026-10-26T17:05:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T16:50:12.7845330Z",
-        "test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
-        "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
+        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -7680,14 +7680,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:743, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T16:50:12+00:00",
+      "updated_at_utc": "2026-10-26T17:05:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T16:50:12.7845330Z",
-        "test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
-        "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
+        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -9043,14 +9043,14 @@
       "test": "verify-ue1-classic-property-native.php",
       "evidence": "Epic v1.200 Core/Src/UnProp.cpp:101-114,208,298,390,460,519,576; UT99 v400 Core/Src/UnProp.cpp:117-134,324,475,673,743,859,954,1099,1282,1491; synthetic UE1 packages v50/v69; SOURCE_IMPLEMENTED_CLASSIC_PROPERTY 2026-10-23 pinned T99 Core/Src/UnProp.cpp:117, shared native metadata fields and version/source flags implemented.",
       "remaining": "Source-defined native UProperty LOAD/SAVE and subclass fields decoded, with 32/32 version 50/69 package positive/negative fixtures; genuine property-class corpus, older per-version gates, complete classIndex=0 UClass/UStruct metadata and runtime property linking remain unverified. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23: native persistent UProperty metadata and subclass archive fields implemented. Runtime property offsets, constructor links, nested item application and compiled G5 parity separately deferred.",
-      "updated_at_utc": "2026-10-26T16:50:12+00:00",
+      "updated_at_utc": "2026-10-26T17:05:03+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T16:50:12.7845330Z",
-        "test_sha256": "72006a59fef268399cc323111097fbca7df9f86a4cce47057f85dcf6f49a8135",
-        "source_sha256": "f67b00f252a3179d144a9acdcbcd26b0bca512bda05cba3c0a61fce664b8b057",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt"
+        "at_utc": "2026-10-26T17:05:03.3833085Z",
+        "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+        "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
+        "log": "catalog\\compliance\\evidence\\o06\\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",

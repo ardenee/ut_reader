@@ -95,9 +95,9 @@ final class CatalogUE1ClassicPropertyNativeReader
                 // Unreal v1.200 UStringProperty is a fixed-size CHAR array.
                 $raw = (int)$u32();
                 $extra['string_size'] = $raw >= 0x80000000 ? $raw - 0x100000000 : $raw;
-                if ($extra['string_size'] <= 0) {
-                    throw new RuntimeException('Invalid UStringProperty StringSize');
-                }
+                // Epic v1.200 UnProp.cpp:519-525 archives signed StringSize
+                // verbatim. No positivity check occurs in Serialize; memory
+                // allocation/link semantics remain separate and unverified.
                 break;
             case 'structproperty':
                 $extra['struct_reference'] = $reference('UStructProperty.Struct');
@@ -109,9 +109,9 @@ final class CatalogUE1ClassicPropertyNativeReader
                 $extra['inner_reference'] = $reference('UFixedArrayProperty.Inner');
                 $raw = (int)$u32();
                 $extra['fixed_count'] = $raw >= 0x80000000 ? $raw - 0x100000000 : $raw;
-                if ($extra['fixed_count'] <= 0) {
-                    throw new RuntimeException('Invalid UFixedArrayProperty.Count');
-                }
+                // Epic UT99 v400 UnProp.cpp:954-961 archives signed Count
+                // verbatim and checkSlow checks Inner, NOT Count. Do not
+                // invent an archive error for zero or negative Count.
                 break;
             case 'mapproperty':
                 $extra['key_reference'] = $reference('UMapProperty.Key');

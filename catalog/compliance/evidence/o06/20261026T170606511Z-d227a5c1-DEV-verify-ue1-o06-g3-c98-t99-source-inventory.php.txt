@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 159,
+    "passed": 159,
+    "failed": [],
+    "source_scope": "C98 original v1200 C++ versus T99 inherited v400 C++ lexical source navigation; v432 implementation equality not inferred",
+    "source_class_methods_indexed": 33,
+    "both_engine_Cpp_bodies_present": 16,
+    "C98_T99_body_source_equivalence_claimed": false,
+    "historical_test_script_and_log_SHA_candidates": 24,
+    "historical_test_files_or_compiled_native_reexecuted": 0,
+    "C227_compiled_symbol_implementations_unverified": 57,
+    "G3_whole_gate_decision": "OPEN"
+}

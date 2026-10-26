@@ -2,6 +2,10 @@
 
 Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation IDs. The canonical operation remains O06. Use the append-only UE1-O06-TEST-EVENTS.jsonl and latest UE1-O06-TEST-STATUS.json; do not rerun matching PASS tests just to reconstruct progress.
 
+## G3-08/G3-11 signed archive counts corrected (2026-10-26)
+
+Two source-proven PHP premature archive errors fixed. Original Unreal v1.200 UStringProperty::Serialize reads signed StringSize verbatim with NO positivity guard. Inherited UT99 v400 UFixedArrayProperty::Serialize archives Inner and signed Count, checkSlow(Inner), but NO Count positivity guard. Corrected PHP now retains 0 and -1 on each source-legal archive field. Post-load native linking and original v227 loaded-value behavior remain unknown, never claimed. Affected DEV property fixture 42/42 PASS; updated original C++ source/evidence SHA verifier 159/159 PASS, official journal. Source, reader before/after and exact output SHA sealed as UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json. Other 23 old G3 and original compiled T99 G5 tests not rerun; full G3 still 0/16 accepted.
+
 ## G3-07 real production source correction (2026-10-26)
 
 Source-defined archive field discrepancy FIXED, but G3-07 full native method remains OPEN. Original C98 v1.200 and inherited T99 v400 UProperty::Serialize both read signed ArrayDim verbatim, with no positivity/range guard in that method. Old UnrealDB invented an early FArchive rejection for 0/-1; PHP now decodes them as signed archive values and consumes the remaining property fields. Actual later native UProperty::Link success is NOT claimed. Original C98 preserves archived PropertyFlags 0x00080060; UT99 v400 for version <=61 clears obsolete net flags to 0x20. The existing fixture was corrected to select the intended game source explicitly. Actual current DEV 40/40 property tests PASS plus 159/159 refreshed source SHA and 24 test-log evidence checks PASS. No G5 native tests and no 23 other historical G3 tests rerun. See UE1-O06-G3-C98-T99-UPROPERTY-SIGNED-ARRAYDIM-SOURCE.json.

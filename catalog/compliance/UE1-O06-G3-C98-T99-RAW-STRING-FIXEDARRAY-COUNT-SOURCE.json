@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "time_utc": "2026-10-26T17:05:50.808886+00:00",
+  "contracts": [
+    "G3-08",
+    "G3-11"
+  ],
+  "decision": "SOURCE_ARCHIVE_SUBBRANCH_CORRECTED_NOT_FULL_G3",
+  "original_selected_Epic_method_sources": {
+    "C98-v1200-UStringProperty": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnProp.cpp",
+      "full_cpp_sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b",
+      "start_line": 519,
+      "method_excerpt_sha256": "5d81b56fbfcf764dd227a2718b20a9b2de14df1c161b2f5634d99422c86a104b",
+      "source_has_positive_count_guard_in_Serialize": false
+    },
+    "T99-v400-UFixedArrayProperty": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "full_cpp_sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+      "start_line": 954,
+      "method_excerpt_sha256": "a20591a36322daded18ef03f5ea4b7f72c135dca7e889127f28f0fb82ac4348a",
+      "source_has_positive_count_guard_in_Serialize": false
+    }
+  },
+  "production_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+  "prior_git_reader_sha256": "e809815e4d5f533dc1aed57c3293130c5c37d895e15ad93142ca2c583a3a403f",
+  "new_reader_sha256": "9aea57974d5300cdb6bd061798bfbab7f05cd52bf62666b1859362c10da50af7",
+  "fixed_distinct_bugs": [
+    "C98 UStringProperty StringSize signed <=0 premature FArchive rejection",
+    "T99 UFixedArrayProperty Count signed <=0 premature FArchive rejection"
+  ],
+  "method_behavior": "Original C98 and inherited T99 Serialize archive signed int without positivity guards; runtime property value/link usefulness is outside these two tests.",
+  "DEV_positive_negative_affected_test": {
+    "name": "verify-ue1-classic-property-native.php",
+    "passes": 42,
+    "cases": [
+      "v50_UStringProperty_zero_StringSize_source_persists",
+      "v50_UStringProperty_negative_StringSize_source_persists",
+      "v69_FixedArrayProperty_zero_Count_source_persists",
+      "v69_FixedArrayProperty_negative_Count_source_persists"
+    ],
+    "test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+    "output_sha256": "55dab0b09a8777700e4d087f050942ce9529348f338f2b91107933bcc786038e",
+    "log": "catalog/compliance/evidence/o06/20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt",
+    "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3"
+  },
+  "C227_original_native_compiled_source_behavior_known": false,
+  "full_G3_08_11_claimed": false,
+  "other_previous_stock_native_tests_rerun": false
+}

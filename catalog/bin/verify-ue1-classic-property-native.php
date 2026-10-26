@@ -152,9 +152,29 @@ try {
     $check('reject_missing_enum_ref',$reject('ByteProperty',50,$base()));
     $check('reject_out_of_map_enum',$reject('ByteProperty',69,$base().$compact(5)));
     $check('reject_null_MetaClass',$reject('ClassProperty',69,$base().$compact(1).$compact(0)));
-    $check('reject_invalid_string_size',$reject('StringProperty',50,$base().pack('V',0)));
+    [$emptyFixedString]=$parse('StringProperty',50,$base().pack('V',0));
+    $check('v50_UStringProperty_zero_StringSize_source_persists',
+        $emptyFixedString['status']==='native_property_record_complete'
+        &&$emptyFixedString['subclass_fields']['string_size']===0
+        &&$emptyFixedString['extension_bytes']===0);
+    [$negativeFixedString]=$parse('StringProperty',50,$base().pack('V',0xffffffff));
+    $check('v50_UStringProperty_negative_StringSize_source_persists',
+        $negativeFixedString['status']==='native_property_record_complete'
+        &&$negativeFixedString['subclass_fields']['string_size']===-1
+        &&$negativeFixedString['extension_bytes']===0);
     $check('reject_truncated_FixedArray_count',$reject('FixedArrayProperty',69,$base().$compact(1)));
-    $check('reject_invalid_FixedArray_count',$reject('FixedArrayProperty',69,$base().$compact(1).pack('V',0)));
+    [$zeroFixedArray]=$parse('FixedArrayProperty',69,$base().$compact(1).pack('V',0));
+    $check('v69_FixedArrayProperty_zero_Count_source_persists',
+        $zeroFixedArray['status']==='native_property_record_complete'
+        &&$zeroFixedArray['subclass_fields']['inner_reference']===1
+        &&$zeroFixedArray['subclass_fields']['fixed_count']===0
+        &&$zeroFixedArray['extension_bytes']===0);
+    [$negativeFixedArray]=$parse('FixedArrayProperty',69,$base().$compact(1).pack('V',0xffffffff));
+    $check('v69_FixedArrayProperty_negative_Count_source_persists',
+        $negativeFixedArray['status']==='native_property_record_complete'
+        &&$negativeFixedArray['subclass_fields']['inner_reference']===1
+        &&$negativeFixedArray['subclass_fields']['fixed_count']===-1
+        &&$negativeFixedArray['extension_bytes']===0);
     $check('reject_map_second_ref_missing',$reject('MapProperty',69,$base().$compact(1)));
     $check('reject_truncated_UField',$reject('BoolProperty',69,$compact(0)));
     $check('reject_early_StrProperty',$reject('StrProperty',50,$base()));

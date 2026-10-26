@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-c98-t99-uproperty-ArrayDim-source-archive`
-- **Stage:** G3-07-ARRAYDIM-RELEASED-6d2ea8cf-PRD-SHA17of17
-- **Last completed action:** Actual classic UE1 G3-07 production archive mismatch corrected and source pinned: v1.200 C98/v400 inherited UT99 UProperty::Serialize preserves signed ArrayDim verbatim 0/-1 and DOES NOT throw inside archive stage, unlike prior PHP. C98 v50 source flag save 0x00080060 vs UT99 legacy <=61 clearing 0x00080040 separately verified. ONE 40/40 PHP property DEV runner PASS; after altered test/hash exactly one 159/159 source+historical SHA evidence runner PASS, no 23 prior G3 fixture or 8 G5 stock native reruns. Source, reader changes and logs SHA sealed. GitHub commit 6d2ea8cf pushed and 17/17 changed files copied DEV to PRD and SHA256 verified, protected config and storage untouched. No original 227j/v1.200 compiled Core.dll or method bodies found in DEV/PRD; 227k not substituted. G3-07 source archive subbranch accepted, full G3 still 0/16 and O06 overall OPEN.
-- **Resume at:** Move to a distinct remaining Epic-source C98/T99 G3 serialization discrepancy or acquire actual correct 227j/v1.200 compiled Core loader/implementation for G3-15 and C227 methods; preserve now sealed G3-07 40/40 and source SHA 159/159. Never assert loaded UProperty::Link semantics from archive ArrayDim, never merge v227k with local 227j source without actual equivalence. Avoid retesting already proved oracles; commit/push this final checkpoint and PRD SHA.
-- **Active changed at:** 2026-10-26T16:59:50+00:00
+- **Contract:** `g3-classic-raw-string-and-fixedarray-count-source`
+- **Stage:** G3-08-11-SIGNED-COUNTS-42PASS-SOURCE159PASS-READY
+- **Last completed action:** Two real original source archive divergence fixes: C98 UStringProperty signed StringSize, T99 UFixedArrayProperty signed Count without false positivity rejection at Serialize stage; original C++ pinned. One DEV property 42/42 PASS and source/24 historical SHA verifier 159/159 PASS; existing 23 other classic and G5 native tests NOT rerun. Source/method, reader before and after and current log SHA pinned, G3 source matrix updated, full G3 remains 0/16 due unproven compiled original C98/C227 stock loader values. Commit/push and PRD SHA deployment pending.
+- **Resume at:** Commit/push changed source/property fixture/status and two logs, SHA verify DEV PRD; then investigate a distinct remaining Core serializer source discrepancy or original v227j native Core DLL. Preserve prior native evidence and do not claim runtime success for invalid signed counts.
+- **Active changed at:** 2026-10-26T17:07:35+00:00
 - **Latest DEV test states:** PASS 161; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
@@ -14,6 +14,10 @@
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-26T17:06:07.0658135Z | verify-ue1-o06-g3-c98-t99-source-inventory.php | PASS | 114 | catalog\compliance\evidence\o06\20261026T170606511Z-d227a5c1-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt |
+| 2026-10-26T17:06:06.5191708Z | verify-ue1-o06-g3-c98-t99-source-inventory.php | STARTED |  | catalog\compliance\evidence\o06\20261026T170606511Z-d227a5c1-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt |
+| 2026-10-26T17:05:03.3833085Z | verify-ue1-classic-property-native.php | PASS | 211 | catalog\compliance\evidence\o06\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt |
+| 2026-10-26T17:05:02.7440936Z | verify-ue1-classic-property-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T170502735Z-52447bf4-DEV-verify-ue1-classic-property-native.php.txt |
 | 2026-10-26T16:55:20.5449461Z | verify-ue1-o06-g3-c98-t99-source-inventory.php | PASS | 104 | catalog\compliance\evidence\o06\20261026T165520032Z-32894944-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt |
 | 2026-10-26T16:55:20.0409812Z | verify-ue1-o06-g3-c98-t99-source-inventory.php | STARTED |  | catalog\compliance\evidence\o06\20261026T165520032Z-32894944-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt |
 | 2026-10-26T16:50:12.7845330Z | verify-ue1-classic-property-native.php | PASS | 201 | catalog\compliance\evidence\o06\20261026T165012180Z-c00d3deb-DEV-verify-ue1-classic-property-native.php.txt |
@@ -28,10 +32,6 @@
 | 2026-10-26T12:22:29.8433436Z | verify-ue1-original-unrealfile-script-expressions.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122229843Z-f1898066-DEV-verify-ue1-original-unrealfile-script-expressions.php.txt |
 | 2026-10-26T12:22:29.4633303Z | verify-ue1-original-unrealfile-primitive.php | PASS | 132 | catalog\compliance\evidence\o06\20261026T122228974Z-04114338-DEV-verify-ue1-original-unrealfile-primitive.php.txt |
 | 2026-10-26T12:22:28.9743461Z | verify-ue1-original-unrealfile-primitive.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122228974Z-04114338-DEV-verify-ue1-original-unrealfile-primitive.php.txt |
-| 2026-10-26T12:22:28.5843376Z | verify-ue1-original-unrealfile-model.php | PASS | 173 | catalog\compliance\evidence\o06\20261026T122228049Z-8e2e9123-DEV-verify-ue1-original-unrealfile-model.php.txt |
-| 2026-10-26T12:22:28.0493437Z | verify-ue1-original-unrealfile-model.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122228049Z-8e2e9123-DEV-verify-ue1-original-unrealfile-model.php.txt |
-| 2026-10-26T12:22:27.6653248Z | verify-ue1-original-unrealfile-mesh.php | PASS | 179 | catalog\compliance\evidence\o06\20261026T122227062Z-10f55d91-DEV-verify-ue1-original-unrealfile-mesh.php.txt |
-| 2026-10-26T12:22:27.0623449Z | verify-ue1-original-unrealfile-mesh.php | STARTED |  | catalog\compliance\evidence\o06\20261026T122227062Z-10f55d91-DEV-verify-ue1-original-unrealfile-mesh.php.txt |
 
 ## Recovery procedure
 
