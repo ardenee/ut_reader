@@ -1,0 +1,4 @@
+r $t0 = 0
+bp 101439fe ".echo MAY1998_C98_USTRING_SUBCLASS_LOADED; dd @esi-38 L2; dd @esi L1; da poi(poi(1018f910)+4*poi(@esi-28))+0xc L32; r $t0 = @$t0 + 1; .if (@$t0 >= 0n66) { q } .else { gc }"
+g
+q

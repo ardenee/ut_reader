@@ -1,0 +1,24 @@
+﻿{
+    "ok": true,
+    "checks": 555,
+    "passed": 555,
+    "failed": [],
+    "original_native_subclass_loaded_objects": 66,
+    "by_source_package": {
+        "Core.u": 38,
+        "Engine.u": 28
+    },
+    "original_loaded_StringSize_values": {
+        "16": 1,
+        "20": 2,
+        "32": 9,
+        "64": 11,
+        "80": 2,
+        "192": 3,
+        "240": 7,
+        "255": 31
+    },
+    "scope": "Original May17 compiled x86 UStringProperty native StringSize+0x48 loaded, original Core and Engine exports only",
+    "malformed_negative_or_other_source_versions_proven": false,
+    "G3_FULL": false
+}

@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "date": "2026-10-26",
+  "status": "ORIGINAL_MAY1998_C98_USTRINGPROPERTY_66_INDIVIDUAL_LOADED_STRING_SIZES_VERIFIED_NOT_FULL_G3_08",
+  "scope": "Original May17 Core.dll actual compiled UStringProperty::Serialize native object LOAD, exactly 66 stock observed StringSize fields mapped by current runtime linker export index and native name to the exact unchanged Core.u and Engine.u original archived values; no malformed negative count oracle or general other versions.",
+  "original_compiled_Core_DLL_source_family": "C98 original May17 Windows retail, compared with original Epic May19 v1.200 UStringProperty::Serialize source, not globally asserted identical on all implementations.",
+  "original_compiled_UStringProperty_export_thunk": "0x10101e74",
+  "original_compiled_UStringProperty_body": "0x101439c0",
+  "native_loaded_StringSize_cdb_after_4_byte_archive_read": "0x101439fe",
+  "native_StringSize_object_offset": 72,
+  "original_Epic_source_method": "UStringProperty::Serialize calls UProperty::Serialize then Ar << StringSize with no archive positivity check; no negative native runtime behavior proven by this stock positive corpus.",
+  "original_binaries_packages": {
+    "Core.dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    },
+    "Core.u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+    },
+    "Engine.u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Engine.u",
+      "bytes": 852255,
+      "sha256": "bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d"
+    }
+  },
+  "original_May_v1200_source_sha": {
+    "Core/Src/UnProp.cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnProp.cpp",
+      "bytes": 20022,
+      "sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b"
+    },
+    "Core/Inc/UnType.h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+      "bytes": 17415,
+      "sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8"
+    }
+  },
+  "sealed_compiled_original_CDB_proof": {
+    "stock_original_native_66_loaded_log": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-USTRING-66-REAL-NATIVE-CDB.txt",
+      "bytes": 26940,
+      "sha256": "21c3914c18da7a2c93af5ef03b5c7d1fc848b64d2eb06c401d077c0469ab9aae"
+    },
+    "stock_original_native_66_breakpoint_cmd": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-USTRING-66-CDB-COMMANDS.txt",
+      "bytes": 201,
+      "sha256": "fc6c5324f8acebad5d592372779de3e6ef8cea09978d5c6e1e1889ae1cca1e38"
+    },
+    "original_compiled_UStringProperty_disasm": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-USTRING-LOADED-COMPILED-DISASM.txt",
+      "bytes": 18928,
+      "sha256": "ba9a7e4eed1a1d49c2bb34729d261b2e9300df25fc01497aafe7b9c303f43a1f"
+    },
+    "original_compiled_UStringProperty_disasm_cmd": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-USTRING-DISASM-CDB-COMMANDS.txt",
+      "bytes": 18,
+      "sha256": "33292f197f8cee379d67fd93fba26b4c23b78e12de458c2f6e3fef6e5f0ebbce"
+    },
+    "original_compiled_first_real_StringSize": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-USTRING-FIRST-NATIVE-CDB.txt",
+      "bytes": 12932,
+      "sha256": "3cb0c44392a8d4628ed34a63ac8df5e9e76b5bfa7869ffe020687c3c205c0f39"
+    },
+    "original_compiled_first_native_cmd": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-USTRING-FIRST-NATIVE-COMMANDS.txt",
+      "bytes": 138,
+      "sha256": "493f6fdc519cb502e3fc5e4e3ce1743fd116df18fe6a1aebeb16f449dcb13e4c"
+    }
+  },
+  "loaded_original_linker_to_package": {
+    "00dac140": "Core.u",
+    "00d55a90": "Engine.u"
+  },
+  "loaded_subclass_object_counts": {
+    "Core.u": 38,
+    "Engine.u": 28
+  },
+  "observed_compiled_unique_properties": 66,
+  "native_StringSize_value_histogram": {
+    "16": 1,
+    "20": 2,
+    "32": 9,
+    "64": 11,
+    "80": 2,
+    "192": 3,
+    "240": 7,
+    "255": 31
+  },
+  "not_all_original_package_string_properties_or_error_branches": true,
+  "G3_full_contracts_accepted": 0
+}
