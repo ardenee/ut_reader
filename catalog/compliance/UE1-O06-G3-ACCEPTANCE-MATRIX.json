@@ -1,0 +1,922 @@
+{
+  "schema": 1,
+  "kind": "G3_PRE_EXECUTION_ACCEPTANCE_REQUIREMENTS_NOT_RESULTS",
+  "generated_utc": "2026-10-26T12:56:47.547485+00:00",
+  "plan": "catalog/compliance/UE1-O06-G3-ACCEPTANCE-PLAN.md",
+  "register_sha256": "3d838539855151623005388b492f09488cf7106b9c276d2826aefd820d4852d4",
+  "gate_status": "G3_OPEN_PLAN_ONLY_NO_G3_GATE_TESTS_EXECUTED",
+  "required_tests_count": 16,
+  "contracts": [
+    {
+      "id": "G3-01",
+      "requirement": "Exact Epic C98/T99/C227 Core source lineage + version gates",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-02",
+      "requirement": "Complete class/property serializer symbols, inherited paths and source exclusions",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-03",
+      "requirement": "UField and UStruct",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-04",
+      "requirement": "UState and UFunction",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-05",
+      "requirement": "UClass serialization and default objects",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-06",
+      "requirement": "UConst and UEnum",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-07",
+      "requirement": "UProperty base metadata",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-08",
+      "requirement": "Scalar derived properties and String/Str version changes",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-09",
+      "requirement": "UObjectProperty and UClassProperty references",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-10",
+      "requirement": "UStructProperty nested layouts",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-11",
+      "requirement": "UArrayProperty, UFixedArrayProperty and UMapProperty",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-12",
+      "requirement": "Source script expression, bytecode and fixups",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-13",
+      "requirement": "Tagged property values, defaults, config and localized",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-14",
+      "requirement": "Source version branches and exact malformed FArchive errors",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-15",
+      "requirement": "Original compiled native loaded-value and genuine-file parity",
+      "acceptance": "PLANNED"
+    },
+    {
+      "id": "G3-16",
+      "requirement": "One independent whole-G3 gate / DEV release / PRD SHA",
+      "acceptance": "PLANNED"
+    }
+  ],
+  "current_registered_core_serializer_entries": {
+    "C98": 14,
+    "T99": 18,
+    "C227": 0
+  },
+  "core_source_missing_C227_prerequisites": 2,
+  "mapped_register_rows": 32,
+  "tracked_acceptance_rows_including_missing_C227": 34,
+  "source_files_and_sha": {
+    "C98": {
+      "Core/Src/UnClass.cpp": {
+        "exists": true,
+        "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+      },
+      "Core/Src/UnProp.cpp": {
+        "exists": true,
+        "sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b"
+      }
+    },
+    "T99_v400_inherited": {
+      "Core/Src/UnClass.cpp": {
+        "exists": true,
+        "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+      },
+      "Core/Src/UnProp.cpp": {
+        "exists": true,
+        "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+      }
+    },
+    "T99_v432_declared": {
+      "Core/Inc/UnClass.h": {
+        "exists": true,
+        "sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2"
+      },
+      "Core/Inc/Core.h": {
+        "exists": true,
+        "sha256": "013d94c06885d442f4de0b8bf6d330ebe99012cd0108c52efe65039112e14ab0"
+      }
+    },
+    "C227": {
+      "Core/Src/UnClass.cpp": {
+        "exists": false,
+        "sha256": null
+      },
+      "Core/Src/UnProp.cpp": {
+        "exists": false,
+        "sha256": null
+      }
+    }
+  },
+  "distinct_existing_reuse_candidate_scripts": 24,
+  "previous_PASS_test_script_hash_equal": 24,
+  "previous_PASS_test_output_hash_equal": 24,
+  "policy": {
+    "do_not_infer_lineage_from_package_version": true,
+    "do_not_claim_UT99_G5_covers_C98_C227": true,
+    "do_not_run_native_undefined_success_claims": true,
+    "do_not_retest_sealed_source_unmodified_evidence": true,
+    "no_prod_serializer_modifications_in_preflight": true,
+    "G3_requires_compiled_native_loaded_value_proof_or_original_source_defined_exclusion": true,
+    "one_final_G3_independent_acceptance_test_only_after_all_prior_fifteen_contracts_pass": true
+  },
+  "source_symbol_matrix": [
+    {
+      "register_id": "C98:UBoolProperty::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UBoolProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 298
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-property-native.php",
+      "candidate_test_source_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UByteProperty::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UByteProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 208
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-property-native.php",
+      "candidate_test_source_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UClass::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UClass::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-05",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 921
+        }
+      ],
+      "reader": "CatalogUE1ClassicClassMetadataReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-classic-struct-alias-lineage.php",
+      "candidate_test_source_sha256": "ab0399001bd6b9eeaae06942a4f0b7d53cc5a08ab3d5371f866dc2eb176b3b18",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UClassProperty::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UClassProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 460
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-property-native.php",
+      "candidate_test_source_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UConst::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UConst::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-06",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1463
+        }
+      ],
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "registered_test": "verify-ue1-classic-const-native.php",
+      "candidate_test_source_sha256": "a2ff9bdf008c9f193b245807b2420aa9bc6b6ed94fab068735bbdc7cce055aea",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UEnum::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UEnum::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-06",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3076
+        }
+      ],
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "registered_test": "verify-ue1-classic-enum-native.php",
+      "candidate_test_source_sha256": "11d649ddc4b008f3b25a0730c7aadd8b5be732b5e9d940971b364684c37475c6",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UField::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UField::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 236
+        }
+      ],
+      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-struct-native.php",
+      "candidate_test_source_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UFunction::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UFunction::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-04",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1358
+        }
+      ],
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicStructNativeReader.php",
+      "registered_test": "verify-ue1-classic-struct-native.php",
+      "candidate_test_source_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UObjectProperty::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UObjectProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 390
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-property-native.php",
+      "candidate_test_source_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UProperty::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-07",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 101
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-o06-genuine-class-default-declarations.php",
+      "candidate_test_source_sha256": "6b69c5d58756c6a00d1d6acae513a940db7d2fb12bf0f0195836131dfb4c72e0",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UState::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UState::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-04",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1440
+        }
+      ],
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicStructNativeReader.php",
+      "registered_test": "verify-ue1-classic-struct-native.php",
+      "candidate_test_source_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UStringProperty::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UStringProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 519
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-o06-genuine-class-default-strings.php",
+      "candidate_test_source_sha256": "d741bed4b3890b0d41bf0d175ddae88e02c4a91552f055c4121b94072fca5dd8",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UStruct::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UStruct::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 476
+        }
+      ],
+      "reader": "CatalogUE1ClassicStructNativeReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-classic-struct-alias-lineage.php",
+      "candidate_test_source_sha256": "ab0399001bd6b9eeaae06942a4f0b7d53cc5a08ab3d5371f866dc2eb176b3b18",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "C98:UStructProperty::Serialize",
+      "branch": "C98",
+      "epic_symbol": "UStructProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-10",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 577
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-property-native.php",
+      "candidate_test_source_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UArrayProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UArrayProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 1099
+        }
+      ],
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicArrayValueReader.php",
+      "registered_test": "verify-ue1-classic-imported-struct-ancestry.php",
+      "candidate_test_source_sha256": "81c0baa38935b0fa108e73335ae86e6a07af841f442fc62e86b6e92c27912b90",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UBoolProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UBoolProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 475
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php); CatalogUE1ClassicArrayValueReader.php with CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-classic-array-inner-values.php",
+      "candidate_test_source_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UByteProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UByteProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 324
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php); CatalogUE1ClassicArrayValueReader.php with CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-classic-array-inner-values.php",
+      "candidate_test_source_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UClass::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UClass::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-05",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 914
+        }
+      ],
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php + CatalogUE1ClassicClassMetadataReader.php",
+      "registered_test": "verify-ue1-o06-genuine-ut99-script-archive.php",
+      "candidate_test_source_sha256": "0839fdb803751187f5f0bc9579a36c4a32695007c8498176a7b60de4abf40753",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UClassFactoryNew::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UClassFactoryNew::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-02",
+      "source_locations": [
+        {
+          "path": "Editor/Src/UnEdFact.cpp",
+          "line": 99
+        }
+      ],
+      "reader": "CatalogUE1ClassicEditorSerializerReader.php via CatalogUE1ClassicNativeObjectReader.php",
+      "registered_test": "verify-ue1-classic-editor-native.php",
+      "candidate_test_source_sha256": "c9930c8fd57416cde2417fab051b16ce162e18380cf7eb458be45f1aeb9c955e",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UClassProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UClassProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 743
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-property-native.php",
+      "candidate_test_source_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UConst::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UConst::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-06",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1438
+        }
+      ],
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "registered_test": "verify-ue1-classic-const-native.php",
+      "candidate_test_source_sha256": "a2ff9bdf008c9f193b245807b2420aa9bc6b6ed94fab068735bbdc7cce055aea",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UEnum::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UEnum::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-06",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnObj.cpp",
+          "line": 3604
+        }
+      ],
+      "reader": "CatalogUE1ClassicNativeObjectReader.php",
+      "registered_test": "verify-ue1-classic-enum-native.php",
+      "candidate_test_source_sha256": "11d649ddc4b008f3b25a0730c7aadd8b5be732b5e9d940971b364684c37475c6",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UField::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UField::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 239
+        }
+      ],
+      "reader": "CatalogUE1ClassicStructNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-struct-native.php",
+      "candidate_test_source_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UFixedArrayProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UFixedArrayProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 954
+        }
+      ],
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicArrayValueReader.php",
+      "registered_test": "verify-ue1-classic-imported-struct-ancestry.php",
+      "candidate_test_source_sha256": "81c0baa38935b0fa108e73335ae86e6a07af841f442fc62e86b6e92c27912b90",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UFunction::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UFunction::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-04",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 1342
+        }
+      ],
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicStructNativeReader.php",
+      "registered_test": "verify-ue1-classic-struct-native.php",
+      "candidate_test_source_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UMapProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UMapProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-11",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 1282
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php) + CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-classic-map-no-data.php",
+      "candidate_test_source_sha256": "4fef2676601bfc97c16d7244ce9b992ce4e5af3335c62f25bed600f6ec6e4f29",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UObjectProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UObjectProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-09",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 673
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php); CatalogUE1ClassicArrayValueReader.php with CatalogUE1ClassicClassDefaultSchemaReader.php",
+      "registered_test": "verify-ue1-classic-array-inner-values.php",
+      "candidate_test_source_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-07",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 117
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php (via CatalogUE1ClassicNativeObjectReader.php)",
+      "registered_test": "verify-ue1-classic-property-native.php",
+      "candidate_test_source_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UState::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UState::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-04",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 712
+        }
+      ],
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php; CatalogUE1ClassicStructNativeReader.php",
+      "registered_test": "verify-ue1-classic-struct-native.php",
+      "candidate_test_source_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UStrProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UStrProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-08",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 859
+        }
+      ],
+      "reader": "CatalogUE1ClassicPropertyNativeReader.php + CatalogUE1ClassicClassDefaultSchemaReader.php + CatalogUE1ClassicArrayValueReader.php + CatalogUE1ClassicTaggedPropertyReader.php + CatalogUE1ClassicFStringArchiveReader.php",
+      "registered_test": "verify-ue1-classic-array-inner-values.php",
+      "candidate_test_source_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UStruct::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UStruct::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-03",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnClass.cpp",
+          "line": 593
+        }
+      ],
+      "reader": "CatalogUE1ClassicScriptArchiveReader.php + CatalogUE1ClassicClassMetadataReader.php",
+      "registered_test": "verify-ue1-o06-genuine-ut99-script-archive.php",
+      "candidate_test_source_sha256": "0839fdb803751187f5f0bc9579a36c4a32695007c8498176a7b60de4abf40753",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "T99:UStructProperty::Serialize",
+      "branch": "T99",
+      "epic_symbol": "UStructProperty::Serialize",
+      "current_register_status": "MAPPED",
+      "required_contract": "G3-10",
+      "source_locations": [
+        {
+          "path": "Core/Src/UnProp.cpp",
+          "line": 1491
+        }
+      ],
+      "reader": "CatalogUE1ClassicStructArrayValueReader.php + CatalogUE1ClassicStructImportResolver.php + CatalogUE1ClassicArrayValueReader.php",
+      "registered_test": "verify-ue1-classic-imported-struct-ancestry.php",
+      "candidate_test_source_sha256": "81c0baa38935b0fa108e73335ae86e6a07af841f442fc62e86b6e92c27912b90",
+      "acceptance": "OPEN_NEEDS_SOURCE_AND_NATIVE_REVIEW"
+    },
+    {
+      "register_id": "G3-C227-MISSING-UClass::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UClass::Serialize",
+      "current_register_status": "MISSING_CORE_SOURCE_REGISTER",
+      "required_contract": "G3-01",
+      "source_locations": [],
+      "reader": "UNRESOLVED: require original compiled C227/Core source or native proof",
+      "registered_test": null,
+      "candidate_test_source_sha256": null,
+      "acceptance": "BLOCKED_MISSING_ORIGINAL_CORE_CPP_AND_REGISTER"
+    },
+    {
+      "register_id": "G3-C227-MISSING-UProperty::Serialize",
+      "branch": "C227",
+      "epic_symbol": "UProperty::Serialize",
+      "current_register_status": "MISSING_CORE_SOURCE_REGISTER",
+      "required_contract": "G3-02",
+      "source_locations": [],
+      "reader": "UNRESOLVED: require original compiled C227/Core source or native proof",
+      "registered_test": null,
+      "candidate_test_source_sha256": null,
+      "acceptance": "BLOCKED_MISSING_ORIGINAL_CORE_CPP_AND_REGISTER"
+    }
+  ],
+  "existing_candidate_tests": {
+    "verify-ue1-classic-tagged-properties.php": {
+      "path": "catalog/bin/verify-ue1-classic-tagged-properties.php",
+      "current_test_sha256": "a43435273ceed564f9cb0de064c3c0cd77d26ec7647bc3bd9f9c9df1a8c6506f",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-class-metadata.php": {
+      "path": "catalog/bin/verify-ue1-classic-class-metadata.php",
+      "current_test_sha256": "9a93f04dbc4481183330689685da77052136b5802a90d58d43eb7f3936fdf72f",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-struct-native.php": {
+      "path": "catalog/bin/verify-ue1-classic-struct-native.php",
+      "current_test_sha256": "49cdecc2c319b8432746dae28792c73a1e2dbd5f586a71712641255391dd6f5b",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-struct-alias-lineage.php": {
+      "path": "catalog/bin/verify-ue1-classic-struct-alias-lineage.php",
+      "current_test_sha256": "ab0399001bd6b9eeaae06942a4f0b7d53cc5a08ab3d5371f866dc2eb176b3b18",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "c667ad0e6eb3ca397ac417768394fdcbbc499b0e79f01e2f39334558befb356d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-enum-native.php": {
+      "path": "catalog/bin/verify-ue1-classic-enum-native.php",
+      "current_test_sha256": "11d649ddc4b008f3b25a0730c7aadd8b5be732b5e9d940971b364684c37475c6",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-const-native.php": {
+      "path": "catalog/bin/verify-ue1-classic-const-native.php",
+      "current_test_sha256": "a2ff9bdf008c9f193b245807b2420aa9bc6b6ed94fab068735bbdc7cce055aea",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "9de5130639f170b8802a4ee89919ce08c50ed02f4fa27eee491b0115486c976f",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-property-native.php": {
+      "path": "catalog/bin/verify-ue1-classic-property-native.php",
+      "current_test_sha256": "b46f424186bbd2883f6c502d349e1208bd88a64f6f8b0610a7505c7dd6417fba",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-array-inner-values.php": {
+      "path": "catalog/bin/verify-ue1-classic-array-inner-values.php",
+      "current_test_sha256": "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-array-struct-members.php": {
+      "path": "catalog/bin/verify-ue1-classic-array-struct-members.php",
+      "current_test_sha256": "f3664ec208d6a13f188eb481f3efc9f1a3bfab7d252c98914508217e04174e8a",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-imported-struct-ancestry.php": {
+      "path": "catalog/bin/verify-ue1-classic-imported-struct-ancestry.php",
+      "current_test_sha256": "81c0baa38935b0fa108e73335ae86e6a07af841f442fc62e86b6e92c27912b90",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "aa0d4d91658567e4522d67087077c0827af3b878de4aaa1eb28a1045cb9ad2b6",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-map-no-data.php": {
+      "path": "catalog/bin/verify-ue1-classic-map-no-data.php",
+      "current_test_sha256": "4fef2676601bfc97c16d7244ce9b992ce4e5af3335c62f25bed600f6ec6e4f29",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-legacy-string-upgrade.php": {
+      "path": "catalog/bin/verify-ue1-classic-legacy-string-upgrade.php",
+      "current_test_sha256": "5dc34546af8f35c6ae9203ccbf184ee648c36ea820e4a51c337a8172f47dd32f",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-fstring-archive.php": {
+      "path": "catalog/bin/verify-ue1-classic-fstring-archive.php",
+      "current_test_sha256": "5ed6bfe2ffb246aef152fda2fc67972b333fc34229d2adacb5aa3f5ac2f7b59a",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-classic-large-tag-boundary.php": {
+      "path": "catalog/bin/verify-ue1-classic-large-tag-boundary.php",
+      "current_test_sha256": "2751b4eeedc70ac263d9ec927bdc35c58789e8177e1be33956357b04038010c0",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "e4982a44b4f51b8b7222311967d0e2d72659322d034e624851470f276399d31c",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-genuine-class-default-declarations.php": {
+      "path": "catalog/bin/verify-ue1-o06-genuine-class-default-declarations.php",
+      "current_test_sha256": "6b69c5d58756c6a00d1d6acae513a940db7d2fb12bf0f0195836131dfb4c72e0",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "ae9f8407ed618357aacdafea053bedf35165ed175bed5068aeaba5d29487b2b4",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-genuine-class-default-references.php": {
+      "path": "catalog/bin/verify-ue1-o06-genuine-class-default-references.php",
+      "current_test_sha256": "06dd4a5651286ab3d29378cf5f99ca75a472eca5bdfdbb1a95d6bb1efa4f0e54",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-genuine-class-default-strings.php": {
+      "path": "catalog/bin/verify-ue1-o06-genuine-class-default-strings.php",
+      "current_test_sha256": "d741bed4b3890b0d41bf0d175ddae88e02c4a91552f055c4121b94072fca5dd8",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "c667ad0e6eb3ca397ac417768394fdcbbc499b0e79f01e2f39334558befb356d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-genuine-class-default-struct-values.php": {
+      "path": "catalog/bin/verify-ue1-o06-genuine-class-default-struct-values.php",
+      "current_test_sha256": "0c41f8f1d3764aa769a961068c7c0976fb96a9f6881addfa4cfc3bfbe893a697",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "046dbe194e8436f490333b490b44fa0bbe8ffee0216232c92fe4f738e8a1c16d",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-genuine-ut99-script-archive.php": {
+      "path": "catalog/bin/verify-ue1-o06-genuine-ut99-script-archive.php",
+      "current_test_sha256": "0839fdb803751187f5f0bc9579a36c4a32695007c8498176a7b60de4abf40753",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-genuine-ut99-full-scripts.php": {
+      "path": "catalog/bin/verify-ue1-o06-genuine-ut99-full-scripts.php",
+      "current_test_sha256": "fb51692d83f9595c98eecb884d60e02bc8b3c7bf2917ac95ee2fc387815c939f",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-classic-runtime-serializer-exclusions.php": {
+      "path": "catalog/bin/verify-ue1-o06-classic-runtime-serializer-exclusions.php",
+      "current_test_sha256": "9a74d04be6512f2afc65f31038ef282ff0def370771c8aa9a8b03fbb9da7c845",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "126e0e22b3c81bf469bddd9dc4fdecf7f813a8881b5c069b5221e22278be5df5",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-c227-genuine-script-source-decision.php": {
+      "path": "catalog/bin/verify-ue1-o06-c227-genuine-script-source-decision.php",
+      "current_test_sha256": "609fe687496d88e669efd48db1a6d0687fed5b861b5c260dbeab1803e05ccbed",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "c63cafd02a93875b5f57f5b2395cb8336555bc65d5bdb3550724b3033fb3a29f",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-g5-t99-uclass-independent-full.php": {
+      "path": "catalog/bin/verify-ue1-o06-g5-t99-uclass-independent-full.php",
+      "current_test_sha256": "19a34be81f809470f6e8286272fba4b4d367550ab9810f8c116b8452f801fce7",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    },
+    "verify-ue1-o06-g5-t99-uobject-independent-full.php": {
+      "path": "catalog/bin/verify-ue1-o06-g5-t99-uobject-independent-full.php",
+      "current_test_sha256": "fff81a5e2c9637aab52f8d0966a831bcdae37bc06c53349f8156efd640a92703",
+      "historical_pass_script_sha_equal": true,
+      "historical_pass_log_sha_equal": true,
+      "historical_pass_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+      "evidence_status": "REUSE_CANDIDATE_NOT_G3_ACCEPTED"
+    }
+  },
+  "outside_this_gate": [
+    "C227 Emitter native/game overrides in G5",
+    "G4 geometry/mesh/level/audio",
+    "G6 final O06 certification"
+  ]
+}

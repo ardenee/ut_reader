@@ -2,6 +2,12 @@
 
 Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation IDs. The canonical operation remains O06. Use the append-only UE1-O06-TEST-EVENTS.jsonl and latest UE1-O06-TEST-STATUS.json; do not rerun matching PASS tests just to reconstruct progress.
 
+## G3 complete pre-execution requirements (2026-10-26)
+
+**G3 PLANNED, NOT ACCEPTED. Exactly 16 source/native acceptance contracts** recorded in [UE1-O06-G3-ACCEPTANCE-PLAN.md](UE1-O06-G3-ACCEPTANCE-PLAN.md), with a SHA-aware [34-row matrix](UE1-O06-G3-ACCEPTANCE-MATRIX.json): 14 C98/Unreal v1.200 currently mapped Core class/property symbols, 18 T99/UT99 v432 mapped symbols, and 2 distinct C227/Unreal v1.227 **MISSING Core implementation/source-register prerequisites**. The canonical v227 Core currently has Classes/Inc but not UnClass.cpp or UnProp.cpp; obtain real native proof/source, do not borrow T99/C98 logic just because package version 69 overlaps.
+
+24 existing directly relevant class/field/property scripts have historical PASS with matching current script and output SHA, reuse after confirming original source and production-reader transitive validity. These are candidates, **NOT 24 accepted G3 contracts**. 26 total classic-named scripts also include G4 geometry/mesh/audio cases and cannot be blindly counted as G3. New G3 tests must close distinct missing source behavior or native loaded values, not repeat sealed G5/G2 oracles. Source-profile C98, T99 and C227 proof plus one independent final G3-16 are mandatory. No new G3 acceptance tests or serializer edits occurred in this planning step.
+
 ## G2 accepted May/July source/archive (2026-10-26)
 
 G2 source/archive ACCEPTED, 18/18 required predeclared contracts and one independent 692/692 verification. All 98 class/engine source pairs reconciled (86 mapped with handlers, 12 source-proven transient exclusions), thirty distinct supporting test scripts currently pass on DEV; all output and script SHA256 validated. Sealed file UE1-O06-G2-1997-SOURCE-ARCHIVE-ACCEPTANCE.json. Original plan UE1-O06-G2-ACCEPTANCE-PLAN.md and matrix UE1-O06-G2-ACCEPTANCE-MATRIX.json remain pre-run evidence.

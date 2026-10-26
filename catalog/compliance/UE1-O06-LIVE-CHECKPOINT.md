@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g2-original-1997-source-acceptance-18`
-- **Stage:** G2-SOURCE-ARCHIVE-18of18-692of692-RELEASED-PRD-SHA58of58
-- **Last completed action:** G2 May v0.86x U86 and July v0.867 U97 source/archive fixture scope accepted: all 18 frozen contracts VERIFIED by independent 692/692 check, 30/30 current DEV scripts PASS, all 98 registered May/July class-source pairs reconciled (86 mapped,12 transient exclusions), 11 native serializer groups with malformed fixture coverage. Initial historical 7 FAIL corrected and kept. No PHP production readers modified, no original native G5 oracles retested. Source acceptance SHA sealed and pushed GitHub main 1d59f9fb, all 58/58 changed source/evidence files copied to PRD and SHA-256 equal, DEV clean. Original compiled May/July native loaded memory and all installed genuine assets NOT certified, broader O06 G3-G6 OPEN.
-- **Resume at:** STOP G2 source/archive accepted 18 tests and all 30 existing fixtures; next independent O06 G3 classic UE1 or remaining G4/G5 native-family implementations. Never present G2 source-only acceptance as compiled May/July native runtime oracle or full O06 closure. Preserve historical journal and acceptance SHA.
-- **Active changed at:** 2026-10-26T12:40:42+00:00
+- **Contract:** `g3-class-property-pretest-contract-matrix`
+- **Stage:** G3-16-CONTRACTS-34-MATRIX-24-REUSABLE-PLANNED
+- **Last completed action:** Pre-execution G3 class/field/property plan saved: exactly 16 source/native acceptance contracts G3-01..G3-16, 34 matrix rows (14 C98 mapped,18 T99 mapped, 2 C227 missing Core cpp/source register prerequisites), 24 existing matching script+log historical SHA-PASS candidates. C227 original Core lacks Src UnClass.cpp UnProp.cpp; mandatory compiled oracle/equivalence evidence before G3 accept. No G3 tests executed or production serializers modified. G2 and G5 previously accepted profiles are unchanged.
+- **Resume at:** Start G3-01 source/provenance and C227 Core native source/oracle discovery; resolve missing actual Core method mapping, then apply predeclared G3-02..15 tests only for missing source branch coverage while reusing 24 SHA results, and ONE independent G3-16 acceptance driver. Do not borrow UT99 v432 profile as Unreal v227. Full O06 remains open.
+- **Active changed at:** 2026-10-26T12:56:12+00:00
 - **Latest DEV test states:** PASS 159; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
