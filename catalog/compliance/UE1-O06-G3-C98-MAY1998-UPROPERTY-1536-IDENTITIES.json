@@ -1,0 +1,134 @@
+{
+  "schema": 1,
+  "date": "2026-10-26",
+  "status": "G3_C98_MAY17_NATIVE_UPROPERTY_1536_EXACT_EXPORT_IDENTITIES_POSITIVE_LOAD_ONLY",
+  "scope_limit": "1536 native UProperty::Serialize calls genuinely observed from original May17 Core.dll at original boot to CDB break limit 0x600. Every observed export identity is checked against exact unmodified May Core.u / Engine.u / UnrealI.u and PHP source reader; do NOT infer unobserved properties loaded or certified, do NOT certify malformed-input source branches or full G3-07/G3-15.",
+  "original_compiled_engine_May17_Sha": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+  "original_Epic_source_May19_method_UnProp": "UProperty::Serialize calls UField::Serialize; Ar << ArrayDim << PropertyFlags << Category; if CPF_Net Ar << RepOffset; if Ar.IsLoading Offset = 0",
+  "original_Epic_source_FName_semantics": "FName::FName uses appStrihash/appStricmp to find existing global FName indices; FName::operator== compares Index, not spelling. Captured first-interned original bird1 vs saved Bird1 is the SAME FName identity; case variants are reported, never normalized in saved original package text.",
+  "original_binary_and_packages": {
+    "original_May1998_Core_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "bytes": 506368
+    },
+    "original_May1998_Core_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.u",
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c",
+      "bytes": 31472
+    },
+    "original_May1998_Engine_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Engine.u",
+      "sha256": "bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d",
+      "bytes": 852255
+    },
+    "original_May1998_UnrealI_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\UnrealI.u",
+      "sha256": "c13e63f468ff23296c9814f1330a444471d34ef5592515dbb80005a15275870c",
+      "bytes": 37670638
+    },
+    "original_May1998_Unreal_exe": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Unreal.exe",
+      "sha256": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30",
+      "bytes": 24576
+    }
+  },
+  "original_Epic_source_file_sha": {
+    "UProperty_serialize_original_UnProp_cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnProp.cpp",
+      "sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b",
+      "bytes": 20022
+    },
+    "UProperty_source_decl_UnType_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+      "sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+      "bytes": 17415
+    },
+    "UObject_layout_original_UnObjBas_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnObjBas.h",
+      "sha256": "6f1668c2ec156a302f99f8a7ae6e1161bac1706e551d70ed9445ab9ae55c68f7",
+      "bytes": 34773
+    },
+    "FName_case_insensitive_registry_original_UnName_cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnName.cpp",
+      "sha256": "0939b97ec58b941518e0f0015ef3bff3cbb481105497262eaf8c0f7804c151b3",
+      "bytes": 6233
+    },
+    "FName_index_equality_original_UnName_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnName.h",
+      "sha256": "281527f7adb81f182b119f2e4aef9d45e5fad2efe6c7b14749465222b5fe3633",
+      "bytes": 4414
+    }
+  },
+  "original_compiled_debugger_proof": {
+    "stock_1536_native_CDB_log": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-UPROPERTY-1536-IDENTIFIED-STOCK-CDB.txt",
+      "sha256": "19bc2297774e8c0353eb6ce41bc476de56a2d43deb521cb7261d40f209535909",
+      "bytes": 632098
+    },
+    "stock_CDB_exact_breakpoint_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-UPROPERTY-1536-CDB-COMMANDS.txt",
+      "sha256": "57c6bf43956caaac7948f3b71cf6d3996d4cb6dcfc5402938ee0e50706a45095",
+      "bytes": 298
+    },
+    "stock_compiled_UProperty_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-UPROPERTY-LOADED-BRANCH-DISASM-CDB.txt",
+      "sha256": "173146c8fda8aa246f0a62bd4884d39bf8b85e3f803b95547b7e2955ff4fc153",
+      "bytes": 23332
+    },
+    "stock_disassembly_CDB_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-UPROPERTY-LOADED-BRANCH-COMMANDS.txt",
+      "sha256": "7a037f18b262f577ccddf3bad463940f86ec2b194cefb8c098a3b719b3c47e72",
+      "bytes": 18
+    },
+    "first_3_compiled_named_property_proof": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-UPROPERTY-3-NAMED-STOCK-CDB.txt",
+      "sha256": "be42820ad3865bea679ba333157ef2f0d167fdd9b297b2495708331dc4669cb7",
+      "bytes": 14146
+    },
+    "first_3_compiled_CDB_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-UPROPERTY-3-CDB-COMMANDS.txt",
+      "sha256": "b66cd11c60fd81c159956195f55583afefe24305cd7ebe636b517512a9384769",
+      "bytes": 239
+    }
+  },
+  "compiled_UProperty_export_thunk": "0x101012c6",
+  "compiled_UProperty_method_body": "0x10141470",
+  "compiled_positive_archive_fields_capture_PC": "0x101414e7",
+  "original_native_layout_bytes": {
+    "UObject.Linker": 16,
+    "UObject.LinkerIndex": 20,
+    "UObject.Parent": 24,
+    "UObject.Name": 32,
+    "UProperty.ArrayDim": 52,
+    "UProperty.PropertyFlags": 56,
+    "UProperty.Category": 60,
+    "UProperty.RepOffset": 64,
+    "UProperty.Offset": 68
+  },
+  "compiled_original_global_FName_table": "0x1018f910",
+  "captured_original_linker_to_true_archive": {
+    "0238c140": "Core.u",
+    "02335a90": "Engine.u",
+    "02403f38": "UnrealI.u"
+  },
+  "actual_stock_loaded_method_calls": 1536,
+  "identified_observed_per_original_package": {
+    "Core.u": 326,
+    "Engine.u": 1162,
+    "UnrealI.u": 48
+  },
+  "original_Core_u_property_exports": 327,
+  "original_Core_u_single_unobserved_export": {
+    "index": 457,
+    "name": "ExecVtbl"
+  },
+  "original_Engine_u_property_exports": 2493,
+  "original_UnrealI_u_property_exports": 4576,
+  "number_original_net_properties_with_RepOffset": 107,
+  "all_observed_loaded_Offset_zero": true,
+  "raw_case_differences": "Six UnrealI.u property records have parent name bird1, three of which have category bird1, while original archive name Bird1. Case-insensitive FName identity equal by original source.",
+  "identities_sealed_according_to": "core exports by linker pointer plus EXACT linker zero based export idx, per-name, parent object name, saved ArrayDim/flags/category, conditional low 16 bit RepOffset, compiled Offset=0",
+  "record_verifier": "catalog/bin/verify-ue1-o06-g3-c98-may1998-uproperty-identities.php",
+  "G3_full_contracts_accepted": 0
+}

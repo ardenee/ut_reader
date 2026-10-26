@@ -1,0 +1,45 @@
+﻿{
+    "ok": true,
+    "checks": 18477,
+    "passed": 18477,
+    "failed": [],
+    "original_native_record_count": 1536,
+    "source_selected_original_package": [
+        "Core.u",
+        "Engine.u",
+        "UnrealI.u"
+    ],
+    "per_source_original": {
+        "Core.u": {
+            "observed": 326,
+            "matched": 326,
+            "all_property_exports": 327,
+            "network_rep_offset_verified": 0,
+            "non_default_category_verified": 20,
+            "display_case_variants": 0,
+            "source_errors": 0
+        },
+        "Engine.u": {
+            "observed": 1162,
+            "matched": 1162,
+            "all_property_exports": 2493,
+            "network_rep_offset_verified": 107,
+            "non_default_category_verified": 272,
+            "display_case_variants": 0,
+            "source_errors": 0
+        },
+        "UnrealI.u": {
+            "observed": 48,
+            "matched": 48,
+            "all_property_exports": 4576,
+            "network_rep_offset_verified": 0,
+            "non_default_category_verified": 4,
+            "display_case_variants": 6,
+            "source_errors": 0
+        }
+    },
+    "original_May_Core_dll_SHA256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+    "unobserved_source_properties_explicitly_unaccepted": true,
+    "C227_T99_native_oracles_rerun": false,
+    "G3_FULL": false
+}

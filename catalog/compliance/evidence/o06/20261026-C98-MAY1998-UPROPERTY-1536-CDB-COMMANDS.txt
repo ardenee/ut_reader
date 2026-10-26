@@ -1,0 +1,4 @@
+r $t0 = 0
+bp 101414e7 ".echo MAY1998_C98_UPROPERTY_IDENTITY; dd @esi+10 L3; dd @esi+34 L5; da poi(poi(1018f910)+4*poi(@esi+20))+0xc L28; da poi(poi(1018f910)+4*poi(poi(@esi+18)+20))+0xc L28; da poi(poi(1018f910)+4*poi(@esi+3c))+0xc L28; r $t0 = @$t0 + 1; .if (@$t0 >= 600) { q } .else { gc }"
+g
+q
