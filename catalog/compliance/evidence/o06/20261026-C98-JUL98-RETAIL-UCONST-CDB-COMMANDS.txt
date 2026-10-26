@@ -1,0 +1,5 @@
+r $t0 = 0
+bp 1010d2fc ".echo C98_RETAIL_CONST_LOADED; dd @esi L3; da poi(@esi) L32; r $t0 = @$t0 + 1; .if (@$t0 >= 2) { q } .else { gc }"
+bp 101280b4 ".echo C98_RETAIL_ENUM_LOADED; dd @esi L3; dd poi(@esi) L8; .echo C98_RETAIL_FNAME_GLOBAL; da poi(poi(1016d468)+4*d1c)+0xc L24; da poi(poi(1016d468)+4*d1d)+0xc L24; da poi(poi(1016d468)+4*d1e)+0xc L24; da poi(poi(1016d468)+4*d1f)+0xc L24; da poi(poi(1016d468)+4*d20)+0xc L24; da poi(poi(1016d468)+4*d21)+0xc L24; da poi(poi(1016d468)+4*d22)+0xc L24; gc"
+g
+q

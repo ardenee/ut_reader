@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-c227i-original-uenum-compiled-loaded-twelve`
-- **Stage:** G3-C227I-REAL-NATIVE-UCONST-UENUM-PRD-SHA-VERIFIED
-- **Last completed action:** Authenticated original OldUnreal 227i compiled runtime executed. C227i UConst 8/8 genuine loaded original Core.u values, independent 88/88 DEV PASS; UEnum 2/2 genuine loaded arrays of total 12 resolved FNames, independent 41/41 DEV PASS; actual UProperty compiled 668 pairs multiset subset of 673 source PHP records DIAGNOSTIC ONLY no individual identities. 43/57 current source-tree C227 Core.lib ABI exports match 227i DLL; remaining 14 differ, and C98 v200 compiled oracle unavailable. Release a9cfe1ba pushed origin/main, PRD deployment all 28/28 changed files SHA-256 identical, catalog/config.php and storage preserved. No prior T99 G5 retests, G3 0/16 FULL.
-- **Resume at:** Recover authenticated C98 v200 Core.dll/binaries or source-defined exclusion and compare real loaded methods; reconcile remaining 14 C227 ABI variations and unresolved UProperty object identities; perform distinct malformed native error tests, then independently review 16 G3 contracts only once mandatory native coverage complete.
-- **Active changed at:** 2026-10-26T19:22:30+00:00
-- **Latest DEV test states:** PASS 163; FAIL 1; STARTED 0
+- **Contract:** `g3-c98-july1998-original-retail-native-uconst-uenum`
+- **Stage:** G3-C98-JUL1998-ORIGINAL-RETAIL-STOCK-LOADED-VERIFIED-RELEASE-PENDING
+- **Last completed action:** Authenticated original Redump retail Unreal European CD; original July1998 compiled x86 Core.dll, Core.u package61 458 exports, stock Unreal.exe executed under CDB. UConst original two loaded Pi and MaxInt values with 20/12 native FString Num/Max match original package PHP loaded; UEnum ESheerAxis original 7 compiled FNames indices 3356-3362 resolved via global FName::Names match PHP original Core.u names with distinct local IDs. New 56/56 SHA pinned focused DEV test PASS; no production readers modified; previous 227i and T99 native evidence not rerun. RETAIL July build not assumed identical to May v200 original sources; G3 remains 0/16 FULL.
+- **Resume at:** Commit/push C98 actual original stock positive loaded evidence, SHA-deploy PRD, preserve original disc binaries only in C:\Temp DEV. Then work on exact May v200 Core binary provenance or truly distinct other class/property native loaded-value/error source branches without repeat tests.
+- **Active changed at:** 2026-10-26T21:54:00+00:00
+- **Latest DEV test states:** PASS 164; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-26T21:53:31.5705350Z | verify-ue1-o06-g3-c98-original-retail-native-loaded.php | PASS | 2231 | catalog\compliance\evidence\o06\20261026T215328913Z-9422f885-DEV-verify-ue1-o06-g3-c98-original-retail-native-loaded.php.txt |
+| 2026-10-26T21:53:28.9199887Z | verify-ue1-o06-g3-c98-original-retail-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T215328913Z-9422f885-DEV-verify-ue1-o06-g3-c98-original-retail-native-loaded.php.txt |
 | 2026-10-26T19:11:08.7569438Z | verify-ue1-o06-g3-c227i-uenum-native-loaded.php | PASS | 110 | catalog\compliance\evidence\o06\20261026T191108223Z-d3884fef-DEV-verify-ue1-o06-g3-c227i-uenum-native-loaded.php.txt |
 | 2026-10-26T19:11:08.2309449Z | verify-ue1-o06-g3-c227i-uenum-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T191108223Z-d3884fef-DEV-verify-ue1-o06-g3-c227i-uenum-native-loaded.php.txt |
 | 2026-10-26T19:01:16.3234844Z | verify-ue1-o06-g3-c227i-uconst-native-loaded.php | PASS | 454 | catalog\compliance\evidence\o06\20261026T190115458Z-74e7f6cc-DEV-verify-ue1-o06-g3-c227i-uconst-native-loaded.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-26T18:30:20.1310259Z | verify-ue1-classic-property-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T183020131Z-11b8db2f-DEV-verify-ue1-classic-property-native.php.txt |
 | 2026-10-26T18:30:19.7190143Z | verify-ue1-classic-struct-native.php | PASS | 242 | catalog\compliance\evidence\o06\20261026T183019016Z-96f44a28-DEV-verify-ue1-classic-struct-native.php.txt |
 | 2026-10-26T18:30:19.0170137Z | verify-ue1-classic-struct-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T183019016Z-96f44a28-DEV-verify-ue1-classic-struct-native.php.txt |
-| 2026-10-26T18:30:18.5970404Z | verify-ue1-classic-enum-native.php | PASS | 156 | catalog\compliance\evidence\o06\20261026T183018010Z-d99605a1-DEV-verify-ue1-classic-enum-native.php.txt |
-| 2026-10-26T18:30:18.0190135Z | verify-ue1-classic-enum-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T183018010Z-d99605a1-DEV-verify-ue1-classic-enum-native.php.txt |
 
 ## Recovery procedure
 

@@ -1,7 +1,7 @@
 {
-  "contract": "g3-c227i-original-uenum-compiled-loaded-twelve",
-  "stage": "G3-C227I-REAL-NATIVE-UCONST-UENUM-PRD-SHA-VERIFIED",
-  "last_action": "Authenticated original OldUnreal 227i compiled runtime executed. C227i UConst 8/8 genuine loaded original Core.u values, independent 88/88 DEV PASS; UEnum 2/2 genuine loaded arrays of total 12 resolved FNames, independent 41/41 DEV PASS; actual UProperty compiled 668 pairs multiset subset of 673 source PHP records DIAGNOSTIC ONLY no individual identities. 43/57 current source-tree C227 Core.lib ABI exports match 227i DLL; remaining 14 differ, and C98 v200 compiled oracle unavailable. Release a9cfe1ba pushed origin/main, PRD deployment all 28/28 changed files SHA-256 identical, catalog/config.php and storage preserved. No prior T99 G5 retests, G3 0/16 FULL.",
-  "next_step": "Recover authenticated C98 v200 Core.dll/binaries or source-defined exclusion and compare real loaded methods; reconcile remaining 14 C227 ABI variations and unresolved UProperty object identities; perform distinct malformed native error tests, then independently review 16 G3 contracts only once mandatory native coverage complete.",
-  "updated_at_utc": "2026-10-26T19:22:30+00:00"
+  "contract": "g3-c98-july1998-original-retail-native-uconst-uenum",
+  "stage": "G3-C98-JUL1998-ORIGINAL-RETAIL-STOCK-LOADED-VERIFIED-RELEASE-PENDING",
+  "last_action": "Authenticated original Redump retail Unreal European CD; original July1998 compiled x86 Core.dll, Core.u package61 458 exports, stock Unreal.exe executed under CDB. UConst original two loaded Pi and MaxInt values with 20/12 native FString Num/Max match original package PHP loaded; UEnum ESheerAxis original 7 compiled FNames indices 3356-3362 resolved via global FName::Names match PHP original Core.u names with distinct local IDs. New 56/56 SHA pinned focused DEV test PASS; no production readers modified; previous 227i and T99 native evidence not rerun. RETAIL July build not assumed identical to May v200 original sources; G3 remains 0/16 FULL.",
+  "next_step": "Commit/push C98 actual original stock positive loaded evidence, SHA-deploy PRD, preserve original disc binaries only in C:\\Temp DEV. Then work on exact May v200 Core binary provenance or truly distinct other class/property native loaded-value/error source branches without repeat tests.",
+  "updated_at_utc": "2026-10-26T21:54:00+00:00"
 }

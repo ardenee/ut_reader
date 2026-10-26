@@ -1,0 +1,43 @@
+﻿{
+    "ok": true,
+    "checks": 56,
+    "passed": 56,
+    "failed": [],
+    "scope": "Original European Unreal retail compiled July 1998 engine/Core.u version61: 2 Const, 1 Enum, original 7 native FNames",
+    "actual_native_parity": {
+        "ESheerAxis": {
+            "real_export_index": 37,
+            "native_loaded_names": [
+                "SHEER_None",
+                "SHEER_XY",
+                "SHEER_XZ",
+                "SHEER_YX",
+                "SHEER_YZ",
+                "SHEER_ZX",
+                "SHEER_ZY"
+            ],
+            "native_global_FName_indices": [
+                3356,
+                3357,
+                3358,
+                3359,
+                3360,
+                3361,
+                3362
+            ]
+        },
+        "Pi": {
+            "native_loaded_text": " 3.1415926535897932",
+            "real_export_index": 323,
+            "FString_Num": 20
+        },
+        "MaxInt": {
+            "native_loaded_text": " 0x7fffffff",
+            "real_export_index": 362,
+            "FString_Num": 12
+        }
+    },
+    "May_1998_v200_source_build_equivalence_proven": false,
+    "malformed_original_native_behavior_proven": false,
+    "G3_FULL": false
+}
