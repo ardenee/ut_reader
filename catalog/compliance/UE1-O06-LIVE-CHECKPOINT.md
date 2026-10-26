@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g5-t99-uobject-fixed-legacy-string-and-struct-eof`
-- **Stage:** verified-35of35-7FULL-1BLOCKED-release-ready
-- **Last completed action:** Actual compiled v432 stock loaded original-derived 2-byte mutant fixed StringProperty -> StrProperty Headline QAlpha-direct-FString, 22/22 archived bytes; new direct branch and nested struct physical ULinkerLoad EOF source fix. Source/native combined 35/35 PASS; legacy old test explicit UT99 profile 17/17 PASS; other affected source tests unchanged PASS. Old native 308 v61 objects and 926 saved property values and seven FULL G5 method oracles SHA reused; G5 7 FULL 1 BLOCKED 0 FAILED.
-- **Resume at:** STOP all native original string/array/class and seven FULL method retests. Global UObject final blocker is stock FMallocAnsi FArray::Add unconstructed nonempty array FString 0xBAADF00D native undefined value and nested UStrProperty compiled positive/error case. Zeroing diagnostic is NOT stock parity. Resolve exact exclusion or deterministic native value and applicable nested full 7 gates before accepting. O06 overall remains open.
-- **Active changed at:** 2026-10-26T09:16:08+00:00
+- **Stage:** released-f3fdfb72-DEV-PRD-SHA26of26
+- **Last completed action:** v432 native old fixed StringProperty to StrProperty loader conversion corrected, genuine Core SavePackage copied 2 bytes and unchanged compiled DLL confirms QAlpha-direct-FString. Dynamic array Struct inner FString physical ULinkerLoad EOF source correction released; final native source 35/35 and affected legacy 17/17 current PASS, three other affected verified PASS. Reconciler/assessor 7 FULL 1 BLOCKED 0 FAILED. GitHub pushed main f3fdfb72, DEV PRD copied exactly 26/26 files SHA-256 equal, git clean. No prior native original or seven FULL method reruns.
+- **Resume at:** Next ONLY generic T99 UObject incomplete stock nonempty array<FString> uninitialized FArray::Add native heap behavior: initial compiled stock FMallocAnsi faults 0xBAADF00D while diagnostic zero allocator loads, cannot claim deterministic stock loaded values. Also actual compiled source-legal nested UStruct inner StrProperty positive/error branch as applicable. Do not replay known old oracles, source-specific 35/35 fixed strings, or seven FULL methods. Resolve original code/native undefined-status exclusion and remaining branch in ONE final 7/7 method decision; otherwise honest BLOCKED. O06 overall open.
+- **Active changed at:** 2026-10-26T09:18:04+00:00
 - **Latest DEV test states:** PASS 156; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
