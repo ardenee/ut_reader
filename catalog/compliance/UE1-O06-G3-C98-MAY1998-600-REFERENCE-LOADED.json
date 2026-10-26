@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "status": "G3_C98_MAY17_600_TRUE_LOADED_CLASS_ENUM_STRUCT_REFERENCE_TARGETS_POSITIVE_ONLY",
+  "date": "2026-10-26",
+  "scope_limit": "Original May17 compiled native 600 event capture, each source linker and zero-based export identifies exact original Core.u/Engine.u serialized UByteProperty.Enum, UObjectProperty.PropertyClass, UClassProperty.MetaClass or UStructProperty.Struct. All 600 original pointer name resolutions checked against original package import/export target names, not raw signed reference vs runtime pointer identities. No malformed native, unobserved classes or other source version profiles certified. Do not accept any full G3-08/09/10/15.",
+  "original_binary_packages": {
+    "Core.dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    },
+    "Core.u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+    },
+    "Engine.u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Engine.u",
+      "bytes": 852255,
+      "sha256": "bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d"
+    }
+  },
+  "source_pins": {
+    "UnProp.cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnProp.cpp",
+      "bytes": 20022,
+      "sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b"
+    },
+    "UnType.h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+      "bytes": 17415,
+      "sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8"
+    },
+    "UnName.cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnName.cpp",
+      "bytes": 6233,
+      "sha256": "0939b97ec58b941518e0f0015ef3bff3cbb481105497262eaf8c0f7804c151b3"
+    },
+    "UnName.h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnName.h",
+      "bytes": 4414,
+      "sha256": "281527f7adb81f182b119f2e4aef9d45e5fad2efe6c7b14749465222b5fe3633"
+    }
+  },
+  "native_cdb_evidence_pins": {
+    "real_native_600_transcript": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-FOUR-REFS-600-NATIVE-CDB.txt",
+      "bytes": 148104,
+      "sha256": "77c2b450338135d6446fd76745f2a1df9346a7b0e025921d102da1f0dc1016b0"
+    },
+    "real_native_600_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-FOUR-REFS-600-CDB-COMMANDS.txt",
+      "bytes": 1127,
+      "sha256": "2aed36d9f6321b2941f1ecb165723166db096888c3d5f90910cb2cf0b6793726"
+    },
+    "real_compiled_4_serializer_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-FOUR-REFS-DISASM-CDB.txt",
+      "bytes": 38324,
+      "sha256": "958e1f79b204686a5b5408906d3b2aa645b406cb9b51108dae4ae3a52873ae30"
+    },
+    "real_compiled_4_serializer_disassembly_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-FOUR-REFS-DISASM-CDB-COMMANDS.txt",
+      "bytes": 63,
+      "sha256": "51fc5a8f37104608164972f9b1fa48cc89984c2f4ffddeb5019b7d05f46b60bb"
+    }
+  },
+  "original_compiled_ref_fields": {
+    "BYTE": {
+      "native_serialization_body": "0x10141bd0",
+      "native_after_LOAD_PC": "0x10141c0d",
+      "native_this_field_offset": 72,
+      "archive_key": "enum_reference",
+      "native_count": 84
+    },
+    "OBJECT": {
+      "native_serialization_body": "0x10142dd0",
+      "native_after_LOAD_PC": "0x10142e0d",
+      "native_this_field_offset": 72,
+      "archive_key": "property_class_reference",
+      "native_count": 268
+    },
+    "CLASS_META": {
+      "native_serialization_body": "0x101433f0",
+      "native_after_LOAD_PC": "0x1014342d",
+      "native_this_field_offset": 80,
+      "archive_key": "meta_class_reference",
+      "native_count": 26
+    },
+    "STRUCT": {
+      "native_serialization_body": "0x10143f30",
+      "native_after_LOAD_PC": "0x10143f6d",
+      "native_this_field_offset": 72,
+      "archive_key": "struct_reference",
+      "native_count": 222
+    }
+  },
+  "original_UE1_core_serializers_inheritance": "UByteProperty/UStructProperty subclasses call UProperty::Serialize. UObjectProperty calls UProperty; UClassProperty calls UObjectProperty and then MetaClass and original check(MetaClass).",
+  "native_pointers_are_not_source_serialized_package_indices": true,
+  "match_by": "Actual original loader ptr + original linker export index (zero-based), saved property class from original source package and saved signed object reference resolved through actual imports/exports, compare resulting original target FName case-insensitively as original UnName.cpp appStricmp dictates.",
+  "actual_original_native_events": 600,
+  "native_by_field": {
+    "OBJECT": 268,
+    "CLASS_META": 26,
+    "BYTE": 84,
+    "STRUCT": 222
+  },
+  "original_native_NULL_Enum_values": 65,
+  "native_original_linker_map": {
+    "0249c140": "Core.u",
+    "02445a90": "Engine.u"
+  },
+  "G3_full_contracts_accepted": 0
+}

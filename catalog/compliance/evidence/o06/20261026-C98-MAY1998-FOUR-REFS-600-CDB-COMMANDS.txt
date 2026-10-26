@@ -1,0 +1,7 @@
+r $t0 = 0
+bp 10141c0d ".echo G3_ORIG_BYTE_REF; dd @esi-38 L2; dd @esi L1; da poi(poi(1018f910)+4*poi(@esi-28))+0xc L30; .if (poi(@esi) != 0) {da poi(poi(1018f910)+4*poi(poi(@esi)+20))+0xc L30} .else {.echo G3_NULL_NATIVE_REF}; r $t0 = @$t0 + 1; .if (@$t0 >= 0n600) { q } .else { gc }"
+bp 10142e0d ".echo G3_ORIG_OBJECT_REF; dd @esi-38 L2; dd @esi L1; da poi(poi(1018f910)+4*poi(@esi-28))+0xc L30; .if (poi(@esi) != 0) {da poi(poi(1018f910)+4*poi(poi(@esi)+20))+0xc L30} .else {.echo G3_NULL_NATIVE_REF}; r $t0 = @$t0 + 1; .if (@$t0 >= 0n600) { q } .else { gc }"
+bp 1014342d ".echo G3_ORIG_CLASS_META_REF; dd @esi-40 L2; dd @esi-8 L3; da poi(poi(1018f910)+4*poi(@esi-30))+0xc L30; .if (poi(@esi) != 0) {da poi(poi(1018f910)+4*poi(poi(@esi)+20))+0xc L30} .else {.echo G3_NULL_NATIVE_REF}; r $t0 = @$t0 + 1; .if (@$t0 >= 0n600) { q } .else { gc }"
+bp 10143f6d ".echo G3_ORIG_STRUCT_REF; dd @esi-38 L2; dd @esi L1; da poi(poi(1018f910)+4*poi(@esi-28))+0xc L30; .if (poi(@esi) != 0) {da poi(poi(1018f910)+4*poi(poi(@esi)+20))+0xc L30} .else {.echo G3_NULL_NATIVE_REF}; r $t0 = @$t0 + 1; .if (@$t0 >= 0n600) { q } .else { gc }"
+g
+q

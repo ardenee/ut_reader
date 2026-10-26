@@ -1,0 +1,32 @@
+﻿{
+    "ok": true,
+    "checks": 5457,
+    "passed": 5457,
+    "failed": [],
+    "original_native_observed": 600,
+    "by_field": {
+        "OBJECT": 268,
+        "CLASS_META": 26,
+        "BYTE": 84,
+        "STRUCT": 222
+    },
+    "native_subclass_types": {
+        "OBJECT": {
+            "ClassProperty": 26,
+            "ObjectProperty": 242
+        },
+        "CLASS_META": {
+            "ClassProperty": 26
+        },
+        "BYTE": {
+            "ByteProperty": 84
+        },
+        "STRUCT": {
+            "StructProperty": 222
+        }
+    },
+    "original_null_enum_fields": 65,
+    "scope": "May17 original compiled 600 UByteProperty, UObjectProperty, UClassProperty MetaClass and UStructProperty pointer references identified by real original exports",
+    "unobserved_malformed_or_other_versions_proven": false,
+    "G3_FULL": false
+}

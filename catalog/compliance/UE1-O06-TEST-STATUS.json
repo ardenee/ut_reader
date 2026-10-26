@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T23:05:04.4272531Z",
-    "head_commit":  "18ea37d2",
+    "updated_at_utc":  "2026-10-26T23:26:15.1891011Z",
+    "head_commit":  "fe9e00bf",
     "current_target":  "DEV",
     "current_source_sha256":  "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
     "tests":  [
@@ -543,6 +543,18 @@
                       "run_id":  "20261026T191108223Z-d3884fef",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261026T191108223Z-d3884fef-DEV-verify-ue1-o06-g3-c227i-uenum-native-loaded.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-c98-may1998-600-native-references.php",
+                      "test":  "verify-ue1-o06-g3-c98-may1998-600-native-references.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T23:26:15.1681049Z",
+                      "source_sha256":  "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
+                      "test_sha256":  "4ca25947dd75b997fec5258f1122da57eb8e0b55cc4919bf06f9895b1b21228e",
+                      "run_id":  "20261026T232614467Z-33861503",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T232614467Z-33861503-DEV-verify-ue1-o06-g3-c98-may1998-600-native-references.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-c98-may1998-original-stock.php",
