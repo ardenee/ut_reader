@@ -1,0 +1,43 @@
+﻿{
+    "ok": true,
+    "checks": 68,
+    "passed": 68,
+    "failed": [],
+    "scope": "Authentic May 17 1998 stock compiled Core.dll 2 Const + one Enum with 7 original global names, original May 19 v1.200 archive source methods, one original Core.u",
+    "native_original_object_parity": {
+        "ESheerAxis": {
+            "export_index": 37,
+            "original_global_FName_indices": [
+                3357,
+                3358,
+                3359,
+                3360,
+                3361,
+                3362,
+                3363
+            ],
+            "compiled_original_names": [
+                "SHEER_None",
+                "SHEER_XY",
+                "SHEER_XZ",
+                "SHEER_YX",
+                "SHEER_YZ",
+                "SHEER_ZX",
+                "SHEER_ZY"
+            ]
+        },
+        "Pi": {
+            "export_index": 323,
+            "native_loaded_text": " 3.1415926535897932",
+            "FString_Num": 20
+        },
+        "MaxInt": {
+            "export_index": 362,
+            "native_loaded_text": " 0x7fffffff",
+            "FString_Num": 12
+        }
+    },
+    "C98_v1200_all_method_byte_exact_source_build_identical": false,
+    "other_G3_property_classes_and_malformed_negative_proven": false,
+    "G3_FULL": false
+}

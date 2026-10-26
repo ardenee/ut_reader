@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-c98-july1998-original-retail-native-uconst-uenum`
-- **Stage:** G3-C98-JUL1998-REAL-CORE-LOADED-PRD-SHA-VERIFIED
-- **Last completed action:** Original Redump SHA1 verified European Unreal July1998 retail Core.dll/Core.u/Core UE1 native stock loaded 2 UConst + 1 UEnum/7 global FName values; 56/56 focused DEV PASS; release b2bf27c3 committed and pushed to main, all 19 changed files deployed DEV to PRD and SHA256 matched 19/19; protected config/storage unchanged. Original May1998 v200 source compiled identity, missing other G3 class/property methods, malformed archive tests and exact C227i ABI differences remain OPEN. G3 0/16 FULL.
-- **Resume at:** Proceed method-distinct original stock runtime native class/property UProperty inherited loaded-identity proof or authenticated exact May1998 v200 source-build oracle; require actual loaded object mapping and exact malformed error cursors, not another aggregate/repeated T99 or 227i test.
-- **Active changed at:** 2026-10-26T21:55:10+00:00
-- **Latest DEV test states:** PASS 164; FAIL 1; STARTED 0
+- **Contract:** `g3-c98-may1998-original-stock-core-uconst-uenum`
+- **Stage:** G3-C98-MAY17-1998-STOCK-UCONST-UENUM-68-VERIFIED-RELEASE-PENDING
+- **Last completed action:** Original Redump USA May17 Unreal.exe native Core.dll 9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92: stock UConst Pi, MaxInt Num/Max and UEnum ESheerAxis 7 original global FNames exactly match original Core.u version61; original May19 v1.200 UnClass.cpp, UnObj.cpp and Window/Src/Main.cpp source hashes sealed and source-required CD path used. Scoped DEV independent 68/68 PASS; original ISO detached after test, no leaked Unreal/cdb process, unmodified original binaries and source. G3 full 0/16.
+- **Resume at:** Commit, push, and SHA-verify PRD original May 1998 68-check source/native evidence and status. Next genuine distinct G3 need exact compiled loaded UProperty/UStruct class instances and malformed/error version branches; do not repeat already accepted Const/Enum loaded evidence.
+- **Active changed at:** 2026-10-26T22:09:50+00:00
+- **Latest DEV test states:** PASS 165; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-26T22:09:15.9646833Z | verify-ue1-o06-g3-c98-may1998-original-stock.php | PASS | 2452 | catalog\compliance\evidence\o06\20261026T220913071Z-d94680b3-DEV-verify-ue1-o06-g3-c98-may1998-original-stock.php.txt |
+| 2026-10-26T22:09:13.0795018Z | verify-ue1-o06-g3-c98-may1998-original-stock.php | STARTED |  | catalog\compliance\evidence\o06\20261026T220913071Z-d94680b3-DEV-verify-ue1-o06-g3-c98-may1998-original-stock.php.txt |
 | 2026-10-26T21:53:31.5705350Z | verify-ue1-o06-g3-c98-original-retail-native-loaded.php | PASS | 2231 | catalog\compliance\evidence\o06\20261026T215328913Z-9422f885-DEV-verify-ue1-o06-g3-c98-original-retail-native-loaded.php.txt |
 | 2026-10-26T21:53:28.9199887Z | verify-ue1-o06-g3-c98-original-retail-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T215328913Z-9422f885-DEV-verify-ue1-o06-g3-c98-original-retail-native-loaded.php.txt |
 | 2026-10-26T19:11:08.7569438Z | verify-ue1-o06-g3-c227i-uenum-native-loaded.php | PASS | 110 | catalog\compliance\evidence\o06\20261026T191108223Z-d3884fef-DEV-verify-ue1-o06-g3-c227i-uenum-native-loaded.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-26T18:36:03.7754519Z | verify-ue1-classic-const-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T183603766Z-6e75eeb1-DEV-verify-ue1-classic-const-native.php.txt |
 | 2026-10-26T18:30:20.7690338Z | verify-ue1-classic-property-native.php | PASS | 253 | catalog\compliance\evidence\o06\20261026T183020131Z-11b8db2f-DEV-verify-ue1-classic-property-native.php.txt |
 | 2026-10-26T18:30:20.1310259Z | verify-ue1-classic-property-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T183020131Z-11b8db2f-DEV-verify-ue1-classic-property-native.php.txt |
-| 2026-10-26T18:30:19.7190143Z | verify-ue1-classic-struct-native.php | PASS | 242 | catalog\compliance\evidence\o06\20261026T183019016Z-96f44a28-DEV-verify-ue1-classic-struct-native.php.txt |
-| 2026-10-26T18:30:19.0170137Z | verify-ue1-classic-struct-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T183019016Z-96f44a28-DEV-verify-ue1-classic-struct-native.php.txt |
 
 ## Recovery procedure
 

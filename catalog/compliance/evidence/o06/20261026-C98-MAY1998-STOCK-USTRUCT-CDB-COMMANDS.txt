@@ -1,0 +1,7 @@
+bp /1 10101f69 ".echo MAY1998_ORIGINAL_UCONST_HIT; r ecx; kb 3; q"
+bp /1 101024f0 ".echo MAY1998_ORIGINAL_UENUM_HIT; r ecx; kb 3; q"
+bp /1 101012c6 ".echo MAY1998_ORIGINAL_UPROPERTY_HIT; r ecx; kb 3; q"
+bp /1 10102068 ".echo MAY1998_ORIGINAL_USTRUCT_HIT; r ecx; kb 3; q"
+bp /1 1010182a ".echo MAY1998_ORIGINAL_UFIELD_HIT; r ecx; kb 3; q"
+g
+q

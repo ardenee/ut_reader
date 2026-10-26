@@ -1,0 +1,4 @@
+bp 10114e1f ".echo MAY1998_V200_ORIGINAL_NATIVE_UCONST_LOADED; dd @esi L3; da poi(@esi) L32; gc"
+bp /1 10138a14 ".echo MAY1998_V200_ORIGINAL_NATIVE_UENUM_LOADED; dd @esi L3; dd poi(@esi) L9; dd 1018f910 L3; q"
+g
+q

@@ -1,0 +1,174 @@
+{
+  "schema": 1,
+  "date": "2026-10-26",
+  "status": "ORIGINAL_MAY1998_RETAIL_COMPILED_NATIVE_C98_UCONST_UENUM_VALUES_VERIFIED_NOT_G3_FULL",
+  "provenance_caveat": "Original genuine US retail Core.dll compiled May 17, 1998; original v1.200 source snapshot dated May 19, 1998. Two serializer source bodies and compiled binary executed independently but source tree and runtime were NOT established identical for all other methods.",
+  "published_Redump_original_zip_sha1": "dc783e4826b11e3b524324748d8f70c02336a588",
+  "source_url": "https://archive.org/download/unreal-pc-redump/UNREAL-PC-REDUMP/Unreal%20%28USA%29.zip",
+  "raw_CD_conversion": "Original MODE2/2352 bin: sector bytes 24..2071 (2048-byte ISO9660 Mode2 Form1 filesystem payload). Authenticated original raw BIN from SHA1 checked published Redump ZIP.",
+  "disc_and_genuine_compiled_files": {
+    "Redump_original_USA_zip": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\Unreal-USA-Original.zip",
+      "bytes": 321024920,
+      "sha256": "00a0fe41de8caddff49e68a3e81fa6f810c42c2453c5dd1afe97a7163f468422"
+    },
+    "Redump_original_USA_MODE2_bin": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\Unreal (USA).bin",
+      "bytes": 531210960,
+      "sha256": "dddadb8b06e2af8d6941d57eb846c3de32bf4713b78db67a4ebd93d7b44ffe5e"
+    },
+    "read_only_mount_ISO_MODE2_Form1_payload": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\Unreal-USA-Original.iso",
+      "bytes": 462551040,
+      "sha256": "9a140a126a8d76c1610004ad469758e811b30b9557818891c4128e19b85fef9c"
+    },
+    "original_May_1998_Core_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    },
+    "original_May_1998_Engine_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Engine.dll",
+      "bytes": 998400,
+      "sha256": "2f3ab0f8bc40960e6be5e1f540ca974a1537d9b23f2b9d7d06af589400b70069"
+    },
+    "original_May_1998_Unreal_exe": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Unreal.exe",
+      "bytes": 24576,
+      "sha256": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30"
+    },
+    "original_May_1998_Core_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+    }
+  },
+  "original_Epic_v1200_source_files": {
+    "UConst_original_v1200_UnClass_cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+      "bytes": 38410,
+      "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+    },
+    "UEnum_original_v1200_UnObj_cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "bytes": 93073,
+      "sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462"
+    },
+    "CD_required_original_v1200_Window_Main_cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Window\\Src\\Main.cpp",
+      "bytes": 14382,
+      "sha256": "fa7c6eace35d530f30b2c58d9094c248213c7e20369f8fa17d8283db837b85b3"
+    }
+  },
+  "runtime_launch": "Original 1998 Unreal.exe -server under Microsoft CDB Win32 x86. Source Main.cpp CD check satisfied by read-only ISO mounted N: plus temporary diagnostic copy of Unreal.ini and Default.ini with Engine.Engine.CdPath=N:\\; original CD contents, compiled Engine/Core DLLs, package and executable unchanged.",
+  "original_1998_ini_sha256_before_diagnostic_copy": "fd25a59e930f5d3d12d04b14d49135ea868c605dc24bbcf8dad1751609127225",
+  "source_evidence": {
+    "original_May_stock_loaded_const_enum_CDB": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-UCONST-UENUM-CDB.txt",
+      "bytes": 13794,
+      "sha256": "151ec82314120d771ac3ef81d5bf6dbc91b480d4bdb4af1db70e933b06c851d4"
+    },
+    "original_May_stock_loaded_const_enum_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-UCONST-UENUM-CDB-COMMANDS.txt",
+      "bytes": 215,
+      "sha256": "8f1a6a79f4871dfee6627a4fe33b3fb3a396bb5a011f355252c60bb4299e21f0"
+    },
+    "original_May_compiled_global_FName_CDB": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-UENUM-GLOBAL-NAMES-CDB.txt",
+      "bytes": 14064,
+      "sha256": "6f7b59ce2b25aaea825057a0db80655394e2480b4ac32fa61750896765ac2cd9"
+    },
+    "original_May_compiled_global_FName_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-UENUM-CDB-COMMANDS.txt",
+      "bytes": 387,
+      "sha256": "94a7f8cf5929958cd5e4b518b19f6307a75b4ba6481a3e88542f6109a12720b6"
+    },
+    "original_May_thunk_followed_disassembly_CDB": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-CORE-DISASM-CDB.txt",
+      "bytes": 24414,
+      "sha256": "db986f41495955136999f1ac6b0af5cd0510a8faa144ad7a0ed2f21d23594f7c"
+    },
+    "original_May_disassembly_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-CORE-DISASM-COMMANDS.txt",
+      "bytes": 33,
+      "sha256": "47e68e87a402714bd0a7f0f6203258fba31b43bc52bd062fbc0c35fded826e9f"
+    },
+    "original_May_USTRUCT_compiled_loader_CDB": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-USTRUCT-CDB.txt",
+      "bytes": 14052,
+      "sha256": "65eea5633857f86cdde8da2393b52c1257db11d79d1c2e9236492bca20bc4650"
+    },
+    "original_May_USTRUCT_compiled_commands": {
+      "path": "catalog/compliance/evidence/o06/20261026-C98-MAY1998-STOCK-USTRUCT-CDB-COMMANDS.txt",
+      "bytes": 343,
+      "sha256": "32f3daceb79bc4d0d1b28ed2cd8545d0743dd99eb5c23116857ab2d771536357"
+    }
+  },
+  "original_May_Core_compiled_method_export_jump_target": {
+    "UField": {
+      "original_export_thunk": "0x1010182a",
+      "compiled_body_target": "0x1010f390"
+    },
+    "UStruct": {
+      "original_export_thunk": "0x10102068",
+      "compiled_body_target": "0x10110b10"
+    },
+    "UConst": {
+      "original_export_thunk": "0x10101f69",
+      "compiled_body_target": "0x10114de0"
+    },
+    "UEnum": {
+      "original_export_thunk": "0x101024f0",
+      "compiled_body_target": "0x101389d0"
+    },
+    "UProperty": {
+      "original_export_thunk": "0x101012c6",
+      "compiled_body_target": "0x10141470"
+    }
+  },
+  "genuine_Core_u_package_version": 61,
+  "genuine_Core_u_export_count": 458,
+  "stock_loaded_UConst": [
+    {
+      "name": "Pi",
+      "native_loaded_text": " 3.1415926535897932",
+      "native_Num": 20,
+      "native_Max": 20
+    },
+    {
+      "name": "MaxInt",
+      "native_loaded_text": " 0x7fffffff",
+      "native_Num": 12,
+      "native_Max": 12
+    }
+  ],
+  "stock_loaded_UEnum": {
+    "original_export": "ESheerAxis",
+    "native_Num": 7,
+    "native_Max": 7,
+    "native_global_FName_indices": [
+      3357,
+      3358,
+      3359,
+      3360,
+      3361,
+      3362,
+      3363
+    ],
+    "native_global_FName_names": [
+      "SHEER_None",
+      "SHEER_XY",
+      "SHEER_XZ",
+      "SHEER_YX",
+      "SHEER_YZ",
+      "SHEER_ZX",
+      "SHEER_ZY"
+    ],
+    "C98_original_FName_Names_global_va": "0x1018f910",
+    "native_FNameEntry_Name_offset": 12,
+    "global_vs_package_local_indices_not_equivalent": true
+  },
+  "G3_full_contracts_accepted": 0,
+  "native_malformed_error_behavior_proven": false,
+  "all_C98_source_build_symbols_verified": false
+}
