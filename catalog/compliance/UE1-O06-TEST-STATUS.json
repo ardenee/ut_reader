@@ -1,20 +1,20 @@
 ﻿{
-    "updated_at_utc":  "2026-10-26T09:08:58.9716740Z",
-    "head_commit":  "0d74c3b6",
+    "updated_at_utc":  "2026-10-26T10:23:53.5793690Z",
+    "head_commit":  "09694181",
     "current_target":  "DEV",
-    "current_source_sha256":  "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5",
+    "current_source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
                       "test":  "verify-ue1-classic-array-inner-values.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-26T09:06:32.0228613Z",
-                      "source_sha256":  "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5",
+                      "event_at_utc":  "2026-10-26T10:23:53.5573457Z",
+                      "source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
                       "test_sha256":  "6614086f596fdb0db7e563ab359e12f68282120c9b3b90789de9032f23563cd4",
-                      "run_id":  "20261026T090631387Z-c9e3b0ca",
+                      "run_id":  "20261026T102352948Z-162253b5",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T090631387Z-c9e3b0ca-DEV-verify-ue1-classic-array-inner-values.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T102352948Z-162253b5-DEV-verify-ue1-classic-array-inner-values.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-array-struct-members.php",
@@ -117,12 +117,12 @@
                       "test":  "verify-ue1-classic-fstring-archive.php",
                       "target":  "DEV",
                       "state":  "PASS",
-                      "event_at_utc":  "2026-10-26T09:06:31.0048698Z",
-                      "source_sha256":  "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5",
+                      "event_at_utc":  "2026-10-26T10:23:52.4603384Z",
+                      "source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
                       "test_sha256":  "5ed6bfe2ffb246aef152fda2fc67972b333fc34229d2adacb5aa3f5ac2f7b59a",
-                      "run_id":  "20261026T090630486Z-b4cf10af",
+                      "run_id":  "20261026T102351953Z-e9946ffe",
                       "exit_code":  0,
-                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T090630486Z-b4cf10af-DEV-verify-ue1-classic-fstring-archive.php.txt"
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T102351953Z-e9946ffe-DEV-verify-ue1-classic-fstring-archive.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-classic-imported-struct-ancestry.php",
@@ -843,6 +843,18 @@
                       "run_id":  "20261026T032406697Z-5492b77a",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261026T032406697Z-5492b77a-DEV-verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g5-t99-uobject-independent-full.php",
+                      "test":  "verify-ue1-o06-g5-t99-uobject-independent-full.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-26T10:23:51.5343339Z",
+                      "source_sha256":  "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+                      "test_sha256":  "fff81a5e2c9637aab52f8d0966a831bcdae37bc06c53349f8156efd640a92703",
+                      "run_id":  "20261026T102350748Z-13c4b582",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261026T102350748Z-13c4b582-DEV-verify-ue1-o06-g5-t99-uobject-independent-full.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php",

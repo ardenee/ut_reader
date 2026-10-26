@@ -2,6 +2,12 @@
 
 Updated 2026-10-22. This is a bounded unresolved list, NOT additional operation IDs. The canonical operation remains O06. Use the append-only UE1-O06-TEST-EVENTS.jsonl and latest UE1-O06-TEST-STATUS.json; do not rerun matching PASS tests just to reconstruct progress.
 
+## Latest G5 closure boundary (2026-10-26)
+
+**G5 T99: 8 FULL / 0 BLOCKED / 0 FAILED ONLY FOR THE EXACT SOURCE/COMPILED PROFILES DOCUMENTED IN THEIR INDIVIDUAL SEALED ACCEPTANCE MANIFESTS.** T99 UObject::Serialize independent final method reviewer 98/98, seven VERIFIED, original 308 stock-loaded v61 instances and 926 native saved values reused. Real v432 compiled native G5CaptionRecord FString+Int field saved as an ordinary struct and as an array element. Stock native loads Direct-Record/71; malformed direct string read fails exactly at physical EOF309. Diagnostic zero allocator, not stock allocator, loads nested array Nested-Record/84 and reaches physical EOF285 on one-byte malformed length; stock FArray::Add unconstructed FString heap crash is explicitly **EXCLUDED as native undefined** and has **no successful stock loaded-value claim**.
+
+Final evidence: UE1-O06-G5-T99-UOBJECT-NATIVE-STRUCT-FSTRING-FINAL-ORACLE.json and UE1-O06-G5-UOBJECT-SELECTED-SOURCE-PROFILE-FULL-ACCEPTANCE.json. **O06 itself remains NOT ACCEPTED:** G1-G6 whole-source acceptance, early UE1 engine families C98/v1200 and C227/v227, other game-specific source overrides/native object tails and unverified legal variants are independent work. Do not schedule retesting any of the eight accepted T99 native method profiles; use their exact SHA-pinned evidence. The earlier G5 7/1 statements in historical notes are superseded for these selected profiles.
+
 ## Current checkpoints
 
 - Latest source checkpoint before SerializeExpr token correction: fd2d1a4f. New token correction and exhaustive coverage currently DEV passed, PRD pending; see journal for current HEAD.

@@ -1,0 +1,351 @@
+{
+  "schema": 1,
+  "date": "2026-10-26T10:19:42.502249+00:00",
+  "method": "T99:UObject::Serialize",
+  "source_profile": "UT99 v432, UE1 package version 61-69 selected source, deterministic saved-archive semantics",
+  "method_decision_scope": "Source-defined file format and deterministic stock-native loaded/error semantics; stock uninitialized array FString materialization is separately EXCLUDED as genuine undefined allocator behavior, not a successfully loaded value or invented parser parity. Earlier v1200/C98, v227/C227 remain independent, as do unverified game-specific class/native tails.",
+  "epic_sources": {
+    "UStruct SerializeTaggedProperties and FString branch": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnClass.cpp",
+      "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+      "bytes": 36351
+    },
+    "UArrayProperty and UStructProperty SerializeItem": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnProp.cpp",
+      "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+      "bytes": 46777
+    },
+    "v432 FArray Add vs AddZeroed": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament v432/Core/Inc/UnTemplate.h",
+      "sha256": "00bbde592c0e461199f613bdb08b70b04f93d5968818c91fe06073b38e9d0975",
+      "bytes": 46839
+    },
+    "v432 UObject Serialize": {
+      "path": "L:/Source/Games/UT99/Unreal Tournament [v1.400] [1999-11-30]/Core/Src/UnObj.cpp",
+      "sha256": "4dd6a4de7b5584015aa5ac79501cca4baca5315df4c65f6b0ae746ab9e1de3b2",
+      "bytes": 107155
+    }
+  },
+  "compiled_unmodified": {
+    "Core.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432
+    },
+    "Engine.dll": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac",
+      "bytes": 1785856
+    },
+    "UCC.exe": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/UCC.exe",
+      "sha256": "90cf7eb27bf1dd56767720b01deb29d3169d9e749f4fda87933e715db390742f",
+      "bytes": 110592
+    }
+  },
+  "actual_unreal_script_class": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/G5StructStringProbe/Classes/G5StructStringProbeActor.uc",
+    "sha256": "e7b0f77fc890d513b2844b2b0c04c7d2ffe5aeee690a87c186048c5fefb875a7",
+    "bytes": 277
+  },
+  "compiled_unreal_script_package": {
+    "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5StructStringProbe.u",
+    "sha256": "093ac55d6966cfc0bf063498ec3ff469b507f6f343e1df8d49e0828eefd3c5a1",
+    "bytes": 1045
+  },
+  "compiled_script_build_log": {
+    "path": "C:/Temp/UnrealDB/O06/G5-StructString-UCC-Make.log",
+    "sha256": "7f5e5faf5531f7bd70b322578cc410ce50c232fa07263aa3f480fda856c51a6c",
+    "bytes": 2250
+  },
+  "actual_core_native_generator": {
+    "source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-StructString-Generate.cpp",
+      "sha256": "3203b091a14191a86ffbf41f3183b4ee4ac60e4f1e7d9a01ee0b68afb5f02fe3",
+      "bytes": 3709
+    },
+    "exe": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-StructString-Generate.exe",
+      "sha256": "f3a054fb33ca35097a650f81785e87c2d130f6f02225ed0de45b0bffa898f2ee",
+      "bytes": 79872
+    },
+    "log": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-StructString-Generate.log",
+      "sha256": "23414d7fa58ad722450c0ecea18a4549875e56156e492e736fa68d95ae8da0c3",
+      "bytes": 636
+    }
+  },
+  "actual_stock_native_loader": {
+    "source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-StructString-Load.cpp",
+      "sha256": "ee910323ed0972ae16cc08917a503b71b68ad95b3e96a0bf72781cdc4195242d",
+      "bytes": 2802
+    },
+    "exe": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-StructString-Load.exe",
+      "sha256": "3ce67cbe853b62ebe831aa06100971c985a8df9dfe471dfba4832051ab13c0da",
+      "bytes": 78336
+    }
+  },
+  "diagnostic_changed_allocator_loader": {
+    "source": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-StructString-ZeroAllocator.cpp",
+      "sha256": "6a660d26402e10d5da06ca61851c982534c301b95194f970ea9cd43cf3e14004",
+      "bytes": 3535
+    },
+    "exe": {
+      "path": "C:/Temp/UnrealDB/O06/G5-UObject-StructString-ZeroAllocator.exe",
+      "sha256": "a847db7334933f82620b985e8e0507c747c4e3450a3fdef03bcd2eeb4c9dafa0",
+      "bytes": 78848
+    }
+  },
+  "actual_generated_originals": {
+    "direct_struct": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5StructStringDirectPayload.u",
+      "sha256": "c65dd008e97a431b0b8166f1e80359303a2316f3e0df3b5a1b9b5556ee93c96f",
+      "bytes": 309
+    },
+    "array_of_struct": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5StructStringArrayPayload.u",
+      "sha256": "c59043de15731ca316183b4362cad6c94605151ef37bce4547e23a531c0f5216",
+      "bytes": 285
+    }
+  },
+  "original_derived_single_byte_malformed": {
+    "direct_struct": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5StructStringDirectBad.u",
+      "sha256": "3572b10a95e11772726ad92f75448f26c1d2dc0c32c402aeec4ec3386d9a0114",
+      "bytes": 309
+    },
+    "array_of_struct": {
+      "path": "C:/Temp/UnrealDB/O06/Native-UCC/System/G5StructStringArrayBad.u",
+      "sha256": "94cace7274e0054c23fb18c311802427096cdb8f765366fb0d12b61b2345cbef",
+      "bytes": 285
+    }
+  },
+  "actual_compiled_logs": {
+    "stock_direct_struct_valid": {
+      "path": "C:/Temp/UnrealDB/O06/G5StructStringDirectPayload-native-load.log",
+      "sha256": "607f914e8e797f23c08a11233ea1aab7f47d89af98988e722634d5f10e2a9226",
+      "bytes": 3960
+    },
+    "stock_direct_struct_malformed": {
+      "path": "C:/Temp/UnrealDB/O06/G5StructStringDirectBad-stock-native.log",
+      "sha256": "4d3cf87aef0127f995baf384866df7e5981b17101ee7557c45df94450626feb8",
+      "bytes": 782
+    },
+    "stock_array_struct_memory_failure": {
+      "path": "C:/Temp/UnrealDB/O06/G5StructStringArrayPayload-native-load.log",
+      "sha256": "34b7cc754eabf717622ac21f0616a98047ab5cb2c22350d5bed22d8b682a0a96",
+      "bytes": 62
+    },
+    "zero_allocator_array_struct_valid": {
+      "path": "C:/Temp/UnrealDB/O06/G5StructStringArrayPayload.u-zero-native.log",
+      "sha256": "7a3cd5a218feabb0ca17689e082c84ef0c2a6f7717eac3eeec5fd6ae98e6a972",
+      "bytes": 3955
+    },
+    "zero_allocator_array_struct_malformed": {
+      "path": "C:/Temp/UnrealDB/O06/G5StructStringArrayBad.u-zero-native.log",
+      "sha256": "b1b7ff4f67f458eadc8797841600f2d623b492294e56ffb5d83641d74254707b",
+      "bytes": 778
+    }
+  },
+  "actual_original_one_byte_mutations": {
+    "direct_struct": {
+      "offset": 261,
+      "old_byte": 14,
+      "new_byte": 60,
+      "physical_eof": 309
+    },
+    "array_of_struct": {
+      "offset": 237,
+      "old_byte": 14,
+      "new_byte": 60,
+      "physical_eof": 285
+    }
+  },
+  "stock_loaded_direct_struct": {
+    "Label": "Direct-Record",
+    "Marker": 71
+  },
+  "conditioned_loaded_nested_array": {
+    "Label": "Nested-Record",
+    "Marker": 84,
+    "native_loaded_value_condition": "diagnostic_zero_allocator_only"
+  },
+  "stock_array_loaded_value": "UNDEFINED_NOT_VERIFIED",
+  "stock_array_observed_process_status": "STATUS_HEAP_CORRUPTION (0xC0000374) while reading nonempty source-legal array<struct FString>",
+  "compiled_native_malformed_error_text": {
+    "direct_struct": "ReadFile beyond EOF 309+1/309",
+    "array_of_struct": "ReadFile beyond EOF 285+1/285"
+  },
+  "previous_immutable_method_results": {
+    "verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php",
+        "sha256": "4c982090c3b70c42c270ce8cf99555f4d697ed625fae48905249bb8ea464ad18",
+        "bytes": 5458
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261025T115635564Z-7540c810-DEV-verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php.txt",
+        "sha256": "19192f519d1a6b01456749eba9722a924cb7e2c48aabcd1137280e4c91fd1b9f",
+        "bytes": 408
+      },
+      "historic_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78"
+    },
+    "verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php",
+        "sha256": "c565b9eb2da90a35c6b17250c315c7a778de7f99345aba719d05aa0c8e457610",
+        "bytes": 4222
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261025T123743131Z-8e6a2aef-DEV-verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php.txt",
+        "sha256": "63f6e1e0624e4f54dc12058e7766e15e1bd74d8451027c69780525fb2a33da1e",
+        "bytes": 399
+      },
+      "historic_source_sha256": "52613984361566ff8d218031069ba98878b2e2dc1d007d117bb40386d257fe78"
+    },
+    "verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php",
+        "sha256": "652aa35f69d63bab14622abd82fbf5b72124eba832ca90aed459fe0291379228",
+        "bytes": 5302
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T222750785Z-7fe50f4a-DEV-verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php.txt",
+        "sha256": "cd19750ee53c4cfaf60f40f9018ca41c83c011e75654b8539ca8b7b3990dcf40",
+        "bytes": 540
+      },
+      "historic_source_sha256": "8a58b69fdfbed2387a880a9bff28e1f75895e7170d3b1e818354ce435651d53f"
+    },
+    "verify-ue1-o06-g5-uobject-current-full-decision.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-current-full-decision.php",
+        "sha256": "a10daaa7cd943191877c070131b3eeacd93b9a70e57505ba4c324b2496782196",
+        "bytes": 9384
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T190826959Z-56364d87-DEV-verify-ue1-o06-g5-uobject-current-full-decision.php.txt",
+        "sha256": "c958017a7af2c5f6ae65d7d80f87349b6d532881956c9f716a625c8ee60b3a2b",
+        "bytes": 812
+      },
+      "historic_source_sha256": "f2f64ef9a2202c18c01ebc61293946990358de9a55e48cdbb2d3021f25dc779f"
+    },
+    "verify-ue1-o06-g5-uobject-consolidated-acceptance.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-consolidated-acceptance.php",
+        "sha256": "8e2dbdec6139d71f49fbd2a4cc72b142472695993068afb2dc69e42be53ae093",
+        "bytes": 6952
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T163857793Z-e7641b1e-DEV-verify-ue1-o06-g5-uobject-consolidated-acceptance.php.txt",
+        "sha256": "1de3e972097f724f803339e9a8c33a5d59228684f8ed12f2613708e8decabca7",
+        "bytes": 668
+      },
+      "historic_source_sha256": "bd8f3d5b028951d08b0548b43586fe98cae55f6b709edc142369f2bd1c92a3a7"
+    },
+    "verify-ue1-o06-g5-uobject-tag-error-consolidated.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-tag-error-consolidated.php",
+        "sha256": "8b6c07eb682c9ccb7f75137d6e670bdea01b122fa263956140e199f29178e649",
+        "bytes": 7965
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T183914268Z-5110d87c-DEV-verify-ue1-o06-g5-uobject-tag-error-consolidated.php.txt",
+        "sha256": "52bf3913f182851a83487b6a10b06578d5239a5020bc5ca011799e3fe2944fbc",
+        "bytes": 581
+      },
+      "historic_source_sha256": "d8fe5ee5b5caa022c312601e742806401e9d7af0a0573e5a31aa5fe38d515372"
+    },
+    "verify-ue1-o06-g5-uobject-dynamic-array-decision.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-dynamic-array-decision.php",
+        "sha256": "9c43c995606184c60bce4c538da8e8f20935aaf4c40910be22640c17177f87e6",
+        "bytes": 10207
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T212002584Z-35b1cb0a-DEV-verify-ue1-o06-g5-uobject-dynamic-array-decision.php.txt",
+        "sha256": "a71a8888f963d65cc65311a64b5363068920ed1429f870187faf6d078cfe9ae8",
+        "bytes": 840
+      },
+      "historic_source_sha256": "92022c708d55d6597e787a4d3b0a70a934e61e9e78d4bbf7ca38523c651cd415"
+    },
+    "verify-ue1-o06-g5-uobject-nested-vector-decision.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-nested-vector-decision.php",
+        "sha256": "e0d5799c15e9ae1df5dcd6d13b45fb8ad5898bb0b6431bfc1e8a5d407a257253",
+        "bytes": 8240
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261024T213654772Z-be2e37be-DEV-verify-ue1-o06-g5-uobject-nested-vector-decision.php.txt",
+        "sha256": "0f08db8398a97a5f73bd729a3fa6bebb661926b2fb846f790846f1cbc9d5b7f7",
+        "bytes": 843
+      },
+      "historic_source_sha256": "aae4f3ff114d1b0823efb2791c4a79c2afcc2ca2e96162f7d92f149e7ea7f21b"
+    },
+    "verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php": {
+      "script": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/bin/verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php",
+        "sha256": "8d4f7012d19865aaef5583aa854be63a2284df1df4ac489e184168d11772a328",
+        "bytes": 5802
+      },
+      "output": {
+        "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/evidence/o06/20261026T090628483Z-a2b8a06d-DEV-verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php.txt",
+        "sha256": "d422d8828e298a0f3bdfc3ff40bbfc4e67f31d0fbc5c3b9cbad584972c0e669f",
+        "bytes": 438
+      },
+      "historic_source_sha256": "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5"
+    }
+  },
+  "previous_pinned_source_proofs": {
+    "v61 actual saved values": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-UOBJECT-PRD-V61-COMPILED-SAVED-VALUES-802.json",
+      "sha256": "4755578e4e403272b262f7b94969e2cddf5042c7b75495d1641a9deb33dbaf33",
+      "bytes": 4046
+    },
+    "v61 XLevel pointers": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-UOBJECT-V61-XLEVEL-124-COMPILED-POINTERS.json",
+      "sha256": "8f6e7d28ef75185a34f0470e74f4713884b4bdfd64346e3d92722b6c0a5239d7",
+      "bytes": 3840
+    },
+    "v61 original loaded": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-UOBJECT-PRD-REAL-V61-COMPILED-OBJECT-308.json",
+      "sha256": "c91394818131ec3e37bc0a74188842a2900a38d36499c1c308a77cbcc0e6ff6f",
+      "bytes": 4733
+    },
+    "native 6 reference negatives": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-REFERENCE-NEGATIVE-6.json",
+      "sha256": "cd2754dc03adacd17eb5a3765bc6d471ac9b60720e27195780cb751bcbe4764a",
+      "bytes": 5688
+    },
+    "native four tagged negatives": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-TAG-NEGATIVE-4.json",
+      "sha256": "0cd2de769a06cf2f1ce8c498553e361cf8ea0b1b5bf7e516021be31a2c5f7bc3",
+      "bytes": 4767
+    },
+    "original stateframe": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-FULL-ACCEPTANCE-ATTEMPT.json",
+      "sha256": "ee4de49977b52ac446dbc1d41374b7b5f4c1f7a5b3385dd27a859d94bacd5a75",
+      "bytes": 4224
+    },
+    "original native FString allocator UB": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-UOBJECT-FSTRING-ALLOCATOR-CONDITIONAL.json",
+      "sha256": "dba4760cf32bf9daa6378684ae2ee66ed1ecd91ee8ab7d32ec9419590a0052f2",
+      "bytes": 4941
+    },
+    "previous real compiled legacy FString": {
+      "path": "C:/Users/arden/source/repos/ut_reader/catalog/compliance/UE1-O06-G5-T99-UOBJECT-FIXED-STRING-NATIVE-AND-STRUCT-EOF.json",
+      "sha256": "230a851c2a865e7eee07b824c1f4ff96c70abbfcf91d36c748f5c2dca789a080",
+      "bytes": 4609
+    }
+  },
+  "new_compiled_stock_original_package_generation": 2,
+  "new_compiled_positive_stock_normal_direct_struct": 1,
+  "new_compiled_positive_zero_diagnostic_array_struct": 1,
+  "new_compiled_direct_struct_malformed_EOF": 1,
+  "new_compiled_zero_diagnostic_array_struct_malformed_EOF": 1,
+  "prior_308_loaded_original_objects_repeated": false,
+  "prior_926_native_saved_fields_repeated": false,
+  "prior_7_FULL_methods_repeated": false
+}

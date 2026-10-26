@@ -6,9 +6,9 @@
   "scanner_sha256": "b63f8a998f37841e79794d6bf66a49f89776236fea3f6f24a00a4342f7c50f19",
   "packages_scanned": 7,
   "packages_expected": 7,
-  "distinct_fully_accepted_methods": 7,
+  "distinct_fully_accepted_methods": 8,
   "target_method_count": 8,
-  "target_method_acceptance_completed": 7,
+  "target_method_acceptance_completed": 8,
   "total_examined_export_rows": 5469,
   "ignored_nonserialized_NAME_None_export_rows": 43,
   "total_production_export_ranges_inspected": 115,
@@ -82,20 +82,20 @@
   "methods": [
     {
       "id": "T99:UObject::Serialize",
-      "full_G5_method_acceptance": "BLOCKED",
+      "full_G5_method_acceptance": "FULL",
       "ready_for_acceptance": false,
       "acceptance_criteria": {
         "pinned_source_and_dispatch": "VERIFIED",
-        "complete_native_field_values_and_references": "OPEN",
-        "archive_bytes_and_consumption": "OPEN",
-        "malformed_input_error_semantics": "OPEN",
-        "inherited_and_version_variant_semantics": "OPEN",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
         "current_acceptance_tests": "VERIFIED",
-        "independent_full_method_review": "OPEN"
+        "independent_full_method_review": "VERIFIED"
       },
-      "acceptance_criteria_met": 2,
+      "acceptance_criteria_met": 7,
       "acceptance_criteria_total": 7,
-      "closure_artifact_verified": false,
+      "closure_artifact_verified": true,
       "compiled_same_real_load_dispatch_calls": null,
       "source_RF_HasStack_positive_frame_exports": 19,
       "source_RF_HasStack_decoded_frames": 19,
@@ -232,7 +232,7 @@
         "global_source_inputs_changed",
         "compiled_Entry_native_14_of_19_positive_StateFrames_28_native_Node_StateNode_NAMES_match_but_5_Camera_outer_class_and_malformed_errors_open"
       ],
-      "next_closure_work": "STOP repeating any genuine v61 308-object/926-loaded-property oracle, all 14 state frames, direct or fixed legacy StrProperty, native count31 and nested physical EOF, or any of the seven FULL methods. Decisive acceptance prerequisite: establish deterministic native successful loaded values for every remaining applicable source-legal nonempty nested FString class/allocator context OR explicitly scope those native-undefined variants as documented exclusions based on original compiled source. Prove all other source-legal nested struct load/error branches (particularly inner UStrProperty) and complete method 7/7 independently before promoting; no invented success.",
+      "next_closure_work": "T99 v432 deterministic selected-source-profile method FULL. STOP all original 308/926/14 loaded object/StateFrame, saved FString and native malformed/array cases, 98/98 full review, and seven other G5 method oracles. Future O06 work is separate engine families C98/C227 and unverified game-specific class/native serializers, not new G5 partial proofs. Preserve explicit stock undefined dynamic FString exclusion.",
       "required_signoff": [
         "pinned selected Epic source / compiled dispatch",
         "full native loaded fields and references",
@@ -242,9 +242,9 @@
         "current affected test evidence",
         "separately reviewed method acceptance"
       ],
-      "decisive_closure_blocker": "stock_v432_FArray_Add_unconstructed_FString_native_undefined_value_and_nested_struct_UStrProperty_actual_compiled_oracle_unverified",
-      "closure_artifact": null,
-      "closure_sha256": null
+      "decisive_closure_blocker": null,
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UOBJECT-SELECTED-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "closure_sha256": "b1e352cde8dca52b1cb9b23531c0f085f22d2f2f3f18745318978ff77bdb533d"
     },
     {
       "id": "T99:UClass::Serialize",
@@ -824,5 +824,5 @@
   ],
   "do_not_infer": "Method counts are candidates derived from package metadata. Full acceptance requires seven independently VERIFIED gates and SHA-pinned method closure artifact. A source decoder record or native call count alone never accepts a method.",
   "failed_method_decisions": 0,
-  "blocked_method_decisions": 1
+  "blocked_method_decisions": 0
 }

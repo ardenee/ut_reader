@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "generated_utc": "2026-10-26T10:25:07.777695+00:00",
+  "method": "T99:UObject::Serialize",
+  "decision": "FULL",
+  "scope": "Only selected UT99 v432 deterministic source-defined file archive/loading profiles (original versions61/68/69 and compiled source-legal fixtures); native-undefined nonempty dynamic FString array allocation excluded; separate C98/C227 and unverified class-specific source branches remain O06 OPEN",
+  "seven_verified_criteria": {
+    "pinned_source_and_dispatch": "VERIFIED",
+    "complete_native_field_values_and_references": "VERIFIED",
+    "archive_bytes_and_consumption": "VERIFIED",
+    "malformed_input_error_semantics": "VERIFIED",
+    "inherited_and_version_variant_semantics": "VERIFIED",
+    "current_acceptance_tests": "VERIFIED",
+    "independent_full_method_review": "VERIFIED"
+  },
+  "independent_method_review_checks": 98,
+  "original_compiled_native_v61_loaded_objects": 308,
+  "original_compiled_native_saved_value_fields": 926,
+  "original_native_malformed_tag_cases_reused": 4,
+  "original_native_stateframes_reused": 14,
+  "new_compiled_source_legal_direct_struct_actual_stock_loaded": {
+    "Label": "Direct-Record",
+    "Marker": 71
+  },
+  "new_compiled_source_legal_array_struct_zero_diagnostic_only": {
+    "Label": "Nested-Record",
+    "Marker": 84
+  },
+  "new_compiled_original_derived_direct_struct_physical_EOF": 309,
+  "new_compiled_original_derived_array_struct_physical_EOF_diagnostic": 285,
+  "native_undefined_exclusion": {
+    "case": "source-legal nonempty dynamic ArrayProperty containing unconstructed FString inner fields",
+    "root_cause": "original compiled UArrayProperty::SerializeItem calls FArray::Add rather than AddZeroed; FString pointer contents never initialized before UStrProperty::SerializeItem",
+    "stock_actual_result": "crash/heap corruption; no stock loaded value certified",
+    "diagnostic_zero_allocator": "used solely as binary serializer archive oracle; never evidence of stock successful load",
+    "unverified_native_memory_values_fabricated": false,
+    "source_archive_bytes_independently_decoded": true
+  },
+  "manifest_sha256": "bdfd5fb380e229c1933aa4d0f14b8b388f54f5b2f220e6e35d2ab7d50ff272d1",
+  "acceptance_script_sha256": "fff81a5e2c9637aab52f8d0966a831bcdae37bc06c53349f8156efd640a92703",
+  "acceptance_output_sha256": "6a925ab944587a83ec709431f0f006f023e0a6b1b6d1f3e06c89508f5dba9e25",
+  "production_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+  "native_engine_invocations_in_final_reviewer": 0,
+  "previous_seven_FULL_native_engines_reexecuted": false,
+  "entire_O06_accepted": false,
+  "other_UE1_game_source_profiles_accepted": false,
+  "all_genuine_and_unseen_UClass_variants_inferred_complete": false
+}

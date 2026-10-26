@@ -417,7 +417,25 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         'serialized_element_bytes'=>strlen($raw),
                         'preview_first_32'=>$elements,
                         'all_values_previewed'=>$count<=32];
-                    if($innerKind==='strproperty'&&$count>0){
+                    $structHasDynamicString=false;
+                    if($innerKind==='structproperty'
+                        &&is_array($structLayout)){
+                        // A struct embedded in UArrayProperty is placed into
+                        // uninitialized FArray::Add storage, just like a
+                        // directly nested FString. The stock compiled v432
+                        // Core/Engine loader crashed on a genuine generated
+                        // array<G5CaptionRecord> where the struct contains
+                        // FString Label. Do not claim that the archive values
+                        // were successfully materialized by stock native.
+                        foreach($structLayout['fields'] as $nestedField){
+                            if(!$nestedField['skip_persistent_archive']
+                                &&$nestedField['kind']==='strproperty'){
+                                $structHasDynamicString=true;break;
+                            }
+                        }
+                    }
+                    if(($innerKind==='strproperty'||$structHasDynamicString)
+                        &&$count>0){
                         // In compiled v432 Core the native UArrayProperty
                         // loader calls FArray::Add(n,c), NOT AddZeroed,
                         // then calls FString::SerializeItem on those raw
@@ -455,6 +473,69 @@ final class CatalogUE1ClassicTaggedPropertyReader
                             .($offset+$physicalLimit).' during direct FString<<');
                     }
                     $raw.=$read($chars*$units);
+                }elseif($loadPolicy==='native_source_property_SerializeItem'
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&$type===10&&is_array($declaration)
+                    &&($declaration['kind']??null)==='structproperty'
+                    &&($declaration['owner_package']??null)
+                        instanceof CatalogUE1PackageReader
+                    &&(int)($declaration['struct_reference']??0)!==0
+                    &&$valuePkg!==null&&$streamState!==null
+                    &&isset($streamState['file_path'])){
+                    // Epic UStructProperty::SerializeItem calls
+                    // Struct->SerializeBin, ignoring advisory Tag.Size.
+                    // Probe the actual source-defined struct field chain
+                    // read-only, then consume exactly those bytes through
+                    // the existing archive callback. This preserves native
+                    // physical FArchive EOF across SerialSize and Tag.Size.
+                    $layout=CatalogUE1ClassicStructArrayValueReader::resolve(
+                        (string)$declaration['owner_path'],
+                        $declaration['owner_package'],
+                        (int)$declaration['struct_reference'],$family);
+                    $raw=null;
+                    if(($layout['status']??null)
+                        ==='struct_local_field_layout_resolved'){
+                        $available=max(0,(int)$streamState['physical_limit']-$position);
+                        $probeSize=min($available,max(32,min($tagSize,256)));
+                        while($probeSize>0){
+                            $probe=file_get_contents(
+                                (string)$streamState['file_path'],false,null,
+                                $offset+$position,$probeSize);
+                            if(!is_string($probe)||strlen($probe)!==$probeSize){
+                                throw new RuntimeException(
+                                    'UE1 v432 physical struct archive read failed');
+                            }
+                            $probeOffset=0;
+                            $attempt=CatalogUE1ClassicStructArrayValueReader::readAt(
+                                $probe,$probeOffset,$layout,true,$valuePkg);
+                            if(($attempt['status']??null)
+                                ==='struct_field_values_decoded'){
+                                $streamState['allow_overread']=true;
+                                $raw=$read($probeOffset);break;
+                            }
+                            if($probeSize===$available){
+                                // Actual compiled ULinkerLoad invokes
+                                // FString<< within SerializeBin; a length
+                                // spanning physical EOF fails at EOF, not
+                                // at this export's declared SerialSize.
+                                if(($attempt['status']??'')
+                                    ==='nested_struct_fstring_unverified'){
+                                    throw new RuntimeException(
+                                        'UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset '
+                                        .($offset+(int)$streamState['physical_limit'])
+                                        .' during direct struct FString<<');
+                                }
+                                break;
+                            }
+                            $probeSize=min($available,max($probeSize+1,2*$probeSize));
+                        }
+                    }
+                    if($raw===null){
+                        // Source layout unresolved/unsupported: preserve
+                        // the original raw tag rather than fabricate a
+                        // native loaded struct value.
+                        $raw=$read($loadSize);
+                    }
                 }else{
                     $raw=$type===3?'':$read($loadSize);
                 }
@@ -565,6 +646,37 @@ final class CatalogUE1ClassicTaggedPropertyReader
                             ['type','depth','x','y','byte_a','byte_b','byte_c','byte_d'],$bytes
                         );
                         $valueKind='water_texture_adrop';
+                    }elseif(
+                        $family===CatalogUE1ClassicSourceFamily::UT99_V432
+                        &&$loadPolicy==='native_source_property_SerializeItem'
+                        &&is_array($declaration)
+                        &&($declaration['kind']??null)==='structproperty'
+                        &&(int)($declaration['struct_reference']??0)!==0
+                        &&($declaration['owner_package']??null)
+                            instanceof CatalogUE1PackageReader
+                    ){
+                        // Actual declared UStructProperty::SerializeItem
+                        // invokes Struct->SerializeBin, *not* a generic
+                        // opaque 19-byte struct. Reuse the exact same
+                        // source-resolved field chain used by a nested
+                        // dynamic UArrayProperty<UStruct>.
+                        $layout=CatalogUE1ClassicStructArrayValueReader::resolve(
+                            (string)$declaration['owner_path'],
+                            $declaration['owner_package'],
+                            (int)$declaration['struct_reference'],$family);
+                        if(($layout['status']??null)
+                            ==='struct_local_field_layout_resolved'){
+                            $structOffset=0;
+                            $structValue=
+                                CatalogUE1ClassicStructArrayValueReader::readAt(
+                                    $raw,$structOffset,$layout,true,$valuePkg);
+                            if(($structValue['status']??null)
+                                ==='struct_field_values_decoded'
+                                &&$structOffset===strlen($raw)){
+                                $value=$structValue;
+                                $valueKind='source_typed_struct';
+                            }
+                        }
                     }
                 }
                 elseif(($type===5||$type===8||$type===6)&&$tagSize>=1&&$tagSize<=5){
@@ -702,7 +814,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
         try {
             if (fseek($fp,$offset)!==0) {throw new RuntimeException('Cannot seek UE1 payload');}
             $streamState=['allow_overread'=>false,
-                'physical_limit'=>$len-$offset];
+                'physical_limit'=>$len-$offset,
+                'file_path'=>$path];
             $read=static function(int $n)use($fp,$size,&$position,&$streamState):string{
                 $limit=$streamState['allow_overread']
                     ?$streamState['physical_limit']:$size;

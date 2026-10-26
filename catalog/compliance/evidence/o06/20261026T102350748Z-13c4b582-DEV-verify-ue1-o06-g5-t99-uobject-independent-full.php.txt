@@ -1,0 +1,30 @@
+﻿{
+    "ok": true,
+    "checks": 98,
+    "passed": 98,
+    "failed": [],
+    "method": "T99:UObject::Serialize",
+    "verdict": "FULL_UT99_V432_SELECTED_DETERMINISTIC_SOURCE_PROFILES_NATIVE_UNDEFINED_EXCLUDED",
+    "seven_gates": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
+    },
+    "scope": "Source-defined file format and deterministic stock-native loaded/error semantics; stock uninitialized array FString materialization is separately EXCLUDED as genuine undefined allocator behavior, not a successfully loaded value or invented parser parity. Earlier v1200/C98, v227/C227 remain independent, as do unverified game-specific class/native tails.",
+    "source_reproduced_real_stock_direct_loaded_values": 1,
+    "source_reproduced_diagnostic_only_nested_struct_values": 1,
+    "compiled_native_exact_struct_FString_EOF_cases": 2,
+    "source_exact_struct_FString_EOF_cases": 2,
+    "stock_nested_FString_array_success_claimed": false,
+    "stock_array_native_undefined_explicitly_excluded": true,
+    "prior_stock_native_real_loaded_objects_SHA_reused": 308,
+    "prior_stock_native_saved_values_SHA_reused": 926,
+    "prior_stock_native_tag_errors_SHA_reused": 4,
+    "native_engine_processes_spawned_by_final_reviewer": 0,
+    "other_UE1_game_families_accepted": false,
+    "all_unseen_source_legal_UClass_variants_inferred": false
+}

@@ -84,6 +84,45 @@ if missing: signature += "\n"+"\n".join(missing)
 # IDs. One NEW compiled stock original-derived legacy-string package and
 # the previously SHA-pinned direct/nested FString EOF evidence establish the
 # exact two edited branches; never replay original class/native oracles.
+# LAST UT99 v432 UObject selected deterministic source-profile gate:
+# an actual stock compiled custom UStruct direct FString and the same struct
+# within dynamic ArrayProperty. A saved native direct struct loads normally,
+# while source-legal nonempty dynamic Array<Struct String> crashes with
+# uninitialized FArray::Add storage; diagnostic ZERO allocator proves only
+# serialized native element semantics, not stock loaded-value parity.
+# Genuine original stock v61 308 instances / 926 saved native values
+# and previous seven FULL method oracles remain intact and SHA reused.
+uobject_struct_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
+assert uobject_struct_current=="75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27"
+struct_test="verify-ue1-o06-g5-t99-uobject-independent-full.php"
+struct_ev=latest.get(struct_test)
+assert struct_ev and struct_ev["state"]=="PASS"
+assert struct_ev["source_sha256"]==uobject_struct_current
+struct_log=ROOT/struct_ev["log"].replace("\\","/")
+struct_result=read(struct_log)
+assert struct_result["ok"] and struct_result["checks"]==struct_result["passed"]==98
+assert struct_result["verdict"]=="FULL_UT99_V432_SELECTED_DETERMINISTIC_SOURCE_PROFILES_NATIVE_UNDEFINED_EXCLUDED"
+assert struct_result["prior_stock_native_real_loaded_objects_SHA_reused"]==308
+assert struct_result["prior_stock_native_saved_values_SHA_reused"]==926
+assert struct_result["stock_array_native_undefined_explicitly_excluded"]
+assert not struct_result["stock_nested_FString_array_success_claimed"]
+assert len(struct_result["seven_gates"])==7
+assert all(v=="VERIFIED" for v in struct_result["seven_gates"].values())
+assert struct_result["native_engine_processes_spawned_by_final_reviewer"]==0
+assert digest(struct_log)==struct_ev["output_sha256"]
+assert digest(ROOT/"catalog/bin"/struct_test)==struct_ev["test_sha256"]
+struct_tag=ROOT/"catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
+struct_prior_blob=subprocess.check_output(["git","-C",str(ROOT),"show",
+ "09694181:catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"])
+struct_prior_sha=hashlib.sha256(struct_prior_blob).hexdigest()
+struct_current_text=struct_tag.read_text(encoding="utf-8-sig")
+assert "direct struct FString<<" in struct_current_text
+assert "source_typed_struct" in struct_current_text
+assert "stock native" in struct_current_text or "stock compiled" in struct_current_text
+src_line=str(struct_tag)+":"+digest(struct_tag).upper()
+assert signature.count(src_line)==1
+signature=signature.replace(src_line,str(struct_tag)+":"+struct_prior_sha.upper(),1)
+assert hashlib.sha256(signature.encode("utf-8")).hexdigest()=="8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5"
 uobject_new_current=hashlib.sha256(signature.encode("utf-8")).hexdigest()
 assert uobject_new_current=="8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5"
 uobject_test="verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php"
@@ -105,7 +144,7 @@ after_uobject_text=uobject_src.read_text(encoding="utf-8-sig")
 assert "native_source_fixed_StringProperty_to_StrProperty_upgrade" in after_uobject_text
 assert "during nested struct FString<<" in after_uobject_text
 assert "native_source_fixed_StringProperty_to_StrProperty_upgrade" not in before_uobject_tag.decode("utf-8-sig")
-tag_current_line=str(uobject_src)+":"+digest(uobject_src).upper()
+tag_current_line=str(uobject_src)+":"+struct_prior_sha.upper()
 assert signature.count(tag_current_line)==1
 signature=signature.replace(tag_current_line,
  str(uobject_src)+":"+before_uobject_sha.upper(),1)
@@ -1286,7 +1325,9 @@ summary={"mapped":len(rows),"excluded":len(reg["entries"])-len(rows),
 result={"schema":1,"generated_utc":dt.datetime.now(dt.timezone.utc).isoformat(),
     "head":head,"previous_runner_head":status.get("head_commit"),
     "previous_source_sha256":status.get("current_source_sha256"),
-    "current_source_sha256":uobject_new_current,
+    "current_source_sha256":uobject_struct_current,
+    "source_native_uobject_selected_final_struct_FString_scoped":True,
+    "previous_source_before_uobject_struct_FString":uobject_new_current,
     "source_native_uobject_legacy_String_upgrade_and_struct_physical_EOF_scoped":True,
     "previous_source_before_uobject_legacy_and_struct":class_memory_current,
     "source_native_uclass_complete_script_memory_scoped":True,

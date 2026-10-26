@@ -1,10 +1,12 @@
 {
   "schema": 1,
-  "generated_utc": "2026-10-26T09:16:25.080342+00:00",
-  "head": "0d74c3b6",
-  "previous_runner_head": "0d74c3b6",
-  "previous_source_sha256": "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5",
-  "current_source_sha256": "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5",
+  "generated_utc": "2026-10-26T10:27:15.995784+00:00",
+  "head": "09694181",
+  "previous_runner_head": "09694181",
+  "previous_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+  "current_source_sha256": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+  "source_native_uobject_selected_final_struct_FString_scoped": true,
+  "previous_source_before_uobject_struct_FString": "8e26d58e1b18d07c71f690aeace53f0221706e7f22fe003988055857b4f768f5",
   "source_native_uobject_legacy_String_upgrade_and_struct_physical_EOF_scoped": true,
   "previous_source_before_uobject_legacy_and_struct": "44d9f7ef4d24dea80ed42fe4106136692eae88d36cd1dd7c5fae6cf874e2bcc3",
   "source_native_uclass_complete_script_memory_scoped": true,
@@ -84,7 +86,7 @@
     "early_methods_without_matching_compiled_runtime": 167
   },
   "latest_DEV_test_states": {
-    "PASS": 156,
+    "PASS": 157,
     "FAIL": 1
   },
   "branch_totals": {
