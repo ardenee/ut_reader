@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-06-uconst-uenum-physical-archive-boundary`
-- **Stage:** G3-06-SOURCE-VERIFIED-RELEASE-PENDING
-- **Last completed action:** Source original C98 v1.200 and inherited T99 v400 physical archive-then-size-check restored for UConst FString and UEnum TArray Names; 8 added regressions, all 4 selected affected DEV scripts pass, PHP syntax/plan JSON pass, G3 still 0/16.
-- **Resume at:** Commit/push verified G3-06 patch and hash-deploy DEV changes to PRD; next look for genuine C98/C227 Core DLL or original implementation, do not infer source from import library.
-- **Active changed at:** 2026-10-26T18:07:24+00:00
+- **Stage:** G3-06-VERIFIED-PRD-SHA-DEPLOYED
+- **Last completed action:** G3-03/04/07 and G3-06 source archive boundaries corrected; final G3-06 4/4 affected DEV scripts PASS/reused, release 5387e1c6 pushed to origin/main, PRD 17/17 changed-file SHA256 identical, config and storage untouched. No original Epic C98/C227 stock native oracle; G3 0/16 FULL.
+- **Resume at:** Seek original C98 v1.200 and C227 v1.227 runtime Core DLL or matching complete Epic implementation source; only after securing compiled native evidence pursue G3 loaded-value and malformed-input seven-gate acceptance; do not replay already sealed T99 G5 tests.
+- **Active changed at:** 2026-10-26T18:08:29+00:00
 - **Latest DEV test states:** PASS 161; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
