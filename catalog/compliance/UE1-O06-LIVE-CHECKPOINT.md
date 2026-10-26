@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-c98-may1998-600-original-native-refs`
-- **Stage:** G3-C98-MAY17-FOUR-REF-METHODS-600-FOCUS-PASS-RELEASE-PENDING
-- **Last completed action:** Original May17 compiled Core.dll genuine 600 individual native loaded reference target objects matched saved original Core.u/Engine.u FName identities via signed original package references across UByteProperty.Enum84 (65 null), UObjectProperty.PropertyClass268, UClassProperty.MetaClass26, UStructProperty.Struct222. Actual original Microsoft CDB proof and source SHA pinned. Scoped new 5457/5457 verifier PASS. Parser already enforces MetaClass!=0; no production PHP changes. US CD ISO dismounted, no repeated previous 1536 property or 66 string, Const Enum, 227i/T99 G5 testing. G3 0/16 fully accepted remains open.
-- **Resume at:** Commit and SHA-deploy source-correct authentic 600 class/enum/struct loaded reference evidence, then remaining G3 exact malformed native failure paths and version profiles; do not mark whole G3 accepted.
-- **Active changed at:** 2026-10-26T23:26:48+00:00
+- **Stage:** G3-C98-MAY17-FOUR-REF-600-PRD-SHA-DEPLOYED
+- **Last completed action:** Original compiled May17 C98 Core.dll reference native byte/object/class/struct methods: 600 original CDB loaded object referent FName identities exact original Core.u/Engine.u signed import/export refs, 5457/5457 independent DEV PASS, positive only. Release 6b57c492 pushed origin main, all 17/17 changed files SHA matched PRD, protected catalog config and storage present; original US CD ISO dismounted. Existing MetaClass zero guard verified source-correct no parser modification. Full G3-01 through G3-16 still 0/16 accepted, missing complete C227 v227 source bodies (14/57 different ABI from original 227i), original T99 v432 source closure, unobserved classes/malformed original native error cursors and G3-16 final gate.
+- **Resume at:** Proceed with source/compiled proof for G3-01/02 missing C227 14 ABI/export body variations, native G3-14 invalid archive exact runtime errors and remaining UStruct/UFunction/UClass and script/default application profiles. No re-execution of the previous native positive 600/1536/66 UProperty, Const Enum, T99 G5 proofs.
+- **Active changed at:** 2026-10-26T23:28:03+00:00
 - **Latest DEV test states:** PASS 168; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
