@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g2-original-1997-source-acceptance-18`
-- **Stage:** G2-SOURCE-ACCEPTED-18of18-692of692-release-ready
-- **Last completed action:** G2 original May U86/July U97 source-defined v22/v23 archive gate 18/18 accepted, independent 692/692 PASS DEV, 30 current fixture tests PASS and SHA validated, 98 registrations, 86 mapped 12 excluded. All seven historical initial fixture failures corrected against selected Epic source; FAIL events retained, no production serializer modified. Original May/July compiled native runtime values and whole O06 not accepted. Report and source SHA sealed. Commit push PRD SHA pending.
-- **Resume at:** Commit push and deploy verified changed G2 files with SHA equality PRD, then move to separate G3/G4/G5 and final G6. Do not replay 30 source-accepted tests or previously sealed eight G5 v432 method oracles.
-- **Active changed at:** 2026-10-26T12:38:36+00:00
+- **Stage:** G2-SOURCE-ARCHIVE-18of18-692of692-RELEASED-PRD-SHA58of58
+- **Last completed action:** G2 May v0.86x U86 and July v0.867 U97 source/archive fixture scope accepted: all 18 frozen contracts VERIFIED by independent 692/692 check, 30/30 current DEV scripts PASS, all 98 registered May/July class-source pairs reconciled (86 mapped,12 transient exclusions), 11 native serializer groups with malformed fixture coverage. Initial historical 7 FAIL corrected and kept. No PHP production readers modified, no original native G5 oracles retested. Source acceptance SHA sealed and pushed GitHub main 1d59f9fb, all 58/58 changed source/evidence files copied to PRD and SHA-256 equal, DEV clean. Original compiled May/July native loaded memory and all installed genuine assets NOT certified, broader O06 G3-G6 OPEN.
+- **Resume at:** STOP G2 source/archive accepted 18 tests and all 30 existing fixtures; next independent O06 G3 classic UE1 or remaining G4/G5 native-family implementations. Never present G2 source-only acceptance as compiled May/July native runtime oracle or full O06 closure. Preserve historical journal and acceptance SHA.
+- **Active changed at:** 2026-10-26T12:40:42+00:00
 - **Latest DEV test states:** PASS 159; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
