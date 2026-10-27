@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-04-t99-469f-original-function-link-native-170`
-- **Stage:** G3-04-469F-170-1712-DEV-PASS-PRD-20-20-SHA
-- **Last completed action:** Original UT99 469f Core.dll native 170 genuinely loaded method objects,168 UFunction and2 UClass, actual 1016/1016 source method fields matched including new 504 loaded linked parameter fields. Explicit 469f source profile PHP implementation; dedicated scoped 1712/1712 DEV PASS and unchanged native evidence v432 transitive PHP6473/6473 PASS, no CDB repeat. Source and native SHA pinned in GitHub commit b5b1c5d9 pushed, selective DEV-to-PRD 20/20 exact SHA identical, PRD protected config/storage and zero PRD PHP tests. 30 distinct native subproofs; G3 whole FULL5/16 and G3-04 OPEN.
-- **Resume at:** Next genuine distinct G3-04: original 469f Engine.u linked object post-LOAD (currently only 469f Core.u) and Unreal v227i/k UFunction/UState variant, then real SAVE and malformed FArchive error/version traces. Reuse original shipped Core,u,Engine and already sealed C98256,v432650,469f170 CDB evidence, do not rerun successful oracle.
-- **Active changed at:** 2026-10-27T22:23:49+00:00
+- **Stage:** G3-04-469F-170-CERTIFIED-ENGINE-STARTUP-UNOBSERVED
+- **Last completed action:** G3-04 original 469f 170 Core.u source loaded parity remains accepted subset, GitHub b5b1c5d9 and post-release checkpoint573f3de1, DEV PRD 20/20 +3/3 SHA. NEW distinct original 469f Engine.u loader exploratory attempts: UCC help batchexport and dumpint not registered in this isolated commandlet; genuine UnrealTournament.exe SHA9dd332e4 copied only into disposable Native-469f/System, original x86 CDB -server process started and bound Core/Engine/Window DLL but stalled before UFunction/UState capture, no Engine.u native values obtained. Specific isolated UnrealTournament process 33728 stopped; no canonical binaries changed. No Engine.u parity claimed, no previous CDB oracle replayed.
+- **Resume at:** Use original 469f Engine.u via available valid compiled commandlet/load package host or original game full asset fixture, rather than repeating hung isolated startup. Alternatively prioritize distinct C227i/k G3-04 or native SAVE/malformed acceptance. Current 469f Core.u subset and v432 C98 native evidence sealed; G3 FULL 5/16.
+- **Active changed at:** 2026-10-27T22:27:35+00:00
 - **Latest DEV test states:** PASS 195; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
