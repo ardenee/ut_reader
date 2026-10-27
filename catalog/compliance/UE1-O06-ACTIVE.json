@@ -1,7 +1,7 @@
 {
-  "contract": "g3-03-c98-may17-original-bad-expr10-native-cursor",
-  "stage": "G3-03-C98-ALL-12-INVALID-SOURCE-TOKENS-54-PASS",
-  "last_action": "Extended pinned original May1998 UStruct malformed opcode fix to full set of 12 invalid low-range C98 script opcodes including 0x34 StructConst enum present but serializer switch absent. Native CDB opcode 0x10 and Tell24238 reused; remaining 11 source-switched by original v1.200 compiled-source snapshot, no new native claims. Single updated real-genuine C98 focus 54/54 DEV PASS; no other accepted tests rerun. Documented semantics and plan.",
-  "next_step": "Commit/push this consolidated C98 switch-default fix and DEV-to-PRD 1:1 SHA. Next major distinct work: G3-03 original compiled SAVE and genuine C227k/v432 behaviours; no further isolated C98 invalid-token proofs.",
-  "updated_at_utc": "2026-10-27T21:12:07+00:00"
+  "contract": "g3-04-c98-may17-original-native-function-state-256",
+  "stage": "G3-04-C98-256-ORIGINAL-NATIVE-2045-SCOPED-PASS",
+  "last_action": "G3-04 new genuine original shipped May17 Core.dll C98 original Core.u/Engine.u 256 unique UFunction/UState/UClass native method events, real 1513 loaded saved fields matched PHP, including separately corrected original Engine.u 3392 FUNC_Net RepOffset606. 2045/2045 NEW focused DEV runner PASS journaled; original CDB logs/commands and deterministic parser/records SHA-pinned. No production PHP reader change, no other native suites rerun. Live full G3 remains 5/16, original compiled coverage reaches11/16 with 28 distinct subproofs.",
+  "next_step": "Commit/push the verified G3-04 evidence and status, deploy only changed catalog files DEV to PRD with SHA256 equality; next G3-04 unresolved original v432/469f/C227 method variants native SAVE and malformed branch. No re-run of new C98 256 records.",
+  "updated_at_utc": "2026-10-27T21:26:43+00:00"
 }

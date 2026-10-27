@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T21:08:32.2892735Z",
-    "head_commit":  "e9cba099",
+    "updated_at_utc":  "2026-10-27T21:25:23.5186418Z",
+    "head_commit":  "6ed5bb12",
     "current_target":  "DEV",
     "current_source_sha256":  "6921e936b8e462d54bccb3a09f482351e81d1e3a17c7e364a1793e89ec6b57d6",
     "tests":  [
@@ -579,6 +579,18 @@
                       "run_id":  "20261027T210831632Z-5ff1e421",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-04-c98-native-function-state.php",
+                      "test":  "verify-ue1-o06-g3-04-c98-native-function-state.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T21:25:23.4946391Z",
+                      "source_sha256":  "6921e936b8e462d54bccb3a09f482351e81d1e3a17c7e364a1793e89ec6b57d6",
+                      "test_sha256":  "fe6668121429074f98ab0afb2d90bc270be50fe3ef79ea5729dd20bad4d77738",
+                      "run_id":  "20261027T212522878Z-2d145d5e",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T212522878Z-2d145d5e-DEV-verify-ue1-o06-g3-04-c98-native-function-state.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-06-full-const-enum-closure.php",

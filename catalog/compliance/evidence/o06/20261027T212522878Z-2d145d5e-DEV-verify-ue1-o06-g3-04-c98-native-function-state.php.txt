@@ -1,0 +1,20 @@
+﻿{
+    "ok": true,
+    "checks": 2045,
+    "failed": [],
+    "native_method_events": 256,
+    "original_file_backed_nonnet_function": 243,
+    "native_state_uclass_prefix": 12,
+    "original_NET_RepOffset": 606,
+    "genuine_loaded_field_comparisons": 1513,
+    "source_lineage": "original May17 1998 x86 engine and May19 original game source (not asserted binary-identical)",
+    "by_source_kind": {
+        "Core.u:Function": 113,
+        "Core.u:Class": 1,
+        "Engine.u:Function": 130,
+        "Engine.u:Class": 8,
+        "Engine.u:State": 3
+    },
+    "previous_native_suites_rerun": 0,
+    "G3_04_full": "OPEN (other C227/T99 native source SAVE and malformed versions)"
+}

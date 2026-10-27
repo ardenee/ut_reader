@@ -1404,6 +1404,20 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c98-may17-original-native-function-state-256": {
+      "description": "Original shipped May17 1998 retail Core.dll UFunction::Serialize and UState::Serialize actual x86 compiled after-LOAD, 256 unique genuine Core.u/Engine.u method objects; 243 nonNET functions, 12 UState/UClass prefixes, 1 FUNC_Net BroadcastMessage. 1513 actual native method-specific field values exactly equal current C98 PHP reader. Raw actual CDB logs, debugger commands, parser and 256 native records SHA pinned; distinct first net EDI adjusted +0x68 corrected in second actual native call, not mislabeled error. Original Core/Engine package/DLL/Src SHAs pinned, 2045 independent focused checks. No prior G3-03 native-load suites retested and no reader changes necessary. Other v432/469f/C227 original compiled native SAVE, malformed/archive cursor, version variants G3-04 remain OPEN.",
+      "readers": [
+        "CatalogUE1ClassicStructNativeReader.php",
+        "CatalogUE1ClassicClassMetadataReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c98-native-function-state.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }
