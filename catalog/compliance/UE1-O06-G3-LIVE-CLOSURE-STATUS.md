@@ -1,13 +1,13 @@
 # G3 live closure ? 27 October 2026
 
-**Full G3 contracts: 0/16. Contracts with original compiled native subproofs: 8/16. Distinct original compiled native subproofs: 10.**
+**Full G3 contracts: 1/16. Contracts with original compiled native subproofs: 8/16. Distinct original compiled native subproofs: 10.**
 
-The full 16-contract gate retains its original strict criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
+G3-01 source selection is accepted under the clarified cumulative game-source inheritance rule. The remaining 15 method/behavior gates retain their strict source/real native parity criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
 
 | Contract | Native subproofs | Decisive remaining requirement |
 |---|---:|---|
-| G3-01 Exact Epic C98/T99/C227 Core source lineage + version gates | 0 | Build-matched C227 Core source or compiled body and all three version/provenance gates. |
-| G3-02 Complete class/property serializer symbols, inherited paths and source exclusions | 0 | 57 later C227 Core.lib methods: disambiguate 14 differing 2012 ABI symbols, inherited LOAD/SAVE and excluded serializer bodies. |
+| G3-01 Exact Epic C98/T99/C227 Core source lineage + version gates | **ACCEPTED: 87/87 DEV** | CLOSED: eight SHA-pinned Unreal source revisions, UT99 v400/v432 chain; UE1 engine and cumulative overrides with later absent CPP inherited; wrong-game and ambiguous provenance rejected. See source-chain manifest and focused G3-01 verifier. Native loaded-value acceptance is G3-15. |
+| G3-02 Complete class/property serializer symbols, inherited paths and source exclusions | 0 | Map only actually changed source header/inline/new serializer methods across revisions; inherited absent game CPP already resolved; 14/57 ABI mismatch alone is not a missing source blocker. |
 | G3-03 UField and UStruct | 1 | Original compiled UStruct script/child/load and malformed cases for C98/T99/C227; 2012 UField reference branch complete only. |
 | G3-04 UState and UFunction | 0 | Original compiled UState/UFunction flags, script, version exceptions and malformed cursor for each profile. |
 | G3-05 UClass serialization and default objects | 0 | Original compiled UClass default-object construction, values, Config/Localized effects and error paths across C98/T99/C227. |
@@ -20,7 +20,7 @@ The full 16-contract gate retains its original strict criteria. Older G3 accepta
 | G3-12 Source script expression, bytecode and fixups | 0 | Native script opcode fixups and bytecode error cursor for C98 and C227; reuse verified v432 G5. |
 | G3-13 Tagged property values, defaults, config and localized | 0 | Native loaded tagged/default/config/localized state for C98 and C227, source-specific defaults and invalid cases. |
 | G3-14 Source version branches and exact malformed FArchive errors | 1 | All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors. |
-| G3-15 Original compiled native loaded-value and genuine-file parity | 10 | Every distinct original compiled class/property method and build: C227 14 ABI mismatches plus unobserved methods and v432. |
+| G3-15 Original compiled native loaded-value and genuine-file parity | 10 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
 | G3-16 One independent whole-G3 gate / DEV release / PRD SHA | 0 | Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements. |
 
 ## Evidence (original compiled engine, subset-specific)
@@ -39,3 +39,7 @@ The full 16-contract gate retains its original strict criteria. Older G3 accepta
 ## Exit rule
 
 Never promote a contract just because a previous native positive sample passed, never rerun SHA-identical sealed proofs, and do not treat the 2012 C227i ABI as proof of the later C227 source. Complete actual original source/native branches before marking each of 16 accepted.
+
+## G3-01 complete source-selection decision (2026-10-27)
+
+**ACCEPTED 87/87 DEV**: exact cumulative original Unreal game-source chain v0.82/v0.83/v0.84a/v0.86x/v0.867/v1.200/v1.224/v1.227, original v0.84a changes remain until actual newer source changes, v1.200 last present classic Core serializer body inherited into v1.224/227, changed later headers remain true source deltas. UT99 v432 inherits v400 game core unless actual v432 changes. All eight source snapshots plus both UT99 baseline/replacement SHA pinned in UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json. Explicit version, wrong-game, 69/227 licensee, ambiguous and deprecated v400 alias checks included. Compiled loaded values, newer header-specific method implementations and archive errors remain distinct G3-02..15 work. Missing game CPP and differing later Core.lib are NOT G3-01 blockers. Independent focus transcript: catalog/compliance/evidence/o06/20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt.

@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 87,
+    "passed": 87,
+    "failed": [],
+    "original_game_revisions": 8,
+    "original_sha_pinned_sources": 23,
+    "v227_classic_serializer_inherited_source": "epic-ue1",
+    "c227_missing_cpp_blocker_removed": true,
+    "v227_introduced_methods_and_changed_headers_remain_distinct_serializer_work": true,
+    "compiled_loaded_value_acceptance_is_separate_G3_15": true
+}

@@ -3,11 +3,11 @@
   "date": "2026-10-27",
   "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
   "full_contracts_required": 16,
-  "full_contracts_accepted": 0,
+  "full_contracts_accepted": 1,
   "contracts_with_pinned_original_native_evidence": 8,
   "distinct_original_native_source_subproofs": 10,
-  "C227_primary_blocker": "Later v227 Core.lib exposes 57 methods; compiled 2012 227i Core.dll matches only 43 method decorated names and cannot replace the later matching implementation. Original Core/Src class/property C++ absent from canonical later v227 tree.",
-  "contract_acceptance_rule": "Full acceptance only after ALL source-selected versions, original compiled methods and required positive/negative branches are proven. Do not infer whole contract from native subproof counts.",
+  "C227_primary_blocker": "NONE FROM MISSING SOURCE FILE: v1.224 and v1.227 inherit classic UE1 v1.200 Core serializer bodies, with actual changed later headers/new classes resolved as source deltas. Native method differences matter only when demonstrated (G3-02..15).",
+  "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
     "may-const-enum": {
       "relative_file": "catalog/compliance/UE1-O06-G3-C98-MAY1998-ORIGINAL-NATIVE-LOADED.json",
@@ -74,16 +74,22 @@
     {
       "id": "G3-01",
       "requirement": "Exact Epic C98/T99/C227 Core source lineage + version gates",
-      "full_status": "OPEN",
+      "full_status": "ACCEPTED",
       "verified_original_native_subproof_ids": [],
-      "decisive_remaining_requirement": "Build-matched C227 Core source or compiled body and all three version/provenance gates."
+      "decisive_remaining_requirement": "CLOSED: original source provenance, cumulative UE1/Unreal v0.82->v1.227 game revision inheritance, actual UT99 v400->v432 source chain, missing game CPP inherited, changed headers retained as method-specific G3-02 issues, game/wire-format and wrong-provenance separation. Native value equivalence remains G3-15 rather than G3-01.",
+      "acceptance_scope": "SOURCE_LINEAGE_AND_LOADER_SELECTION_ONLY; no method serializer/native loaded value parity certified under G3-01",
+      "acceptance_checks": 87,
+      "acceptance_manifest_sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901",
+      "acceptance_verifier_sha256": "4ec651bb6f68b215188050f7541425cd2acc42cc5512dda751db843237a05f54",
+      "acceptance_scoped_DEV_pass_log_sha256": "eefa95a39439544273fdcc31043665e4ee1aa8ad4f6f3a1a7e9ce09f77e35c58",
+      "acceptance_scoped_DEV_pass_log": "catalog/compliance/evidence/o06/20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt"
     },
     {
       "id": "G3-02",
       "requirement": "Complete class/property serializer symbols, inherited paths and source exclusions",
       "full_status": "OPEN",
       "verified_original_native_subproof_ids": [],
-      "decisive_remaining_requirement": "57 later C227 Core.lib methods: disambiguate 14 differing 2012 ABI symbols, inherited LOAD/SAVE and excluded serializer bodies."
+      "decisive_remaining_requirement": "Method-by-method actual header/inline/new type and changed game-source overrides along UE1->Unreal cumulative chain (v1.224/v1.227) and UT99 v400->v432; inherited methods absent in later game CPP already resolved. Do not block on unavailable Core.cpp or 14/57 compiler ABI mismatch alone."
     },
     {
       "id": "G3-03",
@@ -205,7 +211,7 @@
         "c227i-property668",
         "c227i-field915"
       ],
-      "decisive_remaining_requirement": "Every distinct original compiled class/property method and build: C227 14 ABI mismatches plus unobserved methods and v432."
+      "decisive_remaining_requirement": "Actual loaded-value and genuine-file parity for remaining DIFFERENT source-defined serialization behaviors, archive error/version branches; 2012 227i compiled-vs-later Core.lib import ABI difference is diagnostic, NOT an automatic absence-of-source gate."
     },
     {
       "id": "G3-16",
@@ -214,5 +220,10 @@
       "verified_original_native_subproof_ids": [],
       "decisive_remaining_requirement": "Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements."
     }
-  ]
+  ],
+  "full_contracts_open": 15,
+  "source_revision_chain_manifest": {
+    "path": "catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json",
+    "sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901"
+  }
 }

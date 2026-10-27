@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T09:39:04.8608147Z",
-    "head_commit":  "e18be6ab",
+    "updated_at_utc":  "2026-10-27T10:25:03.6804667Z",
+    "head_commit":  "b274f4b2",
     "current_target":  "DEV",
-    "current_source_sha256":  "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
+    "current_source_sha256":  "ade3a8c5b81c0e9900947b5a817b53482adcb7cab948842e6cfae7dd21b078b9",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -507,6 +507,18 @@
                       "run_id":  "20261026T122225190Z-00c61c1b",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261026T122225190Z-00c61c1b-DEV-verify-ue1-o06-g2-stacknode-may-july.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-01-chronological-source-inheritance.php",
+                      "test":  "verify-ue1-o06-g3-01-chronological-source-inheritance.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T10:25:03.6571850Z",
+                      "source_sha256":  "ade3a8c5b81c0e9900947b5a817b53482adcb7cab948842e6cfae7dd21b078b9",
+                      "test_sha256":  "4ec651bb6f68b215188050f7541425cd2acc42cc5512dda751db843237a05f54",
+                      "run_id":  "20261027T102503120Z-98b1e087",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-c227-compiled-core-symbols.php",

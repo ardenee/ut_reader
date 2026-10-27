@@ -257,3 +257,8 @@ The stock genuine original 2012 227i x86 Core.dll UField::Serialize compiled bod
 ## 2026-10-27 ? final-contract tracking correction
 
 [Live per-contract G3 closure register](UE1-O06-G3-LIVE-CLOSURE-STATUS.md) separates 0/16 all-profile FULL gates from 8/16 contracts containing original compiled-engine evidence and 10 SHA-pinned distinct original native proof subsets. Earlier acceptance matrix was created as an immutable pre-execution checklist; it should not be mistaken for the present verified work. Finite decisive missing obligations for each of all 16 contracts are explicit in the live register. Do not rerun already pinned successful subsets to increment counts. Do not promote a whole contract until actual remaining source/version/error and original compiled-method paths are closed.
+
+
+## G3-01 source selection closed ? 2026-10-27
+
+**G3-01 ACCEPTED 87/87** based on original eight-revision Unreal game-source chain and UT99 v400/v432 source pin, cumulative UE1 engine/game inheritance, distinct three archive formats, explicit changed source headers, v69/227 and ambiguous provenance negatives. No missing v1.224/v1.227 Core/Src or 14/57 import ABI mismatch is a standalone missing implementation blocker. See UE1-O06-G3-LIVE-CLOSURE-STATUS.md. Remaining G3-02..G3-16 require concrete actual source changes, method behavior, class-specific malformed/archive and genuine loaded values, not compulsory hunting for absent CPP. Whole G3 now **1/16 accepted**; DO NOT promote other G3 methods on G3-01 evidence.

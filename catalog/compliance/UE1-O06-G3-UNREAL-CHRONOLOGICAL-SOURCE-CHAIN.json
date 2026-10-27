@@ -1,0 +1,221 @@
+{
+  "schema": 1,
+  "source_archive_root": "L:\\Source\\Games\\Unreal",
+  "inheritance_rule": "Per method/class/format, use last source-defined behavior. Later explicit changes replace only changed portions; absent files and absent definitions carry forward the previous implementation. Never reset to a hypothetical default because a later incomplete source snapshot omits a file.",
+  "format_boundary_rule": "The original 1996 resource archive, original 1997 Unrealfile and classic 1998+ UE1 package are different wire-format generations. Persist specific methods across revisions within the applicable archive architecture; 1996 resource payload field layouts do not override 1998 classic package fields solely because names match.",
+  "early_persistence_example": "The 1996 v0.84a source is applied until a later Unreal game source changes the relevant type/method. If a later source file includes a new definition or changes serialized member fields, replace only those changed operations; then keep that change through v1.227 unless overridden again.",
+  "classic_core_implementation_rule": "v1.200 Core/Src/UnClass.cpp and UnProp.cpp are last present classic source implementation in these eight named Unreal game source snapshots; v1.224 and v1.227 provide changed headers/declarations but no replacement implementations. Use this inherited implementation unless a later present source defines a different behavior. Do not make 2012 compiled 227i vs newer Core.lib mismatch into a prerequisite solely to use a missing file.",
+  "later_header_caveat": "A changed header/inline function/new class in v1.224 or v1.227 is an explicitly present source delta and requires checking relevant fields/methods. Missing implementation is not proof of byte-for-byte compiled identity; native build parity, if needed, belongs to distinct behavior tests.",
+  "revisions": [
+    {
+      "revision": "unreal-v0.82",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v0.82] [1996-00-00]",
+      "archive_format_generation": "original_unreal_resource",
+      "source_files": {
+        "UnClass.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.82] [1996-00-00]\\Src\\Engine\\UnClass.cpp",
+          "sha256": "c0db9753533830fa273a66865b5ed28d61169f6da3dbd8d224a0388e505c1bd6",
+          "bytes": 20829
+        }
+      }
+    },
+    {
+      "revision": "unreal-v0.83",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v0.83] [1996-10-01]",
+      "archive_format_generation": "original_unreal_resource",
+      "source_files": {
+        "UnClass.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.83] [1996-10-01]\\Src\\Engine\\UnClass.cpp",
+          "sha256": "c0db9753533830fa273a66865b5ed28d61169f6da3dbd8d224a0388e505c1bd6",
+          "bytes": 20829
+        }
+      }
+    },
+    {
+      "revision": "unreal-v0.84a",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]",
+      "archive_format_generation": "original_unreal_resource",
+      "source_files": {
+        "UnClass.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Engine\\UnClass.cpp",
+          "sha256": "fe92981b1861eb531d233797cb2f9b7e2d5a963a04429e0658cf792c97b21ee0",
+          "bytes": 17043
+        },
+        "UnClass.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.84a] [1996-12-11]\\Src\\Inc\\UnClass.h",
+          "sha256": "97e0e9d7f9fc0337ca09c0515c9b7c93c976d1fd8b17952f202a468dba68ae14",
+          "bytes": 3299
+        }
+      }
+    },
+    {
+      "revision": "unreal-v0.86x",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v0.86x] [1997-05-25]",
+      "archive_format_generation": "original_unrealfile",
+      "source_files": {
+        "UnClass.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.86x] [1997-05-25]\\Src\\Engine\\UnClass.cpp",
+          "sha256": "d00f8099ce12a92ec13fd39a41edadb6a037286970ac0943576a323160dc0449",
+          "bytes": 23892
+        },
+        "UnProp.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.86x] [1997-05-25]\\Src\\Engine\\UnProp.cpp",
+          "sha256": "38ed6be91935209a5bd64ff2f6fef811525a746aa8e62d790b1c54e0a033ee31",
+          "bytes": 13014
+        },
+        "UnObjVer.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.86x] [1997-05-25]\\Src\\Inc\\UnObjVer.h",
+          "sha256": "bf3247d93e9b9a2daa19e66eb68de315690a460878c4f9c5445088a646de737f",
+          "bytes": 1087
+        },
+        "UnClass.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.86x] [1997-05-25]\\Src\\Inc\\UnClass.h",
+          "sha256": "c1524fd1cc893fff6800aa959d425ca1e129d42e80d8ae56a8ca9ba42fd8f241",
+          "bytes": 10245
+        }
+      }
+    },
+    {
+      "revision": "unreal-v0.867",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v0.867] [1997-07-25]",
+      "archive_format_generation": "original_unrealfile",
+      "source_files": {
+        "UnClass.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.867] [1997-07-25]\\Src\\Engine\\UnClass.cpp",
+          "sha256": "3010b7a230883a159ca208168eeee175d77c3c2c8ca19132f0f9e8bc6c76eefa",
+          "bytes": 24364
+        },
+        "UnProp.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.867] [1997-07-25]\\Src\\Engine\\UnProp.cpp",
+          "sha256": "5a6aeed28a6f41693cdf04beb92bf629788e5c2266b75da57695320b92181687",
+          "bytes": 13026
+        },
+        "UnObjVer.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.867] [1997-07-25]\\Src\\Inc\\UnObjVer.h",
+          "sha256": "bf3247d93e9b9a2daa19e66eb68de315690a460878c4f9c5445088a646de737f",
+          "bytes": 1087
+        },
+        "UnClass.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v0.867] [1997-07-25]\\Src\\Inc\\UnClass.h",
+          "sha256": "2b9933d1b20a82d10c988de3025dbba905b2ea706397cb4bffa32a60e4fa6f25",
+          "bytes": 10209
+        }
+      }
+    },
+    {
+      "revision": "unreal-v1.200",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]",
+      "archive_format_generation": "classic_ue1_package",
+      "source_files": {
+        "UnClass.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+          "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+          "bytes": 38410
+        },
+        "UnProp.cpp": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnProp.cpp",
+          "sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b",
+          "bytes": 20022
+        },
+        "UnObjVer.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnObjVer.h",
+          "sha256": "0c4a881bd409a40d397afcc877920fb34ec2dffb5a370090a11248b45feab033",
+          "bytes": 984
+        },
+        "UnClass.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+          "sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+          "bytes": 12622
+        },
+        "UnType.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+          "sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+          "bytes": 17415
+        }
+      }
+    },
+    {
+      "revision": "unreal-v1.224",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]",
+      "archive_format_generation": "classic_ue1_package",
+      "source_files": {
+        "UnObjVer.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnObjVer.h",
+          "sha256": "a0d9e32cd843edba1d5ac9c60987bbf1f774319d1b598723268812f5cbe27d43",
+          "bytes": 1226
+        },
+        "UnClass.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+          "sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+          "bytes": 13109
+        },
+        "UnType.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+          "sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+          "bytes": 19169
+        }
+      }
+    },
+    {
+      "revision": "unreal-v1.227",
+      "source_dir": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]",
+      "archive_format_generation": "classic_ue1_package",
+      "source_files": {
+        "UnObjVer.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjVer.h",
+          "sha256": "9190a63a420acaf6eb626c6711c83f8d3913c05b2b6141d8c8f8d3eed7a2d759",
+          "bytes": 1719
+        },
+        "UnClass.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+          "sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+          "bytes": 16488
+        },
+        "UnType.h": {
+          "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+          "sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+          "bytes": 33778
+        }
+      }
+    }
+  ],
+  "ut99_cumulative_game_source_chain": [
+    {
+      "revision": "ut99-v400",
+      "root": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]",
+      "present_source_pins": {
+        "Core/Src/UnClass.cpp": {
+          "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+          "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+          "bytes": 36351
+        },
+        "Core/Src/UnProp.cpp": {
+          "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+          "sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+          "bytes": 46777
+        },
+        "Core/Inc/UnObjVer.h": {
+          "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnObjVer.h",
+          "sha256": "e81ec92c03f0f8996d1a347f84f669196ea9135147ea1fe8d0bbc1e79bffc3be",
+          "bytes": 1226
+        }
+      }
+    },
+    {
+      "revision": "ut99-v432",
+      "root": "L:\\Source\\Games\\UT99\\Unreal Tournament v432",
+      "present_source_pins": {
+        "Core/Inc/UnClass.h": {
+          "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+          "sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+          "bytes": 14220
+        },
+        "Core/Inc/UnObjVer.h": {
+          "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjVer.h",
+          "sha256": "ffec6ffb6416c9af3d925f52533a86574040f2bc46328e7f9834afc77850bf24",
+          "bytes": 1541
+        }
+      }
+    }
+  ]
+}

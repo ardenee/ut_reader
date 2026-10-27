@@ -6,6 +6,10 @@
  * v1.227 (package 69, licensee 227) is not Unreal Tournament 99.
  * A later UE1 archive without established lineage is left unresolved,
  * rather than silently selecting the UT99 v432 source.
+ * Missing game Core/Src implementations do not replace or invalidate the
+ * Epic UE1 engine baseline. Apply only actual game-source changes; otherwise
+ * the selected game inherits the engine's serializer. A new game-defined
+ * class or explicit changed field is still an override to investigate.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -20,6 +24,15 @@ final class CatalogUE1ClassicSourceFamily
     // updated UT99 loader, never a second selectable source profile.
     public const LEGACY_UT99_V400='ut99-v400';
     public const UNREAL_V227='unreal-v227';
+    /** Chronological game-source snapshots; each change persists until explicitly overridden.
+     * Earlier native-resource/Unrealfile serializer generations have their own wire formats;
+     * method inheritance is resolved within the applicable archive format, not by name alone.
+     */
+    public const UNREAL_GAME_REVISION_CHAIN=[
+        'unreal-v0.82','unreal-v0.83','unreal-v0.84a',
+        'unreal-v0.86x','unreal-v0.867','unreal-v1.200',
+        'unreal-v1.224','unreal-v1.227',
+    ];
 
     /**
      * PACKAGE_MIN_VERSION and PACKAGE_FILE_VERSION in the pinned
@@ -107,10 +120,13 @@ final class CatalogUE1ClassicSourceFamily
         $gate=self::GAME_VERSION_GATES[$selectedSource];
         $below=$version<$gate['minimum'];
         $above=$version>$gate['maximum'];
+        // The source-selected inherited UE1/UT99 engine loader remains the
+        // applicable code when game Core/Src is absent. Native binary
+        // equivalence is tracked separately, not used to erase inheritance.
         $verified=($selectedSource===self::EPIC_UE1);
         $warningUnknown=$selectedSource===self::UT99_V432
-            ?'v432_linker_implementation_unavailable_v400_warns'
-            :'v227_linker_implementation_unavailable';
+            ?'inherited_ut99_v400_linker_source_compiled_equivalence_unchecked'
+            :'inherited_ue1_linker_source_compiled_equivalence_unchecked';
         return [
             'source_profile'=>$selectedSource,
             'archive_version'=>$version,
@@ -124,7 +140,10 @@ final class CatalogUE1ClassicSourceFamily
                            :$warningUnknown)
                 :($verified?'no_version_rejection_in_inspected_linker_check'
                            :$warningUnknown),
-            'source_linker_check_available'=>$verified,
+            'source_linker_check_available'=>true,
+            'source_linker_implementation_selection'=>$selectedSource===self::UT99_V432
+                ?'inherited_ut99_v400_core_source':'inherited_epic_ue1_core_source',
+            'source_linker_compiled_build_equivalence_verified'=>$verified,
             'ut99_source_inheritance'=>'UT99 v400 Core/Src baseline; v432 prebuilt Core.lib overrides require native oracle',
             'runtime_load_success_verified'=>false,
         ];
@@ -186,12 +205,35 @@ final class CatalogUE1ClassicSourceFamily
                     ?'confirmed_69_227_unreal_header'
                     :'sole_version_eligible_profile_not_producer_identity'),
             'game_identity_inferred_from_version_only'=>false,
+            'game_source_revision_chain'=>$v227
+                ?self::UNREAL_GAME_REVISION_CHAIN
+                :($selected===self::EPIC_UE1
+                    ?array_slice(self::UNREAL_GAME_REVISION_CHAIN,0,6)
+                    :['ue1-engine','ut99-v400','ut99-v432']),
+            // Last *present* classic UE1 Core serializer implementation.
+            // v1.224/v1.227 contain newer headers but no replacement
+            // Core/Src/UnClass.cpp or UnProp.cpp; absence is not a reset.
+            'inherited_classic_core_serializer_source'=>$selected===self::UT99_V432
+                ?'ut99-v400':self::EPIC_UE1,
+            'game_core_cpp_override_absent_in_later_revisions'=>$v227
+                ?['unreal-v1.224','unreal-v1.227']
+                :($selected===self::UT99_V432?['ut99-v432']:[]),
+            'previous_game_overrides_persist_until_explicit_later_change'=>true,
+            'archive_format_generation'=>'classic_ue1_package',
+            // Absence of a game-specific replacement .cpp is inheritance,
+            // NOT a new missing-Core blocker. A present changed declaration,
+            // inline implementation or game-defined class still needs its
+            // actual override semantics; never substitute another game.
             'full_game_core_source_available'=>$selected===self::EPIC_UE1,
+            'engine_baseline_source_available'=>true,
+            'missing_game_core_implementation_means'=>'inherit_ue1_engine_source',
+            'game_specific_override_requires_present_source_change'=>true,
+            'missing_game_core_cpp_is_acceptance_blocker'=>false,
             'source_completeness'=>$v227
-                ?'UE1 base + Unreal v227 emitter overrides; replacement Core/Src unavailable'
+                ?'UE1 engine source inherited for absent Core/Src; apply only v227 game source changes (including Emitter and changed headers/classes)'
                 :($selected===self::UT99_V432
-                    ?'UT99 v400 inherited Core/Src plus v432 headers and Core.lib/Engine.lib; absent v432 method bodies need native oracle'
-                    :'Pinned Unreal v1.200 source available; native comparison deferred'),
+                    ?'UE1 engine plus inherited UT99 v400 Core/Src; apply only changed v432 game source and introduced methods'
+                    :'Pinned Unreal v1.200 engine source baseline available'),
         ];
     }
 }
