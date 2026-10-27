@@ -3,9 +3,9 @@
   "date": "2026-10-27",
   "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
   "full_contracts_required": 16,
-  "full_contracts_accepted": 3,
+  "full_contracts_accepted": 4,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 18,
+  "distinct_original_native_source_subproofs": 19,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -151,6 +151,15 @@
       "original_compiled_469f_native_loaded_UEnum": 1,
       "original_compiled_seven_FName_strings_from_runtime": 7,
       "whole_G3_15_completed": false
+    },
+    "t99-469f-original-490-UPROPERTY-loaded-20-native-categories": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-07-T99-469F-490-ORIGINAL-COMPILED-UProperty.json",
+      "sha256": "de5884d10946de3d6eb07a08b96f6b6b041d1365a0d516399fdad316f8dd3d49",
+      "bytes": 355363,
+      "native_compiled_exact_original_export_identities": 490,
+      "native_compiled_categories_dereferenced": 20,
+      "true_original_Core_u_properties_not_loaded": 49,
+      "full_G3_15_accepted": false
     }
   },
   "contracts": [
@@ -250,12 +259,19 @@
     {
       "id": "G3-07",
       "requirement": "UProperty base metadata",
-      "full_status": "OPEN",
+      "full_status": "ACCEPTED",
       "verified_original_native_subproof_ids": [
         "may-property1536",
-        "c227i-property668"
+        "c227i-property668",
+        "t99-469f-original-490-UPROPERTY-loaded-20-native-categories"
       ],
-      "decisive_remaining_requirement": "ElementSize/category/net/error behavior across all three build profiles, including unobserved original property exports."
+      "decisive_remaining_requirement": "CLOSED base UProperty::Serialize per-source LOAD archive and compiled genuine loaded values C98 1536, T99 469f 490, C227i 668, source SAVE field order, category FName, flags, ArrayDim, conditional RepOffset, source legacy v<=61 mask corrected in compiled 227k. Native-unobserved 49 other 469f exports and linked ElementSize are still G3-15, all-method exact malformed native FArchive Tell G3-14.",
+      "acceptance_checks": 2991,
+      "acceptance_scope": "UPROPERTY_BASE_ONDISK_SERIALIZE_FIELDS_C98_T99_C227_NATIVE_LOAD_FLAGS_CATEGORY_NET_SOURCE_VERSION_AND_SOURCE_SAVE",
+      "acceptance_manifest_sha256": "ccd92f34b9161ab766625be03e4b7df7b509d0bbed7593b9e770f565835095f8",
+      "acceptance_verifier_sha256": "af1a11474214d50b3b209c5fcbf73c6be63ac3ce689d994afc9c3cdee1e3d9a8",
+      "acceptance_scoped_DEV_PASS_log": "catalog/compliance/evidence/o06/20261027T154221693Z-cde2d88d-DEV-verify-ue1-o06-g3-07-full-property-closure.php.txt",
+      "acceptance_scoped_DEV_PASS_SHA256": "db62b198b16a938fa0f8bcea395803735b88cac629041b6e6f99d6c801ba2f1c"
     },
     {
       "id": "G3-08",
@@ -342,9 +358,10 @@
         "t99-469f-2026-25-original-compiled-UStruct-loaded-value-members",
         "t99-469f-native-nine-direct-UStruct",
         "c227k-original-two-genuine-UButton-FString-serialized-values",
-        "t99-469f-2026-native-8const-1enum-global-seven-names"
+        "t99-469f-2026-native-8const-1enum-global-seven-names",
+        "t99-469f-original-490-UPROPERTY-loaded-20-native-categories"
       ],
-      "decisive_remaining_requirement": "All genuine original 469f Core.u UConst 8 and UEnum 1 newly compiled native loaded, seven runtime global FName names pinned; G3-06 complete. Other class methods, SAVE and invalid/version original native loaded-value comparisons still OPEN."
+      "decisive_remaining_requirement": "G3-07 UProperty BASE class serialization now accepted: authentic T99 469f 490 native original objects, C98 1536, C227 668 archived source values correct. 49 other real 469f source property exports not loaded in native process; runtime Link ElementSize or all-other-class native SAVE/invalid behavior still OPEN under G3-15."
     },
     {
       "id": "G3-16",
@@ -354,7 +371,7 @@
       "decisive_remaining_requirement": "Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements."
     }
   ],
-  "full_contracts_open": 13,
+  "full_contracts_open": 12,
   "source_revision_chain_manifest": {
     "path": "catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json",
     "sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901"
@@ -451,7 +468,8 @@
     "G3_full_status": 2
   },
   "accepted_behavior_contracts": [
-    "G3-06"
+    "G3-06",
+    "G3-07"
   ],
   "latest_G3_06_full_acceptance": {
     "status": "ACCEPTED",
@@ -468,5 +486,22 @@
     "new_compiled_native_UEnum": 1,
     "previous_tests_reexecuted": 0,
     "cross_contract_G3_14_G3_15_remain_OPEN": true
+  },
+  "latest_G3_07_full_acceptance": {
+    "status": "ACCEPTED",
+    "checks_passed": 2991,
+    "authentic_native_original_profile_counts": {
+      "C98": 1536,
+      "T99": 490,
+      "C227": 668
+    },
+    "unobserved_469f_original_export_IDs": 49,
+    "genuine_2026_compiled_227k_discrepancy_fixed": "old v<=61 PropertyFlags 0x00080040 mask",
+    "manifest_sha256": "ccd92f34b9161ab766625be03e4b7df7b509d0bbed7593b9e770f565835095f8",
+    "original_T99_evidence_sha256": "de5884d10946de3d6eb07a08b96f6b6b041d1365a0d516399fdad316f8dd3d49",
+    "original_DEV_scoped_result": "catalog/compliance/evidence/o06/20261027T154221693Z-cde2d88d-DEV-verify-ue1-o06-g3-07-full-property-closure.php.txt",
+    "original_DEV_scoped_log_sha256": "db62b198b16a938fa0f8bcea395803735b88cac629041b6e6f99d6c801ba2f1c",
+    "historical_tests_reexecuted": 0,
+    "G3_14_and_G3_15_still_OPEN": true
   }
 }

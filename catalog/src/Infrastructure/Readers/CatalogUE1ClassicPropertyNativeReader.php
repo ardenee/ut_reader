@@ -184,15 +184,21 @@ final class CatalogUE1ClassicPropertyNativeReader
             // UInt/Float/Bool/Name/StrProperty add NO LOAD/SAVE native bytes.
             // UBoolProperty BitMask is serialized only in non-load/save archives.
         }
-        // These two pinned Epic serializers genuinely disagree for
-        // overlapping old package versions: Unreal v1.200 UnProp.cpp
-        // preserves PropertyFlags verbatim, whereas UT99 v400 UnProp.cpp
-        // clears obsolete net flags 0x00080040 after reading version<=61.
-        // Use the original source result for <=61 and UT99 for >=62;
-        // expose the separate UT99 legacy-loader result instead of
-        // silently pretending both engines produce identical flags.
+        // This archive version gate is SOURCE-specific, not merely UT99.
+        // Original Epic C98 v1.200 UnProp.cpp preserves archived flags.
+        // UT99 v400 inherits the <=61 obsolete 0x00080040 clearing.
+        // Crucially, actual 2026 Unreal 227k x86 Core.dll compiled
+        // UProperty::Serialize also compares FArchive::Ver() with 61 and
+        // performs AND 0xFFF7FFBF on its in-memory PropertyFlags.
+        // Both compiled methods do so after serializing Category/RepOffset
+        // and before the IsLoading() Offset reset. Do not misreport the
+        // original archived flags; retain raw and selected loaded values.
         $ut99LegacyEffectiveFlags = $version<=61
             ?($flags & ~0x00080040):$flags;
+        $usesCompiledLegacyFlagGate = $family===CatalogUE1ClassicSourceFamily::UT99_V432
+            || $family===CatalogUE1ClassicSourceFamily::UNREAL_V227;
+        $selectedEffectiveFlags = $usesCompiledLegacyFlagGate
+            ?$ut99LegacyEffectiveFlags:$flags;
         return [
             'status' => $position === $limit
                 ? ($kind==='buttonproperty'?'native_buttonproperty_caption_record_complete':'native_property_record_complete')
@@ -209,15 +215,20 @@ final class CatalogUE1ClassicPropertyNativeReader
             'array_dim' => $arrayDim,
             'archive_array_dim_preserved_without_linkage_validation' => true,
             'property_flags' => $flags,
-            'effective_property_flags' => $family===CatalogUE1ClassicSourceFamily::UT99_V432
-                ?$ut99LegacyEffectiveFlags:$flags,
+            'effective_property_flags' => $selectedEffectiveFlags,
             'selected_source_family'=>$family,
             'effective_property_flags_if_ut99_v400_load' =>
                 $ut99LegacyEffectiveFlags,
-            'property_flag_load_semantics' => $family===CatalogUE1ClassicSourceFamily::UT99_V432&&$version<=61
-                ? 'UT99-v400-old-loader-clears-obsolete-net-flags'
-                : ($family===CatalogUE1ClassicSourceFamily::UT99_V432
-                    ?'UT99-v400-preserve-flags':'Epic-UE1-preserve-flags'),
+            'effective_property_flags_if_unreal_v227k_load' =>
+                $ut99LegacyEffectiveFlags,
+            'property_flag_load_semantics' => $version<=61&&$usesCompiledLegacyFlagGate
+                ?($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    ?'UT99-v400-old-loader-clears-obsolete-net-flags'
+                    :'Unreal-v227k-old-loader-clears-obsolete-net-flags')
+                :($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    ?'UT99-v400-preserve-flags'
+                    :($family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                        ?'Unreal-v227k-preserve-flags':'Epic-UE1-preserve-flags')),
             'source_dependent_legacy_net_flags' =>
                 $version<=61&&$flags!==$ut99LegacyEffectiveFlags,
             'category_name_index' => $categoryIndex,

@@ -1287,6 +1287,17 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-07-complete-original-UPROPERTY-base-source-native": {
+      "description": "One NEW independent G3-07 full UProperty BASE declaration serializer behavior gate: preserve original source Arc ArrayDim/PropertyFlags/Category and optional CPF_Net RepOffset; original compiled C98 May1998 1536 personally identified property loaded objects and 107 net RepOffset, 2012 C227i 668 personally identified real properties (old proof SHA, NOT reexecuted), NEW original true compiled UT99 469f Core.dll 490 individually indexed original Core.u UProperty native loaded values, 20 native category FName pointer dereferences through actual global table and 8 distinct categories + 0 postloader Offset, source original 539/Core.u property exports; remaining 49 are NOT claimed original native loaded objects and are G3-15 corpus scope, including RegistryInfo types. Matching original C227k compiled UProperty code exhibits v<=61 obsolete property flags mask 0xFFF7FFBF, a NEW actual production PHP bug fixed: selected C227 now clears bits 0x00080040 on v<=61 while C98 preserves and UT99 already cleared; archive raw Flags unchanged. New source-specific synthetic v60/v61/v69 CPF_Net RepOffset and all three family selection checks; original 227k CDB whole method disasm and original FName logs SHA pinned, old source test and C98/C227 native original DEV PASS logs reusable by SHA without replay. ElementSize runtime Link and ALL other engine malformed FArchive cursors are separate G3-14/G3-15; class method LOAD/SAVE Ar<< field order and selected version gates completed. On independent PASS promote 4/16, never claim missing 49 observed. ONE focus only.",
+      "readers": [
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-07-full-property-closure.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

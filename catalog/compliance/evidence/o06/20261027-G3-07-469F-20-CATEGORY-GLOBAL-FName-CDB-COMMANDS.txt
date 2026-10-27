@@ -1,0 +1,4 @@
+bp Core!UProperty::Serialize+0x99 ".if (poi(@esi+0x40) != 0) {.echo G307_NATIVE_CATEGORY_NAME; dd @esi+10 L14; du poi(poi(Core!FName::Names)+4*poi(@esi+0x40))+0xc L20;};gc"
+g
+.echo G307_ALL_CATEGORY_RECORDS_ENDED
+q

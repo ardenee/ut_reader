@@ -1,0 +1,6 @@
+r $t0 = 0
+bp Core!UProperty::Serialize+0x99 ".if (poi(@esi+0x10) != 0) {r $t0 = @$t0+1; .echo G307_PROPERTY_NATIVE; dd @esi+10 L18;};gc"
+g
+.echo G307_PROPERTY_FINISHED
+r $t0
+q

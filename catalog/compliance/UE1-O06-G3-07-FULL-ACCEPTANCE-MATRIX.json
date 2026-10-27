@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "contract": "G3-07",
+  "decision_target": "Full source-specific on-disk UProperty::Serialize inherited UField + ArrayDim + PropertyFlags + Category + conditional ushort RepOffset + post-load clearing + C98/T99/C227 source version differences.",
+  "existing_authentic_native_C98_1536_and_C227_668_and_new_T99_490_SHA_pins": {
+    "UE1-O06-G3-C98-MAY1998-UPROPERTY-1536-IDENTITIES.json": {
+      "repo_path": "catalog/compliance/UE1-O06-G3-C98-MAY1998-UPROPERTY-1536-IDENTITIES.json",
+      "sha256": "9fa3da97724615df240693c6b0938028c926ee875bc888b7fd003b894c5c8d67",
+      "bytes": 7193
+    },
+    "UE1-O06-G3-C227I-UPROPERTY-668-EXACT-IDENTITIES.json": {
+      "repo_path": "catalog/compliance/UE1-O06-G3-C227I-UPROPERTY-668-EXACT-IDENTITIES.json",
+      "sha256": "3b3d4e779644fe5f620df60e4cc94c6b1969f746ebe2b85e76e094f734304996",
+      "bytes": 5804
+    },
+    "UE1-O06-G3-C98-T99-UPROPERTY-SIGNED-ARRAYDIM-SOURCE.json": {
+      "repo_path": "catalog/compliance/UE1-O06-G3-C98-T99-UPROPERTY-SIGNED-ARRAYDIM-SOURCE.json",
+      "sha256": "44050e16a1121d5ae1eeaea69f81a6ea55f46bf86a46297117fa5039e281a731",
+      "bytes": 2835
+    },
+    "UE1-O06-G3-07-T99-469F-490-ORIGINAL-COMPILED-UProperty.json": {
+      "repo_path": "catalog/compliance/UE1-O06-G3-07-T99-469F-490-ORIGINAL-COMPILED-UProperty.json",
+      "sha256": "de5884d10946de3d6eb07a08b96f6b6b041d1365a0d516399fdad316f8dd3d49",
+      "bytes": 355363
+    }
+  },
+  "already_accepted_focused_negative_and_native_tests_reused_without_execution": {
+    "verify-ue1-classic-property-native.php": {
+      "current_test_sha256": "4bcc2696dab9d7b1c82e2b0bd002042637b3b7f04682ea6584cb2397f67f69b3",
+      "already_accepted_event_UTC": "2026-10-26T18:36:20.1284998Z",
+      "existing_DEV_log_path": "catalog/compliance/evidence/o06/20261026T183619544Z-62fd4dab-DEV-verify-ue1-classic-property-native.php.txt",
+      "existing_DEV_log_SHA256": "55dab0b09a8777700e4d087f050942ce9529348f338f2b91107933bcc786038e",
+      "old_verifier_not_reexecuted": true
+    },
+    "verify-ue1-o06-g3-c98-may1998-uproperty-identities.php": {
+      "current_test_sha256": "08726c847d9c334c577521b25480f36f4ae8569fff51472bbaca7d60c915ea7b",
+      "already_accepted_event_UTC": "2026-10-26T22:55:37.5186474Z",
+      "existing_DEV_log_path": "catalog/compliance/evidence/o06/20261026T225536408Z-cc8998e6-DEV-verify-ue1-o06-g3-c98-may1998-uproperty-identities.php.txt",
+      "existing_DEV_log_SHA256": "60d7ba13d87dcb7db1baf4eec20dc126831b6149a84865593dc632491edc6f4a",
+      "old_verifier_not_reexecuted": true
+    },
+    "verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php": {
+      "current_test_sha256": "d16986fa803c1d77c7882293620ce6e71e52486c4daee7b24d95899a4d218ae0",
+      "already_accepted_event_UTC": "2026-10-27T09:24:27.3061131Z",
+      "existing_DEV_log_path": "catalog/compliance/evidence/o06/20261027T092426607Z-70bebb8d-DEV-verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php.txt",
+      "existing_DEV_log_SHA256": "f15341e70e46471ad3fbf53c81b39b6c8f46aa70b29ff8b2075761f436af9041",
+      "old_verifier_not_reexecuted": true
+    }
+  },
+  "true_original_2026_227k_Core_dll": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+    "bytes": 1286008
+  },
+  "true_original_2026_227k_compiled_UProperty_full_machine_body": {
+    "repo_path": "catalog/compliance/evidence/o06/20261027-G3-07-C227K-UProperty-ORIGINAL-COMPILED-DISASM.txt",
+    "sha256": "581beb3c66778fb6ec2721fa01ed11ea9fb3503dc65a9557ec81240086cbbd7f",
+    "bytes": 15264
+  },
+  "production_UProperty_source_parser": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+  "production_source_parser_sha256_after_227k_legacy_flag_fix": "365444d0872102a9d8f4dca16e193a95eb644a2b5a829e81cc80af018e2f8b14",
+  "new_original_native_loaded_counts_by_profile": {
+    "C98_May1998": 1536,
+    "T99_469f": 490,
+    "C227i": 668
+  },
+  "new_original_469f_derived_instance_global_Category_Names_verified": 20,
+  "new_original_469f_unloaded_other_declaration_exports_in_original_Core_u": 49,
+  "original_469f_property_exports_not_observed_in_compiled_memory_still_analyzed_in_source": true,
+  "no_native_loaded_assertion_for_unobserved_49": true,
+  "explicit_original_227k_compiled_discrepancy_fixed": "At FArchive::Ver <=61 compiled 227k UProperty after Ar<< Category/optional RepOffset clears 0x00080040 flags; former PHP C227 incorrectly retained. C98 v1.200 retains, UT99 inherits bit clearing.",
+  "source_scope_versus_other_contracts": {
+    "G3-07": "Class-specific declaration serializer and archived/loaded field values, source-class differences, errors and SAVE member order",
+    "G3-14": "All-engine exact native malformed FArchive Tell cursors and all source versions, remains OPEN",
+    "G3-15": "Every actual compiled loaded property export in all original packages, later native linked ElementSize and all other methods, remains OPEN"
+  },
+  "specific_outstanding_after_this_class_gate_if_accepted": "G3-14/G3-15 are NOT waived; three build-source families and 490 genuine T99 loaded source records plus original 227k source branch observed without assuming unobserved native objects.",
+  "old_tests_reexecuted": 0,
+  "full_G3_preexisting_accepted": 3,
+  "full_G3_target_after_success": 4,
+  "G3_07_current_acceptance_pending_new_focused_gate": true
+}

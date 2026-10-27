@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 2991,
+    "passed": 2991,
+    "failed": [],
+    "G3_07_FULL_METHOD_STATUS": "ACCEPTED",
+    "new_original_469f_actual_compiled_loaded_properties": 490,
+    "new_original_469f_actual_runtime_global_Category_names": 8,
+    "original_469f_source_export_properties_unobserved_in_native": 49,
+    "old_C98_1536_and_C227i_668_native_tests_replayed": 0,
+    "new_original_227k_compiled_legacy_flags_discrepancy_fixed": true,
+    "G3_14_and_G3_15_crosscutting_remain_open": true
+}

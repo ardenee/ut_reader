@@ -4,7 +4,7 @@
   "generated_utc": "2026-10-26T12:56:47.547485+00:00",
   "plan": "catalog/compliance/UE1-O06-G3-ACCEPTANCE-PLAN.md",
   "register_sha256": "d3ab7705a626413dac406ad72c8186363882297f6f89ac97a2e15140bbe98a04",
-  "gate_status": "G3_LIVE_3_OF_16_ACCEPTED_FINAL_AGGREGATE_STILL_OPEN",
+  "gate_status": "G3_LIVE_4_OF_16_ACCEPTED_FINAL_AGGREGATE_OPEN",
   "required_tests_count": 16,
   "contracts": [
     {
@@ -2098,10 +2098,11 @@
   "live_accepted_full_contracts": [
     "G3-01",
     "G3-02",
-    "G3-06"
+    "G3-06",
+    "G3-07"
   ],
-  "live_full_contracts_accepted": 3,
-  "live_full_contracts_remaining": 13,
+  "live_full_contracts_accepted": 4,
+  "live_full_contracts_remaining": 12,
   "G3_06_full_method_acceptance": {
     "status": "ACCEPTED",
     "checks": 56,
@@ -2109,5 +2110,15 @@
     "compiled_native_469f_sha256": "400a2a5c090e65006bbf92cb93741cfda0f3de69cab3d60d3c8dd5be33dee13a",
     "original_native_malformed_physical_cursor_cross_owner": "G3-14",
     "other_method_aggregate_native_certification_owner": "G3-15"
+  },
+  "G3_07_full_method_acceptance": {
+    "status": "ACCEPTED",
+    "checks_passed": 2991,
+    "matrix_sha256": "ccd92f34b9161ab766625be03e4b7df7b509d0bbed7593b9e770f565835095f8",
+    "observed_original_469f_UProperty_in_CDB": 490,
+    "original_469f_other_exports_unobserved_and_not_claimed_native": 49,
+    "227k_compiled_legacy_flags_fix": true,
+    "all_original_native_runtime_values_G3_15_remain_OPEN": true,
+    "original_malformed_FArchive_Tell_G3_14_remains_OPEN": true
   }
 }
