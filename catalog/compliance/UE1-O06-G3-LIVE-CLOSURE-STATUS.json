@@ -5,7 +5,7 @@
   "full_contracts_required": 16,
   "full_contracts_accepted": 5,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 22,
+  "distinct_original_native_source_subproofs": 23,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -203,6 +203,16 @@
       ],
       "native_stock_game_package_values_claimed": false,
       "G3_08_full_accepted": false
+    },
+    "c227k-real-original-compiled-UAny-FAny-STRING4-LOAD-SAVE-ROUNDTRIP": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-08-C227K-REAL-NATIVE-ANY-STRING-LOAD-SAVE-ROUNDTRIP.json",
+      "sha256": "6a6cb8ceee19f18ecb7ba6b91ad01bf091c2306a8e11198045f132a6e0fcf66a",
+      "bytes": 3966,
+      "actual_C227k_original_compiled_STRING_native_LOAD_SAVE_RELOAD": true,
+      "original_native_compact_saved_hex": "04055465737400",
+      "original_native_loaded_wide_string": "Test",
+      "original_game_package_ULinkerLoad_observed": false,
+      "G3_08_full_accepted": false
     }
   },
   "contracts": [
@@ -325,13 +335,16 @@
         "may-ref600",
         "c227k-original-two-genuine-UButton-FString-serialized-values",
         "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods",
-        "c227k-actual-original-exported-FAny-UAny-Native-LOAD-SAVE-Null-Int-Float-Bool"
+        "c227k-actual-original-exported-FAny-UAny-Native-LOAD-SAVE-Null-Int-Float-Bool",
+        "c227k-real-original-compiled-UAny-FAny-STRING4-LOAD-SAVE-ROUNDTRIP"
       ],
-      "decisive_remaining_requirement": "New REAL original 227k Core.dll UAnyProperty::SerializeItem and FAnyProperty compiled methods executed with x86 FArchive shim on LOAD+SAVE for dynamic types NULL/INT/FLOAT/BOOL, including real GMalloc nonnull allocation. Production value reader now handles these native source wire payloads in a source-resolved v227 AnyProperty tag (shared VectorProperty tag id11 only with identified Any declaration); original other Vector tags remain unchanged. One NEW 65/65 focused DEV acceptance, no old tests replayed. G3-08 OPEN for original ANY STRING/NAME/STRUCT/OBJECT and NET, native in-memory C227k Button Caption, scalar version/error/SAVE and exact physical cursor across types; G3-14 and G3-15 separate.",
+      "decisive_remaining_requirement": "NEW original shipped 227k x86 UAnyProperty::SerializeItem actual compiled source dynamic STRING4 LOAD/SAVE/LOAD roundtrip proven with original FArchive CountBytes slot0x14 and ArIsSaving=2; native saved 7 bytes 04055465737400, native loaded UTF16 Test. PHP now implements source-resolved v227 Any types0..4 (STRING small ASCII signed compact1..63), unverified Unicode and larger malformed fail closed, ordinary Vector tag11 not mistaken as Any. One distinct 36/36 DEV PASS, earlier original native 65/46/38 and accepted gates not rerun. G3-08 OPEN for Any NAME5 STRUCT6 OBJECT7, NET, original 227k Button native in-memory Caption and other scalar source version/malformed/save; crosscutting G3-14/G3-15 separate.",
       "new_469f_227k_compiled_scalar_method_manifest_sha256": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc",
       "new_46_check_scoped_pass_sha256": "ad2e9d166f4e602d651ec5c8ef50f9b3c059b2a23680492b86dea61a8112125c",
       "new_genuine_original_compiled_FAny_0to3_manifest_SHA256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
-      "new_independent_65_pass_log_SHA256": "a3ab7a864f9da21b6f96706aa91bddb964a9e5f6cf50cbc5f63bc3882e53032a"
+      "new_independent_65_pass_log_SHA256": "a3ab7a864f9da21b6f96706aa91bddb964a9e5f6cf50cbc5f63bc3882e53032a",
+      "new_compiled_native_String4_manifest_SHA256": "6a6cb8ceee19f18ecb7ba6b91ad01bf091c2306a8e11198045f132a6e0fcf66a",
+      "new_dev_String4_36_pass_log_SHA256": "8ae3b6f83cceaf9cce417b40f9a97cd6abf195f70aa5febfa95ece7bb311c2bd"
     },
     {
       "id": "G3-09",
@@ -418,9 +431,10 @@
         "t99-469f-original-490-UPROPERTY-loaded-20-native-categories",
         "original469f-and-C227-native-property-class-reference-and-null",
         "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods",
-        "c227k-actual-original-exported-FAny-UAny-Native-LOAD-SAVE-Null-Int-Float-Bool"
+        "c227k-actual-original-exported-FAny-UAny-Native-LOAD-SAVE-Null-Int-Float-Bool",
+        "c227k-real-original-compiled-UAny-FAny-STRING4-LOAD-SAVE-ROUNDTRIP"
       ],
-      "decisive_remaining_requirement": "NEW original 227k compiled exported FAnyProperty and UAnyProperty native runtime methods exercised via MSVC FArchive shim for null,int,float,bool LOAD and SAVE, NOT actual original game-package ULinkerLoad instance values. All original package corpus, Any 4..7/net and other source serializers remain OPEN."
+      "decisive_remaining_requirement": "New actual compiled original 227k FAny/UAny native STRING4 load-save-reload implemented with correct mock archive; prior native types0..3 already proven. Harness is not actual native original game-package ULinkerLoad, so all-original-corpus native instance values and other class methods remain OPEN."
     },
     {
       "id": "G3-16",
@@ -627,5 +641,32 @@
     "manifest_sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
     "DEV_scoped_log_sha256": "a3ab7a864f9da21b6f96706aa91bddb964a9e5f6cf50cbc5f63bc3882e53032a",
     "G3_full_stays_5_of_16": true
+  },
+  "latest_G3_08_227k_original_real_native_STRING4": {
+    "status": "PARTIAL_G3_08_OPEN",
+    "native_actual_compiled_source_String4_LOAD_SAVE_RELOAD": true,
+    "native_wire_hex": "04055465737400",
+    "correct_virtual_CountBytes_offset": "0x14",
+    "correct_ArIsSaving_flag": 2,
+    "supported_production_Any_types": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "unsupported_types": [
+      5,
+      6,
+      7
+    ],
+    "native_network_serializer_verification": "OPEN",
+    "genuine_game_package_instance_not_observed": true,
+    "new_independent_dev_checks": 36,
+    "manifest_sha256": "6a6cb8ceee19f18ecb7ba6b91ad01bf091c2306a8e11198045f132a6e0fcf66a",
+    "scoped_PASS_log": "catalog/compliance/evidence/o06/20261027T172907299Z-3ca3d406-DEV-verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php.txt",
+    "scoped_PASS_log_sha256": "8ae3b6f83cceaf9cce417b40f9a97cd6abf195f70aa5febfa95ece7bb311c2bd",
+    "old_tests_rerun": 0,
+    "G3_accepted_count_unchanged": 5
   }
 }

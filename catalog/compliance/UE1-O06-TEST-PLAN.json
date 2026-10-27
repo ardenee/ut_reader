@@ -1332,6 +1332,17 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-08-c227k-genuine-original-native-FAny-STRING4-LOAD-SAVE": {
+      "description": "ONE new original native actual shipped compiled 227k FAnyProperty STRING type4 executable UAnyProperty::SerializeItem LOAD/SAVE->LOAD oracle. Previous 2026 227k native NULL0 INT1 FLOAT2 BOOL3 already fully original compiled verified in prior 65/65 test and NOT reexecuted; this distinct STRING path required original FArchive CountBytes vtable slot0x14 and genuine ArIsLoading1/ArIsSaving2, else test harness AV or raw 4-byte count mismatch. Corrected isolated MSVC x86 FArchive mock executes REAL original Core.dll UAnyProperty::SerializeItem and FString compact signed count on native LOAD Test5WCHAR including terminator and SAVE exactly seven bytes 04055465737400, native SAVE->LOAD returns identical chars. Original shipped Core DLL and genuine compiled machine FString opcodes and x86 harness script/stdout hash pinned. New true Unreal v227 UAnyProperty source-resolved type11 alias value reader implements only the verified small 1..63 count ASCII-terminated STRING, leaves ordinary vector unchanged and does not claim unproven extended/Unicode. One NEW 36/36 independent archive/malformed/tag source verifier. G3-08 full OPEN (NAME5, STRUCT6, OBJECT7, NET, genuine original Button in-memory, scalar source/negative). No old 65/46/38/66/G3 acceptance reexecution.",
+      "readers": [
+        "CatalogUE1ClassicAnyPropertyValueReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

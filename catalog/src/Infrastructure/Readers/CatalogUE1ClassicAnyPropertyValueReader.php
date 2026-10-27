@@ -7,9 +7,12 @@
  * archives one runtime type byte followed by type-specific bytes.
  *
  * Original 227k Core.dll has been INVOKED through actual original native
- * exports on LOAD and SAVE for NULL, INT, FLOAT, BOOL (0..3) with a test
- * FArchive-ABI shim. STRING, NAME, STRUCT and OBJECT (4..7) are not
- * emulated or read as guessed tagged FVectors.
+ * exports on LOAD and SAVE for NULL, INT, FLOAT, BOOL, STRING (0..4)
+ * with a test FArchive-ABI shim. STRING was additionally proved via
+ * genuine original native FString->FArchive compact-index SAVE/LOAD
+ * round-trip under correct source ArIsSaving=2 and CountBytes vtable.
+ * Only original native-proven small ASCII FString wire records are
+ * decoded; extended Unicode and NAME/STRUCT/OBJECT (5..7) fail closed.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -46,19 +49,44 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             throw new RuntimeException('Unreal v227 Any type discriminator truncated');
         }
         $type=ord($first);
-        if($type>3){
+        if($type>4){
             $typeName=self::TYPES[$type]??'ANYTYPE_INVALID';
-            // This is NOT an Epic native archive error: it is a precise
-            // Unsupported decoder status. Do not guess a 12-byte vector
-            // or skip Tag.Size and claim an original native loaded value.
+            // Unsupported capability; not an Epic runtime archive error.
             throw new RuntimeException(
                 'Unreal v227 dynamic Any subtype not yet implemented: '
                 .$typeName.' ('.$type.')');
         }
-        $size=match($type){0=>0,1=>4,2=>4,3=>1};
-        $payload=$size>0?$read($size):'';
-        if(strlen($payload)!==$size){
-            throw new RuntimeException('Unreal v227 dynamic Any payload truncated');
+        if($type===4){
+            // Original compiled 227k FAnyProperty::Serialize delegates
+            // FString <<, which archives signed compact character count
+            // followed by ANSI/Unicode string bytes. The actual original
+            // 227k native STRING test proved canonical small ANSI form
+            // 04 05 54 65 73 74 00 on LOAD, SAVE, and SAVE->LOAD.
+            // Large/multibyte/Unicode/corrupt counts are NOT yet proved.
+            $countBytes=$read(1);
+            if(strlen($countBytes)!==1){
+                throw new RuntimeException('Unreal v227 Any STRING compact count truncated');
+            }
+            $count=ord($countBytes);
+            if($count<1||$count>63){
+                throw new RuntimeException(
+                    'Unreal v227 Any STRING compact length or Unicode form not yet verified');
+            }
+            $stringBytes=$read($count);
+            if(strlen($stringBytes)!==$count
+                ||substr($stringBytes,-1)!=="\0"
+                ||str_contains(substr($stringBytes,0,-1),"\0")
+                ||preg_match('/[\x80-\xFF]/',$stringBytes)===1){
+                throw new RuntimeException(
+                    'Unreal v227 Any STRING payload invalid or Unicode form not yet verified');
+            }
+            $payload=$countBytes.$stringBytes;
+        }else{
+            $size=match($type){0=>0,1=>4,2=>4,3=>1};
+            $payload=$size>0?$read($size):'';
+            if(strlen($payload)!==$size){
+                throw new RuntimeException('Unreal v227 dynamic Any payload truncated');
+            }
         }
         $raw=$first.$payload;
         $value=match($type){
@@ -66,6 +94,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             1=>self::signed32($payload),
             2=>(float)unpack('g',$payload)[1],
             3=>ord($payload)!==0,
+            4=>substr($stringBytes,0,-1),
         };
         return [
             'status'=>'native_227k_any_value_original_compiled_subtype_verified',
@@ -76,6 +105,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             'value_kind'=>match($type){
                 0=>'native_any_null',1=>'native_any_int32',
                 2=>'native_any_float32',3=>'native_any_bool',
+                4=>'native_any_ansi_string',
             },
             'serialized_byte_count'=>$position-$start,
             'raw_archive_bytes_hex'=>bin2hex($raw),
@@ -87,13 +117,29 @@ final class CatalogUE1ClassicAnyPropertyValueReader
     /**
      * Save only the exact wire forms previously executed with original
      * 227k compiled UAnyProperty::SerializeItem. Floats are passed as
-     * exact original IEEE-754 little-endian bytes to avoid NaN rewrites.
+     * exact IEEE-754 bytes to avoid NaN rewrites. Type4 rawValue is the
+     * original FString compact count and its null-terminated ANSI bytes.
      */
     public static function saveVerified(
         int $type,string $rawValue,string $sourceFamily
     ):string{
         if($sourceFamily!==CatalogUE1ClassicSourceFamily::UNREAL_V227){
             throw new RuntimeException('UAny source provenance is not Unreal v227');
+        }
+        if($type===4){
+            if(strlen($rawValue)<2||strlen($rawValue)>64){
+                throw new RuntimeException('Unreal v227 Any STRING SAVE length not verified');
+            }
+            $count=ord($rawValue[0]);
+            if($count<1||$count>63
+                ||strlen($rawValue)!==$count+1
+                ||substr($rawValue,-1)!=="\0"
+                ||str_contains(substr($rawValue,1,-1),"\0")
+                ||preg_match('/[\x80-\xFF]/',$rawValue)===1){
+                throw new RuntimeException(
+                    'Unreal v227 Any STRING SAVE unsupported compact, Unicode or malformed payload');
+            }
+            return chr($type).$rawValue;
         }
         $expected=match($type){0=>0,1=>4,2=>4,3=>1,default=>null};
         if($expected===null||strlen($rawValue)!==$expected){

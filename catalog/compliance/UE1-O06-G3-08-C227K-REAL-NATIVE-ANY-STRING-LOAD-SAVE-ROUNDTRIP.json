@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "contract": "G3-08 dynamic UAnyProperty STRING subtype4 original compiled native x86 LOAD SAVE roundtrip",
+  "original_DLL": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+    "bytes": 1286008,
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+  },
+  "original_matching_compiled_export_native_behavior": "Original 227k Core.dll UAnyProperty::SerializeItem -> FAnyProperty::Serialize -> FArchive::operator<<(FString) and AR_INDEX compact count used genuine engine; actual original x86 runtime loaded 5 UTF-16 chars including zero, source SAVE wrote exact 7 bytes and its own native LOAD restored same string.",
+  "native_TYPE4_STRING_original_load_wire_hex": "04055465737400",
+  "native_STRING_both_load_save_wire_byte_count": 7,
+  "native_actual_wchar_values": [
+    "0054",
+    "0065",
+    "0073",
+    "0074",
+    "0000"
+  ],
+  "genuine_compiled_FArchive_Saving_flag": 2,
+  "genuine_compiled_FArchive_Loading_flag": 1,
+  "original_required_FArchive_virtual_CountBytes_offset_hex": "0x14",
+  "previous_harness_AV_cause": "Missing mock FArchive::CountBytes vtable slot 0x14. Original native FString operator called a null function pointer; harness was fixed. Save count mismatch was mock ArIsSaving flag zero; original code uses compact AR_INDEX only with proper ArIsSaving=2.",
+  "native_27_oct_output_and_reproducible_Cplusplus_source": {
+    "actual_227k_compiled_UAny_STRING_x86_Cplusplus_harness": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-NATIVE-FAny-STRING-x86-HARNESS.cpp",
+      "sha256": "f3b404a82c3754a2264fdb5e588339cfd1a3fba8cfe523f8a588e168bde549d9",
+      "bytes": 14416
+    },
+    "actual_227k_x86_MSVC_compile_recipe": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-NATIVE-FAny-STRING-MSVC-BUILD.cmd",
+      "sha256": "4baeb881381027f787fbc090922acee12253fa302044e88f96913d217e8f4a43",
+      "bytes": 277
+    },
+    "actual_compiled_native_STRING_LOAD_SAVE_and_SAVE_THEN_LOAD_log": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-NATIVE-FAny-STRING-LOAD-SAVE-ROUNDTRIP.log",
+      "sha256": "c82e3d80226b941c50b0465d345f73aaf126dda0d592e5e29d577a021573833d",
+      "bytes": 1478
+    },
+    "actual_compiled_native_FString_count_operator_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-NATIVE-FString-ARINDEX-COUNT-CDB.txt",
+      "sha256": "03f9a3219942857b21368d1d489bd1a6603384cfab165bf4b910b7437bef9c96",
+      "bytes": 20420
+    },
+    "actual_compiled_native_FString_wchar_operator_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-NATIVE-FString-WCHAR-OPERATOR-CDB.txt",
+      "sha256": "83dbbf2e561e5cb49d04ca1b1146db3688b69ed9483fa8714c09e02d1075546f",
+      "bytes": 17334
+    },
+    "original_STRING_harness_missing_CountBytes_first_failure_native_trace": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-NATIVE-FString-original-harness-missing-CountBytes-CDB.txt",
+      "sha256": "5219d25eefce0181ce9b45f68c3b957d98bcbfdcff324e9bf796e30973efe76f",
+      "bytes": 13652
+    }
+  },
+  "unmodified_original_227k_DLL_SHA_confirmed": true,
+  "original_engine_fault_claimed": false,
+  "prior_accepted_native_tests_reexecuted": 0,
+  "new_production_value_reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+  "new_production_value_reader_sha256": "d3c54a3fbcc0aa182ba31e033a4dc41868d31672de3cabe645dee785dc6e8cb2",
+  "production_SOURCE_requires_resolved_Any_not_shared_VectorTag": true,
+  "source_227k_STRING_can_encode_ASCII_small_compact_range_1_to_63_only": true,
+  "unsupported_unicode_or_multibyte_compact": true,
+  "other_native_ANY_type_NAME_STRUCT_OBJECT_and_NET_still_open": true,
+  "G3_08_FULL_ACCEPTED": false
+}

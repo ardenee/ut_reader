@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "checks": 36,
+    "passed": 36,
+    "failed": [],
+    "actual_original_compiled_native_String4_load_save_roundtrip": true,
+    "source_227k_Any_supported_dynamic_types": [
+        0,
+        1,
+        2,
+        3,
+        4
+    ],
+    "G3_08_FULL_ACCEPTED": false,
+    "old_native_tests_replayed": 0
+}

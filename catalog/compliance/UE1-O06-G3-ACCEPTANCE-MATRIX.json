@@ -2153,5 +2153,13 @@
     "manifest_sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
     "nonverified_any4to7_and_net": true,
     "old_tests_rerun": 0
+  },
+  "G3_08_native_String4": {
+    "status": "PARTIAL_ONLY_OPEN",
+    "independent_checks": 36,
+    "true_original_compiled_UAny_String_LOAD_SAVE_RELOAD": true,
+    "original_hex": "04055465737400",
+    "compiled_manifest_sha256": "6a6cb8ceee19f18ecb7ba6b91ad01bf091c2306a8e11198045f132a6e0fcf66a",
+    "NAME_STRUCT_OBJECT_NET_still_OPEN": true
   }
 }

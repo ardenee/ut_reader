@@ -178,8 +178,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 // NOT claimed to be documented by the later v1.200 source.
                 if($loadPolicy==='native_227k_resolved_AnyProperty_SerializeItem'){
                     // Exact original compiled 227k FAnyProperty methods
-                    // independently executed for NULL/INT/FLOAT/BOOL on
-                    // both LOAD and SAVE. Unsupported subtype4..7 throws
+                    // independently executed for NULL/INT/FLOAT/BOOL/STRING on
+                    // both LOAD and SAVE. Unsupported subtype5..7 throws
                     // an explicit decoder capability error, NOT an invented
                     // Epic FArchive error or a guessed 12-byte FVector.
                     $anyDecoded=CatalogUE1ClassicAnyPropertyValueReader::
