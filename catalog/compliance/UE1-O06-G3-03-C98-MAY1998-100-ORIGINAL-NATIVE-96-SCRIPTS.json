@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "gate": "G3-03 source-original-May17-1998-retail-C98-UStruct-nonzero-script-PARTIAL",
+  "status": "SOURCE_ACTUAL_SHIPPED_ORIGINAL_COMPILED_100_UStruct_SCRIPTS_96_PARTIAL_NOT_FULL",
+  "authentic_original_source_method": "May17 1998 Unreal USA Redump retail x86 Core.dll exported UStruct::Serialize thunk RVA0x2068 calls actual method VA0x10110b10, after script loop native breakpoint VA0x10110c88, original Unreal.exe -server with authentic original ISO mounted read-only CDFS N:, source original binaries unchanged.",
+  "genuine_original_1998_shipped_DLL_packages_executables_SHA256": {
+    "Core.dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    },
+    "Core.u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+    },
+    "Unreal.exe": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Unreal.exe",
+      "bytes": 24576,
+      "sha256": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30"
+    }
+  },
+  "original_v1200_May19_1998_source_UnClass_cpp_pin": {
+    "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+    "bytes": 38410,
+    "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+    "NOT_claimed_identical_to_May17_retail_binary": true
+  },
+  "original_genuine_C98_source_binary_provenance_caveat": "Retail compiled Core.dll May17, historical Epic source snapshot May19. Do not assert identical compilation source across all methods. Original real shipped executable is authority for observed May17 behavior.",
+  "true_actual_original_compiled_CDB_stdout_scripts_parser_and_register_SHA256": {
+    "authentic_original_May17_1998_Core_UStruct_100_native_CDB": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-ORIGINAL-UsTRUCT-REAL-CDB.log",
+      "bytes": 78586,
+      "sha256": "4c9384bf7a5160d1f09c664c6d5f881f5c81f884f92b66cd2767bb63dbd4ef18"
+    },
+    "actual_original_May17_1998_UStruct_cdb_command": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-ORIGINAL-UStruct-CDB-COMMAND.cmd",
+      "bytes": 341,
+      "sha256": "b09c318ce6383e928fc9d915b4cd20253756a116200acd4a02aeda50e764395f"
+    },
+    "source_of_original_CDB_100_native_records_parser": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-SCRIPT-RECORD-PARSER.py",
+      "bytes": 2517,
+      "sha256": "5ab9a7f0b2e46e8ca5f7140ad171d7bc09110e284bd98f32fab05be3b5866a40"
+    },
+    "original_compiled_100_true_UStruct_96_Script_register": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-UStruct-96-SCRIPTS-NATIVE-VALUES.json",
+      "bytes": 52559,
+      "sha256": "238734b9afd79132bbc27a4935eeea1e77064eea3ec54d71329a4f151c7a12c5"
+    },
+    "original_May17_compiled_UStruct_method_real_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-UStruct-ORIGINAL-DISASSEMBLY-CDB.log",
+      "bytes": 23504,
+      "sha256": "5ded74fdbbde8383b028f1d5432d0da9df64303153b6413054ad8f38bdfb6168"
+    },
+    "original_May17_compiled_UStruct_method_disasm_command": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-UStruct-DISASM-COMMAND.cmd",
+      "bytes": 15,
+      "sha256": "39972df10c24e965effd13bfcd8706e61e760392e047d02056c3fc4f4e97dfd1"
+    }
+  },
+  "observed_authentic_original_compiled_May17_1998_corpus": {
+    "original_Core_u_distinct_100_UStruct_derived_function_exports": 100,
+    "original_coreu_nonzero_original_script_memory_records": 96,
+    "original_coreu_zero_original_script_memory_records": 4,
+    "original_compiled_native_max_script_size": 15,
+    "original_compiled_native_nonnull_Children_native_pointers": 96,
+    "actual_native_known_script_bytes_1to1_with_PHP": 175,
+    "native_process_specific_UObject_FName_bytes_masked": 668,
+    "native_loaded_script_actual_known_byte_mismatches": 0,
+    "script_archived_bytes_less_than_in_memory_ScriptNum_cases": 94,
+    "native_source_linker_count": 1,
+    "native_children_target_index_dereferenced": false
+  },
+  "original_executable_C98_script_positive_loaded_memory_real": true,
+  "native_zero_scripts_and_malformed_not_all_certified": true,
+  "source_scope_only_first_100_UStruct_derived_functions_in_genuine_Core_u": true,
+  "original_1998_reader_source_SHA": {
+    "CatalogUE1ClassicStructNativeReader.php": {
+      "repo_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+      "sha256": "863eac4bf29c109a8b8f32fdbd83bc140d1dacec88710c1e50dcc6efa4ffe21e"
+    },
+    "CatalogUE1ClassicScriptArchiveReader.php": {
+      "repo_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+      "sha256": "e06eac12735c61d9852b4fce248c4b27176c9f9046ab31c0fce56f4bc16200af"
+    },
+    "CatalogUE1ClassicNativeObjectReader.php": {
+      "repo_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+      "sha256": "bec8715a9c1c7419756f0ab32e3491a13c34a6143ba1bac30cd1db4a68b45ce2"
+    },
+    "CatalogUE1ClassicTaggedPropertyReader.php": {
+      "repo_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+      "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128"
+    },
+    "CatalogUE1ClassicClassMetadataReader.php": {
+      "repo_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+      "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468"
+    }
+  },
+  "older_C227i_227k_T99_cases_not_inferred_or_repeated": true,
+  "G3_03_FULL": "OPEN",
+  "G3_12_full": "OPEN",
+  "G3_15_full": "OPEN",
+  "still_missing": [
+    "Full C98 authentic real runtime corpus and native Children target dereference",
+    "Original UT99 v432 and 469f and later C227k distinct version and script serializer branches",
+    "Original compiled SAVE of scripted UStruct instances and source-defined error/malformed precise archive cursors",
+    "Zero/nonzero script original archive EOF and direct UStruct/UClass full profile native LOAD"
+  ]
+}

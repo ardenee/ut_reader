@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-03-c227i-real-237-struct-223-script-loaded-native-memory`
-- **Stage:** G3-03-2012-C227I-237-223-NATIVE-SCRIPTS-4412-PASS-PRD-SHA-VERIFIED
-- **Last completed action:** G3-03 original genuine 2012 shipped Core.dll original compiled UStruct::Serialize native after-load CDB for 237 genuine Core.u original file-backed objects, 223 nonzero UFunction native Script.TArray buffers and 14 zero scripts, 232 Children ptrs dereferenced to real same-linker export index. Second independently executed native x86 method call captured 223 true in-memory script arrays, and 646 deterministically non-relocated script bytes byte-for-byte matched production current source decoder, FName/UObject native pointers process-specific excluded; original C227i source TextPos/Line signed INT 0xffffffff=-1 corrected test representation. ONE new 4412/4412 independent DEV scoped PASS no old tests replayed, no UnrealDB code changes needed because all matched. Original Core.dll/u/UCC binaries SHA and six real CDB scripts, UTF16 original logs and native parse register SHA retained and Git tracked. Current new original native source subproof26, full G3 remains5/16 and G3-03 OPEN for original C98/T99 v432+469f and C227k variants, actual SAVE, native malformed/physical Tell. GitHub release24954c8b pushed and changed catalog PRD SHA22/22, protected config/storage. Final checkpoint next.
-- **Resume at:** Try original shipped C98 May1998 UStruct native x86 compiled source and genuine package in isolated disposable original retail executable; do not rerun accepted C98 prior positive evidence, run only new script-loaded-field oracle. Also original UT99 v432 vs 469f positive scripted structs and C227k variant, then malformed and physical archive Tell/SAVE unique new behavior to close full G3-03. Retain 2012 C227i original 237/223 proof and test without rerun.
-- **Active changed at:** 2026-10-27T18:29:23+00:00
-- **Latest DEV test states:** PASS 190; FAIL 1; STARTED 0
+- **Contract:** `g3-03-c98-may17-original-retail-100-UStruct-96-native-script-loaded`
+- **Stage:** G3-03-ORIGINAL-C98-MAY17-100-96-NATIVE-SCRIPTS-1492-PASS-GITHUB-PRD-PENDING
+- **Last completed action:** NEW May17 1998 original USA CD retail shipped Core.dll native actual UStruct::Serialize after script LOAD under original Unreal.exe server with source-authentic CDFS ISO mounted readonly. Real original x86 postload CDB captures exactly 100 distinct genuine original Core.u UStruct-derived UFunction exports, 96 nonzero bytecode script buffers and four zero, all 100 native Line/TextPos/ScriptText nullness/Children nullness and Script.Num match production C98 epic-ue1 archive parser; 175/175 source-known actual compiled script-memory bytes match, 668 FName/UObject process-specific relocations masked, 94 source script memory sizes longer than archived compact bytes. Native max ScriptSize15. This May17 retail compiled Core.dll NOT inferred compiled identically from original May19 source tree globally. One NEW scoped 1492/1492 DEV PASS only, no old accepted C227i/1998/G3/G5 suite rerun. Six original native CDB UTF16 raw logs, commands, original executable native UStruct disasm and deterministic CDB parser+100 source index structured records SHA-sealed and Git force-added (ignored .log). G3 original source subproof27, whole G3 accepted5/16, G3-03 OPEN other source builds, compiler SAVE and malformed FArchive exact Tell. Source L original immutable. Now commit/push & PRD only changed catalog files, final checkpoint next.
+- **Resume at:** Git commit/push original May17 retail genuine native 100 UStruct/96 script source evidence, QA SHA copy to PRD only catalog excluding config/storage, final checkpoint commit/PRD SHA. Dismount temporarily mounted original retail ISO N: CDFS (was not mounted before original C98 run) when no game/debug processes running. Next target entire G3-03 closure native SAVE/malformed and unobserved T99/v432/469f and later C227k source branches, do not repeatedly add positive subproofs without closing required contract.
+- **Active changed at:** 2026-10-27T18:48:26+00:00
+- **Latest DEV test states:** PASS 191; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T18:46:28.1586311Z | verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php | PASS | 141 | catalog\compliance\evidence\o06\20261027T184627555Z-2f411f41-DEV-verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php.txt |
+| 2026-10-27T18:46:27.5656319Z | verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php | STARTED |  | catalog\compliance\evidence\o06\20261027T184627555Z-2f411f41-DEV-verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php.txt |
 | 2026-10-27T18:25:31.5482663Z | verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php | PASS | 195 | catalog\compliance\evidence\o06\20261027T182530828Z-11e0d1b7-DEV-verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php.txt |
 | 2026-10-27T18:25:30.8362654Z | verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php | STARTED |  | catalog\compliance\evidence\o06\20261027T182530828Z-11e0d1b7-DEV-verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php.txt |
 | 2026-10-27T17:56:21.3333293Z | verify-ue1-o06-g3-08-original-227k-UAny-object7-null.php | PASS | 90 | catalog\compliance\evidence\o06\20261027T175620839Z-b42392c0-DEV-verify-ue1-o06-g3-08-original-227k-UAny-object7-null.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-27T16:08:41.1339427Z | verify-ue1-o06-g3-09-full-real-class-object-references.php | STARTED |  | catalog\compliance\evidence\o06\20261027T160841124Z-d60432a3-DEV-verify-ue1-o06-g3-09-full-real-class-object-references.php.txt |
 | 2026-10-27T15:42:22.3202461Z | verify-ue1-o06-g3-07-full-property-closure.php | PASS | 218 | catalog\compliance\evidence\o06\20261027T154221693Z-cde2d88d-DEV-verify-ue1-o06-g3-07-full-property-closure.php.txt |
 | 2026-10-27T15:42:21.7014458Z | verify-ue1-o06-g3-07-full-property-closure.php | STARTED |  | catalog\compliance\evidence\o06\20261027T154221693Z-cde2d88d-DEV-verify-ue1-o06-g3-07-full-property-closure.php.txt |
-| 2026-10-27T15:06:51.6740071Z | verify-ue1-o06-g3-06-full-const-enum-closure.php | PASS | 115 | catalog\compliance\evidence\o06\20261027T150651148Z-4d1328bd-DEV-verify-ue1-o06-g3-06-full-const-enum-closure.php.txt |
-| 2026-10-27T15:06:51.1553662Z | verify-ue1-o06-g3-06-full-const-enum-closure.php | STARTED |  | catalog\compliance\evidence\o06\20261027T150651148Z-4d1328bd-DEV-verify-ue1-o06-g3-06-full-const-enum-closure.php.txt |
 
 ## Recovery procedure
 

@@ -5,7 +5,7 @@
   "full_contracts_required": 16,
   "full_contracts_accepted": 5,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 26,
+  "distinct_original_native_source_subproofs": 27,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -241,6 +241,19 @@
       "native_Children_same_linker_target_count": 232,
       "native_process_specific_relocations_masked": true,
       "G3_03_FULL": "OPEN"
+    },
+    "c98-may17-original-1998-retail-100-UStruct-96-native-script-loaded": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-03-C98-MAY1998-100-ORIGINAL-NATIVE-96-SCRIPTS.json",
+      "sha256": "481bc10b917d7eea128a1638d31be2a5afdd1f84eb6edbf2592359040a76e7d0",
+      "bytes": 6563,
+      "genuine_original_May17_1998_compiled_UStructs": 100,
+      "genuine_original_May17_1998_nonzero_native_Script_buffers": 96,
+      "deterministic_real_native_script_bytevalues_identical": 175,
+      "pointer_FName_native_process_bytes_masked": 668,
+      "native_script_memory_longer_than_archive_count": 94,
+      "original_native_Children_referent_dereferences_observed": false,
+      "May17_compiled_entire_May19_source_snapshot_equivalence_not_claimed": true,
+      "G3_03_FULL": "OPEN"
     }
   },
   "contracts": [
@@ -301,11 +314,14 @@
         "t99-469f-2026-25-original-compiled-UStruct-loaded-value-members",
         "t99-469f-native-nine-direct-UStruct",
         "t99-469f-compiled-malformed-UStruct-FName-assert",
-        "c227i-2012-original-237-UStruct-loaded-223-script-native-values"
+        "c227i-2012-original-237-UStruct-loaded-223-script-native-values",
+        "c98-may17-original-1998-retail-100-UStruct-96-native-script-loaded"
       ],
-      "decisive_remaining_requirement": "NEW original actual compiled 2012 C227i x86 Core.dll UStruct::Serialize captured post-load original Core.u 237 unique real UStruct-derived exports (223 nonzero UFunction scripts; 12 direct UStruct zeros; 2 UClass inherited zero), 232 original same-linker Children references, signed source Line/TextPos, ScriptText nullness and native ScriptSize all equal saved current PHP output. Distinct second genuine CDB run captured 223 original native Script.TArray buffers, source decoder 646 known original x86 script-memory bytes all match, process relocated pointer and FName bytes masked. Independent 4,412/4,412 DEV focused PASS, old UField915 and other accepted tests not rerun. G3-03 FULL OPEN for original C98, UT99 v432 and 469f script-bearing other source branches, later v227k source differences, script SAVE, malformed script/friendly/reference/EOF physical FArchive Tell; no reader code change needed for observed C227i positive sample.",
+      "decisive_remaining_requirement": "NEW independent original authentic May17 1998 US retail x86 compiled Core.dll USTRUCT Serialize native LOAD captured 100 unique original Core.u UFunction-UStruct source exports, 96 nonzero Script.TArray original loaded native buffers, four zero, 96 nonnull original Children ptrs, source Line/TextPos, ScriptSize, ScriptText nullness and known original bytecode memory all matched existing epic-ue1 decoder, original actual native script known bytes175 identical; native process UObject/FName 668 relocated words masked and 94 script bytes smaller on disk due compact refs. One distinct scoped 1,492/1,492 DEV PASS, 0 earlier suites rerun, original retail ISO mounted read-only for original native test. May17 retail compiled binary not assumed compiled from May19 v1.200 source for all symbols. Prior independent C227i original 237 struct/223 script true loaded memory proof retained, not rerun. G3-03 full remains OPEN for other original builds T99 v432 and 469f, 2026 C227k, complete C98 corpus/direct structs and native Children target refs, SAVE, malformed script/size/reference/EOF source error and precise FArchive Tell. G3-12, G3-14, G3-15 separate.",
       "g3_03_new_real_C227i_original_native_manifest_sha256": "cd8ff5a0198bfca58ec04aa0056af74927ec0dd31cff818b93c59e43dec77aa9",
-      "g3_03_new_real_C227i_original_native_PASS_sha256": "cddda38294be9351375fa7228a60e52b106c099ab01ce8e4b0f5cfab1d007536"
+      "g3_03_new_real_C227i_original_native_PASS_sha256": "cddda38294be9351375fa7228a60e52b106c099ab01ce8e4b0f5cfab1d007536",
+      "new_original_C98_May17_100_native_script_manifest_SHA256": "481bc10b917d7eea128a1638d31be2a5afdd1f84eb6edbf2592359040a76e7d0",
+      "new_original_C98_May17_1492_dev_scope_SHA256": "9a581791399049d6fd9599e7c9e83f3b57c95b033e1cb68a44111c2d140f6f06"
     },
     {
       "id": "G3-04",
@@ -420,9 +436,10 @@
       "requirement": "Source script expression, bytecode and fixups",
       "full_status": "OPEN",
       "verified_original_native_subproof_ids": [
-        "c227i-2012-original-237-UStruct-loaded-223-script-native-values"
+        "c227i-2012-original-237-UStruct-loaded-223-script-native-values",
+        "c98-may17-original-1998-retail-100-UStruct-96-native-script-loaded"
       ],
-      "decisive_remaining_requirement": "NEW original 2012 C227i compiled 223 nonzero UStruct scripts and 646 actual loaded native known bytecode-memory bytes prove source SerializeExpr opcode memory reconstruction positive path; source pointer/FName process IDs masked. G3-12 OPEN for original C98 native script relocations, malformed opcode/exact archive cursor and other engine branches."
+      "decisive_remaining_requirement": "NEW original May17 C98 genuine x86 Core.dll UStruct native 96 script-bearing functions and 175 authentic original known non-relocated script-memory bytes matched, original native pointer/FName relocated 668 masked. Earlier C227i 223 original scripts and646 memory known bytes also sealed. Source COMPLETE G3-12 still OPEN for original malformed opcode/native exact cursor, unobserved opcode branches, other builds and physical script fixups."
     },
     {
       "id": "G3-13",
@@ -471,9 +488,10 @@
         "c227k-real-original-compiled-UAny-FAny-STRING4-LOAD-SAVE-ROUNDTRIP",
         "c227k-original-executed-UAny-NAME5-zero-native",
         "c227k-original-real-executed-UAnyProperty-OBJECT7-NULL",
-        "c227i-2012-original-237-UStruct-loaded-223-script-native-values"
+        "c227i-2012-original-237-UStruct-loaded-223-script-native-values",
+        "c98-may17-original-1998-retail-100-UStruct-96-native-script-loaded"
       ],
-      "decisive_remaining_requirement": "NEW original 2012 C227i true shipped Core.dll UCC genuinely loads 237 file-backed UStruct objects incl223 native script memory buffers and232 Children pointer target identities all matching current original source parser, 646 native known loaded script bytes. This is genuine C227i original file-backed loaded-value coverage only; all other source engine builds and remaining method corpus still OPEN."
+      "decisive_remaining_requirement": "NEW original May17 genuine 1998 retail original Core.dll actual real loaded 100 genuine Core.u functions, 96 script-bearing native buffers, 175 native known script-memory bytes exact original PHP match, other 668 process-local relocated bytes correctly masked. Earlier genuine C227i true 237 native UStruct and 223 scripts sealed separately. All class method/profile genuine file native corpus and actual source variants still OPEN."
     },
     {
       "id": "G3-16",
@@ -741,5 +759,23 @@
     "original_DEV_log_sha256": "cddda38294be9351375fa7228a60e52b106c099ab01ce8e4b0f5cfab1d007536",
     "original_2012_C227i_not_equivalent_to_later_2026_227k_without_new_oracle": true,
     "FULL_G3_accepted_still": 5
+  },
+  "latest_G3_03_original_C98_May17_100_96_native_scripts": {
+    "status": "PARTIAL_G3_03_OPEN",
+    "original_genuine_C98_retail_source_build": "May17 1998 compiled original USA CD",
+    "genuine_original_C98_filebacked_UStruct_function_objects": 100,
+    "real_original_C98_UStruct_loaded_Script_Num_positive": 96,
+    "real_native_script_max_num": 15,
+    "real_original_loaded_Children_nonnull": 96,
+    "genuine_original_compiled_script_memory_known_bytes_matched": 175,
+    "genuine_original_compiled_process_relative_relocations_not_compared": 668,
+    "original_script_archive_smaller_than_loaded_memory_count": 94,
+    "actual_native_children_referent_target_index_not_proven": true,
+    "original_May17_binaries_not_inferred_identical_May19_source": true,
+    "one_new_scoped_DEV_checks": 1492,
+    "original_may17_native_manifest_SHA256": "481bc10b917d7eea128a1638d31be2a5afdd1f84eb6edbf2592359040a76e7d0",
+    "original_may17_dev_scoped_log_SHA256": "9a581791399049d6fd9599e7c9e83f3b57c95b033e1cb68a44111c2d140f6f06",
+    "old_accepted_test_suites_reexecuted": 0,
+    "G3_Full_accepted_remains": 5
   }
 }

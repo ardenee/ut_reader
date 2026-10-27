@@ -1379,6 +1379,20 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-03-c98-may17-original-retail-100-UStruct-96-native-script-loaded": {
+      "description": "NEW actual original shipped May17 1998 USA retail Core.dll native UStruct::Serialize genuine file-backed Core.u source LOAD: original x86 Unreal.exe -server with original read-only mounted original Redump CD ISO, real post-script method breakpoint Core+0x10C88/VA 0x10110c88 after UStruct::Serialize thunk VA10102068 actual body VA10110b10. Captures 100 distinct genuine original Core.u UFunction-UStruct records (96 nonzero script, four zero; native max Script.Num=15), actual source linker identity, native FName nonzero global id, ScriptText/Children nullness, signed native Line/TextPos; script TArray memory bytes captured separately and bounded to actual native ScriptSize. Original PHP epic-ue1 source decoder matches all 100, 96 scripts and 175 deterministic actual compiled native bytecode bytes; 668 native FName/UObject process relocations properly masked, 94 original scripts have archive footprint smaller than native in-memory bytecount due compact references. Original May17 compiled source separate from May19 Epic source snapshot and not assumed identical. New independent 1492-check DEV scoped original compiler evidence; no old accepted C227i237/223, C98 prior UString, G3-06/07/08/09 native tests rerun. Full G3-03 still OPEN: all other C98 methods/branches, original UT99 v432/469f, later C227k and SAVE/malformed/FArchive cursor and direct struct other source variants.",
+      "readers": [
+        "CatalogUE1ClassicStructNativeReader.php",
+        "CatalogUE1ClassicScriptArchiveReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

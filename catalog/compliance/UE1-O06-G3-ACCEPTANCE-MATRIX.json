@@ -2186,5 +2186,17 @@
     "method_manifest_sha256": "cd8ff5a0198bfca58ec04aa0056af74927ec0dd31cff818b93c59e43dec77aa9",
     "old_tests_rerun": 0,
     "other_versions_SAVE_malformed_cursor_still_OPEN": true
+  },
+  "G3_03_original_May17_1998_retail_100_native_UStruct_96_script": {
+    "status": "PARTIAL_G3_03_OPEN",
+    "new_scoped_assertions_passed": 1492,
+    "genuine_original_C98_coreu_UStructs": 100,
+    "actual_compiled_source_native_nonzero_scripts": 96,
+    "actual_compiled_original_native_known_bytecode_identical": 175,
+    "process_local_relocations_masked": 668,
+    "actual_native_children_target_indices_not_proven": true,
+    "manifest_SHA256": "481bc10b917d7eea128a1638d31be2a5afdd1f84eb6edbf2592359040a76e7d0",
+    "original_may17_script_corrupt_SAVE_other_builds": "OPEN",
+    "previous_original_compiled_tests_replayed": 0
   }
 }

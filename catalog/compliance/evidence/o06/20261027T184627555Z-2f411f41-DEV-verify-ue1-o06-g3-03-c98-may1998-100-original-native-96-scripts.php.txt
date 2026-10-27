@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 1492,
+    "passed": 1492,
+    "errors": [],
+    "C98_original_May17_coreu_native_UStructs": 100,
+    "original_native_nonzero_scripts": 96,
+    "original_retail_native_known_bytes_matched": 175,
+    "source_pointer_fname_relocation_bytes_deliberately_masked": 668,
+    "archive_script_compact_shorter_than_loaded_memory": 94,
+    "original_source_profile": "C98_May17_retail_only",
+    "G3_03_FULL": "OPEN",
+    "previous_native_ACCEPTED_tests_rerun": 0
+}
