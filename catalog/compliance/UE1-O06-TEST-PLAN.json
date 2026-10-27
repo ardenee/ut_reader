@@ -1320,6 +1320,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-08-c227k-actual-original-FAny-0to3-native-LOAD-SAVE": {
+      "description": "NEW source-class real executable shipped ORIGINAL Unreal 227k x86 Core.dll native UAnyProperty::SerializeItem/ FAnyProperty::Serialize/PeekIsEmpty/SerializeEmpty ACTUALLY INVOKED via disposable MSVC x86 executable, FArchive virtual ABI. Native confirms TYPE0 null 1 byte on LOAD+SAVE, Peek reads byte and restores archive cursor, 8 type markers 0..7 classified, TYPE1 INT 5-byte LOAD+SAVE exact bit pattern0x12345678, TYPE2 FLOAT 5-byte LOAD+SAVE exact IEEE754 raw bits, TYPE3 BOOL 2-byte LOAD+SAVE; native actual original GMalloc constructs dynamic FAny property instances, original DLL L source SHA unchanged. New production CatalogUE1ClassicAnyPropertyValueReader implements only 0..3 matching actual compiled wire; native sourced explicit C227 class-default schema UAny kind allows tagged alias VectorProperty id11 to route new runtime value reader, while true Vector or unknown class is left unchanged opaque. C227 SDK original enum order verifies type names, actual source package Engine.u 5 UAny declarations grounded. Unsupported 4 STRING/5 NAME/6 STRUCT/7 OBJECT, noncanonical BOOL, NET, exact C227k original game package loaded values/other SAVE/invalid are explicitly NOT yet accepted. No previously accepted May UString66, 227k Button2, original 469f pointer46 or full G3-06/07/09 tests reexecuted. Scoped ONE new 65 check gate. Full G3 stays 5/16, G3-08 OPEN.",
+      "readers": [
+        "CatalogUE1ClassicAnyPropertyValueReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

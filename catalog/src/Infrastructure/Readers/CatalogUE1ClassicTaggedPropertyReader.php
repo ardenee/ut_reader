@@ -111,6 +111,18 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     :null;
                 $loadPolicy='archive_bytes_only_schema_not_linked';
                 $loadSize=$tagSize;
+                // Only the EXACT resolved Unreal 227 UAnyProperty
+                // declaration can reinterpret NAME_VectorProperty (tag11).
+                // A real FVector tag with the same type number is never Any.
+                // Actual 227k UAnyProperty::SerializeItem consumes dynamic
+                // subtype wire bytes (0=1, 1/2=5, 3=2), not Tag.Size.
+                if($family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                    &&$type===11
+                    &&is_array($declaration)
+                    &&strtolower((string)($declaration['kind']??''))==='anyproperty'
+                    &&$arrayIndex<(int)($declaration['array_dim']??0)){
+                    $loadPolicy='native_227k_resolved_AnyProperty_SerializeItem';
+                }
                 if($sourceDeclarations!==null
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
                     $expectedType=strtolower((string)($declaration['kind']??''));
@@ -157,13 +169,23 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $loadPolicy='native_warning_skip_invalid_tag_type';
                 }
                 $legacyRef=null;$arrayDecoded=null;
+                $anyDecoded=null;
                 $legacyFixedStringRisk=null;
                 // Genuine UE1 v35 package evidence (DProj*, Palette tag):
                 // the original tag declares a native 4-byte UObject slot,
                 // but the payload is a compact serialized package reference.
                 // This compatibility gate is observed corpus behaviour,
                 // NOT claimed to be documented by the later v1.200 source.
-                if($loadPolicy==='native_source_fixed_StringProperty_to_StrProperty_upgrade'){
+                if($loadPolicy==='native_227k_resolved_AnyProperty_SerializeItem'){
+                    // Exact original compiled 227k FAnyProperty methods
+                    // independently executed for NULL/INT/FLOAT/BOOL on
+                    // both LOAD and SAVE. Unsupported subtype4..7 throws
+                    // an explicit decoder capability error, NOT an invented
+                    // Epic FArchive error or a guessed 12-byte FVector.
+                    $anyDecoded=CatalogUE1ClassicAnyPropertyValueReader::
+                        readFromArchive($read,$position,$family);
+                    $raw=hex2bin($anyDecoded['raw_archive_bytes_hex']);
+                }elseif($loadPolicy==='native_source_fixed_StringProperty_to_StrProperty_upgrade'){
                     // Original compiled UT99 v432 UnClass.cpp:
                     // TCHAR Temp[255]; MaxCount=Tag.Size ? Tag.Size+1 : 255;
                     // read ANSI bytes one by one, stopping at NUL. A short
@@ -546,6 +568,9 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 if(str_starts_with($loadPolicy,'native_warning_skip')){
                     // Keep the raw archived tag and its SHA, but never
                     // present skipped bytes as a native loaded value.
+                }elseif($anyDecoded!==null){
+                    $value=$anyDecoded['value'];
+                    $valueKind=$anyDecoded['value_kind'];
                 }elseif($arrayDecoded!==null){
                     $value=$arrayDecoded;
                     $valueKind='source_typed_dynamic_array';
@@ -700,6 +725,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     'on_disk_value_bytes'=>$offset+$position-$dataOffset,
                     'tag_offset'=>$offset+$start,'value_offset'=>$dataOffset,
                     'native_load_policy'=>$loadPolicy,
+                    'native_227k_source_resolved_Any_decoded'=>$anyDecoded,
                     'legacy_fixed_string_native_runtime_risk'=>$legacyFixedStringRisk,
                     'value_kind'=>$valueKind,
                     'value'=>$value,'value_sha256'=>$raw!==''?hash('sha256',$raw):null];
@@ -872,7 +898,13 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 $position,$offset,$family,$path,$exportIndex
             );
             $schema=null;
-            if($family===CatalogUE1ClassicSourceFamily::UT99_V432){
+            if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                ||$family===CatalogUE1ClassicSourceFamily::UNREAL_V227){
+                // The 227k on-disk GetID alias for UAnyProperty equals
+                // NAME_VectorProperty. Only source-resolved UClass member
+                // declarations may enable the native Any item codec.
+                // Keep v227's OTHER tag modes archive-only until proved;
+                // ordinary v432 validation remains strictly unchanged.
                 $resolved=CatalogUE1ClassicClassDefaultSchemaReader::
                     resolveObjectPropertyDeclarations(
                         $path,$package,(int)$export['classIndex'],$family);

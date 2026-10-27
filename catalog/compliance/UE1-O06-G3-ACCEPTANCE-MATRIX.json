@@ -2145,5 +2145,13 @@
     "original_469f_pointer_serializeitem_bytes": 4,
     "original_227k_pointer_button_serializeitem_bytes": 0,
     "AnyProperty_dynamic_codec": "UNVERIFIED"
+  },
+  "G3_08_real_compiled_227k_FAny_0to3": {
+    "status": "PARTIAL_ONLY_G3_08_OPEN",
+    "new_one_scoped_focused_checks_passed": 65,
+    "original_real_DLL_compiled_NULL_INT_FLOAT_BOOL_LOAD_SAVE": true,
+    "manifest_sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
+    "nonverified_any4to7_and_net": true,
+    "old_tests_rerun": 0
   }
 }

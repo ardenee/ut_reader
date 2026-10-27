@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T16:26:45.2293597Z",
-    "head_commit":  "a86ef809",
+    "updated_at_utc":  "2026-10-27T16:58:14.2625863Z",
+    "head_commit":  "426e476c",
     "current_target":  "DEV",
-    "current_source_sha256":  "f2c070c0e0d2dde5a217f9047012f69de75c903303695ef8709fbaaf16e3a183",
+    "current_source_sha256":  "a89080e4564d81a5e7ca64a4903610d4fca18f26735cc6b193fae372b287b595",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -579,6 +579,18 @@
                       "run_id":  "20261027T162644568Z-e469751b",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T162644568Z-e469751b-DEV-verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php",
+                      "test":  "verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T16:58:14.2435925Z",
+                      "source_sha256":  "a89080e4564d81a5e7ca64a4903610d4fca18f26735cc6b193fae372b287b595",
+                      "test_sha256":  "d19c8b0d10423aaaabc5402e29f74b063a9ef57e20fb80dc24bc97e716b9b7b0",
+                      "run_id":  "20261027T165813475Z-fe58ae3f",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T165813475Z-fe58ae3f-DEV-verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-09-full-real-class-object-references.php",

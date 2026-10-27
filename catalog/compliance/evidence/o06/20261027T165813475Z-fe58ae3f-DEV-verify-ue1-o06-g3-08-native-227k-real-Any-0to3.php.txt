@@ -1,0 +1,21 @@
+﻿{
+    "ok": true,
+    "checks": 65,
+    "passed": 65,
+    "failed": [],
+    "new_real_shipped_original_C227k_native_type0_1_2_3_LOAD_SAVE": true,
+    "new_source_declared_Any_runtime_value_IMPLEMENTED_subtypes": [
+        0,
+        1,
+        2,
+        3
+    ],
+    "native_STRING_NAME_STRUCT_OBJECT_error_Net_subtypes_unverified": [
+        4,
+        5,
+        6,
+        7
+    ],
+    "G3_08_contract_still_OPEN": true,
+    "old_original_native_accepted_tests_reexecuted": 0
+}

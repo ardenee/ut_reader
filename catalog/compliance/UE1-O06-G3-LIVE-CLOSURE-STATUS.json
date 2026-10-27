@@ -5,7 +5,7 @@
   "full_contracts_required": 16,
   "full_contracts_accepted": 5,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 21,
+  "distinct_original_native_source_subproofs": 22,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -183,6 +183,26 @@
       "227k_pointer_button_item_bytes": 0,
       "native_instance_loaded_values_claimed": false,
       "G3_08_accepted": false
+    },
+    "c227k-actual-original-exported-FAny-UAny-Native-LOAD-SAVE-Null-Int-Float-Bool": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-08-C227K-ACTUAL-COMPILED-FANY-NULL-INT-FLOAT-BOOL-LOAD-SAVE.json",
+      "sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
+      "bytes": 5652,
+      "original_C227k_Core_dll_actual_compiled_item_methods_invoked": true,
+      "actual_native_LOADED_and_SAVED_type_codes": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "actual_native_wire_bytes": [
+        1,
+        5,
+        5,
+        2
+      ],
+      "native_stock_game_package_values_claimed": false,
+      "G3_08_full_accepted": false
     }
   },
   "contracts": [
@@ -304,11 +324,14 @@
         "may-string66",
         "may-ref600",
         "c227k-original-two-genuine-UButton-FString-serialized-values",
-        "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods"
+        "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods",
+        "c227k-actual-original-exported-FAny-UAny-Native-LOAD-SAVE-Null-Int-Float-Bool"
       ],
-      "decisive_remaining_requirement": "G3-08 remains OPEN. NEW actual compiled original 469f Pointer SerializeItem/NET archives four bytes; original 227k Pointer and Button share no-op SerializeItem and success-only NetSerializeItem with no archived data. UnrealDB now exposes correct compiled source-specific runtime operator metadata, but actual property-instance value codec is NOT implemented by this declaration reader. UAnyProperty FAnyProperty dynamic Serialize/NetSerialize, original 227k button in-memory Caption LOAD comparison, and other original scalar/Str source version SAVE/error/malformed cases remain required; DO NOT replay old C98 66 string or 227k two caption verifier.",
+      "decisive_remaining_requirement": "New REAL original 227k Core.dll UAnyProperty::SerializeItem and FAnyProperty compiled methods executed with x86 FArchive shim on LOAD+SAVE for dynamic types NULL/INT/FLOAT/BOOL, including real GMalloc nonnull allocation. Production value reader now handles these native source wire payloads in a source-resolved v227 AnyProperty tag (shared VectorProperty tag id11 only with identified Any declaration); original other Vector tags remain unchanged. One NEW 65/65 focused DEV acceptance, no old tests replayed. G3-08 OPEN for original ANY STRING/NAME/STRUCT/OBJECT and NET, native in-memory C227k Button Caption, scalar version/error/SAVE and exact physical cursor across types; G3-14 and G3-15 separate.",
       "new_469f_227k_compiled_scalar_method_manifest_sha256": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc",
-      "new_46_check_scoped_pass_sha256": "ad2e9d166f4e602d651ec5c8ef50f9b3c059b2a23680492b86dea61a8112125c"
+      "new_46_check_scoped_pass_sha256": "ad2e9d166f4e602d651ec5c8ef50f9b3c059b2a23680492b86dea61a8112125c",
+      "new_genuine_original_compiled_FAny_0to3_manifest_SHA256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
+      "new_independent_65_pass_log_SHA256": "a3ab7a864f9da21b6f96706aa91bddb964a9e5f6cf50cbc5f63bc3882e53032a"
     },
     {
       "id": "G3-09",
@@ -394,9 +417,10 @@
         "t99-469f-2026-native-8const-1enum-global-seven-names",
         "t99-469f-original-490-UPROPERTY-loaded-20-native-categories",
         "original469f-and-C227-native-property-class-reference-and-null",
-        "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods"
+        "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods",
+        "c227k-actual-original-exported-FAny-UAny-Native-LOAD-SAVE-Null-Int-Float-Bool"
       ],
-      "decisive_remaining_requirement": "G3-08 newly distinguishes original compiled 469f Pointer item four bytes from original 227k Pointer/Button item no-op and Any dynamic codec; source-method proof only, NOT stock native loaded value or complete genuine corpus. G3-15 original all-class source-loaded/SAVE/malformed certification remains OPEN."
+      "decisive_remaining_requirement": "NEW original 227k compiled exported FAnyProperty and UAnyProperty native runtime methods exercised via MSVC FArchive shim for null,int,float,bool LOAD and SAVE, NOT actual original game-package ULinkerLoad instance values. All original package corpus, Any 4..7/net and other source serializers remain OPEN."
     },
     {
       "id": "G3-16",
@@ -572,5 +596,36 @@
     "actual_loaded_property_instance_claimed": false,
     "native_any_dynamic_codec_completed": false,
     "full_G3_accepted": 5
+  },
+  "latest_G3_08_native_dynamic_value_implementation": {
+    "G3_08": "OPEN",
+    "new_independent_source_gate_checks": 65,
+    "original_compiled_227k_native_exported_methods_actually_executed": [
+      "FAnyProperty::PeekIsEmpty",
+      "FAnyProperty::SerializeEmpty",
+      "FAnyProperty::Serialize",
+      "UAnyProperty::SerializeItem"
+    ],
+    "real_native_both_LOAD_SAVE_subtype_values": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "real_native_wire_byte_sizes": [
+      1,
+      5,
+      5,
+      2
+    ],
+    "source_matched_Any_not_Vector_tag": true,
+    "original_compiled_native_PeekEightTypes_and_Seek_restore": true,
+    "original_game_ULinkerLoad_not_claimed": true,
+    "dynamic_types4to7_and_network_unverified": true,
+    "current_php_value_reader_implemented": true,
+    "old_native_verifiers_reexecuted": 0,
+    "manifest_sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
+    "DEV_scoped_log_sha256": "a3ab7a864f9da21b6f96706aa91bddb964a9e5f6cf50cbc5f63bc3882e53032a",
+    "G3_full_stays_5_of_16": true
   }
 }

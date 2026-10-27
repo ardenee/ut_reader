@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "contract": "G3-08 source-typed original genuine 227k UAnyProperty dynamic LOAD/SAVE selected-subtype implementation",
+  "what_actually_executed": "Original shipped C227k Core.dll exports FAnyProperty::PeekIsEmpty/SerializeEmpty/Serialize and UAnyProperty::SerializeItem invoked as actual 32-bit compiled machine instructions through a disposable MSVC x86 FArchive virtual ABI implementation. The user supplied ORIGINAL DLL is loaded by LoadLibraryA at runtime, never modified or instrumented. Native load/save preserved INT, FLOAT, BOOL and NULL values and exact byte positions.",
+  "original_shipped_C227k_Core_DLL": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+    "bytes": 1286008,
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+  },
+  "source_authority_227k_original_EAnyPropertyType": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnTemplate.h",
+    "bytes": 89423,
+    "sha256": "fcefdfd3ffed4dd6e66eb6e0b6012f60ce445f556150651e791822b8fd480305"
+  },
+  "actual_compiled_native_harness_and_raw_stdout_CDB_input_SHA": {
+    "actual_original_compiled_FAny_harness_Cplusplus": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-COMPILED-NATIVE-ORACLE.cpp",
+      "bytes": 10864,
+      "sha256": "0a4fc6a841931b18e165c1a6e9b777dbf65e6223f589cf0a5ef05188800c71f7"
+    },
+    "actual_original_compiled_FAny_native_x86_MSVC_build_instructions": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-BUILD-AND-RUN.cmd",
+      "bytes": 438,
+      "sha256": "513e7b6697eadb36722a801e74e801ee043e0897e40348eccf66e645bb9b8b21"
+    },
+    "actual_original_compiled_FAny_null_and_cursor_native_run": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-NULL-NATIVE-BUILD-AND-LOAD-SAVE.log",
+      "bytes": 7794,
+      "sha256": "098f31b452a9657e02636abf2b01766d8e3efcf7abee26e37a64b21087db1fb8"
+    },
+    "actual_original_compiled_FAny_int_native_run": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-INT-NATIVE-LOAD-SAVE.log",
+      "bytes": 1718,
+      "sha256": "165006d8dde7a43a8c1ec359f48a0a73df1b975c8b52d08a4399db81806d1b36"
+    },
+    "actual_original_compiled_FAny_float_native_run": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-FLOAT-NATIVE-LOAD-SAVE.log",
+      "bytes": 1718,
+      "sha256": "785bd45f989ffc6406f6d415ff0a6c114f4e64b29767a0cb609c1392d54d6a0a"
+    },
+    "actual_original_compiled_FAny_bool_native_run": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-BOOL-NATIVE-LOAD-SAVE.log",
+      "bytes": 1506,
+      "sha256": "3f5047dfa24a763c1097860914e86605e39f48170171a8cb8774f81d3f2070ed"
+    },
+    "original_compiled_FAny_Serialize_Peek_and_Net_CDB_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-SERIALIZE-PEEK-NET-CDB.txt",
+      "bytes": 30772,
+      "sha256": "256812e26f5e69e177ef9a48344e96edcc092faa571804e227a7c689ca28a689"
+    },
+    "original_compiled_FAny_exact_UAny_SerializeItem_CDB_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-FAny-UAnyProperty-SerializeItem-CDB.txt",
+      "bytes": 44138,
+      "sha256": "369025ddaeca334dd1731134411188cc6d117276bdc9ee886596f74c81c5e072"
+    }
+  },
+  "original_native_loaded_and_saved_by_subtype": {
+    "0_NULL": {
+      "load_saved_type": 0,
+      "wire_byte_count": 1,
+      "oracle": "actual original UAnyProperty::SerializeItem and FAnyProperty::SerializeEmpty, PeekIsEmpty, Serialize"
+    },
+    "1_INT": {
+      "load_saved_type": 1,
+      "wire_byte_count": 5,
+      "native_loaded_saved_value_int32": 305419896
+    },
+    "2_FLOAT": {
+      "load_saved_type": 2,
+      "wire_byte_count": 5,
+      "native_float32_bits_hex": "78563412"
+    },
+    "3_BOOL": {
+      "load_saved_type": 3,
+      "wire_byte_count": 2,
+      "native_loaded_saved_value_bool": 1
+    }
+  },
+  "actual_native_original_PeekIsEmpty_type_zero_true_one_to_seven_false": true,
+  "actual_native_original_PeekIsEmpty_seeks_back_to_unchanged_cursor": true,
+  "actual_native_original_empty_load_two_Serialize_calls_peek_plus_empty": true,
+  "actual_native_original_empty_save_one_Serialize_call": true,
+  "MSVC_x86_fake_FArchive_not_original_engine_ULinkerLoad": true,
+  "no_original_real_game_package_native_dynamic_ANY_instance_loaded_claimed": true,
+  "native_ANYTYPE_STRING_4_probe_harness_AV_observed_not_Epic_regression_proof": true,
+  "original_native_ANYTYPE_NAME_STRUCT_OBJECT_and_NETWORK_unverified": true,
+  "new_production_value_decoder_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+  "new_production_value_decoder_sha256": "0ba4ee34b4e17b0c97c7527cc3869cf11cf67bbc4f1254550b8a26cd2b982b5c",
+  "production_source_resolved_tag_integration": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+  "production_tag_source_sha256": "44516b32e0771cdd75b76c4b08e4e86b1d7ba9e1268d6198c7187e21b33a4efa",
+  "source_requires_resolved_declared_AnyProperty_and_exact_unreal_v227_not_Vector_alias": true,
+  "new_runtime_subtype_support": [
+    "NULL",
+    "INT",
+    "FLOAT",
+    "BOOL"
+  ],
+  "decoder_noncanonical_BOOL_and_Any_nonzero_dynamic_types4to7_unverified_fail_closed": true,
+  "G3_08_full_status": "OPEN",
+  "prior_G3_08_orig_C98_UString66_Button2_and_pointer46_tests_reexecuted": 0
+}
