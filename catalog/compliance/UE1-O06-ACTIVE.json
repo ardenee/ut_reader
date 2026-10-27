@@ -1,7 +1,7 @@
 {
-  "contract": "g3-08-c227k-shipped-original-UAnyProperty-OBJECT7-null-LOAD-SAVE",
-  "stage": "G3-08-OBJECT7-NULL-20-PASS-PRD-SHA-VERIFIED",
-  "last_action": "Actual original C227k shipped Core.dll original compiled UAnyProperty::SerializeItem OBJECT7 null executed both native LOAD and SAVE original five-byte hex0700000000, source FArchive UObject virtual0x18. Production v227 Any null UObject reader implemented with nonnull linker refs fail closed; original TYPE6 STRUCT disposable mock requires native UStruct and lacked initialization, AV only harness issue not original Epic source bug proof. One distinct new 20/20 DEV scoped focused PASS, no old tests rerun; original C++/compiled machine CDB/native load save and STRUCT failure source logs SHA pinned and five files Git tracked. GitHub release c1442dad pushed and all changed catalog files PRD SHA verified, config and storage not overwritten. Whole G3 remains 5/16 ACCEPTED and G3-08 OPEN, original compiled native subproofs25. DesktopCommander updated game-amd new device 533872e5-7261-4327-8483-3b8ee2a8bc45 running0.3.1 functioning normally.",
-  "next_step": "Finish checkpoint commit/push and PRD SHA of 3 checkpoint files. Next G3-08 original FAny STRUCT6 with full initialized UStruct, nonnull NAME/OBJECT with actual ULinker name/object mapping, net, or switch to G3-03 true full source method closure if those require heavy initialization; do NOT repeat passing acceptance tests.",
-  "updated_at_utc": "2026-10-27T17:59:17+00:00"
+  "contract": "g3-03-c227i-real-237-struct-223-script-loaded-native-memory",
+  "stage": "passed-focus",
+  "last_action": "All selected focus DEV verification results PASS or matching PASS cache reused",
+  "next_step": "Inspect acceptance limits, update source contract documentation, then commit and hash-deploy if complete",
+  "updated_at_utc": "2026-10-27T18:25:32+00:00"
 }

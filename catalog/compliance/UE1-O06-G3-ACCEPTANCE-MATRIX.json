@@ -2175,5 +2175,16 @@
     "nonzero_object_linker": "OPEN",
     "STRUCT6_mock_not_original_engine_failure": true,
     "manifest_sha256": "e7fb894b6812e9f163a40e1bcfd5ad32ffe9fd87aca31cdaa0bc2fde4c6f33f8"
+  },
+  "G3_03_original_2012_C227i_237_UStruct_223_scripts": {
+    "status": "PARTIAL_G3_03_OPEN",
+    "new_independent_DEV_checks": 4412,
+    "original_compiled_genuine_UStructs": 237,
+    "original_compiled_genuine_loaded_scripts": 223,
+    "native_actual_source_bytecode_bytes_exact": 646,
+    "native_Children_ptrs_exact": 232,
+    "method_manifest_sha256": "cd8ff5a0198bfca58ec04aa0056af74927ec0dd31cff818b93c59e43dec77aa9",
+    "old_tests_rerun": 0,
+    "other_versions_SAVE_malformed_cursor_still_OPEN": true
   }
 }

@@ -1365,6 +1365,20 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-03-c227i-real-237-struct-223-script-loaded-native-memory": {
+      "description": "NEW genuine original 2012 Unreal 227i x86 Core.dll UStruct::Serialize compiled post-load actual memory for 237 independent file-backed Core.u exports, 223 nonzero script buffers and 14 zero scripts, 232 native Children pointers dereferenced to same original linker export, native ScriptSize up to36, ScriptText nullness, FName non-None, source Line/TextPos signed values incl 0xffffffff native=-1, entire PHP decoded source archive script-memory length. Second independent original compiled CDB execution captured actual Script.TArray bytes after native load; compares 646 exact non-relocated script memory bytes across 223 genuine scripts, mask unknown UObject process pointers and FName global identities. Actual reconstructed PHP scripts 223/223, all 237 structural fields 1:1, genuine 12 direct UStruct, 223 UFunction, 2 original UClass. One distinct independent 4412 DEV assertions. CDB 2 original raw UTF16 logs, 2 commands, parser, parsed native structured records SHA-pinned together with original DLL/Io Core.u/UCC and five source reader SHAs; no old 915 UField, G5 script or earlier G3-06/07/08/09 tests rerun. Full G3-03 OPEN until C98/T99/227k original compiled variants and real SAVE/malformed/script physical cursor; G3-12/14/15 separate.",
+      "readers": [
+        "CatalogUE1ClassicStructNativeReader.php",
+        "CatalogUE1ClassicScriptArchiveReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

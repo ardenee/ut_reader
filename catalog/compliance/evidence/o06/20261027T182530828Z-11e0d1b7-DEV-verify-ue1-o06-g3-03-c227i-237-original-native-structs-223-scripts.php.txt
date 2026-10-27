@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 4412,
+    "passed": 4412,
+    "failed": [],
+    "actual_original_native_2012_loaded_UStruct_objects": 237,
+    "actual_original_native_C227i_script_buffers": 223,
+    "original_compiled_native_known_script_bytes_matched": 646,
+    "actual_native_source_children_targets": 232,
+    "source_loader_script_memory_vs_archive_shorter_count": 213,
+    "original_profiles_certified": "2012 C227i Core.u subset only",
+    "G3_03_FULL": "OPEN",
+    "previous_accepted_native_tests_rerun": 0
+}
