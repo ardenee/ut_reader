@@ -1354,6 +1354,17 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-08-c227k-shipped-original-UAnyProperty-OBJECT7-null-LOAD-SAVE": {
+      "description": "ONE new original shipped C227k x86 Core.dll UAnyProperty::SerializeItem actual original native OBJECT7 NULL LOAD/SAVE via disposable MSVC x86 FArchive correct UObject* virtual operator+0x18. The genuine original compiled method loads native type7 with 5 bytes, original null UObject pointer, then saves 5 bytes 0700000000, no errors. PHP production only allows this proven null OBJECT and rejects non-null object linker remapping, STRUCT6, malformed and other Unreal source families. Original TYPE6 STRUCT probe requires valid UStruct and actual source interpreter: isolated mock caused access violation; not claimed engine defect. One distinct independent focused acceptance 20/20 preflight PASS, older 18/36/65/46 tests not rerun. SOURCE compiled DLL SHA, original x86 MSVC source and build, original true native output and source branch disasm SHA-pinned. G3-08 remains OPEN until nonnull OBJECT/NAME, STRUCT, Net, genuine native Button loaded Caption and other scalar source/version/error behavior.",
+      "readers": [
+        "CatalogUE1ClassicAnyPropertyValueReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-08-original-227k-UAny-object7-null.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

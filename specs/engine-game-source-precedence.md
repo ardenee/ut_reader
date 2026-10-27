@@ -143,3 +143,8 @@ Actual original 227k x86 Core.dll FAnyProperty::Serialize plus UAnyProperty::Ser
 ### G3-08 original 227k Any NAME5 zero (2026-10-27)
 
 Matching original 227k x86 Core.dll UAnyProperty SerializeItem NAME5 compiled native method actually LOAD/SAVE zero FName as five bytes 0500000000. The disposable x86 FArchive shim must implement real FName archive virtual at offset0x1c; initial null virtual was mock omission. UnrealDB source-specific Any decoder only supports zero-valued FName until actual original name table/linker nonzero values are proven; no conjectured arbitrary name resolution. New 18/18 independent scoped DEV check without rerun of previous accepted tests; G3-08 still OPEN, total G3 5/16. Evidence UE1-O06-G3-08-C227K-ORIGINAL-NATIVE-ANY-NAME5-ZERO.json.
+
+
+### G3-08 native 227k Any OBJECT7 null (2026-10-27)
+
+Original C227k shipped x86 Core.dll UAnyProperty::SerializeItem + FAnyProperty::Serialize compiled method serializes a null UObject as source TYPE7 followed by four bytes zero: 07 00 00 00 00. Actual original native LOAD and SAVE executed with FArchive UObject* virtual vtable slot0x18. Source-v227 Any instance reader implements only proven null UObject; no invented non-null ULinker object mapping or class instance values. Original STRUCT6 null test cannot execute in incomplete mock without valid initialized UStruct; test-only AV is NOT an Epic engine error. New independent one-off 20/20 focused DEV acceptance, old tests not replayed, G3-08 OPEN, full G3 5/16. See catalog/compliance/UE1-O06-G3-08-C227K-REAL-OBJECT7-NULL-LOAD-SAVE.json.

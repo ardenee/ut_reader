@@ -1,0 +1,9 @@
+﻿{
+    "ok": true,
+    "checks": 20,
+    "passed": 20,
+    "failed": [],
+    "genuine_original_C227k_UAny_object_null_native_LOAD_SAVE": true,
+    "G3_08_full_status": "OPEN",
+    "previous_tests_replayed": 0
+}

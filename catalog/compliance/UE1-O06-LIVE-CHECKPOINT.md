@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-08-c227k-original-native-FAny-NAME5-zero`
-- **Stage:** G3-08-C227K-NAME5-ZERO-18-ORIGINAL-NATIVE-PRD-SHA-VERIFIED
-- **Last completed action:** Updated Desktop Commander plugin0.3.1 new game-amd device 533872e5-7261-4327-8483-3b8ee2a8bc45 confirmed. Genuine original C227k shipped x86 Core.dll actual compiled UAnyProperty::SerializeItem NAME5 zero virtual FArchive FName slot+0x1c corrected in disposable mock; actual original native LOAD5 bytes and SAVE5 bytes hex0500000000, no errors. Production C227 Any NAME zero source-only codec implemented; real nonzero FName mapping not guessed; original 5 evidence artifacts SHA pinned and GitHub committed. Distinct new scoped original source acceptance 18/18 PASS no repeats, G3 full5/16 accepted and 11 OPEN, original compiled native subproofs24, G3-08 still OPEN for nonzero NAME,STRUCT,OBJECT,NET,Button native memory, scalar source error/version. GitHub commit2746ca61 pushed after first transient push failure then retried successfully, exact PRD changed catalog files SHA verified, protected config/storage unchanged. Source L original untouched.
-- **Resume at:** Continue G3-08 with actual compiled 227k FAny nonzero NAME native genuine name resolution (requires original ULinker FName table), STRUCT, OBJECT, NET and Button Caption or switch to G3-03 full closure if blocked. Do not rerun accepted 18,36,65 or prior tests. Keep status checkpoint after each unique new proof.
-- **Active changed at:** 2026-10-27T17:44:48+00:00
-- **Latest DEV test states:** PASS 188; FAIL 1; STARTED 0
+- **Contract:** `g3-08-c227k-shipped-original-UAnyProperty-OBJECT7-null-LOAD-SAVE`
+- **Stage:** G3-08-OBJECT7-NULL-SOURCE-20-PASS-RELEASE-PENDING
+- **Last completed action:** G3-08 original shipped 227k compiled Core.dll UAnyProperty::SerializeItem real UObject null TYPE7 archive consumed5 and wrote native 0700000000 LOAD/SAVE, x86 MSVC FArchive object virtual slot0x18 real method called. This is real original machine execution, not PHP simulation. Production reader actual source-selected C227 native Any null UObject 7 implemented, nonnull object mapping and STRUCT6 fail closed; STRUCT6 isolated mock invalid UStruct caused AV, no false Epic engine failure assertion. One new 20/20 original source-focused DEV PASS, none of previous NAME5 18/string36/numeric65/pointer46 or full accepted gates rerun. New compiled-native subproof25 while G3 full5/16 and G3-08 OPEN. Original native source C++, x86 build, raw stdout and source disasm/different mock failure five SHA artifacts pinned, source L unchanged. GitHub + PRD release pending.
+- **Resume at:** Commit/push new original 227k native object7 source/verification and SHA deploy changed catalog files with PRD config/storage exclusions. Then final checkpoint. Next G3-08 genuine Struct UStruct runtime, nonnull OBJECT and NAME linker mapping, NET, Button loaded Caption; or prioritize G3-03 closure. Do not rerun passing test suites.
+- **Active changed at:** 2026-10-27T17:58:29+00:00
+- **Latest DEV test states:** PASS 189; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T17:56:21.3333293Z | verify-ue1-o06-g3-08-original-227k-UAny-object7-null.php | PASS | 90 | catalog\compliance\evidence\o06\20261027T175620839Z-b42392c0-DEV-verify-ue1-o06-g3-08-original-227k-UAny-object7-null.php.txt |
+| 2026-10-27T17:56:20.8463336Z | verify-ue1-o06-g3-08-original-227k-UAny-object7-null.php | STARTED |  | catalog\compliance\evidence\o06\20261027T175620839Z-b42392c0-DEV-verify-ue1-o06-g3-08-original-227k-UAny-object7-null.php.txt |
 | 2026-10-27T17:41:50.5056642Z | verify-ue1-o06-g3-08-real-227k-native-Any-NAME5-zero.php | PASS | 91 | catalog\compliance\evidence\o06\20261027T174150013Z-0cd55989-DEV-verify-ue1-o06-g3-08-real-227k-native-Any-NAME5-zero.php.txt |
 | 2026-10-27T17:41:50.0206654Z | verify-ue1-o06-g3-08-real-227k-native-Any-NAME5-zero.php | STARTED |  | catalog\compliance\evidence\o06\20261027T174150013Z-0cd55989-DEV-verify-ue1-o06-g3-08-real-227k-native-Any-NAME5-zero.php.txt |
 | 2026-10-27T17:29:07.8258819Z | verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php | PASS | 93 | catalog\compliance\evidence\o06\20261027T172907299Z-3ca3d406-DEV-verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-27T15:06:51.1553662Z | verify-ue1-o06-g3-06-full-const-enum-closure.php | STARTED |  | catalog\compliance\evidence\o06\20261027T150651148Z-4d1328bd-DEV-verify-ue1-o06-g3-06-full-const-enum-closure.php.txt |
 | 2026-10-27T14:34:52.7268230Z | verify-ue1-o06-g3-c227k-two-real-button-captions.php | PASS | 171 | catalog\compliance\evidence\o06\20261027T143452143Z-c59b159d-DEV-verify-ue1-o06-g3-c227k-two-real-button-captions.php.txt |
 | 2026-10-27T14:34:52.1510849Z | verify-ue1-o06-g3-c227k-two-real-button-captions.php | STARTED |  | catalog\compliance\evidence\o06\20261027T143452143Z-c59b159d-DEV-verify-ue1-o06-g3-c227k-two-real-button-captions.php.txt |
-| 2026-10-27T14:12:22.1523703Z | verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php | PASS | 124 | catalog\compliance\evidence\o06\20261027T141221651Z-b1cbee2e-DEV-verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php.txt |
-| 2026-10-27T14:12:21.6517880Z | verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php | STARTED |  | catalog\compliance\evidence\o06\20261027T141221651Z-b1cbee2e-DEV-verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php.txt |
 
 ## Recovery procedure
 

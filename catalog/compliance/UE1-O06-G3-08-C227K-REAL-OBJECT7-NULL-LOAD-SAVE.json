@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "contract": "G3-08 actual-original-227k-UAnyProperty-OBJECT7-null-LOAD-SAVE",
+  "original_shipped_227k_Core_DLL": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+    "bytes": 1286008
+  },
+  "original_matched_compiled_UAnyProperty_SerializeItem_OBJECT7_null_LOAD_SAVE": true,
+  "original_x86_engine_owned_method_actual_native_wire_hex": "0700000000",
+  "original_x86_engine_owned_method_ACTUAL_native_archive_bytes": 5,
+  "original_FArchive_virtual_UObject_reference_operator_vtable_offset": "0x18",
+  "original_compiled_NULL_object_in_memory_pointer": "0x00000000",
+  "nonzero_UObject_original_linker_mapping_verified": false,
+  "genuine_STRUCT6_null_mock_crash_not_native_error_or_actual_unsupported_engine": true,
+  "genuine_STRUCT6_requires_initialized_UStruct_and_FArchive_methods": true,
+  "original_game_package_ULinkerLoad_value_parity_not_claimed": true,
+  "G3_08_full_status": "OPEN",
+  "new_php_source_decoder_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+  "new_php_source_decoder_sha256": "1f0aa0b37831216a70f5ddd0d8ff1864ed07c100d1d908ff29f1ab1b65e1efb3",
+  "original_native_machine_code_and_execution_artifacts": {
+    "genuine_original_227k_x86_UAny_OBJECT7_native_harness": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-OBJECT7-NULL-NATIVE.cpp",
+      "bytes": 13632,
+      "sha256": "82c3c800471818b0fd9927f6f55423f65c497c1fba7ea8ca5d43d45c1f99429c"
+    },
+    "reproducible_MSVC_x86_build": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-OBJECT7-NULL-BUILD.cmd",
+      "bytes": 279,
+      "sha256": "c5f47dac3a29736a10c61d41884a9f4b86329ded58b74c5b2815e5930ae4f796"
+    },
+    "actual_original_compiled_DLL_NULL_OBJECT_LOAD_SAVE_stdout": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-OBJECT7-NULL-LOAD-SAVE.log",
+      "bytes": 964,
+      "sha256": "50ae89f3000d2766d91c2318a7ee19f4fc6d05faa6435924f15a4bdf5a98a559"
+    },
+    "actual_original_compiled_FAny_struct_object_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-STRUCT-OBJECT-METHOD-CDB.txt",
+      "bytes": 40094,
+      "sha256": "44c6d05f83e490883a09ab5274a64e098edb18bc42cde4b3975435f1e33c36be"
+    },
+    "unsupported_STRUCT6_x86_mock_diagnostic_only": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-STRUCT6-MOCK-UNSUPPORTED-DIAGNOSTIC.log",
+      "bytes": 592,
+      "sha256": "978ea38b4bfdb4e6b9f539c4cd9716afcdf7c624da6afdd79aea8b2f0fca66f0"
+    }
+  },
+  "original_prior_accepted_native_tests_rerun": 0
+}

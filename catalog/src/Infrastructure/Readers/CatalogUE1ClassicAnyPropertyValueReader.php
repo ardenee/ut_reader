@@ -49,7 +49,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             throw new RuntimeException('Unreal v227 Any type discriminator truncated');
         }
         $type=ord($first);
-        if($type>5){
+        if($type>7){
             $typeName=self::TYPES[$type]??'ANYTYPE_INVALID';
             // Unsupported capability; not an Epic runtime archive error.
             throw new RuntimeException(
@@ -93,6 +93,20 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                 throw new RuntimeException(
                     'Unreal v227 Any nonzero NAME value requires native name-table mapping');
             }
+        }elseif($type===7){
+            // Original shipped compiled 227k UAnyProperty::SerializeItem
+            // invokes FArchive's virtual UObject* operation (+0x18).
+            // An actual x86 run confirmed only NULL reference:
+            // 07 00 00 00 00 on both LOAD and SAVE.
+            // A nonzero object needs genuine ULinker object resolution.
+            $payload=$read(4);
+            if(strlen($payload)!==4||$payload!=="\0\0\0\0"){
+                throw new RuntimeException(
+                    'Unreal v227 Any nonnull OBJECT requires native linker mapping');
+            }
+        }elseif($type===6){
+            throw new RuntimeException(
+                'Unreal v227 Any STRUCT native UStruct instance serializer unsupported');
         }else{
             $size=match($type){0=>0,1=>4,2=>4,3=>1};
             $payload=$size>0?$read($size):'';
@@ -108,6 +122,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             3=>ord($payload)!==0,
             4=>substr($stringBytes,0,-1),
             5=>['name_index'=>0,'resolved_text'=>null],
+            7=>['object_reference'=>0,'resolved_object'=>null],
         };
         return [
             'status'=>'native_227k_any_value_original_compiled_subtype_verified',
@@ -120,6 +135,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                 2=>'native_any_float32',3=>'native_any_bool',
                 4=>'native_any_ansi_string',
                 5=>'native_any_zero_fname',
+                7=>'native_any_null_object',
             },
             'serialized_byte_count'=>$position-$start,
             'raw_archive_bytes_hex'=>bin2hex($raw),
@@ -161,6 +177,13 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                     'Unreal v227 Any NAME SAVE not verified for nonzero name-table reference');
             }
             return "\x05".$rawValue;
+        }
+        if($type===7){
+            if($rawValue!=="\0\0\0\0"){
+                throw new RuntimeException(
+                    'Unreal v227 Any OBJECT SAVE not verified for nonnull UObject reference');
+            }
+            return "\x07".$rawValue;
         }
         $expected=match($type){0=>0,1=>4,2=>4,3=>1,default=>null};
         if($expected===null||strlen($rawValue)!==$expected){

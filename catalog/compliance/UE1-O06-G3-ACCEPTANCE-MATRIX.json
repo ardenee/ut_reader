@@ -2167,5 +2167,13 @@
     "new_DEV_checks": 18,
     "native_hex": "0500000000",
     "manifest_sha256": "eeccd713c40fdb04222af613fb19b185be1f6c9e913da0c926bc87e5740ee050"
+  },
+  "G3_08_native_OBJECT7_NULL": {
+    "status": "PARTIAL_G3_08_OPEN",
+    "DEV_focus_checks": 20,
+    "original_compiled_native_hex": "0700000000",
+    "nonzero_object_linker": "OPEN",
+    "STRUCT6_mock_not_original_engine_failure": true,
+    "manifest_sha256": "e7fb894b6812e9f163a40e1bcfd5ad32ffe9fd87aca31cdaa0bc2fde4c6f33f8"
   }
 }

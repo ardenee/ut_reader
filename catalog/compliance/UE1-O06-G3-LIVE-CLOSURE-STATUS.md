@@ -1,6 +1,6 @@
 # G3 live closure ? 27 October 2026
 
-**Full G3 contracts: 5/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 24.**
+**Full G3 contracts: 5/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 25.**
 
 G3-01 source selection is accepted under the clarified cumulative game-source inheritance rule. The remaining 11 method/behavior gates retain their strict source/real native parity criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
 
@@ -13,7 +13,7 @@ G3-01 source selection is accepted under the clarified cumulative game-source in
 | G3-05 UClass serialization and default objects | 0 | Original compiled UClass default-object construction, values, Config/Localized effects and error paths across C98/T99/C227. |
 | G3-06 UConst and UEnum | **ACCEPTED: 56/56 DEV** | CLOSED: authentic C98/T99/C227 compiled values; genuine runtime global names; unconditional UField then class-specific FString/Names archive source for LOAD/SAVE; source-version codec and null/error/EOF cases. Physical native malformed Tell belongs G3-14; other-method aggregate native parity belongs G3-15. |
 | G3-07 UProperty base metadata | **ACCEPTED: 2991/2991 DEV** | CLOSED source UProperty base fields, real C98 1536/T99 490/C227 668 loaded, original 227k legacy v61 flags corrected; 49 native-unobserved property exports and linked ElementSize remain G3-15, native malformed exact Tell G3-14. |
-| G3-08 Scalar derived properties and String/Str version changes | 6 | New original real C227k native Any NAME5 ZERO only LOAD/SAVE; nonzero name-table mapping, STRUCT6, OBJECT7, NET, Button loaded Caption and scalar version/error OPEN. |
+| G3-08 Scalar derived properties and String/Str version changes | 7 | New original compiled UAny type7 NULL UObject archived 0700000000, NAME5 ZERO, type0-4 completed. Nonzero NAME/OBJECT, STRUCT6, NET, Button native loaded caption and scalar error/version remain OPEN. |
 | G3-09 UObjectProperty and UClassProperty references | **ACCEPTED: 222/222 DEV** | Original compiled C98/T99/C227 class reference targets verified, real 469f null MetaClass fallback versus C227 compiled appFailAssert; one T99 source export771 unobserved G3-15, linker/import malformed cursor G3-14. |
 | G3-10 UStructProperty nested layouts | 1 | UStructProperty nested SerializeBin/offsets/imported fields and negative nested errors for all profile builds. |
 | G3-11 UArrayProperty, UFixedArrayProperty and UMapProperty | 1 | Native array/fixed-array/map loaded values and source-defined exclusion/invalid-count cases across each distinct build. |
@@ -133,3 +133,7 @@ NEW original shipped Core.dll x86 UAnyProperty::SerializeItem/ FAnyProperty::Ser
 ## G3-08 genuine compiled 227k ANYTYPE_NAME5 zero LOAD and SAVE (2026-10-27)
 
 Original shipped x86 Core.dll UAnyProperty::SerializeItem compiled method executes TYPE5 zero FName: LOAD consumes five bytes and SAVE outputs 0500000000 with no error. The mock FArchive required the actual FName archive virtual method at offset0x1c; initial missing-virtual crash was a harness limitation, not an Epic defect. This certifies only zero-valued FName; nonzero FName requires original linker name-table behavior, deliberately unsupported. New source-selected production Any reader implements zero NAME only; real original C++ MSVC native test code and binary/log/CDB SHA pinned in UE1-O06-G3-08-C227K-ORIGINAL-NATIVE-ANY-NAME5-ZERO.json. One NEW 18/18 DEV scoped pass, old suites not rerun. Full G3-08 remains OPEN: nonzero name refs, STRUCT6, OBJECT7, NET, button in-memory Caption, scalar version/error branches. Whole G3 remains 5/16; original native subproofs24.
+
+## G3-08 genuine C227k native UAnyProperty OBJECT7 NULL LOAD+SAVE (2026-10-27)
+
+Actual original shipped 227k x86 Core.dll UAnyProperty::SerializeItem compiled native function invokes FArchive virtual UObject* operator at vtable slot0x18; a disposable MSVC x86 archive shim backed native LOAD of original NULL UObject TYPE7 consumes 5 bytes and SAVE writes 0700000000, with correct native type7 and original null UObject pointer, zero archive errors. Production source-selected 227k Any value codec now implements ONLY the five-byte null UObject, refuses arbitrary nonnull UObject linker mapping and corrupted archive. Separate original STRUCT6 null UStruct experiment fails within an incomplete disposable mock because UStruct initialization/type-size behavior is necessary; this is NOT an engine bug proof. Original DLL full SHA, native CPP/MSVC build, output and CDB disasm/unsupported struct diagnostic SHA pinned in UE1-O06-G3-08-C227K-REAL-OBJECT7-NULL-LOAD-SAVE.json. One new independent 20/20 scoped DEV pass, old suites not rerun. G3-08 still OPEN, original native subproofs now25, full G3 5/16 accepted, 11 OPEN.
