@@ -1,0 +1,419 @@
+Opened log file 'C:\Temp\UnrealDB\O06\G3-04-C227k-function-state-disassembly.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe help
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00fe0000 0101e000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 60310000 60a4f000   C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 6f7c0000 6f7e6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 00c60000 00d70000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(6a5c.7648): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=168c0000 edx=00000000 esi=009c5d68 edi=00632000
+eip=778591a8 esp=01f6f2a4 ebp=01f6f2d0 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> uf Core!UFunction::Serialize; uf Core!UState::Serialize; q
+Core!UFunction::Serialize:
+6034a360 55              push    ebp
+6034a361 8bec            mov     ebp,esp
+6034a363 6aff            push    0FFFFFFFFh
+6034a365 68e07c3c60      push    offset Core!ZLibDeCompressData+0x30610 (603c7ce0)
+6034a36a 64a100000000    mov     eax,dword ptr fs:[00000000h]
+6034a370 50              push    eax
+6034a371 83ec0c          sub     esp,0Ch
+6034a374 53              push    ebx
+6034a375 56              push    esi
+6034a376 57              push    edi
+6034a377 a180854360      mov     eax,dword ptr [Core!GThreadStats+0x2b0 (60438580)]
+6034a37c 33c5            xor     eax,ebp
+6034a37e 50              push    eax
+6034a37f 8d45f4          lea     eax,[ebp-0Ch]
+6034a382 64a300000000    mov     dword ptr fs:[00000000h],eax
+6034a388 8965f0          mov     dword ptr [ebp-10h],esp
+6034a38b 8bf9            mov     edi,ecx
+6034a38d c745fc00000000  mov     dword ptr [ebp-4],0
+6034a394 8b5d08          mov     ebx,dword ptr [ebp+8]
+6034a397 53              push    ebx
+6034a398 e8d3030000      call    Core!UStruct::Serialize (6034a770)
+6034a39d f6431080        test    byte ptr [ebx+10h],80h
+6034a3a1 0f857e010000    jne     Core!UFunction::Serialize+0x1c5 (6034a525)
+
+Core!UFunction::Serialize+0x47:
+6034a3a7 83bfb400000000  cmp     dword ptr [edi+0B4h],0
+6034a3ae 7420            je      Core!UFunction::Serialize+0x70 (6034a3d0)
+
+Core!UFunction::Serialize+0x50:
+6034a3b0 33c0            xor     eax,eax
+6034a3b2 668987bc000000  mov     word ptr [edi+0BCh],ax
+6034a3b9 8987b8000000    mov     dword ptr [edi+0B8h],eax
+6034a3bf beffff0000      mov     esi,0FFFFh
+6034a3c4 6689b7be000000  mov     word ptr [edi+0BEh],si
+6034a3cb e9c1000000      jmp     Core!UFunction::Serialize+0x131 (6034a491)
+
+Core!UFunction::Serialize+0x70:
+6034a3d0 837b043f        cmp     dword ptr [ebx+4],3Fh
+6034a3d4 7f10            jg      Core!UFunction::Serialize+0x86 (6034a3e6)
+
+Core!UFunction::Serialize+0x76:
+6034a3d6 8d87cc000000    lea     eax,[edi+0CCh]
+6034a3dc 50              push    eax
+6034a3dd 53              push    ebx
+6034a3de e88dc4ffff      call    Core!UStruct::UStruct+0x160 (60346870)
+6034a3e3 83c408          add     esp,8
+
+Core!UFunction::Serialize+0x86:
+6034a3e6 8d87bc000000    lea     eax,[edi+0BCh]
+6034a3ec 50              push    eax
+6034a3ed 53              push    ebx
+6034a3ee e87dc4ffff      call    Core!UStruct::UStruct+0x160 (60346870)
+6034a3f3 83c408          add     esp,8
+6034a3f6 837b043f        cmp     dword ptr [ebx+4],3Fh
+6034a3fa 7f10            jg      Core!UFunction::Serialize+0xac (6034a40c)
+
+Core!UFunction::Serialize+0x9c:
+6034a3fc 8d87c1000000    lea     eax,[edi+0C1h]
+6034a402 50              push    eax
+6034a403 53              push    ebx
+6034a404 e8f7e5fdff      call    Core!UTextBufferFactory::operator=+0x20 (60328a00)
+6034a409 83c408          add     esp,8
+
+Core!UFunction::Serialize+0xac:
+6034a40c 8d87c0000000    lea     eax,[edi+0C0h]
+6034a412 50              push    eax
+6034a413 53              push    ebx
+6034a414 e8e7e5fdff      call    Core!UTextBufferFactory::operator=+0x20 (60328a00)
+6034a419 83c408          add     esp,8
+6034a41c 837b043f        cmp     dword ptr [ebx+4],3Fh
+6034a420 7f10            jg      Core!UFunction::Serialize+0xd2 (6034a432)
+
+Core!UFunction::Serialize+0xc2:
+6034a422 8d87ce000000    lea     eax,[edi+0CEh]
+6034a428 50              push    eax
+6034a429 53              push    ebx
+6034a42a e841c4ffff      call    Core!UStruct::UStruct+0x160 (60346870)
+6034a42f 83c408          add     esp,8
+
+Core!UFunction::Serialize+0xd2:
+6034a432 8db7b8000000    lea     esi,[edi+0B8h]
+6034a438 56              push    esi
+6034a439 53              push    ebx
+6034a43a e8e1e5fdff      call    Core!UTextBufferFactory::operator=+0x40 (60328a20)
+6034a43f 83c408          add     esp,8
+6034a442 f60640          test    byte ptr [esi],40h
+6034a445 7445            je      Core!UFunction::Serialize+0x12c (6034a48c)
+
+Core!UFunction::Serialize+0xe7:
+6034a447 8d87be000000    lea     eax,[edi+0BEh]
+6034a44d 50              push    eax
+6034a44e 53              push    ebx
+6034a44f e81cc4ffff      call    Core!UStruct::UStruct+0x160 (60346870)
+6034a454 83c408          add     esp,8
+6034a457 f6431001        test    byte ptr [ebx+10h],1
+6034a45b 742f            je      Core!UFunction::Serialize+0x12c (6034a48c)
+
+Core!UFunction::Serialize+0xfd:
+6034a45d beffff0000      mov     esi,0FFFFh
+6034a462 6639b7be000000  cmp     word ptr [edi+0BEh],si
+6034a469 7426            je      Core!UFunction::Serialize+0x131 (6034a491)
+
+Core!UFunction::Serialize+0x10b:
+6034a46b 8b07            mov     eax,dword ptr [edi]
+6034a46d 8bcf            mov     ecx,edi
+6034a46f ff9080000000    call    dword ptr [eax+80h]
+6034a475 8b4858          mov     ecx,dword ptr [eax+58h]
+6034a478 0fb787be000000  movzx   eax,word ptr [edi+0BEh]
+6034a47f 3bc1            cmp     eax,ecx
+6034a481 7c0e            jl      Core!UFunction::Serialize+0x131 (6034a491)
+
+Core!UFunction::Serialize+0x123:
+6034a483 6689b7be000000  mov     word ptr [edi+0BEh],si
+6034a48a eb05            jmp     Core!UFunction::Serialize+0x131 (6034a491)
+
+Core!UFunction::Serialize+0x12c:
+6034a48c beffff0000      mov     esi,0FFFFh
+
+Core!UFunction::Serialize+0x131:
+6034a491 f6431001        test    byte ptr [ebx+10h],1
+6034a495 0f8483000000    je      Core!UFunction::Serialize+0x1be (6034a51e)
+
+Core!UFunction::Serialize+0x13b:
+6034a49b c687c100000000  mov     byte ptr [edi+0C1h],0
+6034a4a2 33c0            xor     eax,eax
+6034a4a4 668987cc000000  mov     word ptr [edi+0CCh],ax
+6034a4ab 6689b7ce000000  mov     word ptr [edi+0CEh],si
+6034a4b2 ff7740          push    dword ptr [edi+40h]
+6034a4b5 e8e6a8ffff      call    Core!FMemCache::Tick+0x200 (60344da0)
+6034a4ba 83c404          add     esp,4
+6034a4bd 32db            xor     bl,bl
+
+Core!UFunction::Serialize+0x15f:
+6034a4bf 8bd0            mov     edx,eax
+6034a4c1 85d2            test    edx,edx
+6034a4c3 7459            je      Core!UFunction::Serialize+0x1be (6034a51e)
+
+Core!UFunction::Serialize+0x165:
+6034a4c5 f6424480        test    byte ptr [edx+44h],80h
+6034a4c9 7453            je      Core!UFunction::Serialize+0x1be (6034a51e)
+
+Core!UFunction::Serialize+0x16b:
+6034a4cb fec3            inc     bl
+6034a4cd 889fc1000000    mov     byte ptr [edi+0C1h],bl
+6034a4d3 8b4244          mov     eax,dword ptr [edx+44h]
+6034a4d6 2580050000      and     eax,580h
+6034a4db 3d80010000      cmp     eax,180h
+6034a4e0 668b4248        mov     ax,word ptr [edx+48h]
+6034a4e4 7506            jne     Core!UFunction::Serialize+0x18c (6034a4ec)
+
+Core!UFunction::Serialize+0x186:
+6034a4e6 6683c004        add     ax,4
+6034a4ea eb0a            jmp     Core!UFunction::Serialize+0x196 (6034a4f6)
+
+Core!UFunction::Serialize+0x18c:
+6034a4ec 8b4a40          mov     ecx,dword ptr [edx+40h]
+6034a4ef 0faf4a3c        imul    ecx,dword ptr [edx+3Ch]
+6034a4f3 6603c1          add     ax,cx
+
+Core!UFunction::Serialize+0x196:
+6034a4f6 668987cc000000  mov     word ptr [edi+0CCh],ax
+6034a4fd f7424400040000  test    dword ptr [edx+44h],400h
+6034a504 740b            je      Core!UFunction::Serialize+0x1b1 (6034a511)
+
+Core!UFunction::Serialize+0x1a6:
+6034a506 668b4248        mov     ax,word ptr [edx+48h]
+6034a50a 668987ce000000  mov     word ptr [edi+0CEh],ax
+
+Core!UFunction::Serialize+0x1b1:
+6034a511 ff7234          push    dword ptr [edx+34h]
+6034a514 e887a8ffff      call    Core!FMemCache::Tick+0x200 (60344da0)
+6034a519 83c404          add     esp,4
+6034a51c eba1            jmp     Core!UFunction::Serialize+0x15f (6034a4bf)
+
+Core!UFunction::Serialize+0x1be:
+6034a51e c745fcffffffff  mov     dword ptr [ebp-4],0FFFFFFFFh
+
+Core!UFunction::Serialize+0x1c5:
+6034a525 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+6034a528 64890d00000000  mov     dword ptr fs:[0],ecx
+6034a52f 59              pop     ecx
+6034a530 5f              pop     edi
+6034a531 5e              pop     esi
+6034a532 5b              pop     ebx
+6034a533 8be5            mov     esp,ebp
+6034a535 5d              pop     ebp
+6034a536 c20400          ret     4
+Core!UState::Serialize:
+6034a570 55              push    ebp
+6034a571 8bec            mov     ebp,esp
+6034a573 6aff            push    0FFFFFFFFh
+6034a575 680d7d3c60      push    offset Core!ZLibDeCompressData+0x3063d (603c7d0d)
+6034a57a 64a100000000    mov     eax,dword ptr fs:[00000000h]
+6034a580 50              push    eax
+6034a581 83ec34          sub     esp,34h
+6034a584 53              push    ebx
+6034a585 56              push    esi
+6034a586 57              push    edi
+6034a587 a180854360      mov     eax,dword ptr [Core!GThreadStats+0x2b0 (60438580)]
+6034a58c 33c5            xor     eax,ebp
+6034a58e 50              push    eax
+6034a58f 8d45f4          lea     eax,[ebp-0Ch]
+6034a592 64a300000000    mov     dword ptr fs:[00000000h],eax
+6034a598 8965f0          mov     dword ptr [ebp-10h],esp
+6034a59b 8bf9            mov     edi,ecx
+6034a59d 897de4          mov     dword ptr [ebp-1Ch],edi
+6034a5a0 c745fc00000000  mov     dword ptr [ebp-4],0
+6034a5a7 8b7508          mov     esi,dword ptr [ebp+8]
+6034a5aa 56              push    esi
+6034a5ab e8c0010000      call    Core!UStruct::Serialize (6034a770)
+6034a5b0 f6461080        test    byte ptr [esi+10h],80h
+6034a5b4 0f8564010000    jne     Core!UState::Serialize+0x1ae (6034a71e)
+
+Core!UState::Serialize+0x4a:
+6034a5ba 8d87c0000000    lea     eax,[edi+0C0h]
+6034a5c0 8d8fb8000000    lea     ecx,[edi+0B8h]
+6034a5c6 8d9fcc000000    lea     ebx,[edi+0CCh]
+6034a5cc 83bfb400000000  cmp     dword ptr [edi+0B4h],0
+6034a5d3 7431            je      Core!UState::Serialize+0x96 (6034a606)
+
+Core!UState::Serialize+0x65:
+6034a5d5 c70000000000    mov     dword ptr [eax],0
+6034a5db c7400400000000  mov     dword ptr [eax+4],0
+6034a5e2 c70100000000    mov     dword ptr [ecx],0
+6034a5e8 c7410400000000  mov     dword ptr [ecx+4],0
+6034a5ef b8ffff0000      mov     eax,0FFFFh
+6034a5f4 668903          mov     word ptr [ebx],ax
+6034a5f7 c787c800000000000000 mov dword ptr [edi+0C8h],0
+6034a601 e911010000      jmp     Core!UState::Serialize+0x1a7 (6034a717)
+
+Core!UState::Serialize+0x96:
+6034a606 50              push    eax
+6034a607 51              push    ecx
+6034a608 56              push    esi
+6034a609 e8a2ecfdff      call    Core!operator<<+0x2d0 (603292b0)
+6034a60e 83c408          add     esp,8
+6034a611 50              push    eax
+6034a612 e899ecfdff      call    Core!operator<<+0x2d0 (603292b0)
+6034a617 83c408          add     esp,8
+6034a61a 8d87c8000000    lea     eax,[edi+0C8h]
+6034a620 50              push    eax
+6034a621 53              push    ebx
+6034a622 56              push    esi
+6034a623 e848c2ffff      call    Core!UStruct::UStruct+0x160 (60346870)
+6034a628 83c408          add     esp,8
+6034a62b 50              push    eax
+6034a62c e8efe3fdff      call    Core!UTextBufferFactory::operator=+0x40 (60328a20)
+6034a631 83c408          add     esp,8
+6034a634 0fb703          movzx   eax,word ptr [ebx]
+6034a637 b9ffff0000      mov     ecx,0FFFFh
+6034a63c 663bc1          cmp     ax,cx
+6034a63f 0f84d2000000    je      Core!UState::Serialize+0x1a7 (6034a717)
+
+Core!UState::Serialize+0xd5:
+6034a645 3b4758          cmp     eax,dword ptr [edi+58h]
+6034a648 0f8dc9000000    jge     Core!UState::Serialize+0x1a7 (6034a717)
+
+Core!UState::Serialize+0xde:
+6034a64e 6a00            push    0
+6034a650 50              push    eax
+6034a651 57              push    edi
+6034a652 57              push    edi
+6034a653 8d4dc0          lea     ecx,[ebp-40h]
+6034a656 e81521fdff      call    Core!FFrame::FFrame (6031c770)
+6034a65b c645fc01        mov     byte ptr [ebp-4],1
+6034a65f c645fc02        mov     byte ptr [ebp-4],2
+6034a663 8b75cc          mov     esi,dword ptr [ebp-34h]
+
+Core!UState::Serialize+0xf6:
+6034a666 8b1e            mov     ebx,dword ptr [esi]
+6034a668 83c604          add     esi,4
+6034a66b 8975cc          mov     dword ptr [ebp-34h],esi
+6034a66e 895de8          mov     dword ptr [ebp-18h],ebx
+6034a671 c7450800000000  mov     dword ptr [ebp+8],0
+6034a678 85db            test    ebx,ebx
+6034a67a 747b            je      Core!UState::Serialize+0x187 (6034a6f7)
+
+Core!UState::Serialize+0x10c:
+6034a67c 8b06            mov     eax,dword ptr [esi]
+6034a67e 894508          mov     dword ptr [ebp+8],eax
+6034a681 83c604          add     esi,4
+6034a684 8975cc          mov     dword ptr [ebp-34h],esi
+6034a687 8945ec          mov     dword ptr [ebp-14h],eax
+6034a68a 50              push    eax
+6034a68b 8d4f54          lea     ecx,[edi+54h]
+6034a68e e84d9dfeff      call    Core!FArray::IsValidIndex (603343e0)
+6034a693 85c0            test    eax,eax
+6034a695 751f            jne     Core!UState::Serialize+0x146 (6034a6b6)
+
+Core!UState::Serialize+0x127:
+6034a697 a1f02c4460      mov     eax,dword ptr [Core!FName::Names (60442cf0)]
+6034a69c 8b0498          mov     eax,dword ptr [eax+ebx*4]
+6034a69f 83c00c          add     eax,0Ch
+6034a6a2 ff7758          push    dword ptr [edi+58h]
+6034a6a5 ff7508          push    dword ptr [ebp+8]
+6034a6a8 50              push    eax
+6034a6a9 6888923d60      push    offset Core!FArchiveDummySave::`vftable'+0x210c (603d9288)
+6034a6ae e8ad960300      call    Core!appThrowf (60383d60)
+6034a6b3 83c410          add     esp,10h
+
+Core!UState::Serialize+0x146:
+6034a6b6 8d45ec          lea     eax,[ebp-14h]
+6034a6b9 50              push    eax
+6034a6ba 8d45e8          lea     eax,[ebp-18h]
+6034a6bd 50              push    eax
+6034a6be 8d8fd0040000    lea     ecx,[edi+4D0h]
+6034a6c4 e8571d0000      call    Core!UStruct::SerializeTaggedProperties+0xa40 (6034c420)
+6034a6c9 eb9b            jmp     Core!UState::Serialize+0xf6 (6034a666)
+
+Core!UState::Serialize+0x187:
+6034a6f7 c745fc01000000  mov     dword ptr [ebp-4],1
+6034a6fe c645fc00        mov     byte ptr [ebp-4],0
+6034a702 c745c0580d3d60  mov     dword ptr [ebp-40h],offset Core!FFrame::`vftable' (603d0d58)
+6034a709 837dd400        cmp     dword ptr [ebp-2Ch],0
+6034a70d 7408            je      Core!UState::Serialize+0x1a7 (6034a717)
+
+Core!UState::Serialize+0x19f:
+6034a70f 8d4dc0          lea     ecx,[ebp-40h]
+6034a712 e8093ffeff      call    Core!FFrame::ClearConstRefs (6032e620)
+
+Core!UState::Serialize+0x1a7:
+6034a717 c745fcffffffff  mov     dword ptr [ebp-4],0FFFFFFFFh
+
+Core!UState::Serialize+0x1ae:
+6034a71e 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+6034a721 64890d00000000  mov     dword ptr fs:[0],ecx
+6034a728 59              pop     ecx
+6034a729 5f              pop     edi
+6034a72a 5e              pop     esi
+6034a72b 5b              pop     ebx
+6034a72c 8be5            mov     esp,ebp
+6034a72e 5d              pop     ebp
+6034a72f c20400          ret     4
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

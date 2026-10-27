@@ -1446,6 +1446,20 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c227i-c227k-original-function-state-472": {
+      "description": "One combined original C227 native differential, never guessed from package v69: actual 2012 v227i Core.dll UCC Core.u 69/0 loaded 223 UFunction, latest 2026 227k Core.dll UCC Core.u 69/227 loaded 249 UFunction and two verified Class::UState records. Two genuine CDB x86 traces, all source-differential function member order, original source and compiled disassembly pinned. 2012 uses historical normal parameter size, 2026 compiled UFunction special (PropertyFlags &0x580)==0x180 four-byte indirect out-parameter packed size. New explicit unreal-v227i runtime provenance retains historical ABI; normal unreal-v227 now follows actual 227k. Total 472 original UFunction and 1416/1416 persisted plus 1416/1416 loaded fields exact. The two older v227i UState-site observations target Struct exports and are excluded rather than misclassified. C227 native SAVE, malformed physical FArchive and other state variants remain OPEN; no previously sealed C98, UT99 v432 or 469f CDB reruns.",
+      "readers": [
+        "CatalogUE1ClassicFunctionLinkReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicSourceFamily.php",
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

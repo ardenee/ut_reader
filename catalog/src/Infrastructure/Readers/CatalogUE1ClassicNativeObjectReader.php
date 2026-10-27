@@ -211,16 +211,20 @@ final class CatalogUE1ClassicNativeObjectReader
                             ?CatalogUE1ClassicSourceFamily::UT99_V469F:$family)
                     :CatalogUE1ClassicStructNativeReader::inspect(
                         $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
-                // Original UT99 v432 and explicit 469f compiled
-                // UFunction::Serialize recompute post-load parameter fields
+                // Actual compiled UT99 v432/469f and Unreal v227i/k
+                // UFunction::Serialize recompute postload parameter fields
                 // from Children UProperty chains without fabricated pointers;
                 // keep unresolved fields null for any unknown member layout.
                 if($nativeKind==='function'
-                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&in_array($family,[
+                        CatalogUE1ClassicSourceFamily::UT99_V432,
+                        CatalogUE1ClassicSourceFamily::UNREAL_V227,
+                    ],true)
                     &&($detail['status']??null)==='native_function_record_complete'){
-                    $sourceProfile=$sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V469F
-                        ?CatalogUE1ClassicSourceFamily::UT99_V469F
-                        :CatalogUE1ClassicSourceFamily::UT99_V432;
+                    $sourceProfile=in_array($sourceFamily,[
+                        CatalogUE1ClassicSourceFamily::UT99_V469F,
+                        CatalogUE1ClassicSourceFamily::UNREAL_V227I,
+                    ],true)?$sourceFamily:$family;
                     $detail=array_replace($detail,
                         CatalogUE1ClassicFunctionLinkReader::recompute(
                             $path,$pkg,$index,$detail,$sourceProfile));

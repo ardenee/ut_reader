@@ -28,6 +28,10 @@ final class CatalogUE1ClassicSourceFamily
     // updated UT99 loader, never a second selectable source profile.
     public const LEGACY_UT99_V400='ut99-v400';
     public const UNREAL_V227='unreal-v227';
+    // Explicit original shipped 2012 v227i Core.dll runtime ABI; never
+    // inferred from v69/227 package headers. The archive source inherits
+    // Unreal v227, while changed post-load UFunction ABI is build-specific.
+    public const UNREAL_V227I='unreal-v227i';
     /** Chronological game-source snapshots; each change persists until explicitly overridden.
      * Earlier native-resource/Unrealfile serializer generations have their own wire formats;
      * method inheritance is resolved within the applicable archive format, not by name alone.
@@ -80,6 +84,8 @@ final class CatalogUE1ClassicSourceFamily
         if($sourceFamily===self::LEGACY_UT99_V400
             ||$sourceFamily===self::UT99_V469F){
             $sourceFamily=self::UT99_V432;
+        }elseif($sourceFamily===self::UNREAL_V227I){
+            $sourceFamily=self::UNREAL_V227;
         }
         if($sourceFamily!==null&&!array_key_exists(
             $sourceFamily,self::GAME_VERSION_GATES)){
@@ -166,6 +172,8 @@ final class CatalogUE1ClassicSourceFamily
         if($sourceFamily===self::LEGACY_UT99_V400
             ||$sourceFamily===self::UT99_V469F){
             $sourceFamily=self::UT99_V432;
+        }elseif($sourceFamily===self::UNREAL_V227I){
+            $sourceFamily=self::UNREAL_V227;
         }
         $version=(int)($header['version']??0);
         $licensee=(int)($header['licenseeVersion']??($header['licensee']??0));
@@ -218,8 +226,9 @@ final class CatalogUE1ClassicSourceFamily
                     :($sourceFamily===self::UT99_V469F
                         ?['ue1-engine','ut99-v400','ut99-v432','ut99-v469f']
                         :['ue1-engine','ut99-v400','ut99-v432'])),
-            'explicit_runtime_source_overlay'=>$sourceFamily===self::UT99_V469F
-                ?self::UT99_V469F:null,
+            'explicit_runtime_source_overlay'=>in_array($sourceFamily,[
+                self::UT99_V469F,self::UNREAL_V227I,
+            ],true)?$sourceFamily:null,
             // Last *present* classic UE1 Core serializer implementation.
             // v1.224/v1.227 contain newer headers but no replacement
             // Core/Src/UnClass.cpp or UnProp.cpp; absence is not a reset.

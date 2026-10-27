@@ -1,0 +1,15 @@
+﻿{
+    "ok": true,
+    "checks": 4296,
+    "fail": [],
+    "original_2012_C227i_functions": 223,
+    "original_2026_C227k_functions": 249,
+    "genuine_unique_function_events": 472,
+    "original_real_C227k_state_class_events": 2,
+    "C227i_struct_state_breakpoint_events_EXCLUDED": 2,
+    "original_method_persisted_fields_matched": 1416,
+    "new_original_compiled_loaded_function_fields_matched": 1416,
+    "all_method_native_function_fields_matched": 2832,
+    "new_native_debugger_runs_reused": 0,
+    "G3_04_Full": "OPEN (native SAVE / malformed/version cursor / 469f Engine and other loaded states)"
+}

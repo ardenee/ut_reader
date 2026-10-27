@@ -1,8 +1,8 @@
 <?php
 /**
- * Reconstruct UT99 v432 and separately compiled 469f UFunction post-load
- * parameter values from original UStruct::Link/UProperty::Link layouts.
- * The 469f path is enabled only with explicit original runtime provenance.
+ * Source-specific UFunction post-LOAD parameter-layout resolver:
+ * UT99 v432/469f and Unreal v227k/explicit original 2012 v227i.
+ * Do not infer either runtime build from package version/number.
  *
  * Does not claim runtime UObject pointer linking, script execution, or
  * arbitrary user-defined struct sizes. Unknown members fail closed.
@@ -19,6 +19,8 @@ final class CatalogUE1ClassicFunctionLinkReader
         if(!in_array($sourceProfile,[
             CatalogUE1ClassicSourceFamily::UT99_V432,
             CatalogUE1ClassicSourceFamily::UT99_V469F,
+            CatalogUE1ClassicSourceFamily::UNREAL_V227,
+            CatalogUE1ClassicSourceFamily::UNREAL_V227I,
         ],true))return ['source_function_link_status'=>'source_profile_unverified'];
         $exports=$pkg->getExports();
         $imports=$pkg->getImports();
@@ -39,7 +41,7 @@ final class CatalogUE1ClassicFunctionLinkReader
                 :($exports[$class-1]['objectNameText']??null));
         };
         $reason=null;
-        $size=0;$count=0;$return=65535;$next=(int)($saved['children_reference']??0);
+        $size=0;$computedParmsSize=0;$count=0;$return=65535;$next=(int)($saved['children_reference']??0);
         $visited=[];$pathBase=strtolower(basename($path));
         if($next<0)$reason='imported_function_child_not_linked';
         while($next>0){
@@ -84,7 +86,17 @@ final class CatalogUE1ClassicFunctionLinkReader
                 if($ref>0&&$pathBase==='core.u'&&is_array($struct)){
                     $coreBuiltin=$sourceKind($struct)==='Struct';
                 }
-                $element=$coreBuiltin?(['Vector'=>12,'Rotator'=>12,'Color'=>4][$name]??null):null;
+                // Extra Unreal 227k native Core math classes only belong
+                // to the explicit Unreal-v227 compiler profile, never
+                // to UT99 just because names and package version coincide.
+                $sizes=['Vector'=>12,'Rotator'=>12,'Color'=>4];
+                if(in_array($sourceProfile,[
+                    CatalogUE1ClassicSourceFamily::UNREAL_V227,
+                    CatalogUE1ClassicSourceFamily::UNREAL_V227I,
+                ],true)){
+                    $sizes+=['Quat'=>16,'InterpCurve'=>12,'Coords'=>48];
+                }
+                $element=$coreBuiltin?($sizes[$name]??null):null;
             }
             if($element===null||$element<=0||$element>1048576){
                 $reason='unverified_element_size:'.$kind;break;
@@ -98,7 +110,13 @@ final class CatalogUE1ClassicFunctionLinkReader
                 ||$offset+$element*$dim>1048576){
                 $reason='unbounded_parameter_layout';break;
             }
-            $size=$offset+$element*$dim;
+            // Original 227k C++ compiled parameter ABI treats an out
+            // parameter with CPF_Parm|CPF_OutParm (without 0x400)
+            // as a four-byte indirect pointer rather than full value.
+            $indirect=$sourceProfile===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                &&($flags&0x580)===0x180;
+            $size=$offset+($indirect?4:$element*$dim);
+            $computedParmsSize=$size;
             ++$count;
             if(($flags&0x400)!==0)$return=$offset; // CPF_ReturnParm
             $next=(int)($property['next_field_reference']??0);
@@ -110,11 +128,12 @@ final class CatalogUE1ClassicFunctionLinkReader
                 'runtime_function_param_chain_linked'=>false];
         }
         return [
-            'loaded_parms_size'=>$size,
+            'loaded_parms_size'=>$computedParmsSize,
             'loaded_num_parms'=>$count,
             'loaded_return_value_offset'=>$return,
             // These are source-computed *values*, not linked engine pointers.
             'source_function_link_status'=>'source_property_layout_computed',
+            'source_function_compiled_runtime_profile'=>$sourceProfile,
             'source_function_loaded_fields_computed'=>true,
             'runtime_function_param_chain_linked'=>false,
         ];
