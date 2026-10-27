@@ -1,0 +1,5 @@
+sxe av
+g
+.echo G304_TINY_BADNET_REAL_NATIVE_ERROR_EXIT
+kb 15
+q

@@ -1473,6 +1473,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c227k-original-native-save-malformed-2objects": {
+      "description": "ONE real 2026 OldUnreal v227k original compiled Core.dll SAVE and independent fresh LOAD of disposable 310-byte package containing exact UState and UFunction, plus one-byte fatal malformed FUNC_Net original physical serial size overrun. Original C++ source compiled x86 against original Core.lib and at runtime linked genuine immutable Core.dll. CDB observed 3 UState::Serialize and 3 UFunction::Serialize SAVE passes and 1 each LOAD with identical state ProbeMask/IgnoreMask/StateFlags/child-function, flags, precedence and three loaded function values; genuine original loader reports fields match. Original writer and original native loader full text/CDB logs and exact 310-byte .u file SHA pinned. Negative changes byte217 from 0x02 to 0x42 to require 2-byte RepOffset beyond function export end221; original compiled loader emits Core.Errors.SerialSize then aborts, UnrealDB reports native_export_serial_size_mismatch with derived cursor223/end221/overrun2 and refuses loaded values. Exact numeric native FArchive Tell was NOT read; do not claim this seals other malformed cursor, other source SAVE or full G3-04. Prior attempt to resave intrinsic Core.u caused original engine Export.PackageIndex>0 assertions and failed independent reload, explicitly excluded. One NEW focused DEV 45 assertions; no previous compiled C98/v432/469f/C227i or Engine.u native acceptance replayed; no production code required for this already-correct source branch.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicStructNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

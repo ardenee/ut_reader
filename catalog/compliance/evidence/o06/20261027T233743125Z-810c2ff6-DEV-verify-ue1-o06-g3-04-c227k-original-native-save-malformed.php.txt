@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 45,
+    "fail": [],
+    "original_engine_build": "Unreal 227k v69/227 x86 original Core.dll",
+    "original_compiled_state_save_calls": 3,
+    "original_compiled_function_save_calls": 3,
+    "original_compiled_distinct_saved_state_objects": 1,
+    "original_compiled_distinct_saved_function_objects": 1,
+    "original_saved_package_size_bytes": 310,
+    "original_compiled_fresh_process_load_match": true,
+    "compiled_fatal_malformed_error": "Core.Errors.SerialSize",
+    "reader_malformed_cursor": 223,
+    "function_serial_end": 221,
+    "numeric_native_Tell_observed": false,
+    "C98_T99_469f_C227i_native_reexecuted": false,
+    "G3_04_Full": "OPEN: other versions, native malformed exact Tell, SAVE branches and remaining states"
+}
