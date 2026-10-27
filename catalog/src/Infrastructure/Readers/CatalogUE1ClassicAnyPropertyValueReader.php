@@ -49,7 +49,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             throw new RuntimeException('Unreal v227 Any type discriminator truncated');
         }
         $type=ord($first);
-        if($type>4){
+        if($type>5){
             $typeName=self::TYPES[$type]??'ANYTYPE_INVALID';
             // Unsupported capability; not an Epic runtime archive error.
             throw new RuntimeException(
@@ -81,6 +81,18 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                     'Unreal v227 Any STRING payload invalid or Unicode form not yet verified');
             }
             $payload=$countBytes.$stringBytes;
+        }elseif($type===5){
+            // Original shipped 227k UAnyProperty::SerializeItem calls
+            // FArchive's virtual FName operator (slot +0x1c). Executed
+            // through original x86 Core.dll for the ZERO-valued name only:
+            // native LOAD/SAVE wire hex 05 00 00 00 00.
+            // Arbitrary names require real name-table/archive remapping,
+            // which has not been native-proven in this mock archive.
+            $payload=$read(4);
+            if(strlen($payload)!==4||$payload!=="\0\0\0\0"){
+                throw new RuntimeException(
+                    'Unreal v227 Any nonzero NAME value requires native name-table mapping');
+            }
         }else{
             $size=match($type){0=>0,1=>4,2=>4,3=>1};
             $payload=$size>0?$read($size):'';
@@ -95,6 +107,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             2=>(float)unpack('g',$payload)[1],
             3=>ord($payload)!==0,
             4=>substr($stringBytes,0,-1),
+            5=>['name_index'=>0,'resolved_text'=>null],
         };
         return [
             'status'=>'native_227k_any_value_original_compiled_subtype_verified',
@@ -106,6 +119,7 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                 0=>'native_any_null',1=>'native_any_int32',
                 2=>'native_any_float32',3=>'native_any_bool',
                 4=>'native_any_ansi_string',
+                5=>'native_any_zero_fname',
             },
             'serialized_byte_count'=>$position-$start,
             'raw_archive_bytes_hex'=>bin2hex($raw),
@@ -140,6 +154,13 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                     'Unreal v227 Any STRING SAVE unsupported compact, Unicode or malformed payload');
             }
             return chr($type).$rawValue;
+        }
+        if($type===5){
+            if($rawValue!=="\0\0\0\0"){
+                throw new RuntimeException(
+                    'Unreal v227 Any NAME SAVE not verified for nonzero name-table reference');
+            }
+            return "\x05".$rawValue;
         }
         $expected=match($type){0=>0,1=>4,2=>4,3=>1,default=>null};
         if($expected===null||strlen($rawValue)!==$expected){

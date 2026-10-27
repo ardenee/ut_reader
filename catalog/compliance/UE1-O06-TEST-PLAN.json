@@ -1343,6 +1343,17 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-08-c227k-original-native-FAny-NAME5-zero": {
+      "description": "ONE distinct genuine original shipped 227k x86 Core.dll UAnyProperty::SerializeItem ANYTYPE_NAME5 ZERO actual native LOAD+SAVE proof with custom source C++ FArchive virtual FName operator slot+0x1c; original native 5-byte wire hex0500000000 (marker5 + original zero-valued FName 4-byte), real native load=5 SAVE=5, unsupported nonzero FName due original linker FName index/name table mapping not native-proven. Previous null/int/float/bool/string source tests never rerun. New source-specific v227 Any decoder implements zero name only and refuses nonzero, truncated, other source families. Original DLL/CPP/native output/initial unimplemented harness CDB and disasm SHA manifest pinned. Full G3-08 remains OPEN, next Any nonzero NAME, STRUCT6,OBJECT7,NET and 227k Button loaded Caption.",
+      "readers": [
+        "CatalogUE1ClassicAnyPropertyValueReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-08-real-227k-native-Any-NAME5-zero.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

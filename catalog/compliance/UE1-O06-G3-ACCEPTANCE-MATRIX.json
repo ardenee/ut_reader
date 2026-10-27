@@ -2161,5 +2161,11 @@
     "original_hex": "04055465737400",
     "compiled_manifest_sha256": "6a6cb8ceee19f18ecb7ba6b91ad01bf091c2306a8e11198045f132a6e0fcf66a",
     "NAME_STRUCT_OBJECT_NET_still_OPEN": true
+  },
+  "G3_08_real_native_NAME5_zero": {
+    "status": "PARTIAL_OPEN",
+    "new_DEV_checks": 18,
+    "native_hex": "0500000000",
+    "manifest_sha256": "eeccd713c40fdb04222af613fb19b185be1f6c9e913da0c926bc87e5740ee050"
   }
 }

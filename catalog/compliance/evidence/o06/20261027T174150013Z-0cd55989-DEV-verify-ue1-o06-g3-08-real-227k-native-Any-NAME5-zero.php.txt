@@ -1,0 +1,8 @@
+﻿{
+    "ok": true,
+    "checks": 18,
+    "passed": 18,
+    "failed": [],
+    "G3_08": "OPEN",
+    "previous_suites_rerun": 0
+}

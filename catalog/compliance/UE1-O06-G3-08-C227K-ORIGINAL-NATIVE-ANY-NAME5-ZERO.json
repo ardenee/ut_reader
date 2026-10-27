@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "contract": "G3-08-PARTIAL-NAME5-ZERO",
+  "date": "2026-10-27",
+  "original_compiled_DLL_path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+  "original_compiled_DLL_sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+  "real_original_x86_UAnyProperty_SerializeItem_NATIVE_NAME5_ZERO_LOAD_SAVE": true,
+  "genuine_original_NAME5_zero_wire_hex": "0500000000",
+  "physical_archive_bytes": 5,
+  "genuine_original_FArchive_FName_virtual_slot": "0x1c",
+  "nonzero_FName_archive_name_table_mapping_unverified": true,
+  "mock_FArchive_original_game_ULinkerLoad_not_claimed": true,
+  "other_dynamic_NAME5_nonzero_STRUCT6_OBJECT7_NET_unverified": true,
+  "G3_08_FULL": "OPEN",
+  "new_native_evidence_artifacts": {
+    "genuine_227k_NAME5_x86_native_Cplusplus": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-NAME5-ORIGINAL-NATIVE.cpp",
+      "bytes": 13056,
+      "sha256": "54cc6ba3b7526102b9984556b5a7181271d1c8d668ac79c39fd8cf09171975bb"
+    },
+    "original_NAME5_MSVC_build": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-NAME5-MSVC-BUILD.cmd",
+      "bytes": 275,
+      "sha256": "a42af73636cd1e66e972619801b0e349025618e6604867f9509e395ab2c27178"
+    },
+    "real_original_227k_NAME5_ZERO_LOAD_SAVE_stdout": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-NAME5-ZERO-LOAD-SAVE.log",
+      "bytes": 904,
+      "sha256": "4dd401c1b8fa2c2b8ac7038f9823f0a7a46539753033aa31a1118f204a78c645"
+    },
+    "real_original_227k_NAME5_missing_FNameArchive_virtual_CDB": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-NAME5-OLD-MOCK-AV-CDB.txt",
+      "bytes": 12680,
+      "sha256": "34389c0caf2aeae0718b06ceb412fd420c53928b38a3da8a22c7df1ef4c1e0a1"
+    },
+    "real_compiled_FAny_NAME5_archive_slot_and_call": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-ANY-NAME5-COMPILED-ARCHIVE-CALL-CDB.txt",
+      "bytes": 12804,
+      "sha256": "057e761a949ca01802ddb9e6314b5309919e30824c4657307c2f5e591b6d1ac5"
+    }
+  },
+  "source_decoder": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+  "source_decoder_sha256": "05cbc15097e9609062f2833aebe2765d7cc135fb70656d6e1285bbcebc00bda5"
+}
