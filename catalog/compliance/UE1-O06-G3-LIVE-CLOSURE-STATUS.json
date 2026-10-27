@@ -3,7 +3,7 @@
   "date": "2026-10-27",
   "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
   "full_contracts_required": 16,
-  "full_contracts_accepted": 1,
+  "full_contracts_accepted": 2,
   "contracts_with_pinned_original_native_evidence": 10,
   "distinct_original_native_source_subproofs": 11,
   "C227_primary_blocker": "NONE FROM MISSING SOURCE FILE: v1.224 and v1.227 inherit classic UE1 v1.200 Core serializer bodies, with actual changed later headers/new classes resolved as source deltas. Native method differences matter only when demonstrated (G3-02..15).",
@@ -95,11 +95,11 @@
     {
       "id": "G3-02",
       "requirement": "Complete class/property serializer symbols, inherited paths and source exclusions",
-      "full_status": "OPEN",
+      "full_status": "ACCEPTED",
       "verified_original_native_subproof_ids": [
         "c227i-2012-array-inner-four"
       ],
-      "decisive_remaining_requirement": "Original C227i loaded 4/4 actual ArrayProperty Inner targets and 4 distinct introduced compiled serializer call orders now verified. Complete distinct changed v1.224/v1.227 method/inline-class inventory incl v227 UButtonProperty::Serialize explicit override with no available implementation, and UT99 v432 deltas. Missing game CPP not a blocker for inherited methods.",
+      "decisive_remaining_requirement": "CLOSED: 57/57 original C227 Core.lib serializer method exports linked to their real original game source class method and behavior gate; 205/205 declared source methods verified across five actual Unreal/UT99 cumulative snapshots. Actual LOAD/SAVE, native behavior, malformed and version obligations remain owner contracts G3-03..15, not G3-02.",
       "actual_game_source_method_delta_2026_10_27": {
         "status": "IMPLEMENTED_SOURCE_CORRECT_WITH_ONE_SCOPED_DEV_PASS",
         "source": "L:/Source/Games/Unreal/Unreal [v1.227]/Core/Inc/UnType.h",
@@ -116,7 +116,15 @@
         "verifier_sha256": "1a70ab932dda66d30ab5b9dbdc03057e2908240e443018e00a69beb7a2177e84",
         "dev_scoped_test_log_sha256": "bace28c58ffd2253cd47b2f88c6d8bc110f609f0bbfbdeddff55436fa933e781",
         "dev_scoped_test_log_path": "catalog/compliance/evidence/o06/20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt"
-      }
+      },
+      "acceptance_scope": "COMPLETE_SOURCE_SYMBOL_METHOD_AND_INHERITANCE_MAPPING_ONLY_NOT_RUNTIME_BEHAVIOR",
+      "original_C227_Core_lib_method_symbols_mapped": 57,
+      "original_game_source_class_method_declarations_mapped": 205,
+      "acceptance_checks": 1318,
+      "acceptance_manifest_sha256": "1422de5431bc3538e9f199b8163513d50fd18bd6ef4bb40bed02b97509af57d7",
+      "acceptance_verifier_sha256": "37de321423dae3ec9e9b018e0ce6f72949b7cdcc29868714975a0e673b8400f8",
+      "acceptance_scoped_DEV_pass_log_sha256": "481bb0ee08dcc80b1d9c02874bdb9b341a6fd991479228cde6b9020f32a95ebb",
+      "acceptance_scoped_DEV_pass_log": "catalog/compliance/evidence/o06/20261027T115222126Z-ecb4bae9-DEV-verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php.txt"
     },
     {
       "id": "G3-03",
@@ -251,7 +259,7 @@
       "decisive_remaining_requirement": "Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements."
     }
   ],
-  "full_contracts_open": 15,
+  "full_contracts_open": 14,
   "source_revision_chain_manifest": {
     "path": "catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json",
     "sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901"
@@ -263,5 +271,9 @@
     "test_sha256": "9fee7e9e7bd044208f30ed376a348aeb9a7751a770c3a916e03597f3f4fb99a4",
     "scoped_dev_log_sha256": "654138d33347cf8002d31a1bdba29199a0ded5417e9d2cb97281f853ff38f988",
     "scoped_dev_log": "catalog/compliance/evidence/o06/20261027T105329635Z-07802580-DEV-verify-ue1-o06-g3-c227i-four-array-inner-native.php.txt"
-  }
+  },
+  "accepted_source_only_contracts": [
+    "G3-01",
+    "G3-02"
+  ]
 }

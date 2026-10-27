@@ -1,0 +1,3582 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "source_authority": "Cumulative Unreal v1200->v1224->v1227, separate UT99 v400->v432; original v227 source header declarations PLUS authentic v227 import library method ownership, no missing game CPP blocker",
+  "previous_original_57_symbol_inventory": "catalog/compliance/UE1-O06-G3-C227-COMPILED-CORE-SYMBOLS.json",
+  "existing_inventory_incorrect_note": "Prior source_has_explicit_Serialize:false for UButtonProperty is FALSE: v227 original UnType.h declares void Serialize(FArchive& Ar);. This new register supersedes that boolean.",
+  "g3_02_accepted_scope": "Complete selected cumulative source class/method symbol, explicit vs inherited and method owner register; class source method behavior, actual G3-08/11/03 etc serialization/errors remain their own gates.",
+  "canonical_original_C227_Core_lib": {
+    "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\BuildTmp\\Win32Release\\Core.lib",
+    "bytes": 798086,
+    "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a"
+  },
+  "original_game_source_header_SHA_pins": {
+    "unreal-v1200": {
+      "UnType.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "bytes": 17415,
+        "sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8"
+      },
+      "UnClass.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "bytes": 12622,
+        "sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765"
+      },
+      "UnObjBas.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnObjBas.h",
+        "bytes": 34773,
+        "sha256": "6f1668c2ec156a302f99f8a7ae6e1161bac1706e551d70ed9445ab9ae55c68f7"
+      }
+    },
+    "unreal-v1224": {
+      "UnType.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "bytes": 19169,
+        "sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723"
+      },
+      "UnClass.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "bytes": 13109,
+        "sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db"
+      },
+      "UnObjBas.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnObjBas.h",
+        "bytes": 38080,
+        "sha256": "1fcdefde1704718490df0b3e4ca75ba6fd624eb18b3c74565534366487abaf07"
+      }
+    },
+    "unreal-v1227": {
+      "UnType.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "bytes": 33778,
+        "sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69"
+      },
+      "UnClass.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "bytes": 16488,
+        "sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d"
+      },
+      "UnObjBas.h": {
+        "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h",
+        "bytes": 60016,
+        "sha256": "de50501bfbc22980d6e932bcc328aa3de725f6358587ca06eb320a3da30c8b2a"
+      }
+    },
+    "ut99-v400": {
+      "UnType.h": {
+        "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "bytes": 20121,
+        "sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65"
+      },
+      "UnClass.h": {
+        "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "bytes": 13588,
+        "sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972"
+      },
+      "UnObjBas.h": {
+        "path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnObjBas.h",
+        "bytes": 39125,
+        "sha256": "bf95787b27d56f4d90af8c2ecb6c3a5d9e6d79ac8797cfd62f56247f9e21644e"
+      }
+    },
+    "ut99-v432": {
+      "UnType.h": {
+        "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "bytes": 19797,
+        "sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636"
+      },
+      "UnClass.h": {
+        "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "bytes": 14220,
+        "sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2"
+      },
+      "UnObjBas.h": {
+        "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjBas.h",
+        "bytes": 43062,
+        "sha256": "a18f6d4fcf1d0ad81e82dee5d5b001980ebd560ddcc3a7ac604649ce61381dfe"
+      }
+    }
+  },
+  "current_C227_method_export_count": 57,
+  "current_C227_distinct_classes": 25,
+  "current_C227_methods_by_type": {
+    "Serialize": 20,
+    "SerializeItem": 15,
+    "NetSerializeItem": 15,
+    "ShouldSerializeItem": 4,
+    "SerializeBin": 1,
+    "SerializeTaggedProperties": 1,
+    "SerializeExpr": 1
+  },
+  "new_v1224_declared_property_subclasses": [
+    "UStrProperty",
+    "UFixedArrayProperty",
+    "UArrayProperty",
+    "UMapProperty"
+  ],
+  "new_v1227_declared_property_subclasses": [
+    "UPointerProperty",
+    "UButtonProperty",
+    "UAnyProperty"
+  ],
+  "new_v1227_explicit_new_Serialize_override": "UButtonProperty",
+  "new_v1227_absent_Serialize_override_inherits_UProperty": [
+    "UPointerProperty",
+    "UAnyProperty"
+  ],
+  "present_v227_method_source_CPP_absence_is_not_a_missing_symbol": true,
+  "unimplemented_method_body_source_behavior_must_be_accepted_in_owner_G3_gate": true,
+  "no_new_runtime_value_parity_claimed": true,
+  "all_C227_57_symbols_source_mapped": true,
+  "methods": [
+    {
+      "symbol": "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UArrayProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+    },
+    {
+      "symbol": "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UBoolProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "3fccc8f59bab23b6b67841ca2a93df19980a2f77686ea0a15eebcdacbef445a3"
+    },
+    {
+      "symbol": "?Serialize@UButtonProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UButtonProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "3e832e75b35f8f601ca910ff89d9810004cb4c4393e1dd1b896aa5d224b83280"
+    },
+    {
+      "symbol": "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UByteProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "98d23c380442a6f357f724493e889ca22111839feecf2e8a849ca8b7c945057d"
+    },
+    {
+      "symbol": "?Serialize@UClass@@UAEXAAVFArchive@@@Z",
+      "class": "UClass",
+      "method": "Serialize",
+      "owner_contract": "G3-05",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UState",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-05",
+      "source_class_definition_body_sha256": "b4491583a305fc1b45c644624d45c2b4da45a6e8e223a9c638fe95b9dacddd20"
+    },
+    {
+      "symbol": "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UClassProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UObjectProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+    },
+    {
+      "symbol": "?Serialize@UConst@@UAEXAAVFArchive@@@Z",
+      "class": "UConst",
+      "method": "Serialize",
+      "owner_contract": "G3-06",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-06",
+      "source_class_definition_body_sha256": "05dcac13f598d9296bfa25c9c4464c537612eceb238cbdf684dcb8dde3202f9f"
+    },
+    {
+      "symbol": "?Serialize@UEnum@@UAEXAAVFArchive@@@Z",
+      "class": "UEnum",
+      "method": "Serialize",
+      "owner_contract": "G3-06",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-06",
+      "source_class_definition_body_sha256": "0ce0414e23244671997118f50fd8fb8bddfc4afd2caa2dc97a49c81096f2a0f7"
+    },
+    {
+      "symbol": "?Serialize@UField@@UAEXAAVFArchive@@@Z",
+      "class": "UField",
+      "method": "Serialize",
+      "owner_contract": "G3-03",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UObject",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-03",
+      "source_class_definition_body_sha256": "5e44c17e705dbb899fcd88b6ca8d251e48b0c9c28faac91a1f2a6ee45c383851"
+    },
+    {
+      "symbol": "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UFixedArrayProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "55673f500d174668e13994fd56b47a22774347b890b001ee2ba3383dfe36626c"
+    },
+    {
+      "symbol": "?Serialize@UFunction@@UAEXAAVFArchive@@@Z",
+      "class": "UFunction",
+      "method": "Serialize",
+      "owner_contract": "G3-04",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UStruct",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-04",
+      "source_class_definition_body_sha256": "68d0bce4f1bea6c3dc519213dbe0992a519eb38d2274e76b44cf8eaa5d3a5096"
+    },
+    {
+      "symbol": "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UMapProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "6f78be4482a0ec49a634d05bc4b911b8680af85f52b651cc947cf50a9953fbfc"
+    },
+    {
+      "symbol": "?Serialize@UObject@@UAEXAAVFArchive@@@Z",
+      "class": "UObject",
+      "method": "Serialize",
+      "owner_contract": "G3-13",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h",
+      "current_source_header_sha256": "de50501bfbc22980d6e932bcc328aa3de725f6358587ca06eb320a3da30c8b2a",
+      "class_super": null,
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-13",
+      "source_class_definition_body_sha256": "f4aae496db5f25e609195f5f59ffadba3e5132f5960801c2b4ae2dee66abf1d6"
+    },
+    {
+      "symbol": "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UObjectProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+    },
+    {
+      "symbol": "?Serialize@UPackage@@UAEXAAVFArchive@@@Z",
+      "class": "UPackage",
+      "method": "Serialize",
+      "owner_contract": "G3-13",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnCorObj.h",
+      "current_source_header_sha256": "51d7e40a7ed3923acd5282cdd2a5d248903f96ca84eea76d14e9ee70a45e3871",
+      "class_super": "UObject",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnCorObj.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnCorObj.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnCorObj.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-13",
+      "source_class_definition_body_sha256": "0ecd5d987d87948b15c28cc2e37be666f35b9160fa2cc9bbf422f1a3e0e52ac4"
+    },
+    {
+      "symbol": "?Serialize@UProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-07",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-07",
+      "source_class_definition_body_sha256": "09e9fb38cb4e2f08385c06240dc3a43d020eca9f1cea8ad40cc2b1880bde09a5"
+    },
+    {
+      "symbol": "?Serialize@UState@@UAEXAAVFArchive@@@Z",
+      "class": "UState",
+      "method": "Serialize",
+      "owner_contract": "G3-04",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UStruct",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-04",
+      "source_class_definition_body_sha256": "9a6baf6e5fbff9d17b2cd41dbf071a794ee324f2832bafe6ecf2a005ae52f25a"
+    },
+    {
+      "symbol": "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UStrProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "93e97d60adce2b08830336cba357cc96afc699dea5e019abd5dedff7c78b3578"
+    },
+    {
+      "symbol": "?Serialize@UStruct@@UAEXAAVFArchive@@@Z",
+      "class": "UStruct",
+      "method": "Serialize",
+      "owner_contract": "G3-03",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-03",
+      "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+    },
+    {
+      "symbol": "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z",
+      "class": "UStructProperty",
+      "method": "Serialize",
+      "owner_contract": "G3-10",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-10",
+      "source_class_definition_body_sha256": "37477e196da0e83e1cbdaa6acd82c0cbfe29a171d6650c0b1f79b889ddc5e054"
+    },
+    {
+      "symbol": "?SerializeItem@UAnyProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UAnyProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "8432d4615c4cb308553dcd2f2f36fa93c16bc45530bc16fe79980fe8edb72eb6"
+    },
+    {
+      "symbol": "?SerializeItem@UArrayProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UArrayProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+    },
+    {
+      "symbol": "?SerializeItem@UBoolProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UBoolProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "3fccc8f59bab23b6b67841ca2a93df19980a2f77686ea0a15eebcdacbef445a3"
+    },
+    {
+      "symbol": "?SerializeItem@UButtonProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UButtonProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "3e832e75b35f8f601ca910ff89d9810004cb4c4393e1dd1b896aa5d224b83280"
+    },
+    {
+      "symbol": "?SerializeItem@UByteProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UByteProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "98d23c380442a6f357f724493e889ca22111839feecf2e8a849ca8b7c945057d"
+    },
+    {
+      "symbol": "?SerializeItem@UClassProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UClassProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UObjectProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+    },
+    {
+      "symbol": "?SerializeItem@UFixedArrayProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UFixedArrayProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "55673f500d174668e13994fd56b47a22774347b890b001ee2ba3383dfe36626c"
+    },
+    {
+      "symbol": "?SerializeItem@UFloatProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UFloatProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "318ddf408f7960d2011b2f2762518c4f3d93c051331d7af17fa1b7d1b926df84"
+    },
+    {
+      "symbol": "?SerializeItem@UIntProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UIntProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "5aeac13bb3e7afd03b9a088f03d1dbeb7ff968b9d4a2e38eb67e1adb1b212e76"
+    },
+    {
+      "symbol": "?SerializeItem@UMapProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UMapProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "6f78be4482a0ec49a634d05bc4b911b8680af85f52b651cc947cf50a9953fbfc"
+    },
+    {
+      "symbol": "?SerializeItem@UNameProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UNameProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "20b477050a85db15fe0db3939de53b26f03e095532c9ce37ba485ba7005445a1"
+    },
+    {
+      "symbol": "?SerializeItem@UObjectProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UObjectProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+    },
+    {
+      "symbol": "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UPointerProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "2f36b71e730bda09ceeb0fc433de05cb5fe7729a502a26cc5103ec6b8af61aed"
+    },
+    {
+      "symbol": "?SerializeItem@UStrProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UStrProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1224",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "93e97d60adce2b08830336cba357cc96afc699dea5e019abd5dedff7c78b3578"
+    },
+    {
+      "symbol": "?SerializeItem@UStructProperty@@UBEXAAVFArchive@@PAX@Z",
+      "class": "UStructProperty",
+      "method": "SerializeItem",
+      "owner_contract": "G3-10",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-10",
+      "source_class_definition_body_sha256": "37477e196da0e83e1cbdaa6acd82c0cbfe29a171d6650c0b1f79b889ddc5e054"
+    },
+    {
+      "symbol": "?NetSerializeItem@UAnyProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UAnyProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "8432d4615c4cb308553dcd2f2f36fa93c16bc45530bc16fe79980fe8edb72eb6"
+    },
+    {
+      "symbol": "?NetSerializeItem@UArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UArrayProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+    },
+    {
+      "symbol": "?NetSerializeItem@UBoolProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UBoolProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "3fccc8f59bab23b6b67841ca2a93df19980a2f77686ea0a15eebcdacbef445a3"
+    },
+    {
+      "symbol": "?NetSerializeItem@UButtonProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UButtonProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "3e832e75b35f8f601ca910ff89d9810004cb4c4393e1dd1b896aa5d224b83280"
+    },
+    {
+      "symbol": "?NetSerializeItem@UByteProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UByteProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "98d23c380442a6f357f724493e889ca22111839feecf2e8a849ca8b7c945057d"
+    },
+    {
+      "symbol": "?NetSerializeItem@UClassProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UClassProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UObjectProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+    },
+    {
+      "symbol": "?NetSerializeItem@UFixedArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UFixedArrayProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "55673f500d174668e13994fd56b47a22774347b890b001ee2ba3383dfe36626c"
+    },
+    {
+      "symbol": "?NetSerializeItem@UFloatProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UFloatProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "318ddf408f7960d2011b2f2762518c4f3d93c051331d7af17fa1b7d1b926df84"
+    },
+    {
+      "symbol": "?NetSerializeItem@UIntProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UIntProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "5aeac13bb3e7afd03b9a088f03d1dbeb7ff968b9d4a2e38eb67e1adb1b212e76"
+    },
+    {
+      "symbol": "?NetSerializeItem@UMapProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UMapProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "6f78be4482a0ec49a634d05bc4b911b8680af85f52b651cc947cf50a9953fbfc"
+    },
+    {
+      "symbol": "?NetSerializeItem@UObjectProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UObjectProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+    },
+    {
+      "symbol": "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UPointerProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "2f36b71e730bda09ceeb0fc433de05cb5fe7729a502a26cc5103ec6b8af61aed"
+    },
+    {
+      "symbol": "?NetSerializeItem@UProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-07",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-07",
+      "source_class_definition_body_sha256": "09e9fb38cb4e2f08385c06240dc3a43d020eca9f1cea8ad40cc2b1880bde09a5"
+    },
+    {
+      "symbol": "?NetSerializeItem@UStrProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UStrProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-08",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-08",
+      "source_class_definition_body_sha256": "93e97d60adce2b08830336cba357cc96afc699dea5e019abd5dedff7c78b3578"
+    },
+    {
+      "symbol": "?NetSerializeItem@UStructProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+      "class": "UStructProperty",
+      "method": "NetSerializeItem",
+      "owner_contract": "G3-10",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-10",
+      "source_class_definition_body_sha256": "37477e196da0e83e1cbdaa6acd82c0cbfe29a171d6650c0b1f79b889ddc5e054"
+    },
+    {
+      "symbol": "?ShouldSerializeItem@UArrayProperty@@UBEHPBEH@Z",
+      "class": "UArrayProperty",
+      "method": "ShouldSerializeItem",
+      "owner_contract": "G3-11",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-11",
+      "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+    },
+    {
+      "symbol": "?ShouldSerializeItem@UClassProperty@@UBEHPBEH@Z",
+      "class": "UClassProperty",
+      "method": "ShouldSerializeItem",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UObjectProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+    },
+    {
+      "symbol": "?ShouldSerializeItem@UObjectProperty@@UBEHPBEH@Z",
+      "class": "UObjectProperty",
+      "method": "ShouldSerializeItem",
+      "owner_contract": "G3-09",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UProperty",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-09",
+      "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+    },
+    {
+      "symbol": "?ShouldSerializeItem@UProperty@@UBEHPBEH@Z",
+      "class": "UProperty",
+      "method": "ShouldSerializeItem",
+      "owner_contract": "G3-07",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "current_source_header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1227",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": false,
+          "source_file": null
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-07",
+      "source_class_definition_body_sha256": "09e9fb38cb4e2f08385c06240dc3a43d020eca9f1cea8ad40cc2b1880bde09a5"
+    },
+    {
+      "symbol": "?SerializeBin@UStruct@@UAEXAAVFArchive@@PAE@Z",
+      "class": "UStruct",
+      "method": "SerializeBin",
+      "owner_contract": "G3-03",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-03",
+      "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+    },
+    {
+      "symbol": "?SerializeTaggedProperties@UStruct@@UAEXAAVFArchive@@PAEPAVUClass@@1H@Z",
+      "class": "UStruct",
+      "method": "SerializeTaggedProperties",
+      "owner_contract": "G3-03",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-03",
+      "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+    },
+    {
+      "symbol": "?SerializeExpr@UStruct@@UAE?AW4EExprToken@@AAHAAVFArchive@@@Z",
+      "class": "UStruct",
+      "method": "SerializeExpr",
+      "owner_contract": "G3-03",
+      "current_source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "current_source_header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+      "class_super": "UField",
+      "first_current_game_source_method_declaration": "unreal-v1200",
+      "revision_declarations": [
+        {
+          "revision": "unreal-v1200",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1224",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h"
+        },
+        {
+          "revision": "unreal-v1227",
+          "method_declared": true,
+          "source_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h"
+        }
+      ],
+      "source_ownership_classification": "EXPLICIT_METHOD_DECLARATION_SOURCE_SYMBOL_ONLY",
+      "method_disk_semantics_verified_here": false,
+      "source_owner_acceptance_pending": "G3-03",
+      "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+    }
+  ],
+  "all_applicable_source_profiles_serialization_class_method_declarations": {
+    "unreal-v1200": [
+      {
+        "class": "UBoolProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "6eafebf5fe2b9f058ca011480fbf637c5f4579c7849632f97eb81efdb03fe197"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "6eafebf5fe2b9f058ca011480fbf637c5f4579c7849632f97eb81efdb03fe197"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "13a9a1414f5dade0db81400a1a906bd0d1edd3a8ea207aa7f701637dd15d9144"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "13a9a1414f5dade0db81400a1a906bd0d1edd3a8ea207aa7f701637dd15d9144"
+      },
+      {
+        "class": "UClass",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-05",
+        "source_class_definition_body_sha256": "c0d17d56ca986b0747c7c3c81bf5730f7a97d8917bd30454fc456c49e7474464"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "fa8f74f9385f8e14582e5e05185ae7bdf6c4da696baf639e0c738c9a661463c1"
+      },
+      {
+        "class": "UConst",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "e94e5905db57f851f2ba3c742da9af0293fc2853db4acc27eedaa916d26ec76a"
+      },
+      {
+        "class": "UEnum",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "761d1141e3fff04235f3b98d18c98bda395c89d00d126026ea4bc677353d3dda"
+      },
+      {
+        "class": "UField",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "ff29632c5ea5868dffe4b2efdbdc2fa00da63e122c75e3166f8ee1cd538b2543"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "d92cf3391bfcdc640bbf93cfa9e6711975beae8b5e20c6b0d6a8922879e6f824"
+      },
+      {
+        "class": "UFunction",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "ddcaaa38cb911306e82a6f96d698f88fe1bf9324b2e8161d785cdc374cf1a541"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "33a1cd17f62e892ca56728ae2edd69c7bee8c1122f7f32bbaf0bc98278c2d88a"
+      },
+      {
+        "class": "UNameProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e890b9036138685032ada57097c6c0fba02b0ff071b2260158b508db2754fa45"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "94901d1012447583bc4c85c2fc91d3c83e4913444159942ecc5432ff0618bec3"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "94901d1012447583bc4c85c2fc91d3c83e4913444159942ecc5432ff0618bec3"
+      },
+      {
+        "class": "UPackage",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnCorObj.h",
+        "header_sha256": "211aa2f7eb459327b7804ec23ae1297f4663889af29509a9a50533eacaf07b3f",
+        "owner_contract": "G3-13",
+        "source_class_definition_body_sha256": "7e7188af4b9026939c655559feb4ad68cf6309ab358dc9407f83445dd54e0330"
+      },
+      {
+        "class": "UProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "7b89f306f96e6cca8bbf49f9f8061dccf08fa94b0a781e04c52fc26bca4097cb"
+      },
+      {
+        "class": "UProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "7b89f306f96e6cca8bbf49f9f8061dccf08fa94b0a781e04c52fc26bca4097cb"
+      },
+      {
+        "class": "UState",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "24727602939171f152ed92dc51c73aa14789e12613ba54919a197b78222c3634"
+      },
+      {
+        "class": "UStringProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "f57ec108e92d522333891b3cb3eba29d9a48d7a7d32f14fd346a99103087dff0"
+      },
+      {
+        "class": "UStringProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "f57ec108e92d522333891b3cb3eba29d9a48d7a7d32f14fd346a99103087dff0"
+      },
+      {
+        "class": "UStruct",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "4e0fa7abd6317722d5180db7bacd051f040ebe1845bbe76d91ee5b1e58ad182d"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeBin",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "4e0fa7abd6317722d5180db7bacd051f040ebe1845bbe76d91ee5b1e58ad182d"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeExpr",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "4e0fa7abd6317722d5180db7bacd051f040ebe1845bbe76d91ee5b1e58ad182d"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeTaggedProperties",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "4e0fa7abd6317722d5180db7bacd051f040ebe1845bbe76d91ee5b1e58ad182d"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "e05897761d6ef0b9249bd219ed0001260963f3d4285987dfa1a9395e1418e017"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "SerializeBin",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "e05897761d6ef0b9249bd219ed0001260963f3d4285987dfa1a9395e1418e017"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+        "header_sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "e05897761d6ef0b9249bd219ed0001260963f3d4285987dfa1a9395e1418e017"
+      }
+    ],
+    "unreal-v1224": [
+      {
+        "class": "UArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "e553408ef1e0540dc19da2b4b526b8a25987ec61062136cc69cc221b8f7805d0"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "e553408ef1e0540dc19da2b4b526b8a25987ec61062136cc69cc221b8f7805d0"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "a189a5a69a49fb9f3b86174854c36a9defdc00ba71bc094dcbf2db3ff70e9c99"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "a189a5a69a49fb9f3b86174854c36a9defdc00ba71bc094dcbf2db3ff70e9c99"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "f021dad0ba6135ad44414ef5b7210f24007c1405c57f22c1d29dfedf836826b1"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "f021dad0ba6135ad44414ef5b7210f24007c1405c57f22c1d29dfedf836826b1"
+      },
+      {
+        "class": "UClass",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-05",
+        "source_class_definition_body_sha256": "ca8980535b6e98efacd5037f2c2b2a556aaa4a0e51671acbb190f837bbf47152"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "42f98e19210c73f29481e2b4bbf98c94cef96392970fec2a90ff5d4eb1061cad"
+      },
+      {
+        "class": "UConst",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "c935d587948e658acff7d377dd35d9e4f0e038878b9dd121f87536623bdfe774"
+      },
+      {
+        "class": "UEnum",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "7da207b006fe9c5e524595f20bfb22e4b8ee60f4c75225b95b09abd1e83b1977"
+      },
+      {
+        "class": "UField",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "7caae5bbd8e8c8876432fe05c4a5589a4b43c59b46b762ee6de7c2c65b4dea36"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "6c1342c1c035737ec2ef64c7f3719d00cfb132e9c7b1a7558d05023faccd73de"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "6c1342c1c035737ec2ef64c7f3719d00cfb132e9c7b1a7558d05023faccd73de"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "1a543cabbe62ac4d791432e91b6e4fdbfad52d460152b9f4e511f157afa34ff1"
+      },
+      {
+        "class": "UFunction",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "3a1b1465f8c65f2c00b5508f40e5f1a2bd6d310fc3618a991063913b3c334d34"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "c8e270e9060041ac448883c639792032138d0905bfb21e6f9d9e05ccf0d091cf"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "1c57f3f0e4ad1dbd6eec3073faf46257f3a3ec37bc331975800791b1015404d0"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "1c57f3f0e4ad1dbd6eec3073faf46257f3a3ec37bc331975800791b1015404d0"
+      },
+      {
+        "class": "UNameProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "644be37366df5ac874441ae12fe4542b7c7035c3bb7ef0e8b4bfd2a9179c36d9"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "cc0a02e38d33d96193fda989884fc07c4afeead80595a23328827cb3ecef3621"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "cc0a02e38d33d96193fda989884fc07c4afeead80595a23328827cb3ecef3621"
+      },
+      {
+        "class": "UPackage",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnCorObj.h",
+        "header_sha256": "e283dbc8a4c26fc44d567e52cb9496529704b7408e7a455520c5e6e43a4f1f7a",
+        "owner_contract": "G3-13",
+        "source_class_definition_body_sha256": "72dee2038837ad70acb1a8f3b42d4aed4ba4ce2f30f89587391cf9c92b068082"
+      },
+      {
+        "class": "UProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "4687d43bf81edb6ba153861b6fb98475f973f030013f337b17e0b3c7932a8f33"
+      },
+      {
+        "class": "UProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "4687d43bf81edb6ba153861b6fb98475f973f030013f337b17e0b3c7932a8f33"
+      },
+      {
+        "class": "UState",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "da3ef701a78437b7b5a10bcbee41f421c610143e97112251d40534d6cdd09eb9"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3fcf5247770cdcffcdb24e13edb7c0fdd871b0b55f8b6a2c2cbd73a226d1eadc"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3fcf5247770cdcffcdb24e13edb7c0fdd871b0b55f8b6a2c2cbd73a226d1eadc"
+      },
+      {
+        "class": "UStruct",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "15bb5c54e42bb69787764bf38963c62a08cb25a1abf55b6701fc22315514b48a"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeBin",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "15bb5c54e42bb69787764bf38963c62a08cb25a1abf55b6701fc22315514b48a"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeExpr",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "15bb5c54e42bb69787764bf38963c62a08cb25a1abf55b6701fc22315514b48a"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeTaggedProperties",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "feff5e7214ae2f033ace471449e13489c0aa851b0dc1cd880ccaf7fec4dab0db",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "15bb5c54e42bb69787764bf38963c62a08cb25a1abf55b6701fc22315514b48a"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "23fd469dc8800d88a21468707c678d5f6c57229b7b844fcac708415d5cc966b5"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+        "header_sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "23fd469dc8800d88a21468707c678d5f6c57229b7b844fcac708415d5cc966b5"
+      }
+    ],
+    "unreal-v1227": [
+      {
+        "class": "UAnyProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "8432d4615c4cb308553dcd2f2f36fa93c16bc45530bc16fe79980fe8edb72eb6"
+      },
+      {
+        "class": "UAnyProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "8432d4615c4cb308553dcd2f2f36fa93c16bc45530bc16fe79980fe8edb72eb6"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "ShouldSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "a8c0771fb83e54e27545bc90e943a5718e465262f7eec87d553d91026c761b84"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3fccc8f59bab23b6b67841ca2a93df19980a2f77686ea0a15eebcdacbef445a3"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3fccc8f59bab23b6b67841ca2a93df19980a2f77686ea0a15eebcdacbef445a3"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3fccc8f59bab23b6b67841ca2a93df19980a2f77686ea0a15eebcdacbef445a3"
+      },
+      {
+        "class": "UButtonProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3e832e75b35f8f601ca910ff89d9810004cb4c4393e1dd1b896aa5d224b83280"
+      },
+      {
+        "class": "UButtonProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3e832e75b35f8f601ca910ff89d9810004cb4c4393e1dd1b896aa5d224b83280"
+      },
+      {
+        "class": "UButtonProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "3e832e75b35f8f601ca910ff89d9810004cb4c4393e1dd1b896aa5d224b83280"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "98d23c380442a6f357f724493e889ca22111839feecf2e8a849ca8b7c945057d"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "98d23c380442a6f357f724493e889ca22111839feecf2e8a849ca8b7c945057d"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "98d23c380442a6f357f724493e889ca22111839feecf2e8a849ca8b7c945057d"
+      },
+      {
+        "class": "UClass",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-05",
+        "source_class_definition_body_sha256": "b4491583a305fc1b45c644624d45c2b4da45a6e8e223a9c638fe95b9dacddd20"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "ShouldSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "5cf419fa52497009066a7326b3e53b1a0b4ad71e59c7e0996d43a1c6d341a46a"
+      },
+      {
+        "class": "UConst",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "05dcac13f598d9296bfa25c9c4464c537612eceb238cbdf684dcb8dde3202f9f"
+      },
+      {
+        "class": "UEnum",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "0ce0414e23244671997118f50fd8fb8bddfc4afd2caa2dc97a49c81096f2a0f7"
+      },
+      {
+        "class": "UField",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "5e44c17e705dbb899fcd88b6ca8d251e48b0c9c28faac91a1f2a6ee45c383851"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "55673f500d174668e13994fd56b47a22774347b890b001ee2ba3383dfe36626c"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "55673f500d174668e13994fd56b47a22774347b890b001ee2ba3383dfe36626c"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "55673f500d174668e13994fd56b47a22774347b890b001ee2ba3383dfe36626c"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "318ddf408f7960d2011b2f2762518c4f3d93c051331d7af17fa1b7d1b926df84"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "318ddf408f7960d2011b2f2762518c4f3d93c051331d7af17fa1b7d1b926df84"
+      },
+      {
+        "class": "UFunction",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "68d0bce4f1bea6c3dc519213dbe0992a519eb38d2274e76b44cf8eaa5d3a5096"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "5aeac13bb3e7afd03b9a088f03d1dbeb7ff968b9d4a2e38eb67e1adb1b212e76"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "5aeac13bb3e7afd03b9a088f03d1dbeb7ff968b9d4a2e38eb67e1adb1b212e76"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "6f78be4482a0ec49a634d05bc4b911b8680af85f52b651cc947cf50a9953fbfc"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "6f78be4482a0ec49a634d05bc4b911b8680af85f52b651cc947cf50a9953fbfc"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "6f78be4482a0ec49a634d05bc4b911b8680af85f52b651cc947cf50a9953fbfc"
+      },
+      {
+        "class": "UNameProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "20b477050a85db15fe0db3939de53b26f03e095532c9ce37ba485ba7005445a1"
+      },
+      {
+        "class": "UObject",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h",
+        "header_sha256": "de50501bfbc22980d6e932bcc328aa3de725f6358587ca06eb320a3da30c8b2a",
+        "owner_contract": "G3-13",
+        "source_class_definition_body_sha256": "f4aae496db5f25e609195f5f59ffadba3e5132f5960801c2b4ae2dee66abf1d6"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "ShouldSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "61dcd5b5682f061ea02d469b0048cc17be7d7041623447fa134136bd94a06c8f"
+      },
+      {
+        "class": "UPackage",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnCorObj.h",
+        "header_sha256": "51d7e40a7ed3923acd5282cdd2a5d248903f96ca84eea76d14e9ee70a45e3871",
+        "owner_contract": "G3-13",
+        "source_class_definition_body_sha256": "0ecd5d987d87948b15c28cc2e37be666f35b9160fa2cc9bbf422f1a3e0e52ac4"
+      },
+      {
+        "class": "UPointerProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "2f36b71e730bda09ceeb0fc433de05cb5fe7729a502a26cc5103ec6b8af61aed"
+      },
+      {
+        "class": "UPointerProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "2f36b71e730bda09ceeb0fc433de05cb5fe7729a502a26cc5103ec6b8af61aed"
+      },
+      {
+        "class": "UProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "09e9fb38cb4e2f08385c06240dc3a43d020eca9f1cea8ad40cc2b1880bde09a5"
+      },
+      {
+        "class": "UProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "09e9fb38cb4e2f08385c06240dc3a43d020eca9f1cea8ad40cc2b1880bde09a5"
+      },
+      {
+        "class": "UProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "09e9fb38cb4e2f08385c06240dc3a43d020eca9f1cea8ad40cc2b1880bde09a5"
+      },
+      {
+        "class": "UProperty",
+        "method": "ShouldSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "09e9fb38cb4e2f08385c06240dc3a43d020eca9f1cea8ad40cc2b1880bde09a5"
+      },
+      {
+        "class": "UState",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "9a6baf6e5fbff9d17b2cd41dbf071a794ee324f2832bafe6ecf2a005ae52f25a"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "93e97d60adce2b08830336cba357cc96afc699dea5e019abd5dedff7c78b3578"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "93e97d60adce2b08830336cba357cc96afc699dea5e019abd5dedff7c78b3578"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "93e97d60adce2b08830336cba357cc96afc699dea5e019abd5dedff7c78b3578"
+      },
+      {
+        "class": "UStruct",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeBin",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeExpr",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeTaggedProperties",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "563d908e01f3b00719d5f0c0f4a6d337f9add8ff1198ce10180653f7ec3b5c20"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "37477e196da0e83e1cbdaa6acd82c0cbfe29a171d6650c0b1f79b889ddc5e054"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "37477e196da0e83e1cbdaa6acd82c0cbfe29a171d6650c0b1f79b889ddc5e054"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+        "header_sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "37477e196da0e83e1cbdaa6acd82c0cbfe29a171d6650c0b1f79b889ddc5e054"
+      }
+    ],
+    "ut99-v400": [
+      {
+        "class": "UArrayProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "cbe3df2add3e28b9b0e3fc5bdac486dc2045bbfe45f6c05241c975fad4323fd6"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "cbe3df2add3e28b9b0e3fc5bdac486dc2045bbfe45f6c05241c975fad4323fd6"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "cbe3df2add3e28b9b0e3fc5bdac486dc2045bbfe45f6c05241c975fad4323fd6"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "41baf6f4667389effeecc0e93a1cf2c6532121a1ca7e32c2719903c2b889d9a9"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "41baf6f4667389effeecc0e93a1cf2c6532121a1ca7e32c2719903c2b889d9a9"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "41baf6f4667389effeecc0e93a1cf2c6532121a1ca7e32c2719903c2b889d9a9"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "17caba9856fe6edb3d0e0c3aa8f4b2a8b7f5f7f20de9d4247f9d219800e8b9de"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "17caba9856fe6edb3d0e0c3aa8f4b2a8b7f5f7f20de9d4247f9d219800e8b9de"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "17caba9856fe6edb3d0e0c3aa8f4b2a8b7f5f7f20de9d4247f9d219800e8b9de"
+      },
+      {
+        "class": "UClass",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-05",
+        "source_class_definition_body_sha256": "22c9dbe2c912d6f3b028129e0b205676266efa8801e95d56f56fb53d85e868b7"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "09b20719fa98737ab6ca5d169b1991aca3c520182c4a17168163908fa0ab291d"
+      },
+      {
+        "class": "UConst",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "c935d587948e658acff7d377dd35d9e4f0e038878b9dd121f87536623bdfe774"
+      },
+      {
+        "class": "UEnum",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "7da207b006fe9c5e524595f20bfb22e4b8ee60f4c75225b95b09abd1e83b1977"
+      },
+      {
+        "class": "UField",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "7caae5bbd8e8c8876432fe05c4a5589a4b43c59b46b762ee6de7c2c65b4dea36"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "06b91dcebeba9bec04fb04f79dead1c31e6b03f60f9a53c96b72c1099f417b8c"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "06b91dcebeba9bec04fb04f79dead1c31e6b03f60f9a53c96b72c1099f417b8c"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "06b91dcebeba9bec04fb04f79dead1c31e6b03f60f9a53c96b72c1099f417b8c"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "7134ffab8984852706e0873140c8e12cabffc3a29818cefa4ebca3e0dec7d97a"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "7134ffab8984852706e0873140c8e12cabffc3a29818cefa4ebca3e0dec7d97a"
+      },
+      {
+        "class": "UFunction",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "3a1b1465f8c65f2c00b5508f40e5f1a2bd6d310fc3618a991063913b3c334d34"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "055e68c55195a78a66f3c83f9ab35bb8e6ba2edc84acb6a0f30f527e189e681a"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "055e68c55195a78a66f3c83f9ab35bb8e6ba2edc84acb6a0f30f527e189e681a"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "58f7b34b4035182620a285aeb9131552ec8d3ac3505448e5b4f5cdd380ad9180"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "58f7b34b4035182620a285aeb9131552ec8d3ac3505448e5b4f5cdd380ad9180"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "58f7b34b4035182620a285aeb9131552ec8d3ac3505448e5b4f5cdd380ad9180"
+      },
+      {
+        "class": "UNameProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "71762eca064ffecc2fd49f914a30dfeed4568438d97a3508ff6e04e8b9e722b7"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "f52dbbf0c4ae878abde5454070de6bb04dc4b61d1c1c426cd7be83cb863722bc"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "f52dbbf0c4ae878abde5454070de6bb04dc4b61d1c1c426cd7be83cb863722bc"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "f52dbbf0c4ae878abde5454070de6bb04dc4b61d1c1c426cd7be83cb863722bc"
+      },
+      {
+        "class": "UPackage",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnCorObj.h",
+        "header_sha256": "59138ff7c3dc390138c951a8ea3712e7740bbec78a7cee1519907499ba4c7f3e",
+        "owner_contract": "G3-13",
+        "source_class_definition_body_sha256": "72dee2038837ad70acb1a8f3b42d4aed4ba4ce2f30f89587391cf9c92b068082"
+      },
+      {
+        "class": "UProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "8189cb23f6e5afca0ac628d48f3f51c3d0d89d330653c05243d72a51d61fb91f"
+      },
+      {
+        "class": "UProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "8189cb23f6e5afca0ac628d48f3f51c3d0d89d330653c05243d72a51d61fb91f"
+      },
+      {
+        "class": "UProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "8189cb23f6e5afca0ac628d48f3f51c3d0d89d330653c05243d72a51d61fb91f"
+      },
+      {
+        "class": "UState",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "da3ef701a78437b7b5a10bcbee41f421c610143e97112251d40534d6cdd09eb9"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "2dc2c57b599c2dcace5fa89e3ccf0ad93e0a647bb91eb7a8a30e8358a12b06b9"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "2dc2c57b599c2dcace5fa89e3ccf0ad93e0a647bb91eb7a8a30e8358a12b06b9"
+      },
+      {
+        "class": "UStruct",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "95e7cfb0dcb87b86e6e7cba0d144719bc084e6a44f85f5ca74d954a4c1e2f60f"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeBin",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "95e7cfb0dcb87b86e6e7cba0d144719bc084e6a44f85f5ca74d954a4c1e2f60f"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeExpr",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "95e7cfb0dcb87b86e6e7cba0d144719bc084e6a44f85f5ca74d954a4c1e2f60f"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeTaggedProperties",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnClass.h",
+        "header_sha256": "b1c41959ef8b6eb421b3e2f8c54df904117a5cfc77eeaac26af6aac2078f7972",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "95e7cfb0dcb87b86e6e7cba0d144719bc084e6a44f85f5ca74d954a4c1e2f60f"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "7200bafd06c3d56fc961215c9feb4d6df7197a6e17dd16b8f1ef0c244d4f9cf6"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "7200bafd06c3d56fc961215c9feb4d6df7197a6e17dd16b8f1ef0c244d4f9cf6"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Inc\\UnType.h",
+        "header_sha256": "4800e81c76fbdfe612bb9d2bbbe8b302d41c55ab39f603186d09be9517f85a65",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "7200bafd06c3d56fc961215c9feb4d6df7197a6e17dd16b8f1ef0c244d4f9cf6"
+      }
+    ],
+    "ut99-v432": [
+      {
+        "class": "UArrayProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "c367966bedef0c3d5757bd100b3decbbd66bde0ae7a17dbd5cbeb832a693ae1c"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "c367966bedef0c3d5757bd100b3decbbd66bde0ae7a17dbd5cbeb832a693ae1c"
+      },
+      {
+        "class": "UArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "c367966bedef0c3d5757bd100b3decbbd66bde0ae7a17dbd5cbeb832a693ae1c"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "941fba7f31343b458df9404c93083b699c1351ea45f702e6ce4807fa6a22a208"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "941fba7f31343b458df9404c93083b699c1351ea45f702e6ce4807fa6a22a208"
+      },
+      {
+        "class": "UBoolProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "941fba7f31343b458df9404c93083b699c1351ea45f702e6ce4807fa6a22a208"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e373da2ad77095f42e26b93a8970b9abee3a117bda591946f0a584ef3556eac9"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e373da2ad77095f42e26b93a8970b9abee3a117bda591946f0a584ef3556eac9"
+      },
+      {
+        "class": "UByteProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e373da2ad77095f42e26b93a8970b9abee3a117bda591946f0a584ef3556eac9"
+      },
+      {
+        "class": "UClass",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-05",
+        "source_class_definition_body_sha256": "09105f565efa3686057c264eb1234378e3c64fd72f11c812b686b8e4c15b3b17"
+      },
+      {
+        "class": "UClassProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "ba1aa2164c560bdc60a6e0a99ab56dcc2cbad7aa4d2fd165ee80ef3d2a9b0d91"
+      },
+      {
+        "class": "UConst",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "05dcac13f598d9296bfa25c9c4464c537612eceb238cbdf684dcb8dde3202f9f"
+      },
+      {
+        "class": "UEnum",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-06",
+        "source_class_definition_body_sha256": "0ce0414e23244671997118f50fd8fb8bddfc4afd2caa2dc97a49c81096f2a0f7"
+      },
+      {
+        "class": "UField",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "460a9bfff69c8c600b423e56751b697f4898397950b899dd98049d1fc2f842d9"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "8875f5ee3c3bf484853a53668c7206bc530912db05fc9be839a1f657a006e2d7"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "8875f5ee3c3bf484853a53668c7206bc530912db05fc9be839a1f657a006e2d7"
+      },
+      {
+        "class": "UFixedArrayProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "8875f5ee3c3bf484853a53668c7206bc530912db05fc9be839a1f657a006e2d7"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e6d446a05433aeb2d41dfb27ebce44d8a1e1854fb03ec820c1ebe1ef2edf3ad9"
+      },
+      {
+        "class": "UFloatProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e6d446a05433aeb2d41dfb27ebce44d8a1e1854fb03ec820c1ebe1ef2edf3ad9"
+      },
+      {
+        "class": "UFunction",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "9d73f435a45e4b9afd7a651f34cce53e8f166a55732ce93792e1ebeb63dfa678"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e38c34ca1a5474dd63ca73a0cbe434e02731840bc900302ba1d0916877039b0f"
+      },
+      {
+        "class": "UIntProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "e38c34ca1a5474dd63ca73a0cbe434e02731840bc900302ba1d0916877039b0f"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "a4166d612048f2809549ce5a8d4df51aeed41fd031ce2fd3da3be3cd3ffd2832"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "a4166d612048f2809549ce5a8d4df51aeed41fd031ce2fd3da3be3cd3ffd2832"
+      },
+      {
+        "class": "UMapProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-11",
+        "source_class_definition_body_sha256": "a4166d612048f2809549ce5a8d4df51aeed41fd031ce2fd3da3be3cd3ffd2832"
+      },
+      {
+        "class": "UNameProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "5339a33270c02dabdca01231c6951d6be4d02c8ceadb24c252685c993e4a79f7"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "40e950cd4a85893335583f7154b411eb152f8af3d2125d301480b88a86ab26dd"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "40e950cd4a85893335583f7154b411eb152f8af3d2125d301480b88a86ab26dd"
+      },
+      {
+        "class": "UObjectProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-09",
+        "source_class_definition_body_sha256": "40e950cd4a85893335583f7154b411eb152f8af3d2125d301480b88a86ab26dd"
+      },
+      {
+        "class": "UPackage",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnCorObj.h",
+        "header_sha256": "a800f0d7891137882bfee561b6103bd527f7e4d83428afb25a72551556832787",
+        "owner_contract": "G3-13",
+        "source_class_definition_body_sha256": "c0db7ed01a599d2c05560d609239af4f3c85a1bdd673aca039d56edd482097f2"
+      },
+      {
+        "class": "UProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "ee261c1a8da80dbbc90d6411909b8c7c043bae6836cf9f8339f99aa344fe7d0b"
+      },
+      {
+        "class": "UProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "ee261c1a8da80dbbc90d6411909b8c7c043bae6836cf9f8339f99aa344fe7d0b"
+      },
+      {
+        "class": "UProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-07",
+        "source_class_definition_body_sha256": "ee261c1a8da80dbbc90d6411909b8c7c043bae6836cf9f8339f99aa344fe7d0b"
+      },
+      {
+        "class": "UState",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-04",
+        "source_class_definition_body_sha256": "4e211715d9d391c624857619535b7e9cde9dc082a831e78da8649a15e94265d4"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "5cd75ab23ef1733d142fd3426dd560e119e516fbdfeb886acd0f5f5cee8a90f7"
+      },
+      {
+        "class": "UStrProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-08",
+        "source_class_definition_body_sha256": "5cd75ab23ef1733d142fd3426dd560e119e516fbdfeb886acd0f5f5cee8a90f7"
+      },
+      {
+        "class": "UStruct",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "460cab3b389f27a80c8b7183d8dc7e4489a7e7221cc86a1bb749bc73e4afb07c"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeBin",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "460cab3b389f27a80c8b7183d8dc7e4489a7e7221cc86a1bb749bc73e4afb07c"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeExpr",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "460cab3b389f27a80c8b7183d8dc7e4489a7e7221cc86a1bb749bc73e4afb07c"
+      },
+      {
+        "class": "UStruct",
+        "method": "SerializeTaggedProperties",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+        "header_sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2",
+        "owner_contract": "G3-03",
+        "source_class_definition_body_sha256": "460cab3b389f27a80c8b7183d8dc7e4489a7e7221cc86a1bb749bc73e4afb07c"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "NetSerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "96ca71bd44f66732555b79cd0d29e6aeefda86fe594e7912a8b5c4bdc34311e7"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "Serialize",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "96ca71bd44f66732555b79cd0d29e6aeefda86fe594e7912a8b5c4bdc34311e7"
+      },
+      {
+        "class": "UStructProperty",
+        "method": "SerializeItem",
+        "source_header": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+        "header_sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636",
+        "owner_contract": "G3-10",
+        "source_class_definition_body_sha256": "96ca71bd44f66732555b79cd0d29e6aeefda86fe594e7912a8b5c4bdc34311e7"
+      }
+    ]
+  },
+  "all_applicable_source_profiles_serialization_method_count": {
+    "unreal-v1200": 28,
+    "unreal-v1224": 33,
+    "unreal-v1227": 58,
+    "ut99-v400": 43,
+    "ut99-v432": 43
+  },
+  "all_five_profile_source_methods_have_owner_gate": true,
+  "ut99_v432_changed_header_non_serializer_runtime_effects": [
+    "DECLARE_CLASS/DECLARE_ABSTRACT_CLASS fourth package argument Core alters static class registration only",
+    "EStaticConstructor new static-link class support alters C++ construction, not itself a new on-disk Serialize override",
+    "UStruct PropertiesAlign new in Core/Inc/UnClass.h: source declaration change; whether persisted belongs G3-03 runtime method acceptance",
+    "UObject::IsProbing inline removed from UnType.h and source may move implementation; does not directly archive byte serialization"
+  ],
+  "v227_explicit_new_method_not_in_c98_or_ut99": "UButtonProperty::Serialize; keep behavior unverified under G3-08, but declaration and source ownership fully mapped",
+  "inherited_no_serialize_override_source_class_map": {
+    "unreal-v227": [
+      "UIntProperty",
+      "UFloatProperty",
+      "UNameProperty",
+      "UPointerProperty",
+      "UAnyProperty"
+    ],
+    "ut99-v432": [
+      "UIntProperty",
+      "UFloatProperty",
+      "UNameProperty"
+    ]
+  },
+  "source_class_body_sha_semantics": "sha256 over original full class body bytes including comments, from first { through its matching } in exact pinned source header; independent verifier recomputes this and checks source method declaration."
+}

@@ -1,0 +1,19 @@
+﻿{
+    "ok": true,
+    "checks": 1318,
+    "passed": 1318,
+    "failed": [],
+    "c227_original_exported_methods_source_declared": 57,
+    "c227_original_class_owners": 25,
+    "five_revision_source_defined_class_methods": 205,
+    "per_source_revision_counts": {
+        "unreal-v1200": 28,
+        "unreal-v1224": 33,
+        "unreal-v1227": 58,
+        "ut99-v400": 43,
+        "ut99-v432": 43
+    },
+    "explicit_new_v227_button_override_mapped_to_G3_08_not_claimed_behavior_verified": true,
+    "G3_02_source_symbol_mapping_complete": true,
+    "G3_03_to_G3_15_loaded_value_and_error_semantics_newly_certified": false
+}
