@@ -1460,6 +1460,19 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c227k-original-engine-native-219": {
+      "description": "One genuinely new original 2026 Unreal 227k Engine.u loaded-value oracle: original Unreal.exe -server EntryII.unr under Microsoft x86 CDB with the original genuine Core.dll, Engine.u, Core.u and original assets junctioned into a disposable isolated C:/Temp sandbox. 220 native UFunction after-load events; 219 distinct source-identified genuine Engine.u UFunction exports (one ambiguous event excluded). Actual 219 x6=1314 persisted/runtime values match. The original engine reports genuine network FUNC_Net RepOffset697/100 for BroadcastMessage/DemoPlaySound; both match existing reader, no false product issue. Four real product gaps fixed: SetTimer dynamic AnyProperty out pointer4; GetBoundingBox imported Core.Struct BoundingBox size28 via exact original 3-field declaration; SetSocketInfo Engine.MeshSocketInfo source 5-field structure size44; GetSocketInfo indirect out pointer4. The new source-gated CatalogUE1ClassicFunctionStructShapeReader verifies package/import identity, nested native Core structure names, exact child field owners, array dimensions, field classes and field order. Missing Core.u or wrong profile fails closed instead of inventing sizes. Genuine original CDB raw logs, command, deterministic parser and 220 values and shipped DLL/package hashes pinned. One new 1555-assertion native comparator. No prior C98/v432/469f/C227 Core native traces repeated. Full G3-04 remains OPEN for SAVE, malformed original FArchive cursor/version/error and other source-build variants.",
+      "readers": [
+        "CatalogUE1ClassicFunctionLinkReader.php",
+        "CatalogUE1ClassicFunctionStructShapeReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

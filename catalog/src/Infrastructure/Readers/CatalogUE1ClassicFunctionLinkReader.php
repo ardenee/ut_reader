@@ -71,8 +71,13 @@ final class CatalogUE1ClassicFunctionLinkReader
             if(!is_int($dim)||$dim<1||$dim>100000){
                 $reason='unverified_array_dim';break;
             }
-            $element=$memberSizes[$kind]??null;
-            if($kind==='StructProperty'){
+            // Original compiled 227k output params with CPF_Parm|OutParm
+            // and no ReturnParm occupy one indirect four-byte pointer,
+            // regardless of the underlying AnyProperty/struct value size.
+            $indirect=$sourceProfile===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                &&($flags&0x580)===0x180;
+            $element=$indirect?4:($memberSizes[$kind]??null);
+            if($kind==='StructProperty'&&!$indirect){
                 $ref=(int)($property['subclass_fields']['struct_reference']??0);
                 $struct=$ref>0?($exports[$ref-1]??null)
                     :($ref<0?($imports[-$ref-1]??null):null);
@@ -97,6 +102,10 @@ final class CatalogUE1ClassicFunctionLinkReader
                     $sizes+=['Quat'=>16,'InterpCurve'=>12,'Coords'=>48];
                 }
                 $element=$coreBuiltin?($sizes[$name]??null):null;
+                if($element===null&&$sourceProfile===CatalogUE1ClassicSourceFamily::UNREAL_V227){
+                    $element=CatalogUE1ClassicFunctionStructShapeReader::elementSize(
+                        $path,$pkg,$ref,is_string($name)?$name:null,$sourceProfile);
+                }
             }
             if($element===null||$element<=0||$element>1048576){
                 $reason='unverified_element_size:'.$kind;break;
@@ -110,11 +119,8 @@ final class CatalogUE1ClassicFunctionLinkReader
                 ||$offset+$element*$dim>1048576){
                 $reason='unbounded_parameter_layout';break;
             }
-            // Original 227k C++ compiled parameter ABI treats an out
-            // parameter with CPF_Parm|CPF_OutParm (without 0x400)
-            // as a four-byte indirect pointer rather than full value.
-            $indirect=$sourceProfile===CatalogUE1ClassicSourceFamily::UNREAL_V227
-                &&($flags&0x580)===0x180;
+            // Source 227k UFunction::Serialize: an indirect out parameter
+            // advances exactly one 4-byte pointer regardless of ArrayDim.
             $size=$offset+($indirect?4:$element*$dim);
             $computedParmsSize=$size;
             ++$count;

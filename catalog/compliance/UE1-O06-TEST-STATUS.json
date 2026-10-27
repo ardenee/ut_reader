@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T22:47:43.8909174Z",
-    "head_commit":  "72b66ac8",
+    "updated_at_utc":  "2026-10-27T23:07:53.7306900Z",
+    "head_commit":  "885a8ae1",
     "current_target":  "DEV",
-    "current_source_sha256":  "8a3d87cca100975acfdb695170c128ae2833db9f86fda9e9ed1500d18eeacafe",
+    "current_source_sha256":  "b5bb5d5dd2623fdc75e30d77f4f5370a64e55ac40904c5f46fd6fa17dbc35dd1",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -603,6 +603,18 @@
                       "run_id":  "20261027T224742849Z-12d7aabd",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T224742849Z-12d7aabd-DEV-verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php",
+                      "test":  "verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T23:07:53.7036921Z",
+                      "source_sha256":  "b5bb5d5dd2623fdc75e30d77f4f5370a64e55ac40904c5f46fd6fa17dbc35dd1",
+                      "test_sha256":  "e3b362c9f48914c5d8cfa784091855b023ec08a01f239ca6a7e17db756ff111f",
+                      "run_id":  "20261027T230752792Z-d7058fee",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T230752792Z-d7058fee-DEV-verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-04-c98-native-function-state.php",
