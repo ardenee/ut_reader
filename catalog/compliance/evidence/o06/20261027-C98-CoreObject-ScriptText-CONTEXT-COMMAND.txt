@@ -1,0 +1,4 @@
+bp 10110b47 ".if (@esi==1019e8f0) {.echo G303_C98_COREOBJECT_BEFORE_ARCHIVE_SCRIPT_REFERENCE; r esi; r edi; dd @esi+0x34 L3; dd @edi L4; }; gc"
+bp 10110b5d ".if (@esi==1019e8f0) {.echo G303_C98_COREOBJECT_AFTER_ARCHIVE_SCRIPT_AND_CHILD; r esi; r edi; dd @esi+0x34 L3; dd @edi L4; .echo G303_C98_REFERENCE_OPERATION_TRACED; q; }; gc"
+g
+q
