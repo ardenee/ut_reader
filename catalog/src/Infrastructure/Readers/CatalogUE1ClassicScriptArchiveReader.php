@@ -330,10 +330,9 @@ final class CatalogUE1ClassicScriptArchiveReader
                     case 0x32: case 0x33: // Struct comparison: struct class then two operands.
                         $node['value'] = $ref(); $children(2);
                         break;
-                    case 0x34: // v227/UT99 EX_UnicodeStringConst; v1.200 StructConst not serialized.
+                    case 0x34: // v227/UT99 EX_UnicodeStringConst; original C98 has no StructConst serializer case.
                         if (!$modern) {
-                            $unsupported = 'Unreal 1998 EX_StructConst lacks SerializeExpr branch';
-                            break;
+                            throw new RuntimeException(sprintf('UE1 Bad expr token %02x at archive cursor %d', $token, $position));
                         }
                         $w = [];
                         for ($i = 0; $i < $scriptSize; $i++) {
@@ -354,6 +353,12 @@ final class CatalogUE1ClassicScriptArchiveReader
                         $node['value'] = $ref(); $child();
                         break;
                     default:
+                        // C98 v1.200 UStruct::SerializeExpr's default is appErrorf,
+                        // not a recoverable unsupported branch. Source-valid reserved
+                        // intrinsic/conversion ranges have already been dispatched.
+                        if (!$modern) {
+                            throw new RuntimeException(sprintf('UE1 Bad expr token %02x at archive cursor %d', $token, $position));
+                        }
                         $unsupported = sprintf('Source token 0x%02X not decoded', $token);
                         break;
                 }

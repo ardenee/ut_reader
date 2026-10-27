@@ -1,7 +1,7 @@
 {
   "contract": "g3-03-c98-may17-original-bad-expr10-native-cursor",
-  "stage": "G3-03-C98-INVALID-OPCODE10-ORIGINAL-NATIVE-CURSOR-23-PASS",
-  "last_action": "Fixed reproducible real product divergence: malformed source-invalid C98 UStruct script opcode0x10 original shipped Core.dll appErrorf at FArchive Tell24238; UnrealDB previously returned script_archive_token_unimplemented, now throws after consuming opcode, including source-equivalent 0x11, modern source retains existing handling. New original genuine + one-byte mutation CDB SHA-pinned and one new scoped 23/23 DEV PASS with all older suites untouched. Docs/source/test status updated; G3 remains5/16.",
-  "next_step": "Release and verify SHA identity DEV to PRD for this verified reader plus compliance, no PRD PHP tests; after release choose the next genuinely missing full G3-03 native SAVE/malformed or G3-04 original function/state contract, never repeat C98 positive 100/96 or C227i 237/223.",
-  "updated_at_utc": "2026-10-27T20:24:16+00:00"
+  "stage": "G3-03-C98-ALL-12-INVALID-SOURCE-TOKENS-54-PASS",
+  "last_action": "Extended pinned original May1998 UStruct malformed opcode fix to full set of 12 invalid low-range C98 script opcodes including 0x34 StructConst enum present but serializer switch absent. Native CDB opcode 0x10 and Tell24238 reused; remaining 11 source-switched by original v1.200 compiled-source snapshot, no new native claims. Single updated real-genuine C98 focus 54/54 DEV PASS; no other accepted tests rerun. Documented semantics and plan.",
+  "next_step": "Commit/push this consolidated C98 switch-default fix and DEV-to-PRD 1:1 SHA. Next major distinct work: G3-03 original compiled SAVE and genuine C227k/v432 behaviours; no further isolated C98 invalid-token proofs.",
+  "updated_at_utc": "2026-10-27T21:12:07+00:00"
 }

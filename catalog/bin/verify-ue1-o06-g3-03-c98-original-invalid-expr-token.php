@@ -51,8 +51,14 @@ $tempDir='C:/Temp/UnrealDB/O06';
 if(!is_dir($tempDir)){mkdir($tempDir,0777,true);}
 $temp=tempnam($tempDir,'C98BAD');
 if($temp===false){throw new RuntimeException('Cannot create isolated one-byte fixture');}
+// Original v1.200 UnClass.cpp:1100-1336: these bytes fall through
+// the C98 SerializeExpr switch to appErrorf, despite 0x34 appearing
+// as EX_StructConst in UnScript.h. Conversion 0x39..0x59 and intrinsic
+// 0x60..0xFF are dispatched before that switch and must not be rejected.
+$invalid=[0x03,0x10,0x11,0x34,0x35,0x37,0x5a,0x5b,0x5c,0x5d,0x5e,0x5f];
+$ck(count($invalid)===count(array_unique($invalid)),'complete distinct original C98 default-branch opcode set');
 try {
-    foreach([0x10,0x11] as $token){
+    foreach($invalid as $token){
         $bytes=$orig;$bytes[24237]=chr($token);
         file_put_contents($temp,$bytes);
         $ck(strlen($bytes)===strlen($orig)
