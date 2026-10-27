@@ -1,0 +1,522 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "contract": "G3-09",
+  "source_master_truth": "Original Epic C98 UClassProperty asserts null; original UT99 v400/v432 UClassProperty asserts null; original 2012 C227i native method asserts; actual later 227k method also asserts; matching original shipped UT99 469f compiled method substitutes UObject::PrivateStaticClass in memory for null instead of assert.",
+  "unmodified_original_stock_source_and_real_native_positive_proof_artifacts": {
+    "T99_native_12_loaded_object_property_class_targets": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-T99-469F-12-OBJECT-4-CLASS-ORIGINAL-CDB.txt",
+      "sha256": "64e9cf95aeb820e336f5b045bdd3e4edd8ce5c296a9044e61b04fb667480ce62",
+      "bytes": 30452
+    },
+    "C227i_native_25_loaded_property_class_targets": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-C227I-25-OBJECT-10-CLASS-ORIGINAL-CDB.txt",
+      "sha256": "f437669cb110ab5fed6002f3fac2238b7c798d6273ff1783b91920e96567ea0e",
+      "bytes": 58646
+    },
+    "T99_actual_original_compiled_469f_UObj_UClass_native_functions": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-T99-469F-REFERENCE-METHODS-DISASM.txt",
+      "sha256": "5e60f767c43fc1e6871726d574746735e4d85d31a3c93eeb1d4c7f22eff5393e",
+      "bytes": 16864
+    },
+    "C227i_actual_original_compiled_UObj_UClass_native_functions": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-C227I-REFERENCE-METHODS-DISASM.txt",
+      "sha256": "23af658727fbf0fbab836004668b93e56810457232ab6486bc92d95bc15f9f42",
+      "bytes": 17132
+    },
+    "later_C227k_actual_compiled_UObj_UClass_native_functions": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-C227K-REFERENCE-METHODS-DISASM.txt",
+      "sha256": "a67ba8dfbb652af7afec321ee76bf1f2e84eff341f1c4d02823f45207676e250",
+      "bytes": 17414
+    },
+    "T99_469f_true_original_compiled_one_byte_null_MetaClass_fallback": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-T99-469F-NULL-METACLASS-FALLBACK-CDB.txt",
+      "sha256": "d83cc7a0ce6267cdeb352bf46c6e5707f706beeb9f7a4b4d7ea97818f8a166ac",
+      "bytes": 12732
+    },
+    "C227i_2012_true_original_compiled_one_byte_null_MetaClass_appFailAssert": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-C227I-NULL-METACLASS-ASSERT-CDB.txt",
+      "sha256": "f1b7e151573a5dd019d9d4cc5a1f50487ac1bd96dd9fd2d1b9457bce3432e52e",
+      "bytes": 17428
+    },
+    "T99_469f_positive_compiled_native_CDB_script": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-T99-469F-REFERENCE-LOAD-CDB-SCRIPT.txt",
+      "sha256": "01c6879336582c7fb86a25fede7e6c7682244457e37ade38e07d71f46276a576",
+      "bytes": 524
+    },
+    "C227i_positive_compiled_native_CDB_script": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-C227I-REFERENCE-LOAD-CDB-SCRIPT.txt",
+      "sha256": "1c9bc49c99be758eff0015a605293178a2d459d9d3929ffff5adac1709d81399",
+      "bytes": 567
+    },
+    "T99_469f_negative_original_native_CDB_script": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-T99-469F-NULL-META-CDB-SCRIPT.txt",
+      "sha256": "21a05be3c653b9e8f828d863ed446a562ed80c2a48fe2d96967eac140ecd5120",
+      "bytes": 219
+    },
+    "C227i_negative_original_native_CDB_script": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-09-C227I-NULL-META-CDB-SCRIPT.txt",
+      "sha256": "0ed8b7104860ff655a653a213fba3953ba87fb1f9a1ebffc62fafee363fb1e1d",
+      "bytes": 278
+    }
+  },
+  "authentic_original_compiled_reference_profiles": {
+    "T99": {
+      "full_original_Core_u_decl_count": 13,
+      "compiled_original_UObjectProperty_Serialize_loaded": [
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 773,
+          "target_original_global_name": "Object",
+          "source_name": "Obj",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 12,
+          "target_original_global_name": "Class",
+          "source_name": "ObjectClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -11
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 625,
+          "target_original_global_name": "Object",
+          "source_name": "ReturnValue",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 248,
+          "target_original_global_name": "Object",
+          "source_name": "E",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 260,
+          "target_original_global_name": "Class",
+          "source_name": "TestClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -11
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 20,
+          "target_original_global_name": "Class",
+          "source_name": "ParentClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -11
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 268,
+          "target_original_global_name": "Object",
+          "source_name": "A",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 31,
+          "target_original_global_name": "Object",
+          "source_name": "B",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 36,
+          "target_original_global_name": "Object",
+          "source_name": "A",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 35,
+          "target_original_global_name": "Object",
+          "source_name": "B",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 318,
+          "target_original_global_name": "Object",
+          "source_name": "Outer",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 616,
+          "target_original_global_name": "Class",
+          "source_name": "Class",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -11
+        }
+      ],
+      "compiled_original_UClassProperty_MetaClass_Serialize_loaded": [
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 12,
+          "target_original_global_name": "Object",
+          "source_name": "ObjectClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 260,
+          "target_original_global_name": "Object",
+          "source_name": "TestClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 20,
+          "target_original_global_name": "Object",
+          "source_name": "ParentClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "06419250",
+          "source_export_zero_based_index": 616,
+          "target_original_global_name": "Object",
+          "source_name": "Class",
+          "saved_MetaClass_compact_ref": 3
+        }
+      ],
+      "source_real_export_indices_not_compiled_loaded": [
+        771
+      ],
+      "do_not_claim_unobserved_loaded": true
+    },
+    "C227": {
+      "full_original_Core_u_decl_count": 25,
+      "compiled_original_UObjectProperty_Serialize_loaded": [
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 687,
+          "target_original_global_name": "Class",
+          "source_name": "ObjClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 901,
+          "target_original_global_name": "Object",
+          "source_name": "ReturnValue",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 763,
+          "target_original_global_name": "Class",
+          "source_name": "BaseClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 764,
+          "target_original_global_name": "Object",
+          "source_name": "Obj",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 760,
+          "target_original_global_name": "Class",
+          "source_name": "ObjClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 828,
+          "target_original_global_name": "Class",
+          "source_name": "ReturnValue",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 756,
+          "target_original_global_name": "Class",
+          "source_name": "ObjClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 834,
+          "target_original_global_name": "Object",
+          "source_name": "ReturnValue",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 12,
+          "target_original_global_name": "Class",
+          "source_name": "ObjectClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 624,
+          "target_original_global_name": "Object",
+          "source_name": "ReturnValue",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 16,
+          "target_original_global_name": "Object",
+          "source_name": "E",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 22,
+          "target_original_global_name": "Class",
+          "source_name": "TestClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 21,
+          "target_original_global_name": "Class",
+          "source_name": "ParentClass",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 745,
+          "target_original_global_name": "Class",
+          "source_name": "ListType",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 843,
+          "target_original_global_name": "Object",
+          "source_name": "PckContents",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 273,
+          "target_original_global_name": "Object",
+          "source_name": "A",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 37,
+          "target_original_global_name": "Object",
+          "source_name": "B",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 40,
+          "target_original_global_name": "Object",
+          "source_name": "A",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 39,
+          "target_original_global_name": "Object",
+          "source_name": "B",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 711,
+          "target_original_global_name": "Property",
+          "source_name": "Prop",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": -18
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 712,
+          "target_original_global_name": "Function",
+          "source_name": "SortCode",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": -2
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 707,
+          "target_original_global_name": "ArrayProperty",
+          "source_name": "Prop",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": -16
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 708,
+          "target_original_global_name": "Function",
+          "source_name": "SortCode",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": -2
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 618,
+          "target_original_global_name": "Object",
+          "source_name": "Outer",
+          "kind": "objectproperty",
+          "saved_PropertyClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 615,
+          "target_original_global_name": "Class",
+          "source_name": "Class",
+          "kind": "classproperty",
+          "saved_PropertyClass_compact_ref": -10
+        }
+      ],
+      "compiled_original_UClassProperty_MetaClass_Serialize_loaded": [
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 687,
+          "target_original_global_name": "Object",
+          "source_name": "ObjClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 763,
+          "target_original_global_name": "Object",
+          "source_name": "BaseClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 760,
+          "target_original_global_name": "Object",
+          "source_name": "ObjClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 828,
+          "target_original_global_name": "Object",
+          "source_name": "ReturnValue",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 756,
+          "target_original_global_name": "Object",
+          "source_name": "ObjClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 12,
+          "target_original_global_name": "Object",
+          "source_name": "ObjectClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 22,
+          "target_original_global_name": "Object",
+          "source_name": "TestClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 21,
+          "target_original_global_name": "Object",
+          "source_name": "ParentClass",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 745,
+          "target_original_global_name": "Object",
+          "source_name": "ListType",
+          "saved_MetaClass_compact_ref": 3
+        },
+        {
+          "linker": "025de610",
+          "source_export_zero_based_index": 615,
+          "target_original_global_name": "Object",
+          "source_name": "Class",
+          "saved_MetaClass_compact_ref": 3
+        }
+      ],
+      "source_real_export_indices_not_compiled_loaded": [],
+      "do_not_claim_unobserved_loaded": true
+    }
+  },
+  "original_separate_two_real_compiled_mutated_MetaClass_outcomes": {
+    "T99_469f": {
+      "original": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.u",
+      "original_sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0",
+      "isolated_actual_compiled_loaded_package_copy": "C:\\Temp\\UnrealDB\\O06\\Native-469f-G309-MetaNull\\System\\Core.u",
+      "isolated_SHA256": "6bb1ca05494150b9f041ecc194ca5d478c19ed0338f54d8b5d556ea380bcdea1",
+      "physical_one_byte_offset": 6930,
+      "old_compact_ref": 3,
+      "new_compact_ref": 0,
+      "only_one_byte_changed": true
+    },
+    "C227i_2012": {
+      "original": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+      "original_sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b",
+      "isolated_actual_compiled_loaded_package_copy": "C:\\Temp\\UnrealDB\\O06\\Native-2012-C227i-G309-MetaNull\\System\\Core.u",
+      "isolated_SHA256": "24b945c0042ac3e410df4486cdc6272123a9376e4b42b92a7971f51b2b00e7ee",
+      "physical_one_byte_offset": 7752,
+      "old_compact_ref": 3,
+      "new_compact_ref": 0,
+      "only_one_byte_changed": true
+    }
+  },
+  "T99_469f_mutant_actual_compiled_UClassProperty_object_export": 12,
+  "T99_469f_mutant_after_actual_archive_serialize_native_MetaClass_symbol": "Core!UObject::PrivateStaticClass",
+  "T99_469f_mutant_no_original_compiled_assert": true,
+  "C227i_2012_mutant_actual_compiled_UClassProperty_object_export": 12,
+  "C227i_2012_mutant_real_compiled_appFailAssert_executed": true,
+  "original_C98_2_compiled_error_cursor_examples_already_verified_not_reexecuted": true,
+  "original_source_older_T99_v400_v432_MetaClass_source_check": "UClassProperty::Serialize Ar << MetaClass; check(MetaClass)",
+  "real_native_469f_fallback_does_not_replace_saved_source_reference": true,
+  "C98_C227_legacy_class_checked_null_remain_rejected": true,
+  "original_T99_unobserved_positive_instance_indices": [
+    771
+  ],
+  "native_compiled_proven_loaded_refs": [
+    12,
+    4,
+    25,
+    10
+  ],
+  "G3_14_other_original_native_invalid_reference_cursors_and_redirects_still_OPEN": true,
+  "G3_15_other_all_profile_full_corpus_loaded_values_still_OPEN": true,
+  "whole_G3_09_full_method_gate_already_passed": false
+}

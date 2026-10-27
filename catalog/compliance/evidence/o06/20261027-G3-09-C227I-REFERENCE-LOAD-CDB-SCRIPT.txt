@@ -1,0 +1,5 @@
+bp Core!UObjectProperty::Serialize+0x4d ".if (poi(@esi-0x50) != 0) {.echo G309_C227_VALID_OBJ_LOADED; dd @esi-50 L24; dd @esi L1; .if (poi(@esi) != 0) {.echo G309_C227_VALID_OBJ_TARGET; dd poi(@esi)+10 L7; du poi(poi(Core!FName::Names)+4*poi(poi(@esi)+0x20))+0xc L18;};};gc"
+bp Core!UClassProperty::Serialize+0x69 ".if (poi(@esi-0x58) != 0) {.echo G309_C227_VALID_CLASS_META; dd @esi-58 L25; .if (poi(@esi) != 0) {.echo G309_C227_VALID_META_TARGET; dd poi(@esi)+10 L7; du poi(poi(Core!FName::Names)+4*poi(poi(@esi)+0x20))+0xc L18;};};gc"
+g
+.echo G309_C227_COMPLETE
+q

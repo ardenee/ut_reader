@@ -1,0 +1,5 @@
+bp Core!UObjectProperty::Serialize+0x4d ".echo G309_T99_AFTER_OBJ_REAL; dd @edi+10 L24; .if (poi(@edi+0x5c) != 0) {.echo G309_T99_AFTER_OBJ_TARGET; dd poi(@edi+0x5c)+10 L7; du poi(poi(Core!FName::Names)+4*poi(poi(@edi+0x5c)+0x20))+0xc L18;};gc"
+bp Core!UClassProperty::Serialize+0x4b ".echo G309_T99_AFTER_CLASS_REAL; dd @edi-54 L24; .if (poi(@edi) != 0) {.echo G309_T99_AFTER_CLASS_TARGET; dd poi(@edi)+10 L7; du poi(poi(Core!FName::Names)+4*poi(poi(@edi)+0x20))+0xc L18;};gc"
+g
+.echo G309_T99_SERIALIZE_METHODS_RETURNED
+q

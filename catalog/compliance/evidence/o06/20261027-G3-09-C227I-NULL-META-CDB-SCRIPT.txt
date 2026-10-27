@@ -1,0 +1,5 @@
+bp Core!appFailAssert ".echo G309_ORIGINAL_C227I_ACTUAL_APPFAILASSERT_ENTERED; kb 6;gc"
+bp Core!UClassProperty::Serialize+0x52 ".if (poi(@esi-0x54) == 0xc) {.echo G309_C227I_NULL_META_SOURCE_METHOD_BRANCH_TAKEN; dd @esi L1;};gc"
+g
+.echo G309_C227I_COMPILED_ASSERT_SESSION_END
+q

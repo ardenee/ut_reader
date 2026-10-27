@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T15:42:22.3454439Z",
-    "head_commit":  "c0a8db8c",
+    "updated_at_utc":  "2026-10-27T16:08:41.9449395Z",
+    "head_commit":  "bd1c6a50",
     "current_target":  "DEV",
-    "current_source_sha256":  "a7bb291eb048ddf79cca921fd8016d9cbb569bcc364984d33b3487463ef92188",
+    "current_source_sha256":  "ea145f2e8c7e168c09a269b5e46b405a0d825ba562f29ff34bed5143305b7be1",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -567,6 +567,18 @@
                       "run_id":  "20261027T154221693Z-cde2d88d",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T154221693Z-cde2d88d-DEV-verify-ue1-o06-g3-07-full-property-closure.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-09-full-real-class-object-references.php",
+                      "test":  "verify-ue1-o06-g3-09-full-real-class-object-references.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T16:08:41.9209415Z",
+                      "source_sha256":  "ea145f2e8c7e168c09a269b5e46b405a0d825ba562f29ff34bed5143305b7be1",
+                      "test_sha256":  "4a379deb15de589066840a0b9fb32f617fce481d95dda6e92f0216c81b483e44",
+                      "run_id":  "20261027T160841124Z-d60432a3",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T160841124Z-d60432a3-DEV-verify-ue1-o06-g3-09-full-real-class-object-references.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-c227-compiled-core-symbols.php",

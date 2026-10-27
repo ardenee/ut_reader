@@ -111,7 +111,21 @@ final class CatalogUE1ClassicPropertyNativeReader
                 if ($kind === 'classproperty') {
                     $extra['meta_class_reference'] = $reference('UClassProperty.MetaClass');
                     if ($extra['meta_class_reference'] === 0) {
-                        throw new RuntimeException('UClassProperty MetaClass must be non-null');
+                        // Original UT99 v400/v432 UClassProperty::Serialize
+                        // checks MetaClass, as does genuine C98/C227.
+                        // Genuine matching 2026 OldUnreal UT99 469f x86
+                        // Core.dll UClassProperty::Serialize RVA 0x84B70
+                        // instead replaces a loaded null MetaClass with
+                        // UObject::PrivateStaticClass after consuming the
+                        // archived reference. The *saved* MetaClass remains
+                        // zero; the in-memory fallback is a separate fact.
+                        // Never silently apply this 469f change to v432.
+                        if (!$ut99_469f) {
+                            throw new RuntimeException('UClassProperty MetaClass must be non-null');
+                        }
+                        $extra['effective_metaclass_runtime_fallback'] =
+                            'UObject::PrivateStaticClass';
+                        $extra['source_469f_null_metaclass_fallback_verified'] = true;
                     }
                 }
                 break;

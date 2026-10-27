@@ -3,9 +3,9 @@
   "date": "2026-10-27",
   "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
   "full_contracts_required": 16,
-  "full_contracts_accepted": 4,
+  "full_contracts_accepted": 5,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 19,
+  "distinct_original_native_source_subproofs": 20,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -160,6 +160,19 @@
       "native_compiled_categories_dereferenced": 20,
       "true_original_Core_u_properties_not_loaded": 49,
       "full_G3_15_accepted": false
+    },
+    "original469f-and-C227-native-property-class-reference-and-null": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-09-T99-C227-REAL-REFERENCES-NULL-METACLASS.json",
+      "sha256": "82d84fdc058cf1db53a253e1b005ead4cc1d2e8db722386ff2a2efc20aedf025",
+      "bytes": 20407,
+      "T99_469f_compiled_property_class_loaded": 12,
+      "T99_469f_compiled_metaclass_loaded": 4,
+      "C227i_2012_compiled_property_class_loaded": 25,
+      "C227i_2012_compiled_metaclass_loaded": 10,
+      "true_original_compiled_469f_zero_fallback": true,
+      "true_original_compiled_C227i_null_appFailAssert": true,
+      "original_469f_source_export771_not_loaded": true,
+      "G3_15_full_native_all_corpus_still_OPEN": true
     }
   },
   "contracts": [
@@ -287,12 +300,19 @@
     {
       "id": "G3-09",
       "requirement": "UObjectProperty and UClassProperty references",
-      "full_status": "OPEN",
+      "full_status": "ACCEPTED",
       "verified_original_native_subproof_ids": [
         "may-ref600",
-        "may-malformed2"
+        "may-malformed2",
+        "original469f-and-C227-native-property-class-reference-and-null"
       ],
-      "decisive_remaining_requirement": "ObjectProperty/ClassProperty original T99 and C227 referents, invalid type/redirect, LOAD/SAVE and failure cursor."
+      "decisive_remaining_requirement": "CLOSED class-specific reference serialization. Authentic C98 original 600 native target observations and two native malformed errors reused, new T99 469f 12 object /4 class meta native loaded and C227i 25 object/10 meta native loaded, all actual global class target names match original saved imports/exports. Real compiled T99 469f null MetaClass runtime uses UObject::PrivateStaticClass fallback while C227i reaches appFailAssert. Original 469f source-only export 771 still unobserved native under G3-15; general invalid linker types/import redirect/FArchive Tell remain G3-14.",
+      "acceptance_checks": 222,
+      "acceptance_scope": "UObjectProperty_and_UClassProperty_source_specific_Class_references_LOAD_SAVE_and_Null",
+      "acceptance_manifest_sha256": "82d84fdc058cf1db53a253e1b005ead4cc1d2e8db722386ff2a2efc20aedf025",
+      "acceptance_verifier_sha256": "4a379deb15de589066840a0b9fb32f617fce481d95dda6e92f0216c81b483e44",
+      "acceptance_scoped_DEV_PASS_log": "catalog/compliance/evidence/o06/20261027T160841124Z-d60432a3-DEV-verify-ue1-o06-g3-09-full-real-class-object-references.php.txt",
+      "acceptance_scoped_DEV_PASS_sha256": "5d202f15092420541b2f191cf5e005f771601e1c558631554439d948bf41caa0"
     },
     {
       "id": "G3-10",
@@ -335,7 +355,7 @@
         "c227k-2026-matched-original-FObjectExport-archetype",
         "t99-469f-compiled-malformed-UStruct-FName-assert"
       ],
-      "decisive_remaining_requirement": "NEW genuine UT99 469f compiled malformed direct UStruct negative: one-byte real original BoundingBox FName offset7541 changed from 0x4f to 0x00, native Core!appFailAssert FriendlyName!=NAME_None UnClass.cpp line840; PHP same rejection. Actual physical native archive Tell cursor not verified. Other original sources and malformed/EOF/version cursor paths OPEN."
+      "decisive_remaining_requirement": "NEW original 469f null MetaClass native fallback and original C227i null MetaClass appFailAssert directly executed on separate one-byte original package mutants; original C98 error cursors already proven. Other invalid reference types, redirects, cross-family exact FArchive physical Tell and source-version malformed branches still OPEN."
     },
     {
       "id": "G3-15",
@@ -359,9 +379,10 @@
         "t99-469f-native-nine-direct-UStruct",
         "c227k-original-two-genuine-UButton-FString-serialized-values",
         "t99-469f-2026-native-8const-1enum-global-seven-names",
-        "t99-469f-original-490-UPROPERTY-loaded-20-native-categories"
+        "t99-469f-original-490-UPROPERTY-loaded-20-native-categories",
+        "original469f-and-C227-native-property-class-reference-and-null"
       ],
-      "decisive_remaining_requirement": "G3-07 UProperty BASE class serialization now accepted: authentic T99 469f 490 native original objects, C98 1536, C227 668 archived source values correct. 49 other real 469f source property exports not loaded in native process; runtime Link ElementSize or all-other-class native SAVE/invalid behavior still OPEN under G3-15."
+      "decisive_remaining_requirement": "G3-09 class-specific reference archive now accepted with original C98/T99/C227 native values, but original T99 export771 not actually loaded by commandlet. All-other-method genuine native loaded/SAVE/error and complete corpus still OPEN."
     },
     {
       "id": "G3-16",
@@ -371,7 +392,7 @@
       "decisive_remaining_requirement": "Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements."
     }
   ],
-  "full_contracts_open": 12,
+  "full_contracts_open": 11,
   "source_revision_chain_manifest": {
     "path": "catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json",
     "sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901"
@@ -469,7 +490,8 @@
   },
   "accepted_behavior_contracts": [
     "G3-06",
-    "G3-07"
+    "G3-07",
+    "G3-09"
   ],
   "latest_G3_06_full_acceptance": {
     "status": "ACCEPTED",
@@ -502,6 +524,29 @@
     "original_DEV_scoped_result": "catalog/compliance/evidence/o06/20261027T154221693Z-cde2d88d-DEV-verify-ue1-o06-g3-07-full-property-closure.php.txt",
     "original_DEV_scoped_log_sha256": "db62b198b16a938fa0f8bcea395803735b88cac629041b6e6f99d6c801ba2f1c",
     "historical_tests_reexecuted": 0,
+    "G3_14_and_G3_15_still_OPEN": true
+  },
+  "latest_G3_09_full_method_acceptance": {
+    "status": "ACCEPTED",
+    "focused_checks": 222,
+    "T99_469f_native_Object_and_Meta": [
+      12,
+      4
+    ],
+    "C227i_native_Object_and_Meta": [
+      25,
+      10
+    ],
+    "original_469f_one_byte_zero_MetaClass_archive_offset": 6930,
+    "original_C227i_one_byte_zero_MetaClass_archive_offset": 7752,
+    "actual_469f_native_runtime_fallback": "Core!UObject::PrivateStaticClass",
+    "actual_C227i_native_failure": "Core!appFailAssert",
+    "T99_unobserved_original_ref_export": 771,
+    "manifest": "catalog/compliance/UE1-O06-G3-09-T99-C227-REAL-REFERENCES-NULL-METACLASS.json",
+    "manifest_sha256": "82d84fdc058cf1db53a253e1b005ead4cc1d2e8db722386ff2a2efc20aedf025",
+    "original_DEV_focused_log": "catalog/compliance/evidence/o06/20261027T160841124Z-d60432a3-DEV-verify-ue1-o06-g3-09-full-real-class-object-references.php.txt",
+    "original_DEV_focused_log_sha256": "5d202f15092420541b2f191cf5e005f771601e1c558631554439d948bf41caa0",
+    "old_C98_positive_and_malformed_tests_repeated": 0,
     "G3_14_and_G3_15_still_OPEN": true
   }
 }

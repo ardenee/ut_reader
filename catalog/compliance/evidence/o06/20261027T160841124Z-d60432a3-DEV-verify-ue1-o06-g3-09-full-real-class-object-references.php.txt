@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "checks": 222,
+    "passed": 222,
+    "failed": [],
+    "G3_09_source_class_method_decision": "ACCEPTED",
+    "new_compiled_original_469f_UClassProperty_records": 4,
+    "new_compiled_original_469f_UObjectProperty_records": 12,
+    "new_compiled_original_C227_UClassProperty_records": 10,
+    "new_compiled_original_C227_UObjectProperty_records": 25,
+    "separate_real_compiled_Metaclass_zero_behavior_oracles": 2,
+    "original_native_T99_unobserved_property_export": [
+        771
+    ],
+    "historical_C98_600_and_two_negative_tests_reexecuted": 0
+}

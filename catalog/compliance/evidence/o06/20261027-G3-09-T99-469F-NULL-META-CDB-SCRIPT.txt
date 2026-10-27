@@ -1,0 +1,4 @@
+bp Core!UClassProperty::Serialize+0x56 ".if (poi(@edi-0x50) == 0xc) {.echo G309_469F_NATIVE_ORIGINAL_BOUNDED_NULL_META_FALLBACK; dd @edi-54 L24; dd @edi L1; ln poi(@edi);};gc"
+g
+.echo G309_469F_NATIVE_REAL_MUTANT_END
+q

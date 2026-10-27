@@ -4,7 +4,7 @@
   "generated_utc": "2026-10-26T12:56:47.547485+00:00",
   "plan": "catalog/compliance/UE1-O06-G3-ACCEPTANCE-PLAN.md",
   "register_sha256": "d3ab7705a626413dac406ad72c8186363882297f6f89ac97a2e15140bbe98a04",
-  "gate_status": "G3_LIVE_4_OF_16_ACCEPTED_FINAL_AGGREGATE_OPEN",
+  "gate_status": "G3_LIVE_5_OF_16_ACCEPTED_FINAL_AGGREGATE_OPEN",
   "required_tests_count": 16,
   "contracts": [
     {
@@ -2099,10 +2099,11 @@
     "G3-01",
     "G3-02",
     "G3-06",
-    "G3-07"
+    "G3-07",
+    "G3-09"
   ],
-  "live_full_contracts_accepted": 4,
-  "live_full_contracts_remaining": 12,
+  "live_full_contracts_accepted": 5,
+  "live_full_contracts_remaining": 11,
   "G3_06_full_method_acceptance": {
     "status": "ACCEPTED",
     "checks": 56,
@@ -2120,5 +2121,21 @@
     "227k_compiled_legacy_flags_fix": true,
     "all_original_native_runtime_values_G3_15_remain_OPEN": true,
     "original_malformed_FArchive_Tell_G3_14_remains_OPEN": true
+  },
+  "G3_09_full_method_acceptance": {
+    "status": "ACCEPTED",
+    "focused_checks": 222,
+    "original_compiled_T99_Obj_Class": [
+      12,
+      4
+    ],
+    "original_compiled_C227i_Obj_Class": [
+      25,
+      10
+    ],
+    "original_compiled_two_distinct_one_byte_meta_branches": true,
+    "original_source_export771_unobserved_G3_15": true,
+    "crosscutting_linker_type_redirect_cursor_G3_14": "OPEN",
+    "compiled_evidence_sha256": "82d84fdc058cf1db53a253e1b005ead4cc1d2e8db722386ff2a2efc20aedf025"
   }
 }

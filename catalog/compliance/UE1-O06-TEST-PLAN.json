@@ -1298,6 +1298,17 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-09-complete-original-UObjectProperty-UClassProperty-references": {
+      "description": "ONE original-compiled-source G3-09 class-specific UObjectProperty::Serialize and UClassProperty::Serialize acceptance. Previously authenticated C98 actual 600 Byte/Object/Class/Struct native reference targets plus two original C98 native malformed/failure cursor outcomes HASH REUSED, not rerun. NEW genuine original UT99 469f native actual 12 of 13 Core.u object/class property saved refs (4 class Meta native dereferences) and C227i original compiled actual 25 of 25 genuine Core.u object/class properties (10 class Meta native dereferences), authentic global FName pointer targets verified against original saved import/export names including ArrayProperty/Function/Property nontrivial referents. Sole original 469f Core.u export771 not loaded in commandlet and NOT native claimed, G3-15 ownership. REAL production fix: Original UT99 v400/v432 compiled source check(MetaClass) vs later actual 469f compiled UClassProperty::Serialize after Ar<<MetaClass if null sets UObject::PrivateStaticClass, while original C98 and 2012 C227i/2026 227k compiled native assert. One-byte source-derived genuine Core.u export12 physical offset6930 positive ref3->0 original 469f compiled returns without assert and writes true UObject::PrivateStaticClass native address; one-byte genuine original 2012 C227i Core.u export12 offset7752 positive ref3->0 original compiled appFailAssert directly witnessed; both pristine original SHA untouched. PHP now selects 469f fallback while v432 C98 C227 still fatal, preserved saved ref0 and exposes derived effective fallback separately. Source type/redirect/linker errors and exact malformed cursor for other properties remain G3-14, other native all-original-corpus G3-15. Class-specific source Ar<< member LOAD/SAVE conditional check/fallback closed. Focus only new gate, prior accepted positives NEVER rerun.",
+      "readers": [
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-09-full-real-class-object-references.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }
