@@ -39,13 +39,17 @@ final class CatalogUE1ClassicPropertyNativeReader
         if (!in_array($kind, self::KINDS, true)) {
             throw new RuntimeException('Unsupported classic UE1 property serializer: '.$kind);
         }
-        // Later Unreal source introduces both classes, but neither
-        // overrides Serialize. Their saved declaration is exactly the
-        // inherited UField -> UProperty archive, source-gated to v227;
-        // their SerializeItem/runtime semantics are a separate contract.
+        // Original Unreal v227 introduces Pointer/Any with inherited
+        // UProperty::Serialize. The actual UT99 469f SDK *also* defines
+        // UPointerProperty without a Serialize override; its genuine
+        // Core/Engine/Editor.u contain real instances. UT99 v432 does NOT
+        // define it. Because both UT builds save v69/licensee0, only the
+        // explicit runtime provenance overlay can permit this exception.
+        $ut99_469f=$sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V469F;
         if (in_array($kind,['pointerproperty','anyproperty'],true)
-            &&$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227) {
-            throw new RuntimeException('New v227 property class absent from selected UE1 game source');
+            &&$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227
+            &&!($ut99_469f&&$kind==='pointerproperty')) {
+            throw new RuntimeException('Property class not defined by selected UE1 game source revision');
         }
         // The v1.200 branch uses fixed UStringProperty. Dynamic FString,
         // array, fixed-array and map property classes belong to the later
@@ -149,6 +153,8 @@ final class CatalogUE1ClassicPropertyNativeReader
             'status' => $position === $limit
                 ? 'native_property_record_complete' : 'native_property_has_extension',
             'property_kind' => $kind,
+            'explicit_runtime_source_overlay' => $ut99_469f
+                ?CatalogUE1ClassicSourceFamily::UT99_V469F:null,
             'declared_4bit_tag_alias' => $kind==='pointerproperty'
                 ?'NAME_IntProperty':($kind==='anyproperty'?'NAME_VectorProperty':null),
             'new_v227_property_runtime_serializeitem_verified' =>

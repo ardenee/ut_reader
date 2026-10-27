@@ -1,0 +1,19 @@
+﻿{
+    "ok": true,
+    "checks": 198,
+    "passed": 198,
+    "failed": [],
+    "real_new_UT99_469f_pointer_native_declarations": {
+        "Core.u": 2,
+        "Engine.u": 12,
+        "Editor.u": 7,
+        "Botpack.u": 0
+    },
+    "complete_real_pointer_count": 21,
+    "SDK_shipped_x86_serializer_method_exports": 53,
+    "rea_native_UStruct_compile_body_observed": true,
+    "UStruct_native_loaded_value_comparison_newly_certified": false,
+    "source_revision_tag_inferred_from_package_version": false,
+    "source_explicit_only_469f_overlay": true,
+    "full_G3_accepted_by_this_subscope": false
+}

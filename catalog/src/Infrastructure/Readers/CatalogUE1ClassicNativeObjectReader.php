@@ -215,7 +215,9 @@ final class CatalogUE1ClassicNativeObjectReader
                 ||in_array($nativeKind,CatalogUE1ClassicStructNativeReader::KINDS,true)){
                 $detail=in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
                     ?CatalogUE1ClassicPropertyNativeReader::inspect(
-                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family)
+                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,
+                        $sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V469F
+                            ?CatalogUE1ClassicSourceFamily::UT99_V469F:$family)
                     :CatalogUE1ClassicStructNativeReader::inspect(
                         $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
                 return $completeG3($detail);

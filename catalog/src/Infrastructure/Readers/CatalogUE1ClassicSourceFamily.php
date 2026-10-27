@@ -20,6 +20,10 @@ final class CatalogUE1ClassicSourceFamily
 {
     public const EPIC_UE1='epic-ue1';
     public const UT99_V432='ut99-v432';
+    // Explicit post-v432 runtime provenance. Internally this inherits the
+    // v432 archive family and applies only *proven* 469f source/compiled
+    // changes; 69/0 alone does not identify 469f versus older UT99.
+    public const UT99_V469F='ut99-v469f';
     // Historical v400 selection is a deprecated CLI alias for the
     // updated UT99 loader, never a second selectable source profile.
     public const LEGACY_UT99_V400='ut99-v400';
@@ -73,7 +77,8 @@ final class CatalogUE1ClassicSourceFamily
      */
     public static function select(int $version,?string $sourceFamily=null):string
     {
-        if($sourceFamily===self::LEGACY_UT99_V400){
+        if($sourceFamily===self::LEGACY_UT99_V400
+            ||$sourceFamily===self::UT99_V469F){
             $sourceFamily=self::UT99_V432;
         }
         if($sourceFamily!==null&&!array_key_exists(
@@ -158,7 +163,8 @@ final class CatalogUE1ClassicSourceFamily
     public static function selectFromHeader(
         array $header,?string $sourceFamily=null
     ):string{
-        if($sourceFamily===self::LEGACY_UT99_V400){
+        if($sourceFamily===self::LEGACY_UT99_V400
+            ||$sourceFamily===self::UT99_V469F){
             $sourceFamily=self::UT99_V432;
         }
         $version=(int)($header['version']??0);
@@ -209,7 +215,11 @@ final class CatalogUE1ClassicSourceFamily
                 ?self::UNREAL_GAME_REVISION_CHAIN
                 :($selected===self::EPIC_UE1
                     ?array_slice(self::UNREAL_GAME_REVISION_CHAIN,0,6)
-                    :['ue1-engine','ut99-v400','ut99-v432']),
+                    :($sourceFamily===self::UT99_V469F
+                        ?['ue1-engine','ut99-v400','ut99-v432','ut99-v469f']
+                        :['ue1-engine','ut99-v400','ut99-v432'])),
+            'explicit_runtime_source_overlay'=>$sourceFamily===self::UT99_V469F
+                ?self::UT99_V469F:null,
             // Last *present* classic UE1 Core serializer implementation.
             // v1.224/v1.227 contain newer headers but no replacement
             // Core/Src/UnClass.cpp or UnProp.cpp; absence is not a reset.

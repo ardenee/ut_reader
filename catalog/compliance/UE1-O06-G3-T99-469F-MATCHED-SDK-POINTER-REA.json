@@ -1,0 +1,200 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "scope": "User newly supplied OldUnreal UT99 469f SDK + matching x86 shipped runtime, XP runtime distinct; explicit source inheritance ut99-v400->ut99-v432->ut99-v469f, version69/licensee0 cannot identify patch, opt-in overlay only.",
+  "original_469f_SDK_x86_Core_import_lib": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Lib\\x86\\Core.lib",
+    "bytes": 755874,
+    "sha256": "55ae95a080e56015af5e28aeb99637e6afa81063f2ff924b0e7fab6e9b24668a"
+  },
+  "original_469f_SDK_x64_Core_import_lib": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Lib\\x64\\Core.lib",
+    "bytes": 778544,
+    "sha256": "e02fd0d25cfdc19a0b79f1477ea34bc99ba62728d5cfc270590dd6c56b73b61d"
+  },
+  "original_469f_runtime_Windows_x86_Core_dll": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+    "bytes": 1790328,
+    "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+  },
+  "original_469f_runtime_WindowsXP_x86_Core_dll": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-WindowsXP-x86\\System\\Core.dll",
+    "bytes": 1453944,
+    "sha256": "6fa96eddc0a6eae282d17b3e8cbdd16ce144294c9cf34244450d36b988ec1fc0"
+  },
+  "original_469f_runtime_Windows_x86_Engine_dll": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Engine.dll",
+    "bytes": 3463032,
+    "sha256": "625dabea278e314714a45c931c98ba6282a9198378499144429aa979a1a0570f"
+  },
+  "original_469f_runtime_Windows_x86_UCC_exe": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\UCC.exe",
+    "bytes": 487800,
+    "sha256": "57d23855ca3f45a203458ccf737bae6d62c15c15f3de012c81f2bed12c4998ae"
+  },
+  "original_469f_runtime_WindowsXP_x86_Engine_dll": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-WindowsXP-x86\\System\\Engine.dll",
+    "bytes": 3266424,
+    "sha256": "076fb91ebb8566cc9cf4aca3aa0eb99d46ba16568817eeb74f8406cbf713bc44"
+  },
+  "original_469f_runtime_WindowsXP_x86_UCC_exe": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-WindowsXP-x86\\System\\UCC.exe",
+    "bytes": 399736,
+    "sha256": "adec462627a007f4893ea660fb69a071c56f1c2c740653f58e9230aa43c17cd3"
+  },
+  "original_469f_SDK_headers": {
+    "UnType.h": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnType.h",
+      "bytes": 24769,
+      "sha256": "0b302e92c3c079d60a0f896a69d4793e6c60728d4cef4708d072144dcbe8c4ef"
+    },
+    "UnClass.h": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnClass.h",
+      "bytes": 17640,
+      "sha256": "4258b41de0b688afd6e0b72c593f90cb0298a90c1eedefe6b4a4b47bcb91024f"
+    },
+    "UnObjVer.h": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnObjVer.h",
+      "bytes": 2711,
+      "sha256": "23fcb7e2388ebe5399b02c9fe6e273158661a5482ef47b4239adcb8c14163862"
+    },
+    "UnObjBas.h": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnObjBas.h",
+      "bytes": 53197,
+      "sha256": "ecbb27582ffe6dec972c0ec167a0db324a81295773818d73d1b3e71266916f65"
+    },
+    "UnArc.h": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnArc.h",
+      "bytes": 6434,
+      "sha256": "51ca049ceedb155c8361cfa1fe81a5821b9097622e114623340e0720cbd59eb4"
+    },
+    "UnLinker.h": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnLinker.h",
+      "bytes": 10652,
+      "sha256": "6ebfd1f14998b1042435c82755d66f6fd3b1384f240f5361c2b17a71d1644bd7"
+    }
+  },
+  "original_v432_baseline_headers": {
+    "UnType.h": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+      "bytes": 19797,
+      "sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636"
+    },
+    "UnClass.h": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnClass.h",
+      "bytes": 14220,
+      "sha256": "28da9c95776142a85214fc444b8d683077a3310f4599881d689acb5c38b7ffd2"
+    },
+    "UnObjVer.h": {
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjVer.h",
+      "bytes": 1541,
+      "sha256": "ffec6ffb6416c9af3d925f52533a86574040f2bc46328e7f9834afc77850bf24"
+    }
+  },
+  "original_469f_real_archive_packages": {
+    "Core.u": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.u",
+      "bytes": 67362,
+      "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0"
+    },
+    "Engine.u": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Engine.u",
+      "bytes": 1251453,
+      "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+    },
+    "Editor.u": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Editor.u",
+      "bytes": 129786,
+      "sha256": "1694e7a037b6bdb0ac4e504c47f60fb493d3445a2b15bd4aa31ea1326873aa13"
+    },
+    "Botpack.u": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Botpack.u",
+      "bytes": 40048034,
+      "sha256": "09172d4e38709a75e88a068ca9080b57fe59f3775a617a2d797f2902c2dbb61a"
+    }
+  },
+  "same_genuine_469f_packages_in_WindowsXP_runtime": true,
+  "original_469f_32bit_Core_DLL_exported_serializer_related_method_count": 53,
+  "matching_469f_SDK_x86_Core_lib_symbols": 53,
+  "matching_core_compiled_serializer_symbols": {
+    "?NetSerializeItem@UArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083a40",
+    "?NetSerializeItem@UBoolProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083a50",
+    "?NetSerializeItem@UByteProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083aa0",
+    "?NetSerializeItem@UFixedArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083af0",
+    "?NetSerializeItem@UFloatProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083b00",
+    "?NetSerializeItem@UIntProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083b20",
+    "?NetSerializeItem@UMapProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083b40",
+    "?NetSerializeItem@UObjectProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083b50",
+    "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083b70",
+    "?NetSerializeItem@UProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083b90",
+    "?NetSerializeItem@UStructProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z": "0x10083bb0",
+    "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z": "0x10084890",
+    "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z": "0x100849c0",
+    "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z": "0x10084aa0",
+    "?Serialize@UClass@@UAEXAAVFArchive@@@Z": "0x10049f00",
+    "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z": "0x10084b70",
+    "?Serialize@UConst@@UAEXAAVFArchive@@@Z": "0x1004a4b0",
+    "?Serialize@UEnum@@UAEXAAVFArchive@@@Z": "0x10036d00",
+    "?Serialize@UExporter@@UAEXAAVFArchive@@@Z": "0x100409e0",
+    "?Serialize@UFactory@@UAEXAAVFArchive@@@Z": "0x100411b0",
+    "?Serialize@UField@@UAEXAAVFArchive@@@Z": "0x1004a550",
+    "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z": "0x10084c50",
+    "?Serialize@UFunction@@UAEXAAVFArchive@@@Z": "0x1004a640",
+    "?Serialize@ULinker@@UAEXAAVFArchive@@@Z": "0x10065b30",
+    "?Serialize@ULinkerLoad@@EAEXAAVFArchive@@@Z": "0x10065c60",
+    "?Serialize@ULinkerLoad@@EAEXPAXH@Z": "0x10065d00",
+    "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z": "0x10084d30",
+    "?Serialize@UObject@@UAEXAAVFArchive@@@Z": "0x10036dd0",
+    "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z": "0x10084e10",
+    "?Serialize@UPackage@@UAEXAAVFArchive@@@Z": "0x10037270",
+    "?Serialize@UPackageMap@@UAEXAAVFArchive@@@Z": "0x10061380",
+    "?Serialize@UProperty@@UAEXAAVFArchive@@@Z": "0x10084ee0",
+    "?Serialize@UState@@UAEXAAVFArchive@@@Z": "0x1004a7b0",
+    "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z": "0x10085000",
+    "?Serialize@UStruct@@UAEXAAVFArchive@@@Z": "0x1004a880",
+    "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z": "0x100850c0",
+    "?Serialize@UTextBuffer@@UAEXAAVFArchive@@@Z": "0x10037300",
+    "?Serialize@UTextBuffer@@UAEXPBGW4EName@@@Z": "0x100373f0",
+    "?SerializeBin@UStruct@@UAEXAAVFArchive@@PAE@Z": "0x1004aaf0",
+    "?SerializeExpr@UStruct@@UAE?AW4EExprToken@@AAHAAVFArchive@@@Z": "0x1004ac20",
+    "?SerializeItem@UArrayProperty@@UBEXAAVFArchive@@PAX@Z": "0x10085190",
+    "?SerializeItem@UBoolProperty@@UBEXAAVFArchive@@PAX@Z": "0x10085260",
+    "?SerializeItem@UByteProperty@@UBEXAAVFArchive@@PAX@Z": "0x100852b0",
+    "?SerializeItem@UFixedArrayProperty@@UBEXAAVFArchive@@PAX@Z": "0x100852d0",
+    "?SerializeItem@UFloatProperty@@UBEXAAVFArchive@@PAX@Z": "0x10085310",
+    "?SerializeItem@UIntProperty@@UBEXAAVFArchive@@PAX@Z": "0x10085330",
+    "?SerializeItem@UMapProperty@@UBEXAAVFArchive@@PAX@Z": "0x10085350",
+    "?SerializeItem@UNameProperty@@UBEXAAVFArchive@@PAX@Z": "0x10085360",
+    "?SerializeItem@UObjectProperty@@UBEXAAVFArchive@@PAX@Z": "0x10085380",
+    "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z": "0x100853a0",
+    "?SerializeItem@UStrProperty@@UBEXAAVFArchive@@PAX@Z": "0x100853c0",
+    "?SerializeItem@UStructProperty@@UBEXAAVFArchive@@PAX@Z": "0x100853e0",
+    "?SerializeTaggedProperties@UStruct@@UAEXAAVFArchive@@PAEPAVUClass@@@Z": "0x1004b520"
+  },
+  "x86_PE_build_timestamp_utc": "2026-10-15T19:12:24+00:00",
+  "authentic_Ghidra_469f_UStruct_Serialize": {
+    "repo_path": "catalog/compliance/evidence/o06/20261027-UE1-UT99-469F-REA-UStruct-Serialize.json",
+    "sha256": "9c0b123e9d9dd18fbf33975d03fa9336bf446f1c3f07a402247b6d31d055d3c1",
+    "bytes": 23306,
+    "compiled_address": "0x1004a880"
+  },
+  "original_UT99_469f_new_UPointerProperty_in_source_header": true,
+  "pointer_own_Serialize_overridden": false,
+  "pointer_tag_4bit_alias": "NAME_IntProperty",
+  "pointer_instances_observed_by_export_class": {
+    "Core.u": 2,
+    "Engine.u": 12,
+    "Editor.u": 7,
+    "Botpack.u": 0
+  },
+  "all_21_original_pointer_declaration_records_read_without_extension": true,
+  "original_UT99_v432_missing_PointerProperty": true,
+  "archive_version": 69,
+  "archive_licensee_version": 0,
+  "source_family_internal_inherited_archive_baseline": "ut99-v432",
+  "explicit_game_runtime_source_overlay": "ut99-v469f",
+  "no_ver_only_new_469f_automatic_qualification": true,
+  "G3_03_actual_UStruct_native_loaded_values_fully_accepted": false,
+  "G3_08_full_pointer_instance_value_behavior_accepted": false,
+  "G3_all_accepted": false
+}
