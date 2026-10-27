@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-01-complete-cumulative-unreal-game-source-selection`
-- **Stage:** G3-01-SOURCE-PROVENANCE-CUMULATIVE-UE1-UNREAL-UT99-87-ACCEPTED-PRD-PENDING
-- **Last completed action:** User confirmed chronological cumulative source inheritance v0.82->v0.83->v0.84a->v0.86x->v0.867->v1.200->v1.224->v1.227. UE1 engine baseline, successive game-source method deltas persist until explicit newer change; missing v1.224/v1.227 UnClass/UnProp CPP are inherited from last applicable v1.200 classic serializer; changed later headers/new classes remain method-delta G3-02, UT99 v432 inherits its own v400. Separate 1996 resource/1997 Unrealfile/1998 classic formats. 28 genuine source snapshot files SHA sealed; scoped one source-selection verifier 87/87 DEV PASS with wrong-game/version/ambiguity negatives, G3-01 source lineage acceptance 1/16 (remaining method behavior G3-02..15 OPEN). Old later Core.lib vs 2012 227i 14 symbol ABI differences no longer global missing source blocker. No prior native positive verifiers repeated and no serializer algorithm rewritten.
-- **Resume at:** Commit/push and PRD SHA-verify G3-01 87/87 accepted code and eight-revision source manifest; then G3-02 focus actual changed declarations/inline method/added type deltas across revision chain, not absent CPP or irrelevant Core.lib mismatches.
-- **Active changed at:** 2026-10-27T10:27:44+00:00
-- **Latest DEV test states:** PASS 172; FAIL 1; STARTED 0
+- **Contract:** `g3-02-v227-source-introduced-property-inherited-serialize`
+- **Stage:** G3-02-V227-NEW-DECLARED-INHERITED-PROPERTIES-20-PASS-RELEASE-PENDING
+- **Last completed action:** After accepted G3-01 chronological game sources, implemented actual later v227 changed original UnType.h class additions: UPointerProperty, UAnyProperty have NO Serialize override and hence inherit UE1 UField::Serialize+UProperty::Serialize declaration with no native extra bytes, source v227 gated, preserve 4-bit GetID NAME_IntProperty/NAME_VectorProperty aliases and distinct unverified runtime SerializeItem. Newly introduced UButtonProperty declares Serialize(FArchive&) so overrides inherited source and cannot be reported as complete with unavailable method body. New focused source/payload one-shot 20/20 DEV PASS, no 2012 compiled samples of introduced classes in checked Core/Engine/Editor/UMenu. G3-02 has actual code fix but other changed method classes OPEN; G3-01 source policy FULL ACCEPTED 1/16, no repeat old compiled property/field tests.
+- **Resume at:** Commit actual G3-02 source-directed reader fix, release GitHub and PRD byte-SHA. Continue G3-02 remaining explicit new/changed v1.224/227 headers method semantics; no need to recover absent game Core.cpp, 14 ABI differences not global blocker.
+- **Active changed at:** 2026-10-27T10:36:07+00:00
+- **Latest DEV test states:** PASS 173; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T10:34:02.0585864Z | verify-ue1-o06-g3-02-v227-new-property-inheritance.php | PASS | 128 | catalog\compliance\evidence\o06\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt |
+| 2026-10-27T10:34:01.5016249Z | verify-ue1-o06-g3-02-v227-new-property-inheritance.php | STARTED |  | catalog\compliance\evidence\o06\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt |
 | 2026-10-27T10:25:03.6571850Z | verify-ue1-o06-g3-01-chronological-source-inheritance.php | PASS | 95 | catalog\compliance\evidence\o06\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt |
 | 2026-10-27T10:25:03.1288502Z | verify-ue1-o06-g3-01-chronological-source-inheritance.php | STARTED |  | catalog\compliance\evidence\o06\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt |
 | 2026-10-27T09:39:04.8367851Z | verify-ue1-o06-g3-c227i-ufield-915-native-references.php | PASS | 334 | catalog\compliance\evidence\o06\20261027T093904069Z-57ab140a-DEV-verify-ue1-o06-g3-c227i-ufield-915-native-references.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-26T22:55:36.4156731Z | verify-ue1-o06-g3-c98-may1998-uproperty-identities.php | STARTED |  | catalog\compliance\evidence\o06\20261026T225536408Z-cc8998e6-DEV-verify-ue1-o06-g3-c98-may1998-uproperty-identities.php.txt |
 | 2026-10-26T22:09:15.9646833Z | verify-ue1-o06-g3-c98-may1998-original-stock.php | PASS | 2452 | catalog\compliance\evidence\o06\20261026T220913071Z-d94680b3-DEV-verify-ue1-o06-g3-c98-may1998-original-stock.php.txt |
 | 2026-10-26T22:09:13.0795018Z | verify-ue1-o06-g3-c98-may1998-original-stock.php | STARTED |  | catalog\compliance\evidence\o06\20261026T220913071Z-d94680b3-DEV-verify-ue1-o06-g3-c98-may1998-original-stock.php.txt |
-| 2026-10-26T21:53:31.5705350Z | verify-ue1-o06-g3-c98-original-retail-native-loaded.php | PASS | 2231 | catalog\compliance\evidence\o06\20261026T215328913Z-9422f885-DEV-verify-ue1-o06-g3-c98-original-retail-native-loaded.php.txt |
-| 2026-10-26T21:53:28.9199887Z | verify-ue1-o06-g3-c98-original-retail-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T215328913Z-9422f885-DEV-verify-ue1-o06-g3-c98-original-retail-native-loaded.php.txt |
 
 ## Recovery procedure
 

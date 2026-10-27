@@ -69,3 +69,10 @@ Keep the three original serialized archive generations separate: 1996 resource, 
 The newest present classic Core/Src/UnClass.cpp and Core/Src/UnProp.cpp among the eight Unreal game sources are from v1.200. v1.224 and v1.227 lack replacement implementation files but supply changed Core/Inc headers. The source model therefore inherits v1.200 classic method implementations into v227 and applies all newer *actual* game source changes. It does not borrow UT99 Core; UT99 v432 similarly inherits its v400 game Core implementation where later source is absent. Source body inheritance is distinct from proving byte-for-byte binary equivalence, retained as a separate method/native acceptance responsibility.
 
 Original source chain SHA manifest: catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json. Single source-selection acceptance: catalog/bin/verify-ue1-o06-g3-01-chronological-source-inheritance.php. A mismatched 2012 Core.dll and later Core.lib is not a reason to block source inheritance or all G3 contracts.
+
+
+### G3-02 v227 newly introduced property-source delta (2026-10-27)
+
+Unreal v1.227 Core/Inc/UnType.h introduces UPointerProperty and UAnyProperty with no replacement Serialize(FArchive&), so their original UField/UProperty base declaration archive is inherited. Their GetID aliases are NAME_IntProperty and NAME_VectorProperty; actual runtime SerializeItem semantics still differ and are not certified. CatalogUE1ClassicPropertyNativeReader supports their source-specific on-disk declarations for unreal-v227 only.
+
+UButtonProperty explicitly declares a new Serialize(FArchive&) override in the v227 header; missing the CPP is not proof of no change. CatalogUE1ClassicNativeObjectReader reports game_defined_buttonproperty_serialize_override_unverified rather than accepting inherited completion. New source-based v69/licensee227 package fixtures with wrong-game and trailing native byte negatives: 20/20 DEV PASS. G3-02 remains OPEN for other changed method/field behaviors.

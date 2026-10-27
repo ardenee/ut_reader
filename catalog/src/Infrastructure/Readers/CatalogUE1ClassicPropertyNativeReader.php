@@ -19,6 +19,10 @@ final class CatalogUE1ClassicPropertyNativeReader
         'objectproperty', 'classproperty', 'nameproperty', 'stringproperty',
         'strproperty', 'structproperty', 'arrayproperty', 'fixedarrayproperty',
         'mapproperty',
+        // Original Unreal v1.227 Core/Inc/UnType.h adds these two class
+        // declarations with inherited UProperty::Serialize. They do not
+        // declare a new Serialize override; only their tag GetID differs.
+        'pointerproperty', 'anyproperty',
     ];
 
     /**
@@ -34,6 +38,14 @@ final class CatalogUE1ClassicPropertyNativeReader
         $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         if (!in_array($kind, self::KINDS, true)) {
             throw new RuntimeException('Unsupported classic UE1 property serializer: '.$kind);
+        }
+        // Later Unreal source introduces both classes, but neither
+        // overrides Serialize. Their saved declaration is exactly the
+        // inherited UField -> UProperty archive, source-gated to v227;
+        // their SerializeItem/runtime semantics are a separate contract.
+        if (in_array($kind,['pointerproperty','anyproperty'],true)
+            &&$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227) {
+            throw new RuntimeException('New v227 property class absent from selected UE1 game source');
         }
         // The v1.200 branch uses fixed UStringProperty. Dynamic FString,
         // array, fixed-array and map property classes belong to the later
@@ -117,6 +129,10 @@ final class CatalogUE1ClassicPropertyNativeReader
                 $extra['key_reference'] = $reference('UMapProperty.Key');
                 $extra['value_reference'] = $reference('UMapProperty.Value');
                 break;
+            // UPointerProperty and UAnyProperty have no Serialize override
+            // in v227 UnType.h: UProperty inherited native archive only.
+            // Their GetID aliases affect tagged instance values, not this
+            // declaration's serialized native byte count.
             // UInt/Float/Bool/Name/StrProperty add NO LOAD/SAVE native bytes.
             // UBoolProperty BitMask is serialized only in non-load/save archives.
         }
@@ -133,6 +149,10 @@ final class CatalogUE1ClassicPropertyNativeReader
             'status' => $position === $limit
                 ? 'native_property_record_complete' : 'native_property_has_extension',
             'property_kind' => $kind,
+            'declared_4bit_tag_alias' => $kind==='pointerproperty'
+                ?'NAME_IntProperty':($kind==='anyproperty'?'NAME_VectorProperty':null),
+            'new_v227_property_runtime_serializeitem_verified' =>
+                !in_array($kind,['pointerproperty','anyproperty'],true),
             'super_field_reference' => $superField,
             'next_field_reference' => $nextField,
             'array_dim' => $arrayDim,

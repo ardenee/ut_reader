@@ -89,7 +89,24 @@
       "requirement": "Complete class/property serializer symbols, inherited paths and source exclusions",
       "full_status": "OPEN",
       "verified_original_native_subproof_ids": [],
-      "decisive_remaining_requirement": "Method-by-method actual header/inline/new type and changed game-source overrides along UE1->Unreal cumulative chain (v1.224/v1.227) and UT99 v400->v432; inherited methods absent in later game CPP already resolved. Do not block on unavailable Core.cpp or 14/57 compiler ABI mismatch alone."
+      "decisive_remaining_requirement": "Method-by-method actual header/inline/new type and changed game-source overrides along UE1->Unreal cumulative chain (v1.224/v1.227) and UT99 v400->v432; inherited methods absent in later game CPP already resolved. Do not block on unavailable Core.cpp or 14/57 compiler ABI mismatch alone.",
+      "actual_game_source_method_delta_2026_10_27": {
+        "status": "IMPLEMENTED_SOURCE_CORRECT_WITH_ONE_SCOPED_DEV_PASS",
+        "source": "L:/Source/Games/Unreal/Unreal [v1.227]/Core/Inc/UnType.h",
+        "inherited_no_serialize_override": [
+          "UPointerProperty",
+          "UAnyProperty"
+        ],
+        "preserved_declared_4bit_tag_aliases": {
+          "UPointerProperty": "NAME_IntProperty",
+          "UAnyProperty": "NAME_VectorProperty"
+        },
+        "present_explicit_override_remains_unverified": "UButtonProperty::Serialize(FArchive& Ar)",
+        "verifier_checks": 20,
+        "verifier_sha256": "1a70ab932dda66d30ab5b9dbdc03057e2908240e443018e00a69beb7a2177e84",
+        "dev_scoped_test_log_sha256": "bace28c58ffd2253cd47b2f88c6d8bc110f609f0bbfbdeddff55436fa933e781",
+        "dev_scoped_test_log_path": "catalog/compliance/evidence/o06/20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt"
+      }
     },
     {
       "id": "G3-03",

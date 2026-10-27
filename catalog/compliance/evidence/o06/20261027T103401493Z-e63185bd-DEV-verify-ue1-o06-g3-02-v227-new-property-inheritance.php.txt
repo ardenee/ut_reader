@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 20,
+    "passed": 20,
+    "failed": [],
+    "introduced_227_properties_inherited_base": [
+        "UPointerProperty",
+        "UAnyProperty"
+    ],
+    "explicit_changed_serialize_not_inferred": "UButtonProperty",
+    "archive_source": "Unreal v1.227 Core/Inc/UnType.h",
+    "not_a_full_G3_02_or_15_or_16_acceptance": true
+}
