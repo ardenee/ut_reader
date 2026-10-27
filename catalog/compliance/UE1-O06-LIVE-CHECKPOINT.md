@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-02-full-cumulative-serializer-source-method-symbols`
-- **Stage:** G3-02-SOURCE-METHOD-57-PLUS-205-1318-FULL-ACCEPTED-PRD-SHA-VERIFIED
-- **Last completed action:** G3-02 SOURCE symbol/method/inheritance/exclusion FULL acceptance closed: 57/57 original later C227 Core.lib decorated serializer methods have original pinned v227 class method bodies & G3 owner assignments; 205 original method declarations across five 1998/1999/227 and UT99 400/432 source snapshots all exact class-body SHA verified. New independent 1318/1318 DEV focused PASS. Old Oct26 source manifest incorrectly claimed UButtonProperty does not declare Serialize; new source proves explicit override and assigned runtime to G3-08. Unreal v227 Pointer/Any Serialize inherited with runtime SerializeItem separately classified; UT99 v432 static construction and PropertiesAlign changes recognized, not misread as new file bytes. Evidence release 56a2bc42 pushed GitHub and PRD 15/15 modified catalog files SHA verified; no repeated previous 668/915/array4 native tests, production codec unchanged. G3 overall FULL 2/16, G3-01 and G3-02 are source-only accepted, all remaining G3-03..16 method behavior gates strict OPEN.
-- **Resume at:** Start G3-03 UField/UStruct inherited behavior and original source-bound script/Children native serialization across C98/UT99 v432/C227; use previous UField 915 actual native proof without replay. For any source-defined extra UStruct metadata version branches or runtime link fields, correct reader and run one full-method acceptance with original compiler and malformed path; do not return to missing CPP or Core.lib as automatic blocker.
-- **Active changed at:** 2026-10-27T11:56:20+00:00
-- **Latest DEV test states:** PASS 175; FAIL 1; STARTED 0
+- **Contract:** `g3-c227k-matched-native-export-archetype-source`
+- **Stage:** G3-C227K-ORIGINAL-MATCHED-SDK-NATIVE-ARCHETYPE-180-FOCUS-PASS-RELEASE-PENDING
+- **Last completed action:** User-supplied 2026 authentic OldUnreal 227k_15 matching SDK and shipped runtime C227 57/57 original serializer-related decorated symbol exports, historical 2012 runtime 43/57 now superseded (14 abi gaps solved). Two authentic REA/Ghidra outputs on exact SHA original x86 Core.dll: UButtonProperty::Serialize at 0x10080010 calls base UProperty then FString Caption this+0x8c, G3-08 actual loaded behavior remains open; FArchive << FObjectExport at 0x1005DA20 after flags0x100 and archive licensee>=227 reads signed 32-bit ArchetypeIndex BEFORE compact serialSize/Offset. Production CatalogLegacyPackageReader now implements this source-selected native behavior, seven genuine 227k Core/Engine/Editor/UnrealShare/UnrealI/UMenu/UPak packages fully accepted, formerly rejected original UnrealShare.u export13627 BoxRigidBody flags 0x70104 ArchIndex+13069. Original source data untouched SHA, one isolated 4-byte bad index mutated to 2147483647 rejected; independently parsed physical export cursor. One new scoped independent DEV focus 180/180 PASS in 758ms, original old G5 conservative test preserved but superseded. Native subproof total12, 227k matched genuine artifact archived with SHA; whole G3 remains 2/16, no earlier native positive proof rerun.
+- **Resume at:** Commit/push genuine 227k matching SDK artifact hashes, two real native REA disassemblies, new source-correct archetype reader+one 180-check verifier; SHA-deploy PRD only changed catalog files, protect config/storage. Next G3-08 implement compiled UButtonProperty Caption FString with source-defined archive encoding and one new genuine/native fixture; G3-03 UStruct distinct compiled behavior may use 227k source. Do not force old 2012 unmatched ABI Core.lib.
+- **Active changed at:** 2026-10-27T12:28:00+00:00
+- **Latest DEV test states:** PASS 176; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T12:23:53.7337218Z | verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php | PASS | 758 | catalog\compliance\evidence\o06\20261027T122352547Z-66f13321-DEV-verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php.txt |
+| 2026-10-27T12:23:52.5573331Z | verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php | STARTED |  | catalog\compliance\evidence\o06\20261027T122352547Z-66f13321-DEV-verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php.txt |
 | 2026-10-27T11:52:22.6975103Z | verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php | PASS | 142 | catalog\compliance\evidence\o06\20261027T115222126Z-ecb4bae9-DEV-verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php.txt |
 | 2026-10-27T11:52:22.1354605Z | verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php | STARTED |  | catalog\compliance\evidence\o06\20261027T115222126Z-ecb4bae9-DEV-verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php.txt |
 | 2026-10-27T10:53:31.5645031Z | verify-ue1-o06-g3-c227i-four-array-inner-native.php | PASS | 972 | catalog\compliance\evidence\o06\20261027T105329635Z-07802580-DEV-verify-ue1-o06-g3-c227i-four-array-inner-native.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-27T06:16:09.5255598Z | verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php | STARTED |  | catalog\compliance\evidence\o06\20261027T061609517Z-f2803fc7-DEV-verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php.txt |
 | 2026-10-26T23:26:15.1681049Z | verify-ue1-o06-g3-c98-may1998-600-native-references.php | PASS | 281 | catalog\compliance\evidence\o06\20261026T232614467Z-33861503-DEV-verify-ue1-o06-g3-c98-may1998-600-native-references.php.txt |
 | 2026-10-26T23:26:14.4761067Z | verify-ue1-o06-g3-c98-may1998-600-native-references.php | STARTED |  | catalog\compliance\evidence\o06\20261026T232614467Z-33861503-DEV-verify-ue1-o06-g3-c98-may1998-600-native-references.php.txt |
-| 2026-10-26T23:05:04.4062462Z | verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php | PASS | 158 | catalog\compliance\evidence\o06\20261026T230503824Z-c26a0589-DEV-verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php.txt |
-| 2026-10-26T23:05:03.8322345Z | verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T230503824Z-c26a0589-DEV-verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php.txt |
 
 ## Recovery procedure
 

@@ -1,6 +1,6 @@
 # G3 live closure ? 27 October 2026
 
-**Full G3 contracts: 2/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 11.**
+**Full G3 contracts: 2/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 12.**
 
 G3-01 source selection is accepted under the clarified cumulative game-source inheritance rule. The remaining 14 method/behavior gates retain their strict source/real native parity criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
 
@@ -19,8 +19,8 @@ G3-01 source selection is accepted under the clarified cumulative game-source in
 | G3-11 UArrayProperty, UFixedArrayProperty and UMapProperty | 1 | Native array/fixed-array/map loaded values and source-defined exclusion/invalid-count cases across each distinct build. |
 | G3-12 Source script expression, bytecode and fixups | 0 | Native script opcode fixups and bytecode error cursor for C98 and C227; reuse verified v432 G5. |
 | G3-13 Tagged property values, defaults, config and localized | 0 | Native loaded tagged/default/config/localized state for C98 and C227, source-specific defaults and invalid cases. |
-| G3-14 Source version branches and exact malformed FArchive errors | 1 | All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors. |
-| G3-15 Original compiled native loaded-value and genuine-file parity | 11 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
+| G3-14 Source version branches and exact malformed FArchive errors | 2 | All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors. |
+| G3-15 Original compiled native loaded-value and genuine-file parity | 12 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
 | G3-16 One independent whole-G3 gate / DEV release / PRD SHA | 0 | Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements. |
 
 ## Evidence (original compiled engine, subset-specific)
@@ -58,3 +58,11 @@ v1.224 Unreal game source introduces UStrProperty, UArrayProperty, UFixedArrayPr
 ## 2026-10-27 G3-02 source symbol mapping accepted — 1318 of 1318
 
 G3-02 is FULL for its limited source/class/method/inheritance register responsibility: all 57 authentic later v227 Core.lib relevant exported decorated serializer symbols are independently verified in real v227 class headers and have named downstream G3 behavior owners; all 205 class-method declarations across original Unreal v1.200, v1.224, v1.227 and UT99 v400, v432 are independently matched to exact SHA-pinned original source class bodies. This covers source-defined inheritance and exceptions. Original v227 UButtonProperty explicitly declares Serialize (the Oct26 source-symbol inventory incorrectly recorded false), while PointerProperty/AnyProperty inherit base Serialize. UT99 v432 changes class macros and static construction plus UStruct PropertiesAlign, but these are not assumed to create new archive bytes without Serialize evidence. Remaining implementation and real compiled native LOAD/SAVE, version and malformed semantics are specifically assigned to G3-03 through G3-15, not certified here. Full G3 2/16; 14 genuine behavior gates OPEN. The old original evidence remains unchanged and the new complete register supersedes its false UButton source Boolean. See UE1-O06-G3-CUMULATIVE-CORE-SERIALIZER-METHOD-REGISTER.json.
+
+## New user-provided genuine 2026 OldUnreal 227k SDK and compiled original oracle (2026-10-27)
+
+The 227k_15 Windows SDK and actual shipped Windows runtime under L:/Source/Games/Unreal have a MATCHING x86 ABI for all 57/57 authentic C227 Core serializer methods. The earlier 2012 227i Core.dll matched only 43/57; its 14 differences are no longer source blockers. x86 and x64 SDK Core.lib, matched real Core.dll and Engine.dll, seven real original .u packages, and updated headers are SHA-pinned in UE1-O06-G3-C227K-MATCHED-SDK-REA-AND-ARCHETYPE.json.
+
+REA/Ghidra 12.1.4 decompiled shipped x86 227k Core.dll SHA c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194. Compiled FArchive << FObjectExport at VA 0x1005DA20 reads signed 32-bit ArchetypeIndex AFTER ObjectFlags only when RF_HasArchtype=0x100 and archive LicenseeVer >=227, before compact SerialSize and optional SerialOffset. Original UnrealShare.u has 13,873 exports. At actual export 13627 BoxRigidBody, original flags 0x00070104, saved ArchetypeIndex is +13069. Corrected production CatalogLegacyPackageReader now parses all seven original 227k packages. Independent physical source-byte parsing proves exact four-byte field placement and next export offset. One isolated malformed ArchetypeIndex=2147483647 is rejected and the original L:/Source file SHA remains unchanged.
+
+REA also recovered the actual custom UButtonProperty::Serialize at 0x10080010: inherited UProperty::Serialize then FString Caption from this+0x8C. The production UButton declaration is still conservative; runtime loaded-value and malformed-FString acceptance remains G3-08 OPEN. All two original REA results are sealed, and ONE new independent 180/180 DEV scoped test PASS. The older no-native-operator source guard is immutable HISTORICAL evidence, superseded by this real shipped compiled behavior, not rerun. This closes the real FObjectExport archetype layout defect and 14 old ABI mismatches, not all G3-14/G3-15 methods. G3 still 2/16 fully accepted.

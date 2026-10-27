@@ -542,22 +542,22 @@ abstract class CatalogLegacyPackageReaderBase
                     : $reader->i32();
                 $objectName = $reader->packageIndex($version);
                 $flags = $reader->u32();
-                // Unreal v1.227 Core/Inc/UnLinker.h::FObjectExport
-                // declares an additional persistent ArchetypeIndex, but
-                // its out-of-line archive operator is not in the published
-                // source. Never silently present a source-flagged archive
-                // as having no archetype merely because the older UT99
-                // export layout lacks that field. A genuine v227 archive
-                // without RF_HasArchtype is parsed unchanged.
+                // Authentic OldUnreal 227k Core.dll SHA256 c391cade...
+                // FArchive << FObjectExport (x86 0x1005DA20):
+                //  ClassIndex (compact), SuperIndex (compact), PackageIndex
+                //  (signed 32-bit), ObjectName (FName), ObjectFlags (DWORD),
+                //  then WHEN RF_HasArchtype and Ar.LicenseeVer() >= 227:
+                //  ArchetypeIndex (signed 32-bit), followed by compact
+                //  SerialSize and compact SerialOffset when size != 0.
+                //  Ghidra confirms the identical native int32 archive
+                //  operator for PackageIndex and ArchetypeIndex. Never
+                //  apply this 227-specific flag layout to UT99 archives.
                 $v227ArchetypeProfile = $this->engineKey === 'UE1'
                     && $version === 69
-                    && (int)($this->header['licenseeVersion']??0) === 227;
-                if ($v227ArchetypeProfile && ($flags & 0x00000100) !== 0) {
-                    throw new RuntimeException(
-                        'Unreal v227 FObjectExport RF_HasArchtype (0x100)'
-                        .' requires unverified native ArchetypeIndex'
-                        .' archive layout; refusing unsupported export');
-                }
+                    && (int)($this->header['licenseeVersion']??0) >= 227;
+                $archetypeIndex = $v227ArchetypeProfile
+                    && ($flags & 0x00000100) !== 0
+                    ? $reader->i32() : 0;
                 $serialSize = $reader->packageIndex($version);
                 // Unreal v1.200 UE1, Unreal II v69 and generic UE2/Warfare
                 // v126 all test truthiness: any non-zero serialized size is
@@ -595,7 +595,8 @@ abstract class CatalogLegacyPackageReaderBase
                 'objectFlags' => $flags,
                 'serialSize' => $serialSize,
                 'serialOffset' => $serialOffset,
-                'archetype' => 0,
+                'archetype' => $archetypeIndex,
+                'archetypeIndex' => $archetypeIndex,
                 'components' => [],
                 'componentMap' => [],
                 'exportFlags' => 0,
@@ -633,6 +634,15 @@ abstract class CatalogLegacyPackageReaderBase
             if ($version >= 50) {
                 $this->validateUE1SignedReference(
                     (int)$export['outerIndex'], 'PackageIndex', $i, $imports, $exports
+                );
+            }
+            // The compiled 227k ExportMap operator reads this extra signed
+            // INT only for RF_HasArchtype under LicenseeVer >= 227.
+            if ($this->engineKey === 'UE1' && $version === 69
+                && (int)($this->header['licenseeVersion']??0) >= 227
+                && ((int)$export['objectFlags'] & 0x00000100) !== 0) {
+                $this->validateUE1SignedReference(
+                    (int)$export['archetypeIndex'], 'ArchetypeIndex', $i, $imports, $exports
                 );
             }
             // Native Preload seeks SerialOffset and reads SerialSize bytes.

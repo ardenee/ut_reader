@@ -1,0 +1,45 @@
+﻿{
+    "ok": true,
+    "passed": 180,
+    "checks": 180,
+    "failed": [],
+    "real_original_227k_package_summary": {
+        "Core.u": {
+            "exports": 1142,
+            "flagged_archetypes": 0
+        },
+        "Engine.u": {
+            "exports": 9477,
+            "flagged_archetypes": 0
+        },
+        "Editor.u": {
+            "exports": 650,
+            "flagged_archetypes": 0
+        },
+        "UnrealShare.u": {
+            "exports": 13873,
+            "flagged_archetypes": 1
+        },
+        "UnrealI.u": {
+            "exports": 4051,
+            "flagged_archetypes": 0
+        },
+        "UMenu.u": {
+            "exports": 4363,
+            "flagged_archetypes": 0
+        },
+        "UPak.u": {
+            "exports": 3727,
+            "flagged_archetypes": 0
+        }
+    },
+    "fully_decoded_original_227k_archetype_file": "UnrealShare.u",
+    "real_original_archetype_export_index": 13627,
+    "real_original_archetype_value": 13069,
+    "physical_real_file_ArchetypeIndex_offset": 48155243,
+    "original_2012_227i_Core_dll_ABI_mismatches_resolved_in_227k": 14,
+    "matched_227k_DLL_and_SDK_import_symbols": 57,
+    "genuine_original_native_mutation_rejected_source_message": "RuntimeException: Invalid UE1 Export[13627] ArchetypeIndex reference 2147483647 (exports 1..13873, imports -1..-815). File: C:/Users/arden/source/repos/ut_reader/catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php:667",
+    "button_FString_caption_compiled_layout_recovered_not_yet_runtime_sample_accepted": true,
+    "full_G3_03_to_15_parity_newly_certified": false
+}

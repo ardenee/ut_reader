@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T11:52:22.7235934Z",
-    "head_commit":  "bbfdf9c3",
+    "updated_at_utc":  "2026-10-27T12:23:53.7527390Z",
+    "head_commit":  "f533bf51",
     "current_target":  "DEV",
-    "current_source_sha256":  "63c5376cd668e3646981ae4b0932e4c11f6ac2101dc830781db86b6f69f3460d",
+    "current_source_sha256":  "e4661337133117e675683224a089d85fb0a8f67718865beb770188e359f7da3b",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -615,6 +615,18 @@
                       "run_id":  "20261027T092426607Z-70bebb8d",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T092426607Z-70bebb8d-DEV-verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php",
+                      "test":  "verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T12:23:53.7337218Z",
+                      "source_sha256":  "e4661337133117e675683224a089d85fb0a8f67718865beb770188e359f7da3b",
+                      "test_sha256":  "f0de52986e493cb47a8701c8b1f324bfe28ea93a2a1b155200b4eb645241e2e2",
+                      "run_id":  "20261027T122352547Z-66f13321",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T122352547Z-66f13321-DEV-verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-c98-may1998-600-native-references.php",

@@ -5,8 +5,8 @@
   "full_contracts_required": 16,
   "full_contracts_accepted": 2,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 11,
-  "C227_primary_blocker": "NONE FROM MISSING SOURCE FILE: v1.224 and v1.227 inherit classic UE1 v1.200 Core serializer bodies, with actual changed later headers/new classes resolved as source deltas. Native method differences matter only when demonstrated (G3-02..15).",
+  "distinct_original_native_source_subproofs": 12,
+  "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
     "may-const-enum": {
@@ -76,6 +76,16 @@
       "original_compiled_source_loaded_ArrayProperty_records": 4,
       "original_compiled_subclass_methods_disassembled": 4,
       "source_native_subscope_only": true
+    },
+    "c227k-2026-matched-original-FObjectExport-archetype": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C227K-MATCHED-SDK-REA-AND-ARCHETYPE.json",
+      "sha256": "3f4fc0875c3d9cb1d3780f2bc60043c5e152c7642120e527d9251412d200d9ae",
+      "bytes": 10118,
+      "original_compiled_227k_FObjectExport_archive_layout_proved": true,
+      "authentic_227k_UnrealShare_real_archetype": 13069,
+      "authentic_227k_source_packages_validated": 7,
+      "SDK_compiled_227k_method_symbol_matches": 57,
+      "all_G3_accepted": false
     }
   },
   "contracts": [
@@ -179,7 +189,7 @@
         "may-string66",
         "may-ref600"
       ],
-      "decisive_remaining_requirement": "Bool, Byte, Int, Float, Name, String, Str and later C227 scalar type/version and malformed paths, original compiled behavior."
+      "decisive_remaining_requirement": "REA authentic 2026 compiled 227k UButtonProperty Serialize calls inherited UProperty and then serializes FString Caption at object offset 0x8C. No genuine native loaded UButton records currently compared; implement exact FString, original loaded-value and malformed archive cases along with other scalar/string source variants."
     },
     {
       "id": "G3-09",
@@ -228,9 +238,10 @@
       "requirement": "Source version branches and exact malformed FArchive errors",
       "full_status": "OPEN",
       "verified_original_native_subproof_ids": [
-        "may-malformed2"
+        "may-malformed2",
+        "c227k-2026-matched-original-FObjectExport-archetype"
       ],
-      "decisive_remaining_requirement": "All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors."
+      "decisive_remaining_requirement": "C227k compiled archive layout confirmed: licensee>=227 and RF_HasArchtype archives signed i32 ArchetypeIndex after flags. Original UnrealShare 13873 exports, BoxRigidBody index13627 reference 13069, isolated bad reference negative. Remaining original compiled archive/error/version branches for C98, UT99 and C227 still open."
     },
     {
       "id": "G3-15",
@@ -247,9 +258,10 @@
         "may-malformed2",
         "c227i-property668",
         "c227i-field915",
-        "c227i-2012-array-inner-four"
+        "c227i-2012-array-inner-four",
+        "c227k-2026-matched-original-FObjectExport-archetype"
       ],
-      "decisive_remaining_requirement": "Actual loaded-value and genuine-file parity for remaining DIFFERENT source-defined serialization behaviors, archive error/version branches; 2012 227i compiled-vs-later Core.lib import ABI difference is diagnostic, NOT an automatic absence-of-source gate."
+      "decisive_remaining_requirement": "Matching 2026 227k SDK Core.lib and actual shipped Core.dll now agree for all 57 of 57 method exports, versus 2012 old Core.dll only 43. Original real FObjectExport and UButton method REA proof recovered. Remaining distinct method native loaded-value and malformed/version parity still open."
     },
     {
       "id": "G3-16",
@@ -275,5 +287,19 @@
   "accepted_source_only_contracts": [
     "G3-01",
     "G3-02"
-  ]
+  ],
+  "matching_C227_runtime_sdk_compiled_export_symbol_count": 57,
+  "obsolete_2012_227i_14_symbol_mismatch_resolved": true,
+  "latest_227k_native_oracle": {
+    "manifest": "catalog/compliance/UE1-O06-G3-C227K-MATCHED-SDK-REA-AND-ARCHETYPE.json",
+    "manifest_sha256": "3f4fc0875c3d9cb1d3780f2bc60043c5e152c7642120e527d9251412d200d9ae",
+    "focus_test": "catalog/bin/verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php",
+    "focus_verifier_sha256": "f0de52986e493cb47a8701c8b1f324bfe28ea93a2a1b155200b4eb645241e2e2",
+    "focus_checks_passed": 180,
+    "focused_log": "catalog/compliance/evidence/o06/20261027T122352547Z-66f13321-DEV-verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php.txt",
+    "focused_log_sha256": "d8fbc585e2dabffa1932a4a83497cd1fb98fdae25adc08ea4c650c6b68d4f52a",
+    "genuine_UnrealShare_export_count": 13873,
+    "genuine_archetype_export_index": 13627,
+    "genuine_archetype_value": 13069
+  }
 }

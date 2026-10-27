@@ -1,0 +1,234 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "purpose": "New user-supplied OldUnreal v227k_15 SDK and authentic installed runtime. Exact compatible compiled serializer symbol gate, real original exported archetype layout, REA decompilation UButton custom Serialize. No claim source CPP rediscovered.",
+  "compiled_runtime_build": "Unreal 227k_15 2026-08-15 x86",
+  "real_227k_x86_Core_dll": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+    "bytes": 1286008,
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+  },
+  "matching_227k_SDK_x86_Core_import_lib": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Lib\\x86\\Core.lib",
+    "bytes": 819212,
+    "sha256": "b46f9cab43814946c7e4ac224fdf2dfc575498dad1a4557548639bb9ff12321f"
+  },
+  "real_227k_x64_Core_dll": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System64\\Core.dll",
+    "bytes": 1165688,
+    "sha256": "4eaa8e2681ef1067e4eed3e1f43ac34d9d203c3c24a029a2b5db1c592151d52a"
+  },
+  "matching_227k_SDK_x64_Core_import_lib": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Lib\\x64\\Core.lib",
+    "bytes": 840664,
+    "sha256": "4f57b9743adbdd25a28fa21b3fb7f61a64f45c9a6a84f8eb7b93dcd369f1efa6"
+  },
+  "real_227k_x86_Engine_dll": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Engine.dll",
+    "bytes": 4768120,
+    "sha256": "92f6bd4ed6f3fd6162af30e45871a6f3e5093647115f1ea74ef87ac2d24314aa"
+  },
+  "real_227k_x86_UCC_exe": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\UCC.exe",
+    "bytes": 240504,
+    "sha256": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a"
+  },
+  "prior_unmatched_2012_227i_Core_dll": {
+    "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+    "bytes": 901120,
+    "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+  },
+  "old_C227_Core_import_lib_originally_mismatched": {
+    "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\BuildTmp\\Win32Release\\Core.lib",
+    "bytes": 798086,
+    "sha256": "0f783628ec17997c72b071cd2f23b7578204c42a15283139238d174f34f0917a"
+  },
+  "original_C227_symbol_source_manifest": "catalog/compliance/UE1-O06-G3-C227-COMPILED-CORE-SYMBOLS.json",
+  "C227_relevant_serializer_method_symbol_count": 57,
+  "227k_compiled_DLL_symbols_matching_v227_method_owners": 57,
+  "227k_SDK_x86_import_lib_symbols_matching_v227_method_owners": 57,
+  "2012_227i_compiled_DLL_symbols_matching_v227_method_owners": 43,
+  "previously_mismatched_14_symbols_now_present": [
+    {
+      "class": "UButtonProperty",
+      "method": "Serialize",
+      "export_name": "?Serialize@UButtonProperty@@UAEXAAVFArchive@@@Z"
+    },
+    {
+      "class": "UAnyProperty",
+      "method": "SerializeItem",
+      "export_name": "?SerializeItem@UAnyProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UButtonProperty",
+      "method": "SerializeItem",
+      "export_name": "?SerializeItem@UButtonProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UClassProperty",
+      "method": "SerializeItem",
+      "export_name": "?SerializeItem@UClassProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UPointerProperty",
+      "method": "SerializeItem",
+      "export_name": "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z"
+    },
+    {
+      "class": "UAnyProperty",
+      "method": "NetSerializeItem",
+      "export_name": "?NetSerializeItem@UAnyProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UButtonProperty",
+      "method": "NetSerializeItem",
+      "export_name": "?NetSerializeItem@UButtonProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UPointerProperty",
+      "method": "NetSerializeItem",
+      "export_name": "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UStrProperty",
+      "method": "NetSerializeItem",
+      "export_name": "?NetSerializeItem@UStrProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z"
+    },
+    {
+      "class": "UArrayProperty",
+      "method": "ShouldSerializeItem",
+      "export_name": "?ShouldSerializeItem@UArrayProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UClassProperty",
+      "method": "ShouldSerializeItem",
+      "export_name": "?ShouldSerializeItem@UClassProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UObjectProperty",
+      "method": "ShouldSerializeItem",
+      "export_name": "?ShouldSerializeItem@UObjectProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UProperty",
+      "method": "ShouldSerializeItem",
+      "export_name": "?ShouldSerializeItem@UProperty@@UBEHPBEH@Z"
+    },
+    {
+      "class": "UStruct",
+      "method": "SerializeTaggedProperties",
+      "export_name": "?SerializeTaggedProperties@UStruct@@UAEXAAVFArchive@@PAEPAVUClass@@1H@Z"
+    }
+  ],
+  "new_227k_original_sdk_header_pins": {
+    "UnType.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnType.h",
+      "bytes": 34156,
+      "sha256": "2c78a2c6403ea68f3cc59d7e9d56005c740293aaa8ac22703b1dcef2fcb9543e"
+    },
+    "UnObjVer.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnObjVer.h",
+      "bytes": 1899,
+      "sha256": "e194d249596a0b22092f3ab3eb7438d1c7a51102e95bd5b1c0544c2973bd6f5d"
+    },
+    "UnClass.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnClass.h",
+      "bytes": 16809,
+      "sha256": "5d55442733113af569e97540f60bdc3e5d35e480baeca0e29aedf0696dc304ae"
+    },
+    "UnLinker.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnLinker.h",
+      "bytes": 12213,
+      "sha256": "1625fc5a1b8c3c26d1ca3fcdd4172750e9b4c87492184b55edc7fc5683b861d6"
+    },
+    "UnObjBas.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnObjBas.h",
+      "bytes": 59461,
+      "sha256": "f933b807aa9dbffc14a08c409b89446839121ac20310bb8926dbbff6fbbd0f13"
+    },
+    "UnArc.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnArc.h",
+      "bytes": 7632,
+      "sha256": "3d4abf2b0cdc816e42ba6172f8e1e4f09f62fef5b3f7725514df4acb05e1ae16"
+    }
+  },
+  "new_227k_original_genuine_package_pins": {
+    "Core.u": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.u",
+      "bytes": 103686,
+      "sha256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+    },
+    "Engine.u": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Engine.u",
+      "bytes": 3699955,
+      "sha256": "a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e"
+    },
+    "Editor.u": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Editor.u",
+      "bytes": 233614,
+      "sha256": "6a965e7be71b10ffba2a6634bb546a493b665c9ab4c194290af62e5e4c28d730"
+    },
+    "UnrealShare.u": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\UnrealShare.u",
+      "bytes": 48159660,
+      "sha256": "ab2e571dd2e0bad0d8e4389f4d8bc1c7476a61d809de69ce2e7552511197864d"
+    },
+    "UnrealI.u": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\UnrealI.u",
+      "bytes": 23850693,
+      "sha256": "976bc6a9a9465d5dd40aa59a2526851ad4f1d682440a1e00dc166f89e95af931"
+    },
+    "UMenu.u": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\UMenu.u",
+      "bytes": 2212267,
+      "sha256": "f3b7b539ca06ddc3e0fca62bed90ede8a0cd7874ba330606f1dc276c006fe52e"
+    },
+    "UPak.u": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\UPak.u",
+      "bytes": 12135114,
+      "sha256": "35d480fed074b41140a2831db5d9cd2254e37f330c399f2213a1fb8cf266b75d"
+    }
+  },
+  "original_REA_Ghidra_12_1_4_compiled_source_observations": {
+    "rea_227k_fobjectexport_archive": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-UE1-C227K-REA-FObjectExport-Archive.json",
+      "bytes": 12570,
+      "sha256": "c6e0bc292693ee26ada34988d5bbd5ca1577fb763e8e53a3909f935e1fb6a022"
+    },
+    "rea_227k_ubuttonproperty_serialize": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-UE1-C227K-REA-UButtonProperty-Serialize.json",
+      "bytes": 9326,
+      "sha256": "ca916f0724695ffe43fdeefc20db908a948399a348e2d578654e7ff050e1a7ff"
+    }
+  },
+  "exact_original_227k_FObjectExport_export_operator_address": "0x1005DA20",
+  "original_compiled_export_member_byte_order": [
+    "ClassIndex compact",
+    "SuperIndex compact",
+    "PackageIndex signed int32",
+    "ObjectName FName",
+    "ObjectFlags uint32",
+    "if ObjectFlags & 0x100 and ArchiveLicenseeVer >= 227: ArchetypeIndex signed int32",
+    "SerialSize compact",
+    "if SerialSize != 0: SerialOffset compact"
+  ],
+  "archive_licensee_gate_compiled_threshold": 227,
+  "RF_HasArchtype_flag": 256,
+  "source_native_licensee_227_original_ArchetypeIndex_behavior_proved": true,
+  "original_227k_UnrealShare_u_export_with_archetype": {
+    "index": 13627,
+    "name": "BoxRigidBody",
+    "object_flags_hex": "00070104",
+    "ArchetypeIndex": 13069,
+    "valid_reference": true,
+    "original_UnrealShare_u_exports": 13873
+  },
+  "exact_original_227k_UButtonProperty_Serialize_address": "0x10080010",
+  "compiled_UButton_Serialize_calls": [
+    "UProperty::Serialize",
+    "FString::operator<<(Ar, Caption at UButton+0x8C)"
+  ],
+  "UButton_runtime_loaded_objects_compared": 0,
+  "UButton_has_compiled_code_but_not_yet_native_loaded_value_certified": true,
+  "full_G3_status_updated_automatically": false
+}
