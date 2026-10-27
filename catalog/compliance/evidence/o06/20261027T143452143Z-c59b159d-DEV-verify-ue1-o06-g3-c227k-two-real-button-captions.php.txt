@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 38,
+    "passed": 38,
+    "failed": [],
+    "original_real_227k_UButtonProperty_positive_exports": [
+        2285,
+        2286
+    ],
+    "original_real_Caption_values": [
+        "Move point to viewport",
+        "Go to point"
+    ],
+    "matched_original_compiled_UButton_and_FString_operator_recovered": true,
+    "native_CDB_execution_of_real_button_exports_proven": false,
+    "two_distinct_source_defined_mutation_outcomes_checked": true,
+    "whole_G3_08_complete": false
+}

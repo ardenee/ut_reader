@@ -1,6 +1,6 @@
 # G3 live closure ? 27 October 2026
 
-**Full G3 contracts: 2/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 16.**
+**Full G3 contracts: 2/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 17.**
 
 G3-01 source selection is accepted under the clarified cumulative game-source inheritance rule. The remaining 14 method/behavior gates retain their strict source/real native parity criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
 
@@ -13,14 +13,14 @@ G3-01 source selection is accepted under the clarified cumulative game-source in
 | G3-05 UClass serialization and default objects | 0 | Original compiled UClass default-object construction, values, Config/Localized effects and error paths across C98/T99/C227. |
 | G3-06 UConst and UEnum | 4 | C98/v432/C227 UConst/UEnum negative archives, LOAD/SAVE and version gates; compiled 2012 C227i only covers observed objects. |
 | G3-07 UProperty base metadata | 2 | ElementSize/category/net/error behavior across all three build profiles, including unobserved original property exports. |
-| G3-08 Scalar derived properties and String/Str version changes | 2 | Bool, Byte, Int, Float, Name, String, Str and later C227 scalar type/version and malformed paths, original compiled behavior. |
+| G3-08 Scalar derived properties and String/Str version changes | 3 | Bool, Byte, Int, Float, Name, String, Str and later C227 scalar type/version and malformed paths, original compiled behavior. |
 | G3-09 UObjectProperty and UClassProperty references | 2 | ObjectProperty/ClassProperty original T99 and C227 referents, invalid type/redirect, LOAD/SAVE and failure cursor. |
 | G3-10 UStructProperty nested layouts | 1 | UStructProperty nested SerializeBin/offsets/imported fields and negative nested errors for all profile builds. |
 | G3-11 UArrayProperty, UFixedArrayProperty and UMapProperty | 1 | Native array/fixed-array/map loaded values and source-defined exclusion/invalid-count cases across each distinct build. |
 | G3-12 Source script expression, bytecode and fixups | 0 | Native script opcode fixups and bytecode error cursor for C98 and C227; reuse verified v432 G5. |
 | G3-13 Tagged property values, defaults, config and localized | 0 | Native loaded tagged/default/config/localized state for C98 and C227, source-specific defaults and invalid cases. |
 | G3-14 Source version branches and exact malformed FArchive errors | 3 | All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors. |
-| G3-15 Original compiled native loaded-value and genuine-file parity | 15 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
+| G3-15 Original compiled native loaded-value and genuine-file parity | 16 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
 | G3-16 One independent whole-G3 gate / DEV release / PRD SHA | 0 | Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements. |
 
 ## Evidence (original compiled engine, subset-specific)
@@ -87,3 +87,9 @@ Two genuinely new original compiled 469f native branches, both independently sco
 - One independent original compiled negative test modifies EXACTLY ONE BYTE of an isolated unchanged-format authentic Core.u BoundingBox direct UStruct FName from original compact 4f01 at physical offset7541 to 0001. Actual original UT99 469f x86 Core.dll via UCC and CDB calls real ULinkerLoad::Preload, UStruct::Serialize+0x85, then appFailAssert FriendlyName!=NAME_None (original compiled UnClass.cpp line840). Existing UnrealDB reader rejects the same source-defined NAME_None field. NEW 27/27 DEV focused PASS; source L directory and genuine original Core.u hashes unchanged. This does not yet prove the original native archive Tell cursor.
 
 Both actual original compiled command scripts, debugger logs and source/input SHA pins are stored in UE1-O06-G3-T99-469F-NINE-DIRECT-UStruct-ORIGINAL-NATIVE.json and UE1-O06-G3-T99-469F-ORIGINAL-MALFORMED-UStruct-FRIENDLYNAME.json. G3-03 and G3-14 remain OPEN for other original builds, bytecode, malformed EOF, physical cursor and SAVE cases. Whole G3 remains 2/16; now 16 distinct original compiled subproofs. The two tests add 162 independent focused checks without production decoder changes because the observed current native behavior already matched Epic/OldUnreal compiled runtime.
+
+## 2026-10-27 G3-08 original genuine 227k UButtonProperty Caption serializer implemented
+
+Production decoder FIX, not simply another source mapping: 2026 227k shipped original Core.dll UButtonProperty::Serialize (RVA 0x80010) uses inherited UProperty::Serialize then FString Caption at native member+0x8C. NEW genuine compiled FArchive<<FString operator RVA0x66E40 decompiled with REA/Ghidra shows signed compact count, positive ANSI/negative UTF16LE, final char overwritten with NUL on native LOAD. Original shipped ScriptedAI.u contains two ACTUAL UButtonProperty exports: MoveCamButton caption Move point to viewport count23 and MovePointButton caption Go to point count12. The reader now consumes BOTH complete original native archive records and returns native_buttonproperty_caption_record_complete, not the old unverified status. Original source package and compiled Core.dll SHA pinned in UE1-O06-G3-C227K-TWO-GENUINE-UButton-Caption-Serialize.json. One NEW 38/38 scoped DEV PASS, previous old tests not replayed. Two isolated source-defined malformed byte mutations distinguish an invalid terminal character from count overrun; not falsely described as execution of those mutants through compiled Core.dll.
+
+Limit: original shipped 227k UCC.exe has neither make nor batchexport commandlets, so actual in-memory Caption values were NOT compared with a loaded native property. UButton runtime SerializeItem and NetSerializeItem, SAVE, other scalar/str/version and malformed compiled-native behaviors remain G3-08 OPEN. Full G3 remains 2/16; compiled-source original subproofs now 17. Historic earlier source-only assertion that UButton override is unverified is superseded by this compiled body.

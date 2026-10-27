@@ -76,19 +76,10 @@ final class CatalogUE1ClassicNativeObjectReader
         if($gameOverride!==null){
             return array_replace($record,$gameOverride);
         }
-        // Unreal v1.227 UnType.h introduces UButtonProperty and explicitly
-        // declares UButtonProperty::Serialize(FArchive&), unlike its two
-        // new UProperty-inherited siblings. Without this changed method's
-        // body, never mistake an empty native tail for verified inheritance.
-        if($family===CatalogUE1ClassicSourceFamily::UNREAL_V227
-            &&$nativeKind==='buttonproperty'){
-            return array_replace($record,[
-                'status'=>'game_defined_buttonproperty_serialize_override_unverified',
-                'source_override'=>'Unreal v1.227 Core/Inc/UnType.h UButtonProperty::Serialize(FArchive&)',
-                'serialized_native_tail_bytes_unverified'=>$nativeLength,
-                'runtime_serializeitem_verified'=>false,
-            ]);
-        }
+        // Genuine 227k Core.dll UButtonProperty::Serialize (RVA 0x80010)
+        // calls UProperty::Serialize, then serializes FString Caption.
+        // The source-specific inherited reader below now accounts for the
+        // additional archive member, rather than returning "unverified".
         // v432 skeletal/animation method order now comes from the
         // authentic installed compiled Engine.dll, not declarations.
         // Decode after the common bounded archive callbacks below.

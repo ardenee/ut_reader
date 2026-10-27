@@ -18,7 +18,7 @@ final class CatalogUE1ClassicPropertyNativeReader
         'byteproperty', 'intproperty', 'boolproperty', 'floatproperty',
         'objectproperty', 'classproperty', 'nameproperty', 'stringproperty',
         'strproperty', 'structproperty', 'arrayproperty', 'fixedarrayproperty',
-        'mapproperty',
+        'mapproperty', 'buttonproperty',
         // Original Unreal v1.227 Core/Inc/UnType.h adds these two class
         // declarations with inherited UProperty::Serialize. They do not
         // declare a new Serialize override; only their tag GetID differs.
@@ -38,6 +38,14 @@ final class CatalogUE1ClassicPropertyNativeReader
         $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
         if (!in_array($kind, self::KINDS, true)) {
             throw new RuntimeException('Unsupported classic UE1 property serializer: '.$kind);
+        }
+        // Original Unreal v227, confirmed by matching 2026 227k Core.dll,
+        // explicitly overrides UButtonProperty::Serialize with a trailing
+        // FString Caption after inherited UProperty::Serialize. Earlier
+        // C98 and UT99 source profiles do not define this class.
+        if($kind==='buttonproperty'
+            &&$family!==CatalogUE1ClassicSourceFamily::UNREAL_V227){
+            throw new RuntimeException('UButtonProperty absent from selected UE1 game source');
         }
         // Original Unreal v227 introduces Pointer/Any with inherited
         // UProperty::Serialize. The actual UT99 469f SDK *also* defines
@@ -133,6 +141,42 @@ final class CatalogUE1ClassicPropertyNativeReader
                 $extra['key_reference'] = $reference('UMapProperty.Key');
                 $extra['value_reference'] = $reference('UMapProperty.Value');
                 break;
+            case 'buttonproperty':
+                // Genuine matching 227k Core.dll RVA 0x80010:
+                // inherited UProperty prefix, then operator<<(FArchive&,
+                // FString&), compiled RVA 0x66E40. That operator reads an
+                // AR_INDEX signed character count: positive ANSI, negative
+                // UTF-16LE WCHAR count. The saved count includes the final
+                // NUL slot, but native load also consumes non-NUL last slots.
+                // Keep malformed terminators observable, not fabricated as
+                // archive exceptions. The physical archive EOF belongs to
+                // the parent read callback; the final SerialSize mismatch is
+                // only checked after this native Serialize method returns.
+                $signedCount=$compact();
+                $wide=$signedCount<0;
+                $count=abs($signedCount);
+                $unitWidth=$wide?2:1;
+                $stringOffset=$position;
+                $raw=$read($count*$unitWidth);
+                $end=$wide?"\x00\x00":"\x00";
+                $terminated=$count===0||str_ends_with($raw,$end);
+                $encoded=$count>0?substr($raw,0,-$unitWidth):'';
+                $decoded=$encoded===''?'':($wide
+                    ?@iconv('UTF-16LE','UTF-8',$encoded)
+                    :\UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($encoded));
+                $valueReliable=$decoded!==false;
+                $extra['caption']=$valueReliable?$decoded:null;
+                $extra['caption_count_signed']=$signedCount;
+                $extra['caption_unit_count']=$count;
+                $extra['caption_encoding']=$wide?'UTF-16LE':'Epic-FromAnsi-bytewise';
+                $extra['caption_string_raw_offset']=$stringOffset;
+                $extra['caption_string_raw_length']=$count*$unitWidth;
+                $extra['caption_string_raw_sha256']=hash('sha256',$raw);
+                $extra['caption_terminator_is_nul']=$terminated;
+                $extra['caption_text_decoded']=$valueReliable;
+                $extra['caption_serialize_source']='original-227k-Core-UButtonProperty-Serialize-0x10080010';
+                $extra['runtime_serializeitem_verified']=false;
+                break;
             // UPointerProperty and UAnyProperty have no Serialize override
             // in v227 UnType.h: UProperty inherited native archive only.
             // Their GetID aliases affect tagged instance values, not this
@@ -151,14 +195,15 @@ final class CatalogUE1ClassicPropertyNativeReader
             ?($flags & ~0x00080040):$flags;
         return [
             'status' => $position === $limit
-                ? 'native_property_record_complete' : 'native_property_has_extension',
+                ? ($kind==='buttonproperty'?'native_buttonproperty_caption_record_complete':'native_property_record_complete')
+                : ($kind==='buttonproperty'?'native_buttonproperty_caption_has_extension':'native_property_has_extension'),
             'property_kind' => $kind,
             'explicit_runtime_source_overlay' => $ut99_469f
                 ?CatalogUE1ClassicSourceFamily::UT99_V469F:null,
             'declared_4bit_tag_alias' => $kind==='pointerproperty'
                 ?'NAME_IntProperty':($kind==='anyproperty'?'NAME_VectorProperty':null),
             'new_v227_property_runtime_serializeitem_verified' =>
-                !in_array($kind,['pointerproperty','anyproperty'],true),
+                !in_array($kind,['pointerproperty','anyproperty','buttonproperty'],true),
             'super_field_reference' => $superField,
             'next_field_reference' => $nextField,
             'array_dim' => $arrayDim,

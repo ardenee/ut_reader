@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "acceptance_target": "G3-08 actual original 227k UButtonProperty Serialize inherited UProperty then FString Caption, real original ScriptedAI.u two genuine persisted property exports, not a simulation of positive package bytes",
+  "true_original_227k_Core_DLL": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+    "bytes": 1286008,
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+  },
+  "true_original_227k_SDK_UnType_header": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnType.h",
+    "bytes": 34156,
+    "sha256": "2c78a2c6403ea68f3cc59d7e9d56005c740293aaa8ac22703b1dcef2fcb9543e"
+  },
+  "true_original_227k_ScriptedAI_u": {
+    "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\ScriptedAI.u",
+    "bytes": 359911,
+    "sha256": "396abd174a6ec86631de7d7c442f9187c7658af4baf2eaa6a58a93eff9327d36"
+  },
+  "true_original_227k_compiled_Caption_member_offset": "0x8c",
+  "true_original_227k_UButtonProperty_Serialize_PE_address": "0x10080010",
+  "true_original_227k_operator_FArchive_FString_PE_address": "0x10066e40",
+  "original_compiled_UButton_227k_REA": {
+    "repo_path": "catalog/compliance/evidence/o06/20261027-UE1-C227K-REA-UButtonProperty-Serialize.json",
+    "sha256": "ca916f0724695ffe43fdeefc20db908a948399a348e2d578654e7ff050e1a7ff",
+    "bytes": 9326
+  },
+  "original_compiled_FString_operator_227k_REA": {
+    "repo_path": "catalog/compliance/evidence/o06/20261027-G3-C227K-REAL-FString-Operator-REA.json",
+    "sha256": "3a948acc89550f2774a1d4d98359ea642fe32cf175105b4ba1147a71c5782460",
+    "bytes": 25338
+  },
+  "real_original_scriptedAI_two_button_declaration_exports": [
+    {
+      "original_zero_based_export_index": 2285,
+      "object_name": "MoveCamButton",
+      "original_serial_offset": 292981,
+      "original_serial_size": 80,
+      "original_native_caption_count_file_offset": 293037,
+      "original_native_caption_count": 23,
+      "original_native_caption_data_offset": 293038,
+      "original_native_caption_value": "Move point to viewport",
+      "original_native_caption_bytes_hex": "4d6f766520706f696e7420746f2076696577706f727400"
+    },
+    {
+      "original_zero_based_export_index": 2286,
+      "object_name": "MovePointButton",
+      "original_serial_offset": 293061,
+      "original_serial_size": 62,
+      "original_native_caption_count_file_offset": 293110,
+      "original_native_caption_count": 12,
+      "original_native_caption_data_offset": 293111,
+      "original_native_caption_value": "Go to point",
+      "original_native_caption_bytes_hex": "476f20746f20706f696e7400"
+    }
+  ],
+  "real_original_button_declaration_exports_found_in_shipped_227k_corpus": 2,
+  "original_227k_compiled_UButton_calls": [
+    "UProperty::Serialize",
+    "FArchive::operator<<(FString& Caption)"
+  ],
+  "original_227k_FString_archive_native_encoding": "signed compact count; positive ANSI bytes, negative UTF16LE 2-byte codeunits; compiled operator always writes last in-memory TCHAR as 0 on LOAD",
+  "native_runtime_original_file_loaded_button_memory_captured": false,
+  "compiled_CDB_button_commandlet_note": "The supplied 227k UCC.exe build has no batchexport or make commandlet in this isolated runtime; do not claim CDB executed UButton::Serialize from ScriptedAI.u",
+  "true_source_original_L_files_not_modified": true,
+  "G3_08_full_contract_accepted": false
+}

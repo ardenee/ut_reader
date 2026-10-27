@@ -2,275 +2,1009 @@
   "schema": 1,
   "notes": "Explicit conservative contract/test selection. Tier gate is contract-level, not overall O06 acceptance. Add owner readers and tests for new contracts.",
   "contracts": {
-    "g3-03-t99-469f-nine-original-compiled-direct-UStruct": {"description":"NEW real original compiled OldUnreal UT99 469f direct UStruct native LOADED-value acceptance (NOT UFunction inherited 25 evidence): real x86 2026 Core.dll original source SHA, true Core.u genuine 9 direct UStruct subclasses at zero-based export indexes 0/1/32/53/486/535/546/551/590, original compiled UStruct::Serialize+0x1ea after full loaded method CDB snapshots in two separate isolated real UCC.exe make -nobind runs; distinct native linker per process, same genuine source package. Compare all nine loaded friendly names / original global object FName, script size, TextPos, Line, ScriptText, real Children pointer presence to actual original PHP archive, six newly captured native Children pointers dereferenced and compact positive source indices agree exactly. Three original Core.u Registry* structs source valid but NOT loaded by this commandlet; no false claims; original files immutable, no earlier 25 UFunction/21 pointer tests replayed. Independent 135 focused assertions; G3-03/15 whole OPEN; G3 overall2/16.","readers":[],"focus":["verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php"],"affected":[],"gate":[]},
-    "g3-03-t99-469f-original-compiled-malformed-FriendlyName": {"description":"NEW original compiled UT99 469f UNMODIFIED x86 UCC+Core.dll behavior on isolated one-byte mutated genuine Core.u BoundingBox direct UStruct zero-based index53: original genuine export SerialOffset7533/size22, tag envelope end7535, original compact FName index79 bytes4f01 at physical offset7541, disposable single byte 0x4f to 0x00 keeps remaining source unchanged. Original compiled real CDB breakpoint Core!appFailAssert captures source call Core!ULinkerLoad::Preload+0x128 -> Core!UStruct::Serialize+0x85 -> Core!appFailAssert original UnClass.cpp Line840: Assertion failed FriendlyName!=NAME_None; PHP already correctly rejects RuntimeException UStruct FriendlyName cannot be NAME_None. Actual compiled native archive Tell cursor not claimed tested. Original genuine L source SHA unchanged, exact mutant SHA pinned, 2 UTF16 debugger log/scripts SHA and 27 one-shot independent actual original source/mutant checks. G3-03 and G3-14 remain OPEN; source method negative accepted only.","readers":[],"focus":["verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php"],"affected":[],"gate":[]},
-    "g3-03-t99-469f-25-original-compiled-UStruct-loaded-values": {"description":"NEW unique real 2026 OldUnreal UT99 469f compiled x86 Core.dll UField inherited UStruct::Serialize genuine original 25 file-backed UFunction objects after compiled UStruct::Serialize returns (original real Core.u v69/l0). CDB original x86 Core!UStruct::Serialize+0x1ea breakpoint in isolated matching original UCC.exe make -nobind, source original Core DLL SHA 80ac334..., Core.u SHA 7b2d496..., user original source L untouched, 25 original zero-based export identities, script byte counts, actual source Line, TextPos, native FriendlyName equals object name internal FName, native ScriptText zero, 21 actual Children UObject pointer targets whose native ULinkerIndex matches same real original source export refs. PHP existing CatalogUE1ClassicStructNativeReader already matches all 25 native loaded-value sets and exact export bounds; 298 independent checks with original runtime CDB commands/transcript and x86 original function machine disassembly SHA-pinned. Original 469f distinct real inherited UStruct loaded submethod only; C98/v432/C227 variant, error branches/bytecode semantics, G3-03 FULL still OPEN; G3 overall remains 2/16. Previous 21 pointer test and G3-01/02 not replayed.","readers":[],"focus":["verify-ue1-o06-g3-t99-469f-25-original-native-struct.php"],"affected":[],"gate":[]},
-    "g3-t99-469f-original-matched-sdk-pointer-source": {"description":"NEW genuine OldUnreal UT99 469f Windows x86+XP x86 SDK/runtimes. SHA-pinned 53 exact original compiled serializer-related Core.dll exports match 53/53 matching x86 SDK Core.lib; distinct 469f 2026 compiled x86 UStruct::Serialize body recovered by REA Ghidra, original source UStruct new code script mismatch branch, not loaded-value parity. Original v469f Core/Inc/UnType.h adds UPointerProperty with no custom Serialize and tagged NAME_IntProperty alias; earlier v432 UnType.h does NOT define it. Four genuine v69/licensee0 original 469f Core.u, Engine.u, Editor.u, Botpack.u package maps validated; Core2, Engine12, Editor7 total 21 real PointerProperty declarations now decoded as inherited UField->UProperty via explicit ut99-v469f source overlay; v432 selection still rejects original 469f-only class. Patch cannot be distinguished by v69/0 header, so source alias maps to inherited v432 behavior with explicit provenance opt-in; no guessing release by package version or changing old v432 behavior. One new independent 198/198 scoped acceptance with hashes, 53 original SDK exports, REA original SHA, positive 21 and original wrong-revision negatives. G3 full2/16; no old original compiled positive tests repeated; class SerializeItem/runtime value not claimed verified.","readers":["CatalogUE1ClassicSourceFamily.php","CatalogUE1ClassicNativeObjectReader.php","CatalogUE1ClassicPropertyNativeReader.php"],"focus":["verify-ue1-o06-g3-t99-469f-matched-sdk-pointer-inherited.php"],"affected":[],"gate":[]},
-    "g3-c227k-matched-native-export-archetype-source": {"description":"NEW actual authentic 2026 OldUnreal 227k_15 SDK matching shipped 227k compiled runtime: 57/57 true decorated x86 Core.dll exports exactly present in matching Core.lib; original 2012 227i DLL matches only 43/57 (14 later ABI gaps now resolved). REA/Ghidra 12.1.4 compiled UButtonProperty::Serialize at 0x10080010 confirmed inherited UProperty::Serialize then Caption FString member at +0x8c; no native loaded button object claimed. More important REA compiled FArchive << FObjectExport at 0x1005DA20: after Class/Super compact, PackageIndex signed int32, Name, flags, if flags & 0x100 and licensee>=227 ArchetypeIndex signed i32 then compact serial size/offset. Production CatalogLegacyPackageReader now source-specific implements full native field, signed archetype bounds; authentic installed 227k Core.u/Engine.u/Editor.u/UnrealShare.u/UnrealI.u/UMenu.u/UPak.u all fully validate. Actual genuine UnrealShare.u 13,873 exports index13627 BoxRigidBody flags 0x70104 ArchetypeIndex +13069; exact physical position and next-record consumption, one isolated 4-byte invalid signed reference mutation rejected without altering original SHA. Original 2 REA outputs and matched SDK/runtime binaries SHA sealed; one 180/180 new focused DEV test, no previous C98/T99/v227 positive tests replayed. Other G3-08/14/15 scopes remain OPEN, overall G3 2/16.","readers":["CatalogLegacyPackageReader.php"],"focus":["verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php"],"affected":[],"gate":[]},
-    "g3-02-full-cumulative-serializer-source-method-symbols": {"description":"Full G3-02 SOURCE-SYMBOL and inherited method-source ownership complete (not loaded-value semantics): authentic later v227 Core.lib all 57 genuine decorated Core class/property serializer methods; original source header definitions individually SHA pinned 57/57, 25 distinct relevant classes, 10 owner G3 contracts, plus 205 distinct actual method declarations across five chronological real Unreal 1200, Unreal 1224, Unreal 1227, UT99 v400, UT99 v432 snapshots, exact 205 original C++ class body hashes and 5*3 genuine header hashes; source actual game additions and inheritance, v227 UButton explicit Serialize override (old stored boolean was wrong), v227 Pointer/Any inherited Serialize, original v432 constructor/macro/PropertiesAlign/IsProbing deltas classified but not inferred on-disk extra bytes. Independent complete source mappings, 1318/1318 focused DEV checks PASS. G3-02 is source symbol and exception closure only; each 57 method runtime/LOAD/SAVE/error remains assigned to G3-03..15. No replay prior native/aggregate 668/915/Array4 proofs, no production serializer edited and no false compiled runtime equivalence.","readers":[],"focus":["verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php"],"affected":[],"gate":[]},
-    "g3-02-original-2012-c227i-four-array-inner-identities": {"description":"Original UE1 Unreal v1224 (inherited by v227) class additions UArrayProperty/UFixedArrayProperty/UMapProperty/UStrProperty absent from v1200. Independently genuine original 2012 227i Core.dll x86 4 subclass Serialize methods disassembled, showing UArrayProperty calls UProperty inherited then Ar << Inner, fixed array method two arguments Inner+Count, UMap Key+Value, UStr only inherited. Actual source UCC.exe help triggers 4 original Core.u UArrayProperty with native this+0x14 zero-based export identities 662/667/669/746 and native this+0x60 inner pointee export indexes 928/922/917/843: saved compact positive refs 929/923/918/844 all exact current PHP reader. Original DLL+Core.u+UCC hashes, v1200/v1224/v1227 source hashes, 4 CDB logs/commands pinned, independent one focused 73/73 PHP verifier. No fixedarray/map actual loaded values in this run, 2012 compiled binary no claim of later 227k exact ABI, G3-02/11/15 remain OPEN. Distinct actual compiled subtype behavior, not repeated previous UProperty 668 base proof.","readers":[],"focus":["verify-ue1-o06-g3-c227i-four-array-inner-native.php"],"affected":[],"gate":[]},
-    "g3-02-v227-source-introduced-property-inherited-serialize": {"description":"Actual v1.227 Core/Inc/UnType.h defines added UPointerProperty and UAnyProperty (neither overrides Serialize) so their property declarations inherit Epic UE1 UField::Serialize+UProperty::Serialize with zero subclass native bytes; source-v227 only and preserve distinct 4-bit GetID aliases NAME_IntProperty/NAME_VectorProperty without pretending SerializeItem runtime loaded semantics. UButtonProperty explicitly declares a new Serialize(FArchive&) override so cannot be declared inherited/complete merely because .cpp absent, report specific unverified method even if tail zero. One complete distinct source-defined G3-02 change/negative suite; original 227 source header SHA, genuine v69/l227 package fixture plus wrong game and extension, source constraints. G3-01 accepted already; G3-02/15 remain OPEN for other methods.","readers":["CatalogUE1ClassicNativeObjectReader.php","CatalogUE1ClassicPropertyNativeReader.php"],"focus":["verify-ue1-o06-g3-02-v227-new-property-inheritance.php"],"affected":[],"gate":[]},
-    "g3-01-complete-cumulative-unreal-game-source-selection": {"description":"G3-01 COMPLETE original Unreal UE1 game-source provenance selection and cumulative method inheritance across 8 genuine original Unreal revisions v0.82, v0.83, v0.84a, v0.86x, v0.867, v1.200, v1.224, v1.227. SHA verify 23 real source files, distinct 1996/1997/classic archive formats, last applicable present Core CPP original v1.200 when v1.224/227 replacement implementations absent, apply v1.224/227 changed source headers as deltas, explicit source revision chain persists earlier changes. UT99 v432 inherits v400 Core where no later override, but not Unreal C227; version69/licensee227 selects Unreal, conflicting and ambiguous source cases must reject; linkers source-inherited, compiled parity handled by G3-15 not source-selection gate; genuine C227 14/57 mismatch not a missing-game-CPP blocker. One independent complete DEV source-selection verifier with original source SHA; no old native test repeats.","readers":["CatalogUE1ClassicSourceFamily.php"],"focus":["verify-ue1-o06-g3-01-chronological-source-inheritance.php"],"affected":[],"gate":[]},
-    "g3-c227i-ufield-original-915-compiled-super-next-identities": {"description":"Real authentic original 2012 Unreal 227i compiled Core.dll UField::Serialize method x86 body 0x10116850 after archived refs at 0x101168aa, exact per-export original Core.u v69 l227 915 individual source archive exports. Native this+0x10 linker pointer, +0x14 zero-based export index, +0x28 SuperField ptr, +0x2c Next ptr. 912 null/3 non-null SuperField and 238 null/677 non-null Next, every non-null target same actual original linker and native target zero-based export +1 equals actual saved signed source reference. 913 subclasses verified with current production NativeObjectReader and two UClass exports [2 Object,7 Commandlet] verified through dedicated ClassMetadataReader. Both ref fields for 915/915 individual native source objects exactly matched, one new independent 9389-check PHP verifier PASS, original stock 227i Core.dll/Core.u/UCC, original WinDbg actual 915-event transcript and source disassembly hash-pinned; original later v227 headers declaration-only, 2012 compiled ABI not equivalent to later 227 Core.lib. Does not certify UStruct serialization, class defaults, source exception/version/other builds. G3-03/15/16 remain OPEN, 0/16.","readers":[],"focus":["verify-ue1-o06-g3-c227i-ufield-915-native-references.php"],"affected":[],"gate":[]},
-    "g3-c227i-uproperty-original-native-668-exact-export-identities": {"description":"Real original authenticated 2012 Unreal 227i Core.dll+UCC.exe and genuine untouched Core.u (v69 licensee227), 668 actual native UProperty::Serialize memory events. This+0x14 is true zero-based ULinkerLoad ExportMap LinkerIndex, NOT FName global index; this+0x34 native ArrayDim, +0x3c native PropertyFlags. All 668 independently original linker exports identified without duplicate and exact native loaded values match both sealed genuine Core.u 673 property snapshot and current production source reader, 8715 individual DEV checks PASS. Five genuine property exports not loaded [3,4,6,634,655]; 43/57 overlap of later source Core.lib and original 2012 compiled ABI means no later Core implementation equivalence. Not FULL G3-07/15 or G3-16; C227 source negative and version branches OPEN. No production reader changes or past 668 aggregate subset test replay.","readers":[],"focus":["verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php"],"affected":[],"gate":[]},
-    "g3-c98-may1998-two-original-compiled-native-malformed-error-cursors": {"description":"Two source-distinct true original May17 1998 compiled C98 malformed UClassProperty references with exact native archive cursor. Original untouched Core.u v61 export index4 ObjectClass 15 bytes at original SerialOffset 3559. Isolated diagnostic cloned original runtime and one-byte Core.u mutations: saved PropertyClass -12 -> invalid -63 (encoded 8c -> bf at byte3572), original native compiled appErrorf with argument -63 at archive cursor3573; and saved MetaClass +1 -> null0 (01 ->00 at byte3573), original compiled UClassProperty check(MetaClass) fatal at native cursor3574. Both show separate PHP original source reader RuntimeExceptions and order, preserved original source Core.u SHA, actual cloned DLL same SHA, original Epic v1.200 UnProp.cpp, UnLinker.h, UnArc.h, authentic CDB transcribed negative calls and memory cursor, byte-exact isolated mutations. One independent negative verifier 55 source/native SHA/error assertions. Not all G3-14 negatives; G3 FULL still 0/16; no positive G3 reruns or production parser changes.","readers":[],"focus":["verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php"],"affected":[],"gate":[]},
-    "g3-c98-may1998-600-original-native-refs": {"description":"Original May17 compiled Core.dll 600 observed true loaded reference fields: UByteProperty.Enum 84, UObjectProperty.PropertyClass 268, UClassProperty.MetaClass 26, UStructProperty.Struct 222, 65 null enum refs. Identified original Core.u/Engine.u 0-based linker export and true native FName referent versus original saved signed import/export names; SHA original binary, source and CDB. Independent 5457-check DEV verifier. Scoped positive only, G3 0/16 full.","readers":[],"focus":["verify-ue1-o06-g3-c98-may1998-600-native-references.php"],"affected":[],"gate":[]},
-    "g3-c98-may1998-ustring-66-loaded-string-size": {"description":"Original May17 compiled x86 Core.dll UStringProperty::Serialize original export 0x10101e74 -> true compiled body 0x101439c0, after compiled UProperty::Serialize inheritance then Ar << StringSize native 4byte field at this+0x48 and observed return 0x101439fe. Exactly 66 true original loaded StringSize values in compiled memory, 38 Core.u and 28 Engine.u, each authenticated by original linker and zero-based export index, native FName name, and exact original package PHP subclass_fields.string_size. SHA-pin original Core.dll, Core.u, Engine.u, two Epic v1.200 source files and saved CDB disassembly/log. One independent 555-check focus script; no production reader change, no malformed or negative runtime claims, G3-08 full OPEN and G3 0/16. Do not replay previous 1536 parent property/C98 Const Enum/C227i/T99/G5 tests.","readers":[],"focus":["verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php"],"affected":[],"gate":[]},
-    "g3-c98-may1998-uproperty-loaded-1536-identities": {"description":"Original Redump USA May17 1998 stock compiled Core.dll UProperty::Serialize actual method body 0x10141470, after LOAD capture 0x101414e7, 1536 individually identified native Core.u/Engine.u/UnrealI.u property exports. Exact native Linker+LinkerIndex and resolved FName name/outer/category mapped to PHP saved arrays with same 0-based export; original ArrayDim, PropertyFlags, RepOffset (107 CPF_Net), Offset zero on source load. Original v1.200 source UnProp.cpp, UnType.h, UnObjBas.h and FName UnName.cpp appStricmp / UnName.h index equality; 6 Bird1/bird1 first-interned original FName spelling variations equivalent without rewriting package bytes. 326/327 Core, 1162/2493 Engine, 48/4576 UnrealI property exports OBSERVED; others UNOBSERVED, not accepted. SHA sealed original May PE/Core.u Engine.u UnrealI.u and source files and CDB disassembly and log of 1536 loaded calls. One independent 18477-check DEV verifier. No production parser change, original May17 binary not globally asserted byte-equal to May19 source, G3 full 0/16. No prior Const/Enum/227i/T99/G5 repetitions.","readers":[],"focus":["verify-ue1-o06-g3-c98-may1998-uproperty-identities.php"],"affected":[],"gate":[]},
-    "g3-c98-may1998-original-stock-core-uconst-uenum": {"description": "Original May17 1998 US retail CD (Redump SHA1 authenticated), MODE2/2352 ISO read-only mounted with original Epic v1.200 Window/Src/Main.cpp Engine.Engine.CdPath N: source-defined CD requirement. Exact genuine May17 compiled x86 Core.dll, Engine.dll Unreal.exe unmodified; original Core.u package61 458 exports. Stock CDB loaded 2 UConst Pi/MaxInt FString Num/Max and original UEnum ESheerAxis 7 global FName index->native text, matched original PHP saved values plus May19 v1.200 UnClass.cpp/UnObj.cpp serializer source. Five relevant original compiled May Core methods traced to body behind PE export thunks. One independent SHA pinned DEV 68-check verifier, no other UE stock or G5 rerun. This does NOT prove all May17 compiled function bodies identical to May19 source or close G3 0/16 FULL.", "readers": [], "focus": ["verify-ue1-o06-g3-c98-may1998-original-stock.php"], "affected": [], "gate": []},
-    "g3-c98-july1998-original-retail-native-uconst-uenum": {"description": "Authenticated original European Unreal retail CD original 1998-07 compiled Core.dll Core.u version 61, not presumed identical to 1998-05 v1.200 source compile. Redump sha1 and original BIN/ISO/PE/package SHA256 sealed. Stock 1998 Unreal.exe -server with original retail assets and Windows CDB: two UConst genuine FString loaded text/Num/Max values Pi and MaxInt and seven real compiled UEnum ESheerAxis loaded native global FName indices resolved via original FName::Names. Verify identical decoded saved values, correct local-vs-global FName distinction; 56 independent checks, one focused DEV verifier, no prior 227i or T99 native tests rerun. G3 full remains 0/16.", "readers": [], "focus": ["verify-ue1-o06-g3-c98-original-retail-native-loaded.php"], "affected": [], "gate": []},
-    "g3-c227i-original-uenum-compiled-loaded-twelve": {"description": "One original OldUnreal 227i compiled x86 Core.dll UEnum::Serialize native loaded-value acceptance: 2 actual Core.u enums, five/seven array FName values, all 12 original global FName indices resolved through compiled FName::Names table and independently compared to PHP original local NameMap referents; original DLL/UCC/Core.u SHA and debugger logs pinned. 227i Core.lib 43/57 method overlap and C98 still blocked, not whole G3 acceptance. No repeated UConst compiled captures.", "readers": [], "focus": ["verify-ue1-o06-g3-c227i-uenum-native-loaded.php"], "affected": [], "gate": []},
-    "g3-c227i-original-uconst-compiled-loaded-eight": {"description": "Original C227i 2012 compiled Core.dll loaded-value proof: 2012 OldUnreal installer archive authenticated by external SHA; extracted original DLL UCC.exe Core.u Engine.dll verified against OldUnreal official SHA list. CDB captured four genuine original compiled G3 Serialize call paths and eight in-memory UConst FString values (Num/Max), all eight genuine Core.u records matched via current source PHP; 43/57 old v227 import symbols match, 14 absent or ABI-changed. One independent SHA-pinned DEV verifier reuses sealed native logs and does NOT rerun debugger/native engine. C98 and unmatched 227 source/oracles not proven, G3 whole remains 0/16.", "readers": [], "focus": ["verify-ue1-o06-g3-c227i-uconst-native-loaded.php"], "affected": [], "gate": []},
-    "g3-06-t99-legacy-wide-fstring-source-overlap": {"description": "True original C98/T99 overlapping package-version distinction: T99 v400 Core/Src/UnMisc.cpp::FString<< selects UTF16 by negative compact SaveNum without any Ar.Ver() gate, including versions 61 and 63; C98 v1.200 Core/Inc/Core.h FString is TArray<char>. PHP UConst incorrectly rejected wide FString whenever ver<64 regardless of selected source. Permit source-selected T99 v61/63 Unicode but keep C98 source rejection and C227 implementation explicitly unknown. Existing UConst fixture adds three provenance/version assertions, no C98/C227 runtime native proof or G3 full acceptance.", "readers": ["CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-classic-const-native.php"], "affected": ["verify-ue1-classic-enum-native.php", "verify-ue1-classic-struct-native.php", "verify-ue1-classic-property-native.php"], "gate": []},
-    "g3-06-uconst-fstring-source-raw-units": {"description": "One original C98 v1.200 Core/Inc/Core.h TArray<char> and T99 inherited UT99 v400 Core/Src/UnMisc.cpp FString::operator<< LOAD difference: neither archive reader validates trailing NUL; UT99 FromUnicode maps 16-bit units without strict Unicode-scalar validation and clears FString arrays of one element after load. Correct UConst native PHP invented errors: consume raw source-defined archive, preserve SHA/preview, mark non-NUL or nonrepresentable UTF16 text unverified instead of fabricating successful C-string. Five representative novel source-code-unit tests in existing UConst fixture; C98/C227 original compiled stock loaded memory remains blocked; G3 FULL remains OPEN.", "readers": ["CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-classic-const-native.php"], "affected": ["verify-ue1-classic-enum-native.php", "verify-ue1-classic-struct-native.php", "verify-ue1-classic-property-native.php"], "gate": []},
-    "g3-06-uconst-uenum-physical-archive-boundary": {"description": "G3-06 source-correct original v1.200 C98 and inherited v400 T99 UConst::Serialize FString and UEnum::Serialize Names TArray file-backed linker archive: do not prematurely reject counts at export SerialSize. Read from physical file, report post-Serialize SerialSize mismatch; actual physical EOF remains fatal. Four new cross-export tests and four EOF cases across v50/v69 on each distinct class; C98/C227 original native loaded-object parity and full G3 stay OPEN.", "readers": ["CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-classic-const-native.php", "verify-ue1-classic-enum-native.php"], "affected": ["verify-ue1-classic-struct-native.php", "verify-ue1-classic-property-native.php"], "gate": []},
-    "g3-native-class-property-physical-archive-boundary": {"description": "G3-03/04/07 original C98 Unreal v1.200 Core/Src/UnLinker.h::LoadObject and inherited T99 v400 Core/Src/UnLinker.h::Preload source define physical file-backed archive reads first, then compare Tell()-SerialOffset with SerialSize. Correct shared Field/Struct/State/Function and property-native premature export-bounded EOF; preserve archive overrun cursor and mark source linker SerialSize mismatch, physical-file EOF still fatal. Only these G3 native kinds change; G3 full and C227 original loaded-value remain open.", "readers": ["CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-classic-struct-native.php"], "affected": ["verify-ue1-classic-property-native.php", "verify-ue1-classic-const-native.php", "verify-ue1-classic-enum-native.php"], "gate": []},
-    "g3-classic-raw-string-and-fixedarray-count-source": {"description": "G3-08/G3-11 two real original Core source archive-stage mismatches: C98 v1.200 Core/Src/UnProp.cpp:519-525 UStringProperty::Serialize performs UProperty::Serialize and Ar << StringSize with no positivity check; inherited T99 v400 Core/Src/UnProp.cpp:954-961 UFixedArrayProperty::Serialize performs Super::Serialize and Ar << Inner << Count, checkSlow(Inner), with NO Count positivity check. Correct PHP premature reject for signed 0/-1 in both; preserves actual archive content and bytes, does NOT claim runtime/link success, C227 lacks compiled loaded oracle. ONE affected DEV original property fixture now 42 cases including four signed source tests. G3-08 and G3-11 FULL remain OPEN until all original compiled source families proven.", "readers": ["CatalogUE1ClassicPropertyNativeReader.php"], "focus": ["verify-ue1-classic-property-native.php"], "affected": [], "gate": []},
-    "g3-c98-t99-uproperty-ArrayDim-source-archive": {"description": "ONE true G3 production reader correction against pinned original C98 Unreal v1.200 and inherited T99 v400 Core/Src/UnProp.cpp UProperty::Serialize: Ar << ArrayDim << PropertyFlags << Category, NO ArrayDim positive/range validation in original Serializer. PHP previously invented a throw for archive zero and signed-negative ArrayDim; source now preserves raw signed 0/-1 and decodes remaining flags/name fully, runtime UProperty::Link or native C227 undefined/untested. Also repairs existing v50 fixture to select Epic v1.200 explicitly and preserve 0x00080060 flags; UT99 <=61 separately clears 0x00080040. ONE affected 40-case DEV property test, 2 signed branch cases plus legacy flags; no prior G5 native replay; G3 whole still OPEN.", "readers": ["CatalogUE1ClassicPropertyNativeReader.php"], "focus": ["verify-ue1-classic-property-native.php"], "affected": [], "gate": []},
-    "g3-c98-t99-original-source-method-inventory": {"description": "Pin exact C98 Unreal v1.200 and T99 inherited UT99 v400 three original Core Cpp sources UnClass.cpp UnProp.cpp UnObj.cpp and 33 class/property serialization method lexical source signature/navigation diff cases. Exactly 16 signatures have implementation source bodies in both, none whitespace-body identical; this does not prove v432 compilation equality. SHA-verify without rerun 24 previous classic/genuine test source scripts and old PASS output hashes, current G3 matrix stable register-entry fingerprint, C227 57 unimplemented original compiled Core import surface remains separate. One 159-check DEV verifier. No prior native or tests reexecuted; G3 full remains OPEN.", "readers": ["CatalogUE1ClassicPropertyNativeReader.php"], "focus": ["verify-ue1-o06-g3-c98-t99-source-inventory.php"], "affected": [], "gate": []},
-    "g3-c227-original-core-import-symbol-inventory": {"description": "One original C227 Unreal v1.227 Core.lib compiled COFF IMPORT symbol inventory and Core/Inc/UnType.h source alias acceptance, SHA-pinned: 57 unique compiler-exported serialized method declarations across 25 G3 Core class/property types; three novel properties UPointerProperty and UButtonProperty use IntProperty wire tag, UAnyProperty uses VectorProperty on disk; 244 independent checks. Unlike actual DLL/Core source this does NOT prove serialized byte behavior or loaded fields, no other G3 contracts or C98/T99 prior oracles replayed.", "readers": [], "focus": ["verify-ue1-o06-g3-c227-compiled-core-symbols.php"], "affected": [], "gate": []},
-    "g2-original-1997-source-acceptance-18": {"description": "One final independent May U86 and July U97 Unrealfile v22/v23 original-build-selected source/archive G2 gate: 18 pre-agreed contracts, all 98 registration/source pairs, 86 mapped plus 12 original unsaveable excludes, current PHP test and logs SHA original 30 passing DEV tests, exact known source variations, invalid record cases for every 11 native serializer group, and zero prior G5 method native oracle repeats; excludes stock native loaded-value and unseen original 1997 packages. 692/692 reviewer checks. Corrected seven historical fixture assumptions only; no serializer changed.", "readers": [], "focus": ["verify-ue1-o06-g2-source-acceptance.php"], "affected": [], "gate": []},
-    "g5-t99-uobject-independent-deterministic-source-full": {"description": "ONE final independent UT99 compiled v432 UObject::Serialize source-profile method acceptance (actual original UE1 v61-69 selected deterministic archive/loading and malformed FArchive semantics only): 98 SHA-pinned assertions and 7 of 7 gates, reusing historical real stock 308 native loaded original objects, 926 saved values, 14 StateFrames, 4 malformed source branches and 7 prior FULL siblings. New v432 compiled true UStruct FString class: one direct struct stock saved and loaded Label Direct-Record Marker71; one original single-byte malformed string count 14->60 stock ULinkerLoad physical EOF at 309; one source-legal dynamic array of same struct saved in original compiled Core, zero-initializing diagnostic native loads Label Nested-Record Marker84, original-derived count14->60 compiled diagnostic FArchive physical EOF285; source PHP exact values/end offsets. Stock dynamic array struct FString also faulted with native STATUS_HEAP_CORRUPTION due original FArray::Add unconstructed FString, so stock loaded-value parity explicitly EXCLUDED as source-undefined; do NOT claim stock-success or conflate diagnostic allocator. No native engines run during 98-check review; no prior stock or seven accepted method native reruns. C98/C227 other engine families and arbitrary unverified game-specific tails remain O06 open.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-t99-uobject-independent-full.php"], "affected": ["verify-ue1-classic-fstring-archive.php", "verify-ue1-classic-array-inner-values.php"], "gate": []},
-    "g5-t99-uobject-fixed-legacy-string-and-struct-eof": {"description": "One source-proven real compiled v432 UObject remaining two-branch correction. Stock original Core/Engine load of 283-byte native-generated G5DirectStringPayload.u, two-byte copy changes tag StrProperty type to old fixed StringProperty and first ANSI byte to Q (unchanged size); real compiled loader dynamically upgrades string and loads Headline QAlpha-direct-FString; current source reads exact 22 bytes and source-matched no-warning policy. Previous real compiled physical ULinkerLoad FString EOF proof reused to correct inner UStruct nested array member StrProperty premature export SerialSize guard; do not invent native nested loaded value or stock array<FString> success. ONE 35-check combined SHA-pinned native/source verifier, global UObject method remains legitimately BLOCKED until all applicable native seven gates. Zero repeated prior seven FULL methods.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php"], "affected": ["verify-ue1-classic-legacy-string-upgrade.php", "verify-ue1-classic-fstring-archive.php", "verify-ue1-classic-array-inner-values.php", "verify-ue1-o06-g5-uobject-direct-str-physical-eof.php"], "gate": []},
-    "g5-t99-uclass-final-original-engine-source-profile": {"description": "ONE independent seven-criterion original compiled UT99 v432 UClass::Serialize entire genuine version69 Engine.u source-profile acceptance: 88/88 original UClass native loaded, 608/608 original class default values including one source-defined runtime INI override, 3053 actual FDependency values and 1056 inherited fields reused SHA; 16 original class scripts 1509 memory bytes, all 989 known-byte loaded bytes and 130 native UObject pointer/FName loaded referents compared including 13 newly compiled class values from ONE Core/Engine process; 88 actual class archive records fully consumed; pin original compiled dependency-count malformed input error. Independent 1342 checks, 7 of 7 restricted to existing Engine.u v69 profile. C98/C227 and unknown Config environments separate. No native engine rerun inside verifier.", "readers": ["CatalogUE1ClassicScriptArchiveReader.php"], "focus": ["verify-ue1-o06-g5-t99-uclass-independent-full.php"], "affected": ["verify-ue1-o06-genuine-ut99-script-archive.php", "verify-ue1-o06-genuine-ut99-full-scripts.php", "verify-ue1-classic-class-metadata.php"], "gate": []},
-    "g5-t99-uclass-native-script-loaded-relocations": {"description": "One original compiled v432 Engine.u UClass script memory relocation and class CDO acceptance: load genuine Actor/Pawn/LevelInfo directly in unchanged compiled Core/Engine, 767/314/11 actual loaded Script memory sizes, 57 loaded instruction token-offset bytes, three native pointer referents to ByteProperty Engine.Actor.Role and three runtime default primitive values Role4/GroundSpeed320/TimeDilation1. Preserve package index/local FName versus real pointer/global FName identity, mark runtime addresses not fabricated; 47-check native log SHA pinned acceptance including real compiled v432 Pawn Script FName local NameMap slot15 -> global FName893 resolves PlayerPawn. This does NOT claim global UClass FULL, Config/Localized and remaining tagged/default/fixup/error variants remain open. Never repeat 88 prior scalar/class oracles.", "readers": ["CatalogUE1ClassicScriptArchiveReader.php"], "focus": ["verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php"], "affected": ["verify-ue1-o06-genuine-ut99-script-archive.php", "verify-ue1-o06-genuine-ut99-full-scripts.php"], "gate": []},
-    "g5-t99-skeletalmesh-independent-full": {"description": "ONE final UT99 v432 SkeletalMesh Serialize compiled method decision: five prior original loaded skeletal objects and 282956 array bytes SHA-reused; new genuine compiled isolated SavePackage+LoadPackage nonempty RemapAnimVerts: one 4-vertex reversal and one 2-frame duplicate/discard remap 6 vertices, 10/10 actual packed 32-bit loaded values match PHP source ordered and SHA; native source clears remap list. Third short array native loads despite undefined beyond-remap pointer, PHP refuses invented fatal or deterministic memory value. Existing CDB malformed DefaultAnimation cursor412679. Independent seven-gate source-profile-only acceptance, no native engine reruns in verifier.", "readers": ["CatalogUE1ClassicMeshNativeReader.php"], "focus": ["verify-ue1-o06-g5-t99-skeletal-independent-full.php"], "affected": ["verify-ue1-classic-mesh-native.php", "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"], "gate": []},
-    "g5-t99-uobject-direct-str-physical-error": {"description": "One new original compiled UT99 v432 UStrProperty Headline written via Core SavePackage, stock Core DLL native loaded Headline identical to current source PHP, one copy with signed ANSI count byte at absolute offset232 21->75. Actual native loader physical EOF 283+1/283 in ULinkerLoad::Serialize <- FString<<; previous PHP incorrectly rejected at export SerialSize. Repair direct native matched StrProperty source branch with physical FArchive EOF and precise bounded error. Source and native binary/log/one-byte originals SHA-pinned, never redo nested array FString native testing. T99 UObject whole method still BLOCKED.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-uobject-direct-str-physical-eof.php"], "affected": ["verify-ue1-classic-fstring-archive.php", "verify-ue1-classic-array-inner-values.php", "verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"], "gate": []},
-    "g5-t99-uclass-physical-error-origin": {"description": "One original v432 compiled Core.dll malformed UClass Dependency FArchive origin correction: use physical package EOF rather than premature export SerialSize rejection. Also restores the class stream cursor after inspectClassDefaults to read v<57 trailing two FNames exactly once. One genuine immutable UWindow.u export, one one-byte count mutation, native first-chance CDB log all SHA-pinned. Class FULL remains BLOCKED on script fixups and other inherited cases. Never replay original 88 native class loads.", "readers": ["CatalogUE1ClassicClassMetadataReader.php"], "focus": ["verify-ue1-classic-class-metadata.php"], "affected": ["verify-ue1-o06-genuine-ut99-script-archive.php"], "gate": []},
-    "g5-t99-skeletalmesh-whole-loaded-scalars": {"description": "One new compiled original native scalar and inherited UMesh/ULodMesh loaded-value comparison on five original v69 skeletal meshes, plus a single byte modified DefaultAnimation reference original-copy native exception at exact cursor 412679. Original DLL source, five original package SHA, C++ program SHA, logs and one mutation all pinned. Earlier 282956 native skeletal array bytes reused without rerun. Method deliberately BLOCKED until real nonempty RemapAnimVerts handling and remaining malformed inherited paths are independently accepted.", "readers": ["CatalogUE1ClassicMeshNativeReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php"], "affected": [], "gate": []},
-    "g5-t99-animation-final-review": {"description": "One final source scoped review of UAnimation v432 original archives and preexisting compiled loader evidence. The inherited UObject code is independently covered. Other families and methods remain separate.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"], "focus": ["verify-ue1-o06-g5-t99-animation-independent-full.php"], "affected": [], "gate": []},
-    "g5-t99-animation-native-error-cursors": {"description": "Original compiled UT99 v432 UAnimation ULinkerLoad native first-chance position from CDB vs source-specific PHP error cursor on six SHA-sealed malformed v69 original-copy specimens. Compiled negative RefBones, AnimTracks, KeyQuat reach physical package EOF instead of early export or element-count rejection; FName errors match precise after-name cursor. Uses original source-selected TArray Empty(NewNum) and i<NewNum semantics, bounded safe PHP rejection, pinned unmodified compiled Engine/Core and old debugger captures, no native replay. Whole method remains BLOCKED on other version/inherited branches.", "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"], "focus": ["verify-ue1-o06-g5-t99-animation-native-error-cursors.php"], "affected": ["verify-ue1-o06-g5-t99-animation-whole-native.php"], "gate": []},
-    "g5-t99-animation-whole-native-v432": {"description": "Single method-wide T99 v432 UAnimation original compiled Core/Engine native file-loading verifier: three genuine version69 packages, 3694 exact per-field values and 3667 records including all 70 MotionChunks, 540836 actual nested numeric array bytes, 3 inherited no-stack zero-tag UObject envelopes. Eight unique original-copy malformed FName, count and physical truncation outcomes compared to stock native loader. SHA-pin original binary, source, build source/exe, stdout and mutated inputs. Exact native exception-cursor and wider source-legal inherited branches remain OPEN, method BLOCKED; no native replay during scope verification.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"], "focus": ["verify-ue1-o06-g5-t99-animation-whole-native.php"], "affected": [], "gate": []},
-    "g5-t99-skeletalmesh-inherited-lodmesh-lazy-seek": {"description": "Epic v400 TLazyArray always Ar.Seek(absolute SeekPos), accepting source-legal forward unused payload; inherited ULodMesh/UMesh reader previously falsely required exact TArray end. Epic v1200 UnMath.h FSphere inherits FVector12 (no FSphere-specific operator), not later UT99 FPlane16. Update shared production Mesh/ULodMesh reader and source-correct legacy mesh fixtures, verify original v69 compiled skeletal/animation source records without native engine reruns. Full SkeletalMesh method stays BLOCKED on remaining seven-gate prerequisites.", "readers": ["CatalogUE1ClassicMeshNativeReader.php"], "focus": ["verify-ue1-classic-mesh-native.php"], "affected": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"], "gate": []},
-    "g5-t99-uobject-nested-fstring-physical-eof": {"description": "New native v432 nested array<FString> source error: original Core.dll zero-initializing diagnostic host isolates valid FString::SerializeItem stream; mutate one original Core SavePackage-generated length byte 13->96; native ULinkerLoad::Serialize physical EOF byte308 in FString<<, previous PHP prematurely rejects at export SerialSize. Production safely checks physical buffer and reproduces native origin+cursor. Canonical compiled DLL unmodified; diagnostic host allocator conditioned, stock native loaded-value parity NOT VERIFIED. One 25-check source, native, originality and focused PHP check. Do not rerun earlier native samples.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"], "affected": [], "gate": []},
-    "g5-t99-uobject-nonempty-fstring-conditional-native": {"description": "One unique original UT99 v432 Core DLL nonempty dynamic array<FString> native differential: stock FMallocAnsi native loader CDB faults at 0xBAADF00D after source FArray::Add uninitialized FString element; disposable instrumented FMallocAnsi zero-inits new allocations, unchanged original compiled DLL loads two Alpha/Beta strings and two FVector elements and matches current source PHP archive. Conditional native success only, stock native success unverified. Source and compiled DLL/original package/log/diagnostic compiler all SHA pinned; 34 checks, no repeated stock v432 native runs, method remains BLOCKED.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-uobject-fstring-conditional-native.php"], "affected": [], "gate": []},
-    "g5-t99-uobject-native-dynamic-array-physical-eof": {"description": "One new genuine compiled UT99 v432 native malformed source array<int> dynamic count31 at offset254; native ULinkerLoad::Serialize hits physical end absolute308, not export SerialSize count guard. Fix production source branch with safe physical-package EOF check and exact cursor origin. Original engine-generated v69 package, Core.dll, one original altered log, source headers SHA-pinned, source-only array bounded. Focus once, do not repeat older array cases. G5 global UObject still BLOCKED.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-uobject-native-array-physical-eof.php"], "affected": [], "gate": []},
-    "g5-t99-font-v432-independent-source-profile-full": {"description": "Independent T99-v432-only full UFont::Serialize file-loading seven-gate acceptance, source and original compiled Core+Engine pinned. Four previous genuine native glyphs (16KB) plus two distinct compiled x86 loads covering all 62 original nonempty fonts, complete 1200128 native glyph bytes, 46434 TMap pairs 185736 bytes, all 62 full texture references; 66 source true inherited two-byte NAME_None archive envelopes; original v432 compiled malformed Font native cursor Got4116 Expected4112 safely matches source, original unmutated 0 and valid four remap evidence. One final 185+ assertion current-source reviewer, no prior CDB replays. General UObject and C98/C227 unrelated.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"], "focus": ["verify-ue1-o06-g5-t99-font-independent-full.php"], "affected": [], "gate": []},
-    "g5-t99-textbuffer-v432-independent-source-profile-full": {"description": "Independent full UT99 v432 UTextBuffer::Serialize original file-read source-profile seven-gate acceptance. 88 genuine original Engine.u TextBuffer exports, all 88 inherited no-stack/no-property compact two-byte NAME_None paths and current native complete bounds; reused native v432 88 exact Pos/Top/UTF16 loaded values totalling 1007796 memory bytes, 3 native positive mutations and 1 compiled oversized rejection with safe exact byte-consumption 912 vs 843. One conclusive 302-check acceptance with current reader SHA; generic UObject and C98/C227 remain independent blocked; no native replay.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-o06-g5-t99-textbuffer-independent-full.php"], "affected": [], "gate": []},
-    "g5-t99-sound-music-independent-full-method-closure": {"description": "Independent complete all-seven-gate UT99 v432 only FULL method review for USound::Serialize and UMusic::Serialize. Pin and reuse original compiled x86 native loaded positive 11 / 1,216,472 bytes and 9 WAV Duration float values; five distinct native malformed outcomes; source original Epic v400 Super->FileType->TLazyArray field sequence and the 11 actual original inherited UObject no-stack/no-tag one-byte NAME_None archives, source variant v61 vs v64/v66. Generic T99 UObject method remains separate BLOCKED. C98 v1200 and C227 v227 profiles NOT covered. Requires SHA-current evidence and independent 63+ source assertions; closure artifact per method after success. Zero repeated native engines.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-o06-g5-t99-audio-independent-full-method-review.php"], "affected": [], "gate": []},
-    "g5-t99-uobject-v61-direct-XLevel-pointer": {"description": "Original compiled v432 AActor::XLevel direct native pointer loaded comparison for 124 v61 original saved transient values; all 124 exact class-qualified path references match original UE1 exports. Combined with prior 802 compiled text values this accounts for all 926 saved fields. Distinct new native oracle once; global method blocked pending other versions.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php"], "affected": [], "gate": []},
-    "g5-t99-uobject-original-v61-802-compiled-saved-values": {"description": "Reconcile ALL 926 actual saved original PRD Gold v61 object property tags across 308 real compiled UT99 v432 loaded objects to earlier native ExportProperties stdout. 802 exact per-field typed matches across 8 Property families, zero mismatches; other 124 XLevel original tags are deliberately omitted by Epic UProperty::Port() because Actor.uc var transient const Level XLevel. Zero unaccounted; original SHA, existing compiled stdout SHA, current PHP saved tags, source evaluator pin, no native engine rerun. Scope a single genuine original map; full UObject still BLOCKED on other versions and runtime pointer semantics.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php"], "affected": [], "gate": []},
-    "g5-t99-audio-native-loaded-malformed-consolidated": {"description": "One complete method-specific UT99 v432 compiled Core/Engine native loaded-value and malformed error disposition for 9 Sound/2 Music originals (v61,v66 Sound v61,v64 Music), original 1216472 bytes, FileType OriginalSize native SHA FNV and all 9 WAV Duration exact float bits. Five distinct compiled mutated error/empty outcomes SHA pinned; correct Music TLazyArray forward skip and fail closed on Sound empty native crash. Current-source acceptance one verifier 66 checks. Shared inherited UObject/7-gate method FULL separate BLOCKED.", "readers": ["CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php"], "affected": [], "gate": []},
-    "g5-c98-audio-array-source-dispatch": {"description": "Native sound/music archive Data is ordinary TArray for Epic Unreal v1200, but TLazyArray for UT99 v400 and v227 headers; lazy absolute SeekPos only for the latter AND archive version>61. Prevent source-selected v1200 serializer from fabricating modern lazy header solely because archive Ver>61. Six genuine SHA-attested original Gold packages v61 (C98 explicit) + v69/227 (C227) 35 real audio objects. No repeated compiled UT99 oracles, full method still BLOCKED.", "readers": ["CatalogUE1ClassicNativeObjectReader.php"], "focus": ["verify-ue1-o06-g5-native-audio-source-array-decision.php"], "affected": [], "gate": []},
-    "g5-c227-export-archetype-native-operator-guard": {"description": "Source-defined v227 69/licensee227 FObjectExport ArchetypeIndex is persistent but native operator<< implementation unavailable. The source flag RF_HasArchtype=0x100 now fails closed instead of using older UT99 zero-archetype layout. Three original SHA-pinned v227 packages with 426 exports remain byte-identical and decode; three disposable first-export flag-positive mutated copies are denied without fabricating archive-index bytes. v227 native positive archetype still BLOCKED. Source fingerprint now includes transitive shared CatalogLegacyPackageReader; prior native scopes reconstructed by SHA, no compiled engine rerun.", "readers": ["CatalogLegacyPackageReader.php"], "focus": ["verify-ue1-o06-c227-archetype-native-operator-guard.php"], "affected": [], "gate": []},
-    "g5-t99-uobject-epic-camera-source-exclusion-decision": {"description": "Resolve supposed Camera native reachability blocker with exact original Unreal v1.200 and UT99 inherited v400 ULinkerLoad::CreateExport source, plus two existing genuine compiled v432 original v61/v68 outcomes SHA reused: v1200 Camera skipped only when Ver()<57, UT99 Camera always CreateExport returns NULL. Original v54 Gold five Camera, original v61 Gold four Camera, original v68 UT99 Entry five Camera checked, 15 ordinary controls. Preserve source-decoded archive preview while not fabricating native load and DebugSerialize flags for excluded Camera. Scope C98/T99 source only, v227 unknown. NO native engine replay. FULL method separate and blocked.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"], "focus": ["verify-ue1-o06-g5-camera-source-reachability-decision.php"], "affected": [], "gate": []},
-    "g5-c98-v54-original-model-FSphere-source-decision": {"description": "Exact Epic Unreal v1.200 FSphere inherits FVector, no FSphere operator<<; old v40 archives FPlane, modern v41..61 uses FVector12. Fix actual source mismatch causing 297/299 native UModel errors +2 partial extensions on real Gold v54 PRD original. 2667/2667 UObject tagged and native recognized class records now complete including 299/299 UModel and BSP. Keep UT99 v432 native branch unchanged, existing compiled oracles SHA reused. Source-only final method verdict BLOCKED.", "readers": ["CatalogUE1ClassicPrimitiveNativeReader.php"], "focus": ["verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php"], "affected": [], "gate": []},
-    "g5-c227-original-v227-script-source-decision": {"description": "One changed-source decision on 3 real PRD v69 licensee227 original UE1 archives. Current source dialect uses v227 UnStack.h modern opcode meanings shared with v432, distinct v1.200. 399 genuine object tags and all 27 UClass streams parse, previous 11 real script/class overruns no longer occur. Source-only exact package SHA, v227-only tokens unsupported; compiled v227 native C++ unavailable. Zero existing v432 native tests rerun; method FULL blocked.", "readers": ["CatalogUE1ClassicScriptArchiveReader.php"], "focus": ["verify-ue1-o06-c227-genuine-script-source-decision.php"], "affected": [], "gate": []},
-    "g5-t99-uobject-v227-source-flag-decision": {"description": "Consolidated changed-source correctness decision: original Epic v1200/v227/v432 source header and v1200/UT99 inherited C++ implementation SHA-pinned. v227 0x40000000 RF_PendingDelete, v1200/UT99 RF_DebugSerialize; v227 RF_HasArchtype 0x100 in RF_Load. Production tag and class readers must not fabricate v227 post-load DebugSerialize or PendingDelete. Real PRD Gold v69 original and v61 original source selections used. Prior 308 compiled real v61 and earlier native slices SHA reused; no engine replay. FULL method still BLOCKED.", "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicClassMetadataReader.php"], "focus": ["verify-ue1-o06-g5-uobject-v227-source-flag-decision.php"], "affected": [], "gate": []},
+    "g3-03-t99-469f-nine-original-compiled-direct-UStruct": {
+      "description": "NEW real original compiled OldUnreal UT99 469f direct UStruct native LOADED-value acceptance (NOT UFunction inherited 25 evidence): real x86 2026 Core.dll original source SHA, true Core.u genuine 9 direct UStruct subclasses at zero-based export indexes 0/1/32/53/486/535/546/551/590, original compiled UStruct::Serialize+0x1ea after full loaded method CDB snapshots in two separate isolated real UCC.exe make -nobind runs; distinct native linker per process, same genuine source package. Compare all nine loaded friendly names / original global object FName, script size, TextPos, Line, ScriptText, real Children pointer presence to actual original PHP archive, six newly captured native Children pointers dereferenced and compact positive source indices agree exactly. Three original Core.u Registry* structs source valid but NOT loaded by this commandlet; no false claims; original files immutable, no earlier 25 UFunction/21 pointer tests replayed. Independent 135 focused assertions; G3-03/15 whole OPEN; G3 overall2/16.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-03-t99-469f-original-compiled-malformed-FriendlyName": {
+      "description": "NEW original compiled UT99 469f UNMODIFIED x86 UCC+Core.dll behavior on isolated one-byte mutated genuine Core.u BoundingBox direct UStruct zero-based index53: original genuine export SerialOffset7533/size22, tag envelope end7535, original compact FName index79 bytes4f01 at physical offset7541, disposable single byte 0x4f to 0x00 keeps remaining source unchanged. Original compiled real CDB breakpoint Core!appFailAssert captures source call Core!ULinkerLoad::Preload+0x128 -> Core!UStruct::Serialize+0x85 -> Core!appFailAssert original UnClass.cpp Line840: Assertion failed FriendlyName!=NAME_None; PHP already correctly rejects RuntimeException UStruct FriendlyName cannot be NAME_None. Actual compiled native archive Tell cursor not claimed tested. Original genuine L source SHA unchanged, exact mutant SHA pinned, 2 UTF16 debugger log/scripts SHA and 27 one-shot independent actual original source/mutant checks. G3-03 and G3-14 remain OPEN; source method negative accepted only.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-03-t99-469f-25-original-compiled-UStruct-loaded-values": {
+      "description": "NEW unique real 2026 OldUnreal UT99 469f compiled x86 Core.dll UField inherited UStruct::Serialize genuine original 25 file-backed UFunction objects after compiled UStruct::Serialize returns (original real Core.u v69/l0). CDB original x86 Core!UStruct::Serialize+0x1ea breakpoint in isolated matching original UCC.exe make -nobind, source original Core DLL SHA 80ac334..., Core.u SHA 7b2d496..., user original source L untouched, 25 original zero-based export identities, script byte counts, actual source Line, TextPos, native FriendlyName equals object name internal FName, native ScriptText zero, 21 actual Children UObject pointer targets whose native ULinkerIndex matches same real original source export refs. PHP existing CatalogUE1ClassicStructNativeReader already matches all 25 native loaded-value sets and exact export bounds; 298 independent checks with original runtime CDB commands/transcript and x86 original function machine disassembly SHA-pinned. Original 469f distinct real inherited UStruct loaded submethod only; C98/v432/C227 variant, error branches/bytecode semantics, G3-03 FULL still OPEN; G3 overall remains 2/16. Previous 21 pointer test and G3-01/02 not replayed.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-t99-469f-25-original-native-struct.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-t99-469f-original-matched-sdk-pointer-source": {
+      "description": "NEW genuine OldUnreal UT99 469f Windows x86+XP x86 SDK/runtimes. SHA-pinned 53 exact original compiled serializer-related Core.dll exports match 53/53 matching x86 SDK Core.lib; distinct 469f 2026 compiled x86 UStruct::Serialize body recovered by REA Ghidra, original source UStruct new code script mismatch branch, not loaded-value parity. Original v469f Core/Inc/UnType.h adds UPointerProperty with no custom Serialize and tagged NAME_IntProperty alias; earlier v432 UnType.h does NOT define it. Four genuine v69/licensee0 original 469f Core.u, Engine.u, Editor.u, Botpack.u package maps validated; Core2, Engine12, Editor7 total 21 real PointerProperty declarations now decoded as inherited UField->UProperty via explicit ut99-v469f source overlay; v432 selection still rejects original 469f-only class. Patch cannot be distinguished by v69/0 header, so source alias maps to inherited v432 behavior with explicit provenance opt-in; no guessing release by package version or changing old v432 behavior. One new independent 198/198 scoped acceptance with hashes, 53 original SDK exports, REA original SHA, positive 21 and original wrong-revision negatives. G3 full2/16; no old original compiled positive tests repeated; class SerializeItem/runtime value not claimed verified.",
+      "readers": [
+        "CatalogUE1ClassicSourceFamily.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-t99-469f-matched-sdk-pointer-inherited.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c227k-matched-native-export-archetype-source": {
+      "description": "NEW actual authentic 2026 OldUnreal 227k_15 SDK matching shipped 227k compiled runtime: 57/57 true decorated x86 Core.dll exports exactly present in matching Core.lib; original 2012 227i DLL matches only 43/57 (14 later ABI gaps now resolved). REA/Ghidra 12.1.4 compiled UButtonProperty::Serialize at 0x10080010 confirmed inherited UProperty::Serialize then Caption FString member at +0x8c; no native loaded button object claimed. More important REA compiled FArchive << FObjectExport at 0x1005DA20: after Class/Super compact, PackageIndex signed int32, Name, flags, if flags & 0x100 and licensee>=227 ArchetypeIndex signed i32 then compact serial size/offset. Production CatalogLegacyPackageReader now source-specific implements full native field, signed archetype bounds; authentic installed 227k Core.u/Engine.u/Editor.u/UnrealShare.u/UnrealI.u/UMenu.u/UPak.u all fully validate. Actual genuine UnrealShare.u 13,873 exports index13627 BoxRigidBody flags 0x70104 ArchetypeIndex +13069; exact physical position and next-record consumption, one isolated 4-byte invalid signed reference mutation rejected without altering original SHA. Original 2 REA outputs and matched SDK/runtime binaries SHA sealed; one 180/180 new focused DEV test, no previous C98/T99/v227 positive tests replayed. Other G3-08/14/15 scopes remain OPEN, overall G3 2/16.",
+      "readers": [
+        "CatalogLegacyPackageReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-c227k-original-archetype-and-matched-sdk.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-02-full-cumulative-serializer-source-method-symbols": {
+      "description": "Full G3-02 SOURCE-SYMBOL and inherited method-source ownership complete (not loaded-value semantics): authentic later v227 Core.lib all 57 genuine decorated Core class/property serializer methods; original source header definitions individually SHA pinned 57/57, 25 distinct relevant classes, 10 owner G3 contracts, plus 205 distinct actual method declarations across five chronological real Unreal 1200, Unreal 1224, Unreal 1227, UT99 v400, UT99 v432 snapshots, exact 205 original C++ class body hashes and 5*3 genuine header hashes; source actual game additions and inheritance, v227 UButton explicit Serialize override (old stored boolean was wrong), v227 Pointer/Any inherited Serialize, original v432 constructor/macro/PropertiesAlign/IsProbing deltas classified but not inferred on-disk extra bytes. Independent complete source mappings, 1318/1318 focused DEV checks PASS. G3-02 is source symbol and exception closure only; each 57 method runtime/LOAD/SAVE/error remains assigned to G3-03..15. No replay prior native/aggregate 668/915/Array4 proofs, no production serializer edited and no false compiled runtime equivalence.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-02-original-2012-c227i-four-array-inner-identities": {
+      "description": "Original UE1 Unreal v1224 (inherited by v227) class additions UArrayProperty/UFixedArrayProperty/UMapProperty/UStrProperty absent from v1200. Independently genuine original 2012 227i Core.dll x86 4 subclass Serialize methods disassembled, showing UArrayProperty calls UProperty inherited then Ar << Inner, fixed array method two arguments Inner+Count, UMap Key+Value, UStr only inherited. Actual source UCC.exe help triggers 4 original Core.u UArrayProperty with native this+0x14 zero-based export identities 662/667/669/746 and native this+0x60 inner pointee export indexes 928/922/917/843: saved compact positive refs 929/923/918/844 all exact current PHP reader. Original DLL+Core.u+UCC hashes, v1200/v1224/v1227 source hashes, 4 CDB logs/commands pinned, independent one focused 73/73 PHP verifier. No fixedarray/map actual loaded values in this run, 2012 compiled binary no claim of later 227k exact ABI, G3-02/11/15 remain OPEN. Distinct actual compiled subtype behavior, not repeated previous UProperty 668 base proof.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c227i-four-array-inner-native.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-02-v227-source-introduced-property-inherited-serialize": {
+      "description": "Actual v1.227 Core/Inc/UnType.h defines added UPointerProperty and UAnyProperty (neither overrides Serialize) so their property declarations inherit Epic UE1 UField::Serialize+UProperty::Serialize with zero subclass native bytes; source-v227 only and preserve distinct 4-bit GetID aliases NAME_IntProperty/NAME_VectorProperty without pretending SerializeItem runtime loaded semantics. UButtonProperty explicitly declares a new Serialize(FArchive&) override (later matched 227k compiled body: inherited UProperty then serialized FString Caption); after G3-08 implementation, synthetic source fixture must include Caption FString, never wrongly accept bare inherited native bytes. One complete distinct source-defined G3-02 change/negative suite; original 227 source header SHA, genuine v69/l227 package fixture plus wrong game and extension, source constraints. G3-01 accepted already; G3-02/15 remain OPEN for other methods.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-02-v227-new-property-inheritance.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-01-complete-cumulative-unreal-game-source-selection": {
+      "description": "G3-01 COMPLETE original Unreal UE1 game-source provenance selection and cumulative method inheritance across 8 genuine original Unreal revisions v0.82, v0.83, v0.84a, v0.86x, v0.867, v1.200, v1.224, v1.227. SHA verify 23 real source files, distinct 1996/1997/classic archive formats, last applicable present Core CPP original v1.200 when v1.224/227 replacement implementations absent, apply v1.224/227 changed source headers as deltas, explicit source revision chain persists earlier changes. UT99 v432 inherits v400 Core where no later override, but not Unreal C227; version69/licensee227 selects Unreal, conflicting and ambiguous source cases must reject; linkers source-inherited, compiled parity handled by G3-15 not source-selection gate; genuine C227 14/57 mismatch not a missing-game-CPP blocker. One independent complete DEV source-selection verifier with original source SHA; no old native test repeats.",
+      "readers": [
+        "CatalogUE1ClassicSourceFamily.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-01-chronological-source-inheritance.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c227i-ufield-original-915-compiled-super-next-identities": {
+      "description": "Real authentic original 2012 Unreal 227i compiled Core.dll UField::Serialize method x86 body 0x10116850 after archived refs at 0x101168aa, exact per-export original Core.u v69 l227 915 individual source archive exports. Native this+0x10 linker pointer, +0x14 zero-based export index, +0x28 SuperField ptr, +0x2c Next ptr. 912 null/3 non-null SuperField and 238 null/677 non-null Next, every non-null target same actual original linker and native target zero-based export +1 equals actual saved signed source reference. 913 subclasses verified with current production NativeObjectReader and two UClass exports [2 Object,7 Commandlet] verified through dedicated ClassMetadataReader. Both ref fields for 915/915 individual native source objects exactly matched, one new independent 9389-check PHP verifier PASS, original stock 227i Core.dll/Core.u/UCC, original WinDbg actual 915-event transcript and source disassembly hash-pinned; original later v227 headers declaration-only, 2012 compiled ABI not equivalent to later 227 Core.lib. Does not certify UStruct serialization, class defaults, source exception/version/other builds. G3-03/15/16 remain OPEN, 0/16.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c227i-ufield-915-native-references.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c227i-uproperty-original-native-668-exact-export-identities": {
+      "description": "Real original authenticated 2012 Unreal 227i Core.dll+UCC.exe and genuine untouched Core.u (v69 licensee227), 668 actual native UProperty::Serialize memory events. This+0x14 is true zero-based ULinkerLoad ExportMap LinkerIndex, NOT FName global index; this+0x34 native ArrayDim, +0x3c native PropertyFlags. All 668 independently original linker exports identified without duplicate and exact native loaded values match both sealed genuine Core.u 673 property snapshot and current production source reader, 8715 individual DEV checks PASS. Five genuine property exports not loaded [3,4,6,634,655]; 43/57 overlap of later source Core.lib and original 2012 compiled ABI means no later Core implementation equivalence. Not FULL G3-07/15 or G3-16; C227 source negative and version branches OPEN. No production reader changes or past 668 aggregate subset test replay.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-may1998-two-original-compiled-native-malformed-error-cursors": {
+      "description": "Two source-distinct true original May17 1998 compiled C98 malformed UClassProperty references with exact native archive cursor. Original untouched Core.u v61 export index4 ObjectClass 15 bytes at original SerialOffset 3559. Isolated diagnostic cloned original runtime and one-byte Core.u mutations: saved PropertyClass -12 -> invalid -63 (encoded 8c -> bf at byte3572), original native compiled appErrorf with argument -63 at archive cursor3573; and saved MetaClass +1 -> null0 (01 ->00 at byte3573), original compiled UClassProperty check(MetaClass) fatal at native cursor3574. Both show separate PHP original source reader RuntimeExceptions and order, preserved original source Core.u SHA, actual cloned DLL same SHA, original Epic v1.200 UnProp.cpp, UnLinker.h, UnArc.h, authentic CDB transcribed negative calls and memory cursor, byte-exact isolated mutations. One independent negative verifier 55 source/native SHA/error assertions. Not all G3-14 negatives; G3 FULL still 0/16; no positive G3 reruns or production parser changes.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-may1998-600-original-native-refs": {
+      "description": "Original May17 compiled Core.dll 600 observed true loaded reference fields: UByteProperty.Enum 84, UObjectProperty.PropertyClass 268, UClassProperty.MetaClass 26, UStructProperty.Struct 222, 65 null enum refs. Identified original Core.u/Engine.u 0-based linker export and true native FName referent versus original saved signed import/export names; SHA original binary, source and CDB. Independent 5457-check DEV verifier. Scoped positive only, G3 0/16 full.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c98-may1998-600-native-references.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-may1998-ustring-66-loaded-string-size": {
+      "description": "Original May17 compiled x86 Core.dll UStringProperty::Serialize original export 0x10101e74 -> true compiled body 0x101439c0, after compiled UProperty::Serialize inheritance then Ar << StringSize native 4byte field at this+0x48 and observed return 0x101439fe. Exactly 66 true original loaded StringSize values in compiled memory, 38 Core.u and 28 Engine.u, each authenticated by original linker and zero-based export index, native FName name, and exact original package PHP subclass_fields.string_size. SHA-pin original Core.dll, Core.u, Engine.u, two Epic v1.200 source files and saved CDB disassembly/log. One independent 555-check focus script; no production reader change, no malformed or negative runtime claims, G3-08 full OPEN and G3 0/16. Do not replay previous 1536 parent property/C98 Const Enum/C227i/T99/G5 tests.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-may1998-uproperty-loaded-1536-identities": {
+      "description": "Original Redump USA May17 1998 stock compiled Core.dll UProperty::Serialize actual method body 0x10141470, after LOAD capture 0x101414e7, 1536 individually identified native Core.u/Engine.u/UnrealI.u property exports. Exact native Linker+LinkerIndex and resolved FName name/outer/category mapped to PHP saved arrays with same 0-based export; original ArrayDim, PropertyFlags, RepOffset (107 CPF_Net), Offset zero on source load. Original v1.200 source UnProp.cpp, UnType.h, UnObjBas.h and FName UnName.cpp appStricmp / UnName.h index equality; 6 Bird1/bird1 first-interned original FName spelling variations equivalent without rewriting package bytes. 326/327 Core, 1162/2493 Engine, 48/4576 UnrealI property exports OBSERVED; others UNOBSERVED, not accepted. SHA sealed original May PE/Core.u Engine.u UnrealI.u and source files and CDB disassembly and log of 1536 loaded calls. One independent 18477-check DEV verifier. No production parser change, original May17 binary not globally asserted byte-equal to May19 source, G3 full 0/16. No prior Const/Enum/227i/T99/G5 repetitions.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c98-may1998-uproperty-identities.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-may1998-original-stock-core-uconst-uenum": {
+      "description": "Original May17 1998 US retail CD (Redump SHA1 authenticated), MODE2/2352 ISO read-only mounted with original Epic v1.200 Window/Src/Main.cpp Engine.Engine.CdPath N: source-defined CD requirement. Exact genuine May17 compiled x86 Core.dll, Engine.dll Unreal.exe unmodified; original Core.u package61 458 exports. Stock CDB loaded 2 UConst Pi/MaxInt FString Num/Max and original UEnum ESheerAxis 7 global FName index->native text, matched original PHP saved values plus May19 v1.200 UnClass.cpp/UnObj.cpp serializer source. Five relevant original compiled May Core methods traced to body behind PE export thunks. One independent SHA pinned DEV 68-check verifier, no other UE stock or G5 rerun. This does NOT prove all May17 compiled function bodies identical to May19 source or close G3 0/16 FULL.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c98-may1998-original-stock.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-july1998-original-retail-native-uconst-uenum": {
+      "description": "Authenticated original European Unreal retail CD original 1998-07 compiled Core.dll Core.u version 61, not presumed identical to 1998-05 v1.200 source compile. Redump sha1 and original BIN/ISO/PE/package SHA256 sealed. Stock 1998 Unreal.exe -server with original retail assets and Windows CDB: two UConst genuine FString loaded text/Num/Max values Pi and MaxInt and seven real compiled UEnum ESheerAxis loaded native global FName indices resolved via original FName::Names. Verify identical decoded saved values, correct local-vs-global FName distinction; 56 independent checks, one focused DEV verifier, no prior 227i or T99 native tests rerun. G3 full remains 0/16.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c98-original-retail-native-loaded.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c227i-original-uenum-compiled-loaded-twelve": {
+      "description": "One original OldUnreal 227i compiled x86 Core.dll UEnum::Serialize native loaded-value acceptance: 2 actual Core.u enums, five/seven array FName values, all 12 original global FName indices resolved through compiled FName::Names table and independently compared to PHP original local NameMap referents; original DLL/UCC/Core.u SHA and debugger logs pinned. 227i Core.lib 43/57 method overlap and C98 still blocked, not whole G3 acceptance. No repeated UConst compiled captures.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c227i-uenum-native-loaded.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c227i-original-uconst-compiled-loaded-eight": {
+      "description": "Original C227i 2012 compiled Core.dll loaded-value proof: 2012 OldUnreal installer archive authenticated by external SHA; extracted original DLL UCC.exe Core.u Engine.dll verified against OldUnreal official SHA list. CDB captured four genuine original compiled G3 Serialize call paths and eight in-memory UConst FString values (Num/Max), all eight genuine Core.u records matched via current source PHP; 43/57 old v227 import symbols match, 14 absent or ABI-changed. One independent SHA-pinned DEV verifier reuses sealed native logs and does NOT rerun debugger/native engine. C98 and unmatched 227 source/oracles not proven, G3 whole remains 0/16.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c227i-uconst-native-loaded.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-06-t99-legacy-wide-fstring-source-overlap": {
+      "description": "True original C98/T99 overlapping package-version distinction: T99 v400 Core/Src/UnMisc.cpp::FString<< selects UTF16 by negative compact SaveNum without any Ar.Ver() gate, including versions 61 and 63; C98 v1.200 Core/Inc/Core.h FString is TArray<char>. PHP UConst incorrectly rejected wide FString whenever ver<64 regardless of selected source. Permit source-selected T99 v61/63 Unicode but keep C98 source rejection and C227 implementation explicitly unknown. Existing UConst fixture adds three provenance/version assertions, no C98/C227 runtime native proof or G3 full acceptance.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-const-native.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-enum-native.php",
+        "verify-ue1-classic-struct-native.php",
+        "verify-ue1-classic-property-native.php"
+      ],
+      "gate": []
+    },
+    "g3-06-uconst-fstring-source-raw-units": {
+      "description": "One original C98 v1.200 Core/Inc/Core.h TArray<char> and T99 inherited UT99 v400 Core/Src/UnMisc.cpp FString::operator<< LOAD difference: neither archive reader validates trailing NUL; UT99 FromUnicode maps 16-bit units without strict Unicode-scalar validation and clears FString arrays of one element after load. Correct UConst native PHP invented errors: consume raw source-defined archive, preserve SHA/preview, mark non-NUL or nonrepresentable UTF16 text unverified instead of fabricating successful C-string. Five representative novel source-code-unit tests in existing UConst fixture; C98/C227 original compiled stock loaded memory remains blocked; G3 FULL remains OPEN.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-const-native.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-enum-native.php",
+        "verify-ue1-classic-struct-native.php",
+        "verify-ue1-classic-property-native.php"
+      ],
+      "gate": []
+    },
+    "g3-06-uconst-uenum-physical-archive-boundary": {
+      "description": "G3-06 source-correct original v1.200 C98 and inherited v400 T99 UConst::Serialize FString and UEnum::Serialize Names TArray file-backed linker archive: do not prematurely reject counts at export SerialSize. Read from physical file, report post-Serialize SerialSize mismatch; actual physical EOF remains fatal. Four new cross-export tests and four EOF cases across v50/v69 on each distinct class; C98/C227 original native loaded-object parity and full G3 stay OPEN.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-const-native.php",
+        "verify-ue1-classic-enum-native.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-struct-native.php",
+        "verify-ue1-classic-property-native.php"
+      ],
+      "gate": []
+    },
+    "g3-native-class-property-physical-archive-boundary": {
+      "description": "G3-03/04/07 original C98 Unreal v1.200 Core/Src/UnLinker.h::LoadObject and inherited T99 v400 Core/Src/UnLinker.h::Preload source define physical file-backed archive reads first, then compare Tell()-SerialOffset with SerialSize. Correct shared Field/Struct/State/Function and property-native premature export-bounded EOF; preserve archive overrun cursor and mark source linker SerialSize mismatch, physical-file EOF still fatal. Only these G3 native kinds change; G3 full and C227 original loaded-value remain open.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-struct-native.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-property-native.php",
+        "verify-ue1-classic-const-native.php",
+        "verify-ue1-classic-enum-native.php"
+      ],
+      "gate": []
+    },
+    "g3-classic-raw-string-and-fixedarray-count-source": {
+      "description": "G3-08/G3-11 two real original Core source archive-stage mismatches: C98 v1.200 Core/Src/UnProp.cpp:519-525 UStringProperty::Serialize performs UProperty::Serialize and Ar << StringSize with no positivity check; inherited T99 v400 Core/Src/UnProp.cpp:954-961 UFixedArrayProperty::Serialize performs Super::Serialize and Ar << Inner << Count, checkSlow(Inner), with NO Count positivity check. Correct PHP premature reject for signed 0/-1 in both; preserves actual archive content and bytes, does NOT claim runtime/link success, C227 lacks compiled loaded oracle. ONE affected DEV original property fixture now 42 cases including four signed source tests. G3-08 and G3-11 FULL remain OPEN until all original compiled source families proven.",
+      "readers": [
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-property-native.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-t99-uproperty-ArrayDim-source-archive": {
+      "description": "ONE true G3 production reader correction against pinned original C98 Unreal v1.200 and inherited T99 v400 Core/Src/UnProp.cpp UProperty::Serialize: Ar << ArrayDim << PropertyFlags << Category, NO ArrayDim positive/range validation in original Serializer. PHP previously invented a throw for archive zero and signed-negative ArrayDim; source now preserves raw signed 0/-1 and decodes remaining flags/name fully, runtime UProperty::Link or native C227 undefined/untested. Also repairs existing v50 fixture to select Epic v1.200 explicitly and preserve 0x00080060 flags; UT99 <=61 separately clears 0x00080040. ONE affected 40-case DEV property test, 2 signed branch cases plus legacy flags; no prior G5 native replay; G3 whole still OPEN.",
+      "readers": [
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-property-native.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c98-t99-original-source-method-inventory": {
+      "description": "Pin exact C98 Unreal v1.200 and T99 inherited UT99 v400 three original Core Cpp sources UnClass.cpp UnProp.cpp UnObj.cpp and 33 class/property serialization method lexical source signature/navigation diff cases. Exactly 16 signatures have implementation source bodies in both, none whitespace-body identical; this does not prove v432 compilation equality. SHA-verify without rerun 24 previous classic/genuine test source scripts and old PASS output hashes, current G3 matrix stable register-entry fingerprint, C227 57 unimplemented original compiled Core import surface remains separate. One 159-check DEV verifier. No prior native or tests reexecuted; G3 full remains OPEN.",
+      "readers": [
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-c98-t99-source-inventory.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-c227-original-core-import-symbol-inventory": {
+      "description": "One original C227 Unreal v1.227 Core.lib compiled COFF IMPORT symbol inventory and Core/Inc/UnType.h source alias acceptance, SHA-pinned: 57 unique compiler-exported serialized method declarations across 25 G3 Core class/property types; three novel properties UPointerProperty and UButtonProperty use IntProperty wire tag, UAnyProperty uses VectorProperty on disk; 244 independent checks. Unlike actual DLL/Core source this does NOT prove serialized byte behavior or loaded fields, no other G3 contracts or C98/T99 prior oracles replayed.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-c227-compiled-core-symbols.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g2-original-1997-source-acceptance-18": {
+      "description": "One final independent May U86 and July U97 Unrealfile v22/v23 original-build-selected source/archive G2 gate: 18 pre-agreed contracts, all 98 registration/source pairs, 86 mapped plus 12 original unsaveable excludes, current PHP test and logs SHA original 30 passing DEV tests, exact known source variations, invalid record cases for every 11 native serializer group, and zero prior G5 method native oracle repeats; excludes stock native loaded-value and unseen original 1997 packages. 692/692 reviewer checks. Corrected seven historical fixture assumptions only; no serializer changed.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g2-source-acceptance.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-uobject-independent-deterministic-source-full": {
+      "description": "ONE final independent UT99 compiled v432 UObject::Serialize source-profile method acceptance (actual original UE1 v61-69 selected deterministic archive/loading and malformed FArchive semantics only): 98 SHA-pinned assertions and 7 of 7 gates, reusing historical real stock 308 native loaded original objects, 926 saved values, 14 StateFrames, 4 malformed source branches and 7 prior FULL siblings. New v432 compiled true UStruct FString class: one direct struct stock saved and loaded Label Direct-Record Marker71; one original single-byte malformed string count 14->60 stock ULinkerLoad physical EOF at 309; one source-legal dynamic array of same struct saved in original compiled Core, zero-initializing diagnostic native loads Label Nested-Record Marker84, original-derived count14->60 compiled diagnostic FArchive physical EOF285; source PHP exact values/end offsets. Stock dynamic array struct FString also faulted with native STATUS_HEAP_CORRUPTION due original FArray::Add unconstructed FString, so stock loaded-value parity explicitly EXCLUDED as source-undefined; do NOT claim stock-success or conflate diagnostic allocator. No native engines run during 98-check review; no prior stock or seven accepted method native reruns. C98/C227 other engine families and arbitrary unverified game-specific tails remain O06 open.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-uobject-independent-full.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-fstring-archive.php",
+        "verify-ue1-classic-array-inner-values.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-uobject-fixed-legacy-string-and-struct-eof": {
+      "description": "One source-proven real compiled v432 UObject remaining two-branch correction. Stock original Core/Engine load of 283-byte native-generated G5DirectStringPayload.u, two-byte copy changes tag StrProperty type to old fixed StringProperty and first ANSI byte to Q (unchanged size); real compiled loader dynamically upgrades string and loads Headline QAlpha-direct-FString; current source reads exact 22 bytes and source-matched no-warning policy. Previous real compiled physical ULinkerLoad FString EOF proof reused to correct inner UStruct nested array member StrProperty premature export SerialSize guard; do not invent native nested loaded value or stock array<FString> success. ONE 35-check combined SHA-pinned native/source verifier, global UObject method remains legitimately BLOCKED until all applicable native seven gates. Zero repeated prior seven FULL methods.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-native-legacy-and-struct-closure.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-legacy-string-upgrade.php",
+        "verify-ue1-classic-fstring-archive.php",
+        "verify-ue1-classic-array-inner-values.php",
+        "verify-ue1-o06-g5-uobject-direct-str-physical-eof.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-uclass-final-original-engine-source-profile": {
+      "description": "ONE independent seven-criterion original compiled UT99 v432 UClass::Serialize entire genuine version69 Engine.u source-profile acceptance: 88/88 original UClass native loaded, 608/608 original class default values including one source-defined runtime INI override, 3053 actual FDependency values and 1056 inherited fields reused SHA; 16 original class scripts 1509 memory bytes, all 989 known-byte loaded bytes and 130 native UObject pointer/FName loaded referents compared including 13 newly compiled class values from ONE Core/Engine process; 88 actual class archive records fully consumed; pin original compiled dependency-count malformed input error. Independent 1342 checks, 7 of 7 restricted to existing Engine.u v69 profile. C98/C227 and unknown Config environments separate. No native engine rerun inside verifier.",
+      "readers": [
+        "CatalogUE1ClassicScriptArchiveReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-uclass-independent-full.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-genuine-ut99-script-archive.php",
+        "verify-ue1-o06-genuine-ut99-full-scripts.php",
+        "verify-ue1-classic-class-metadata.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-uclass-native-script-loaded-relocations": {
+      "description": "One original compiled v432 Engine.u UClass script memory relocation and class CDO acceptance: load genuine Actor/Pawn/LevelInfo directly in unchanged compiled Core/Engine, 767/314/11 actual loaded Script memory sizes, 57 loaded instruction token-offset bytes, three native pointer referents to ByteProperty Engine.Actor.Role and three runtime default primitive values Role4/GroundSpeed320/TimeDilation1. Preserve package index/local FName versus real pointer/global FName identity, mark runtime addresses not fabricated; 47-check native log SHA pinned acceptance including real compiled v432 Pawn Script FName local NameMap slot15 -> global FName893 resolves PlayerPawn. This does NOT claim global UClass FULL, Config/Localized and remaining tagged/default/fixup/error variants remain open. Never repeat 88 prior scalar/class oracles.",
+      "readers": [
+        "CatalogUE1ClassicScriptArchiveReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-uclass-script-loaded-fixups.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-genuine-ut99-script-archive.php",
+        "verify-ue1-o06-genuine-ut99-full-scripts.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-skeletalmesh-independent-full": {
+      "description": "ONE final UT99 v432 SkeletalMesh Serialize compiled method decision: five prior original loaded skeletal objects and 282956 array bytes SHA-reused; new genuine compiled isolated SavePackage+LoadPackage nonempty RemapAnimVerts: one 4-vertex reversal and one 2-frame duplicate/discard remap 6 vertices, 10/10 actual packed 32-bit loaded values match PHP source ordered and SHA; native source clears remap list. Third short array native loads despite undefined beyond-remap pointer, PHP refuses invented fatal or deterministic memory value. Existing CDB malformed DefaultAnimation cursor412679. Independent seven-gate source-profile-only acceptance, no native engine reruns in verifier.",
+      "readers": [
+        "CatalogUE1ClassicMeshNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-skeletal-independent-full.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-mesh-native.php",
+        "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-uobject-direct-str-physical-error": {
+      "description": "One new original compiled UT99 v432 UStrProperty Headline written via Core SavePackage, stock Core DLL native loaded Headline identical to current source PHP, one copy with signed ANSI count byte at absolute offset232 21->75. Actual native loader physical EOF 283+1/283 in ULinkerLoad::Serialize <- FString<<; previous PHP incorrectly rejected at export SerialSize. Repair direct native matched StrProperty source branch with physical FArchive EOF and precise bounded error. Source and native binary/log/one-byte originals SHA-pinned, never redo nested array FString native testing. T99 UObject whole method still BLOCKED.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-direct-str-physical-eof.php"
+      ],
+      "affected": [
+        "verify-ue1-classic-fstring-archive.php",
+        "verify-ue1-classic-array-inner-values.php",
+        "verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-uclass-physical-error-origin": {
+      "description": "One original v432 compiled Core.dll malformed UClass Dependency FArchive origin correction: use physical package EOF rather than premature export SerialSize rejection. Also restores the class stream cursor after inspectClassDefaults to read v<57 trailing two FNames exactly once. One genuine immutable UWindow.u export, one one-byte count mutation, native first-chance CDB log all SHA-pinned. Class FULL remains BLOCKED on script fixups and other inherited cases. Never replay original 88 native class loads.",
+      "readers": [
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-class-metadata.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-genuine-ut99-script-archive.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-skeletalmesh-whole-loaded-scalars": {
+      "description": "One new compiled original native scalar and inherited UMesh/ULodMesh loaded-value comparison on five original v69 skeletal meshes, plus a single byte modified DefaultAnimation reference original-copy native exception at exact cursor 412679. Original DLL source, five original package SHA, C++ program SHA, logs and one mutation all pinned. Earlier 282956 native skeletal array bytes reused without rerun. Method deliberately BLOCKED until real nonempty RemapAnimVerts handling and remaining malformed inherited paths are independently accepted.",
+      "readers": [
+        "CatalogUE1ClassicMeshNativeReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-skeletal-native-scalars-and-error.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-animation-final-review": {
+      "description": "One final source scoped review of UAnimation v432 original archives and preexisting compiled loader evidence. The inherited UObject code is independently covered. Other families and methods remain separate.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-animation-independent-full.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-animation-native-error-cursors": {
+      "description": "Original compiled UT99 v432 UAnimation ULinkerLoad native first-chance position from CDB vs source-specific PHP error cursor on six SHA-sealed malformed v69 original-copy specimens. Compiled negative RefBones, AnimTracks, KeyQuat reach physical package EOF instead of early export or element-count rejection; FName errors match precise after-name cursor. Uses original source-selected TArray Empty(NewNum) and i<NewNum semantics, bounded safe PHP rejection, pinned unmodified compiled Engine/Core and old debugger captures, no native replay. Whole method remains BLOCKED on other version/inherited branches.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-animation-native-error-cursors.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-g5-t99-animation-whole-native.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-animation-whole-native-v432": {
+      "description": "Single method-wide T99 v432 UAnimation original compiled Core/Engine native file-loading verifier: three genuine version69 packages, 3694 exact per-field values and 3667 records including all 70 MotionChunks, 540836 actual nested numeric array bytes, 3 inherited no-stack zero-tag UObject envelopes. Eight unique original-copy malformed FName, count and physical truncation outcomes compared to stock native loader. SHA-pin original binary, source, build source/exe, stdout and mutated inputs. Exact native exception-cursor and wider source-legal inherited branches remain OPEN, method BLOCKED; no native replay during scope verification.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-animation-whole-native.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-skeletalmesh-inherited-lodmesh-lazy-seek": {
+      "description": "Epic v400 TLazyArray always Ar.Seek(absolute SeekPos), accepting source-legal forward unused payload; inherited ULodMesh/UMesh reader previously falsely required exact TArray end. Epic v1200 UnMath.h FSphere inherits FVector12 (no FSphere-specific operator), not later UT99 FPlane16. Update shared production Mesh/ULodMesh reader and source-correct legacy mesh fixtures, verify original v69 compiled skeletal/animation source records without native engine reruns. Full SkeletalMesh method stays BLOCKED on remaining seven-gate prerequisites.",
+      "readers": [
+        "CatalogUE1ClassicMeshNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-mesh-native.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"
+      ],
+      "gate": []
+    },
+    "g5-t99-uobject-nested-fstring-physical-eof": {
+      "description": "New native v432 nested array<FString> source error: original Core.dll zero-initializing diagnostic host isolates valid FString::SerializeItem stream; mutate one original Core SavePackage-generated length byte 13->96; native ULinkerLoad::Serialize physical EOF byte308 in FString<<, previous PHP prematurely rejects at export SerialSize. Production safely checks physical buffer and reproduces native origin+cursor. Canonical compiled DLL unmodified; diagnostic host allocator conditioned, stock native loaded-value parity NOT VERIFIED. One 25-check source, native, originality and focused PHP check. Do not rerun earlier native samples.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-nested-fstring-physical-eof.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-uobject-nonempty-fstring-conditional-native": {
+      "description": "One unique original UT99 v432 Core DLL nonempty dynamic array<FString> native differential: stock FMallocAnsi native loader CDB faults at 0xBAADF00D after source FArray::Add uninitialized FString element; disposable instrumented FMallocAnsi zero-inits new allocations, unchanged original compiled DLL loads two Alpha/Beta strings and two FVector elements and matches current source PHP archive. Conditional native success only, stock native success unverified. Source and compiled DLL/original package/log/diagnostic compiler all SHA pinned; 34 checks, no repeated stock v432 native runs, method remains BLOCKED.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-fstring-conditional-native.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-uobject-native-dynamic-array-physical-eof": {
+      "description": "One new genuine compiled UT99 v432 native malformed source array<int> dynamic count31 at offset254; native ULinkerLoad::Serialize hits physical end absolute308, not export SerialSize count guard. Fix production source branch with safe physical-package EOF check and exact cursor origin. Original engine-generated v69 package, Core.dll, one original altered log, source headers SHA-pinned, source-only array bounded. Focus once, do not repeat older array cases. G5 global UObject still BLOCKED.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-native-array-physical-eof.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-font-v432-independent-source-profile-full": {
+      "description": "Independent T99-v432-only full UFont::Serialize file-loading seven-gate acceptance, source and original compiled Core+Engine pinned. Four previous genuine native glyphs (16KB) plus two distinct compiled x86 loads covering all 62 original nonempty fonts, complete 1200128 native glyph bytes, 46434 TMap pairs 185736 bytes, all 62 full texture references; 66 source true inherited two-byte NAME_None archive envelopes; original v432 compiled malformed Font native cursor Got4116 Expected4112 safely matches source, original unmutated 0 and valid four remap evidence. One final 185+ assertion current-source reviewer, no prior CDB replays. General UObject and C98/C227 unrelated.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-font-independent-full.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-textbuffer-v432-independent-source-profile-full": {
+      "description": "Independent full UT99 v432 UTextBuffer::Serialize original file-read source-profile seven-gate acceptance. 88 genuine original Engine.u TextBuffer exports, all 88 inherited no-stack/no-property compact two-byte NAME_None paths and current native complete bounds; reused native v432 88 exact Pos/Top/UTF16 loaded values totalling 1007796 memory bytes, 3 native positive mutations and 1 compiled oversized rejection with safe exact byte-consumption 912 vs 843. One conclusive 302-check acceptance with current reader SHA; generic UObject and C98/C227 remain independent blocked; no native replay.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-textbuffer-independent-full.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-sound-music-independent-full-method-closure": {
+      "description": "Independent complete all-seven-gate UT99 v432 only FULL method review for USound::Serialize and UMusic::Serialize. Pin and reuse original compiled x86 native loaded positive 11 / 1,216,472 bytes and 9 WAV Duration float values; five distinct native malformed outcomes; source original Epic v400 Super->FileType->TLazyArray field sequence and the 11 actual original inherited UObject no-stack/no-tag one-byte NAME_None archives, source variant v61 vs v64/v66. Generic T99 UObject method remains separate BLOCKED. C98 v1200 and C227 v227 profiles NOT covered. Requires SHA-current evidence and independent 63+ source assertions; closure artifact per method after success. Zero repeated native engines.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-t99-audio-independent-full-method-review.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-uobject-v61-direct-XLevel-pointer": {
+      "description": "Original compiled v432 AActor::XLevel direct native pointer loaded comparison for 124 v61 original saved transient values; all 124 exact class-qualified path references match original UE1 exports. Combined with prior 802 compiled text values this accounts for all 926 saved fields. Distinct new native oracle once; global method blocked pending other versions.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-v61-124-native-XLevel-pointers.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-uobject-original-v61-802-compiled-saved-values": {
+      "description": "Reconcile ALL 926 actual saved original PRD Gold v61 object property tags across 308 real compiled UT99 v432 loaded objects to earlier native ExportProperties stdout. 802 exact per-field typed matches across 8 Property families, zero mismatches; other 124 XLevel original tags are deliberately omitted by Epic UProperty::Port() because Actor.uc var transient const Level XLevel. Zero unaccounted; original SHA, existing compiled stdout SHA, current PHP saved tags, source evaluator pin, no native engine rerun. Scope a single genuine original map; full UObject still BLOCKED on other versions and runtime pointer semantics.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-original-v61-native-saved-values.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-audio-native-loaded-malformed-consolidated": {
+      "description": "One complete method-specific UT99 v432 compiled Core/Engine native loaded-value and malformed error disposition for 9 Sound/2 Music originals (v61,v66 Sound v61,v64 Music), original 1216472 bytes, FileType OriginalSize native SHA FNV and all 9 WAV Duration exact float bits. Five distinct compiled mutated error/empty outcomes SHA pinned; correct Music TLazyArray forward skip and fail closed on Sound empty native crash. Current-source acceptance one verifier 66 checks. Shared inherited UObject/7-gate method FULL separate BLOCKED.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-c98-audio-array-source-dispatch": {
+      "description": "Native sound/music archive Data is ordinary TArray for Epic Unreal v1200, but TLazyArray for UT99 v400 and v227 headers; lazy absolute SeekPos only for the latter AND archive version>61. Prevent source-selected v1200 serializer from fabricating modern lazy header solely because archive Ver>61. Six genuine SHA-attested original Gold packages v61 (C98 explicit) + v69/227 (C227) 35 real audio objects. No repeated compiled UT99 oracles, full method still BLOCKED.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-native-audio-source-array-decision.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-c227-export-archetype-native-operator-guard": {
+      "description": "Source-defined v227 69/licensee227 FObjectExport ArchetypeIndex is persistent but native operator<< implementation unavailable. The source flag RF_HasArchtype=0x100 now fails closed instead of using older UT99 zero-archetype layout. Three original SHA-pinned v227 packages with 426 exports remain byte-identical and decode; three disposable first-export flag-positive mutated copies are denied without fabricating archive-index bytes. v227 native positive archetype still BLOCKED. Source fingerprint now includes transitive shared CatalogLegacyPackageReader; prior native scopes reconstructed by SHA, no compiled engine rerun.",
+      "readers": [
+        "CatalogLegacyPackageReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-c227-archetype-native-operator-guard.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-uobject-epic-camera-source-exclusion-decision": {
+      "description": "Resolve supposed Camera native reachability blocker with exact original Unreal v1.200 and UT99 inherited v400 ULinkerLoad::CreateExport source, plus two existing genuine compiled v432 original v61/v68 outcomes SHA reused: v1200 Camera skipped only when Ver()<57, UT99 Camera always CreateExport returns NULL. Original v54 Gold five Camera, original v61 Gold four Camera, original v68 UT99 Entry five Camera checked, 15 ordinary controls. Preserve source-decoded archive preview while not fabricating native load and DebugSerialize flags for excluded Camera. Scope C98/T99 source only, v227 unknown. NO native engine replay. FULL method separate and blocked.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-camera-source-reachability-decision.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-c98-v54-original-model-FSphere-source-decision": {
+      "description": "Exact Epic Unreal v1.200 FSphere inherits FVector, no FSphere operator<<; old v40 archives FPlane, modern v41..61 uses FVector12. Fix actual source mismatch causing 297/299 native UModel errors +2 partial extensions on real Gold v54 PRD original. 2667/2667 UObject tagged and native recognized class records now complete including 299/299 UModel and BSP. Keep UT99 v432 native branch unchanged, existing compiled oracles SHA reused. Source-only final method verdict BLOCKED.",
+      "readers": [
+        "CatalogUE1ClassicPrimitiveNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-c98-v54-real-model-sphere-source-decision.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-c227-original-v227-script-source-decision": {
+      "description": "One changed-source decision on 3 real PRD v69 licensee227 original UE1 archives. Current source dialect uses v227 UnStack.h modern opcode meanings shared with v432, distinct v1.200. 399 genuine object tags and all 27 UClass streams parse, previous 11 real script/class overruns no longer occur. Source-only exact package SHA, v227-only tokens unsupported; compiled v227 native C++ unavailable. Zero existing v432 native tests rerun; method FULL blocked.",
+      "readers": [
+        "CatalogUE1ClassicScriptArchiveReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-c227-genuine-script-source-decision.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g5-t99-uobject-v227-source-flag-decision": {
+      "description": "Consolidated changed-source correctness decision: original Epic v1200/v227/v432 source header and v1200/UT99 inherited C++ implementation SHA-pinned. v227 0x40000000 RF_PendingDelete, v1200/UT99 RF_DebugSerialize; v227 RF_HasArchtype 0x100 in RF_Load. Production tag and class readers must not fabricate v227 post-load DebugSerialize or PendingDelete. Real PRD Gold v69 original and v61 original source selections used. Prior 308 compiled real v61 and earlier native slices SHA reused; no engine replay. FULL method still BLOCKED.",
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-v227-source-flag-decision.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
     "g5-t99-uobject-prd-v61-native-loaded-decision": {
       "description": "Single SHA-pinned real PRD version61 original map loaded by compiled authentic UT99 v432 Core.dll, 308/312 export objects exact native class-name identities; four original Camera entries genuinely not instantiated; 308 tagged streams and 184 native class tails decoded in source, 0 errors. Native original 8515 textual export property lines NOT individually matched to PHP. Previous 37/37 and 113 native values reused only by SHA, no new native runs in acceptance; seven-gate method BLOCKED.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-prd-v61-native-loaded-decision.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-prd-native-string-decision": {
       "description": "One production source-current decision based on SHA-pinned original PRD UE1 corpus sample, genuine compiled v432 engine-generated nonempty FString array wire archive, compiled native Core.dll failed load plus CDB uninitialized pointer and source FArray::Add versus AddZeroed. Source wire values remain visible but runtime loaded values NOT_VERIFIED. Reuse prior native compiled 36/36 + 113 original values by SHA only; full T99 UObject remains BLOCKED.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-prd-native-string-decision.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-prd-native-string-decision.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-nested-vector-decision": {
       "description": "One changed-source compiled real UT99 v432 UCC and Core.dll SavePackage native nested array<vector> archive. Native original 2 FVector fields each 12 bytes, array count2+24 bytes, malformed Tag.Size=1 still reads25, count1 native fail at archive cursor235, count3 native source FName failure at250 beyond declared export SerialSize, same source-scope PHP cursor. Reuse original six dynamic array native results and SHA-pinned original genuine Entry 113 values and 43 frames without native reruns. Full method remains BLOCKED on nonempty nested FString and other source/Camera variants.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-nested-vector-decision.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-nested-vector-decision.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-dynamic-array-decision": {
       "description": "One true compiled v432 UCC-generated and Core SavePackage-generated v69 ordinary UObject with 3 valid typed persisted arrays and six real compiled malformed one-byte cases. Four fatal exact linker cursor outcomes 268/276/272/278, two valid malicious Tag.Size cases consuming actual Inner->SerializeItem length, no replay previous 50/61/49/43, previously compiled original genuine 113 values only SHA-scoped. Strict seven-gate full method remains BLOCKED.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-dynamic-array-decision.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-dynamic-array-decision.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-serializeitem-size-decision": {
       "description": "Single changed-source compiled UT99 v432 UObject method verdict after FOUR new real original Entry.unr Region PointRegion and LevelSummary.Title StrProperty Tag.Size corruption oracles (valid SerializeItem ignores declared size); each original restored SHA256. Valid struct reads exactly six bytes and FString ten even when tags declare 1/12 or 1/20. Reuse SHA-pinned previous six reference-fault and four tag-error outcomes, 43 StateFrame checks and verify 113 actual loaded native values once on CURRENT source. FULL still BLOCKED on other nested dynamic array, historical version and Camera branches.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-serializeitem-size-decision.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-serializeitem-size-decision.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-current-full-decision": {
       "description": "Single changed-source T99:UObject method decision: six previously captured real compiled v432 malformed reference/array/struct oracle outcomes with fatal cursor positions; 4 earlier native tag outcomes and 43 StateFrame evidence reused by pinned SHA; 113 original actual loaded native tagged values compared on current source once. No compiled native reruns. BLOCKED until other applicable branch and native error paths plus independent closure.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicClassDefaultSchemaReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-current-full-decision.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicClassDefaultSchemaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-current-full-decision.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-tag-error-consolidated": {
       "description": "One consolidated latest T99:UObject::Serialize compiler/native error acceptance on four controlled one-byte malformed FPropertyTag branches from unchanged genuine Entry.unr: type zero warn/skip, schema type mismatch warn/skip, early NAME_None native SerialSize Got16 Expected105 for AActor::Serialize Super-only ancestry, and declared float Size12 with native UFloatProperty four-byte SerializeItem. Original compiled v432 Core.dll outcome/source logs SHA-pinned, four original archives restored each. Verify all 113 previous original native-loaded tagged values on updated production reader WITHOUT compiling/running native again. Strict FULL still BLOCKED on other error source paths and final independent review.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicClassDefaultSchemaReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-tag-error-consolidated.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicClassDefaultSchemaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-tag-error-consolidated.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-loaded-tagged-acceptance": {
       "description": "One consolidated T99:UObject::Serialize updated method-level acceptance after real compiled v432 Core.dll directly loaded original Entry.unr: reuse SHA-pinned 43/43 StateFrame verdict without rerunning it, and compare all 113 serialized tag values and actual references across all 33 original loaded exports against the genuine compiled runtime UObject::ExportProperties output. Exact v432 FPointRegion Zone, iLeaf, ZoneNumber and ECsgOper enum source mapping; zero old native executable reruns. Full method remains BLOCKED on other malformed property/reference paths, exact consumed-byte cases, version branches and final independent review.",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-tagged-native-acceptance.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-tagged-native-acceptance.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-uobject-consolidated-acceptance": {
       "description": "ONE compiled native UT99 v432 UObject::Serialize method acceptance decision: pinned genuine original v68 Entry.unr standalone compiled Core.dll LoadPackage native event 14/19 loaded 5 Camera context excluded, prior 28 real runtime referent names, and three independently executed single-byte invalid StateFrame code offsets -2, 0, 63 with native error Offset mismatch N 0. PHP derives Node->Script.Num through actual referenced class metadata and reproduces exact errors without permanent source modifications. Full method BLOCKED on unclosed complete UObject tagged loaded values and additional negative/property variants; do not inflate partial into FULL.",
-      "readers": ["CatalogUE1ClassicStateFrameReader.php", "CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicClassMetadataReader.php"],
-      "focus": ["verify-ue1-o06-g5-uobject-consolidated-acceptance.php"],
+      "readers": [
+        "CatalogUE1ClassicStateFrameReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uobject-consolidated-acceptance.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-font-consolidated-acceptance": {
       "description": "ONE complete T99:UFont::Serialize verdict after correcting source-selected v432 malformed TMap CharRemap cursor from proactive PHP bounds rejection to original compiled Got4116 Expected4112, without physically reading outside export. Reuse already pinned original four legal remaps, real native glyph/texture and two nonempty PRD font loader proofs; inherited UObject still not FULL and method therefore BLOCKED.",
-      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],
-      "focus": ["verify-ue1-o06-g5-font-consolidated-acceptance.php"],
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-font-consolidated-acceptance.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-t99-textbuffer-consolidated-acceptance": {
       "description": "ONE full T99:UTextBuffer::Serialize decision using SHA-pinned existing original v432 Core Engine.u and 88 actual loaded strings plus source-selected real malformed/positive cases. Safely reproduce compiled ANSI900 malformed attempted cursor and Serial size mismatch Got912 Expected843 without actually reading the following export. The true inherited T99:UObject::Serialize remains BLOCKED so the method may only become BLOCKED, never falsely FULL.",
-      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php"],
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-textbuffer-consolidated-acceptance.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-v432-uclass-inherited-native-values": {
       "description": "Compiled original UT99 v432 UClass inherits UField/UStruct/UState: all 88/88 named nonzero genuine Engine.u UClasses have original SuperField/Next, ScriptText/Children, FriendlyName, Script.Num, TextPos/Line, ProbeMask64, IgnoreMask64, StateFlags and LabelOffset verified against full SHA-pinned native compiled MEMORY64 snapshot (12 fields per class). v432 source headers plus v400 legacy source pinned; malformed/native Script fixups and variants OPEN.",
-      "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
-      "focus": ["verify-ue1-o06-g5-uclass-inherited-native-88.php"],
+      "readers": [
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uclass-inherited-native-88.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-v432-uclass-real-export-coverage": {
       "description": "Correct v69 Engine.u ClassIndex==0 denominator: 131 ExportMap rows are 88 genuine nonempty named UClass serializations plus 43 zero-size NAME_None placeholders. Real compiled v432 Core!UClass::Serialize loaded ALL 88/88 named classes; 2 unrelated Core class records separated by actual FName + local linker index. Supersedes previous false 43-unvisited-class blocker; inherited, malformed and version variants still OPEN.",
-      "readers": ["CatalogUE1PackageReader.php", "CatalogUE1ClassicClassMetadataReader.php"],
-      "focus": ["verify-ue1-o06-g5-v432-uclass-real-export-coverage.php"],
+      "readers": [
+        "CatalogUE1PackageReader.php",
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-v432-uclass-real-export-coverage.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-uclass-defaults-native-608": {
       "description": "88 genuine v69 Engine.u UClass::Serialize defaults in actual compiled UT99 v432 Memory64 full process snapshot: entire 608 source tagged defaults resolved through live UClass Defaults and UProperty PropertyLink, Offset, FBool mask, native UObject reference/name table, FString and struct bytes. 607 exact values; single GameReplicationInfo.ServerName runtime config override corroborated by SHA-pinned UnrealTournament.ini. Full method OPEN for inheritance, malformed/error and other source variants; all 88 real classes loaded, 43 rows are zero-size NAME_None placeholders.",
-      "readers": ["CatalogUE1ClassicClassMetadataReader.php", "CatalogUE1ClassicClassDefaultSchemaReader.php"],
-      "focus": ["verify-ue1-o06-g5-uclass-defaults-native-608.php"],
+      "readers": [
+        "CatalogUE1ClassicClassMetadataReader.php",
+        "CatalogUE1ClassicClassDefaultSchemaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uclass-defaults-native-608.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-uclass-full-nested-memory": {
       "description": "UT99 v432 actual compiled Core.dll UClass::Serialize after 90th loaded class: 44 MB real MiniDump MEMORY64 contains full UClass FDependency TArray elements (runtime UObject class FName / Deep / CRC), complete PackageImports runtime FName array and ClassWithin referent. Compare all 88 original loaded Engine.u classes against production CatalogUE1ClassicClassMetadataReader. Do not mark method fully G5 accepted while inherited defaults, malformed/errors or other source branches are open; all 88 genuine Engine.u classes are covered.",
-      "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
-      "focus": ["verify-ue1-o06-g5-uclass-all-native-nested-memory.php"],
+      "readers": [
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-uclass-all-native-nested-memory.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-uclass-native-values": {
       "description": "Real unmodified compiled v432 Core!UClass::Serialize same-load post-archive 90 calls, 88 authentic Engine.u class exports with exact loaded ClassFlags, 16-byte GUID, dependency and import TArray lengths, ClassWithin pointer and runtime FName ConfigName; two unrelated Core objects disambiguated by actual compiled class names; 43 ClassIndex==0 rows are zero-size NAME_None placeholders, NOT unobserved real classes; other method branches OPEN.",
-      "readers": ["CatalogUE1ClassicClassMetadataReader.php"],
-      "focus": ["verify-ue1-o06-g5-multimethod-uclass-loaded-values.php"],
+      "readers": [
+        "CatalogUE1ClassicClassMetadataReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-multimethod-uclass-loaded-values.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-stateframe-native-referents": {
       "description": "Actual compiled UT99 v432 UObject::Serialize post-StateFrame with live FName global name table resolutions for 14 original Entry.unr v68 Node and StateNode object pointer references; strict 28 reference name comparisons and ProbeMask/LatentAction/Code versus source with SHA pinned native CDB and untouched source. Remaining five and full G5 method acceptance OPEN.",
-      "readers": ["CatalogUE1ClassicStateFrameReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-multimethod-stateframe-native-referents.php"],
+      "readers": [
+        "CatalogUE1ClassicStateFrameReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-multimethod-stateframe-native-referents.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-v68-positive-stateframe": {
       "description": "Original UT99 version-68 Entry.unr contains 19 RF_HasStack actor exports; all source state frames decode, 14 are independently observed after actual compiled v432 UObject::Serialize FStateFrame with exact 64-bit probe masks, signed latent actions and null code pointers. Five not reached due absent Actor t3d exporter; full method remains OPEN.",
-      "readers": ["CatalogUE1ClassicStateFrameReader.php","CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-multimethod-v68-positive-stateframe.php"],
+      "readers": [
+        "CatalogUE1ClassicStateFrameReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-multimethod-v68-positive-stateframe.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-uobject-inherited-v432": {
       "description": "Same genuine compiled UT99 v432 Engine.u load: 5955 UObject serialize entries, 90 UClass, 90 TextBuffer, 4 Font; 88 original TextBuffer and 4 Font complete post-archive flags, source frame absence, source Pos/Top/Text length, tag bounds and native-tail semantics. Authentic CDB + original DLL package SHA sealed. Does NOT close untested positive StateFrame, malformed/input or other UE1 source profile.",
-      "readers": ["CatalogUE1ClassicStateFrameReader.php","CatalogUE1ClassicTaggedPropertyReader.php","CatalogUE1ClassicNativeObjectReader.php"],
-      "focus": ["verify-ue1-o06-g5-multimethod-uobject-inherited-flags.php"],
+      "readers": [
+        "CatalogUE1ClassicStateFrameReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-multimethod-uobject-inherited-flags.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-multimethod-one-load-v432": {
       "description": "One authentic compiled v432 Engine.u package load in one CDB invocation exercises THREE selected method entry points: UClass 90 calls, UTextBuffer 90, UFont 4. Independent SHA-pinned Core/Engine original DLLs and debugger log; this is dispatch coverage only, not full-method acceptance.",
       "readers": [],
-      "focus": ["verify-ue1-o06-g5-multimethod-native-one-load.php"],
+      "focus": [
+        "verify-ue1-o06-g5-multimethod-native-one-load.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-full-method-textbuffer-v432-candidate": {
       "description": "Strict T99:UTextBuffer::Serialize candidate full-method acceptance gate: authentic compiled Core.dll PostSerialize 88 genuine Engine.u complete Pos/Top/TCHAR strings (1007796 actual native memory bytes), compiled controlled positive Pos/Top and wide, missing-NUL source discrepancy corrected, oversized native and PHP both reject; inherited method and native error bytepath still OPEN",
-      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-classic-textbuffer-native.php", "verify-ue1-o06-g5-textbuffer-native-all-values.php"],
-      "affected": ["verify-ue1-o06-native-ut99-textbuffer-exports.php"],
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-classic-textbuffer-native.php",
+        "verify-ue1-o06-g5-textbuffer-native-all-values.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-native-ut99-textbuffer-exports.php"
+      ],
       "gate": []
     },
     "g5-v432-native-motionchunk-full-memory": {
       "description": "Native compiled UT99 v432 genuine v69 UAnimation full loaded MotionChunk/Moves/AnalogTrack/RootTrack nested KeyQuat KeyPos KeyTime arrays: SHA-pinned CDB full-memory snapshots and strict production source bytes for all 70 Moves across original EcoTerror/d00d packages",
-      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php"],
+      "readers": [
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-native-v432-motionchunk-full-memory.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-v432-native-motionchunk-headers": {
       "description": "Genuine v69 EcoTerror and d00d UAnimation under compiled v432: 70 complete MotionChunk scalar/root headers, per-move BoneIndices/AnimTracks counts, 95 first-Move AnalogTrack headers, complete BoneIndices and first-track KeyQuat/Pos/Time buffers against production parser",
-      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-native-v432-motionchunk-headers.php"],
+      "readers": [
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-native-v432-motionchunk-headers.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-v432-native-refbones-full-elements": {
       "description": "Unmodified original PRD v69 UT99 table/EcoTerror/d00d: native compiled v432 237 full FMeshBone memory structs/strings, byte-for-byte serialized member values, FName table, excludes uninitialized YSize and Depth",
-      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-native-refbones-v432.php"],
+      "readers": [
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-native-refbones-v432.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-v432-native-animseq-and-notifies": {
       "description": "Unmodified PRD original UT99 v69 compiled Engine.dll: genuine 70 native FMeshAnimSeq records plus 22 nested FMeshAnimNotify functions and timestamps, source-decoder numeric fields and global native FName names, SHA-pinned CDB logs",
-      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-native-animseq-notifies-v432.php"],
+      "readers": [
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-native-animseq-notifies-v432.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-native-skeletal-vector-array-elements": {
       "description": "Real original PRD UT99 v69: compiled v432 native-loaded complete Points and LocalPoints arrays for five genuine USkeletalMesh objects; 10 full float32 FVector arrays SHA-pinned from debugger, all 225756 bytes and production field previews",
-      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-real-skeletal-vector-arrays.php"],
+      "readers": [
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-real-skeletal-vector-arrays.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-native-skeletal-animation-array-elements": {
       "description": "Genuine PRD UT99 v69 5 skeletal meshes and 3 animations loaded by compiled v432 Engine: full 42,032-byte bone weight/influence arrays and all 143 native FNamedBone name/flags/parent records, SHA-pinned CDB memory and runtime FName table",
-      "readers": ["CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"],
+      "readers": [
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-real-skeletal-animation-full-arrays.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-prd-ue1-native-real-nonempty-font": {
       "description": "Read-only PRD corpus genuine UWindowFonts.utx v69: compiled UT99 v432 native-loaded 29+33 Fonts with nonempty 255/1183 maps, actual in-memory mapping keys and values SHA matching original wire bytes",
-      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php"],
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-genuine-v432-nonempty-fonts.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-prd-ue1-genuine-skeletal-animation": {
       "description": "SHA-pinned unmodified UT99 PRD corpus: 10 genuine v69 SkeletalMesh/Animation native records and compiled v432 loaded array counts/reference parity for 8 source exports in three dependency-resolved packages; SFCharacter4 native load blocked",
-      "readers": ["CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php", "CatalogUE1ClassicTaggedPropertyReader.php"],
-      "focus": ["verify-ue1-o06-g5-genuine-v432-skeletal-animation.php"],
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php",
+        "CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-genuine-v432-skeletal-animation.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-v432-native-font-loaded-values": {
       "description": "Genuine UT99 v432 Engine.u UFont: 4 CDB post-Serialize loaded glyph arrays, CPP/page/remap, and resolved native texture linker identities; SHA-pinned native logs and blob artifacts",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],
-      "focus": ["verify-ue1-o06-g5-native-v432-font-loaded-values.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-native-v432-font-loaded-values.php"
+      ],
       "affected": [],
       "gate": []
     },
     "g5-v432-genuine-font-byte-compat": {
       "description": "34 SHA-pinned genuine installed v68/v69 UT99 UFont exports, compiled v432 method archive order, full native byte consumption; no compiled in-memory value oracle",
-      "readers": ["CatalogUE1ClassicTaggedPropertyReader.php", "CatalogUE1ClassicNativeObjectReader.php", "CatalogUE1ClassicV432NativeDeltaReader.php"],
-      "focus": ["verify-ue1-o06-g5-genuine-v432-fonts.php"],
+      "readers": [
+        "CatalogUE1ClassicTaggedPropertyReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicV432NativeDeltaReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g5-genuine-v432-fonts.php"
+      ],
       "affected": [],
       "gate": []
     },
@@ -497,7 +1231,9 @@
         "CatalogUE1ClassicNativeObjectReader.php",
         "CatalogUE1ClassicTaggedPropertyReader.php"
       ],
-      "focus": ["verify-ue1-o06-native-ut99-music-all.php"],
+      "focus": [
+        "verify-ue1-o06-native-ut99-music-all.php"
+      ],
       "affected": [],
       "gate": []
     },
@@ -507,7 +1243,9 @@
         "CatalogUE1ClassicNativeObjectReader.php",
         "CatalogUE1ClassicTaggedPropertyReader.php"
       ],
-      "focus": ["verify-ue1-o06-native-ut99-sound-exports.php"],
+      "focus": [
+        "verify-ue1-o06-native-ut99-sound-exports.php"
+      ],
       "affected": [],
       "gate": []
     },
@@ -528,6 +1266,18 @@
         "verify-ue1-o06-genuine-compiled-native.php",
         "verify-ue1-o06-payload-negatives.php"
       ]
+    },
+    "g3-08-c227k-two-authentic-ButtonProperty-Caption": {
+      "description": "REAL G3-08 227k SOURCE IMPLEMENTATION not invented missing .cpp: matching original 2026 compiled Core.dll UButtonProperty::Serialize RVA0x80010 calls inherited UProperty::Serialize then compiled FArchive << FString Caption via operator RVA0x66e40; new REA Ghidra both SHA pinned (matching Core DLL c391cade...). Two ACTUAL genuine original shipped 227k ScriptedAI.u UButtonProperty exports indices2285 MoveCamButton Caption Move point to viewport and2286 MovePointButton Caption Go to point now decoded full exact native export by production CatalogUE1ClassicPropertyNativeReader; original archive SHA pinned. Signed compact WCHAR/ANSI count original operator body; isolated 1-byte missing NUL and +1 FName length source-branch validations. Prior G3-02 historical source-only regression updated to test new true Caption rather than stale unverified response, but older historical success events never replayed. Native compiled code recovered, actual original compiled engine did NOT load these in memory because supplied UCC has no native make/batchexport commandlet; do not claim actual in-memory loaded-value comparison, UButton SerializeItem/runtime remains unverified; G3-08 whole OPEN, G3 full2/16. ONE new focus only.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-c227k-two-real-button-captions.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-03-t99-469f-original-compiled-malformed-FriendlyName`
-- **Stage:** G3-03-469F-9-DIRECT-UStruct-135-AND-ORIGINAL-MALFORMED-FNAME-27-PRD-SHA-VERIFIED
-- **Last completed action:** G3-03 two NEW distinct real original UT99 v469f CDB native branches closed as subproofs: 9 direct Core.u UStruct objects compiled LOAD original UStruct::Serialize+0x1ea with real native FriendlyName/ScriptSize/Line/TextPos/ScriptText/Children pointer matches; six actual native Children linkers dereferenced; 135/135 independent DEV focused PASS. Separate original source one-byte direct BoundingBox FName79 at physical 7541 -> NAME_None, actual unmodified compiled Core.dll UCC under CDB triggers real UStruct::Serialize+0x85 -> appFailAssert FriendlyName!=NAME_None private UnClass.cpp line840; PHP equally rejects, 27/27 NEW focused PASS. Three other genuine registry direct struct objects not loaded and native FArchive Tell cursor not claimed. Source L original untouched SHA. Evidence/status commit c0db6f18 pushed GitHub and PRD 21/21 changed catalog files SHA; .gitignore *.log originally excluded raw CDB transcripts, corrected by explicit git add -f, supplementary evidence commit 848c0fcb pushed GitHub and PRD all 3/3 original raw CDB logs SHA. Manifest SHA pins now all published/verified. No production reader change (already correct), G3 entire 2/16 accepted, distinct original compiled native subproofs16, no prior G3-03 25 derived functions/G3-08 pointer/C227 native positives repeated, DEV main clean.
-- **Resume at:** Continue G3-03 remaining 3 RegistryPropertyInfo/RegistryObjectInfo/PreferencesInfo real native loaded-value cases if actually reachable; verify original compiled native archive cursor at real FriendlyName assertion (was not yet measured), original distinct v432/C98/C227K UStruct methods, script bytecode and precise failure behavior. Another G3-08 priority is actual 227k UButtonProperty::Serialize FString Caption changed method. Do not rerun sealed 135+27 or 298 tests, and when raw original x86 CDB evidence extension is .log, git add -f despite repo *.log ignore; SHA verify PRD.
-- **Active changed at:** 2026-10-27T14:18:24+00:00
-- **Latest DEV test states:** PASS 180; FAIL 1; STARTED 0
+- **Contract:** `g3-08-c227k-two-authentic-ButtonProperty-Caption`
+- **Stage:** G3-08-C227K-REAL-TWO-BUTTON-CAPTIONS-ORIGINAL-REA-38-FOCUS-PASS-RELEASE-PENDING
+- **Last completed action:** G3-08 NEW actual source-based production native archive implementation not mere positive tests: real matching original 227k compiled Core.dll UButtonProperty::Serialize at RVA0x80010 inherited UProperty plus real compiled FArchive<<FString at RVA0x66E40 Caption member this+0x8c, actual full signed compact ANSI/UTF16 FString operator REA recovered. Previously source reader reported unverified override and discarded native tails; now exact fully saved native fields for BOTH real original shipped 227k ScriptedAI.u indices2285 MoveCamButton Caption Move point to viewport count23 and2286 MovePointButton Caption Go to point count12, source ScriptedAI SHA 396abd... unchanged. One NEW independent DEV scoped 38/38 PASS, includes actual genuine saved on-disk property values, new FArchive compiled REA proof SHA and one-byte isolated source-defined missing terminator / overrun-count path, no earlier tests rerun. Historical G3-02 accepted results untouched; its outdated regression source code corrected to expect real FString Caption. Actual compiled in-memory ButtonProperty loaded value has NOT been captured because original 227k shipped UCC lacks make and batchexport; runtime SerializeItem explicit false, G3-08/G3-15 full OPEN, G3=2/16 and original compiled-source subproofs17.
+- **Resume at:** Commit/push parser change and original C227k UButton+FString compiled REA and 2 genuine original ScriptedAI.u persisted captions; SHA-deploy PRD protect config/storage. Final checkpoint must state next G3-08 method runtime SerializeItem/NetSerializeItem and 227k native-loaded actual objects still open; G3-03 other C98/T99/C227k native methods pending. Never replay 38 acceptance or prior positive tests.
+- **Active changed at:** 2026-10-27T14:38:00+00:00
+- **Latest DEV test states:** PASS 181; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T14:34:52.7268230Z | verify-ue1-o06-g3-c227k-two-real-button-captions.php | PASS | 171 | catalog\compliance\evidence\o06\20261027T143452143Z-c59b159d-DEV-verify-ue1-o06-g3-c227k-two-real-button-captions.php.txt |
+| 2026-10-27T14:34:52.1510849Z | verify-ue1-o06-g3-c227k-two-real-button-captions.php | STARTED |  | catalog\compliance\evidence\o06\20261027T143452143Z-c59b159d-DEV-verify-ue1-o06-g3-c227k-two-real-button-captions.php.txt |
 | 2026-10-27T14:12:22.1523703Z | verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php | PASS | 124 | catalog\compliance\evidence\o06\20261027T141221651Z-b1cbee2e-DEV-verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php.txt |
 | 2026-10-27T14:12:21.6517880Z | verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php | STARTED |  | catalog\compliance\evidence\o06\20261027T141221651Z-b1cbee2e-DEV-verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php.txt |
 | 2026-10-27T14:12:19.3132614Z | verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php | PASS | 113 | catalog\compliance\evidence\o06\20261027T141218777Z-44c392aa-DEV-verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-27T10:53:29.6435155Z | verify-ue1-o06-g3-c227i-four-array-inner-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T105329635Z-07802580-DEV-verify-ue1-o06-g3-c227i-four-array-inner-native.php.txt |
 | 2026-10-27T10:34:02.0585864Z | verify-ue1-o06-g3-02-v227-new-property-inheritance.php | PASS | 128 | catalog\compliance\evidence\o06\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt |
 | 2026-10-27T10:34:01.5016249Z | verify-ue1-o06-g3-02-v227-new-property-inheritance.php | STARTED |  | catalog\compliance\evidence\o06\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt |
-| 2026-10-27T10:25:03.6571850Z | verify-ue1-o06-g3-01-chronological-source-inheritance.php | PASS | 95 | catalog\compliance\evidence\o06\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt |
-| 2026-10-27T10:25:03.1288502Z | verify-ue1-o06-g3-01-chronological-source-inheritance.php | STARTED |  | catalog\compliance\evidence\o06\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt |
 
 ## Recovery procedure
 

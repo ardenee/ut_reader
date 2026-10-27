@@ -5,7 +5,7 @@
   "full_contracts_required": 16,
   "full_contracts_accepted": 2,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 16,
+  "distinct_original_native_source_subproofs": 17,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -128,6 +128,20 @@
       "original_dev_focused_log_sha256": "09dd558899e81946a4bee71b2f4601f56ec30bd58836422b22b33b47ccce8531",
       "independent_new_checks_passed": 27,
       "full_method_acceptance": false
+    },
+    "c227k-original-two-genuine-UButton-FString-serialized-values": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C227K-TWO-GENUINE-UButton-Caption-Serialize.json",
+      "sha256": "3284b2fa98be71cce3815ad4f7df5c74bd14cd3954193548c8fa37fdb49c59bc",
+      "bytes": 3568,
+      "original_REA_compiled_UButton_and_FString_operator": true,
+      "actual_original_ScriptedAI_u_ButtonProperty_saved_values_decoded": 2,
+      "native_in_memory_button_loaded_values_compared": 0,
+      "new_independent_checks_passed": 38,
+      "independent_verifier": "catalog/bin/verify-ue1-o06-g3-c227k-two-real-button-captions.php",
+      "independent_verifier_sha256": "d502d263fa521b6898bb02bc49757bc41f0af56922116de5f12d366160beb462",
+      "scoped_DEV_log": "catalog/compliance/evidence/o06/20261027T143452143Z-c59b159d-DEV-verify-ue1-o06-g3-c227k-two-real-button-captions.php.txt",
+      "scoped_DEV_log_sha256": "84bd3f3c8860482531fde1a79c8bca85d292103f86e8756f24497ce5c2026995",
+      "G3_08_full_method_accepted": false
     }
   },
   "contracts": [
@@ -233,9 +247,10 @@
       "full_status": "OPEN",
       "verified_original_native_subproof_ids": [
         "may-string66",
-        "may-ref600"
+        "may-ref600",
+        "c227k-original-two-genuine-UButton-FString-serialized-values"
       ],
-      "decisive_remaining_requirement": "UT99 469f source adds UPointerProperty, inherited base Serialize and GetID alias NAME_IntProperty. 21 authentic original v69/l0 source .u property declarations now decode under explicit overlay; compiled runtime SerializeItem values not certified. C227k UButton Caption method remains unimplemented for full G3-08."
+      "decisive_remaining_requirement": "NEW actual matching compiled C227k Core.dll UButtonProperty::Serialize and FArchive<<FString decompiled at RVA 0x80010/0x66e40, plus 2 genuine untouched ScriptedAI.u MoveCamButton and MovePointButton Caption source file values accepted by new PHP serializer and 38/38 focused checks. On-disk method branch now implemented fully; native in-memory loaded Captions not captured (227k UCC lacks make/batchexport). Runtime SerializeItem/NetSerializeItem, SAVE and other scalar/string version/error behaviors remain OPEN."
     },
     {
       "id": "G3-09",
@@ -309,9 +324,10 @@
         "c227k-2026-matched-original-FObjectExport-archetype",
         "t99-469f-matched-original-SDK-21-PointerProperty",
         "t99-469f-2026-25-original-compiled-UStruct-loaded-value-members",
-        "t99-469f-native-nine-direct-UStruct"
+        "t99-469f-native-nine-direct-UStruct",
+        "c227k-original-two-genuine-UButton-FString-serialized-values"
       ],
-      "decisive_remaining_requirement": "NEW 469f original x86 engine nine direct file-backed UStruct native LOAD values incl six native child pointer targets; separate original compiled bad FriendlyName exception path. Other G3 class method SAVE/LOAD/error/version branches across C98/T99/C227 remain OPEN."
+      "decisive_remaining_requirement": "NEW original C227k UButton compiled native method body and original FString operator compared to two real original ScriptedAI.u source archive captions. True compiled in-memory loaded Caption values not captured; this is source+compiled-code on-disk parity, not actual loaded-value native acceptance. Other methods, SAVE and malformed/version native behaviors remain OPEN."
     },
     {
       "id": "G3-16",
@@ -404,5 +420,17 @@
     },
     "total_new_one_time_accepted_focused_checks": 162,
     "full_g3_accepted": 2
+  },
+  "latest_G3_08_227k_button_archive_implementation": {
+    "manifest": "catalog/compliance/UE1-O06-G3-C227K-TWO-GENUINE-UButton-Caption-Serialize.json",
+    "manifest_sha256": "3284b2fa98be71cce3815ad4f7df5c74bd14cd3954193548c8fa37fdb49c59bc",
+    "focused_verifier": "catalog/bin/verify-ue1-o06-g3-c227k-two-real-button-captions.php",
+    "new_focused_checks_passed": 38,
+    "original_saved_captions": [
+      "Move point to viewport",
+      "Go to point"
+    ],
+    "native_in_memory_comparison": false,
+    "G3_full_status": 2
   }
 }

@@ -113,13 +113,21 @@ try{
         catch(RuntimeException $e){$notCompleted=true;}
         $check('inherits no additional native bytes, extra byte never reported complete '.$kind,$notCompleted);
     }
-    $button=$inspect('ButtonProperty',69,227,$base,Sources::UNREAL_V227);
-    $check('explicitly new v227 UButtonProperty Serialize override never accepted as bare inherited',
-        $button['status']==='game_defined_buttonproperty_serialize_override_unverified'
-        &&$button['serialized_native_tail_bytes_unverified']===strlen($base)
-        &&$button['runtime_serializeitem_verified']===false);
-    $check('source-defined C227 Button method provenance retained',
-        str_contains((string)($button['source_override']??''),'UButtonProperty::Serialize(FArchive&)'));
+    // Originally this regression documented the then-unverified override.
+    // A genuine matching 227k Core.dll has now proved the exact additional
+    // FString Caption archive, including 2 genuinely shipped ButtonProperty
+    // instances. Retain source isolation and verify the completed serializer.
+    $button=$inspect('ButtonProperty',69,227,$base."\x05Test\x00",Sources::UNREAL_V227);
+    $check('explicit C227 UButtonProperty Serialize reads inherited base AND Caption',
+        $button['status']==='native_buttonproperty_caption_record_complete'
+        &&$button['subclass_fields']['caption']==='Test'
+        &&$button['subclass_fields']['caption_count_signed']===5
+        &&$button['extension_bytes']===0
+        &&$button['new_v227_property_runtime_serializeitem_verified']===false);
+    $check('C227 compiled C++ UButton serializer provenance retained without inventing SerializeItem',
+        $button['subclass_fields']['caption_serialize_source']
+            ==='original-227k-Core-UButtonProperty-Serialize-0x10080010'
+        &&$button['subclass_fields']['runtime_serializeitem_verified']===false);
 }finally{
     foreach($files as $f)@unlink($f);
 }
