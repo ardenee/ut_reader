@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T12:42:45.1538311Z",
-    "head_commit":  "a5b2463d",
+    "updated_at_utc":  "2026-10-27T13:19:59.3849379Z",
+    "head_commit":  "2553b384",
     "current_target":  "DEV",
     "current_source_sha256":  "e33fff73c8c52dc18ddb06994b9817705dfe2c28b1ad624ff363077a8311c73a",
     "tests":  [
@@ -711,6 +711,18 @@
                       "run_id":  "20261026T170606511Z-d227a5c1",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261026T170606511Z-d227a5c1-DEV-verify-ue1-o06-g3-c98-t99-source-inventory.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-t99-469f-25-original-native-struct.php",
+                      "test":  "verify-ue1-o06-g3-t99-469f-25-original-native-struct.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T13:19:59.3648897Z",
+                      "source_sha256":  "e33fff73c8c52dc18ddb06994b9817705dfe2c28b1ad624ff363077a8311c73a",
+                      "test_sha256":  "86e1505dd647bf71878739d2a186200786052ad58556e6ff9557ec55647e1210",
+                      "run_id":  "20261027T131958817Z-db0e0366",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T131958817Z-db0e0366-DEV-verify-ue1-o06-g3-t99-469f-25-original-native-struct.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-t99-469f-matched-sdk-pointer-inherited.php",

@@ -1,0 +1,372 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "source_method": "G3-03 AUTHENTIC OldUnreal UT99 v469f real compiled Core.dll UStruct::Serialize; source compiled uses UField inherited then archives ScriptText, Children, FriendlyName, source Line, TextPos and decoded script bytecode; no CPP recovered.",
+  "proof_type": "actual_original_compiled_engine_runtime_loaded_values_independent_of_PHP",
+  "original_user_supplied_SDK_runtime_assets_sha": {
+    "original_UT99_469f_Core_DLL": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+      "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+      "bytes": 1790328
+    },
+    "original_UT99_469f_Core_U": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.u",
+      "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0",
+      "bytes": 67362
+    },
+    "original_UT99_469f_UCC_EXE": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\UCC.exe",
+      "sha256": "57d23855ca3f45a203458ccf737bae6d62c15c15f3de012c81f2bed12c4998ae",
+      "bytes": 487800
+    },
+    "original_UT99_469f_UnClass_header": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnClass.h",
+      "sha256": "4258b41de0b688afd6e0b72c593f90cb0298a90c1eedefe6b4a4b47bcb91024f",
+      "bytes": 17640
+    }
+  },
+  "original_stock_compiled_CDB_artifacts_sha": {
+    "authentic_469f_CDB_real_loaded_UStruct_transcript": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-T99-469F-G3-03-25-AUTHENTIC-COMPILED-STRUCT-MEMORY.txt",
+      "sha256": "633b688589599a8e5b684604b9a806faf889cc1765e66bbaf3c85214539bd5e7",
+      "bytes": 32340
+    },
+    "authentic_469f_CDB_original_debugger_commands": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-T99-469F-G3-03-25-AUTHENTIC-COMPILED-STRUCT-COMMANDS.txt",
+      "sha256": "cbab27c8f721e661a6dcc1af0bcd41ee593ff45cdf2103599f659650597314ba",
+      "bytes": 367
+    },
+    "authentic_469f_CDB_UStruct_machine_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-T99-469F-G3-03-AUTHENTIC-UStruct-MACHINE-INSTRUCTIONS.txt",
+      "sha256": "83d664fdc17a69bf924beaf956b689f5a9e588036555589a85d5c07327c25f7d",
+      "bytes": 28768
+    }
+  },
+  "isolated_compiled_process_executed": "C:/Temp/UnrealDB/O06/Native-469f/System/UCC.exe make -nobind",
+  "isolation_original_L_source_unmodified": true,
+  "authentic_compiled_core_export_method_name": "Core!UStruct::Serialize",
+  "authentic_export_method_original_PE_address": "0x1004A880",
+  "authentic_compiled_breakpoint_after_all_archive_loaded": "Core!UStruct::Serialize+0x1ea",
+  "original_data_memory_offsets": {
+    "ULinkerLoad_ptr": "UObject+0x10",
+    "OriginalZeroBasedExportIndex": "UObject+0x14",
+    "UStruct_ScriptText": "UStruct+0x34",
+    "UStruct_Children": "UStruct+0x38",
+    "UStruct_FriendlyName": "UStruct+0x44",
+    "UStruct_Script_ByteCount": "UStruct+0x4C",
+    "UStruct_TextPos": "UStruct+0x54",
+    "UStruct_Line": "UStruct+0x58"
+  },
+  "authentic_compiled_loaded_value_records": [
+    {
+      "original_zero_based_Core_u_export_index": 671,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c8ef0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 672,
+      "original_loaded_global_FriendlyName_ID": 1508,
+      "original_loaded_global_ObjectName_ID": 1508,
+      "original_loaded_script_memory_byte_count": 1,
+      "original_loaded_source_text_position": 15961,
+      "original_loaded_source_line_number": 338
+    },
+    {
+      "original_zero_based_Core_u_export_index": 670,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c8f50",
+      "original_loaded_Children_zero_based_Core_u_export_index": 669,
+      "original_loaded_global_FriendlyName_ID": 1509,
+      "original_loaded_global_ObjectName_ID": 1509,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 15912,
+      "original_loaded_source_line_number": 337
+    },
+    {
+      "original_zero_based_Core_u_export_index": 634,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "00000000",
+      "original_loaded_Children_zero_based_Core_u_export_index": null,
+      "original_loaded_global_FriendlyName_ID": 317,
+      "original_loaded_global_ObjectName_ID": 317,
+      "original_loaded_script_memory_byte_count": 2,
+      "original_loaded_source_text_position": 15751,
+      "original_loaded_source_line_number": 333
+    },
+    {
+      "original_zero_based_Core_u_export_index": 633,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "00000000",
+      "original_loaded_Children_zero_based_Core_u_export_index": null,
+      "original_loaded_global_FriendlyName_ID": 316,
+      "original_loaded_global_ObjectName_ID": 316,
+      "original_loaded_script_memory_byte_count": 2,
+      "original_loaded_source_text_position": 15593,
+      "original_loaded_source_line_number": 327
+    },
+    {
+      "original_zero_based_Core_u_export_index": 629,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c8530",
+      "original_loaded_Children_zero_based_Core_u_export_index": 5,
+      "original_loaded_global_FriendlyName_ID": 1261,
+      "original_loaded_global_ObjectName_ID": 1261,
+      "original_loaded_script_memory_byte_count": 11,
+      "original_loaded_source_text_position": 15202,
+      "original_loaded_source_line_number": 312
+    },
+    {
+      "original_zero_based_Core_u_export_index": 777,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c8290",
+      "original_loaded_Children_zero_based_Core_u_export_index": 772,
+      "original_loaded_global_FriendlyName_ID": 1544,
+      "original_loaded_global_ObjectName_ID": 1544,
+      "original_loaded_script_memory_byte_count": 21,
+      "original_loaded_source_text_position": 14965,
+      "original_loaded_source_line_number": 308
+    },
+    {
+      "original_zero_based_Core_u_export_index": 709,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c80b0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 678,
+      "original_loaded_global_FriendlyName_ID": 1513,
+      "original_loaded_global_ObjectName_ID": 1513,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 14825,
+      "original_loaded_source_line_number": 307
+    },
+    {
+      "original_zero_based_Core_u_export_index": 628,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c8050",
+      "original_loaded_Children_zero_based_Core_u_export_index": 675,
+      "original_loaded_global_FriendlyName_ID": 1262,
+      "original_loaded_global_ObjectName_ID": 1262,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 14738,
+      "original_loaded_source_line_number": 306
+    },
+    {
+      "original_zero_based_Core_u_export_index": 627,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "00000000",
+      "original_loaded_Children_zero_based_Core_u_export_index": null,
+      "original_loaded_global_FriendlyName_ID": 1331,
+      "original_loaded_global_ObjectName_ID": 1331,
+      "original_loaded_script_memory_byte_count": 1,
+      "original_loaded_source_text_position": 14667,
+      "original_loaded_source_line_number": 305
+    },
+    {
+      "original_zero_based_Core_u_export_index": 673,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c8e90",
+      "original_loaded_Children_zero_based_Core_u_export_index": 676,
+      "original_loaded_global_FriendlyName_ID": 1507,
+      "original_loaded_global_ObjectName_ID": 1507,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 14607,
+      "original_loaded_source_line_number": 304
+    },
+    {
+      "original_zero_based_Core_u_export_index": 626,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "00000000",
+      "original_loaded_Children_zero_based_Core_u_export_index": null,
+      "original_loaded_global_FriendlyName_ID": 1319,
+      "original_loaded_global_ObjectName_ID": 1319,
+      "original_loaded_script_memory_byte_count": 1,
+      "original_loaded_source_text_position": 14538,
+      "original_loaded_source_line_number": 303
+    },
+    {
+      "original_zero_based_Core_u_export_index": 621,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c8fb0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 15,
+      "original_loaded_global_FriendlyName_ID": 1317,
+      "original_loaded_global_ObjectName_ID": 1317,
+      "original_loaded_script_memory_byte_count": 16,
+      "original_loaded_source_text_position": 14475,
+      "original_loaded_source_line_number": 300
+    },
+    {
+      "original_zero_based_Core_u_export_index": 617,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "067b0d70",
+      "original_loaded_Children_zero_based_Core_u_export_index": 248,
+      "original_loaded_global_FriendlyName_ID": 1318,
+      "original_loaded_global_ObjectName_ID": 1318,
+      "original_loaded_script_memory_byte_count": 11,
+      "original_loaded_source_text_position": 14356,
+      "original_loaded_source_line_number": 299
+    },
+    {
+      "original_zero_based_Core_u_export_index": 614,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c90d0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 280,
+      "original_loaded_global_FriendlyName_ID": 1266,
+      "original_loaded_global_ObjectName_ID": 1266,
+      "original_loaded_script_memory_byte_count": 11,
+      "original_loaded_source_text_position": 14293,
+      "original_loaded_source_line_number": 298
+    },
+    {
+      "original_zero_based_Core_u_export_index": 611,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c91f0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 18,
+      "original_loaded_global_FriendlyName_ID": 1264,
+      "original_loaded_global_ObjectName_ID": 1264,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 14209,
+      "original_loaded_source_line_number": 297
+    },
+    {
+      "original_zero_based_Core_u_export_index": 609,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c92b0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 17,
+      "original_loaded_global_FriendlyName_ID": 1265,
+      "original_loaded_global_ObjectName_ID": 1265,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 14125,
+      "original_loaded_source_line_number": 294
+    },
+    {
+      "original_zero_based_Core_u_export_index": 607,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c9310",
+      "original_loaded_Children_zero_based_Core_u_export_index": 252,
+      "original_loaded_global_FriendlyName_ID": 1267,
+      "original_loaded_global_ObjectName_ID": 1267,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 14070,
+      "original_loaded_source_line_number": 293
+    },
+    {
+      "original_zero_based_Core_u_export_index": 604,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c9370",
+      "original_loaded_Children_zero_based_Core_u_export_index": 253,
+      "original_loaded_global_FriendlyName_ID": 1268,
+      "original_loaded_global_ObjectName_ID": 1268,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 13994,
+      "original_loaded_source_line_number": 290
+    },
+    {
+      "original_zero_based_Core_u_export_index": 600,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "067b0c90",
+      "original_loaded_Children_zero_based_Core_u_export_index": 260,
+      "original_loaded_global_FriendlyName_ID": 1269,
+      "original_loaded_global_ObjectName_ID": 1269,
+      "original_loaded_script_memory_byte_count": 11,
+      "original_loaded_source_text_position": 13938,
+      "original_loaded_source_line_number": 289
+    },
+    {
+      "original_zero_based_Core_u_export_index": 598,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c9490",
+      "original_loaded_Children_zero_based_Core_u_export_index": 599,
+      "original_loaded_global_FriendlyName_ID": 1270,
+      "original_loaded_global_ObjectName_ID": 1270,
+      "original_loaded_script_memory_byte_count": 1,
+      "original_loaded_source_text_position": 13829,
+      "original_loaded_source_line_number": 286
+    },
+    {
+      "original_zero_based_Core_u_export_index": 595,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c94f0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 22,
+      "original_loaded_global_FriendlyName_ID": 1335,
+      "original_loaded_global_ObjectName_ID": 1335,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 13780,
+      "original_loaded_source_line_number": 285
+    },
+    {
+      "original_zero_based_Core_u_export_index": 592,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c95b0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 261,
+      "original_loaded_global_FriendlyName_ID": 1322,
+      "original_loaded_global_ObjectName_ID": 1322,
+      "original_loaded_script_memory_byte_count": 11,
+      "original_loaded_source_text_position": 13718,
+      "original_loaded_source_line_number": 284
+    },
+    {
+      "original_zero_based_Core_u_export_index": 587,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c9670",
+      "original_loaded_Children_zero_based_Core_u_export_index": 256,
+      "original_loaded_global_FriendlyName_ID": 1320,
+      "original_loaded_global_ObjectName_ID": 1320,
+      "original_loaded_script_memory_byte_count": 16,
+      "original_loaded_source_text_position": 13604,
+      "original_loaded_source_line_number": 281
+    },
+    {
+      "original_zero_based_Core_u_export_index": 585,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c97f0",
+      "original_loaded_Children_zero_based_Core_u_export_index": 257,
+      "original_loaded_global_FriendlyName_ID": 1321,
+      "original_loaded_global_ObjectName_ID": 1321,
+      "original_loaded_script_memory_byte_count": 6,
+      "original_loaded_source_text_position": 13505,
+      "original_loaded_source_line_number": 280
+    },
+    {
+      "original_zero_based_Core_u_export_index": 582,
+      "original_loaded_Linker_pointer_hex": "067d9250",
+      "original_loaded_ScriptText_object_pointer_hex": "00000000",
+      "original_loaded_Children_object_pointer_hex": "066c9850",
+      "original_loaded_Children_zero_based_Core_u_export_index": 28,
+      "original_loaded_global_FriendlyName_ID": 760,
+      "original_loaded_global_ObjectName_ID": 760,
+      "original_loaded_script_memory_byte_count": 11,
+      "original_loaded_source_text_position": 13445,
+      "original_loaded_source_line_number": 279
+    }
+  ],
+  "authentic_native_total_file_backed_compiled_events": 25,
+  "authentic_native_children_loaded_source_export_refs": 21,
+  "archived_package_format": 69,
+  "archived_licensee_version": 0,
+  "type_scope": "UStruct::Serialize inherited prefix of 25 real original Core.u Function objects; not all UClass or direct UStruct types, nor G3-04 UFunction subclass fields",
+  "runtime_script_byte_counts_only_not_complete_bytecode_semantics": true,
+  "no_UT99_v432_original_compiled_equivalence_inferred": true,
+  "G3_03_FULL_accepted": false,
+  "G3_04_FULL_accepted": false,
+  "G3_15_FULL_accepted": false
+}

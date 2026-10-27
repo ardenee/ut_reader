@@ -1,0 +1,6 @@
+r $t0 = 0
+bp Core!UStruct::Serialize+0x1ea ".if (poi(@edi+0x10) != 0) { r $t0 = @$t0+1; .if (@$t0 <= 0n25) { .echo G3_03_469F_REAL_NATIVE_STRUCT_SOURCE; dd @edi+10 L19; .if (poi(@edi+0x38) != 0) { .echo G3_03_469F_REAL_NATIVE_CHILD_TARGET; dd poi(@edi+0x38)+0x10 L2; }; }; .if (@$t0 == 0n25) {bc 0;}; }; gc"
+g
+.echo G3_03_469F_REAL_NATIVE_LOADED_FIELDS_DONE
+r $t0
+q

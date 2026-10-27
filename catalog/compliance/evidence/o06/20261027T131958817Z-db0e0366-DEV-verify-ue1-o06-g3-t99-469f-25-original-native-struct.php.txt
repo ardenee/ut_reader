@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 298,
+    "passed": 298,
+    "failed": [],
+    "source": "original genuine 2026 UT99 469f Core.u",
+    "actual_native_loaded_UStruct_prefix_matches": 25,
+    "actual_native_loaded_Children_targets_matches": 21,
+    "source_line_and_text_position_and_script_count_matches": 25,
+    "native_debugger_execution_orig_source_L_unchanged": true,
+    "C98_and_original_v432_and_C227_per_build_native_parity_newly_certified": false,
+    "G3_03_method_full_accepted": false
+}
