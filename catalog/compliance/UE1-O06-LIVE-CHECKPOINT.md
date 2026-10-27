@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-04-c98-may17-original-native-function-state-256`
-- **Stage:** G3-04-C98-256-2045-DEV-PASS-PRD-17-17-SHA
-- **Last completed action:** New C98 G3-04 exact original compiled 256 UFunction/UState/UClass method events, 1513 distinct saved loaded native fields all match reader, 2045/2045 dedicated DEV scoped PASS, raw original CDB SHA proof and parser committed/pushed GitHub e26d7d97. DEV-to-PRD changed artifact SHA-256 17/17 identical, protected config/storage untouched, no PRD tests. Native subproof coverage 11/16; G3 FULL remains5/16 and G3-04 OPEN. No earlier native suites repeated.
-- **Resume at:** Next distinct G3-04 acceptance: original v432/469f and C227 function/state method SAVE+LOAD profiles and per-version/error cursor; do not re-run C98 256 method trace or any sealed G3-03 suites. Consolidate a whole method acceptance before declaring FULL, otherwise record explicit remaining blockers.
-- **Active changed at:** 2026-10-27T21:28:20+00:00
-- **Latest DEV test states:** PASS 193; FAIL 1; STARTED 0
+- **Contract:** `g3-04-t99-v432-native-function-property-linked-load-650`
+- **Stage:** G3-04-V432-650-NATIVE-6473-DEV-PASS-READY-RELEASE
+- **Last completed action:** VERIFIED genuine original UT99 v432 compiled x86 Core.dll exact 650 file-backed UFunction/UState original Core.u+Engine.u method events. Found source parity defect: current reader did not reconstruct THREE postload UFunction parameter fields for 619 functions. Source-gated CatalogUE1ClassicFunctionLinkReader plus NativeObjectReader v432-only branch models exact UProperty child, alignment, source-defined intrinsic primitive sizes, fails closed foreign/import/unknown. New SHA-pinned native regression passed 6473/6473 DEV with 2025 persisted +1857 newly reconstructed postload fields =3882/3882 genuine compiler bytes/loaded values, incl44 networked functions and31 UState/UClass. Original compiled source, DLL, UCC, packages and 4 evidence files SHA pinned; no original C98 256 / G3-03 / G5 repeated. Live G3 remains 5/16 full, original compiled evidence now29, 11/16 with native subproof.
+- **Resume at:** Commit/push source implementation, new focused verifier, original CDB log+command+parser+650 parsed records, canonical status/live checkpoint; SHA-deploy changed files to PRD without PHP execution. Next work G3-04 469f and C227 original method variants, SAVE and malformed cursor, not repeat completed v432 650 or C98 256.
+- **Active changed at:** 2026-10-27T22:12:13+00:00
+- **Latest DEV test states:** PASS 194; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T22:10:47.0565520Z | verify-ue1-o06-g3-04-v432-function-link-native.php | PASS | 672 | catalog\compliance\evidence\o06\20261027T221045979Z-f855d1b4-DEV-verify-ue1-o06-g3-04-v432-function-link-native.php.txt |
+| 2026-10-27T22:10:45.9875862Z | verify-ue1-o06-g3-04-v432-function-link-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T221045979Z-f855d1b4-DEV-verify-ue1-o06-g3-04-v432-function-link-native.php.txt |
 | 2026-10-27T21:25:23.4946391Z | verify-ue1-o06-g3-04-c98-native-function-state.php | PASS | 210 | catalog\compliance\evidence\o06\20261027T212522878Z-2d145d5e-DEV-verify-ue1-o06-g3-04-c98-native-function-state.php.txt |
 | 2026-10-27T21:25:22.8866459Z | verify-ue1-o06-g3-04-c98-native-function-state.php | STARTED |  | catalog\compliance\evidence\o06\20261027T212522878Z-2d145d5e-DEV-verify-ue1-o06-g3-04-c98-native-function-state.php.txt |
 | 2026-10-27T21:08:32.2643067Z | verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php | PASS | 227 | catalog\compliance\evidence\o06\20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-27T17:41:50.0206654Z | verify-ue1-o06-g3-08-real-227k-native-Any-NAME5-zero.php | STARTED |  | catalog\compliance\evidence\o06\20261027T174150013Z-0cd55989-DEV-verify-ue1-o06-g3-08-real-227k-native-Any-NAME5-zero.php.txt |
 | 2026-10-27T17:29:07.8258819Z | verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php | PASS | 93 | catalog\compliance\evidence\o06\20261027T172907299Z-3ca3d406-DEV-verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php.txt |
 | 2026-10-27T17:29:07.3078557Z | verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php | STARTED |  | catalog\compliance\evidence\o06\20261027T172907299Z-3ca3d406-DEV-verify-ue1-o06-g3-08-c227k-real-native-Any-STRING4.php.txt |
-| 2026-10-27T16:58:14.2435925Z | verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php | PASS | 177 | catalog\compliance\evidence\o06\20261027T165813475Z-fe58ae3f-DEV-verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php.txt |
-| 2026-10-27T16:58:13.4845565Z | verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php | STARTED |  | catalog\compliance\evidence\o06\20261027T165813475Z-fe58ae3f-DEV-verify-ue1-o06-g3-08-native-227k-real-Any-0to3.php.txt |
 
 ## Recovery procedure
 

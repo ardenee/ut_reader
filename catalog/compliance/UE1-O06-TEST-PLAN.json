@@ -1418,6 +1418,20 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-t99-v432-native-function-property-linked-load-650": {
+      "description": "NEW original UT99 v432 compiled x86 Core.dll/UCC.exe native actual UFunction::Serialize and UState::Serialize. One 650-event original Core.u/Engine.u debugger run: 619 UFunction, 31 UState/UClass, 44 networked functions. All 2025 persisted method fields match previous PHP. Concrete missing reader behavior: three original UT99 function post-load fields recomputed from Children properties were NULL for all 619, versus native 1857 actual loaded values. New source-gated CatalogUE1ClassicFunctionLinkReader traces source-valid original own UProperty chain with exact primitive Core.Struct Vector/Rotator/Color sizes, bool and array alignment and fail-closed unknown. Full 1857/1857 new loaded fields equal original compiled Core, 3882/3882 total actual native fields. Original compiled CDB log, command, parser and 650 records SHA-pinned with source/binary hashes; 469f overlay excluded pending its own compiled proof. Earlier May1998 C98 256 originals and C227 evidence not rerun. Full G3-04 remains OPEN for other versions, SAVE and malformed cursor.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicFunctionLinkReader.php",
+        "CatalogUE1ClassicStructNativeReader.php",
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-v432-function-link-native.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

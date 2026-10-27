@@ -211,6 +211,18 @@ final class CatalogUE1ClassicNativeObjectReader
                             ?CatalogUE1ClassicSourceFamily::UT99_V469F:$family)
                     :CatalogUE1ClassicStructNativeReader::inspect(
                         $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
+                // UT99 v432 UFunction::Serialize recomputes loaded parameter
+                // fields from the linked Children UProperty chain. Derive
+                // source-proven values without fabricating runtime pointers;
+                // keep unresolved fields null for any unknown member layout.
+                if($nativeKind==='function'
+                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&$sourceFamily!==CatalogUE1ClassicSourceFamily::UT99_V469F
+                    &&($detail['status']??null)==='native_function_record_complete'){
+                    $detail=array_replace($detail,
+                        CatalogUE1ClassicFunctionLinkReader::recompute(
+                            $path,$pkg,$index,$detail));
+                }
                 return $completeG3($detail);
             }
             if($nativeKind==='primitive'){
