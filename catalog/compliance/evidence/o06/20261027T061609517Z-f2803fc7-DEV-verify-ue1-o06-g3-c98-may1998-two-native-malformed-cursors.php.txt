@@ -1,0 +1,21 @@
+﻿{
+    "ok": true,
+    "checks": 55,
+    "passed": 55,
+    "errors": [],
+    "original_source_package_sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c",
+    "original_compiled_Core_sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+    "mutations": {
+        "PropertyClass_minus63": {
+            "source_error": "Invalid UObjectProperty.PropertyClass package reference",
+            "native_cursor": 3573
+        },
+        "MetaClass_zero": {
+            "source_error": "UClassProperty MetaClass must be non-null",
+            "native_cursor": 3574
+        }
+    },
+    "real_compiled_original_fatal_branches": 2,
+    "this_does_not_accept_G3_14_or_G3_16": true,
+    "G3_FULL": false
+}

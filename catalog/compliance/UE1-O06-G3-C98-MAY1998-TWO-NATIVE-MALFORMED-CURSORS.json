@@ -1,0 +1,145 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "status": "ORIGINAL_COMPILED_C98_MAY17_TWO_DISTINCT_MALFORMED_SOURCE_NATIVE_FAILURE_CURSORS_VERIFIED",
+  "scope": "2 one-byte original Core.u export4 ClassProperty ObjectClass malformed input variants isolated from original May17 stock Unreal executable. Corrupted PropertyClass imported index -63 fails in source inherited property reference load at original physical cursor3573; null MetaClass fails one byte later at check(MetaClass) original compiled cursor3574. Independent PHP reader likewise fatal. No other error branches, source profiles or full G3 certified.",
+  "original_untouched_original_package_sha": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c",
+  "original_native_Core_dll_May17_sha": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+  "original_stock_package_header_version": 61,
+  "original_untouched_Core_imports": 16,
+  "original_Core_property_export": {
+    "export_index_0based": 4,
+    "object_name": "ObjectClass",
+    "serialized_class": "ClassProperty",
+    "serial_offset": 3559,
+    "serial_size": 15,
+    "original_serial_bytes_hex": "000045070100000080000000008c01"
+  },
+  "isolated_mutations_one_byte_diff_from_unmodified_original": {
+    "PropertyClass_minus63": {
+      "filename": "isolated_invalid_PropertyClass_Core_u",
+      "absolute_byte_offset": 3572,
+      "old_byte": "8c",
+      "new_byte": "bf",
+      "original_archive_reference": -12,
+      "mutated_archive_reference": -63,
+      "expected_original_fatal_archive_cursor": 3573,
+      "source_action": "UObjectProperty::Serialize inherited from UClassProperty, Ar << PropertyClass; invalid signed compact package import index before MetaClass serialization"
+    },
+    "MetaClass_zero": {
+      "filename": "isolated_MetaClass_null_Core_u",
+      "absolute_byte_offset": 3573,
+      "old_byte": "01",
+      "new_byte": "00",
+      "original_archive_reference": 1,
+      "mutated_archive_reference": 0,
+      "expected_original_fatal_archive_cursor": 3574,
+      "source_action": "UClassProperty::Serialize calls UObjectProperty::Serialize, Ar << MetaClass; check(MetaClass) fatal after byte read"
+    }
+  },
+  "original_oracle_and_mutant_file_pins": {
+    "original_stock_May17_Core_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    },
+    "original_untouched_Core_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+    },
+    "original_stock_Unreal_exe": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Unreal.exe",
+      "bytes": 24576,
+      "sha256": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30"
+    },
+    "isolated_MetaClass_null_Core_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\G3-negative-MetaClass0\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "fe0c89d3ea1a5ce61b2edc7094470e599607cad26cdd2515e45ff8fe0d3559a6"
+    },
+    "isolated_invalid_PropertyClass_Core_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\G3-negative-InvalidPropertyClass\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "2f42be8d990db4073eac537fac553a6906b606311097797283fad1df94d0140e"
+    },
+    "isolated_MetaClass_compiled_Core_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\G3-negative-MetaClass0\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    },
+    "isolated_invalid_PropertyClass_compiled_Core_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\G3-negative-InvalidPropertyClass\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    }
+  },
+  "Epic_v1200_source_pins": {
+    "Epic_May19_UnProp_cpp": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnProp.cpp",
+      "bytes": 20022,
+      "sha256": "512de89b03aa6c3ab3ec2ba8b3b704d0d8839a5297e5a2271a7fe2782c26c52b"
+    },
+    "Epic_May19_UnLinker_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h",
+      "bytes": 30359,
+      "sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f"
+    },
+    "Epic_May19_UnArc_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnArc.h",
+      "bytes": 4243,
+      "sha256": "a4bff6341ee2ecc9467d4902d60cf9ad1d723b6350e5b9510603773558a37c89"
+    }
+  },
+  "original_x86_CDB_real_failure_cursor_logs_and_commands": {
+    "source_native_MetaClass_null_fatal_log": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-METACLASS-NULL-STOCK-ERROR-CDB.txt",
+      "bytes": 17362,
+      "sha256": "0e86f66dfdff918eba640aad11300ebd04084e94efc0dcb702f9895a4c61f286"
+    },
+    "source_native_MetaClass_null_fatal_cmd": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-METACLASS-NULL-STOCK-ERROR-CDB-COMMANDS.txt",
+      "bytes": 247,
+      "sha256": "d225243d77c69ea730603fa6fe68f65c8e4d04b372ceb9d7ee1b3e01aaa7d6e7"
+    },
+    "source_native_MetaClass_null_cursor_log": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-METACLASS-NULL-EXACT-CURSOR-CDB.txt",
+      "bytes": 14204,
+      "sha256": "1055d144f9d60725a5b80bb3639be1b06f37a3aa6997c8d45e004737c437c675"
+    },
+    "source_native_MetaClass_null_cursor_cmd": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-METACLASS-NULL-EXACT-CURSOR-CDB-COMMANDS.txt",
+      "bytes": 274,
+      "sha256": "6d51e0e05668f979f8026d65ebd942a2f19ca782cd8caa94bf141520a387451f"
+    },
+    "source_native_invalid_PropertyClass_fatal_log": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-INVALID-PROPERTYCLASS-STOCK-ERROR-CDB.txt",
+      "bytes": 18512,
+      "sha256": "55b22665e3351269a120eb872ec2037b3c789dcb9092a530b772ff30fd3f3927"
+    },
+    "source_native_invalid_PropertyClass_fatal_cmd": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-INVALID-PROPERTYCLASS-STOCK-ERROR-CDB-COMMANDS.txt",
+      "bytes": 271,
+      "sha256": "a1157c195ebba0fe37c3826ab6df9c4f6d9ef664ff94c85482a930c87126de46"
+    },
+    "source_native_invalid_PropertyClass_cursor_log": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-INVALID-PROPERTYCLASS-EXACT-CURSOR-CDB.txt",
+      "bytes": 15244,
+      "sha256": "7a57e2f197424903faca279450a9953745b14d27d7bfda7528f58095fbfeb722"
+    },
+    "source_native_invalid_PropertyClass_cursor_cmd": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C98-MAY-INVALID-PROPERTYCLASS-EXACT-CURSOR-CDB-COMMANDS.txt",
+      "bytes": 251,
+      "sha256": "2895a43c65cec36301100d83885b3510f49deff4d1201cea5dcef7485f81d927"
+    }
+  },
+  "native_May_UClassProperty_body": "0x101433f0",
+  "native_May_UClassProperty_MetaClass_loaded_guard": "0x1014342d",
+  "native_May_UClassProperty_MetaClass_zero_fail_path": "0x10143432",
+  "native_May_UClassProperty_MetaClass_fatal_appErrorf_site": "0x10143456",
+  "native_invalid_negative_reference_compiled_Core_appErrorf": "0x1010146a",
+  "native_invalid_negative_reference_argument_hexdword": "ffffffc1",
+  "original_Core_u_untouched_after_tests": true,
+  "required_php_reader_contract": "catalog/bin/verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php",
+  "G3_full_contracts_accepted": 0
+}
