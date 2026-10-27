@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-03-c227i-real-237-struct-223-script-loaded-native-memory`
-- **Stage:** passed-focus
-- **Last completed action:** All selected focus DEV verification results PASS or matching PASS cache reused
-- **Resume at:** Inspect acceptance limits, update source contract documentation, then commit and hash-deploy if complete
-- **Active changed at:** 2026-10-27T18:25:32+00:00
+- **Stage:** G3-03-2012-C227I-237-223-NATIVE-SCRIPTS-4412-PASS-PRD-SHA-VERIFIED
+- **Last completed action:** G3-03 original genuine 2012 shipped Core.dll original compiled UStruct::Serialize native after-load CDB for 237 genuine Core.u original file-backed objects, 223 nonzero UFunction native Script.TArray buffers and 14 zero scripts, 232 Children ptrs dereferenced to real same-linker export index. Second independently executed native x86 method call captured 223 true in-memory script arrays, and 646 deterministically non-relocated script bytes byte-for-byte matched production current source decoder, FName/UObject native pointers process-specific excluded; original C227i source TextPos/Line signed INT 0xffffffff=-1 corrected test representation. ONE new 4412/4412 independent DEV scoped PASS no old tests replayed, no UnrealDB code changes needed because all matched. Original Core.dll/u/UCC binaries SHA and six real CDB scripts, UTF16 original logs and native parse register SHA retained and Git tracked. Current new original native source subproof26, full G3 remains5/16 and G3-03 OPEN for original C98/T99 v432+469f and C227k variants, actual SAVE, native malformed/physical Tell. GitHub release24954c8b pushed and changed catalog PRD SHA22/22, protected config/storage. Final checkpoint next.
+- **Resume at:** Try original shipped C98 May1998 UStruct native x86 compiled source and genuine package in isolated disposable original retail executable; do not rerun accepted C98 prior positive evidence, run only new script-loaded-field oracle. Also original UT99 v432 vs 469f positive scripted structs and C227k variant, then malformed and physical archive Tell/SAVE unique new behavior to close full G3-03. Retain 2012 C227i original 237/223 proof and test without rerun.
+- **Active changed at:** 2026-10-27T18:29:23+00:00
 - **Latest DEV test states:** PASS 190; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
