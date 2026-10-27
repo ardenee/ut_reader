@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-c227i-ufield-original-915-compiled-super-next-identities`
-- **Stage:** G3-LIVE-16-CLOSURE-REGISTER-DECISIVE-EXIT-CRITERIA-SEALED
-- **Last completed action:** Stopped repeating original positive evidence without contract closure: existing pre-execution G3 matrix is PLANNED (not actual live gate), 16 full contracts all source-profile-gated, later C227 matching Core source/method body absent and 14/57 2012 vs later ABI symbol differences. New live closure register enumerates all 16 exact decisive remaining requirements and recognizes 8/16 contracts with genuine compiled original native evidence across 10 distinct sealed proof manifests. Every proof manifest independently SHA verified. No full G3 acceptance claimed, no old positive tests rerun and no production decoder modified.
-- **Resume at:** Resolve G3-01/02 original v227 build-matched source/native implementation or source-defined exclusions FIRST (root blocker), then finish per-contract precise remaining branch in UE1-O06-G3-LIVE-CLOSURE-STATUS.md. Do not generate another positive sample without retiring a specific listed remaining G3 full exit criterion. Whole G3 remains 0/16.
-- **Active changed at:** 2026-10-27T10:03:26+00:00
+- **Stage:** G3-LIVE-16-CONTRACT-CLOSURE-REGISTER-PRD-SHA-VERIFIED
+- **Last completed action:** New current G3 closure register records each of 16 exact decisive missing obligations, with 10 SHA-pinned authentic original compiled native proof manifests affecting 8/16 contract categories; full G3 remains genuinely 0/16 because all are combined C98/T99v432/C227 full gates. Identified central later C227 Core implementation and 14/57 ABI source-symbol differences as priority, not another isolated positive test. Release 44366b7a pushed GitHub main, 7/7 changed files SHA verified on PRD. Older G3 acceptance matrix deliberately retained as pre-execution PLAN, now linked live ledger in PROJECT-STATUS and OPEN-CONTRACTS. No previous native positive tests rerun or production parser changes.
+- **Resume at:** G3-01 then G3-02: get exact later C227 build-matched Core implementation or compiled symbol oracle matching ALL 57 Core.lib exports, formally reconcile 14 older-ABI differences and actual original source definitions; then retire each discrete remaining item in live per-contract closure register. Stop adding another positive-only batch unless it closes a listed full-contract exit criterion.
+- **Active changed at:** 2026-10-27T10:04:01+00:00
 - **Latest DEV test states:** PASS 171; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
