@@ -240,12 +240,16 @@ final class CatalogUE1ClassicScriptArchiveReader
                     case 0x0f: // Let/assignment.
                         $children(2);
                         break;
-                    case 0x10: // UT99 DynArrayElement.
-                        if (!$modern) { $unsupported = 'Unreal 1998 token 0x10 not defined'; break; }
+                    case 0x10: // UT99 DynArrayElement, invalid in original 1998 Unreal.
+                        if (!$modern) {
+                            throw new RuntimeException(sprintf('UE1 Bad expr token %02x at archive cursor %d', $token, $position));
+                        }
                         $children(2);
                         break;
-                    case 0x11: // UT99 New, four expressions.
-                        if (!$modern) { $unsupported = 'Unreal 1998 token 0x11 not defined'; break; }
+                    case 0x11: // UT99 New, invalid in original 1998 Unreal.
+                        if (!$modern) {
+                            throw new RuntimeException(sprintf('UE1 Bad expr token %02x at archive cursor %d', $token, $position));
+                        }
                         $children(4);
                         break;
                     case 0x12: case 0x19: // ClassContext/Context.

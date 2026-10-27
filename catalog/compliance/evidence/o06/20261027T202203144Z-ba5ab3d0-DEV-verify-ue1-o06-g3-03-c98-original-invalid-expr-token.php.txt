@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "checks": 23,
+    "failed": [],
+    "profile": "authentic original May17 1998 C98 and May19 v1.200 source",
+    "native_error": "Bad expr token 10",
+    "native_archive_cursor": 24238,
+    "original_reader_error": "source-invalid opcode throws at same physical archive cursor",
+    "previously_sealed_native_proofs_reexecuted": 0,
+    "G3_03_full": "OPEN"
+}

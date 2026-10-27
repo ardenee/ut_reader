@@ -1393,6 +1393,17 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-03-c98-may17-original-bad-expr10-native-cursor": {
+      "description": "One NEW genuine original 1998 native malformed EndState UStruct script: one byte offset24237 source token 0x14 -> source-invalid 0x10, actual original shipped Core.dll appErrorf Bad expr token 10 with live FArchive Tell=24238. Fix original Unreal 1998 script source token 0x10 and similarly source-invalid 0x11 to fail immediately rather than falsely returning script_archive_token_unimplemented. Source-valid but unimplemented opcodes remain partial; original Core.u, DLL, executable and original source SHA-pinned. Original CDB log/command SHA pinned. No previous 100/96 C98 or 237/223 C227i native tests reexecuted. G3-03 and G3-14 remain OPEN for other malformed/version/source profiles.",
+      "readers": [
+        "CatalogUE1ClassicScriptArchiveReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

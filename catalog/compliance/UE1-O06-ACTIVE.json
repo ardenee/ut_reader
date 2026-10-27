@@ -1,7 +1,7 @@
 {
-  "contract": "g3-03-c98-may17-original-retail-100-UStruct-96-native-script-loaded",
-  "stage": "G3-03-C98-COREOBJECT-CONTEXT-DIFFERENCE-EXPLAINED",
-  "last_action": "New genuine May1998 original UStruct native Class Object ScriptText 231 serialized -> runtime NULL due TextBuffer2 edit-only load context 0x00340000; EndState 457 remains nonnull with 0x00070004 server enabled. CDB native before/after and source pins recorded, current UnrealDB preserves saved references and already marks runtime_refs_resolved=false; no PHP bug. Temporary 1998 CD mount N removed, disposable ini switched to user mounted O backed up; no original binaries changed. No accepted old suites rerun.",
-  "next_step": "Full G3-03 still requires native SAVE/malformed exact cursor and remaining compiled source lineages, G3-15 separately runtime linker identity. Do not repeat C98 100/96 or C227i 237/223.",
-  "updated_at_utc": "2026-10-27T19:02:22+00:00"
+  "contract": "g3-03-c98-may17-original-bad-expr10-native-cursor",
+  "stage": "G3-03-C98-INVALID-OPCODE10-ORIGINAL-NATIVE-CURSOR-23-PASS",
+  "last_action": "Fixed reproducible real product divergence: malformed source-invalid C98 UStruct script opcode0x10 original shipped Core.dll appErrorf at FArchive Tell24238; UnrealDB previously returned script_archive_token_unimplemented, now throws after consuming opcode, including source-equivalent 0x11, modern source retains existing handling. New original genuine + one-byte mutation CDB SHA-pinned and one new scoped 23/23 DEV PASS with all older suites untouched. Docs/source/test status updated; G3 remains5/16.",
+  "next_step": "Release and verify SHA identity DEV to PRD for this verified reader plus compliance, no PRD PHP tests; after release choose the next genuinely missing full G3-03 native SAVE/malformed or G3-04 original function/state contract, never repeat C98 positive 100/96 or C227i 237/223.",
+  "updated_at_utc": "2026-10-27T20:24:16+00:00"
 }
