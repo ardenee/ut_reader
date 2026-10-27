@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "contract": "G3-03 negative genuine original compiled UT99 469f direct UStruct::Serialize",
+  "true_original_user_source_Core_u": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.u",
+    "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0",
+    "bytes": 67362
+  },
+  "true_original_469f_compiled_Core_DLL": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+    "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "bytes": 1790328
+  },
+  "true_original_469f_UCC_exe": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\UCC.exe",
+    "sha256": "57d23855ca3f45a203458ccf737bae6d62c15c15f3de012c81f2bed12c4998ae",
+    "bytes": 487800
+  },
+  "original_compiled_winDBG_evidence": {
+    "original_compiled_malformed_name_CDB_output": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-T99-469F-ORIGINAL-COMPILED-Bad-FriendlyName-CDB.log",
+      "sha256": "46d1f2145cb88ae8e2fee9f13db8896da1d63f77fe2758d40859bb1c8204aace",
+      "bytes": 15640
+    },
+    "original_compiled_malformed_name_CDB_script": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-T99-469F-ORIGINAL-COMPILED-Bad-FriendlyName-CDB.cmd",
+      "sha256": "75018cfc6d704948df3261e89952c16b055d846f766639a4009083858b377531",
+      "bytes": 136
+    }
+  },
+  "isolation_path": "C:/Temp/UnrealDB/O06/Native-469f-Malformed-FriendlyName/System/Core.u",
+  "isolated_genuine_original_first_compiled_delta_byte": 7541,
+  "original_byte_value_hex": "4f",
+  "isolated_corrupted_byte_value_hex": "00",
+  "genuine_export_zero_based_index": 53,
+  "genuine_export_name": "BoundingBox",
+  "export_archive_serial_offset": 7533,
+  "export_archive_serial_size": 22,
+  "tagged_UObject_envelope_end": 7535,
+  "file_offset_of_encoded_FName_FriendlyName": 7541,
+  "genuine_original_compact_FName_bytes": "4f01",
+  "original_compact_FName_index": 79,
+  "isolated_mutated_FName_bytes": "0001",
+  "compiled_native_Archive_reads_one_byte_NAME_None_then_asserts_before_following_byte": true,
+  "original_source_package_did_not_change": true,
+  "isolated_mutant_SHA256": "ba37ec4078718b9ae6dcdcc9a47b55326df0b67f0b9abb748947f425e0d0ac2b",
+  "isolated_mutant_bytes": 67362,
+  "byte_delta_exactly_single_character": true,
+  "native_original_process": "C:/Temp/UnrealDB/O06/Native-469f-Malformed-FriendlyName/System/UCC.exe make -nobind",
+  "compiled_call_chain": [
+    "Core!ULinkerLoad::Preload+0x128",
+    "Core!UStruct::Serialize+0x85",
+    "Core!appFailAssert"
+  ],
+  "compiled_exception_text": "Assertion failed: FriendlyName!=NAME_None",
+  "original_compiled_source_line": 840,
+  "original_compiled_error_caught": true,
+  "original_PHP_negative_expected": "UStruct FriendlyName cannot be NAME_None",
+  "error_cursor_original_compiled_Tell_in_debugger_verified": false,
+  "full_G3_03_method_accepted": false
+}

@@ -1,0 +1,193 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "original_engine": "Genuine OldUnreal UT99 v469f original shipped x86 Core.dll and original Core.u package",
+  "source_binary_SHA256_identity": {
+    "true_original_469f_Core_DLL": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+      "bytes": 1790328,
+      "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+    },
+    "true_original_469f_Core_u": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.u",
+      "bytes": 67362,
+      "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0"
+    },
+    "true_original_469f_UCC_exe": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\UCC.exe",
+      "bytes": 487800,
+      "sha256": "57d23855ca3f45a203458ccf737bae6d62c15c15f3de012c81f2bed12c4998ae"
+    },
+    "true_original_469f_SDK_UnClass_header": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnClass.h",
+      "bytes": 17640,
+      "sha256": "4258b41de0b688afd6e0b72c593f90cb0298a90c1eedefe6b4a4b47bcb91024f"
+    }
+  },
+  "original_compiled_debugger_evidence": {
+    "actual_original_compiled_direct_UStruct_0_1_32_CDB_log": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-T99-469F-DIRECT-UStruct-THREE-ORIGINAL-CDB.log",
+      "bytes": 14532,
+      "sha256": "cbea2aacdc72837accc7abc8995395e119b6f5455f84e54492728aae4e723f01"
+    },
+    "actual_original_compiled_direct_UStruct_remaining_6_CDB_log": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-T99-469F-DIRECT-UStruct-SIX-ORIGINAL-CDB.log",
+      "bytes": 20446,
+      "sha256": "d638c1593f9ab5b925a8d5f0c0d180d4cbc636e0d3235174e1762843418ca4b2"
+    },
+    "original_direct_UStruct_3_CDB_command": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-T99-469F-DIRECT-UStruct-THREE-COMMAND.txt",
+      "bytes": 379,
+      "sha256": "8026510237301b45c4792aee56540b5543f7ee42953330d0c3cdc5f3069cf7f5"
+    },
+    "original_direct_UStruct_6_CDB_command": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-03-T99-469F-DIRECT-UStruct-SIX-COMMAND.txt",
+      "bytes": 1967,
+      "sha256": "fd822b07351ecea385c03c7664f1a3681381c2af9741ce3a6dbaa87777187ada"
+    }
+  },
+  "original_compiled_x86_method": "Core!UStruct::Serialize",
+  "original_compiled_method_original_PE_address": "0x1004A880",
+  "compiled_breakpoint_after_method_finished": "Core!UStruct::Serialize+0x1EA",
+  "method_compiled_load_scope": "Nine actual native direct UStruct object types, not UFunction-derived instances, captured in real isolated original UCC.exe make -nobind. v69/licensee0 source profile explicitly UT99 v469f.",
+  "original_native_DIRECT_UStruct_original_Core_u_records": [
+    {
+      "original_Core_u_export_index_zero_based": 0,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_0_1_32_CDB_log",
+      "original_compiled_linker_hex": "06309250",
+      "actual_native_global_object_name_id": 87,
+      "actual_native_global_friendly_name_id": 87,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "061fb530",
+      "actual_native_Children_export_index_if_dereferenced": null,
+      "native_Children_dereference_observed": false,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 1,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_0_1_32_CDB_log",
+      "original_compiled_linker_hex": "06309250",
+      "actual_native_global_object_name_id": 88,
+      "actual_native_global_friendly_name_id": 88,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "061fb410",
+      "actual_native_Children_export_index_if_dereferenced": null,
+      "native_Children_dereference_observed": false,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 32,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_0_1_32_CDB_log",
+      "original_compiled_linker_hex": "06309250",
+      "actual_native_global_object_name_id": 91,
+      "actual_native_global_friendly_name_id": 91,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "061ffe50",
+      "actual_native_Children_export_index_if_dereferenced": null,
+      "native_Children_dereference_observed": false,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 53,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_remaining_6_CDB_log",
+      "original_compiled_linker_hex": "06aa9250",
+      "actual_native_global_object_name_id": 1289,
+      "actual_native_global_friendly_name_id": 1289,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "06a84ab0",
+      "actual_native_Children_export_index_if_dereferenced": 478,
+      "native_Children_dereference_observed": true,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 486,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_remaining_6_CDB_log",
+      "original_compiled_linker_hex": "06aa9250",
+      "actual_native_global_object_name_id": 1293,
+      "actual_native_global_friendly_name_id": 1293,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "06a84c00",
+      "actual_native_Children_export_index_if_dereferenced": 515,
+      "native_Children_dereference_observed": true,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 535,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_remaining_6_CDB_log",
+      "original_compiled_linker_hex": "06aa9250",
+      "actual_native_global_object_name_id": 90,
+      "actual_native_global_friendly_name_id": 90,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "0699feb0",
+      "actual_native_Children_export_index_if_dereferenced": 293,
+      "native_Children_dereference_observed": true,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 546,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_remaining_6_CDB_log",
+      "original_compiled_linker_hex": "06aa9250",
+      "actual_native_global_object_name_id": 1237,
+      "actual_native_global_friendly_name_id": 1237,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "069b2840",
+      "actual_native_Children_export_index_if_dereferenced": 46,
+      "native_Children_dereference_observed": true,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 551,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_remaining_6_CDB_log",
+      "original_compiled_linker_hex": "06aa9250",
+      "actual_native_global_object_name_id": 93,
+      "actual_native_global_friendly_name_id": 93,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "06a84e30",
+      "actual_native_Children_export_index_if_dereferenced": 550,
+      "native_Children_dereference_observed": true,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    },
+    {
+      "original_Core_u_export_index_zero_based": 590,
+      "original_native_compiled_source_CDB_log": "actual_original_compiled_direct_UStruct_remaining_6_CDB_log",
+      "original_compiled_linker_hex": "06aa9250",
+      "actual_native_global_object_name_id": 665,
+      "actual_native_global_friendly_name_id": 665,
+      "actual_native_ScriptText_pointer_hex": "00000000",
+      "actual_native_Children_pointer_hex": "06ac0110",
+      "actual_native_Children_export_index_if_dereferenced": 584,
+      "native_Children_dereference_observed": true,
+      "actual_native_script_size": 0,
+      "actual_native_source_line": 0,
+      "actual_native_source_text_position": 0
+    }
+  ],
+  "actual_compiled_direct_uscript_objects_observed": 9,
+  "actual_direct_UStruct_children_dereferenced_source_export_indices": 6,
+  "native_loaded_direct_UStruct_children_ptr_present_but_not_dereferenced": 3,
+  "original_469f_Core_u_other_direct_UStruct_export_indices_NOT_loaded_by_this_commandlet": [
+    727,
+    728,
+    734
+  ],
+  "original_source_files_modified": false,
+  "G3_03_full_method_acceptance": false,
+  "no_claim_of_native_loaded_last_three_structs": true,
+  "no_prior_25_UFunction_native_proof_rerun": true
+}

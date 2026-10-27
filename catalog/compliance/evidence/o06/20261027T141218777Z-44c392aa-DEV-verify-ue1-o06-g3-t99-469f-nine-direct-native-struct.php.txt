@@ -1,0 +1,15 @@
+﻿{
+    "ok": true,
+    "passed": 135,
+    "checks": 135,
+    "failed": [],
+    "original_native_direct_struct_values_verified": 9,
+    "original_native_children_linker_export_target_verified": 6,
+    "other_original_direct_UStruct_assembly_classes_not_loaded": [
+        727,
+        728,
+        734
+    ],
+    "production_php_native_reader_changes_needed": false,
+    "full_G3_03_method_accepted": false
+}

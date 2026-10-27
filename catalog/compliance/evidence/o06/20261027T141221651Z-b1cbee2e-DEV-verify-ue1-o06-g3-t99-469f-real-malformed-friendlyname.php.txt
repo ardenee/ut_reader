@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "checks": 27,
+    "passed": 27,
+    "failed": [],
+    "genuine_original_469f_compiled_error": "FriendlyName!=NAME_None",
+    "original_single_byte_mutation_offset": 7541,
+    "PHP_and_original_compiled_fatal_parity": true,
+    "error_cursor_not_native_verified": true,
+    "full_G3_03_accepted": false
+}

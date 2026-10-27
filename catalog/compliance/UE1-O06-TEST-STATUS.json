@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T13:19:59.3849379Z",
-    "head_commit":  "2553b384",
+    "updated_at_utc":  "2026-10-27T14:12:22.1758418Z",
+    "head_commit":  "5e8c6002",
     "current_target":  "DEV",
     "current_source_sha256":  "e33fff73c8c52dc18ddb06994b9817705dfe2c28b1ad624ff363077a8311c73a",
     "tests":  [
@@ -735,6 +735,30 @@
                       "run_id":  "20261027T124244352Z-73cc6515",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T124244352Z-73cc6515-DEV-verify-ue1-o06-g3-t99-469f-matched-sdk-pointer-inherited.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php",
+                      "test":  "verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T14:12:19.3132614Z",
+                      "source_sha256":  "e33fff73c8c52dc18ddb06994b9817705dfe2c28b1ad624ff363077a8311c73a",
+                      "test_sha256":  "95f97ed8142e870a43379ba2e06780ee77754422bd25068f770e6c861cefe178",
+                      "run_id":  "20261027T141218777Z-44c392aa",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T141218777Z-44c392aa-DEV-verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php",
+                      "test":  "verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T14:12:22.1523703Z",
+                      "source_sha256":  "e33fff73c8c52dc18ddb06994b9817705dfe2c28b1ad624ff363077a8311c73a",
+                      "test_sha256":  "7e21a3edfdb40cebc9718734f5b47a02b971ecad7870ee67446906c50824d113",
+                      "run_id":  "20261027T141221651Z-b1cbee2e",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T141221651Z-b1cbee2e-DEV-verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g5-audio-loaded-and-malformed-acceptance.php",

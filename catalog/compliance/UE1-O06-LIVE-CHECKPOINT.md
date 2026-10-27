@@ -2,18 +2,22 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-03-t99-469f-25-original-compiled-UStruct-loaded-values`
-- **Stage:** G3-03-469F-ORIGINAL-25-UStruct-NATIVE-21-CHILDREN-298-PRD-SHA-VERIFIED
-- **Last completed action:** G3-03 true original compiled OldUnreal UT99 469f UStruct inherited LOAD native loaded-value acceptance: 25 genuinely file-backed original Core.u UFunction objects through actual Core.dll UStruct::Serialize after function exit, real native UObject _LinkerIndex, 25 exact ScriptSize, FriendlyName global identity, original source Line and TextPos, null ScriptText, 21 native dereferenced Children object export indices ALL matched actual UnrealDB Core.u PHP decoder independently 298/298 scoped DEV PASS. Isolated original UCC make -nobind + CDB executed from C:/Temp only, SHA of genuine 469f compiled DLL, Core.u and original source pinned unchanged. Three WinDbg transcripts/scripts including decompiled machine instructions sealed. No production codec edit because already matches observed original native. Release 66cb9cae GitHub pushed and PRD 18/18 changed catalog files verified SHA. Follow-on attempted original direct UStruct CDB selector had debugger expression syntax error and NO observation, is not proof nor acceptance. Full G3=2/16, G3-03 still OPEN, distinct native subproofs14. Prior 21 469f pointers and C227 915 original base not rerun.
-- **Resume at:** Continue G3-03 direct original UStruct (not UFunction-derived) loaded-values, and precise native archive failure/script mismatch branches with distinct C98, UT99 v432, 469f, C227k. Note CDB .if expression AND operators previously failed in isolated direct-struct debug command; correct Windbg MASM script filter syntax before use; no need rerun 25 accepted UFunction prefix. Alternatively G3-08 original 227k UButton Caption FString, native loaded-value/error verification. Retain original game sources as immutable.
-- **Active changed at:** 2026-10-27T13:25:01+00:00
-- **Latest DEV test states:** PASS 178; FAIL 1; STARTED 0
+- **Contract:** `g3-03-t99-469f-original-compiled-malformed-FriendlyName`
+- **Stage:** G3-03-469F-9-DIRECT-NATIVE-135-AND-MALFORMED-FNAME-27-FOCUS-PASS-RELEASE-PENDING
+- **Last completed action:** Two NEW original UT99 469f native compiled distinct G3-03 proof branches accepted: first nine direct original Core.u UStruct native loaded values after actual Core!UStruct::Serialize+0x1ea return, matching PHP exact 9/9 native original object identity and real FriendlyName/Line/TextPos/ScriptSize/null ScriptText/Children pointer plus six dereferenced genuine native Children references; NEW one scoped 135/135 DEV PASS. Three other original source Core.u registry direct structs not loaded so not claimed. Second genuine compiled malformed native oracle isolated one-byte source copy BoundingBox export53 physical FName offset7541 original compact index79 byte4f to NAME_None byte00: actual original UCC under CDB via ULinkerLoad::Preload+0x128 -> UStruct::Serialize+0x85 -> appFailAssert FriendlyName!=NAME_None original compiled UnClass.cpp840; current PHP rejects same isolated source mutation; NEW one scoped 27/27 DEV PASS. Both original CDB commands/logs and real DLL/source/fixture hashes sealed, original L source files untouched. Native original FArchive Tell cursor not claimed. Neither whole G3-03 nor G3-14 closed, full G3 2/16, original compiled subproof count16, production reader unchanged and earlier 25 native function records and 21 pointer property tests not replayed.
+- **Resume at:** Commit and push real 469f nine direct original native and one negative FriendlyName evidence, SHA deploy changed catalog files PRD protecting catalog/config.php and storage; checkpoint. Next G3-03 native FArchive Tell cursor at fatal, missing three actual registry structs and distinct C98/v432/C227 build, or G3-08 227k UButton Caption FString; never re-run accepted 135/27/298 suites.
+- **Active changed at:** 2026-10-27T14:16:11+00:00
+- **Latest DEV test states:** PASS 180; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T14:12:22.1523703Z | verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php | PASS | 124 | catalog\compliance\evidence\o06\20261027T141221651Z-b1cbee2e-DEV-verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php.txt |
+| 2026-10-27T14:12:21.6517880Z | verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php | STARTED |  | catalog\compliance\evidence\o06\20261027T141221651Z-b1cbee2e-DEV-verify-ue1-o06-g3-t99-469f-real-malformed-friendlyname.php.txt |
+| 2026-10-27T14:12:19.3132614Z | verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php | PASS | 113 | catalog\compliance\evidence\o06\20261027T141218777Z-44c392aa-DEV-verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php.txt |
+| 2026-10-27T14:12:18.7844739Z | verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php | STARTED |  | catalog\compliance\evidence\o06\20261027T141218777Z-44c392aa-DEV-verify-ue1-o06-g3-t99-469f-nine-direct-native-struct.php.txt |
 | 2026-10-27T13:19:59.3648897Z | verify-ue1-o06-g3-t99-469f-25-original-native-struct.php | PASS | 121 | catalog\compliance\evidence\o06\20261027T131958817Z-db0e0366-DEV-verify-ue1-o06-g3-t99-469f-25-original-native-struct.php.txt |
 | 2026-10-27T13:19:58.8254704Z | verify-ue1-o06-g3-t99-469f-25-original-native-struct.php | STARTED |  | catalog\compliance\evidence\o06\20261027T131958817Z-db0e0366-DEV-verify-ue1-o06-g3-t99-469f-25-original-native-struct.php.txt |
 | 2026-10-27T12:42:45.1328349Z | verify-ue1-o06-g3-t99-469f-matched-sdk-pointer-inherited.php | PASS | 354 | catalog\compliance\evidence\o06\20261027T124244352Z-73cc6515-DEV-verify-ue1-o06-g3-t99-469f-matched-sdk-pointer-inherited.php.txt |
@@ -28,10 +32,6 @@
 | 2026-10-27T10:34:01.5016249Z | verify-ue1-o06-g3-02-v227-new-property-inheritance.php | STARTED |  | catalog\compliance\evidence\o06\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt |
 | 2026-10-27T10:25:03.6571850Z | verify-ue1-o06-g3-01-chronological-source-inheritance.php | PASS | 95 | catalog\compliance\evidence\o06\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt |
 | 2026-10-27T10:25:03.1288502Z | verify-ue1-o06-g3-01-chronological-source-inheritance.php | STARTED |  | catalog\compliance\evidence\o06\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt |
-| 2026-10-27T09:39:04.8367851Z | verify-ue1-o06-g3-c227i-ufield-915-native-references.php | PASS | 334 | catalog\compliance\evidence\o06\20261027T093904069Z-57ab140a-DEV-verify-ue1-o06-g3-c227i-ufield-915-native-references.php.txt |
-| 2026-10-27T09:39:04.0778101Z | verify-ue1-o06-g3-c227i-ufield-915-native-references.php | STARTED |  | catalog\compliance\evidence\o06\20261027T093904069Z-57ab140a-DEV-verify-ue1-o06-g3-c227i-ufield-915-native-references.php.txt |
-| 2026-10-27T09:24:27.3061131Z | verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php | PASS | 271 | catalog\compliance\evidence\o06\20261027T092426607Z-70bebb8d-DEV-verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php.txt |
-| 2026-10-27T09:24:26.6151476Z | verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php | STARTED |  | catalog\compliance\evidence\o06\20261027T092426607Z-70bebb8d-DEV-verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php.txt |
 
 ## Recovery procedure
 

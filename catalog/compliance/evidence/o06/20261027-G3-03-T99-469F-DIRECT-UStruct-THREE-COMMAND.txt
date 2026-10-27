@@ -1,0 +1,6 @@
+r $t0 = 0
+bp Core!UStruct::Serialize+0x1ea ".if (poi(@edi+0x14) == 0n0) {r $t0 = @$t0+1; .echo G3_03_DIRECT_STRUCT_ZERO; dd @edi+10 L19;}; .if (poi(@edi+0x14) == 0n1) {r $t0 = @$t0+1; .echo G3_03_DIRECT_STRUCT_ONE; dd @edi+10 L19;}; .if (poi(@edi+0x14) == 0n32) {r $t0 = @$t0+1; .echo G3_03_DIRECT_STRUCT_32; dd @edi+10 L19;}; gc"
+g
+.echo G3_03_DIRECT_STRUCT_NATIVE_END
+r $t0
+q
