@@ -1,0 +1,218 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
+  "full_contracts_required": 16,
+  "full_contracts_accepted": 0,
+  "contracts_with_pinned_original_native_evidence": 8,
+  "distinct_original_native_source_subproofs": 10,
+  "C227_primary_blocker": "Later v227 Core.lib exposes 57 methods; compiled 2012 227i Core.dll matches only 43 method decorated names and cannot replace the later matching implementation. Original Core/Src class/property C++ absent from canonical later v227 tree.",
+  "contract_acceptance_rule": "Full acceptance only after ALL source-selected versions, original compiled methods and required positive/negative branches are proven. Do not infer whole contract from native subproof counts.",
+  "original_native_proofs": {
+    "may-const-enum": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C98-MAY1998-ORIGINAL-NATIVE-LOADED.json",
+      "sha256": "5f8a8a3902e36f7a2b51e7b29e6f55bca5eed4dbd820d8d547070dc8b80b58d2",
+      "bytes": 7810,
+      "actual_native_subscope_only": true
+    },
+    "july-const-enum": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C98-RETAIL-ORIGINAL-NATIVE-LOADED.json",
+      "sha256": "64c2131efc660bb482f3866d46290769eb48ac24c34e7bde5f2fa9814af91b53",
+      "bytes": 5389,
+      "actual_native_subscope_only": true
+    },
+    "c227i-const": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C227I-UCONST-NATIVE-LOADED.json",
+      "sha256": "1146e08561fb621bf8e404f6fa52bf29bac0188b43cb2ac1906c476fb13a5064",
+      "bytes": 8083,
+      "actual_native_subscope_only": true
+    },
+    "c227i-enum": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C227I-UENUM-NATIVE-LOADED.json",
+      "sha256": "5cddcc834996fe0cc66bca18e747e817f2e484096a2c29f6b24813919458221c",
+      "bytes": 4587,
+      "actual_native_subscope_only": true
+    },
+    "may-property1536": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C98-MAY1998-UPROPERTY-1536-IDENTITIES.json",
+      "sha256": "9fa3da97724615df240693c6b0938028c926ee875bc888b7fd003b894c5c8d67",
+      "bytes": 7193,
+      "actual_native_subscope_only": true
+    },
+    "may-string66": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C98-MAY1998-USTRING-66-LOADED.json",
+      "sha256": "fdef03ff417cda89fca8af115279116a833f4ac84242db9688e2cec2073c23bf",
+      "bytes": 4588,
+      "actual_native_subscope_only": true
+    },
+    "may-ref600": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C98-MAY1998-600-REFERENCE-LOADED.json",
+      "sha256": "50139b8dd8a0faa0afdfa9a8ada825ad6bd76af9e7d185139d7adf92eebe452b",
+      "bytes": 5369,
+      "actual_native_subscope_only": true
+    },
+    "may-malformed2": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C98-MAY1998-TWO-NATIVE-MALFORMED-CURSORS.json",
+      "sha256": "643f1d0d4e0ed77407d8f1845f39306a9c75005cbacfaae615c5d8830f19727f",
+      "bytes": 7835,
+      "actual_native_subscope_only": true
+    },
+    "c227i-property668": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C227I-UPROPERTY-668-EXACT-IDENTITIES.json",
+      "sha256": "3b3d4e779644fe5f620df60e4cc94c6b1969f746ebe2b85e76e094f734304996",
+      "bytes": 5804,
+      "actual_native_subscope_only": true
+    },
+    "c227i-field915": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C227I-UFIELD-915-EXACT-NATIVE-REFERENCES.json",
+      "sha256": "da9d0616f9e65670fc9e8d1ea1007b403384bb6e3b409b8e6a3da3395051777c",
+      "bytes": 4943,
+      "actual_native_subscope_only": true
+    }
+  },
+  "contracts": [
+    {
+      "id": "G3-01",
+      "requirement": "Exact Epic C98/T99/C227 Core source lineage + version gates",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "Build-matched C227 Core source or compiled body and all three version/provenance gates."
+    },
+    {
+      "id": "G3-02",
+      "requirement": "Complete class/property serializer symbols, inherited paths and source exclusions",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "57 later C227 Core.lib methods: disambiguate 14 differing 2012 ABI symbols, inherited LOAD/SAVE and excluded serializer bodies."
+    },
+    {
+      "id": "G3-03",
+      "requirement": "UField and UStruct",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "c227i-field915"
+      ],
+      "decisive_remaining_requirement": "Original compiled UStruct script/child/load and malformed cases for C98/T99/C227; 2012 UField reference branch complete only."
+    },
+    {
+      "id": "G3-04",
+      "requirement": "UState and UFunction",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "Original compiled UState/UFunction flags, script, version exceptions and malformed cursor for each profile."
+    },
+    {
+      "id": "G3-05",
+      "requirement": "UClass serialization and default objects",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "Original compiled UClass default-object construction, values, Config/Localized effects and error paths across C98/T99/C227."
+    },
+    {
+      "id": "G3-06",
+      "requirement": "UConst and UEnum",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "may-const-enum",
+        "july-const-enum",
+        "c227i-const",
+        "c227i-enum"
+      ],
+      "decisive_remaining_requirement": "C98/v432/C227 UConst/UEnum negative archives, LOAD/SAVE and version gates; compiled 2012 C227i only covers observed objects."
+    },
+    {
+      "id": "G3-07",
+      "requirement": "UProperty base metadata",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "may-property1536",
+        "c227i-property668"
+      ],
+      "decisive_remaining_requirement": "ElementSize/category/net/error behavior across all three build profiles, including unobserved original property exports."
+    },
+    {
+      "id": "G3-08",
+      "requirement": "Scalar derived properties and String/Str version changes",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "may-string66",
+        "may-ref600"
+      ],
+      "decisive_remaining_requirement": "Bool, Byte, Int, Float, Name, String, Str and later C227 scalar type/version and malformed paths, original compiled behavior."
+    },
+    {
+      "id": "G3-09",
+      "requirement": "UObjectProperty and UClassProperty references",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "may-ref600",
+        "may-malformed2"
+      ],
+      "decisive_remaining_requirement": "ObjectProperty/ClassProperty original T99 and C227 referents, invalid type/redirect, LOAD/SAVE and failure cursor."
+    },
+    {
+      "id": "G3-10",
+      "requirement": "UStructProperty nested layouts",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "may-ref600"
+      ],
+      "decisive_remaining_requirement": "UStructProperty nested SerializeBin/offsets/imported fields and negative nested errors for all profile builds."
+    },
+    {
+      "id": "G3-11",
+      "requirement": "UArrayProperty, UFixedArrayProperty and UMapProperty",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "Native array/fixed-array/map loaded values and source-defined exclusion/invalid-count cases across each distinct build."
+    },
+    {
+      "id": "G3-12",
+      "requirement": "Source script expression, bytecode and fixups",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "Native script opcode fixups and bytecode error cursor for C98 and C227; reuse verified v432 G5."
+    },
+    {
+      "id": "G3-13",
+      "requirement": "Tagged property values, defaults, config and localized",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "Native loaded tagged/default/config/localized state for C98 and C227, source-specific defaults and invalid cases."
+    },
+    {
+      "id": "G3-14",
+      "requirement": "Source version branches and exact malformed FArchive errors",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "may-malformed2"
+      ],
+      "decisive_remaining_requirement": "All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors."
+    },
+    {
+      "id": "G3-15",
+      "requirement": "Original compiled native loaded-value and genuine-file parity",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [
+        "may-const-enum",
+        "july-const-enum",
+        "c227i-const",
+        "c227i-enum",
+        "may-property1536",
+        "may-string66",
+        "may-ref600",
+        "may-malformed2",
+        "c227i-property668",
+        "c227i-field915"
+      ],
+      "decisive_remaining_requirement": "Every distinct original compiled class/property method and build: C227 14 ABI mismatches plus unobserved methods and v432."
+    },
+    {
+      "id": "G3-16",
+      "requirement": "One independent whole-G3 gate / DEV release / PRD SHA",
+      "full_status": "OPEN",
+      "verified_original_native_subproof_ids": [],
+      "decisive_remaining_requirement": "Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements."
+    }
+  ]
+}
