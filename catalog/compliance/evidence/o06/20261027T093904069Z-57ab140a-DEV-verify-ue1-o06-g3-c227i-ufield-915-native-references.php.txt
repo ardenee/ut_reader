@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "checks": 9389,
+    "passed": 9389,
+    "failed": [],
+    "original_compiled_UField_915_distinct_loaded_object_field_pairs_matched": 915,
+    "native_total": 915,
+    "inherited_native_reference_values_compared": 1830,
+    "super_nonzero": 3,
+    "next_nonzero": 677,
+    "generic_native_reader": 913,
+    "dedicated_class_reader": 2,
+    "original_2012_Core_u_exports": 934,
+    "only_2012_227i_this_method_and_these_observed_objects_proved": true,
+    "G3_full": false
+}

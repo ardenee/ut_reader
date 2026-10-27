@@ -1,0 +1,3 @@
+bp 101168aa ".echo G3_ORIGINAL_227I_UFIELD_REAL_LOADED; dd @esi+10 L2; dd @esi+28 L2; .if (poi(@esi+28) != 0) {dd poi(@esi+28)+10 L2} .else {.echo ORIGINAL_SUPER_NULL}; .if (poi(@esi+2c) != 0) {dd poi(@esi+2c)+10 L2} .else {.echo ORIGINAL_NEXT_NULL}; gc"
+g
+q

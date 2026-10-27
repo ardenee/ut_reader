@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "status": "ORIGINAL_COMPILED_2012_C227I_UFIELD_915_AUTHENTIC_PER_OBJECT_SUPER_AND_NEXT_SAVED_REFERENCE_TARGETS_MATCH",
+  "scope": "Original authenticated 2012 227i Core.dll UField::Serialize real after archive 915 distinct original Core.u version69 licensee227 export native loaded objects (same linker in run), exact serialized SuperField (this+0x28) and Next (this+0x2c) pointers. Native target ptr+0x10 same genuine linker and target ptr+0x14 zero-based export idx, compared saved signed index = idx+1. All 915 objects incl two Class UClass separately decoded via real CatalogUE1ClassicClassMetadataReader; 913 remaining class/property/struct via Native::inspect, 915/915 both refs exact, no observed mismatch; no 2012 compiled source file available, 2012 native and later C227 original core.lib 14/57 decorated ABI mismatch. Does not certify UStruct script values, methods beyond UField, malformed paths, later source or G3 FULL.",
+  "original_2012_original_binary_package_pins": {
+    "Core.dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+      "bytes": 901120,
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+    },
+    "Core.u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+      "bytes": 81184,
+      "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"
+    },
+    "UCC.exe": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\UCC.exe",
+      "bytes": 135680,
+      "sha256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672"
+    }
+  },
+  "original_2012_915_real_compiled_native_source_logs": {
+    "native_original_CDB_915_UField_loaded_memory": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UFIELD-915-EXACT-LOADED-MEMORY-CDB.txt",
+      "bytes": 276766,
+      "sha256": "3767c991e8b0aed9734d9c0389e88721339c4f54d7a63cf5ff5cd22b38c669a1"
+    },
+    "native_original_CDB_915_UField_instructions": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UFIELD-915-EXACT-LOADED-MEMORY-CDB-COMMANDS.txt",
+      "bytes": 260,
+      "sha256": "9028f462e79281d02d1871689bc27bf948724adaa3d7bfc0be588e65fe086572"
+    },
+    "native_original_UField_UStruct_compiled_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UFIELD-USTRUCT-REAL-COMPILED-DISASM-CDB.txt",
+      "bytes": 32172,
+      "sha256": "d118e7ec9aac5f00c729e341f9ebe1b7e9f6f4e1e0b5761e507d581c6dc44171"
+    },
+    "native_original_UField_UStruct_compiled_disassembly_instructions": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UFIELD-USTRUCT-REAL-COMPILED-DISASM-CDB-COMMANDS.txt",
+      "bytes": 33,
+      "sha256": "e99423805482788bc606b5d4c3a918b357540f328dfb51359703f7fe8d144713"
+    }
+  },
+  "later_v227_header_declarations_only_not_2012_compiled_source_body": {
+    "UnObjBas.h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h",
+      "bytes": 60016,
+      "sha256": "de50501bfbc22980d6e932bcc328aa3de725f6358587ca06eb320a3da30c8b2a"
+    },
+    "UnType.h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "bytes": 33778,
+      "sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69"
+    }
+  },
+  "original_UField_compiled_body": "0x10116850",
+  "original_UField_after_real_Super_and_Next_archive_byte_read": "0x101168aa",
+  "compiled_after_archive_2012_x86_this_offsets": {
+    "actual_linker": "this+0x10",
+    "genuine_linker_export_index": "this+0x14",
+    "SuperField_loaded_UObject_ptr": "this+0x28",
+    "Next_loaded_UObject_ptr": "this+0x2c"
+  },
+  "original_runtime_invocation": "UCC.exe help",
+  "genuine_archive_version": 69,
+  "genuine_archive_licensee_version": 227,
+  "observed_loaded_UField_objects": 915,
+  "observed_all_unique_zero_based_real_original_package_export_indices": 915,
+  "original_Core_u_total_exports": 934,
+  "nonzero_original_SuperField_UObject_targets": 3,
+  "zero_original_SuperField_targets": 912,
+  "nonzero_original_Next_UObject_targets": 677,
+  "zero_original_Next_targets": 238,
+  "all_nonnull_targets_have_same_2012_native_linker_in_one_run": true,
+  "native_observed_loads_linker_pointers_count": 1,
+  "two_Class_exports_require_dedicated_class_reader": [
+    {
+      "index": 2,
+      "name": "Object"
+    },
+    {
+      "index": 7,
+      "name": "Commandlet"
+    }
+  ],
+  "original_native_UField_nonUClass_generic_reader_verifications": 913,
+  "original_native_UField_UClass_dedicated_reader_verifications": 2,
+  "exact_per_object_loaded_SuperField_and_Next_value_matches": 915,
+  "native_malformed_errors_and_other_source_build_equivalence_verified": false,
+  "G3_03_full_accepted": false,
+  "G3_15_full_accepted": false,
+  "G3_ALL_FULL_accepted": 0
+}
