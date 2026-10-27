@@ -1278,6 +1278,15 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-06-complete-original-Const-Enum-method-closure": {
+      "description": "ONE independent G3-06 full UConst and UEnum class-specific method acceptance after immutable G3-01 source + G3-02 class/method mapping. New original 2026 UT99 469f matching compiled Core.dll authentic 8 UConst objects and 1 UEnum with ALL seven actual global runtime FName text values from original real Core.u; verified directly against saved real source 69/l0 values. Reuses SHA-pinned previous May 1998 C98 compiled 2 Const and ESheerAxis, July C98 supplementary, original 2012 C227i 8 Const and 2 Enum real compiled loaded values, and existing exact original source-typed positive/negative version/ref/count/physical-EOF tests BY SHA ONLY, never reruns them. Also compiled 227k authentic Core.dll native code disassembly proves both class method UField::Serialize + FString/TArray<FName> archive inherited load/save method order (different internal member offset +0x3c vs UT99 +0x34); T99 v60/61/63 unicode source-specific gate and C98 source difference verified, exact current implementation fingerprint. No stock compiled SAVE roundtrip claimed, original shared Ar<< method source proves Class serialization symmetry. Separate G3-14 physical native malformed Tell / other negative branches and G3-15 all-method aggregate remain OPEN. On PASS mark G3-06 class contract ACCEPTED and full G3 3/16; no other full contract claimed.",
+      "readers": [],
+      "focus": [
+        "verify-ue1-o06-g3-06-full-const-enum-closure.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

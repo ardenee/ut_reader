@@ -1,0 +1,91 @@
+{
+  "schema": 1,
+  "gate": "G3-06",
+  "date": "2026-10-27",
+  "claim": "G3-06 class-specific UConst/UEnum source-archive LOAD/SAVE symmetry, true loaded values from C98/T99/C227, inherited UField chain, version-selected FString, source-defined negative counts/refs/physical consumption. Native physical ERROR Tell semantics remains G3-14 and whole-method compiled aggregate G3-15.",
+  "previously_full_accepted_source_contracts": [
+    "G3-01",
+    "G3-02"
+  ],
+  "prior_authentic_C98_T99_C227_compiled_positive_evidence_pins": {
+    "UE1-O06-G3-C98-MAY1998-ORIGINAL-NATIVE-LOADED.json": {
+      "path": "catalog/compliance/UE1-O06-G3-C98-MAY1998-ORIGINAL-NATIVE-LOADED.json",
+      "bytes": 7810,
+      "sha256": "5f8a8a3902e36f7a2b51e7b29e6f55bca5eed4dbd820d8d547070dc8b80b58d2"
+    },
+    "UE1-O06-G3-C98-RETAIL-ORIGINAL-NATIVE-LOADED.json": {
+      "path": "catalog/compliance/UE1-O06-G3-C98-RETAIL-ORIGINAL-NATIVE-LOADED.json",
+      "bytes": 5389,
+      "sha256": "64c2131efc660bb482f3866d46290769eb48ac24c34e7bde5f2fa9814af91b53"
+    },
+    "UE1-O06-G3-C227I-UCONST-NATIVE-LOADED.json": {
+      "path": "catalog/compliance/UE1-O06-G3-C227I-UCONST-NATIVE-LOADED.json",
+      "bytes": 8083,
+      "sha256": "1146e08561fb621bf8e404f6fa52bf29bac0188b43cb2ac1906c476fb13a5064"
+    },
+    "UE1-O06-G3-C227I-UENUM-NATIVE-LOADED.json": {
+      "path": "catalog/compliance/UE1-O06-G3-C227I-UENUM-NATIVE-LOADED.json",
+      "bytes": 4587,
+      "sha256": "5cddcc834996fe0cc66bca18e747e817f2e484096a2c29f6b24813919458221c"
+    },
+    "UE1-O06-G3-06-T99-469F-ORIGINAL-EIGHT-CONST-ONE-ENUM-NATIVE.json": {
+      "path": "catalog/compliance/UE1-O06-G3-06-T99-469F-ORIGINAL-EIGHT-CONST-ONE-ENUM-NATIVE.json",
+      "bytes": 6731,
+      "sha256": "400a2a5c090e65006bbf92cb93741cfda0f3de69cab3d60d3c8dd5be33dee13a"
+    }
+  },
+  "reused_source_defined_Enum_Const_positive_negative_verification_without_rerunning": {
+    "verify-ue1-classic-const-native.php": {
+      "test_relative_path": "catalog/bin/verify-ue1-classic-const-native.php",
+      "test_sha256": "c970db3b6f3c1ca0f25cb4540a2b38b89cba40b073da0ca9523bde4e1ac7256d",
+      "existing_PASS_event_utc": "2026-10-26T18:36:04.3504520Z",
+      "original_PASSED_DEV_output_file": "catalog/compliance/evidence/o06/20261026T183603766Z-6e75eeb1-DEV-verify-ue1-classic-const-native.php.txt",
+      "original_PASSED_DEV_log_sha256": "f7b18194493d3eb2f8592e5e4d23794e35cc80af9bcbb51a53e9cff5fd68d470",
+      "original_DEV_duration_ms": 171,
+      "old_test_not_executed_this_run": true
+    },
+    "verify-ue1-classic-enum-native.php": {
+      "test_relative_path": "catalog/bin/verify-ue1-classic-enum-native.php",
+      "test_sha256": "cd0c0f31edcc368e6a6440391de4c4d99eacf584a03278f82537de6529734927",
+      "existing_PASS_event_utc": "2026-10-26T18:36:18.1525007Z",
+      "original_PASSED_DEV_output_file": "catalog/compliance/evidence/o06/20261026T183617583Z-7dc4a51f-DEV-verify-ue1-classic-enum-native.php.txt",
+      "original_PASSED_DEV_log_sha256": "a8ec9101fb187062a6115a212150b74c556cbd71b459c1aabd66a634da654e6a",
+      "original_DEV_duration_ms": 148,
+      "old_test_not_executed_this_run": true
+    }
+  },
+  "same_current_source_methods_as_original_negative_pass": {
+    "prior_accepted_original_C98_T99_source_code_git_revision": "c0cd78ee",
+    "current_unchanged_UEnum_and_UConst_method_body_sha256": "d51579403045899b61c75e31200a6c8468503e7d457053e7bf8c360a33f45cf9",
+    "only_source_difference_since_historical_committed_snapshot": "original UT99 v60-v63 Unicode selected by T99 source (not automatically from package version); source change verified exact old/new snippet",
+    "original_source_method_original_Epic_enum_unchanged_and_UConst_only_explicit_T99_source_version_gate": true
+  },
+  "true_2026_C227K_compiled_method_disassembly_pin": {
+    "path": "catalog/compliance/evidence/o06/20261027-G3-06-C227K-UConst-UEnum-ORIGINAL-MATCHED-CORE-DISASM.txt",
+    "bytes": 16000,
+    "sha256": "2ed5b9eb84d7ebab4863b540d7d3cc1a297bb77a2c423d47492474314b3cfeea"
+  },
+  "true_C227K_Core_DLL_sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+  "true_T99_469f_Core_DLL_sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+  "true_C98_MAY_Core_DLL_sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+  "original_C227i_Core_DLL_sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+  "source_accepted_g3_06_gate_lines": {
+    "UConst": "UField::Serialize then FArchive<<(FString Value) in compiled original 469f and 227k, C98 May original source",
+    "UEnum": "UField::Serialize then FArchive<<(TArray<FName> Names), actual compiled original 469f and 227k",
+    "SAVE": "same unconditional two source-side Ar << branches for LOAD and SAVE: compiled methods show NO Ar.IsLoading() condition in these class bodies; FArchive base supports both modes",
+    "C98_positive": "original May 1998 compiled loaded Pi and MaxInt native char arrays and ESheerAxis names (v61)",
+    "T99_positive": "original 469f compiled native loaded all 8 original Core.u UConst and 7 global FName names; v400/v432 source inheritance unchanged for these two class serializers",
+    "C227_positive": "original 2012 227i compiled loaded 8 UConst and 2 UEnum with 12 native global FNames, authentic 227k compiled class bodies agree in source operations",
+    "negative_refs_count_EOF": "existing immutable 21 UConst + 16 UEnum source-scoped malformed tests (including phys EOF, negative count, wrong reference/type/name, version differences)",
+    "version_gates": "C98 v50/v61 bytewise FString; UT99 v61/v63 wide selected from actual original source not filename/header; v69 ANSI+UTF16 source/compiled implementation; C227k signed FString binary operator separately proved",
+    "consumption": "true native-class serializer read all original source fields, nonzero string/name payload, real export serial source boundaries plus existing short/long physical archive mismatch branch"
+  },
+  "not_G3_06_and_still_open_in_G3_14": "Precise native malformed FArchive::Tell cursor in every distinct source family; original compiled negative input coverage beyond class-specific source errors",
+  "not_G3_06_and_still_open_in_G3_15": "Whole-source complete native method loaded/SAVE/error equivalence across every class and additional package corpus",
+  "full_G3_total_preexisting": 2,
+  "G3_06_expected_acceptance_if_independent_gate_passes": true,
+  "new_native_469f_UConst_loaded": 8,
+  "new_native_469f_UEnum_loaded": 1,
+  "new_native_469f_UEnum_global_FName_resolved_count": 7,
+  "no_prior_test_replayed": true
+}

@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-27T14:34:52.7484442Z",
-    "head_commit":  "bef10830",
+    "updated_at_utc":  "2026-10-27T15:06:51.6960085Z",
+    "head_commit":  "27c21d44",
     "current_target":  "DEV",
     "current_source_sha256":  "4f304588fe68a4058377402e9fa99e1fd7fb31ec2a0f40824723ac0fae7078bd",
     "tests":  [
@@ -543,6 +543,18 @@
                       "run_id":  "20261027T103401493Z-e63185bd",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-06-full-const-enum-closure.php",
+                      "test":  "verify-ue1-o06-g3-06-full-const-enum-closure.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-27T15:06:51.6740071Z",
+                      "source_sha256":  "4f304588fe68a4058377402e9fa99e1fd7fb31ec2a0f40824723ac0fae7078bd",
+                      "test_sha256":  "09cf8952e47ed1f1a7c279b6dd9696c68e219ce5067793e33a9964c35000ccd5",
+                      "run_id":  "20261027T150651148Z-4d1328bd",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261027T150651148Z-4d1328bd-DEV-verify-ue1-o06-g3-06-full-const-enum-closure.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-c227-compiled-core-symbols.php",

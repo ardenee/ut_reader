@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "scope": "NEW genuine original UT99 patch469f matched shipped x86 native UConst and UEnum compiled LOAD all Core.u source exports, without rerunning C98/C227 native proofs.",
+  "true_original_Core_dll": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+    "bytes": 1790328,
+    "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+  },
+  "true_original_Core_u": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.u",
+    "bytes": 67362,
+    "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0"
+  },
+  "true_original_UCC_exe": {
+    "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\UCC.exe",
+    "bytes": 487800,
+    "sha256": "57d23855ca3f45a203458ccf737bae6d62c15c15f3de012c81f2bed12c4998ae"
+  },
+  "actual_original_compiled_engine_CDB_artifacts": {
+    "original_compiled_eight_UConst_one_UEnum_native_memory": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-06-T99-469F-EIGHT-UConst-ONE-UEnum-ORIGINAL-NATIVE-CDB.txt",
+      "bytes": 23664,
+      "sha256": "feac24698783250f4915736380e07865348ad98bae82bbc2168303e3d693d8a7"
+    },
+    "original_compiled_seven_UEnum_global_FName_values": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-06-T99-469F-SEVEN-UEnum-NAMES-ORIGINAL-CDB.txt",
+      "bytes": 13542,
+      "sha256": "6a9bb4b32fddf2f0c13819f64c4d84f9e1fa342b7aaa3e197530601528f5097f"
+    },
+    "original_compiled_UConst_and_UEnum_method_machine_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-06-T99-469F-UConst-UEnum-MACHINE-DISASM.txt",
+      "bytes": 15736,
+      "sha256": "8526e599ad53adeb41414680f2aab6b3a8b6d0b319c2a1ec033d9d08ad8ac13a"
+    },
+    "actual_original_compiled_loaded_value_CDB_script": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-06-T99-469F-NATIVE-LOAD-CDB-SCRIPT.txt",
+      "bytes": 597,
+      "sha256": "ea267104ea8e68183c4375bac5355a51c42a7dbd60e03acf725b190f92238fda"
+    },
+    "actual_original_compiled_global_FName_CDB_script": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-06-T99-469F-NATIVE-GLOBAL-NAMES-CDB-SCRIPT.txt",
+      "bytes": 491,
+      "sha256": "e6545f0430b3268248ed6fad0633e475aa6a4a07cf68c82ae0786d2b646db067"
+    }
+  },
+  "original_469f_compiled_UConst_method_PE_va": "0x1004a4b0",
+  "original_469f_compiled_UEnum_method_PE_va": "0x10036d00",
+  "original_469f_compiled_method_calls": [
+    "UField::Serialize",
+    "FArchive<<FString Value",
+    "FArchive<<TArray<FName> Names"
+  ],
+  "actual_native_loaded_UConst_original_Core_u_exports": [
+    {
+      "genuine_Core_u_zero_based_export_index": 311,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 12,
+      "compiled_loaded_value_capacity": 12,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200030007800300030003200300030003000300030000000",
+      "compiled_loaded_value_string": " 0x00200000"
+    },
+    {
+      "genuine_Core_u_zero_based_export_index": 314,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 12,
+      "compiled_loaded_value_capacity": 12,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200030007800300030003000300034003000300030000000",
+      "compiled_loaded_value_string": " 0x00004000"
+    },
+    {
+      "genuine_Core_u_zero_based_export_index": 511,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 20,
+      "compiled_loaded_value_capacity": 20,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200033002e0031003400310035003900320036003500330035003800390037003900330032000000",
+      "compiled_loaded_value_string": " 3.1415926535897932"
+    },
+    {
+      "genuine_Core_u_zero_based_export_index": 514,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 12,
+      "compiled_loaded_value_capacity": 12,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200030007800370066006600660066006600660066000000",
+      "compiled_loaded_value_string": " 0x7fffffff"
+    },
+    {
+      "genuine_Core_u_zero_based_export_index": 593,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 12,
+      "compiled_loaded_value_capacity": 12,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200030007800300030003400300030003000300030000000",
+      "compiled_loaded_value_string": " 0x00400000"
+    },
+    {
+      "genuine_Core_u_zero_based_export_index": 596,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 12,
+      "compiled_loaded_value_capacity": 12,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200030007800300030003100300030003000300030000000",
+      "compiled_loaded_value_string": " 0x00100000"
+    },
+    {
+      "genuine_Core_u_zero_based_export_index": 605,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 12,
+      "compiled_loaded_value_capacity": 12,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200030007800300030003000300030003000300031000000",
+      "compiled_loaded_value_string": " 0x00000001"
+    },
+    {
+      "genuine_Core_u_zero_based_export_index": 608,
+      "compiled_loaded_Linker_pointer_hex": "06759250",
+      "compiled_loaded_value_character_count_with_null": 12,
+      "compiled_loaded_value_capacity": 12,
+      "compiled_loaded_value_UTF16LE_bytes_hex": "200030007800300030003000300030003000300034000000",
+      "compiled_loaded_value_string": " 0x00000004"
+    }
+  ],
+  "actual_native_UEnum_original_Core_u_export_index": 46,
+  "actual_native_UEnum_array_count": 7,
+  "actual_native_global_FName_ids": [
+    1279,
+    1280,
+    1281,
+    1282,
+    1283,
+    1284,
+    1285
+  ],
+  "actual_native_global_FName_text_values": [
+    "SHEER_None",
+    "SHEER_XY",
+    "SHEER_XZ",
+    "SHEER_YX",
+    "SHEER_YZ",
+    "SHEER_ZX",
+    "SHEER_ZY"
+  ],
+  "actual_native_loaded_const_count": 8,
+  "actual_native_loaded_enum_count": 1,
+  "all_original_T99_469f_Core_u_UConst_UEnum_export_objects_observed": true,
+  "genuine_469f_source_archive_version": 69,
+  "genuine_469f_source_archive_licensee": 0,
+  "native_compiled_LOAD_only_not_SAVE": true,
+  "compiled_native_malformed_cases_not_claimed": true,
+  "g3_06_fully_accepted_by_this_single_profile_evidence": false
+}

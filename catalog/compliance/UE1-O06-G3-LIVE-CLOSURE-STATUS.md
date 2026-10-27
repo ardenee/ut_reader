@@ -1,8 +1,8 @@
 # G3 live closure ? 27 October 2026
 
-**Full G3 contracts: 2/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 17.**
+**Full G3 contracts: 3/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 18.**
 
-G3-01 source selection is accepted under the clarified cumulative game-source inheritance rule. The remaining 14 method/behavior gates retain their strict source/real native parity criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
+G3-01 source selection is accepted under the clarified cumulative game-source inheritance rule. The remaining 13 method/behavior gates retain their strict source/real native parity criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
 
 | Contract | Native subproofs | Decisive remaining requirement |
 |---|---:|---|
@@ -11,7 +11,7 @@ G3-01 source selection is accepted under the clarified cumulative game-source in
 | G3-03 UField and UStruct | 5 | Original compiled UStruct script/child/load and malformed cases for C98/T99/C227; 2012 UField reference branch complete only. |
 | G3-04 UState and UFunction | 0 | Original compiled UState/UFunction flags, script, version exceptions and malformed cursor for each profile. |
 | G3-05 UClass serialization and default objects | 0 | Original compiled UClass default-object construction, values, Config/Localized effects and error paths across C98/T99/C227. |
-| G3-06 UConst and UEnum | 4 | C98/v432/C227 UConst/UEnum negative archives, LOAD/SAVE and version gates; compiled 2012 C227i only covers observed objects. |
+| G3-06 UConst and UEnum | **ACCEPTED: 56/56 DEV** | CLOSED: authentic C98/T99/C227 compiled values; genuine runtime global names; unconditional UField then class-specific FString/Names archive source for LOAD/SAVE; source-version codec and null/error/EOF cases. Physical native malformed Tell belongs G3-14; other-method aggregate native parity belongs G3-15. |
 | G3-07 UProperty base metadata | 2 | ElementSize/category/net/error behavior across all three build profiles, including unobserved original property exports. |
 | G3-08 Scalar derived properties and String/Str version changes | 3 | Bool, Byte, Int, Float, Name, String, Str and later C227 scalar type/version and malformed paths, original compiled behavior. |
 | G3-09 UObjectProperty and UClassProperty references | 2 | ObjectProperty/ClassProperty original T99 and C227 referents, invalid type/redirect, LOAD/SAVE and failure cursor. |
@@ -20,7 +20,7 @@ G3-01 source selection is accepted under the clarified cumulative game-source in
 | G3-12 Source script expression, bytecode and fixups | 0 | Native script opcode fixups and bytecode error cursor for C98 and C227; reuse verified v432 G5. |
 | G3-13 Tagged property values, defaults, config and localized | 0 | Native loaded tagged/default/config/localized state for C98 and C227, source-specific defaults and invalid cases. |
 | G3-14 Source version branches and exact malformed FArchive errors | 3 | All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors. |
-| G3-15 Original compiled native loaded-value and genuine-file parity | 16 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
+| G3-15 Original compiled native loaded-value and genuine-file parity | 17 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
 | G3-16 One independent whole-G3 gate / DEV release / PRD SHA | 0 | Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements. |
 
 ## Evidence (original compiled engine, subset-specific)
@@ -93,3 +93,9 @@ Both actual original compiled command scripts, debugger logs and source/input SH
 Production decoder FIX, not simply another source mapping: 2026 227k shipped original Core.dll UButtonProperty::Serialize (RVA 0x80010) uses inherited UProperty::Serialize then FString Caption at native member+0x8C. NEW genuine compiled FArchive<<FString operator RVA0x66E40 decompiled with REA/Ghidra shows signed compact count, positive ANSI/negative UTF16LE, final char overwritten with NUL on native LOAD. Original shipped ScriptedAI.u contains two ACTUAL UButtonProperty exports: MoveCamButton caption Move point to viewport count23 and MovePointButton caption Go to point count12. The reader now consumes BOTH complete original native archive records and returns native_buttonproperty_caption_record_complete, not the old unverified status. Original source package and compiled Core.dll SHA pinned in UE1-O06-G3-C227K-TWO-GENUINE-UButton-Caption-Serialize.json. One NEW 38/38 scoped DEV PASS, previous old tests not replayed. Two isolated source-defined malformed byte mutations distinguish an invalid terminal character from count overrun; not falsely described as execution of those mutants through compiled Core.dll.
 
 Limit: original shipped 227k UCC.exe has neither make nor batchexport commandlets, so actual in-memory Caption values were NOT compared with a loaded native property. UButton runtime SerializeItem and NetSerializeItem, SAVE, other scalar/str/version and malformed compiled-native behaviors remain G3-08 OPEN. Full G3 remains 2/16; compiled-source original subproofs now 17. Historic earlier source-only assertion that UButton override is unverified is superseded by this compiled body.
+
+## G3-06 FULL ACCEPTED — original compiled UConst and UEnum (2026-10-27)
+
+The FIRST G3 serializer method-family closure: UConst::Serialize and UEnum::Serialize are ACCEPTED in ONE scoped independent 56/56 DEV pass. No previously accepted tests repeated. Original stock compiled May1998 C98 Pi, MaxInt and native ESheerAxis seven names; original C227i 8 UConst/2 UEnum with twelve global FName values; NEW original 2026 UT99 469f compiled all eight actual Core.u constants and real ESheerAxis seven runtime global FName names read through actual FName::Names. All native positive names/strings match the original saved file values and archive counts. Original C227k compiled Core DLL additionally demonstrates UField::Serialize then FString/TArray<FName> archives, unconditional class-specific LOAD/SAVE member order (ABI +0x3C, compared with T99 +0x34). Reuses previous original source-defined negative count, invalid reference/name, EOF and v61/v63 selected UTF16/ANSI acceptance results by SHA, without running the old scripts. C98 vs T99 same archive version DOES NOT imply same string codec.
+
+Exact native malformed FArchive physical Tell and other original compiled failure cases remain the separately required G3-14 contract. Whole-reader other serializer compiled parity remains G3-15. No claim of original native full archive SAVE commandlet output from this gate, and no claim all G3 contracts completed. Current G3 is 3/16, 13 open, with 18 original native subproofs. See UE1-O06-G3-06-FULL-CLOSURE-MATRIX.json and UE1-O06-G3-06-T99-469F-ORIGINAL-EIGHT-CONST-ONE-ENUM-NATIVE.json.

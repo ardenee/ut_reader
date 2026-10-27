@@ -4,7 +4,7 @@
   "generated_utc": "2026-10-26T12:56:47.547485+00:00",
   "plan": "catalog/compliance/UE1-O06-G3-ACCEPTANCE-PLAN.md",
   "register_sha256": "d3ab7705a626413dac406ad72c8186363882297f6f89ac97a2e15140bbe98a04",
-  "gate_status": "G3_OPEN_PLAN_ONLY_NO_G3_GATE_TESTS_EXECUTED",
+  "gate_status": "G3_LIVE_3_OF_16_ACCEPTED_FINAL_AGGREGATE_STILL_OPEN",
   "required_tests_count": 16,
   "contracts": [
     {
@@ -2094,5 +2094,20 @@
     "source_sha256": "eef76733804e22dea979e9d5eeb04f89d7e086ffc7ebafae54a5efc4d3a6a1f3",
     "passed": 159,
     "G5_original_native_tests_rerun": 0
+  },
+  "live_accepted_full_contracts": [
+    "G3-01",
+    "G3-02",
+    "G3-06"
+  ],
+  "live_full_contracts_accepted": 3,
+  "live_full_contracts_remaining": 13,
+  "G3_06_full_method_acceptance": {
+    "status": "ACCEPTED",
+    "checks": 56,
+    "manifest_sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871",
+    "compiled_native_469f_sha256": "400a2a5c090e65006bbf92cb93741cfda0f3de69cab3d60d3c8dd5be33dee13a",
+    "original_native_malformed_physical_cursor_cross_owner": "G3-14",
+    "other_method_aggregate_native_certification_owner": "G3-15"
   }
 }

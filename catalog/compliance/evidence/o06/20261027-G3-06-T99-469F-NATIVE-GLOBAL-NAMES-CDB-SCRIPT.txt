@@ -1,0 +1,3 @@
+bp Core!UEnum::Serialize+0x4e ".if (poi(@edi+0x10) != 0) {.echo G3_06_NEW_TRUE_T99_469F_SEVEN_GLOBAL_ENUM_NAMES; dd @edi+10 L12; dd poi(@edi+0x34) L7; du poi(poi(Core!FName::Names)+4*0x4ff)+0xc L22;du poi(poi(Core!FName::Names)+4*0x500)+0xc L22;du poi(poi(Core!FName::Names)+4*0x501)+0xc L22;du poi(poi(Core!FName::Names)+4*0x502)+0xc L22;du poi(poi(Core!FName::Names)+4*0x503)+0xc L22;du poi(poi(Core!FName::Names)+4*0x504)+0xc L22;du poi(poi(Core!FName::Names)+4*0x505)+0xc L22;};gc"
+g
+q

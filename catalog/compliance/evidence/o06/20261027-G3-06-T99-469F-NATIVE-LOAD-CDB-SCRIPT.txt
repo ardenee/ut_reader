@@ -1,0 +1,9 @@
+r $t0 = 0
+r $t1 = 0
+bp Core!UConst::Serialize+0x4b ".if (poi(@edi+0x10) != 0) {r $t0 = @$t0+1; .if (@$t0 <= 0n18) {.echo G3_06_NEW_TRUE_469F_COMPILED_UCONST_LOADED; dd @edi+10 L12; .if (poi(@edi+0x34) != 0) {.echo G3_06_469F_LOADED_VALUE_BYTES; db poi(@edi+0x34) L40;};};};gc"
+bp Core!UEnum::Serialize+0x4e ".if (poi(@edi+0x10) != 0) {r $t1 = @$t1+1; .if (@$t1 <= 0n9) {.echo G3_06_NEW_TRUE_469F_COMPILED_UENUM_LOADED; dd @edi+10 L12; .if (poi(@edi+0x34) != 0) {.echo G3_06_469F_LOADED_FNAME_IDS; dd poi(@edi+0x34) L10;};};};gc"
+g
+.echo G3_06_REAL_469F_ORIGINAL_COMPILED_NATIVE_END
+r $t0
+r $t1
+q

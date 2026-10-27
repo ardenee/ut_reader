@@ -3,9 +3,9 @@
   "date": "2026-10-27",
   "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
   "full_contracts_required": 16,
-  "full_contracts_accepted": 2,
+  "full_contracts_accepted": 3,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 17,
+  "distinct_original_native_source_subproofs": 18,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -142,6 +142,15 @@
       "scoped_DEV_log": "catalog/compliance/evidence/o06/20261027T143452143Z-c59b159d-DEV-verify-ue1-o06-g3-c227k-two-real-button-captions.php.txt",
       "scoped_DEV_log_sha256": "84bd3f3c8860482531fde1a79c8bca85d292103f86e8756f24497ce5c2026995",
       "G3_08_full_method_accepted": false
+    },
+    "t99-469f-2026-native-8const-1enum-global-seven-names": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-06-T99-469F-ORIGINAL-EIGHT-CONST-ONE-ENUM-NATIVE.json",
+      "sha256": "400a2a5c090e65006bbf92cb93741cfda0f3de69cab3d60d3c8dd5be33dee13a",
+      "bytes": 6731,
+      "original_compiled_469f_native_loaded_UConst": 8,
+      "original_compiled_469f_native_loaded_UEnum": 1,
+      "original_compiled_seven_FName_strings_from_runtime": 7,
+      "whole_G3_15_completed": false
     }
   },
   "contracts": [
@@ -222,14 +231,21 @@
     {
       "id": "G3-06",
       "requirement": "UConst and UEnum",
-      "full_status": "OPEN",
+      "full_status": "ACCEPTED",
       "verified_original_native_subproof_ids": [
         "may-const-enum",
         "july-const-enum",
         "c227i-const",
-        "c227i-enum"
+        "c227i-enum",
+        "t99-469f-2026-native-8const-1enum-global-seven-names"
       ],
-      "decisive_remaining_requirement": "C98/v432/C227 UConst/UEnum negative archives, LOAD/SAVE and version gates; compiled 2012 C227i only covers observed objects."
+      "decisive_remaining_requirement": "CLOSED: original compiled C98/T99/C227 UConst and UEnum member values and global FName semantics, original 227k compiled Ar<< method SAVE/LOAD order, inherited UField, selected FString v61/v63 source changes, source-typed negative reference/count/physical EOF evidence. Stock native malformed FArchive Tell remains G3-14 and whole-reader other-method compiled proof remains G3-15.",
+      "acceptance_scope": "FULL_CLASS_SPECIFIC_UCONST_UENUM_SOURCE_SERIALIZE_LOADED_NATIVE_VALUES_VERSION_AND_SOURCE_NEGATIVES",
+      "acceptance_checks": 56,
+      "acceptance_manifest_sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871",
+      "acceptance_verifier_sha256": "09cf8952e47ed1f1a7c279b6dd9696c68e219ce5067793e33a9964c35000ccd5",
+      "acceptance_scoped_DEV_pass_log_sha256": "2e96e104d36031e34c23bebcd55703d7485906faec11d7f9165c43774fe74985",
+      "acceptance_scoped_DEV_pass_log": "catalog/compliance/evidence/o06/20261027T150651148Z-4d1328bd-DEV-verify-ue1-o06-g3-06-full-const-enum-closure.php.txt"
     },
     {
       "id": "G3-07",
@@ -325,9 +341,10 @@
         "t99-469f-matched-original-SDK-21-PointerProperty",
         "t99-469f-2026-25-original-compiled-UStruct-loaded-value-members",
         "t99-469f-native-nine-direct-UStruct",
-        "c227k-original-two-genuine-UButton-FString-serialized-values"
+        "c227k-original-two-genuine-UButton-FString-serialized-values",
+        "t99-469f-2026-native-8const-1enum-global-seven-names"
       ],
-      "decisive_remaining_requirement": "NEW original C227k UButton compiled native method body and original FString operator compared to two real original ScriptedAI.u source archive captions. True compiled in-memory loaded Caption values not captured; this is source+compiled-code on-disk parity, not actual loaded-value native acceptance. Other methods, SAVE and malformed/version native behaviors remain OPEN."
+      "decisive_remaining_requirement": "All genuine original 469f Core.u UConst 8 and UEnum 1 newly compiled native loaded, seven runtime global FName names pinned; G3-06 complete. Other class methods, SAVE and invalid/version original native loaded-value comparisons still OPEN."
     },
     {
       "id": "G3-16",
@@ -337,7 +354,7 @@
       "decisive_remaining_requirement": "Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements."
     }
   ],
-  "full_contracts_open": 14,
+  "full_contracts_open": 13,
   "source_revision_chain_manifest": {
     "path": "catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json",
     "sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901"
@@ -432,5 +449,24 @@
     ],
     "native_in_memory_comparison": false,
     "G3_full_status": 2
+  },
+  "accepted_behavior_contracts": [
+    "G3-06"
+  ],
+  "latest_G3_06_full_acceptance": {
+    "status": "ACCEPTED",
+    "required_checks": 56,
+    "evidence": "catalog/compliance/UE1-O06-G3-06-FULL-CLOSURE-MATRIX.json",
+    "evidence_sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871",
+    "native_469f_evidence": "catalog/compliance/UE1-O06-G3-06-T99-469F-ORIGINAL-EIGHT-CONST-ONE-ENUM-NATIVE.json",
+    "native_469f_evidence_sha256": "400a2a5c090e65006bbf92cb93741cfda0f3de69cab3d60d3c8dd5be33dee13a",
+    "verifier": "catalog/bin/verify-ue1-o06-g3-06-full-const-enum-closure.php",
+    "verifier_sha256": "09cf8952e47ed1f1a7c279b6dd9696c68e219ce5067793e33a9964c35000ccd5",
+    "scoped_DEV_output": "catalog/compliance/evidence/o06/20261027T150651148Z-4d1328bd-DEV-verify-ue1-o06-g3-06-full-const-enum-closure.php.txt",
+    "scoped_DEV_output_sha256": "2e96e104d36031e34c23bebcd55703d7485906faec11d7f9165c43774fe74985",
+    "new_compiled_native_UConst": 8,
+    "new_compiled_native_UEnum": 1,
+    "previous_tests_reexecuted": 0,
+    "cross_contract_G3_14_G3_15_remain_OPEN": true
   }
 }

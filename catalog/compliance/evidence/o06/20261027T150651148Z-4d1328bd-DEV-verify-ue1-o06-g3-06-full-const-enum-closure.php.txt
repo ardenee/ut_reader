@@ -1,0 +1,20 @@
+﻿{
+    "ok": true,
+    "checks": 56,
+    "passed": 56,
+    "failed": [],
+    "G3_06_acceptance": "ACCEPTED",
+    "authentic_new_T99_469f_UConst_loaded_count": 8,
+    "authentic_new_T99_469f_UEnum_loaded_count": 1,
+    "original_T99_469f_global_native_FName_values": [
+        "SHEER_None",
+        "SHEER_XY",
+        "SHEER_XZ",
+        "SHEER_YX",
+        "SHEER_YZ",
+        "SHEER_ZX",
+        "SHEER_ZY"
+    ],
+    "replayed_old_tests": 0,
+    "G3_14_and_G3_15_corss_cutting_mandatory_obligations_remain_open": true
+}
