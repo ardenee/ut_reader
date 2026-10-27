@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "passed": 73,
+    "checks": 73,
+    "failed": [],
+    "original_compiled_227i_loaded_arrays": 4,
+    "exact_source_native_loaded_Inner_target_reference_match_count": 4,
+    "original_compiled_methods_distinct_disassembled": 4,
+    "unobserved_map_and_fixed_loaded_values_fabricated": false,
+    "all_16_G3_Full_accepted": false
+}

@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "status": "AUTHENTIC_2012_ORIGINAL_C227I_UARRAYPROPERTY_FOUR_NATIVE_LOADED_INNER_IDENTITIES",
+  "scope": "G3-02 actual changed game source v1224 adds four formerly nonexistent property subclasses UArray/UFixedArray/UMap/UStr, v227 inherits declarations unless later source changes. Original 2012 227i Core.dll compiled x86 method disassembly confirms UArrayProperty::Serialize (0x10149a30) calls UProperty::Serialize then Ar << Inner, UFixedArrayProperty::Serialize (0x101494c0) calls base then Inner+Count, UMapProperty::Serialize (0x10149ff0) calls base then Key+Value, UStrProperty::Serialize (0x101492c0) calls base only. Actual 2012 stock UCC.exe help loaded exactly four genuine Core.u ArrayProperty exports (indices 662,667,669,746) and native ptr at this+0x60 resolves each Inner to same actual native package linker and target export index. Exact positive saved reference equals target index+1, and current actual PHP reader individually matches. No fixed/map native objects loaded on this run, original source 2012 binary not later compiled v227 lineage, no full G3-02/G3-11/G3-15 acceptance claimed.",
+  "original_stock_executable_binary_pins": {
+    "authentic_original_2012_227i_Core_dll": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+      "bytes": 901120
+    },
+    "authentic_original_2012_227i_Core_u": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+      "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b",
+      "bytes": 81184
+    },
+    "authentic_original_2012_227i_UCC_exe": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\UCC.exe",
+      "sha256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672",
+      "bytes": 135680
+    }
+  },
+  "actual_original_game_source_headers": {
+    "unreal_v1200_UnType_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnType.h",
+      "sha256": "7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8",
+      "bytes": 17415
+    },
+    "unreal_v1224_UnType_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.224] [1999-05-01] [INCOMPLETE]\\Core\\Inc\\UnType.h",
+      "sha256": "8d1744ac11d7eee1ffc6c79f99c3ec5e7b36848313e27147be33a8f42e57e723",
+      "bytes": 19169
+    },
+    "unreal_v1227_UnType_h": {
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnType.h",
+      "sha256": "b7faf265555ee3c05a03368826613ad68ea5f1bc90076451b908c44b7b77cf69",
+      "bytes": 33778
+    }
+  },
+  "native_original_CDB_method_disassembly_and_four_loaded_values": {
+    "original_2012_227i_compiled_subclass_function_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C227I-ARRAY-MAP-FIXED-STR-COMPILED-DISASM.txt",
+      "sha256": "85d545c089adc5ed8d72984bda32d70707d641def8df8251d21ae0abdd4df0f5",
+      "bytes": 43616
+    },
+    "original_2012_227i_compiled_subclass_disassembly_commands": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C227I-ARRAY-MAP-FIXED-STR-COMPILED-DISASM-COMMANDS.txt",
+      "sha256": "2128c992eb84acfd4e6d7b540b9ef155cb4dc07980125b5a0ef8b6adeb604eef",
+      "bytes": 63
+    },
+    "original_2012_227i_native_4_real_ArrayProperty_loaded_referents": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C227I-ARRAY-FOUR-ORIGINAL-NATIVE-INNER-REFERENTS.txt",
+      "sha256": "e2d626abc9f9351f5d697964c343e65b22f75a53891c97bf8405c4f43e7fbea7",
+      "bytes": 17600
+    },
+    "original_2012_227i_four_ArrayProperty_breakpoint_commands": {
+      "path": "catalog/compliance/evidence/o06/20261027-G3-C227I-ARRAY-FOUR-ORIGINAL-NATIVE-INNER-BREAKPOINTS.txt",
+      "sha256": "00903202b5f4b635bfb67f7ea0e1bcbff356ab8de3c9ecbe320f2b9315cabb77",
+      "bytes": 697
+    }
+  },
+  "original_archived_version": 69,
+  "original_licensee_version": 227,
+  "compiled_UArrayProperty_Serialize_address": "0x10149a30",
+  "compiled_UArrayProperty_after_Inner_load": "0x10149a7a",
+  "compiled_UFixedArrayProperty_Serialize_address": "0x101494c0",
+  "compiled_UMapProperty_Serialize_address": "0x10149ff0",
+  "compiled_UStrProperty_Serialize_address": "0x101492c0",
+  "confirmed_real_original_2012_loads": [
+    {
+      "original_zero_based_array_export_index": 662,
+      "original_zero_based_runtime_Inner_export_index": 928,
+      "original_saved_positive_Inner_reference": 929
+    },
+    {
+      "original_zero_based_array_export_index": 667,
+      "original_zero_based_runtime_Inner_export_index": 922,
+      "original_saved_positive_Inner_reference": 923
+    },
+    {
+      "original_zero_based_array_export_index": 669,
+      "original_zero_based_runtime_Inner_export_index": 917,
+      "original_saved_positive_Inner_reference": 918
+    },
+    {
+      "original_zero_based_array_export_index": 746,
+      "original_zero_based_runtime_Inner_export_index": 843,
+      "original_saved_positive_Inner_reference": 844
+    }
+  ],
+  "confirmed_loaded_array_property_count": 4,
+  "actual_loaded_fixedarray_property_count": 0,
+  "actual_loaded_map_property_count": 0,
+  "all_four_original_inner_targets_resolve_same_native_Core_u_linker": true,
+  "later_v1227_build_implementation_equivalence_proved": false,
+  "G3_02_FULL_accepted": false,
+  "G3_11_FULL_accepted": false,
+  "G3_15_FULL_accepted": false
+}

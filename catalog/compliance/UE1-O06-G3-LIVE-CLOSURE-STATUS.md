@@ -1,13 +1,13 @@
 # G3 live closure ? 27 October 2026
 
-**Full G3 contracts: 1/16. Contracts with original compiled native subproofs: 8/16. Distinct original compiled native subproofs: 10.**
+**Full G3 contracts: 1/16. Contracts with original compiled native subproofs: 10/16. Distinct original compiled native subproofs: 11.**
 
 G3-01 source selection is accepted under the clarified cumulative game-source inheritance rule. The remaining 15 method/behavior gates retain their strict source/real native parity criteria. Older G3 acceptance matrix is a pre-execution plan and its PLANNED entries must not be mistaken for the live closure status.
 
 | Contract | Native subproofs | Decisive remaining requirement |
 |---|---:|---|
 | G3-01 Exact Epic C98/T99/C227 Core source lineage + version gates | **ACCEPTED: 87/87 DEV** | CLOSED: eight SHA-pinned Unreal source revisions, UT99 v400/v432 chain; UE1 engine and cumulative overrides with later absent CPP inherited; wrong-game and ambiguous provenance rejected. See source-chain manifest and focused G3-01 verifier. Native loaded-value acceptance is G3-15. |
-| G3-02 Complete class/property serializer symbols, inherited paths and source exclusions | 0 | Map only actually changed source header/inline/new serializer methods across revisions; inherited absent game CPP already resolved; 14/57 ABI mismatch alone is not a missing source blocker. |
+| G3-02 Complete class/property serializer symbols, inherited paths and source exclusions | 1 | Map only actually changed source header/inline/new serializer methods across revisions; inherited absent game CPP already resolved; 14/57 ABI mismatch alone is not a missing source blocker. |
 | G3-03 UField and UStruct | 1 | Original compiled UStruct script/child/load and malformed cases for C98/T99/C227; 2012 UField reference branch complete only. |
 | G3-04 UState and UFunction | 0 | Original compiled UState/UFunction flags, script, version exceptions and malformed cursor for each profile. |
 | G3-05 UClass serialization and default objects | 0 | Original compiled UClass default-object construction, values, Config/Localized effects and error paths across C98/T99/C227. |
@@ -16,11 +16,11 @@ G3-01 source selection is accepted under the clarified cumulative game-source in
 | G3-08 Scalar derived properties and String/Str version changes | 2 | Bool, Byte, Int, Float, Name, String, Str and later C227 scalar type/version and malformed paths, original compiled behavior. |
 | G3-09 UObjectProperty and UClassProperty references | 2 | ObjectProperty/ClassProperty original T99 and C227 referents, invalid type/redirect, LOAD/SAVE and failure cursor. |
 | G3-10 UStructProperty nested layouts | 1 | UStructProperty nested SerializeBin/offsets/imported fields and negative nested errors for all profile builds. |
-| G3-11 UArrayProperty, UFixedArrayProperty and UMapProperty | 0 | Native array/fixed-array/map loaded values and source-defined exclusion/invalid-count cases across each distinct build. |
+| G3-11 UArrayProperty, UFixedArrayProperty and UMapProperty | 1 | Native array/fixed-array/map loaded values and source-defined exclusion/invalid-count cases across each distinct build. |
 | G3-12 Source script expression, bytecode and fixups | 0 | Native script opcode fixups and bytecode error cursor for C98 and C227; reuse verified v432 G5. |
 | G3-13 Tagged property values, defaults, config and localized | 0 | Native loaded tagged/default/config/localized state for C98 and C227, source-specific defaults and invalid cases. |
 | G3-14 Source version branches and exact malformed FArchive errors | 1 | All unique source-defined malformed and version failure branches beyond two verified May1998 reference errors. |
-| G3-15 Original compiled native loaded-value and genuine-file parity | 10 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
+| G3-15 Original compiled native loaded-value and genuine-file parity | 11 | Native parity only for source-defined distinct serializers/version-error branches and genuine observed objects; unrelated 2012 vs later C227 ABI diagnostic is not an absent game-source blocker. |
 | G3-16 One independent whole-G3 gate / DEV release / PRD SHA | 0 | Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements. |
 
 ## Evidence (original compiled engine, subset-specific)
@@ -48,3 +48,8 @@ Never promote a contract just because a previous native positive sample passed, 
 ## G3-02 newly introduced Unreal v227 subclass inheritance implementation (2026-10-27)
 
 Original v227 Core/Inc/UnType.h newly defines UPointerProperty and UAnyProperty with **NO Serialize(FArchive&) override**: their on-disk declarations persist the inherited UE1 UField -> UProperty serialized members and add no subclass metadata bytes. The source expressly maps their 4-bit tagged instance-value type aliases to NAME_IntProperty and NAME_VectorProperty, respectively, which does NOT make their runtime SerializeItem behavior identical to normal Int/Vector properties. Production CatalogUE1ClassicPropertyNativeReader now recognizes both classes **only for selected unreal-v227**, preserves exact tagged aliases in declaration metadata and keeps runtime SerializeItem unverified. Both other selected game sources reject those class identities. Critically, original v227 UButtonProperty **DOES declare** Serialize(FArchive&) and thus cannot be treated as inherited when its method body is unavailable: CatalogUE1ClassicNativeObjectReader now returns an explicit source-defined override-unverified status even if the native byte tail is zero. Genuine 2012 227i Core.u/Engine.u/Editor.u/UMenu.u contained no instances of the new three property classes in the selected stock commandlet corpus; one new source-SHA-based synthetic version69/licensee227 fixture checker covers inherited positive, wrong game and extra byte, plus explicit override refusal: **20/20 DEV scoped PASS**. Source inherited classes are now production implemented; UButton explicit implementation and remaining changed v227 source declarations are still G3-02 work. Full G3 remains **1/16**. Source SHA evidence is part of UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json.
+
+
+## G3-02 / G3-11 original 2012 C227i actual compiled new source subclasses (2026-10-27)
+
+v1.224 Unreal game source introduces UStrProperty, UArrayProperty, UFixedArrayProperty, UMapProperty; v1.227 retains them. Actual original 2012 227i compiled Core.dll disassembly establishes UStr inherited UProperty only, UArray inherited then Inner, UFixedArray inherited then Inner+Count, UMap inherited then Key+Value. Four native UArrayProperty::Serialize original Core.u indices 662/667/669/746 loaded real original Inner pointers to source exports 928/922/917/843, or saved refs 929/923/918/844; all four exactly match the current production reader. True original native x86 debugger transcripts, original DLL/UCC/Core.u and three source UnType.h revisions SHA pinned in UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json. Independent NEW one-shot DEV scoped verifier 73/73 PASS; no old 668 native UProperty base trace replay or production decoder changes required. No UFixedArray or UMap actual loaded instances on the original UCC startup; native disassembly is evidence of call order ONLY, not genuine loaded-value certification. G3-02, G3-11, G3-15 remain OPEN; full G3 stays 1/16.

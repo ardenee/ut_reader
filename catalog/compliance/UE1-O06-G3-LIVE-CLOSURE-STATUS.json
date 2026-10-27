@@ -4,8 +4,8 @@
   "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
   "full_contracts_required": 16,
   "full_contracts_accepted": 1,
-  "contracts_with_pinned_original_native_evidence": 8,
-  "distinct_original_native_source_subproofs": 10,
+  "contracts_with_pinned_original_native_evidence": 10,
+  "distinct_original_native_source_subproofs": 11,
   "C227_primary_blocker": "NONE FROM MISSING SOURCE FILE: v1.224 and v1.227 inherit classic UE1 v1.200 Core serializer bodies, with actual changed later headers/new classes resolved as source deltas. Native method differences matter only when demonstrated (G3-02..15).",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -68,6 +68,14 @@
       "sha256": "da9d0616f9e65670fc9e8d1ea1007b403384bb6e3b409b8e6a3da3395051777c",
       "bytes": 4943,
       "actual_native_subscope_only": true
+    },
+    "c227i-2012-array-inner-four": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+      "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31",
+      "bytes": 5530,
+      "original_compiled_source_loaded_ArrayProperty_records": 4,
+      "original_compiled_subclass_methods_disassembled": 4,
+      "source_native_subscope_only": true
     }
   },
   "contracts": [
@@ -88,8 +96,10 @@
       "id": "G3-02",
       "requirement": "Complete class/property serializer symbols, inherited paths and source exclusions",
       "full_status": "OPEN",
-      "verified_original_native_subproof_ids": [],
-      "decisive_remaining_requirement": "Method-by-method actual header/inline/new type and changed game-source overrides along UE1->Unreal cumulative chain (v1.224/v1.227) and UT99 v400->v432; inherited methods absent in later game CPP already resolved. Do not block on unavailable Core.cpp or 14/57 compiler ABI mismatch alone.",
+      "verified_original_native_subproof_ids": [
+        "c227i-2012-array-inner-four"
+      ],
+      "decisive_remaining_requirement": "Original C227i loaded 4/4 actual ArrayProperty Inner targets and 4 distinct introduced compiled serializer call orders now verified. Complete distinct changed v1.224/v1.227 method/inline-class inventory incl v227 UButtonProperty::Serialize explicit override with no available implementation, and UT99 v432 deltas. Missing game CPP not a blocker for inherited methods.",
       "actual_game_source_method_delta_2026_10_27": {
         "status": "IMPLEMENTED_SOURCE_CORRECT_WITH_ONE_SCOPED_DEV_PASS",
         "source": "L:/Source/Games/Unreal/Unreal [v1.227]/Core/Inc/UnType.h",
@@ -186,8 +196,10 @@
       "id": "G3-11",
       "requirement": "UArrayProperty, UFixedArrayProperty and UMapProperty",
       "full_status": "OPEN",
-      "verified_original_native_subproof_ids": [],
-      "decisive_remaining_requirement": "Native array/fixed-array/map loaded values and source-defined exclusion/invalid-count cases across each distinct build."
+      "verified_original_native_subproof_ids": [
+        "c227i-2012-array-inner-four"
+      ],
+      "decisive_remaining_requirement": "Real C227i UArray 4/4 exact original loaded Inner native ref values, but genuine FixedArray/Map loaded values not observed. Nested instance array/map semantics and source malformed, overflow and physical EOF/version branches remain."
     },
     {
       "id": "G3-12",
@@ -226,7 +238,8 @@
         "may-ref600",
         "may-malformed2",
         "c227i-property668",
-        "c227i-field915"
+        "c227i-field915",
+        "c227i-2012-array-inner-four"
       ],
       "decisive_remaining_requirement": "Actual loaded-value and genuine-file parity for remaining DIFFERENT source-defined serialization behaviors, archive error/version branches; 2012 227i compiled-vs-later Core.lib import ABI difference is diagnostic, NOT an automatic absence-of-source gate."
     },
@@ -242,5 +255,13 @@
   "source_revision_chain_manifest": {
     "path": "catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json",
     "sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901"
+  },
+  "last_source_native_new_verifier": {
+    "manifest": "c227i-2012-array-inner-four",
+    "checks": 73,
+    "passed": 73,
+    "test_sha256": "9fee7e9e7bd044208f30ed376a348aeb9a7751a770c3a916e03597f3f4fb99a4",
+    "scoped_dev_log_sha256": "654138d33347cf8002d31a1bdba29199a0ded5417e9d2cb97281f853ff38f988",
+    "scoped_dev_log": "catalog/compliance/evidence/o06/20261027T105329635Z-07802580-DEV-verify-ue1-o06-g3-c227i-four-array-inner-native.php.txt"
   }
 }

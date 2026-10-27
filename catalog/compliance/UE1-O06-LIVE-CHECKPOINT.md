@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-02-v227-source-introduced-property-inherited-serialize`
-- **Stage:** G3-01-FULL-SOURCE-87-G3-02-V227-DECLARATIONS-20-PRD-SHA-VERIFIED
-- **Last completed action:** User confirmed cumulative game-source lineage rule through Unreal v0.84a to v1.227. G3-01 SOURCE SELECTION accepted 1/16 after pinned original eight-Unreal and UT99 v400->v432 source snapshots and 87/87 scoped DEV PASS, release 887d87fc GitHub pushed PRD 16/16 SHA matched. G3-02 actual added game class source: UPointerProperty and UAnyProperty inherit UField/UProperty native serialized declaration (no explicit Serialize override) and retain source-tag GetID aliases; UButtonProperty explicitly declares Serialize(FArchive&) therefore remains SOURCE-SPECIFIC UNVERIFIED, not guessed inherited. Single new source anchored 20/20 focused DEV PASS, actual implementation release 499de57a GitHub pushed, PRD 16/16 SHA files matched. Neither missing v227 cpp nor mismatched 2012 Core.lib inhibits source inheritance; remaining G3-02 changed header methods and behavior-specific native G3 tests are open, final gate 1/16.
-- **Resume at:** Continue G3-02 complete actual source-defined C227 v1.224->v1.227 changed header/inline method and new-class inventory and UT99 v400->v432 deltas, track inherited vs overwritten per class/method; then close remaining contracts. Do not retest G3-01 87, G3-02 20, earlier 668/915/1536/600 proofs or compel missing game .cpp reconstruction.
-- **Active changed at:** 2026-10-27T10:36:47+00:00
-- **Latest DEV test states:** PASS 173; FAIL 1; STARTED 0
+- **Contract:** `g3-02-original-2012-c227i-four-array-inner-identities`
+- **Stage:** G3-02-C227I-ORIGINAL-ARRAY-FOUR-INNER-73-FOCUS-PASS-RELEASE-PENDING
+- **Last completed action:** One NEW compiled original 2012 227i after-Serialize UArrayProperty distinct subclass method acceptance 73/73 scoped DEV PASS with original 2012 DLL/UCC/Core.u and CDB direct four after-load source export indices 662/667/669/746, Inner reference target saved compact indices 929/923/918/844 current PHP exact match. Disassembled four genuine newly introduced game source methods UStr/Array/FixedArray/Map. Original 227i fixedarray/map did not load objects, their only evidence is actual compiled call order, not loaded parity. True original 1998 v1200, 1999 v1224 and v227 game UnType headers SHA pinned. Separate source profile, 2012 binary not later C227 v227k certified. Native source-backed contracts with at least one proof now 10/16, 11 distinct proof manifests; full G3 1/16 because G3-02 and G3-11 still require changed/new override and instance native cases, no production PHP changes or previous UProperty base test replay.
+- **Resume at:** Commit and deploy this ONE new C227i UArray subclass native loaded proof DEV to PRD with SHA. Then resolve remaining explicit changed header methods especially v227 UButtonProperty custom Serialize and separate UStruct/Array nested values without repeating prior positive source validations.
+- **Active changed at:** 2026-10-27T10:56:34+00:00
+- **Latest DEV test states:** PASS 174; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T10:53:31.5645031Z | verify-ue1-o06-g3-c227i-four-array-inner-native.php | PASS | 972 | catalog\compliance\evidence\o06\20261027T105329635Z-07802580-DEV-verify-ue1-o06-g3-c227i-four-array-inner-native.php.txt |
+| 2026-10-27T10:53:29.6435155Z | verify-ue1-o06-g3-c227i-four-array-inner-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T105329635Z-07802580-DEV-verify-ue1-o06-g3-c227i-four-array-inner-native.php.txt |
 | 2026-10-27T10:34:02.0585864Z | verify-ue1-o06-g3-02-v227-new-property-inheritance.php | PASS | 128 | catalog\compliance\evidence\o06\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt |
 | 2026-10-27T10:34:01.5016249Z | verify-ue1-o06-g3-02-v227-new-property-inheritance.php | STARTED |  | catalog\compliance\evidence\o06\20261027T103401493Z-e63185bd-DEV-verify-ue1-o06-g3-02-v227-new-property-inheritance.php.txt |
 | 2026-10-27T10:25:03.6571850Z | verify-ue1-o06-g3-01-chronological-source-inheritance.php | PASS | 95 | catalog\compliance\evidence\o06\20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-26T23:05:03.8322345Z | verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T230503824Z-c26a0589-DEV-verify-ue1-o06-g3-c98-may1998-ustring-native-loaded.php.txt |
 | 2026-10-26T22:55:37.5186474Z | verify-ue1-o06-g3-c98-may1998-uproperty-identities.php | PASS | 662 | catalog\compliance\evidence\o06\20261026T225536408Z-cc8998e6-DEV-verify-ue1-o06-g3-c98-may1998-uproperty-identities.php.txt |
 | 2026-10-26T22:55:36.4156731Z | verify-ue1-o06-g3-c98-may1998-uproperty-identities.php | STARTED |  | catalog\compliance\evidence\o06\20261026T225536408Z-cc8998e6-DEV-verify-ue1-o06-g3-c98-may1998-uproperty-identities.php.txt |
-| 2026-10-26T22:09:15.9646833Z | verify-ue1-o06-g3-c98-may1998-original-stock.php | PASS | 2452 | catalog\compliance\evidence\o06\20261026T220913071Z-d94680b3-DEV-verify-ue1-o06-g3-c98-may1998-original-stock.php.txt |
-| 2026-10-26T22:09:13.0795018Z | verify-ue1-o06-g3-c98-may1998-original-stock.php | STARTED |  | catalog\compliance\evidence\o06\20261026T220913071Z-d94680b3-DEV-verify-ue1-o06-g3-c98-may1998-original-stock.php.txt |
 
 ## Recovery procedure
 

@@ -1,0 +1,8 @@
+r $t0 = 0
+bp 10149a7a ".echo G3_C227I_ARRAYPROPERTY_AFTER_SUBCLASS_INNER_LOAD; dd @esi-50 L2; dd @esi L1; .if (poi(@esi) != 0) {dd poi(@esi)+10 L2} .else {.echo G3_NULL_INNER}; r $t0 = @$t0+1; gc"
+bp 1014951a ".echo G3_C227I_FIXEDARRAY_AFTER_SUBCLASS_INNER_COUNT_LOAD; dd @esi-50 L2; dd @esi L2; .if (poi(@esi) != 0) {dd poi(@esi)+10 L2} .else {.echo G3_NULL_INNER}; r $t0 = @$t0+1; gc"
+bp 1014a047 ".echo G3_C227I_MAPPROPERTY_AFTER_SUBCLASS_KEY_VALUE_LOAD; dd @esi-50 L2; dd @esi L2; .if (poi(@esi) != 0) {dd poi(@esi)+10 L2} .else {.echo G3_NULL_KEY}; .if (poi(@esi+4) != 0) {dd poi(@esi+4)+10 L2} .else {.echo G3_NULL_VALUE}; r $t0 = @$t0+1; gc"
+g
+.echo G3_C227I_NEW_SUBCLASS_FINISHED
+r $t0
+q
