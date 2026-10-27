@@ -5,7 +5,7 @@
   "full_contracts_required": 16,
   "full_contracts_accepted": 5,
   "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 20,
+  "distinct_original_native_source_subproofs": 21,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -173,6 +173,16 @@
       "true_original_compiled_C227i_null_appFailAssert": true,
       "original_469f_source_export771_not_loaded": true,
       "G3_15_full_native_all_corpus_still_OPEN": true
+    },
+    "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods": {
+      "relative_file": "catalog/compliance/UE1-O06-G3-08-469F-VS-227K-POINTER-BUTTON-ANY-RUNTIME-SEMANTICS.json",
+      "sha256": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc",
+      "bytes": 6232,
+      "new_authentic_compiled_original_PE_methods": 8,
+      "469f_pointer_item_bytes": 4,
+      "227k_pointer_button_item_bytes": 0,
+      "native_instance_loaded_values_claimed": false,
+      "G3_08_accepted": false
     }
   },
   "contracts": [
@@ -293,9 +303,12 @@
       "verified_original_native_subproof_ids": [
         "may-string66",
         "may-ref600",
-        "c227k-original-two-genuine-UButton-FString-serialized-values"
+        "c227k-original-two-genuine-UButton-FString-serialized-values",
+        "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods"
       ],
-      "decisive_remaining_requirement": "NEW actual matching compiled C227k Core.dll UButtonProperty::Serialize and FArchive<<FString decompiled at RVA 0x80010/0x66e40, plus 2 genuine untouched ScriptedAI.u MoveCamButton and MovePointButton Caption source file values accepted by new PHP serializer and 38/38 focused checks. On-disk method branch now implemented fully; native in-memory loaded Captions not captured (227k UCC lacks make/batchexport). Runtime SerializeItem/NetSerializeItem, SAVE and other scalar/string version/error behaviors remain OPEN."
+      "decisive_remaining_requirement": "G3-08 remains OPEN. NEW actual compiled original 469f Pointer SerializeItem/NET archives four bytes; original 227k Pointer and Button share no-op SerializeItem and success-only NetSerializeItem with no archived data. UnrealDB now exposes correct compiled source-specific runtime operator metadata, but actual property-instance value codec is NOT implemented by this declaration reader. UAnyProperty FAnyProperty dynamic Serialize/NetSerialize, original 227k button in-memory Caption LOAD comparison, and other original scalar/Str source version SAVE/error/malformed cases remain required; DO NOT replay old C98 66 string or 227k two caption verifier.",
+      "new_469f_227k_compiled_scalar_method_manifest_sha256": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc",
+      "new_46_check_scoped_pass_sha256": "ad2e9d166f4e602d651ec5c8ef50f9b3c059b2a23680492b86dea61a8112125c"
     },
     {
       "id": "G3-09",
@@ -380,9 +393,10 @@
         "c227k-original-two-genuine-UButton-FString-serialized-values",
         "t99-469f-2026-native-8const-1enum-global-seven-names",
         "t99-469f-original-490-UPROPERTY-loaded-20-native-categories",
-        "original469f-and-C227-native-property-class-reference-and-null"
+        "original469f-and-C227-native-property-class-reference-and-null",
+        "t99-469f-versus-c227k-Pointer-Button-Any-8-native-machine-methods"
       ],
-      "decisive_remaining_requirement": "G3-09 class-specific reference archive now accepted with original C98/T99/C227 native values, but original T99 export771 not actually loaded by commandlet. All-other-method genuine native loaded/SAVE/error and complete corpus still OPEN."
+      "decisive_remaining_requirement": "G3-08 newly distinguishes original compiled 469f Pointer item four bytes from original 227k Pointer/Button item no-op and Any dynamic codec; source-method proof only, NOT stock native loaded value or complete genuine corpus. G3-15 original all-class source-loaded/SAVE/malformed certification remains OPEN."
     },
     {
       "id": "G3-16",
@@ -548,5 +562,15 @@
     "original_DEV_focused_log_sha256": "5d202f15092420541b2f191cf5e005f771601e1c558631554439d948bf41caa0",
     "old_C98_positive_and_malformed_tests_repeated": 0,
     "G3_14_and_G3_15_still_OPEN": true
+  },
+  "latest_G3_08_original_compiled_runtime_method_delta": {
+    "status": "SOURCE_COMPILED_PARTIAL_G3_08_OPEN",
+    "new_independent_DEV_checks": 46,
+    "original_native_method_PE_byte_SHA": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc",
+    "DEV_log_sha256": "ad2e9d166f4e602d651ec5c8ef50f9b3c059b2a23680492b86dea61a8112125c",
+    "old_tests_replayed": 0,
+    "actual_loaded_property_instance_claimed": false,
+    "native_any_dynamic_codec_completed": false,
+    "full_G3_accepted": 5
   }
 }

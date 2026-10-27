@@ -1,0 +1,4 @@
+u Core!UPointerProperty::SerializeItem L10
+.echo POINTER_NET
+u Core!UPointerProperty::NetSerializeItem L10
+q

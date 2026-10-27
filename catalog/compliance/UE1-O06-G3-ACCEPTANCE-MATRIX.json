@@ -2137,5 +2137,13 @@
     "original_source_export771_unobserved_G3_15": true,
     "crosscutting_linker_type_redirect_cursor_G3_14": "OPEN",
     "compiled_evidence_sha256": "82d84fdc058cf1db53a253e1b005ead4cc1d2e8db722386ff2a2efc20aedf025"
+  },
+  "G3_08_original_469f_vs_227k_compiled_runtime_methods": {
+    "G3_08": "OPEN",
+    "independent_scoped_checks_passed": 46,
+    "compiled_PE_byte_evidence_sha256": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc",
+    "original_469f_pointer_serializeitem_bytes": 4,
+    "original_227k_pointer_button_serializeitem_bytes": 0,
+    "AnyProperty_dynamic_codec": "UNVERIFIED"
   }
 }

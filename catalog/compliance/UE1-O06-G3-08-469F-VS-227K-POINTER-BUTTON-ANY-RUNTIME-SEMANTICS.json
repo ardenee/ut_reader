@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "contract": "G3-08 PARTIAL original runtime operation source-specific method branch",
+  "scope": "An actual source-code/compiled ORIGINAL behavioral discrepancy, rather than rerunning old UString66 or Button38 positive tests",
+  "original_matched_compiled_true_native_PE_exports_and_first24bytes": {
+    "T99-469f": {
+      "original_dll": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+      "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+      "bytes": 1790328,
+      "native_exported_methods": {
+        "UPointerProperty::SerializeItem": {
+          "PE_export_name": "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z",
+          "PE_RVA": "0x853a0",
+          "PE_file_offset": 542624,
+          "first_24_compiled_bytes_hex": "558bec8b4d086a04ff750c8b01ff50045dc20800cccccccc"
+        },
+        "UPointerProperty::NetSerializeItem": {
+          "PE_export_name": "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+          "PE_RVA": "0x83b70",
+          "PE_file_offset": 536432,
+          "first_24_compiled_bytes_hex": "558bec8b4d086a04ff75108b01ff5004b8010000005dc20c"
+        }
+      }
+    },
+    "C227k": {
+      "original_dll": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+      "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+      "bytes": 1286008,
+      "native_exported_methods": {
+        "UPointerProperty::SerializeItem": {
+          "PE_export_name": "?SerializeItem@UPointerProperty@@UBEXAAVFArchive@@PAX@Z",
+          "PE_RVA": "0x1ec40",
+          "PE_file_offset": 122944,
+          "first_24_compiled_bytes_hex": "c20800cccccccccccccccccccccccccc558bec8b45080141"
+        },
+        "UPointerProperty::NetSerializeItem": {
+          "PE_export_name": "?NetSerializeItem@UPointerProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+          "PE_RVA": "0x7ea00",
+          "PE_file_offset": 515584,
+          "first_24_compiled_bytes_hex": "b801000000c20c00cccccccccccccccc558bec8b818c0000"
+        },
+        "UButtonProperty::SerializeItem": {
+          "PE_export_name": "?SerializeItem@UButtonProperty@@UBEXAAVFArchive@@PAX@Z",
+          "PE_RVA": "0x1ec40",
+          "PE_file_offset": 122944,
+          "first_24_compiled_bytes_hex": "c20800cccccccccccccccccccccccccc558bec8b45080141"
+        },
+        "UButtonProperty::NetSerializeItem": {
+          "PE_export_name": "?NetSerializeItem@UButtonProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+          "PE_RVA": "0x7ea00",
+          "PE_file_offset": 515584,
+          "first_24_compiled_bytes_hex": "b801000000c20c00cccccccccccccccc558bec8b818c0000"
+        },
+        "UAnyProperty::SerializeItem": {
+          "PE_export_name": "?SerializeItem@UAnyProperty@@UBEXAAVFArchive@@PAX@Z",
+          "PE_RVA": "0x80b00",
+          "PE_file_offset": 524032,
+          "first_24_compiled_bytes_hex": "558bec6aff6834dc0b1064a1000000005083ec10535657a1"
+        },
+        "UAnyProperty::NetSerializeItem": {
+          "PE_export_name": "?NetSerializeItem@UAnyProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z",
+          "PE_RVA": "0x7e800",
+          "PE_file_offset": 515072,
+          "first_24_compiled_bytes_hex": "558bec6aff6850d90b1064a1000000005083ec10535657a1"
+        }
+      }
+    }
+  },
+  "original_real_CDB_compiled_native_instruction_logs": {
+    "C227k_original_Pointer_Button_Any_compiled_CDB_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-Pointer-Button-Any-RUNTIME-METHODS-CDB.txt",
+      "sha256": "9f9a3721d6146caf22d3cd2cced834ad63036f5ca4aa4d77183ed4c69d0118a6",
+      "bytes": 26252
+    },
+    "T99_469f_original_Pointer_compiled_CDB_disassembly": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-T99-469F-Pointer-4-BYTE-RUNTIME-METHODS-CDB.txt",
+      "sha256": "1528223049c5948103b5df6645f3ccf4eef270de3459b797c8f7a2843bc49306",
+      "bytes": 11490
+    },
+    "C227k_original_compiled_DEBUGGER_commands": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-Pointer-Button-Any-RUNTIME-CDB-SCRIPT.txt",
+      "sha256": "b02f904d2883ddc1946fb5d686bd78dad88fb054917e2ee06f62602a40beb5fc",
+      "bytes": 368
+    },
+    "T99_469f_original_compiled_DEBUGGER_commands": {
+      "repo_path": "catalog/compliance/evidence/o06/20261027-G3-08-T99-469F-Pointer-RUNTIME-CDB-SCRIPT.txt",
+      "sha256": "6a1f8ade95aecc0978614a7c64e7f1628aa0852120a18393bbd88b0f6c70134b",
+      "bytes": 109
+    }
+  },
+  "T99_469f_PointerProperty_runtime_item_or_net_serialized_byte_count": 4,
+  "C227k_Pointer_and_Button_serializeitem_byte_count": 0,
+  "C227k_Pointer_and_Button_netserializeitem_byte_count": 0,
+  "C227k_Pointer_and_Button_NetSerializeItem_true_return_value": 1,
+  "C227k_AnyProperty_SerializeItem_dynamic_FAnyProperty_native_value": "original compiled dynamically creates/releases FAnyProperty and invokes Serialize; native value codec and malformed branches remain unsupported in PHP.",
+  "newly_updated_Reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+  "newly_updated_reader_SHA256": "9f1f0b6cb770f0801610e57f32db30c99d2da4bd14b39ede4b1c834b0564e2b6",
+  "existing_original_227k_two_Caption_Serialize_OLD_manifest_SHA256": "3284b2fa98be71cce3815ad4f7df5c74bd14cd3954193548c8fa37fdb49c59bc",
+  "existing_native_Button_2_caption_original_loaded_values_not_rerun": true,
+  "no_native_in_memory_Button_Caption_claimed": true,
+  "no_original_runtime_instance_value_reader_implementation_claimed": true,
+  "G3_08_FULL_ACCEPTED": false,
+  "remaining_G3_08_work": [
+    "Real 227k UButton Caption in-memory loaded-value or defensible source-defined executable equivalent",
+    "UAnyProperty dynamic FAnyProperty::Serialize and NetSerializeItem instance codec / error cases",
+    "Source-typed scalar UBool bitmask and UByte enum/version/scalar String vs Str instance-value and malformed branches",
+    "Original actual compiled malformed/export physical cursor and SAVE source-case where required"
+  ]
+}

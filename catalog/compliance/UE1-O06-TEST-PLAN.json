@@ -1309,6 +1309,17 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-08-original-469f-vs-227k-compiled-Pointer-Button-Any-runtime-method-delta": {
+      "description": "NEW native original matching compiled 469f vs 227k Runtime SerializeItem and NetSerializeItem PE export instructions for UT99 469f PointerProperty, C227k PointerProperty/ButtonProperty, and C227k AnyProperty dynamic codecs. Actual original 469f Pointer SerializeItem delegates Archive.Serialize(Data,4), NetSerializeItem same plus return1. Actual compiled 227k Pointer and Button share exact RVA0x1EC40 ret8 no-op SerializeItem and exact RVA0x7EA00 mov eax,1 ret12 NetSerializeItem with zero on-wire bytes. UAnyProperty native SerializeItem at0x80B00 dynamically constructs/releases FAnyProperty and invokes it, NetSerializeItem at0x7E800 delegates FAnyProperty::NetSerialize, still NOT implemented by UnrealDB runtime value reader. A genuine package version69/0 does NOT imply 469f overlay vs historical v432. Source-specific production declaration metadata exposes exact verified compiled item methods without claiming actual value-instance parser support. Original shipped 227k two UButton Caption saved method and C98 UString66 earlier native proofs not rerun; G3-08 REMAINS OPEN until UAny dynamic codec, button actual original native loaded Caption or proper executable evidence, scalar item/type/version/malformed semantics. Scoped ONE independent 46 checks on original Core DLL machine bytes SHA and NEW source metadata fixtures, no previous verification replay.",
+      "readers": [
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

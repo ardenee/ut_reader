@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 46,
+    "passed": 46,
+    "failed": [],
+    "G3_08_FULL_ACCEPTED": false,
+    "new_original_compiled_source_specific_runtime_operator_methods": 8,
+    "genuine_469f_pointer_payload_bytes": 4,
+    "genuine_C227k_pointer_button_payload_bytes": 0,
+    "genuine_C227k_Any_dynamic_codec_unsupported": true,
+    "prior_native_positive_acceptance_tests_reexecuted": 0,
+    "full_G3_contracts_still_accepted": 5
+}

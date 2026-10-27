@@ -198,6 +198,39 @@ final class CatalogUE1ClassicPropertyNativeReader
             // UInt/Float/Bool/Name/StrProperty add NO LOAD/SAVE native bytes.
             // UBoolProperty BitMask is serialized only in non-load/save archives.
         }
+        // Genuine matching shipped x86 Core.dll RUNTIME-VALUE methods differ
+        // radically, even with the SAME NAME_IntProperty GetID alias.
+        // Original UT99 469f UPointerProperty::SerializeItem delegates
+        // Archive.Serialize(Data,4), NetSerializeItem archives four bytes
+        // and returns 1. Actual Unreal 227k Pointer and Button use the
+        // SAME no-op SerializeItem (ret 8) and SAME success-only
+        // NetSerializeItem (mov eax,1; ret 0xc). 469f != v432, and no
+        // archive version identifies their runtime-provenance difference.
+        // Original 227k UAny uses FAnyProperty's dynamic instance format
+        // and is NOT a VectorProperty value despite its 4-bit tag alias.
+        // These describe compiled C++ method behavior; this declaration
+        // reader does NOT execute or implement runtime instance encoders.
+        $originalScalarCompiledRuntime=null;
+        if($kind==='pointerproperty'&&$ut99_469f){
+            $originalScalarCompiledRuntime=[
+                'matched_original_compiled_binary_profile'=>'ut99-469f-x86',
+                'serializeitem_semantics'=>'FArchive::Serialize(Data,4)',
+                'serializeitem_archive_bytes'=>4,
+                'netserializeitem_semantics'=>'FArchive::Serialize(Data,4); return 1',
+                'netserializeitem_archive_bytes'=>4,
+                'netserializeitem_returns'=>1,
+            ];
+        }elseif($family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+            &&in_array($kind,['pointerproperty','buttonproperty'],true)){
+            $originalScalarCompiledRuntime=[
+                'matched_original_compiled_binary_profile'=>'unreal-227k-x86',
+                'serializeitem_semantics'=>'no-op; ret 8',
+                'serializeitem_archive_bytes'=>0,
+                'netserializeitem_semantics'=>'return 1; ret 0x0c; no archive write',
+                'netserializeitem_archive_bytes'=>0,
+                'netserializeitem_returns'=>1,
+            ];
+        }
         // This archive version gate is SOURCE-specific, not merely UT99.
         // Original Epic C98 v1.200 UnProp.cpp preserves archived flags.
         // UT99 v400 inherits the <=61 obsolete 0x00080040 clearing.
@@ -224,6 +257,16 @@ final class CatalogUE1ClassicPropertyNativeReader
                 ?'NAME_IntProperty':($kind==='anyproperty'?'NAME_VectorProperty':null),
             'new_v227_property_runtime_serializeitem_verified' =>
                 !in_array($kind,['pointerproperty','anyproperty','buttonproperty'],true),
+            // Exact source-specific COMPILED method semantics only.
+            // Keep the separate runtime value reader unsupported until
+            // it can exercise native loaded-value and negative behavior.
+            'compiled_scalar_runtime_method_semantics' => $originalScalarCompiledRuntime,
+            'compiled_scalar_runtime_methods_disassembled' => $originalScalarCompiledRuntime!==null,
+            'unrealdb_runtime_instance_method_implemented' =>
+                !in_array($kind,['pointerproperty','anyproperty','buttonproperty'],true),
+            'unreal_v227_anyproperty_dynamic_instance_codec_unverified' =>
+                $kind==='anyproperty'
+                    &&$family===CatalogUE1ClassicSourceFamily::UNREAL_V227,
             'super_field_reference' => $superField,
             'next_field_reference' => $nextField,
             'array_dim' => $arrayDim,

@@ -1,0 +1,12 @@
+u Core!UButtonProperty::SerializeItem L12
+.echo G308_BUTTON_NET
+u Core!UButtonProperty::NetSerializeItem L8
+.echo G308_POINTER_SERIALIZEITEM
+u Core!UPointerProperty::SerializeItem L12
+.echo G308_POINTER_NET
+u Core!UPointerProperty::NetSerializeItem L8
+.echo G308_ANY_DEEP
+uf Core!UAnyProperty::SerializeItem
+.echo G308_ANY_NET
+uf Core!UAnyProperty::NetSerializeItem
+q
