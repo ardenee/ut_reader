@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "date": "2026-10-27",
+  "status": "ORIGINAL_2012_COMPILED_227I_UPROPERTY_668_EXACT_ZEROBASED_LINKER_EXPORT_IDS_ALL_NATIVE_LOADED_VALUE_MATCHED",
+  "prior_diagnostic": "catalog/compliance/UE1-O06-G3-C227I-UPROPERTY-NATIVE-DIAGNOSTIC.json",
+  "prior_diagnostic_limit_superseded": "Previous 668 / 673 multiset inclusion had no proved identity. Now genuine original 2012 Core.dll after native UProperty Serialize calls show this+0x14 is zero-based ExportMap LinkerIndex, NOT global FName index. CDB naive du of FName table by this index produced irrelevant names and must never be used for identity. Every one of the 668 genuine original Core.u zero-based property export indices unique and exactly matches individually identified on-disk PHP ArrayDim,PropertyFlags.",
+  "scope": "Only original authenticated 2012 227i native Core.dll with its own untouched original Core.u package and actual UCC.exe runtime with 668 individually identified property objects; no original v227 later Core.lib ABI equivalence (14/57 unresolved), no 5 property exports not observed, no malformed C227 native branch or other version profile; full G3-07/G3-15/G3-16 remain OPEN.",
+  "original_stock_binary_package_executable_pins": {
+    "original_227i_stock_Core_DLL": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+      "bytes": 901120,
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+    },
+    "original_227i_genuine_Core_U": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+      "bytes": 81184,
+      "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"
+    },
+    "original_227i_stock_UCC_EXE": {
+      "path": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\UCC.exe",
+      "bytes": 135680,
+      "sha256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672"
+    }
+  },
+  "actual_original_compiled_2012_CDB_and_unchanged_php_snapshot": {
+    "native_668_per_export_memory_dump": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UPROPERTY-668-EXACT-INDEX-MEMORY-CDB.txt",
+      "bytes": 381378,
+      "sha256": "142415cc0a6a1215690c47d8ae59a95d9c8b3331d1fe8a4405726e8ddc26ddef"
+    },
+    "native_668_per_export_compiled_breakpoint_commands": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UPROPERTY-668-EXACT-INDEX-MEMORY-CDB-COMMANDS.txt",
+      "bytes": 269,
+      "sha256": "2827d0ab169be4daf0e9e09560ca1994ff0bf4e2a6409e6934389aca1239f2f6"
+    },
+    "native_original_2012_archive_version_licensee_memory_dump": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UPROPERTY-2012-ARCHIVE-V69-L227-CDB.txt",
+      "bytes": 11024,
+      "sha256": "e2caf7092f174b704b3a548f25c7b521b1eef27c4f1777687445a201d6bc9fe5"
+    },
+    "native_original_2012_archive_version_licensee_breakpoint": {
+      "path": "catalog/compliance/evidence/o06/20261027-C227I-UPROPERTY-2012-ARCHIVE-V69-L227-CDB-COMMANDS.txt",
+      "bytes": 248,
+      "sha256": "8678ea2e2cc2f1efbb0fb11a615be84ceea171b51d24f0cbaa25f57922914f17"
+    },
+    "previous_673_original_real_CoreU_PHP_export_snapshot": {
+      "path": "catalog/compliance/evidence/o06/20261026-C227I-CORE-U-PROPERTY-ARCHIVE-SNAPSHOT.txt",
+      "bytes": 473212,
+      "sha256": "32f1e4326f4ea3005e1099c6e8a083a89ab0609962fc8f2e376f56f920a4b018"
+    }
+  },
+  "later_v227_header_for_decl_only_not_compiled_equivalence": {
+    "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjBas.h",
+    "bytes": 60016,
+    "sha256": "de50501bfbc22980d6e932bcc328aa3de725f6358587ca06eb320a3da30c8b2a"
+  },
+  "native_compiled_method": "UProperty::Serialize",
+  "native_after_archive_point": "0x10148182",
+  "original_executable_args": "UCC.exe help",
+  "original_archive_version": 69,
+  "original_archive_licensee_version": 227,
+  "source_compiled_this_field_offsets": {
+    "ULinkerLoad_ptr": "this+0x10",
+    "linker_export_index_zero_based": "this+0x14",
+    "ArrayDim": "this+0x34",
+    "PropertyFlags": "this+0x3c"
+  },
+  "native_CDB_wrong_display_name_warning": "Names printed by du FName::Names[poi(@esi+14)] in this capture are NOT property names, because this+14 is link export index. Use actual original getExports()[index].objectNameText instead. No native property identity mismatch.",
+  "auth_original_Core_u_property_export_count": 673,
+  "auth_original_C227i_native_serialized_property_records": 668,
+  "actual_linker_ptr_per_run": [
+    "0269e610"
+  ],
+  "all_668_native_source_export_and_loaded_ArrayDim_PropertyFlags_agree": true,
+  "unique_native_export_indices": 668,
+  "original_property_exports_not_observed_on_this_UCC_startup": [
+    {
+      "export_index": 3,
+      "name": "strparm",
+      "kind": "StrProperty",
+      "array_dim": 1,
+      "property_flags": 4194304
+    },
+    {
+      "export_index": 4,
+      "name": "intparm",
+      "kind": "IntProperty",
+      "array_dim": 1,
+      "property_flags": 0
+    },
+    {
+      "export_index": 6,
+      "name": "Parms",
+      "kind": "StrProperty",
+      "array_dim": 1,
+      "property_flags": 4194432
+    },
+    {
+      "export_index": 634,
+      "name": "ExecVtbl",
+      "kind": "IntProperty",
+      "array_dim": 1,
+      "property_flags": 4098
+    },
+    {
+      "export_index": 655,
+      "name": "ReturnValue",
+      "kind": "IntProperty",
+      "array_dim": 1,
+      "property_flags": 1408
+    }
+  ],
+  "native_other_abi_current_later_Core_lib_mismatch": "43/57 exact symbol overlap with compiled 2012 original DLL; 14 absent/changed, must not equate 2012 compiled methods to later L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\BuildTmp Core.lib",
+  "all_G3_complete_contracts": 0
+}

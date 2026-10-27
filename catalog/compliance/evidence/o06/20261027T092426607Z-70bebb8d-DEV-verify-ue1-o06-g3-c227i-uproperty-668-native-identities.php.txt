@@ -1,0 +1,57 @@
+﻿{
+    "ok": true,
+    "checks": 8715,
+    "passed": 8715,
+    "failed": [],
+    "original_2012_C227i_native_compiled_loaded_individual_export_matches": 668,
+    "source_PHP_property_exports": 673,
+    "unobserved_property_export_indices": [
+        3,
+        4,
+        6,
+        634,
+        655
+    ],
+    "same_original_linker_ptr_within_this_run": "0269e610",
+    "sample": [
+        {
+            "export_index": 933,
+            "name": "ReturnValue",
+            "array_dim": 1,
+            "flags": 1408
+        },
+        {
+            "export_index": 662,
+            "name": "Ar",
+            "array_dim": 1,
+            "flags": 4194688
+        },
+        {
+            "export_index": 928,
+            "name": "Ar",
+            "array_dim": 1,
+            "flags": 0
+        },
+        {
+            "export_index": 927,
+            "name": "B",
+            "array_dim": 1,
+            "flags": 2
+        },
+        {
+            "export_index": 663,
+            "name": "Offset",
+            "array_dim": 1,
+            "flags": 128
+        },
+        {
+            "export_index": 795,
+            "name": "Count",
+            "array_dim": 1,
+            "flags": 144
+        }
+    ],
+    "source_later_core_lib_method_ABI_equivalence_proved": false,
+    "full_G3_07_15_16_accepted": false,
+    "G3_FULL": false
+}

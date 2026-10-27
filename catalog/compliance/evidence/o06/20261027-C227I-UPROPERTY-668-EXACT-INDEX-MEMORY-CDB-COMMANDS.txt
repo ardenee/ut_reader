@@ -1,0 +1,4 @@
+r $t0 = 0
+bp 10148182 ".echo C227_NATIVE_REAL_PROPERTY_IDENTITY; dd @esi+08 L5; dd @esi+34 L4; du poi(poi(104d0490)+4*poi(@esi+14))+0xc L32; .if (poi(@esi+18) != 0) {du poi(poi(104d0490)+4*poi(poi(@esi+18)+14))+0xc L32} .else {.echo NO_OUTER}; r $t0 = @$t0+1; gc"
+g
+q

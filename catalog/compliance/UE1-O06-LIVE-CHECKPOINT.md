@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-c98-may1998-two-original-compiled-native-malformed-error-cursors`
-- **Stage:** G3-C98-MAY17-TWO-ORIGINAL-NATIVE-MALFORMED-FATAL-CURSORS-PRD-SHA-VERIFIED
-- **Last completed action:** Original compiled May17 Core.dll two independent malformed original Core.u class references physically verified in isolated single-byte mutations: inherited PropertyClass invalid import -63 native appErrorf at actual original archive absolute cursor3573; null MetaClass from +1 to 0 after next archive byte native check(MetaClass) appErrorf at actual native archive cursor3574. PHP original ClassProperty ref rejects both correctly. All original source+May compiled binary+unchanged Core.u+mutant one-byte Core.u+8 real native CDB logs/commands SHA pinned. Independent scoped DEV 55/55 PASS, release bf888523 pushed origin main, PRD 21/21 changed file SHA matches and protected config/storage preserved. Original diagnostic CD image dismounted and no Unreal/CDB processes, no production PHP reader changes, no passed positive UE1 G5/original native probes rerun. G3-14 remains OPEN as whole and G3 full 0/16.
-- **Resume at:** Resolve other distinct G3-14 source native malformed branches (archived invalid FName, physical EOF, nested/class default), C227 v227 Core missing implementation/14 ABI differences, methods UClass/UStruct etc before final G3-16 independent whole gate. Do not rerun original C98 two verified negative cursors or previous 1536/600/66 positive evidence.
-- **Active changed at:** 2026-10-27T06:17:16+00:00
-- **Latest DEV test states:** PASS 169; FAIL 1; STARTED 0
+- **Contract:** `g3-c227i-uproperty-original-native-668-exact-export-identities`
+- **Stage:** G3-C227I-2012-ORIGINAL-UPROPERTY-668-EXACT-IDENTITIES-8715-FOCUS-PASS-RELEASE-PENDING
+- **Last completed action:** Actual original 2012 227i Core.dll UProperty::Serialize 668 live original UCC help native callbacks: actual compiled linker index is this+0x14 (NOT global FName), source exact original 934 export Core.u v69/l227 index, 668 unique C227i UProperty exports every original loaded ArrayDim and PropertyFlags matches real original saved bytes and current PHP reader. Five exports 3 strparm 4 intparm 6 Parms 634 ExecVtbl 655 ReturnValue not seen on this UCC run. New distinct independent DEV focus 8715/8715 PASS; source compiled binary, direct 668 native CDB memory plus 673 original PHP snapshot pin, old aggregate superseded. NO production PHP changes, later Core.lib 14/57 ABI gap and rest G3 remain OPEN full 0/16.
+- **Resume at:** Commit authentic original 227i property native individually-identified evidence and SHA-deploy to PRD. Later investigate original 227i 5 unobserved or exact source-family core ABI 14 differences, compiled UE1 archive EOF paths; do not rerun previous 668 aggregate or May C98 positives.
+- **Active changed at:** 2026-10-27T09:25:02+00:00
+- **Latest DEV test states:** PASS 170; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-27T09:24:27.3061131Z | verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php | PASS | 271 | catalog\compliance\evidence\o06\20261027T092426607Z-70bebb8d-DEV-verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php.txt |
+| 2026-10-27T09:24:26.6151476Z | verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php | STARTED |  | catalog\compliance\evidence\o06\20261027T092426607Z-70bebb8d-DEV-verify-ue1-o06-g3-c227i-uproperty-668-native-identities.php.txt |
 | 2026-10-27T06:16:10.0505610Z | verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php | PASS | 118 | catalog\compliance\evidence\o06\20261027T061609517Z-f2803fc7-DEV-verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php.txt |
 | 2026-10-27T06:16:09.5255598Z | verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php | STARTED |  | catalog\compliance\evidence\o06\20261027T061609517Z-f2803fc7-DEV-verify-ue1-o06-g3-c98-may1998-two-native-malformed-cursors.php.txt |
 | 2026-10-26T23:26:15.1681049Z | verify-ue1-o06-g3-c98-may1998-600-native-references.php | PASS | 281 | catalog\compliance\evidence\o06\20261026T232614467Z-33861503-DEV-verify-ue1-o06-g3-c98-may1998-600-native-references.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-26T19:11:08.2309449Z | verify-ue1-o06-g3-c227i-uenum-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T191108223Z-d3884fef-DEV-verify-ue1-o06-g3-c227i-uenum-native-loaded.php.txt |
 | 2026-10-26T19:01:16.3234844Z | verify-ue1-o06-g3-c227i-uconst-native-loaded.php | PASS | 454 | catalog\compliance\evidence\o06\20261026T190115458Z-74e7f6cc-DEV-verify-ue1-o06-g3-c227i-uconst-native-loaded.php.txt |
 | 2026-10-26T19:01:15.4655184Z | verify-ue1-o06-g3-c227i-uconst-native-loaded.php | STARTED |  | catalog\compliance\evidence\o06\20261026T190115458Z-74e7f6cc-DEV-verify-ue1-o06-g3-c227i-uconst-native-loaded.php.txt |
-| 2026-10-26T18:36:20.1284998Z | verify-ue1-classic-property-native.php | PASS | 208 | catalog\compliance\evidence\o06\20261026T183619544Z-62fd4dab-DEV-verify-ue1-classic-property-native.php.txt |
-| 2026-10-26T18:36:19.5445000Z | verify-ue1-classic-property-native.php | STARTED |  | catalog\compliance\evidence\o06\20261026T183619544Z-62fd4dab-DEV-verify-ue1-classic-property-native.php.txt |
 
 ## Recovery procedure
 
