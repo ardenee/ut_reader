@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 1712,
+    "failed": [],
+    "original_compiled_469f_events": 170,
+    "original_functions": 168,
+    "original_uclasses": 2,
+    "persisted_and_reconstructed_native_fields": 1016,
+    "matches": 1016,
+    "new_postload_values": 504,
+    "previous_completed_native_runs_reexecuted": 0,
+    "G3_04_full": "OPEN (remaining C227/469f Engine, SAVE, malformed branch coverage)"
+}

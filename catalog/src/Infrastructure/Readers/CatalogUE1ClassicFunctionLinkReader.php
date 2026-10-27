@@ -1,7 +1,8 @@
 <?php
 /**
- * Reconstruct UT99 v432 UFunction post-load parameter values from the
- * source-defined UStruct::Link / UProperty::Link member layout.
+ * Reconstruct UT99 v432 and separately compiled 469f UFunction post-load
+ * parameter values from original UStruct::Link/UProperty::Link layouts.
+ * The 469f path is enabled only with explicit original runtime provenance.
  *
  * Does not claim runtime UObject pointer linking, script execution, or
  * arbitrary user-defined struct sizes. Unknown members fail closed.
@@ -12,8 +13,13 @@ final class CatalogUE1ClassicFunctionLinkReader
 {
     /** @return array<string,mixed> */
     public static function recompute(
-        string $path, CatalogUE1PackageReader $pkg, int $functionIndex, array $saved
+        string $path, CatalogUE1PackageReader $pkg, int $functionIndex, array $saved,
+        string $sourceProfile=CatalogUE1ClassicSourceFamily::UT99_V432
     ):array {
+        if(!in_array($sourceProfile,[
+            CatalogUE1ClassicSourceFamily::UT99_V432,
+            CatalogUE1ClassicSourceFamily::UT99_V469F,
+        ],true))return ['source_function_link_status'=>'source_profile_unverified'];
         $exports=$pkg->getExports();
         $imports=$pkg->getImports();
         $function=$exports[$functionIndex]??null;
@@ -51,7 +57,7 @@ final class CatalogUE1ClassicFunctionLinkReader
                 $reason='foreign_field_owner';break;
             }
             try {
-                $property=self::loadProperty($path,$pkg,$next-1);
+                $property=self::loadProperty($path,$pkg,$next-1,$sourceProfile);
             }catch(\Throwable $e){$reason='unreadable_property';break;}
             if(($property['status']??null)!=='native_property_record_complete'){
                 $reason='unverified_property_archive';break;
@@ -116,13 +122,13 @@ final class CatalogUE1ClassicFunctionLinkReader
 
     /** @return array<string,mixed> */
     private static function loadProperty(
-        string $path,CatalogUE1PackageReader $pkg,int $index
+        string $path,CatalogUE1PackageReader $pkg,int $index,string $sourceProfile
     ):array{
         return CatalogUE1ClassicNativeObjectReader::inspect(
             $path,$pkg,$index,
             CatalogUE1ClassicTaggedPropertyReader::inspect(
-                $path,$pkg,$index,CatalogUE1ClassicSourceFamily::UT99_V432),
-            CatalogUE1ClassicSourceFamily::UT99_V432
+                $path,$pkg,$index,$sourceProfile),
+            $sourceProfile
         );
     }
 }

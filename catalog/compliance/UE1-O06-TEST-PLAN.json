@@ -1432,6 +1432,20 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-t99-469f-original-function-link-native-170": {
+      "description": "Original OldUnreal UT99 469f x86 Core.dll compiled UFunction::Serialize and UState::Serialize, 170 authentic original Core.u native after-LOAD events (168 UFunction and 2 UClass), SHA-pinned original compiled disassembly and debugger output. 1016/1016 unique native method values match UnrealDB source model, including 504 newly reconstructed linked parameter fields. Explicit ut99-v469f source provenance required; no silent 469f inference from version69, unknown source classes fail closed without invented runtime UObject pointers. Original 469f Engine.u, C227, SAVE/version/malformed FArchive behaviours remain OPEN; completed v432 650 and C98 256 native traces are NOT replayed.",
+      "readers": [
+        "CatalogUE1ClassicFunctionLinkReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicStructNativeReader.php",
+        "CatalogUE1ClassicPropertyNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-469f-function-link-native.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

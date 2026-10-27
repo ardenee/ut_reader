@@ -9,6 +9,7 @@ use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicNativeObjectReader 
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicTaggedPropertyReader as T;
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicClassMetadataReader as C;
 use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicFunctionLinkReader as Link;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1ClassicSourceFamily;
 $r=dirname(__DIR__,2);
 $folder=$r.'/catalog/compliance/evidence/o06/20261027-';
 $sys='C:/Temp/UnrealDB/O06/Native-UCC/System/';
@@ -113,11 +114,11 @@ $assert(($bad['source_function_link_status']??null)==='source_layout_unverified'
     &&!isset($bad['loaded_num_parms'])
     &&($bad['runtime_function_param_chain_linked']??null)===false,
     'malformed field-chain reference fails closed without invented loaded values');
-$alt=N::inspect($sys.'Core.u',$pkgs[41296464],629,
-    T::inspect($sys.'Core.u',$pkgs[41296464],629,'ut99-v469f'),'ut99-v469f');
-$assert(!isset($alt['source_function_loaded_fields_computed'])
-    &&($alt['loaded_num_parms']??null)===null,
-    'source-only v432 link overlay not silently applied to post-v432 469f provenance');
+$unsupported=Link::recompute($sys.'Core.u',$pkgs[41296464],629,
+    $sample,CatalogUE1ClassicSourceFamily::EPIC_UE1);
+$assert(($unsupported['source_function_link_status']??null)==='source_profile_unverified'
+    &&!isset($unsupported['loaded_num_parms']),
+    'C98 source profile cannot borrow UT99 function parameter link semantics');
 $ok=$failed===[];
 echo json_encode(['ok'=>$ok,'checks'=>$checks,'fail'=>$failed,
     'actual_original_compiled_events'=>650,'v432_functions'=>$functionCount,

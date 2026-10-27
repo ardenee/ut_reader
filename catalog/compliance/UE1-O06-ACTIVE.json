@@ -1,7 +1,7 @@
 {
-  "contract": "g3-04-t99-v432-native-function-property-linked-load-650",
-  "stage": "G3-04-V432-650-6473-PRD-18-18-SHA-CERTIFIED-SUBPROOF",
-  "last_action": "ACTUAL PRODUCT CORRECTION complete: original UT99 v432 compiled Core.dll original UCC x86 native 650 method events, 619 UFunction,31 UState/UClass,44 FUNC_Net. Prior 2025 saved method fields match, new loaded NumParms/ParmsSize/ReturnValueOffset previously NULL: now source-exact reconstructed 1857/1857, all 3882 native fields match, one NEW focused DEV 6473/6473 PASS. Git commit f7ef1d89 pushed, 18 changed source/evidence/status files PRD SHA256 18/18 identical, no production PHP tests and no prior native suite reruns. G3 full5/16, 29 distinct native subproofs and 11/16 with compiled evidence.",
-  "next_step": "Investigate G3-04 separate compiled UT99 469f changed UFunction/UState methods and original Unreal 227k/i; preserve completed v432 650 and C98 256 proof without reruns. Determine whether 469f v432 function link precomputation differs before enabling its source-specific runtime resolver. Remaining native SAVE/version error gates still OPEN.",
-  "updated_at_utc": "2026-10-27T22:13:16+00:00"
+  "contract": "g3-04-t99-469f-original-function-link-native-170",
+  "stage": "G3-04-469F-170-1712-SCOPED-PASS-READY-RELEASE",
+  "last_action": "NEW real original UT99 469f compiled 168 UFunction +2 UClass method postload genuine Core.u executed via CDB once; 1016/1016 original native persisted+loaded method fields matched including 504 computed 469f provenance-only loaded params. Actual compiled disasm, original Core.dll/u/UCC/SDK SHA-pinned and raw native log+parser+170 records in compliance. Implemented separate explicit 469f source profile for UFunction property chain; new one focused scoped DEV 1712/1712 PASS, changed v432 PHP transitive 6473/6473 PASS after fixing a verifier-only namespace import. No CDB original repeats. Docs/live coverage 30 subproofs, full G3 5/16/11 OPEN.",
+  "next_step": "Git commit/push 469f source, verifier, original native logs and docs, selective SHA deploy changed catalog files to PRD; checkpoint PRD hash. Next required distinct G3-04 original 469f Engine.u and C227 source profiles or actual SAVE/malformed, not repeated Core.u 170.",
+  "updated_at_utc": "2026-10-27T22:22:59+00:00"
 }
