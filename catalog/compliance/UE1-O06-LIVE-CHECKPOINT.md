@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-c98-may1998-two-original-compiled-native-malformed-error-cursors`
-- **Stage:** G3-C98-MAY17-TWO-NATIVE-MALFORMED-FATAL-CURSORS-55-PASS-RELEASE-PENDING
-- **Last completed action:** Original May17 compiled C98 true malformed source-controlled Oracle: ObjectClass ClassProperty genuine Core.u export4 original offset3559 size15, one-byte isolated invalid PropertyClass -63 at byte3572 produces original native appErrorf at true FArchive cursor3573, and one-byte null MetaClass at byte3573 produces original UClassProperty check(MetaClass) appErrorf at cursor3574. Matching exact PHP rejection types and field order. Original stock core source original May DLL, original pristine Core.u and isolated mutants + 8 authentic CDB command/transcripts SHA sealed. One DEV scope verifier 55/55 PASS. Original US read-only disc ISO detached, no Unreal/cdb processes. G3-14 full OPEN and G3 0/16, no production code edit/no previous accepted positives rerun.
-- **Resume at:** GitHub push and PRD SHA original compiled negative failure proof, then more original malformed pointer/version/C227/source methods without retesting positives.
-- **Active changed at:** 2026-10-27T06:16:36+00:00
+- **Stage:** G3-C98-MAY17-TWO-ORIGINAL-NATIVE-MALFORMED-FATAL-CURSORS-PRD-SHA-VERIFIED
+- **Last completed action:** Original compiled May17 Core.dll two independent malformed original Core.u class references physically verified in isolated single-byte mutations: inherited PropertyClass invalid import -63 native appErrorf at actual original archive absolute cursor3573; null MetaClass from +1 to 0 after next archive byte native check(MetaClass) appErrorf at actual native archive cursor3574. PHP original ClassProperty ref rejects both correctly. All original source+May compiled binary+unchanged Core.u+mutant one-byte Core.u+8 real native CDB logs/commands SHA pinned. Independent scoped DEV 55/55 PASS, release bf888523 pushed origin main, PRD 21/21 changed file SHA matches and protected config/storage preserved. Original diagnostic CD image dismounted and no Unreal/CDB processes, no production PHP reader changes, no passed positive UE1 G5/original native probes rerun. G3-14 remains OPEN as whole and G3 full 0/16.
+- **Resume at:** Resolve other distinct G3-14 source native malformed branches (archived invalid FName, physical EOF, nested/class default), C227 v227 Core missing implementation/14 ABI differences, methods UClass/UStruct etc before final G3-16 independent whole gate. Do not rerun original C98 two verified negative cursors or previous 1536/600/66 positive evidence.
+- **Active changed at:** 2026-10-27T06:17:16+00:00
 - **Latest DEV test states:** PASS 169; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
