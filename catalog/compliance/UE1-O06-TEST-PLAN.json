@@ -1522,6 +1522,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-t99-469f-original-native-save-load": {
+      "description": "Distinct genuine original compiled OldUnreal 469f x86 Core.dll UState+UFunction Serialize SAVING through actual UObject::SavePackage and independent fresh process LOADING via UObject::LoadPackage. Two disposable genuine original methods, source-defined probe/ignore masks and state flags, actual linked child pointer identity, function flags/native/index/precedence and loaded NumParms/ParmsSize/ReturnValueOffset confirmed by genuine native x86 executable. Actual original compiled writer emitted 322-byte v69/0 package with real 25-byte Function export offset208 and 40-byte State export offset233. UnrealDB reads the exact genuine writer-emitted file correctly, 37/37 new SHA-pinned original save/load assertions. Genuine original Core.dll/import library, both x86 hosts, build scripts/logs, source, original signed package output and independent host logs retained; no other native original traces rerun. 469f SAVE/LOAD positive source family now established but G3-04 OPEN for other genuine source profiles and malformed/version branch errors.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicStructNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-469f-original-native-save-load.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

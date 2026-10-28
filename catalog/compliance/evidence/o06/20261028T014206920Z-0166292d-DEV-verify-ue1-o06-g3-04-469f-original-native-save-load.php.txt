@@ -1,0 +1,10 @@
+﻿{
+    "ok": true,
+    "checks": 37,
+    "failed": [],
+    "original_compiled_469f_save_load_methods": 2,
+    "original_writer_generated_package_bytes": 322,
+    "original_compiled_CDB_Engine_load_rerun": false,
+    "other_original_native_suites_rerun": false,
+    "g3_04_FULL": "OPEN: other source build SAVE/version/error branches"
+}
