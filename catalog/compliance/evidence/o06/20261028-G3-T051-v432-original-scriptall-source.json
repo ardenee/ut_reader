@@ -1,0 +1,1023 @@
+{
+    "Pawn": {
+        "size": 314,
+        "source_memory_hex": "9a3a01000000003a240416822d0100000000180c009a3a01000000003a24041616848282822d01000000001807002d0100000000161807002d010000000016180c009a3a01000000003a240416161807002d010000000016822d0100000000180c009a3a01000000003a240416162d01000000009a3a01000000003a2403168284812d010000000016181200822d01000000001807002d01000000001616180c009a3a01000000003a240416168284812d010000000016181200822d01000000001807002d01000000001616180c009a3a01000000003a24041616828484812d010000000016181200822d01000000001807002d01000000001616182200829a3a19010000000005000101000000003a240016180900612f2100000000161616180c009a3a01000000003a24041616963a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101010101000000000101010101010000000001010101010101010101010000000001010101010000000001010101010100000000010101010101010000000001010101010101010101000000000101010100000000010101010101000000000101010101010100000000010101000000000101010101010101010000000001010101010101000000000101010101000000000101010101010101000000000101010101010101010100000000010101010101010000000001010101010000000001010101010101010000000001010101010101010101010000000001010101010101000000000101010101000000000101010101010101010100000000010101010000000001010101010101010101000000000101010101010101010000000001010101010101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 14,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 24,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 39,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 48,
+                "archive_index": 25,
+                "target_source": "export",
+                "target_name": "bIsPlayer"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 58,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 69,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 83,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 91,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 101,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 112,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 119,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 132,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 143,
+                "archive_index": 1105,
+                "target_source": "export",
+                "target_name": "bClientDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 152,
+                "archive_index": 1102,
+                "target_source": "export",
+                "target_name": "bClientDemoNetFunc"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 164,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 178,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 189,
+                "archive_index": 1105,
+                "target_source": "export",
+                "target_name": "bClientDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 198,
+                "archive_index": 1102,
+                "target_source": "export",
+                "target_name": "bClientDemoNetFunc"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 210,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 225,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 236,
+                "archive_index": 1105,
+                "target_source": "export",
+                "target_name": "bClientDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 245,
+                "archive_index": 1102,
+                "target_source": "export",
+                "target_name": "bClientDemoNetFunc"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 259,
+                "archive_index": 4,
+                "target_source": "export",
+                "target_name": "Level"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 267,
+                "archive_index": 23,
+                "target_source": "export",
+                "target_name": "NetMode"
+            },
+            {
+                "kind": "fname",
+                "memory_offset": 281,
+                "archive_index": 15,
+                "resolved_name": "PlayerPawn"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 294,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 306,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "Actor": {
+        "size": 767,
+        "source_memory_hex": "9a3a01000000003a240416822d0100000000180c009a3a01000000003a2404161682822d0100000000180c00993a01000000003a24021616180c009a3a01000000003a24041616829a3a01000000003a24041618160084812d010000000016180900812d010000000016161682827701000000002a16180c009a3a01000000003a2404161618160084812d010000000016180900812d01000000001616162d01000000009a3a01000000003a24041682842d01000000001807002d010000000016180c009a3a01000000003a240416168282812d01000000001618220084842d01000000001807002d010000000016180c00963a01000000003a2402161616180c009a3a01000000003a24041616828282812d010000000016181c00849a3a01000000003a240216180c009a3a01000000003a240316161618220084842d01000000001807002d010000000016180c00963a01000000003a2402161616180c009a3a01000000003a240416169a3a01000000003a240216842d0100000000182d0084829a3a01000000003a240216181200842d01000000001807002d010000000016161807002d01000000001616842d010000000018240082829a3a01000000003a2402161807002d010000000016180900812d010000000016161682829a3a01000000003a240216180c009a3a01000000003a240516161807002d010000000016829a3a01000000003a2402161831008482983a01000000003a24021618160084812d010000000016180900812d01000000001616161807002d010000000016169a3a01000000003a2404169a3a01000000003a2404168282829a3a01000000003a240116180900812d0100000000161618140084812d0100000000161807002d01000000001616180c009a3a01000000003a24041616829a3a01000000003a240216180c009a3a01000000003a24041616829a3a01000000003a240316180c009a3a01000000003a240416169a3a01000000003a240416829b3a01000000003a240016180c009a3a01000000003a24041616963a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101010101000000000101010101010000000001010101010101010100000000010101010101000000000101010101010101010101000000000101010101010101010000000001010101010101010101010000000001010101010101000000000101010101010100000000010101010101010100000000010101010101010101010101000000000101010101010100000000010101010100000000010101000000000101010101010101000000000101010101000000000101010101010100000000010101010101010101010000000001010101010101010000000001010101010000000001010101010101000000000101010101010101010101010000000001010101010101010101010000000001010101010101010000000001010101010101010101000000000101010101010101010101010100000000010101010100000000010101010101010000000001010101010101010101010100000000010101010101010100000000010101010101010000000001010101010101010000000001010101010101010101000000000101010101000000000101010101010100000000010101010100000000010101010101010100000000010101010101010101000000000101010101010100000000010101010101010100000000010101010101010101010000000001010101010101010101000000000101010101000000000101010101010101010101010000000001010101010101010101010000000001010101010101000000000101010101010101000000000101010101000000000101010101010100000000010101010101010101010000000001010101010101010101000000000101010101010101010000000001010101010100000000010101010101010100000000010101010101010101000000000101010101010101010100000000010101010101010101000000000101010101010101010100000000010101010101010100000000010101010101010100000000010101010101010101010000000001010101010101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 14,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 24,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 37,
+                "archive_index": 1747,
+                "target_source": "export",
+                "target_name": "bReplicateInstigator"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 47,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 62,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 75,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 90,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 101,
+                "archive_index": 1044,
+                "target_source": "export",
+                "target_name": "bClientAnim"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 112,
+                "archive_index": 205,
+                "target_source": "export",
+                "target_name": "AmbientSound"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 124,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 140,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 151,
+                "archive_index": 1044,
+                "target_source": "export",
+                "target_name": "bClientAnim"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 160,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 167,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 179,
+                "archive_index": 1282,
+                "target_source": "export",
+                "target_name": "bCollideActors"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 188,
+                "archive_index": 200,
+                "target_source": "export",
+                "target_name": "bCollideWorld"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 199,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 213,
+                "archive_index": 855,
+                "target_source": "export",
+                "target_name": "bCarriedItem"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 225,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 234,
+                "archive_index": 811,
+                "target_source": "export",
+                "target_name": "bSimulatedPawn"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 245,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 261,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 276,
+                "archive_index": 855,
+                "target_source": "export",
+                "target_name": "bCarriedItem"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 288,
+                "archive_index": 320,
+                "target_source": "export",
+                "target_name": "DrawType"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 302,
+                "archive_index": 320,
+                "target_source": "export",
+                "target_name": "DrawType"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 319,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 328,
+                "archive_index": 811,
+                "target_source": "export",
+                "target_name": "bSimulatedPawn"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 339,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 355,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 367,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 378,
+                "archive_index": 1635,
+                "target_source": "export",
+                "target_name": "bSimFall"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 390,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 404,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 413,
+                "archive_index": 811,
+                "target_source": "export",
+                "target_name": "bSimulatedPawn"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 424,
+                "archive_index": 1782,
+                "target_source": "export",
+                "target_name": "bIsMover"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 433,
+                "archive_index": 1635,
+                "target_source": "export",
+                "target_name": "bSimFall"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 445,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 458,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 469,
+                "archive_index": 811,
+                "target_source": "export",
+                "target_name": "bSimulatedPawn"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 481,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 495,
+                "archive_index": 73,
+                "target_source": "export",
+                "target_name": "Physics"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 509,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 518,
+                "archive_index": 320,
+                "target_source": "export",
+                "target_name": "DrawType"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 534,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 549,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 560,
+                "archive_index": 1044,
+                "target_source": "export",
+                "target_name": "bClientAnim"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 572,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 581,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 592,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 606,
+                "archive_index": 320,
+                "target_source": "export",
+                "target_name": "DrawType"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 620,
+                "archive_index": 77,
+                "target_source": "export",
+                "target_name": "bHidden"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 633,
+                "archive_index": 1136,
+                "target_source": "export",
+                "target_name": "bOnlyOwnerSee"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 643,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 655,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 668,
+                "archive_index": 320,
+                "target_source": "export",
+                "target_name": "DrawType"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 682,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 695,
+                "archive_index": 320,
+                "target_source": "export",
+                "target_name": "DrawType"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 709,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 721,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 733,
+                "archive_index": 1745,
+                "target_source": "export",
+                "target_name": "LightType"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 747,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 759,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "LevelInfo": {
+        "size": 11,
+        "source_memory_hex": "9a3a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "Inventory": {
+        "size": 33,
+        "source_memory_hex": "829a3a01000000003a2404161807002d0100000000169a3a01000000003a240416",
+        "source_memory_known_mask_hex": "010101010000000001010101010101010100000000010101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 4,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 17,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 25,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "PlayerPawn": {
+        "size": 191,
+        "source_memory_hex": "822d0100000000180c009a3a01000000003a24041616822d0100000000180c009a3a01000000003a24041616822d0100000000180c009a3a01000000003a24041616963a01000000003a240416963a01000000003a240416963a01000000003a240416963a01000000003a240416829a3a01000000003a240416180900812d010000000016169a3a01000000003a2404169a3a01000000003a240416829a3a01000000003a240416180900812d010000000016169a3a01000000003a240316",
+        "source_memory_known_mask_hex": "0101010000000001010101010100000000010101010101010100000000010101010101000000000101010101010101000000000101010101010000000001010101010101010000000001010101010101000000000101010101010100000000010101010101010000000001010101010101010000000001010101010101010101000000000101010101000000000101010101010100000000010101010101010100000000010101010101010101010000000001010101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 13,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 25,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 35,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 47,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 57,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 69,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 80,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 91,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 102,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 114,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 128,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 137,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 148,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 160,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 174,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 183,
+                "archive_index": 105,
+                "target_source": "export",
+                "target_name": "RemoteRole"
+            }
+        ]
+    },
+    "PlayerReplicationInfo": {
+        "size": 11,
+        "source_memory_hex": "9a3a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "Weapon": {
+        "size": 22,
+        "source_memory_hex": "822d0100000000180c009a3a01000000003a24041616",
+        "source_memory_known_mask_hex": "01010100000000010101010101000000000101010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 13,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "ZoneInfo": {
+        "size": 11,
+        "source_memory_hex": "9a3a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "Ammo": {
+        "size": 22,
+        "source_memory_hex": "822d0100000000180c009a3a01000000003a24041616",
+        "source_memory_known_mask_hex": "01010100000000010101010101000000000101010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 13,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "Mover": {
+        "size": 11,
+        "source_memory_hex": "9a3a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "GameReplicationInfo": {
+        "size": 33,
+        "source_memory_hex": "9a3a01000000003a240416822d0100000000180c009a3a01000000003a24041616",
+        "source_memory_known_mask_hex": "010101000000000101010101010100000000010101010101000000000101010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 14,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 24,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "Teleporter": {
+        "size": 33,
+        "source_memory_hex": "9a3a01000000003a240416822d0100000000180c009a3a01000000003a24041616",
+        "source_memory_known_mask_hex": "010101000000000101010101010100000000010101010101000000000101010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 14,
+                "archive_index": 335,
+                "target_source": "export",
+                "target_name": "bNetInitial"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 24,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "SpawnNotify": {
+        "size": 11,
+        "source_memory_hex": "9a3a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "WarpZoneInfo": {
+        "size": 11,
+        "source_memory_hex": "9a3a01000000003a240416",
+        "source_memory_known_mask_hex": "0101010000000001010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "Pickup": {
+        "size": 22,
+        "source_memory_hex": "822d0100000000180c009a3a01000000003a24041616",
+        "source_memory_known_mask_hex": "01010100000000010101010101000000000101010101",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 162,
+                "target_source": "export",
+                "target_name": "bNetOwner"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 13,
+                "archive_index": 22,
+                "target_source": "export",
+                "target_name": "Role"
+            }
+        ]
+    },
+    "DemoRecSpectator": {
+        "size": 6,
+        "source_memory_hex": "2d0100000000",
+        "source_memory_known_mask_hex": "010100000000",
+        "relocations": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 2,
+                "archive_index": 222,
+                "target_source": "export",
+                "target_name": "bDemoRecording"
+            }
+        ]
+    }
+}

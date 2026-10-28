@@ -4,7 +4,7 @@
     "T049",
     "T056"
   ],
-  "started_at": "2026-10-28T13:33:31+00:00",
+  "started_at": "2026-10-28T13:41:06+00:00",
   "tests": [
     {
       "id": "T049",
@@ -18,8 +18,8 @@
     },
     {
       "id": "T051",
-      "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T052",
@@ -47,11 +47,11 @@
       "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     }
   ],
-  "finished_at": "2026-10-28T13:33:31+00:00",
+  "finished_at": "2026-10-28T13:41:06+00:00",
   "counts": {
-    "PASS": 1,
+    "PASS": 2,
     "FAIL": 0,
-    "BLOCKED": 7,
+    "BLOCKED": 6,
     "PENDING": 0
   }
 }

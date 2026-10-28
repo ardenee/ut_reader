@@ -529,7 +529,56 @@ def eval_t056(_row: dict[str, Any]) -> dict[str, Any]:
        "Fixed T056 cross-era compatibility: genuine 1998 FObjectManager-saved v61 UFunctions contain original EX_EndCode 0x15 (physical offsets797,854), legal C98 source; actual unmodified original 469f Core.dll loader FAILED with Bad expr token 15 (NOT a successful legacy UFunction load). UT99 original source omits that case; current UnrealDB now raises identical bad expression error instead of silently returning partial, with source-local cursors798/855 in focused 18/18 PHP parity. v227 separate opcode remains unverified; T011 and G3-04 stay BLOCKED. All original engine and CDB proof reused; zero replay.",
        "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T056":eval_t056,"T067":eval_t067}
+def eval_t051(_row: dict[str, Any]) -> dict[str, Any]:
+    """Pin stock v432 Core.u + Engine.Inventory source-defined nested SKIP oracle."""
+    script="catalog/bin/verify-ue1-o06-g3-t051-v432-native-script-flow.php"
+    result="catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json"
+    original_log="catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-native.log"
+    original_source="catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json"
+    core_result="catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json"
+    pins=[
+      verify_pin(script,"9dbbf3e18039dc3920148bfabf60e9049b914b2cbe2e528059135366d2fcad78"),
+      verify_pin(result,"457fd47987390226c24c57ec92c203510d7c30bf4c0c505d885464b7f9482bee"),
+      verify_pin(original_log,"2f9a686c19f52be6e9866eac1fb521d42bc479f073510fbcc397a6d317843a11"),
+      verify_pin(original_source,"e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67"),
+      verify_pin(core_result,"cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php","df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500")
+    ]
+    originals=[
+      ("C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+       "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"),
+      ("C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+       "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"),
+      ("C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+       "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"),
+      (r"L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Core\Src\UnClass.cpp",
+       "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380")
+    ]
+    for file,sha in originals:
+      p=pathlib.Path(file)
+      if not p.is_file() or sha256(p)!=sha:
+        raise AssertionError("Original v432 engine/source changed: "+file)
+      pins.append({"original":file,"sha256":sha})
+    current=json.loads((ROOT/result).read_text(encoding="utf-8-sig"))
+    for k,expected in {"ok":True,"checks":25,"Engine_u_class":"Inventory",
+       "class_export_index":4,"memory_script_num":33,"archive_bytes_consumed":25,
+       "current_decoded_expression_count":17,"exact_original_native_memory_known_bytes":21,
+       "relocated_native_pointer_bytes":12,"original_compiled_engines_reexecuted":0,
+       "old_positive_verifiers_replayed":0,
+       "current_script_reader_sha256":"df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"}.items():
+      if current.get(k)!=expected:
+        raise AssertionError("Actual original compiled T051 native compare mismatch: "+k)
+    if current.get("errors") or "EX_Skip 0x18" not in current.get("control_flow","") or "82->9A->3A->01" not in current.get("nested_tokens",""):
+      raise AssertionError("T051 original v432 control-flow or nested parser unproven")
+    core=json.loads((ROOT/core_result).read_text(encoding="utf-8-sig"))
+    v=core["native_objects"]["NotEqual_FloatFloat"]
+    if core.get("checks")!=31 or not core.get("ok") or v.get("source_package")!="Core.u" or v.get("native_script_bytes")!=10 or v.get("archived_script_bytes")!=6:
+      raise AssertionError("Original compiled stock v432 Core.u script failed")
+    return {"status":"PASS",
+       "result":"Stock original compiled UT99 v432 Core.u UStruct NotEqual_FloatFloat 10 native/6 archived bytes with two real object pointers; stock v432 Engine.u Inventory UClass script 33 original native memory bytes vs 25 archived, 17 expression nodes including source EX_Skip(0x18) control flow with nested 0x2d and 0x82 native call -> 0x9a -> 0x3a conversion -> 0x01 Role field. 21/21 deterministic native bytes exact and 12 native pointer bytes explicitly masked, actual pointer targets mapped. Prior 31/31 Core.u and new 25/25 Inventory direct native/current comparisons pinned; zero original compiled reruns. Only T051 script branch, not other G3-12 full closure.",
+       "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T056":eval_t056,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -569,7 +618,7 @@ def render_progress(register:dict[str,Any])->None:
         result=x.get("result") if x["status"]=="PASS" else x.get("blocking_reason")
         result=(result or "not yet processed").replace("|","/").replace("\n"," ")
         lines.append(f"| {x['id']} | {x['status']} | {result} |")
-    lines+=["","T001–T008, T010, T032, T056 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
+    lines+=["","T001–T008, T010, T032, T051, T056 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
     PROGRESS.write_text("\n".join(lines),encoding="utf-8")
 
 def review_one(row:dict[str,Any],retry:bool)->dict[str,Any]:

@@ -1,0 +1,430 @@
+﻿SCRIPT_ALL_BEGIN class=Inventory
+UCLASS_LOADED path=Engine.Inventory class=Class Engine.Inventory deps=114
+SCRIPT_FULL_HEX size=33 bytes=829a3a0170d14d013a2404161807002d0180bb5401169a3a0170d14d013a240416
+SCRIPT_FULL_RELOC slot=4 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=17 kind=object original=162 resolved=BoolProperty Engine.Actor.bNetOwner
+SCRIPT_FULL_RELOC slot=25 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=33 properties_size=740 defaults_size=740 children=03385CC8
+SCRIPT_BYTE at=0 hex=82
+SCRIPT_BYTE at=1 hex=9a
+SCRIPT_BYTE at=2 hex=3a
+SCRIPT_BYTE at=3 hex=01
+SCRIPT_BYTE at=4 hex=70
+SCRIPT_BYTE at=5 hex=d1
+SCRIPT_BYTE at=6 hex=4d
+SCRIPT_BYTE at=7 hex=01
+SCRIPT_BYTE at=8 hex=3a
+SCRIPT_BYTE at=9 hex=24
+SCRIPT_BYTE at=10 hex=04
+SCRIPT_BYTE at=11 hex=16
+SCRIPT_BYTE at=12 hex=18
+SCRIPT_BYTE at=13 hex=07
+SCRIPT_BYTE at=14 hex=00
+SCRIPT_BYTE at=15 hex=2d
+SCRIPT_BYTE at=16 hex=01
+SCRIPT_BYTE at=17 hex=80
+SCRIPT_BYTE at=18 hex=bb
+SCRIPT_BYTE at=19 hex=54
+SCRIPT_BYTE at=20 hex=01
+SCRIPT_BYTE at=21 hex=16
+SCRIPT_BYTE at=22 hex=9a
+SCRIPT_BYTE at=23 hex=3a
+SCRIPT_BYTE at=24 hex=01
+SCRIPT_BYTE at=25 hex=70
+SCRIPT_BYTE at=26 hex=d1
+SCRIPT_BYTE at=27 hex=4d
+SCRIPT_BYTE at=28 hex=01
+SCRIPT_BYTE at=29 hex=3a
+SCRIPT_BYTE at=30 hex=24
+SCRIPT_BYTE at=31 hex=04
+SCRIPT_BYTE at=32 hex=16
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=740
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=Inventory
+SCRIPT_ALL_BEGIN class=PlayerPawn
+UCLASS_LOADED path=Engine.PlayerPawn class=Class Engine.PlayerPawn deps=688
+SCRIPT_FULL_HEX size=191 bytes=822d0180bb5401180c009a3a0170d14d013a24041616822d0180bb5401180c009a3a0170d14d013a24041616822d01b8475601180c009a3a0170d14d013a24041616963a0170d14d013a240416963a0170d14d013a240416963a0170d14d013a240416963a0170d14d013a240416829a3a0170d14d013a240416180900812d01b847560116169a3a0170d14d013a2404169a3a0170d14d013a240416829a3a0170d14d013a240416180900812d01b847560116169a3a0148c754013a240316
+SCRIPT_FULL_RELOC slot=3 kind=object original=162 resolved=BoolProperty Engine.Actor.bNetOwner
+SCRIPT_FULL_RELOC slot=13 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=25 kind=object original=162 resolved=BoolProperty Engine.Actor.bNetOwner
+SCRIPT_FULL_RELOC slot=35 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=47 kind=object original=222 resolved=BoolProperty Engine.Actor.bDemoRecording
+SCRIPT_FULL_RELOC slot=57 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=69 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=80 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=91 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=102 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=114 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=128 kind=object original=222 resolved=BoolProperty Engine.Actor.bDemoRecording
+SCRIPT_FULL_RELOC slot=137 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=148 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=160 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=174 kind=object original=222 resolved=BoolProperty Engine.Actor.bDemoRecording
+SCRIPT_FULL_RELOC slot=183 kind=object original=105 resolved=ByteProperty Engine.Actor.RemoteRole
+SCRIPT_LOADED size=191 properties_size=1916 defaults_size=1916 children=03381058
+SCRIPT_BYTE at=0 hex=82
+SCRIPT_BYTE at=1 hex=2d
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=80
+SCRIPT_BYTE at=4 hex=bb
+SCRIPT_BYTE at=5 hex=54
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=18
+SCRIPT_BYTE at=8 hex=0c
+SCRIPT_BYTE at=9 hex=00
+SCRIPT_BYTE at=10 hex=9a
+SCRIPT_BYTE at=11 hex=3a
+SCRIPT_BYTE at=12 hex=01
+SCRIPT_BYTE at=13 hex=70
+SCRIPT_BYTE at=14 hex=d1
+SCRIPT_BYTE at=15 hex=4d
+SCRIPT_BYTE at=16 hex=01
+SCRIPT_BYTE at=17 hex=3a
+SCRIPT_BYTE at=18 hex=24
+SCRIPT_BYTE at=19 hex=04
+SCRIPT_BYTE at=20 hex=16
+SCRIPT_BYTE at=21 hex=16
+SCRIPT_BYTE at=22 hex=82
+SCRIPT_BYTE at=23 hex=2d
+SCRIPT_BYTE at=24 hex=01
+SCRIPT_BYTE at=25 hex=80
+SCRIPT_BYTE at=26 hex=bb
+SCRIPT_BYTE at=27 hex=54
+SCRIPT_BYTE at=28 hex=01
+SCRIPT_BYTE at=29 hex=18
+SCRIPT_BYTE at=30 hex=0c
+SCRIPT_BYTE at=31 hex=00
+SCRIPT_BYTE at=32 hex=9a
+SCRIPT_BYTE at=33 hex=3a
+SCRIPT_BYTE at=34 hex=01
+SCRIPT_BYTE at=35 hex=70
+SCRIPT_BYTE at=36 hex=d1
+SCRIPT_BYTE at=37 hex=4d
+SCRIPT_BYTE at=38 hex=01
+SCRIPT_BYTE at=39 hex=3a
+SCRIPT_BYTE at=40 hex=24
+SCRIPT_BYTE at=41 hex=04
+SCRIPT_BYTE at=42 hex=16
+SCRIPT_BYTE at=43 hex=16
+SCRIPT_BYTE at=44 hex=82
+SCRIPT_BYTE at=45 hex=2d
+SCRIPT_BYTE at=46 hex=01
+SCRIPT_BYTE at=47 hex=b8
+SCRIPT_LINKED_PROPERTY slot=3 target=BoolProperty Engine.Actor.bNetOwner
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=1916
+UCLASS_DEFAULT_FLOAT name=GroundSpeed bits=43a00000 offset=620
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=PlayerPawn
+SCRIPT_ALL_BEGIN class=PlayerReplicationInfo
+UCLASS_LOADED path=Engine.PlayerReplicationInfo class=Class Engine.PlayerReplicationInfo deps=12
+SCRIPT_FULL_HEX size=11 bytes=9a3a0170d14d013a240416
+SCRIPT_FULL_RELOC slot=3 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=11 properties_size=620 defaults_size=620 children=0156CCC0
+SCRIPT_BYTE at=0 hex=9a
+SCRIPT_BYTE at=1 hex=3a
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=70
+SCRIPT_BYTE at=4 hex=d1
+SCRIPT_BYTE at=5 hex=4d
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=3a
+SCRIPT_BYTE at=8 hex=24
+SCRIPT_BYTE at=9 hex=04
+SCRIPT_BYTE at=10 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=ByteProperty Engine.Actor.Role
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=620
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=PlayerReplicationInfo
+SCRIPT_ALL_BEGIN class=Weapon
+UCLASS_LOADED path=Engine.Weapon class=Class Engine.Weapon deps=204
+SCRIPT_FULL_HEX size=22 bytes=822d0180bb5401180c009a3a0170d14d013a24041616
+SCRIPT_FULL_RELOC slot=3 kind=object original=162 resolved=BoolProperty Engine.Actor.bNetOwner
+SCRIPT_FULL_RELOC slot=13 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=22 properties_size=948 defaults_size=948 children=0337EF28
+SCRIPT_BYTE at=0 hex=82
+SCRIPT_BYTE at=1 hex=2d
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=80
+SCRIPT_BYTE at=4 hex=bb
+SCRIPT_BYTE at=5 hex=54
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=18
+SCRIPT_BYTE at=8 hex=0c
+SCRIPT_BYTE at=9 hex=00
+SCRIPT_BYTE at=10 hex=9a
+SCRIPT_BYTE at=11 hex=3a
+SCRIPT_BYTE at=12 hex=01
+SCRIPT_BYTE at=13 hex=70
+SCRIPT_BYTE at=14 hex=d1
+SCRIPT_BYTE at=15 hex=4d
+SCRIPT_BYTE at=16 hex=01
+SCRIPT_BYTE at=17 hex=3a
+SCRIPT_BYTE at=18 hex=24
+SCRIPT_BYTE at=19 hex=04
+SCRIPT_BYTE at=20 hex=16
+SCRIPT_BYTE at=21 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=BoolProperty Engine.Actor.bNetOwner
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=948
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=Weapon
+SCRIPT_ALL_BEGIN class=ZoneInfo
+UCLASS_LOADED path=Engine.ZoneInfo class=Class Engine.ZoneInfo deps=17
+SCRIPT_FULL_HEX size=11 bytes=9a3a0170d14d013a240416
+SCRIPT_FULL_RELOC slot=3 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=11 properties_size=872 defaults_size=872 children=03306D68
+SCRIPT_BYTE at=0 hex=9a
+SCRIPT_BYTE at=1 hex=3a
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=70
+SCRIPT_BYTE at=4 hex=d1
+SCRIPT_BYTE at=5 hex=4d
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=3a
+SCRIPT_BYTE at=8 hex=24
+SCRIPT_BYTE at=9 hex=04
+SCRIPT_BYTE at=10 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=ByteProperty Engine.Actor.Role
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=872
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=ZoneInfo
+SCRIPT_ALL_BEGIN class=Ammo
+UCLASS_LOADED path=Engine.Ammo class=Class Engine.Ammo deps=42
+SCRIPT_FULL_HEX size=22 bytes=822d0180bb5401180c009a3a0170d14d013a24041616
+SCRIPT_FULL_RELOC slot=3 kind=object original=162 resolved=BoolProperty Engine.Actor.bNetOwner
+SCRIPT_FULL_RELOC slot=13 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=22 properties_size=796 defaults_size=796 children=015618F8
+SCRIPT_BYTE at=0 hex=82
+SCRIPT_BYTE at=1 hex=2d
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=80
+SCRIPT_BYTE at=4 hex=bb
+SCRIPT_BYTE at=5 hex=54
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=18
+SCRIPT_BYTE at=8 hex=0c
+SCRIPT_BYTE at=9 hex=00
+SCRIPT_BYTE at=10 hex=9a
+SCRIPT_BYTE at=11 hex=3a
+SCRIPT_BYTE at=12 hex=01
+SCRIPT_BYTE at=13 hex=70
+SCRIPT_BYTE at=14 hex=d1
+SCRIPT_BYTE at=15 hex=4d
+SCRIPT_BYTE at=16 hex=01
+SCRIPT_BYTE at=17 hex=3a
+SCRIPT_BYTE at=18 hex=24
+SCRIPT_BYTE at=19 hex=04
+SCRIPT_BYTE at=20 hex=16
+SCRIPT_BYTE at=21 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=BoolProperty Engine.Actor.bNetOwner
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=796
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=Ammo
+SCRIPT_ALL_BEGIN class=Mover
+UCLASS_LOADED path=Engine.Mover class=Class Engine.Mover deps=137
+SCRIPT_FULL_HEX size=11 bytes=9a3a0170d14d013a240416
+SCRIPT_FULL_RELOC slot=3 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=11 properties_size=1064 defaults_size=1064 children=032EBAA0
+SCRIPT_BYTE at=0 hex=9a
+SCRIPT_BYTE at=1 hex=3a
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=70
+SCRIPT_BYTE at=4 hex=d1
+SCRIPT_BYTE at=5 hex=4d
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=3a
+SCRIPT_BYTE at=8 hex=24
+SCRIPT_BYTE at=9 hex=04
+SCRIPT_BYTE at=10 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=ByteProperty Engine.Actor.Role
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=1064
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=Mover
+SCRIPT_ALL_BEGIN class=GameReplicationInfo
+UCLASS_LOADED path=Engine.GameReplicationInfo class=Class Engine.GameReplicationInfo deps=12
+SCRIPT_FULL_HEX size=33 bytes=9a3a0170d14d013a240416822d01d8aa5601180c009a3a0170d14d013a24041616
+SCRIPT_FULL_RELOC slot=3 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=14 kind=object original=335 resolved=BoolProperty Engine.Actor.bNetInitial
+SCRIPT_FULL_RELOC slot=24 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=33 properties_size=820 defaults_size=820 children=01561988
+SCRIPT_BYTE at=0 hex=9a
+SCRIPT_BYTE at=1 hex=3a
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=70
+SCRIPT_BYTE at=4 hex=d1
+SCRIPT_BYTE at=5 hex=4d
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=3a
+SCRIPT_BYTE at=8 hex=24
+SCRIPT_BYTE at=9 hex=04
+SCRIPT_BYTE at=10 hex=16
+SCRIPT_BYTE at=11 hex=82
+SCRIPT_BYTE at=12 hex=2d
+SCRIPT_BYTE at=13 hex=01
+SCRIPT_BYTE at=14 hex=d8
+SCRIPT_BYTE at=15 hex=aa
+SCRIPT_BYTE at=16 hex=56
+SCRIPT_BYTE at=17 hex=01
+SCRIPT_BYTE at=18 hex=18
+SCRIPT_BYTE at=19 hex=0c
+SCRIPT_BYTE at=20 hex=00
+SCRIPT_BYTE at=21 hex=9a
+SCRIPT_BYTE at=22 hex=3a
+SCRIPT_BYTE at=23 hex=01
+SCRIPT_BYTE at=24 hex=70
+SCRIPT_BYTE at=25 hex=d1
+SCRIPT_BYTE at=26 hex=4d
+SCRIPT_BYTE at=27 hex=01
+SCRIPT_BYTE at=28 hex=3a
+SCRIPT_BYTE at=29 hex=24
+SCRIPT_BYTE at=30 hex=04
+SCRIPT_BYTE at=31 hex=16
+SCRIPT_BYTE at=32 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=ByteProperty Engine.Actor.Role
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=820
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=GameReplicationInfo
+SCRIPT_ALL_BEGIN class=Teleporter
+UCLASS_LOADED path=Engine.Teleporter class=Class Engine.Teleporter deps=59
+SCRIPT_FULL_HEX size=33 bytes=9a3a0170d14d013a240416822d01d8aa5601180c009a3a0170d14d013a24041616
+SCRIPT_FULL_RELOC slot=3 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_FULL_RELOC slot=14 kind=object original=335 resolved=BoolProperty Engine.Actor.bNetInitial
+SCRIPT_FULL_RELOC slot=24 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=33 properties_size=876 defaults_size=876 children=01562288
+SCRIPT_BYTE at=0 hex=9a
+SCRIPT_BYTE at=1 hex=3a
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=70
+SCRIPT_BYTE at=4 hex=d1
+SCRIPT_BYTE at=5 hex=4d
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=3a
+SCRIPT_BYTE at=8 hex=24
+SCRIPT_BYTE at=9 hex=04
+SCRIPT_BYTE at=10 hex=16
+SCRIPT_BYTE at=11 hex=82
+SCRIPT_BYTE at=12 hex=2d
+SCRIPT_BYTE at=13 hex=01
+SCRIPT_BYTE at=14 hex=d8
+SCRIPT_BYTE at=15 hex=aa
+SCRIPT_BYTE at=16 hex=56
+SCRIPT_BYTE at=17 hex=01
+SCRIPT_BYTE at=18 hex=18
+SCRIPT_BYTE at=19 hex=0c
+SCRIPT_BYTE at=20 hex=00
+SCRIPT_BYTE at=21 hex=9a
+SCRIPT_BYTE at=22 hex=3a
+SCRIPT_BYTE at=23 hex=01
+SCRIPT_BYTE at=24 hex=70
+SCRIPT_BYTE at=25 hex=d1
+SCRIPT_BYTE at=26 hex=4d
+SCRIPT_BYTE at=27 hex=01
+SCRIPT_BYTE at=28 hex=3a
+SCRIPT_BYTE at=29 hex=24
+SCRIPT_BYTE at=30 hex=04
+SCRIPT_BYTE at=31 hex=16
+SCRIPT_BYTE at=32 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=ByteProperty Engine.Actor.Role
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=876
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=Teleporter
+SCRIPT_ALL_BEGIN class=SpawnNotify
+UCLASS_LOADED path=Engine.SpawnNotify class=Class Engine.SpawnNotify deps=15
+SCRIPT_FULL_HEX size=11 bytes=9a3a0170d14d013a240416
+SCRIPT_FULL_RELOC slot=3 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=11 properties_size=532 defaults_size=532 children=0334B008
+SCRIPT_BYTE at=0 hex=9a
+SCRIPT_BYTE at=1 hex=3a
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=70
+SCRIPT_BYTE at=4 hex=d1
+SCRIPT_BYTE at=5 hex=4d
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=3a
+SCRIPT_BYTE at=8 hex=24
+SCRIPT_BYTE at=9 hex=04
+SCRIPT_BYTE at=10 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=ByteProperty Engine.Actor.Role
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=532
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=SpawnNotify
+SCRIPT_ALL_BEGIN class=WarpZoneInfo
+UCLASS_LOADED path=Engine.WarpZoneInfo class=Class Engine.WarpZoneInfo deps=35
+SCRIPT_FULL_HEX size=11 bytes=9a3a0170d14d013a240416
+SCRIPT_FULL_RELOC slot=3 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=11 properties_size=1052 defaults_size=1052 children=032E59F0
+SCRIPT_BYTE at=0 hex=9a
+SCRIPT_BYTE at=1 hex=3a
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=70
+SCRIPT_BYTE at=4 hex=d1
+SCRIPT_BYTE at=5 hex=4d
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=3a
+SCRIPT_BYTE at=8 hex=24
+SCRIPT_BYTE at=9 hex=04
+SCRIPT_BYTE at=10 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=ByteProperty Engine.Actor.Role
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=1052
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=WarpZoneInfo
+SCRIPT_ALL_BEGIN class=Pickup
+UCLASS_LOADED path=Engine.Pickup class=Class Engine.Pickup deps=83
+SCRIPT_FULL_HEX size=22 bytes=822d0180bb5401180c009a3a0170d14d013a24041616
+SCRIPT_FULL_RELOC slot=3 kind=object original=162 resolved=BoolProperty Engine.Actor.bNetOwner
+SCRIPT_FULL_RELOC slot=13 kind=object original=22 resolved=ByteProperty Engine.Actor.Role
+SCRIPT_LOADED size=22 properties_size=768 defaults_size=768 children=03383B50
+SCRIPT_BYTE at=0 hex=82
+SCRIPT_BYTE at=1 hex=2d
+SCRIPT_BYTE at=2 hex=01
+SCRIPT_BYTE at=3 hex=80
+SCRIPT_BYTE at=4 hex=bb
+SCRIPT_BYTE at=5 hex=54
+SCRIPT_BYTE at=6 hex=01
+SCRIPT_BYTE at=7 hex=18
+SCRIPT_BYTE at=8 hex=0c
+SCRIPT_BYTE at=9 hex=00
+SCRIPT_BYTE at=10 hex=9a
+SCRIPT_BYTE at=11 hex=3a
+SCRIPT_BYTE at=12 hex=01
+SCRIPT_BYTE at=13 hex=70
+SCRIPT_BYTE at=14 hex=d1
+SCRIPT_BYTE at=15 hex=4d
+SCRIPT_BYTE at=16 hex=01
+SCRIPT_BYTE at=17 hex=3a
+SCRIPT_BYTE at=18 hex=24
+SCRIPT_BYTE at=19 hex=04
+SCRIPT_BYTE at=20 hex=16
+SCRIPT_BYTE at=21 hex=16
+SCRIPT_LINKED_PROPERTY slot=3 target=BoolProperty Engine.Actor.bNetOwner
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=768
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=Pickup
+SCRIPT_ALL_BEGIN class=DemoRecSpectator
+UCLASS_LOADED path=Engine.DemoRecSpectator class=Class Engine.DemoRecSpectator deps=15
+SCRIPT_FULL_HEX size=6 bytes=2d01b8475601
+SCRIPT_FULL_RELOC slot=2 kind=object original=222 resolved=BoolProperty Engine.Actor.bDemoRecording
+SCRIPT_LOADED size=6 properties_size=1928 defaults_size=1928 children=0334A558
+SCRIPT_BYTE at=0 hex=2d
+SCRIPT_BYTE at=1 hex=01
+SCRIPT_BYTE at=2 hex=b8
+SCRIPT_BYTE at=3 hex=47
+SCRIPT_BYTE at=4 hex=56
+SCRIPT_BYTE at=5 hex=01
+UCLASS_RUNTIME_DEFAULT initialized=1 properties_size=1928
+UCLASS_DEFAULT_FLOAT name=GroundSpeed bits=43a00000 offset=620
+UCLASS_DEFAULT_BYTE name=Role value=4 offset=45
+SCRIPT_CLASS class=101F2158
+SCRIPT_ALL_END class=DemoRecSpectator
+UCLASS_ALL_END success=1 count=13

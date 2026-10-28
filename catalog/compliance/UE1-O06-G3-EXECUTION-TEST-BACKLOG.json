@@ -1483,13 +1483,61 @@
       "pass_criterion": "Existing original native source proof covers branch+size or precise missing opcode identified without replay.",
       "evidence": "G5 original v432 script evidence and source opcode declaration",
       "reuse": "v432 accepted G5 not entire G3.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Use sealed G5 native bytecode parser proof to map source-defined opcodes and memory size. PASS ONLY WHEN: Existing original native source proof covers branch+size or precise missing opcode identified without replay. ORACLE: G5 original v432 script evidence and source opcode declaration. Reuse before any new execution: v432 accepted G5 not entire G3.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "c00bd7184a2a5cd90d1b3cc0f9f7806adc7787850ea583a6d01a309ac81e28e8",
+      "result": "Stock original compiled UT99 v432 Core.u UStruct NotEqual_FloatFloat 10 native/6 archived bytes with two real object pointers; stock v432 Engine.u Inventory UClass script 33 original native memory bytes vs 25 archived, 17 expression nodes including source EX_Skip(0x18) control flow with nested 0x2d and 0x82 native call -> 0x9a -> 0x3a conversion -> 0x01 Role field. 21/21 deterministic native bytes exact and 12 native pointer bytes explicitly masked, actual pointer targets mapped. Prior 31/31 Core.u and new 25/25 Inventory direct native/current comparisons pinned; zero original compiled reruns. Only T051 script branch, not other G3-12 full closure.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T13:41:06+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t051-v432-native-script-flow.php",
+          "sha256": "9dbbf3e18039dc3920148bfabf60e9049b914b2cbe2e528059135366d2fcad78",
+          "bytes": 7636
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
+          "sha256": "457fd47987390226c24c57ec92c203510d7c30bf4c0c505d885464b7f9482bee",
+          "bytes": 1017
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-native.log",
+          "sha256": "2f9a686c19f52be6e9866eac1fb521d42bc479f073510fbcc397a6d317843a11",
+          "bytes": 17460
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json",
+          "sha256": "e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67",
+          "bytes": 38624
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "sha256": "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76",
+          "bytes": 1147
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+          "bytes": 20905
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+          "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+          "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+          "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+        },
+        {
+          "original": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+          "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+        }
+      ]
     },
     {
       "id": "T052",

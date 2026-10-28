@@ -1,0 +1,26 @@
+{
+    "ok": true,
+    "checks": 25,
+    "errors": [],
+    "real_compiled_native_source": "genuine UT99 v432 Core.dll/Engine.dll Engine.u Inventory UClass",
+    "original_stock_Core_u_script": {
+        "source_package": "Core.u",
+        "export_index": 286,
+        "native_script_bytes": 10,
+        "original_memory_hex": "29f8ce2b012940702b01",
+        "archived_script_bytes": 6,
+        "object_pointer_relocations": 2
+    },
+    "Engine_u_class": "Inventory",
+    "class_export_index": 4,
+    "memory_script_num": 33,
+    "archive_bytes_consumed": 25,
+    "current_decoded_expression_count": 17,
+    "nested_tokens": "82->9A->3A->01(source Role)",
+    "control_flow": "EX_Skip 0x18 source offset7 nested EX_IntOne 0x2D",
+    "exact_original_native_memory_known_bytes": 21,
+    "relocated_native_pointer_bytes": 12,
+    "original_compiled_engines_reexecuted": 0,
+    "old_positive_verifiers_replayed": 0,
+    "current_script_reader_sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"
+}

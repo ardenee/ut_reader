@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-80-TESTS-12-PASS-68-BLOCKED-T056-SOURCE-FIX-SEALED
-- **Last completed action:** T056 original C98 EndCode 0x15 -> real compiled UT99 469f Bad expr token15 matched; 18/18 new focused parity, original 469f error native log copied/pinned, production old soft unsupported fixed only UT99 source; T010 acceptance still valid by SHA-checked single-branch source reverse-diff with no native rerun
-- **Resume at:** Continue fixed T009 malformed UStruct refs/ScriptSize and T011 genuinely loadable legacy UT99 v60-63 function, then T051 v432 stock branch/nested script using retained original G5 16 class dataset; 12/80 PASS, 68 BLOCKED, G3 5/16 FULL, no final PRD release until T078-T080.
-- **Active changed at:** 2026-10-28T13:35:09+00:00
+- **Stage:** G3-80-TESTS-13-PASS-67-BLOCKED-T051-ORIGINAL-V432-25-25
+- **Last completed action:** Closed fixed T051: original stock v432 Core.u 31/31 sealed + Engine.Inventory UClass 33 loaded script bytes vs 25 archived, native real EX_Skip control flow and nested expressions, all 21 known original compiled bytes and three object relocations matched, focused 25/25; 0 original native replays
+- **Resume at:** T009 malformed direct UStruct references; T011 genuine loadable v60-v63 function; T050 C98 original Name/Object relocation mixed; T052 469f-only script differential and T053 C227 native delta remain specifically BLOCKED; continue fixed 80-test register, G3 5/16, no PRD release before final.
+- **Active changed at:** 2026-10-28T13:41:57+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
