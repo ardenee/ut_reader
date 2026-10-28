@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-04-c227k-original-badnet-physical-tell`
-- **Stage:** G3-04-C227K-FARCHIVE-PHYSICAL-TELL-26-DEV-PASS-RELEASE-PENDING
-- **Last completed action:** Actual original 2026 227k Core.dll malformed archive Tell221 vs attempted end223, source-specific before-read guard fixed UnrealDB false consumption; explicit unreal-v227k runtime provenance only; genuine 310-byte saved input, native CDB breakpoint plus disassembly SHA pinned, one new focused DEV26/26 PASS; valid original fixture positive LOAD also matched; no prior original suites replayed; G3 stays5/16 FULL, native35.
-- **Resume at:** Commit original debugger proof, production source fix, narrow verifier and checkpoint; push main then deploy only commit differences DEV-to-PRD with per-file SHA; seal PRD status in follow-up checkpoint. G3-04 remains OPEN for independent remaining method/version/error cases.
-- **Active changed at:** 2026-10-28T00:53:12+00:00
+- **Stage:** G3-04-C227K-NATIVE-TELL-221-26-DEV-PASS-PRD-17-17-SHA
+- **Last completed action:** Original 2026 227k compiled FArchive native numeric Tell221, attempted end223 export bound221: production false physical cursor fixed for explicit unreal-v227k overlay, 26/26 one new DEV focused PASS. Original Core.dll and debugger CDB command/raw numeric trace and compiled disassembly SHA pinned. GitHub main bab15d59 pushed, 17/17 DEV-to-PRD changed-file SHA256 identical, protected config and storage untouched; G3 remains 5/16 FULL, 11/16 compiled subproof and 35 distinct native subproofs (G3-04 eight). No previously sealed original engines re-executed.
+- **Resume at:** Next distinct G3-04 contract: original compiled UT99 v469f Engine UState, plus other genuine source-specific SAVE/version/malformed/State variations; reuse sealed 227k physical-Tell, SAVE+LOAD fixture and C98/v432/C227i/k UFunction traces without reruns. Close whole G3-04 only after all distinct method acceptance criteria have evidence; current G3 FULL 5/16.
+- **Active changed at:** 2026-10-28T00:54:33+00:00
 - **Latest DEV test states:** PASS 199; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
