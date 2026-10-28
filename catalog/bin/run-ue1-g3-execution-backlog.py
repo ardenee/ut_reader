@@ -210,7 +210,42 @@ def eval_t004(_row: dict[str, Any]) -> dict[str, Any]:
             "result":"Original 469f compiled Core.dll native LOAD of previously unobserved direct RegistryPropertyInfo/RegistryObjectInfo/PreferencesInfo, 46/46 exact original-native loaded UStruct fields and live linked Children/Next vs UnrealDB reader PASS; previous nine direct struct probes not repeated.",
             "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T008":eval_t008,"T067":eval_t067}
+def eval_t005_t006(_row: dict[str, Any]) -> dict[str, Any]:
+    """Real 2026 227k compiled original Core.dll fields and linked references."""
+    pins=[
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp",
+                 "9263998f6c69a5eb0955e83545831b84f3aeb034afc13d1039cfae06bf789a5a"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.log",
+                 "29afbd35450e4a969d28236a4971f75e596390d79ec8dd0c3d07abd81f18dbf1"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-build.log",
+                 "bfc038501ca57da99bff2fd33adc073a2c8cfa6f3b249f5db7381b1f5ee56ce6"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+                 "ba4f0e4d9cb8e091d5af22067a3db992f3b1666eeac15627a0ab28e0fe1953de"),
+    ]
+    path="catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json"
+    pins.append(verified_pass_log(path,"checks",87))
+    o=json.loads((ROOT/path).read_text(encoding="utf-8-sig"))
+    expected={"Vector":(0,584,313,0),"Rotator":(1,577,33,0),
+              "Color":(547,547,559,0),"Plane":(32,309,935,1),
+              "Coords":(571,569,1074,0),"Guid":(312,590,662,0)}
+    rows=o.get("native_loaded",{})
+    if set(rows)!=set(expected):
+        raise AssertionError("227k real original native UStruct set incomplete")
+    for name,(idx,child,nxt,sup) in expected.items():
+        v=rows[name]
+        if (v["export_index"],v["native_children_ref"],v["native_next_ref"],
+            v["native_super_ref"],v["native_script_length"])!=(idx,child,nxt,sup,0):
+            raise AssertionError("227k compiled native loaded reference mismatch "+name)
+    script=o.get("native_function_nonzero",{})
+    if script!={"export":292,"memory":11,"archive":7}:
+        raise AssertionError("227k inherited source nonzero script size proof missing")
+    pins.append({"original_Core_dll_SHA256":"c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+                 "original_Core_u_SHA256":"28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"})
+    return {"status":"PASS","result":
+      "Original compiled 2026 Unreal 227k Core.dll: 6 direct UStruct source fields, names, zero-script, loaded Children/Next/SuperField/ScriptText linker identities and inherited nonzero script 11 memory/7 archive, 87/87 true original native vs reader PASS, no 2012 original rerun.",
+      "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T008":eval_t008,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

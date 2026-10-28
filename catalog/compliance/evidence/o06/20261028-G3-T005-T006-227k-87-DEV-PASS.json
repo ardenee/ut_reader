@@ -1,0 +1,57 @@
+{
+    "ok": true,
+    "checks": 87,
+    "failed": [],
+    "T005": "Original compiled Unreal 227k six direct UStructs and nonzero inherited UStruct script 11/7",
+    "T006": "Original compiled UField Next/SuperField and UStruct Children/ScriptText target identities",
+    "native_loaded": {
+        "Vector": {
+            "export_index": 0,
+            "native_children_ref": 584,
+            "native_next_ref": 313,
+            "native_super_ref": 0,
+            "native_script_length": 0
+        },
+        "Rotator": {
+            "export_index": 1,
+            "native_children_ref": 577,
+            "native_next_ref": 33,
+            "native_super_ref": 0,
+            "native_script_length": 0
+        },
+        "Color": {
+            "export_index": 547,
+            "native_children_ref": 547,
+            "native_next_ref": 559,
+            "native_super_ref": 0,
+            "native_script_length": 0
+        },
+        "Plane": {
+            "export_index": 32,
+            "native_children_ref": 309,
+            "native_next_ref": 935,
+            "native_super_ref": 1,
+            "native_script_length": 0
+        },
+        "Coords": {
+            "export_index": 571,
+            "native_children_ref": 569,
+            "native_next_ref": 1074,
+            "native_super_ref": 0,
+            "native_script_length": 0
+        },
+        "Guid": {
+            "export_index": 312,
+            "native_children_ref": 590,
+            "native_next_ref": 662,
+            "native_super_ref": 0,
+            "native_script_length": 0
+        }
+    },
+    "native_function_nonzero": {
+        "export": 292,
+        "memory": 11,
+        "archive": 7
+    },
+    "already_sealed_2012_C227i_positive_native_rerun": false
+}

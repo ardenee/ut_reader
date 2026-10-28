@@ -220,13 +220,44 @@
       "pass_criterion": "Each direct native field, zero/nonzero script and declared length matches 227k-selected decoder.",
       "evidence": "2026 original Core.dll + original Core.u; one grouped native observation",
       "reuse": "2012 227i 237-object evidence sealed, not interchangeable with 227k.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture real 2026 Core.dll direct UStruct post-LOAD names, line/textpos, script sizes and source references. PASS ONLY WHEN: Each direct native field, zero/nonzero script and declared length matches 227k-selected decoder. ORACLE: 2026 original Core.dll + original Core.u; one grouped native observation. Reuse before any new execution: 2012 227i 237-object evidence sealed, not interchangeable with 227k.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "107eb2f07c05e575a8d3dd4d33921f55058d995eee9fc04d404aa8d677bfcc17",
+      "result": "Original compiled 2026 Unreal 227k Core.dll: 6 direct UStruct source fields, names, zero-script, loaded Children/Next/SuperField/ScriptText linker identities and inherited nonzero script 11 memory/7 archive, 87/87 true original native vs reader PASS, no 2012 original rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T12:54:20+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp",
+          "sha256": "9263998f6c69a5eb0955e83545831b84f3aeb034afc13d1039cfae06bf789a5a",
+          "bytes": 2377
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.log",
+          "sha256": "29afbd35450e4a969d28236a4971f75e596390d79ec8dd0c3d07abd81f18dbf1",
+          "bytes": 1428
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-build.log",
+          "sha256": "bfc038501ca57da99bff2fd33adc073a2c8cfa6f3b249f5db7381b1f5ee56ce6",
+          "bytes": 396
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "sha256": "ba4f0e4d9cb8e091d5af22067a3db992f3b1666eeac15627a0ab28e0fe1953de",
+          "bytes": 1735
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "sha256": "ba4f0e4d9cb8e091d5af22067a3db992f3b1666eeac15627a0ab28e0fe1953de",
+          "accepted_original_assertions": 87
+        },
+        {
+          "original_Core_dll_SHA256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+          "original_Core_u_SHA256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+        }
+      ]
     },
     {
       "id": "T006",
@@ -238,13 +269,44 @@
       "pass_criterion": "Every mandatory pointer identity matches reader; true runtime nulls reported separately from nonzero archived refs.",
       "evidence": "Original x86 pointer-to-export mapping; no PHP-synthesized pointer address",
       "reuse": "C227i 232 Children pointers already sealed.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Dereference original loaded pointers against same-linker export table; compare original archived indices. PASS ONLY WHEN: Every mandatory pointer identity matches reader; true runtime nulls reported separately from nonzero archived refs. ORACLE: Original x86 pointer-to-export mapping; no PHP-synthesized pointer address. Reuse before any new execution: C227i 232 Children pointers already sealed.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "107eb2f07c05e575a8d3dd4d33921f55058d995eee9fc04d404aa8d677bfcc17",
+      "result": "Original compiled 2026 Unreal 227k Core.dll: 6 direct UStruct source fields, names, zero-script, loaded Children/Next/SuperField/ScriptText linker identities and inherited nonzero script 11 memory/7 archive, 87/87 true original native vs reader PASS, no 2012 original rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T12:54:20+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp",
+          "sha256": "9263998f6c69a5eb0955e83545831b84f3aeb034afc13d1039cfae06bf789a5a",
+          "bytes": 2377
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.log",
+          "sha256": "29afbd35450e4a969d28236a4971f75e596390d79ec8dd0c3d07abd81f18dbf1",
+          "bytes": 1428
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-build.log",
+          "sha256": "bfc038501ca57da99bff2fd33adc073a2c8cfa6f3b249f5db7381b1f5ee56ce6",
+          "bytes": 396
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "sha256": "ba4f0e4d9cb8e091d5af22067a3db992f3b1666eeac15627a0ab28e0fe1953de",
+          "bytes": 1735
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "sha256": "ba4f0e4d9cb8e091d5af22067a3db992f3b1666eeac15627a0ab28e0fe1953de",
+          "accepted_original_assertions": 87
+        },
+        {
+          "original_Core_dll_SHA256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+          "original_Core_u_SHA256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+        }
+      ]
     },
     {
       "id": "T007",

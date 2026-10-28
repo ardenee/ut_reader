@@ -4,7 +4,7 @@
     "T001",
     "T008"
   ],
-  "started_at": "2026-10-28T12:46:06+00:00",
+  "started_at": "2026-10-28T12:54:20+00:00",
   "tests": [
     {
       "id": "T001",
@@ -28,13 +28,13 @@
     },
     {
       "id": "T005",
-      "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T006",
-      "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T007",
@@ -47,11 +47,11 @@
       "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     }
   ],
-  "finished_at": "2026-10-28T12:46:06+00:00",
+  "finished_at": "2026-10-28T12:54:20+00:00",
   "counts": {
-    "PASS": 5,
+    "PASS": 7,
     "FAIL": 0,
-    "BLOCKED": 3,
+    "BLOCKED": 1,
     "PENDING": 0
   }
 }

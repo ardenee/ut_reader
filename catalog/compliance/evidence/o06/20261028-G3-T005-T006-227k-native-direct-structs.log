@@ -1,0 +1,17 @@
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+G3_T005_227K_PACKAGE=0156ACCC
+G3_T005_227K_LOOKUP[0] obj=01563BEC
+G3_T005_227K_NATIVE[0] export=0 script=0 line=0 textpos=0 name=Vector child_ref=584 next_ref=313 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T005_227K_LOOKUP[1] obj=01563CB4
+G3_T005_227K_NATIVE[1] export=1 script=0 line=0 textpos=0 name=Rotator child_ref=577 next_ref=33 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T005_227K_LOOKUP[2] obj=01563E44
+G3_T005_227K_NATIVE[2] export=547 script=0 line=0 textpos=0 name=Color child_ref=547 next_ref=559 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T005_227K_LOOKUP[3] obj=015353BC
+G3_T005_227K_NATIVE[3] export=32 script=0 line=0 textpos=0 name=Plane child_ref=309 next_ref=935 super_ref=1 scripttext_null=1 child_same_linker=1
+G3_T005_227K_LOOKUP[4] obj=015360B4
+G3_T005_227K_NATIVE[4] export=571 script=0 line=0 textpos=0 name=Coords child_ref=569 next_ref=1074 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T005_227K_LOOKUP[5] obj=0153617C
+G3_T005_227K_NATIVE[5] export=312 script=0 line=0 textpos=0 name=Guid child_ref=590 next_ref=662 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T005_227K_NONZERO_FUNCTION export=292 script=11 present=1
+G3_T005_227K_LOADED_COUNT=6
