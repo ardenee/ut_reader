@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-80-TESTS-13-PASS-67-BLOCKED-T051-ORIGINAL-V432-25-25
-- **Last completed action:** Closed fixed T051: original stock v432 Core.u 31/31 sealed + Engine.Inventory UClass 33 loaded script bytes vs 25 archived, native real EX_Skip control flow and nested expressions, all 21 known original compiled bytes and three object relocations matched, focused 25/25; 0 original native replays
-- **Resume at:** T009 malformed direct UStruct references; T011 genuine loadable v60-v63 function; T050 C98 original Name/Object relocation mixed; T052 469f-only script differential and T053 C227 native delta remain specifically BLOCKED; continue fixed 80-test register, G3 5/16, no PRD release before final.
-- **Active changed at:** 2026-10-28T13:41:57+00:00
+- **Stage:** G3-13-OF-80-PASS-T050-FIRST100-NO-MIXED-NAME-OBJECT
+- **Last completed action:** T001-T008,T010,T032,T051,T056,T067 PASS; fixed T050 investigative PHP-only scan of original 1998 100 UStruct records (96 script,4 zero) identified 0 individual scripts with both FName/object relocations; T050 stays BLOCKED; no compiled native rerun or new suite replay
+- **Resume at:** Identify a genuine C98 Core.u mixed FName+UObject script outside initial 100 before doing any new original compiled loaded-memory oracle; T009 original malformed direct UStruct ref/ScriptSize and T011 authentic loadable legacy UT99 UFunction still BLOCKED. Continue fixed baseline, no speculative PASS or PRD release.
+- **Active changed at:** 2026-10-28T13:43:53+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
