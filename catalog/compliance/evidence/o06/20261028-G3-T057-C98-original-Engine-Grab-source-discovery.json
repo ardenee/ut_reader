@@ -1,0 +1,187 @@
+{
+    "status": "DISCOVERY_NOT_NATIVE_ACCEPTANCE",
+    "errors": [],
+    "original_engine_u_sha256": "bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d",
+    "original_core_dll_sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+    "original_engine_dll_sha256": "2f3ab0f8bc40960e6be5e1f540ca974a1537d9b23f2b9d7d06af589400b70069",
+    "genuine_core_u_sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c",
+    "original_version": 61,
+    "original_export_index": 1613,
+    "export_name": "Grab",
+    "class_index": -3,
+    "serial_offset": 94325,
+    "serial_size": 57,
+    "source_script_size": 30,
+    "source_script_archive": {
+        "status": "script_archive_expressions_decoded",
+        "source_family": "epic-ue1",
+        "script_memory_expected": 30,
+        "script_memory_decoded": 30,
+        "archive_bytes_consumed": 23,
+        "expression_count": 13,
+        "expression_preview": [
+            {
+                "token": 20,
+                "memory_offset": 0,
+                "archive_offset": 94345,
+                "value": [],
+                "children": [],
+                "memory_end": 2,
+                "archive_end": 94347
+            },
+            {
+                "token": 7,
+                "memory_offset": 2,
+                "archive_offset": 94347,
+                "value": 22,
+                "children": [
+                    {
+                        "token": 114,
+                        "memory_offset": 5,
+                        "archive_offset": 94350,
+                        "value": null,
+                        "children": [
+                            {
+                                "token": 1,
+                                "memory_offset": 6,
+                                "archive_offset": 94351,
+                                "value": 30,
+                                "children": [],
+                                "memory_end": 11,
+                                "archive_end": 94353
+                            },
+                            {
+                                "token": 42,
+                                "memory_offset": 11,
+                                "archive_offset": 94353,
+                                "value": null,
+                                "children": [],
+                                "memory_end": 12,
+                                "archive_end": 94354
+                            },
+                            {
+                                "token": 22,
+                                "memory_offset": 12,
+                                "archive_offset": 94354,
+                                "value": null,
+                                "children": [],
+                                "memory_end": 13,
+                                "archive_end": 94355
+                            }
+                        ],
+                        "memory_end": 13,
+                        "archive_end": 94355
+                    }
+                ],
+                "memory_end": 13,
+                "archive_end": 94355
+            },
+            {
+                "token": 27,
+                "memory_offset": 13,
+                "archive_offset": 94355,
+                "value": {
+                    "index": 729,
+                    "name": "GrabDecoration"
+                },
+                "children": [
+                    {
+                        "token": 22,
+                        "memory_offset": 18,
+                        "archive_offset": 94358,
+                        "value": null,
+                        "children": [],
+                        "memory_end": 19,
+                        "archive_end": 94359
+                    }
+                ],
+                "memory_end": 19,
+                "archive_end": 94359
+            },
+            {
+                "token": 6,
+                "memory_offset": 19,
+                "archive_offset": 94359,
+                "value": 28,
+                "children": [],
+                "memory_end": 22,
+                "archive_end": 94362
+            },
+            {
+                "token": 27,
+                "memory_offset": 22,
+                "archive_offset": 94362,
+                "value": {
+                    "index": 89,
+                    "name": "DropDecoration"
+                },
+                "children": [
+                    {
+                        "token": 22,
+                        "memory_offset": 27,
+                        "archive_offset": 94365,
+                        "value": null,
+                        "children": [],
+                        "memory_end": 28,
+                        "archive_end": 94366
+                    }
+                ],
+                "memory_end": 28,
+                "archive_end": 94366
+            },
+            {
+                "token": 4,
+                "memory_offset": 28,
+                "archive_offset": 94366,
+                "value": null,
+                "children": [],
+                "memory_end": 29,
+                "archive_end": 94367
+            },
+            {
+                "token": 21,
+                "memory_offset": 29,
+                "archive_offset": 94367,
+                "value": null,
+                "children": [],
+                "memory_end": 30,
+                "archive_end": 94368
+            }
+        ],
+        "expression_preview_truncated": true,
+        "native_load_relocation_count": 3,
+        "native_load_relocation_preview": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 7,
+                "archive_index": 30,
+                "target_source": "export",
+                "target_name": "carriedDecoration"
+            },
+            {
+                "kind": "fname",
+                "memory_offset": 14,
+                "archive_index": 729,
+                "resolved_name": "GrabDecoration"
+            },
+            {
+                "kind": "fname",
+                "memory_offset": 23,
+                "archive_index": 89,
+                "resolved_name": "DropDecoration"
+            }
+        ],
+        "native_load_relocation_preview_truncated": false,
+        "native_pointer_addresses_fabricated": false,
+        "source_memory_full_byte_reconstruction": true,
+        "source_memory_bytes_hex": "14000716007201000000002a161b0000000016061c001b00000000160415",
+        "source_memory_known_mask_hex": "010101010101010000000001010100000000010101010100000000010101",
+        "unsupported_branch": null,
+        "bytecode_executed": false,
+        "runtime_refs_resolved": false
+    },
+    "original_native_selected_export_loaded": false,
+    "native_loading_prerequisite": "Original C98 Unreal.exe -server did not deserialize Engine.u Grab export1613 during one bounded 45s x86 CDB session; original Engine.u loaded-value script oracle still missing",
+    "compiled_engine_trace_ever_accepted": false,
+    "fixed_T057_status": "BLOCKED"
+}

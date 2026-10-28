@@ -38,3 +38,6 @@ catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compile
 # Preserve original shipped v432 malformed native CDB and UCC logs without newline normalization.
 catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-Children-error-no-Tell.log -text
 catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-ScriptSize-error-no-Tell.log -text
+# Preserve exact original 1998 C98 debugger transcript and single-export probe commands.
+catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-no-native-hit.log -text
+catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-native-probe.cmd -text

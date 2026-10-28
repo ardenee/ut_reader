@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-15-PASS-65-BLOCKED-T009-V432-ERRORS-NO-TELL-T057-C227-NESTED
-- **Last completed action:** After GitHub 89a6fd83 C98 T009 compiled native 31/31, ran two distinct original UT99 v432 compiled Core.dll/UCC genuine Core.u one-byte malformed cases: Children Bad import index62/16; ScriptSize2->3 mismatch Got7 expected3. Exact original native FArchive Tell NOT captured, and current v432 parser errors differ from native. Original raw logs SHA-pinned. Read-only sealed original C227i 2012 RandRange 14 recursive expr/2 top/3 object refs; original C98 100 native scripts zero true nested; fixed T057 remains blocked. No PASS inflation.
-- **Resume at:** T009: obtain actual v432 malformed FArchive Tell and resolve confirmed original-vs-reader diagnostic discrepancy without conflating 469f, then genuine 227k native branch; T057 locate authentic original C98 recursive bytecode with 2+ compact refs; T011 genuinely loadable native v60-63 UT99 UFunction still absent. Remain 15/80 PASS and 65 BLOCKED, G3 5/16 FULL, no PRD.
-- **Active changed at:** 2026-10-28T22:00:50+00:00
+- **Stage:** G3-15-PASS-65-BLOCKED-T057-C98-ENGINEU-ORIGINAL-LOADER-NOT-REACHED
+- **Last completed action:** Genuine original C98 retail Engine.u 3619 exports scanned; source reader found 913 script records, 535 genuinely nested with 2+ references, 363 mixed Name/Object. Exact original Engine.Grab export1613 Script.Num30 physical archive23, 13 recursive nodes/7 top and 3 relocations. One bounded 45s original compiled C98 Core.dll Unreal.exe -server did not load selected export, so no native in-memory proof; source discovery and failed original compiled CDB trace SHA-pinned. Original v432 T009 bad-ref and script-size error text mismatch and native Tell missing, C98 T009 proof unchanged.
+- **Resume at:** T057 choose original loader that actually reaches original C98 Engine.Grab export1613 then capture real native buffer+typed referents once, no repeat same boot probe; T009 v432 real Tell and diagnostic source fix, 227k branch, T011 truly loadable UT99 v60-63. G3 15/80 PASS, 65 BLOCKED, G3 5/16 FULL, no PRD.
+- **Active changed at:** 2026-10-28T22:05:31+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
