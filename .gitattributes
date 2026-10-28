@@ -35,3 +35,6 @@ catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-
 catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.log -text
 catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.cmd -text
 catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.cmd -text
+# Preserve original shipped v432 malformed native CDB and UCC logs without newline normalization.
+catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-Children-error-no-Tell.log -text
+catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-ScriptSize-error-no-Tell.log -text

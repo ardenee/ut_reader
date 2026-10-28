@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-15-PASS-65-BLOCKED-T009-C98-COMPILED-ERROR-CURSOR-PROVEN
-- **Last completed action:** Original May17 1998 actual compiled Core.dll x86 one-byte genuine Core.u EndState Children compact import -63 failed Bad import index62/16 at FArchive Tell24224; independent original ScriptSize4->5 failed Got9 expected5 at native Tell24243; source-selected struct reader error/cursor corrected, focused current-vs-native 31/31 PASS, both original native raw CDB logs and commands SHA-pinned. Fixed T009 remains BLOCKED for compiled UT99 v432 and 227k distinct branches.
-- **Resume at:** Complete original v432 and 227k T009 distinct malformed Children/ScriptSize native oracles once each. T011 still needs truly loadable original UT99 version60-63 UFunction. Fixed register 15 PASS 65 BLOCKED; no PRD release.
-- **Active changed at:** 2026-10-28T21:49:27+00:00
+- **Stage:** G3-15-PASS-65-BLOCKED-T009-V432-ERRORS-NO-TELL-T057-C227-NESTED
+- **Last completed action:** After GitHub 89a6fd83 C98 T009 compiled native 31/31, ran two distinct original UT99 v432 compiled Core.dll/UCC genuine Core.u one-byte malformed cases: Children Bad import index62/16; ScriptSize2->3 mismatch Got7 expected3. Exact original native FArchive Tell NOT captured, and current v432 parser errors differ from native. Original raw logs SHA-pinned. Read-only sealed original C227i 2012 RandRange 14 recursive expr/2 top/3 object refs; original C98 100 native scripts zero true nested; fixed T057 remains blocked. No PASS inflation.
+- **Resume at:** T009: obtain actual v432 malformed FArchive Tell and resolve confirmed original-vs-reader diagnostic discrepancy without conflating 469f, then genuine 227k native branch; T057 locate authentic original C98 recursive bytecode with 2+ compact refs; T011 genuinely loadable native v60-63 UT99 UFunction still absent. Remain 15/80 PASS and 65 BLOCKED, G3 5/16 FULL, no PRD.
+- **Active changed at:** 2026-10-28T22:00:50+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
