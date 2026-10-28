@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-15-PASS-65-BLOCKED-T057-C98-ENGINEU-ORIGINAL-LOADER-NOT-REACHED
-- **Last completed action:** Genuine original C98 retail Engine.u 3619 exports scanned; source reader found 913 script records, 535 genuinely nested with 2+ references, 363 mixed Name/Object. Exact original Engine.Grab export1613 Script.Num30 physical archive23, 13 recursive nodes/7 top and 3 relocations. One bounded 45s original compiled C98 Core.dll Unreal.exe -server did not load selected export, so no native in-memory proof; source discovery and failed original compiled CDB trace SHA-pinned. Original v432 T009 bad-ref and script-size error text mismatch and native Tell missing, C98 T009 proof unchanged.
-- **Resume at:** T057 choose original loader that actually reaches original C98 Engine.Grab export1613 then capture real native buffer+typed referents once, no repeat same boot probe; T009 v432 real Tell and diagnostic source fix, 227k branch, T011 truly loadable UT99 v60-63. G3 15/80 PASS, 65 BLOCKED, G3 5/16 FULL, no PRD.
-- **Active changed at:** 2026-10-28T22:05:31+00:00
+- **Stage:** G3-16-OF-80-PASS-T057-C98-V432-C227-NATIVE-NESTED-CLOSED
+- **Last completed action:** Fixed T057 full PASS using one NEW original compiled retail May17 C98 Core.dll -make Engine.Grab loaded30/archived23 13 recursive expressions, one UObject and two FName typed reloc (18/18 native literal bytes), plus sealed stock v432 Engine.Inventory 21/21 literal and original 2012 C227i Core.RandRange 14/14; 112/112 focused source+real native original verification, 53 literal native bytes matched and 36 original relocation bytes intentionally masked. 16 PASS/64 BLOCKED; no prior native repeats, no grouped G3-12 closure.
+- **Resume at:** T009 preserve verified C98 native error/Tell, resolve actual stock v432 error diagnostic mismatch and original FArchive Tell without conflating 469f, then original 227k distinct malformed; T011 genuine loadable original UT99 v60-63 UFunction legacy fields; T050 C98 Core.u same-script FName+Object missing; final gates T078-T080 not eligible, no PRD.
+- **Active changed at:** 2026-10-28T22:15:14+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

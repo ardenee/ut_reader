@@ -1756,13 +1756,121 @@
       "pass_criterion": "Reader matches typed recursion, consumes exact bytes, and handles unknown reference without invented values.",
       "evidence": "Source opcode table plus original compiled memory values",
       "reuse": "Only original source-legal cases.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Scoped sealed genuine original compiled C98/227i Core.u bytecode inspection without native rerun: original May17 C98 100 UStruct exports have 67 multiple-object-ref script samples but ZERO genuinely nested/recursive expression traces. Original 2012 C227i RandRange export628 has true 14 recursive visits vs two top-level expression nodes, with three typed object relocations, preserved original 227i native script bytes and source compiler SHA in sealed 237/223 proof. Existing original compiled UT99 v432 Inventory nested 17-expression, three-reloc source-native oracle sealed T051. NEW C98 SOURCE-GENUINE CORPUS FOUND BUT COMPILED NATIVE LOADED MEMORY STILL MISSING: original shipped C98 Engine.u SHA bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d contains 3619 exports, 913 successfully source-decoded scripts, 535 genuinely nested with >=2 typed compact relocations and 363 both FName+object scripts. Exact native-selected source candidate Engine.u Grab export1613 has Script.Num30, archived23, 13 nested expression visits across 7 top-level, 1 object and 2 FName typed relocation slots. SHA-pinned read-only source discovery catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-source-discovery.json. One compiled original May17 C98 Core.dll x86 Unreal.exe -server 45-second bounded CDB did NOT reach that lazy-loaded export (original CDB trace no-native-hit SHA-pinned), so native memory bytes/targets UNOBSERVED. Must select an original loader that actually preloads this real Engine.u UFunction and capture original compiled loaded memory once; do not claim PHP source reconstruction or a C98 original Core.u nonrecursive script constitutes T057 native proof. T057 BLOCKED, no earlier accepted native reruns. Reuse T051/T010/C227i SHA proofs; do not rerun accepted C98 100 or C227i 223 native scripts.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "37332cedab95788e9d788804858b0636f6ad9014372b24d1947ce7800968b86c",
+      "result": "Three actual original compiled source-family nested EX_* scripts, no native reruns: C98 May17 retail Core.dll real Engine.u Grab export1613 13 expressions/7 top-level/30 in-memory vs23 archive, 18/18 deterministic compiled native bytes match; 1 UObject+2 FName typed slots (12 bytes intentionally masked). UT99 v432 sealed compiled Engine.Inventory 17 recursive expressions including EX_Skip/native conversion, 21/21 literal bytes/12 reloc bytes. Original Unreal 2012 C227i Core.RandRange 14 recursive expressions/2 top-level 26 memory/18 archive, 14/14 literal bytes/12 typed object bytes. 112/112 focused source/current/original verification PASS; total 53 native known bytes and 36 relocation bytes masked; no unknown process pointer addresses fabricated. T057 only, G3-12 overall still OPEN.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T22:14:34+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t057-original-native-recursive.php",
+          "sha256": "e3d9cc2fad6b4e250667484c1ac2f2ac2ccb983fda4bdddd57d441c5af1b547b",
+          "bytes": 11946
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-original-native-three-families-112pass.json",
+          "sha256": "917cb4ea822786112dacf5def7e3976fe2694befc32d90e063f2b92d0aa9bc97",
+          "bytes": 4483
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.log",
+          "sha256": "9f0e601d360c98cf78505ecd548b20e59b9d24f52cb652bcdcddbaef5a892ef5",
+          "bytes": 6698
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.cmd",
+          "sha256": "ef6c851f7d8e81808ca87e4e16ebdb6208712680483caed69a4e867fda7fa383",
+          "bytes": 273
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-source-discovery.json",
+          "sha256": "7f986e863651900e362ba144b3a4c2244f89f4a3761683a219ae026b135ba1df",
+          "bytes": 6973
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-223-ORIGINAL-NATIVE-VALUES.json",
+          "sha256": "36923b929fa6bf05389f93be97203caa6ce08495b838bd53e877b6e31ae96b5c",
+          "bytes": 143091
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-CDB.log",
+          "sha256": "01cf2d729a0f23f99e92492eb597e178e674a937b4ae5b88d14464c01f455c3b",
+          "bytes": 154692
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
+          "sha256": "457fd47987390226c24c57ec92c203510d7c30bf4c0c505d885464b7f9482bee",
+          "bytes": 1017
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+          "bytes": 20905
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "sha256": "23c7b307fd88af83851a005b0aca0f0be83560aafe122886be314ac2de445f5f",
+          "bytes": 7937
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "sha256": "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6",
+          "bytes": 50236
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
+          "bytes": 59741
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t051-v432-native-script-flow.php",
+          "sha256": "9dbbf3e18039dc3920148bfabf60e9049b914b2cbe2e528059135366d2fcad78",
+          "bytes": 7636
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
+          "sha256": "457fd47987390226c24c57ec92c203510d7c30bf4c0c505d885464b7f9482bee",
+          "bytes": 1017
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-native.log",
+          "sha256": "2f9a686c19f52be6e9866eac1fb521d42bc479f073510fbcc397a6d317843a11",
+          "bytes": 17460
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json",
+          "sha256": "e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67",
+          "bytes": 38624
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "sha256": "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76",
+          "bytes": 1147
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+          "bytes": 20905
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+          "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+          "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.dll",
+          "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+        },
+        {
+          "original": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+          "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+        }
+      ]
     },
     {
       "id": "T058",

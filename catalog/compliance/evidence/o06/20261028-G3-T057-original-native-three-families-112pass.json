@@ -1,0 +1,103 @@
+{
+    "ok": true,
+    "checks": 112,
+    "errors": [],
+    "original_compiled_source_profiles": [
+        "C98-May17-1998",
+        "UT99-v432",
+        "Unreal-C227i-2012"
+    ],
+    "true_original_compiled_nested_script_samples": 3,
+    "recursive_expression_visits": {
+        "C98": 13,
+        "v432": 17,
+        "C227i": 14
+    },
+    "real_native_known_bytes_equal": 53,
+    "real_native_typed_relocation_bytes_masked": 36,
+    "C98_original_native": {
+        "known": 18,
+        "masked": 12,
+        "mismatches": [],
+        "references": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 7,
+                "archive_index": 30,
+                "target_source": "export",
+                "target_name": "carriedDecoration"
+            },
+            {
+                "kind": "fname",
+                "memory_offset": 14,
+                "archive_index": 729,
+                "resolved_name": "GrabDecoration"
+            },
+            {
+                "kind": "fname",
+                "memory_offset": 23,
+                "archive_index": 89,
+                "resolved_name": "DropDecoration"
+            }
+        ],
+        "native_loaded_memory_hex": "14000716007201f8ee47022a161b2b07000016061c001be6040000160415",
+        "physical_script_archive_bytes": 23
+    },
+    "C227i_original_native": {
+        "known": 14,
+        "masked": 12,
+        "mismatches": [],
+        "references": [
+            {
+                "kind": "object_pointer",
+                "memory_offset": 3,
+                "archive_index": 6,
+                "target_source": "export",
+                "target_name": "Min"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 10,
+                "archive_index": 257,
+                "target_source": "export",
+                "target_name": "Max"
+            },
+            {
+                "kind": "object_pointer",
+                "memory_offset": 15,
+                "archive_index": 6,
+                "target_source": "export",
+                "target_name": "Min"
+            }
+        ],
+        "native_loaded_memory_hex": "04ae0078af6002abaf0058b060020078af600216c3161616040b",
+        "physical_script_archive_bytes": 18
+    },
+    "v432_sealed_compiled_native_known_bytes": 21,
+    "physical_archive_bytes": {
+        "C98": 23,
+        "v432": 25,
+        "C227i": 18
+    },
+    "previously_completed_native_sessions_reexecuted": 0,
+    "old_acceptance_suites_replayed": 0,
+    "source_and_native_pin_sha256": {
+        "Core.dll": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+        "Engine.dll": "2f3ab0f8bc40960e6be5e1f540ca974a1537d9b23f2b9d7d06af589400b70069",
+        "Core.u": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b",
+        "Engine.u": "bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d",
+        "Unreal.exe": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30",
+        "20261028-G3-T057-C98-original-Engine-Grab-source-discovery.json": "7f986e863651900e362ba144b3a4c2244f89f4a3761683a219ae026b135ba1df",
+        "20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.log": "9f0e601d360c98cf78505ecd548b20e59b9d24f52cb652bcdcddbaef5a892ef5",
+        "20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.cmd": "ef6c851f7d8e81808ca87e4e16ebdb6208712680483caed69a4e867fda7fa383",
+        "UCC.exe": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672",
+        "20261027-G3-03-C227I-237-223-ORIGINAL-NATIVE-VALUES.json": "36923b929fa6bf05389f93be97203caa6ce08495b838bd53e877b6e31ae96b5c",
+        "20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-CDB.log": "01cf2d729a0f23f99e92492eb597e178e674a937b4ae5b88d14464c01f455c3b",
+        "20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-COMMAND.cmd": "819405efb1760c5fb28dab4438b5d27c0b8224577a895b7e52a6bfd6ab8acf4d",
+        "20261028-G3-T051-original-v432-control-flow-native-compare.json": "457fd47987390226c24c57ec92c203510d7c30bf4c0c505d885464b7f9482bee",
+        "20261028-G3-T051-v432-original-scriptall-native.log": "2f9a686c19f52be6e9866eac1fb521d42bc479f073510fbcc397a6d317843a11",
+        "20261028-G3-T051-v432-original-scriptall-source.json": "e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67",
+        "CatalogUE1ClassicScriptArchiveReader.php": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"
+    },
+    "G3_12_overall": "OPEN"
+}

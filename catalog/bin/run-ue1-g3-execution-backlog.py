@@ -663,7 +663,68 @@ def eval_t055(_row: dict[str, Any]) -> dict[str, Any]:
        "result":"One named source-defined invalid SerializeExpr opcode: authentic retail May17 1998 original Core.u EndState export456 offset24237 mutated only 0x14->0x10; unchanged original C98 Core.dll under native CDB calls appErrorf(Bad expr token 10) at actual FArchive Tell24238; current C98 source branch rejects at exactly24238 with no loaded state. Previously sealed 54/54 direct source/native/physical byte checks SHA-verified; no original engine rerun. This ONE invalid-token test does not certify every malformed opcode or UT99/227 distinct branches.",
        "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T067":eval_t067}
+def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
+    """Original compiled source-family nested bytecode: C98, v432 and C227i.
+
+    Only exact SHA-pinned original compiled x86 CDB buffers count. The
+    T057 verifier makes fresh PHP current-reader byte comparisons but
+    launches ZERO original native runtimes and repeats ZERO older tests.
+    """
+    script="catalog/bin/verify-ue1-o06-g3-t057-original-native-recursive.php"
+    output="catalog/compliance/evidence/o06/20261028-G3-T057-original-native-three-families-112pass.json"
+    pins=[]
+    for p,h in [
+        (script,"e3d9cc2fad6b4e250667484c1ac2f2ac2ccb983fda4bdddd57d441c5af1b547b"),
+        (output,"917cb4ea822786112dacf5def7e3976fe2694befc32d90e063f2b92d0aa9bc97"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.log",
+         "9f0e601d360c98cf78505ecd548b20e59b9d24f52cb652bcdcddbaef5a892ef5"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.cmd",
+         "ef6c851f7d8e81808ca87e4e16ebdb6208712680483caed69a4e867fda7fa383"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-source-discovery.json",
+         "7f986e863651900e362ba144b3a4c2244f89f4a3761683a219ae026b135ba1df"),
+        ("catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-223-ORIGINAL-NATIVE-VALUES.json",
+         "36923b929fa6bf05389f93be97203caa6ce08495b838bd53e877b6e31ae96b5c"),
+        ("catalog/compliance/evidence/o06/20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-CDB.log",
+         "01cf2d729a0f23f99e92492eb597e178e674a937b4ae5b88d14464c01f455c3b"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
+         "457fd47987390226c24c57ec92c203510d7c30bf4c0c505d885464b7f9482bee"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+         "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+         "23c7b307fd88af83851a005b0aca0f0be83560aafe122886be314ac2de445f5f"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+         "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+         "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128"),
+    ]:
+        pins.append(verify_pin(p,h))
+    result=json.loads((ROOT/output).read_text(encoding="utf-8-sig"))
+    for k,v in {
+        "ok":True,"checks":112,"errors":[],
+        "original_compiled_source_profiles":["C98-May17-1998","UT99-v432","Unreal-C227i-2012"],
+        "true_original_compiled_nested_script_samples":3,
+        "recursive_expression_visits":{"C98":13,"v432":17,"C227i":14},
+        "real_native_known_bytes_equal":53,
+        "real_native_typed_relocation_bytes_masked":36,
+        "physical_archive_bytes":{"C98":23,"v432":25,"C227i":18},
+        "previously_completed_native_sessions_reexecuted":0,
+        "old_acceptance_suites_replayed":0,
+        "G3_12_overall":"OPEN"
+    }.items():
+        if result.get(k)!=v:
+            raise AssertionError("T057 original source-native exact acceptance failed: "+k)
+    for key,known,masked in [("C98_original_native",18,12),("C227i_original_native",14,12)]:
+        detail=result.get(key,{})
+        if detail.get("known")!=known or detail.get("masked")!=masked or detail.get("mismatches"):
+            raise AssertionError("T057 authentic native byte relocation mismatch: "+key)
+    reused=eval_t051(_row)
+    if reused.get("status")!="PASS":
+        raise AssertionError("T057 sealed original UT99 v432 nested source-native T051 acceptance missing")
+    return {"status":"PASS",
+        "result":"Three actual original compiled source-family nested EX_* scripts, no native reruns: C98 May17 retail Core.dll real Engine.u Grab export1613 13 expressions/7 top-level/30 in-memory vs23 archive, 18/18 deterministic compiled native bytes match; 1 UObject+2 FName typed slots (12 bytes intentionally masked). UT99 v432 sealed compiled Engine.Inventory 17 recursive expressions including EX_Skip/native conversion, 21/21 literal bytes/12 reloc bytes. Original Unreal 2012 C227i Core.RandRange 14 recursive expressions/2 top-level 26 memory/18 archive, 14/14 literal bytes/12 typed object bytes. 112/112 focused source/current/original verification PASS; total 53 native known bytes and 36 relocation bytes masked; no unknown process pointer addresses fabricated. T057 only, G3-12 overall still OPEN.",
+        "evidence":pins+reused.get("evidence",[])}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
