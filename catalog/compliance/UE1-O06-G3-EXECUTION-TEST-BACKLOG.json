@@ -1468,7 +1468,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Run original compiled SerializeExpr and capture loaded script buffer typed relocation positions. PASS ONLY WHEN: Known byte positions match; relocatable Name/Object words compare by resolved target not literal ASLR address. ORACLE: Reuse 96 true original C98 script memory buffers; cover only untested token types. Reuse before any new execution: No blanket rerun of 100 scripts.",
+      "blocking_reason": "ORIGINAL FIXTURE ABSENT IN RETAIL C98 CORE.U: Full source-selected PHP-only inspection of all 458 genuine May17 1998 Core.u exports, including class exports, inspected 109 nonzero script-bearing exports without an exception; ZERO individual scripts contain both a typed FName token and UObject-pointer relocation. Previously 100 sealed UStruct records provide 96 nonzero scripts but none mixed. Cannot PASS by combining two different scripts. Need a distinct genuine original C98 Core.u revision with both tokens, followed by ONE authentic compiled native loaded memory trace and typed FName/object target comparison. No prior original native oracle replay; do not replace with synthetic.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"

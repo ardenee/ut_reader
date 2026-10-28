@@ -1,7 +1,7 @@
 {
   "contract": "g3-controlled-80-fixed-tests",
-  "stage": "G3-80-TESTS-15-PASS-65-BLOCKED-T054-T055-CLOSED",
-  "last_action": "Original v432 Pawn 314 loaded vs 246 archive with 202 exact native bytes and 112 pointer bytes, T054 16/16 PASS; original 1998 Bad expr token10 compiled FArchive Tell24238 T055 sealed 54/54 PASS; T050 full original 458-export Core.u scan of 109 scripts had no mixed Name+Object and zero exceptions so remains blocked; no native reruns",
-  "next_step": "Attempt T009 original compiled malformed direct UStruct ref/ScriptSize and T011 authentic loadable version60-63 UFunction; T050 requires different original compiled genuine Core.u with both typed relocations; continue fixed baseline with G3 5/16 FULL, do not deploy PRD before T078-T080.",
-  "updated_at_utc": "2026-10-28T20:07:44+00:00"
+  "stage": "G3-15-PASS-65-BLOCKED-T050-ALL458-NO-MIXED-T009-C98-NATIVE-NEXT",
+  "last_action": "T054 and T055 original compiled proof sealed in GitHub 41b1070c; T050 all 458 original C98 Core.u exports, 109 script-bearing, zero inspection exceptions and no mixed FName/Object specimen, precise evidence gap recorded; original v1.200 UField/UStruct serializer C++ audited for T009, no explicit negative ScriptSize validation in method, actual compiled error semantics still open",
+  "next_step": "T009 obtain one new authentic compiled malformed direct UStruct SuperField/Children reference plus invalid ScriptSize FArchive Tell; do not pre-impose PHP negative-size failure as native equivalence. T011 original UT99 genuine v60-v63 UFunction loaded-value evidence remains separately required. Fixed baseline 15/80 PASS, 65 BLOCKED, G3 5/16 FULL; no PRD deployment.",
+  "updated_at_utc": "2026-10-28T20:10:27+00:00"
 }
