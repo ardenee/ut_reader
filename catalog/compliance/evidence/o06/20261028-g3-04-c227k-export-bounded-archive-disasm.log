@@ -1,0 +1,183 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-04-c227k-export-bounded-archive-disasm.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\G304FunctionStateBadNetLoad.exe
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 002e0000 002f8000   G304FunctionStateBadNetLoad.exe
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 60310000 60a4f000   C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll
+ModLoad: 6a7c0000 6a7dd000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+ModLoad: 65c50000 65ce6000   C:\WINDOWS\SysWOW64\MSVCP140.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 6f7c0000 6f7e6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(7360.3f48): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=e2230000 edx=00000000 esi=00ef5d68 edi=00b4d000
+eip=778591a8 esp=00d3f3ac ebp=00d3f3d8 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> u Core+0x611f7 L58; u Core+0x617b0 L6; q
+Core!ULinkerLoad::Seek+0xf7:
+603711f7 8b4f1c          mov     ecx,dword ptr [edi+1Ch]
+603711fa 8b01            mov     eax,dword ptr [ecx]
+603711fc ff5034          call    dword ptr [eax+34h]
+603711ff 8b5d0c          mov     ebx,dword ptr [ebp+0Ch]
+60371202 03c3            add     eax,ebx
+60371204 53              push    ebx
+60371205 3b4720          cmp     eax,dword ptr [edi+20h]
+60371208 0f8e91000000    jle     Core!ULinkerLoad::Seek+0x19f (6037129f)
+6037120e 814f1000010000  or      dword ptr [edi+10h],100h
+60371215 6a00            push    0
+60371217 ff7508          push    dword ptr [ebp+8]
+6037121a e8c1070300      call    Core!ZLibDeCompressData+0xa310 (603a19e0)
+6037121f 6a00            push    0
+60371221 ff3528754360    push    dword ptr [Core!GPackage (60437528)]
+60371227 8d45e8          lea     eax,[ebp-18h]
+6037122a 6838d63d60      push    offset Core!FArchiveDummySave::`vftable'+0x64bc (603dd638)
+6037122f 50              push    eax
+60371230 e87b910000      call    Core!LocalizeError (6037a3b0)
+60371235 83c41c          add     esp,1Ch
+60371238 c745fc00000000  mov     dword ptr [ebp-4],0
+6037123f 83780400        cmp     dword ptr [eax+4],0
+60371243 7407            je      Core!ULinkerLoad::Seek+0x14c (6037124c)
+60371245 8b00            mov     eax,dword ptr [eax]
+60371247 894508          mov     dword ptr [ebp+8],eax
+6037124a eb07            jmp     Core!ULinkerLoad::Seek+0x153 (60371253)
+6037124c c74508a80b3d60  mov     dword ptr [ebp+8],offset Core!FArchive::`vftable'+0x60 (603d0ba8)
+60371253 8b4f1c          mov     ecx,dword ptr [edi+1Ch]
+60371256 8b7720          mov     esi,dword ptr [edi+20h]
+60371259 8b01            mov     eax,dword ptr [ecx]
+6037125b ff5034          call    dword ptr [eax+34h]
+6037125e 8b4f14          mov     ecx,dword ptr [edi+14h]
+60371261 03c3            add     eax,ebx
+60371263 56              push    esi
+60371264 50              push    eax
+60371265 e826fdfbff      call    Core!UObject::GetFullName (60330f90)
+6037126a 50              push    eax
+6037126b ff7508          push    dword ptr [ebp+8]
+6037126e ff35c05b4460    push    dword ptr [Core!GWarn (60445bc0)]
+60371274 e8e7950000      call    Core!FOutputDevice::Logf (6037a860)
+60371279 83c414          add     esp,14h
+6037127c c745fcffffffff  mov     dword ptr [ebp-4],0FFFFFFFFh
+60371283 8d4de8          lea     ecx,[ebp-18h]
+60371286 e83525fbff      call    Core!FString::~FString (603237c0)
+6037128b 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+6037128e 64890d00000000  mov     dword ptr fs:[0],ecx
+60371295 59              pop     ecx
+60371296 5f              pop     edi
+60371297 5e              pop     esi
+60371298 5b              pop     ebx
+60371299 8be5            mov     esp,ebp
+6037129b 5d              pop     ebp
+6037129c c20800          ret     8
+6037129f 8b4f1c          mov     ecx,dword ptr [edi+1Ch]
+603712a2 ff7508          push    dword ptr [ebp+8]
+603712a5 8b01            mov     eax,dword ptr [ecx]
+603712a7 ff5004          call    dword ptr [eax+4]
+603712aa 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+603712ad 64890d00000000  mov     dword ptr fs:[0],ecx
+603712b4 59              pop     ecx
+603712b5 5f              pop     edi
+603712b6 5e              pop     esi
+603712b7 5b              pop     ebx
+603712b8 8be5            mov     esp,ebp
+603712ba 5d              pop     ebp
+603712bb c20800          ret     8
+603712be cc              int     3
+603712bf cc              int     3
+Core!ULinker::Serialize:
+603712c0 55              push    ebp
+603712c1 8bec            mov     ebp,esp
+603712c3 6aff            push    0FFFFFFFFh
+603712c5 68c0ac3c60      push    offset Core!ZLibDeCompressData+0x335f0 (603cacc0)
+603712ca 64a100000000    mov     eax,dword ptr fs:[00000000h]
+603712d0 50              push    eax
+603712d1 83ec14          sub     esp,14h
+603712d4 53              push    ebx
+603712d5 56              push    esi
+603712d6 57              push    edi
+603712d7 a180854360      mov     eax,dword ptr [Core!GThreadStats+0x2b0 (60438580)]
+603712dc 33c5            xor     eax,ebp
+603712de 50              push    eax
+603712df 8d45f4          lea     eax,[ebp-0Ch]
+603712e2 64a300000000    mov     dword ptr fs:[00000000h],eax
+603712e8 8965f0          mov     dword ptr [ebp-10h],esp
+603712eb 8bd9            mov     ebx,ecx
+603712ed c745fc00000000  mov     dword ptr [ebp-4],0
+603712f4 8b7d08          mov     edi,dword ptr [ebp+8]
+603712f7 57              push    edi
+603712f8 e8a39bfcff      call    Core!UObject::Serialize (6033aea0)
+Core!ULinkerLoad::Serialize+0x320:
+603717b0 8b491c          mov     ecx,dword ptr [ecx+1Ch]
+603717b3 8b01            mov     eax,dword ptr [ecx]
+603717b5 ff6034          jmp     dword ptr [eax+34h]
+603717b8 cc              int     3
+603717b9 cc              int     3
+603717ba cc              int     3
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

@@ -1,0 +1,10 @@
+﻿{
+    "ok": true,
+    "checks": 24,
+    "failed": [],
+    "true_native_Tell": 221,
+    "attempted_read_end": 223,
+    "export_end": 221,
+    "build": "original compiled 2026 227k x86 Core.dll only",
+    "other_original_native_suites_reexecuted": false
+}

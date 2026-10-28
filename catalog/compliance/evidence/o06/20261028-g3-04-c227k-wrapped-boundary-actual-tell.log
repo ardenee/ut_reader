@@ -1,0 +1,117 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-04-c227k-wrapped-boundary-actual-tell.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\G304FunctionStateBadNetLoad.exe
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 002e0000 002f8000   G304FunctionStateBadNetLoad.exe
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 60310000 60a4f000   C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll
+ModLoad: 65c50000 65ce6000   C:\WINDOWS\SysWOW64\MSVCP140.dll
+ModLoad: 6a7c0000 6a7dd000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 6f7c0000 6f7e6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(82a8.23c8): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=f08f0000 edx=00000000 esi=01515d68 edi=00f99000
+eip=778591a8 esp=0113f2ec ebp=0113f318 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> sxe av
+0:000> r $t0=0
+0:000> r $t1=0
+0:000> bp Core+0x611ff ".if (@eax >= 0n190) {.printf \"G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=%u attempted_length=%u export_end=%u\n\", @eax, poi(@ebp+0xC), poi(@edi+0x20);};gc"
+0:000> bp Core+0x61208 ".if (@eax > poi(@edi+0x20)) {r $t0=@$t0+1; .printf \"G304_ORIGINAL_227K_EXPORT_CHECK_DENIES_READ attempted_end=%u bound=%u length=%u tell_before=%u\n\", @eax, poi(@edi+0x20), @ebx, @eax-@ebx;kb 5;};gc"
+0:000> bp Core+0x6129f ".if (@ebx == 2) {r $t1=@$t1+1;.echo G304_ORIGINAL_227K_2BYTE_READ_WAS_ALLOWED;};gc"
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=227 attempted_length=4 export_end=261 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=231 attempted_length=4 export_end=261 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=235 attempted_length=4 export_end=261 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=202 attempted_length=4 export_end=221 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=206 attempted_length=4 export_end=221 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=210 attempted_length=4 export_end=221 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=214 attempted_length=2 export_end=221 G304_ORIGINAL_227K_2BYTE_READ_WAS_ALLOWED
+G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=216 attempted_length=1 export_end=221 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=217 attempted_length=4 export_end=221 G304_ORIGINAL_227K_WRAPPED_TELL_RETURN native=221 attempted_length=2 export_end=221 G304_ORIGINAL_227K_EXPORT_CHECK_DENIES_READ attempted_end=223 bound=221 length=2 tell_before=221 ChildEBP RetAddr      Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+0113f32c 60346883     015a3a4a 00000002 015a3a44 Core!ULinkerLoad::Seek+0x108
+0113f340 6034a454     0113f394 015a3a4a c41db51e Core!UStruct::UStruct+0x173
+0113f378 60370c13     0113f394 c41db592 015a398c Core!UFunction::Serialize+0xf4
+0113f3f4 60348fa1     015a398c c41db2f2 015a33dc Core!ULinkerLoad::Preload+0x163
+0113f494 60348dcf     0113f5a0 00000001 c41db2b2 Core!UStruct::Link+0x101
+(82a8.23c8): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+eax=603d1524 ebx=0113f394 ecx=00000000 edx=00000000 esi=0000ffff edi=015a398c
+eip=60348563 esp=0113f34c ebp=0113f378 iopl=0         nv up ei ng nz na po cy
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010283
+Core!UField::GetOwnerClass+0x13:
+60348563 81792cf0914660  cmp     dword ptr [ecx+2Ch],offset Core!UClass::PrivateStaticClass (604691f0) ds:002b:0000002c=????????
+0:000> .echo G304_ORIGINAL_227K_WRAPPED_ARCHIVE_CHECK_FINISHED
+G304_ORIGINAL_227K_WRAPPED_ARCHIVE_CHECK_FINISHED
+0:000> r @$t0
+$t0=00000001
+0:000> r @$t1
+$t1=00000001
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

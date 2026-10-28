@@ -32,6 +32,9 @@ final class CatalogUE1ClassicSourceFamily
     // inferred from v69/227 package headers. The archive source inherits
     // Unreal v227, while changed post-load UFunction ABI is build-specific.
     public const UNREAL_V227I='unreal-v227i';
+    // Explicit original 2026 v227k compiled loader behavior. The 69/227
+    // package header identifies Unreal, NOT the loaded Core.dll revision.
+    public const UNREAL_V227K='unreal-v227k';
     /** Chronological game-source snapshots; each change persists until explicitly overridden.
      * Earlier native-resource/Unrealfile serializer generations have their own wire formats;
      * method inheritance is resolved within the applicable archive format, not by name alone.
@@ -84,7 +87,7 @@ final class CatalogUE1ClassicSourceFamily
         if($sourceFamily===self::LEGACY_UT99_V400
             ||$sourceFamily===self::UT99_V469F){
             $sourceFamily=self::UT99_V432;
-        }elseif($sourceFamily===self::UNREAL_V227I){
+        }elseif(in_array($sourceFamily,[self::UNREAL_V227I,self::UNREAL_V227K],true)){
             $sourceFamily=self::UNREAL_V227;
         }
         if($sourceFamily!==null&&!array_key_exists(
@@ -172,7 +175,7 @@ final class CatalogUE1ClassicSourceFamily
         if($sourceFamily===self::LEGACY_UT99_V400
             ||$sourceFamily===self::UT99_V469F){
             $sourceFamily=self::UT99_V432;
-        }elseif($sourceFamily===self::UNREAL_V227I){
+        }elseif(in_array($sourceFamily,[self::UNREAL_V227I,self::UNREAL_V227K],true)){
             $sourceFamily=self::UNREAL_V227;
         }
         $version=(int)($header['version']??0);
@@ -227,7 +230,7 @@ final class CatalogUE1ClassicSourceFamily
                         ?['ue1-engine','ut99-v400','ut99-v432','ut99-v469f']
                         :['ue1-engine','ut99-v400','ut99-v432'])),
             'explicit_runtime_source_overlay'=>in_array($sourceFamily,[
-                self::UT99_V469F,self::UNREAL_V227I,
+                self::UT99_V469F,self::UNREAL_V227I,self::UNREAL_V227K,
             ],true)?$sourceFamily:null,
             // Last *present* classic UE1 Core serializer implementation.
             // v1.224/v1.227 contain newer headers but no replacement

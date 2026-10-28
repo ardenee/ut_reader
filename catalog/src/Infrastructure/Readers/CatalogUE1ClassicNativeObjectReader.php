@@ -16,6 +16,17 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 
 use RuntimeException;
 
+/** Original compiled 227k linker checks attempted export byte count before advancing Tell(). */
+final class CatalogUE1ClassicNativeExportBoundaryReached extends RuntimeException
+{
+    public function __construct(
+        public readonly int $physicalCursor,
+        public readonly int $requestedEnd
+    ){
+        parent::__construct('Original Unreal 227k FArchive export SerialSize boundary exceeded');
+    }
+}
+
 final class CatalogUE1ClassicNativeObjectReader
 {
     /** @param array<string,mixed> $propertyStream @return array<string,mixed> */
@@ -136,12 +147,29 @@ final class CatalogUE1ClassicNativeObjectReader
             ...CatalogUE1ClassicStructNativeReader::KINDS,
         ],true);
         $archiveLimit=$g3Native?(int)filesize($path):$limit;
+        // Actual 2026 v227k Core.dll ULinkerLoad export-scope wrapper:
+        // compiled Serialize calls underlying Tell(), adds requested bytes,
+        // checks against SerialOffset+SerialSize and reports SerialSize
+        // WITHOUT advancing the underlying file archive on overrun.
+        // The 2012 v227i and UT99/C98 sources have different provenance;
+        // no unverified source runtime inherits this compiled branch.
+        $compiled227kBoundedRead=$g3Native
+            &&$family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+            &&$sourceFamily===CatalogUE1ClassicSourceFamily::UNREAL_V227K
+            &&(int)($pkg->getHeader()['version']??0)===69
+            &&(int)($pkg->getHeader()['licenseeVersion']??0)===227;
         $fp=fopen($path,'rb');
         if($fp===false){throw new RuntimeException('Cannot open native UE1 payload');}
         try{
             if(fseek($fp,$start)!==0){throw new RuntimeException('Cannot seek native UE1 payload');}
             $pos=$start;
-            $read=static function(int $n)use($fp,$limit,$archiveLimit,$g3Native,&$pos,$family,$nativeKind):string{
+            $read=static function(int $n)use(
+                $fp,$limit,$archiveLimit,$exportLimit,$g3Native,
+                $compiled227kBoundedRead,&$pos,$family,$nativeKind
+            ):string{
+                if($compiled227kBoundedRead&&$n>=0&&$n>$exportLimit-$pos){
+                    throw new CatalogUE1ClassicNativeExportBoundaryReached($pos,$pos+$n);
+                }
                 if($n<0||$n>$archiveLimit-$pos){
                     if($g3Native){
                         throw new RuntimeException('UE1 G3 native physical archive EOF cursor='.$archiveLimit);
@@ -192,7 +220,9 @@ final class CatalogUE1ClassicNativeObjectReader
             }
             $completeG3=static function(array $detail)use($record,&$pos,$exportLimit):array{
                 if($pos>$exportLimit){
-                    // Both original linkers compare Tell() to SerialSize AFTER Serialize.
+                    // Other verified source archives may consume past an export
+                    // and compare the resulting Tell() after Serialize.
+                    // The 2026 v227k compiled BEFORE-read guard is above.
                     $detail['status']='native_export_serial_size_mismatch';
                     $detail['source_serial_size_check_failed']=true;
                     $detail['archive_cursor']=$pos;
@@ -204,13 +234,28 @@ final class CatalogUE1ClassicNativeObjectReader
             };
             if(in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
                 ||in_array($nativeKind,CatalogUE1ClassicStructNativeReader::KINDS,true)){
-                $detail=in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
-                    ?CatalogUE1ClassicPropertyNativeReader::inspect(
-                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,
-                        $sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V469F
-                            ?CatalogUE1ClassicSourceFamily::UT99_V469F:$family)
-                    :CatalogUE1ClassicStructNativeReader::inspect(
-                        $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
+                try{
+                    $detail=in_array($nativeKind,CatalogUE1ClassicPropertyNativeReader::KINDS,true)
+                        ?CatalogUE1ClassicPropertyNativeReader::inspect(
+                            $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,
+                            $sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V469F
+                                ?CatalogUE1ClassicSourceFamily::UT99_V469F:$family)
+                        :CatalogUE1ClassicStructNativeReader::inspect(
+                            $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
+                }catch(CatalogUE1ClassicNativeExportBoundaryReached $overrun){
+                    // Native file cursor remains at the last valid byte.
+                    // The attempted read end is diagnostic, NOT Tell().
+                    return array_replace($record,[
+                        'status'=>'native_export_serial_size_mismatch',
+                        'source_serial_size_check_failed'=>true,
+                        'archive_cursor'=>$overrun->physicalCursor,
+                        'expected_export_end'=>$exportLimit,
+                        'attempted_archive_end'=>$overrun->requestedEnd,
+                        'serial_size_overrun_bytes'=>$overrun->requestedEnd-$exportLimit,
+                        'native_compiled_export_check'=>'227k_before_read',
+                        'extension_bytes'=>0,
+                    ]);
+                }
                 // Actual compiled UT99 v432/469f and Unreal v227i/k
                 // UFunction::Serialize recompute postload parameter fields
                 // from Children UProperty chains without fabricated pointers;

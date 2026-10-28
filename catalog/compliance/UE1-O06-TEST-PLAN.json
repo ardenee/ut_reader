@@ -1485,6 +1485,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c227k-original-badnet-physical-tell": {
+      "description": "ONE new original 2026 compiled 227k x86 DLL FArchive numeric Tell and rejection at the malformed UFunction FUNC_Net 310-byte genuine original SAVE fixture. Actual compiled archive returns physical Tell221, attempted two-byte end223, original export end221 and native rejection before physical read. Exact original DLL/executable/fixture/CDB command and machine disassembly/raw transcript all SHA pinned. A real UnrealDB 227k cursor defect is fixed and scoped specifically to the NEW explicit unreal-v227k original runtime overlay; 69/227 alone never identifies compiled revision, 2012 v227i and other source profiles do not silently inherit. NEW scoped 26 assertions including original valid fixture overlay, no prior SAVE/LOAD or native suites repeated. G3-04 stays OPEN for other versions, SAVE and malformed branches; G3 remains 5/16 FULL.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicSourceFamily.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }
