@@ -1,0 +1,126 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-UCC\System\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\v432\focus-classflags
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(7d88.87a0): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=c0010000 edx=00000000 esi=00725e70 edi=002f4000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core+0x27ab3 ".echo ORIGINAL_CLASSFLAGS_BEFORE_ARCHIVE; dd @esi+488 L2; dd @ebx+444 L1; dd poi(@ebx+444)+3c L1; gc"
+0:000> bp Core+0x27ac3 ".echo ORIGINAL_CLASSFLAGS_AFTER_ARCHIVE; dd @esi+488 L2; dd @ebx+444 L1; dd poi(@ebx+444)+3c L1; r; kb 9; q"
+0:000> sxe -c ".echo UNEXPECTED_AV; r; kb 7; q" av
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+(7d88.87a0): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 02590000 02722000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 02590000 02722000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 11000000 11079000   C:\Temp\UnrealDB\O06\Native-UCC\System\Window.dll
+ModLoad: 10300000 105c7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Engine.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\comdlg32.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+Loading package Core.u...
+ORIGINAL_CLASSFLAGS_BEFORE_ARCHIVE
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+102a1bf0  00000001 00000000
+027575d0  02757630
+0275766c  00001552
+ORIGINAL_CLASSFLAGS_AFTER_ARCHIVE
+102a1bf0  00000112 00000000
+027575d0  02757630
+0275766c  00001556
+eax=02757630 ebx=0275718c ecx=001af50c edx=00000004 esi=102a1768 edi=00000000
+eip=10127ac3 esp=001af4f0 ebp=001af518 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x24606:
+10127ac3 8d8e90040000    lea     ecx,[esi+490h]
+ChildEBP RetAddr      Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+001af518 101454fa     0275718c 027570e8 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x24606
+001af55c 1015aadc     102a1768 1010284c 00d7af60 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x4203d
+001af59c 1015a81a     1010284c 00000000 1010284c Core!FRegistryObjectInfo::FRegistryObjectInfo+0x5761f
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+001af5cc 025ae0cb     00000000 027c82b8 00000001 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x5735d
+*** WARNING: Unable to verify checksum for UCC.exe
+001af66c 00406025     1027b2a4 0040d73e 0040d73e Editor!UBitArray::UBitArray+0x1b6cc
+001aff00 0040d821     001af670 026cbf20 025828f0 UCC+0x6025
+001aff74 75c85d49     002f4000 75c85d30 001affdc UCC+0xd821
+001aff84 777ac75b     002f4000 08bc97dd 00000000 KERNEL32!BaseThreadInitThunk+0x19
+001affdc 777ac6e1     ffffffff 777f635d 00000000 ntdll!__RtlUserThreadStart+0x2b
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

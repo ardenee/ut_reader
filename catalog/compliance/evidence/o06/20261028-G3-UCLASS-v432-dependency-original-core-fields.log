@@ -1,0 +1,181 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-UCC\System\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\v432\dependency-native-identity
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(3b08.4698): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=cf070000 edx=00000000 esi=00545e70 edi=00224000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core+0x27b30 ".echo ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX; .echo NATIVE_OWNER_EXPORT;dd @esi+14 L1; .echo NATIVE_DEP_COUNT;dd @esi+4c4 L1; .if (poi(@esi+4c4)>0) {.echo FIRST_REAL_DEPENDENCY_EXPORT;dd poi(poi(@esi+4c0))+14 L1}; .if (poi(@esi+4c4)>1) {.echo SECOND_REAL_DEPENDENCY_EXPORT;dd poi(poi(@esi+4c0)+c)+14 L1}; .echo NATIVE_DEP_RECORD_DONE;gc"
+0:000> sxe -c ".echo ORIGINAL_NATIVE_UNEXPECTED_AV; r; kb 6; q" av
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 02410000 025a2000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 02410000 025a2000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 11000000 11079000   C:\Temp\UnrealDB\O06\Native-UCC\System\Window.dll
+ModLoad: 10300000 105c7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Engine.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\comdlg32.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+Loading package Core.u...
+ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX
+NATIVE_OWNER_EXPORT
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+102a177c  00000002
+NATIVE_DEP_COUNT
+102a1c2c  00000001
+FIRST_REAL_DEPENDENCY_EXPORT
+102a177c  00000002
+NATIVE_DEP_RECORD_DONE
+ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX
+NATIVE_OWNER_EXPORT
+1029b474  00000007
+NATIVE_DEP_COUNT
+1029b924  00000002
+FIRST_REAL_DEPENDENCY_EXPORT
+1029b474  00000007
+SECOND_REAL_DEPENDENCY_EXPORT
+102a177c  00000002
+NATIVE_DEP_RECORD_DONE
+ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX
+NATIVE_OWNER_EXPORT
+028095ac  0000028d
+NATIVE_DEP_COUNT
+02809a5c  00000002
+FIRST_REAL_DEPENDENCY_EXPORT
+028095ac  0000028d
+SECOND_REAL_DEPENDENCY_EXPORT
+1029b474  00000007
+NATIVE_DEP_RECORD_DONE
+ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX
+NATIVE_OWNER_EXPORT
+1029af64  00000148
+NATIVE_DEP_COUNT
+1029b414  00000002
+FIRST_REAL_DEPENDENCY_EXPORT
+1029af64  00000148
+SECOND_REAL_DEPENDENCY_EXPORT
+102a177c  00000002
+NATIVE_DEP_RECORD_DONE
+ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX
+NATIVE_OWNER_EXPORT
+02811ec4  00000149
+NATIVE_DEP_COUNT
+02812374  00000002
+FIRST_REAL_DEPENDENCY_EXPORT
+02811ec4  00000149
+SECOND_REAL_DEPENDENCY_EXPORT
+102a177c  00000002
+NATIVE_DEP_RECORD_DONE
+ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX
+NATIVE_OWNER_EXPORT
+0281e304  00000276
+NATIVE_DEP_COUNT
+0281e7b4  00000002
+FIRST_REAL_DEPENDENCY_EXPORT
+0281e304  00000276
+SECOND_REAL_DEPENDENCY_EXPORT
+102a177c  00000002
+NATIVE_DEP_RECORD_DONE
+ORIGINAL_UCLASS_DEPENDENCY_ACTUAL_OBJECT_INDEX
+NATIVE_OWNER_EXPORT
+02820444  00000296
+NATIVE_DEP_COUNT
+028208f4  00000002
+FIRST_REAL_DEPENDENCY_EXPORT
+02820444  00000296
+SECOND_REAL_DEPENDENCY_EXPORT
+1029b474  00000007
+NATIVE_DEP_RECORD_DONE
+No txt exporter found for Class Core.System
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+(3b08.4698): C++ EH exception - code e06d7363 (first chance)
+Can't export Class Core.System to file C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\v432\dependency-native-identity\System.txt
+
+History: UBatchExportCommandlet::Main
+
+Exiting due to error
+eax=00000000 ebx=77878240 ecx=00000000 edx=00000000 esi=00000001 edi=00000000
+eip=777b850c esp=001afddc ebp=001afeb4 iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000202
+ntdll!NtTerminateProcess+0xc:
+777b850c c20800          ret     8
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

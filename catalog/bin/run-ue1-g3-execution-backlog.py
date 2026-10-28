@@ -785,7 +785,36 @@ def eval_t009(_row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":"Six genuinely compiled original native UStruct malformed branches: C98 retail EndState Children import index62/16 Tell24224 and ScriptSize9/5 Tell24243; stock v432 Children62/16 Tell43307 and ScriptSize7/3 Tell43324; original 2026 Unreal 227k localized ImportIndex Tell67623 and named ScriptSize7/3 Tell67640. Six independent one-byte real Core.u mutants, original loaded method/reader physical Tell disassembly, SHA-pinned native x86 logs and original binaries. Production source-selected 91/91 exact errors/cursors/rejected loaded state PASS; no native or prior accepted test rerun. Only T009 closed; G3-03 group remains OPEN.","evidence":pins}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
+def eval_t013(_row: dict[str, Any]) -> dict[str, Any]:
+    """Original UT99 v432 complete UClass Core.u seven + sealed Engine.u 88."""
+    base="catalog/compliance/evidence/o06/"
+    pins=[]
+    for path,h in [
+        ("catalog/bin/verify-ue1-o06-g3-t013-original-v432-core-engine.py","b8431fc2021c0e416ff003025b47b53909bc948a56bafd1e80c5c3c7795ed8fb"),
+        (base+"20261028-G3-T013-original-v432-Core7-Engine88-207pass.json","2b96c37ec28f8027758d89d387d32739507a9c5bff8640e856efbf38bc09805e"),
+        (base+"20261028-G3-T013-v432-Core-seven-source-archive.json","6593137474989fd6fa03cd6fb7882a3327cdb8080e10553e1b48717a0c833c7a"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468"),
+        (base+"20261028-G3-UCLASS-v432-original-Core-all-class-flags-within.log","631379efb7a9c11bb529f67147491a1b939e68dc31e8217cdb11bd28d5eda3f1"),
+        (base+"20261028-G3-UCLASS-v432-inherited-original-core-fields.log","3c63226cca8a7f49ecb0fccd3854307046a9bd29f33a68b60d0322e23c92932c"),
+        (base+"20261028-G3-UCLASS-v432-remaining-original-core-fields.log","17619b0952b1db3dcafe69e9c069b539bfa5c3bf756113ff9bf36df141ed2ee8"),
+        (base+"20261028-G3-UCLASS-v432-dependency-original-core-fields.log","3646f312781985b399956532c21dd296c231535c78c2cc61517628326681f6ca"),
+        (base+"20261028-G3-UCLASS-v432-archive-cursor-original-core-fields.log","f18aa62cd790fa2a534c15488da9f67932b55d7fdaa99742cc2ec9504fc8827e"),
+        ("catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json","772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e"),
+        ("catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json","c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"),
+    ]:
+        pins.append(verify_pin(path,h))
+    r=json.loads((ROOT/base/"20261028-G3-T013-original-v432-Core7-Engine88-207pass.json").read_text(encoding="utf-8"))
+    if not (r.get("ok") is True and r.get("checks")==207 and r.get("failures")==[]
+            and r.get("T013")=="PASS"
+            and r.get("original_stock_Core_u_UClass_fully_compared")==7
+            and r.get("native_Core_u_dependency_elements")==13
+            and r.get("original_Engine_u_UClass_FULL_reused")==88
+            and r.get("original_compiled_native_executions_by_this_verifier")==0):
+        raise AssertionError("T013 original seven Core.u and 88 Engine.u complete native oracle missing")
+    return {"status":"PASS","result":"Original shipped compiled UT99 v432 Core.dll UClass::Serialize loaded all 7 genuine Core.u classes; all archived ClassFlags, real ClassWithin/UField ref identities, global FName config, script/state scalars, GUIDs, 13 fully initialized FDependency elements (native same-process UObject.Index, deep, CRC), PackageImports and original archive consumption verified. Genuine v432 native ClassFlags loaded 274 with FArchive Tell 5458->5462. Reuses previously fully accepted original 88 genuine Engine.u classes with 7/7 source gates and 608 defaults. Current source/native 207/207 focused verifier, no prior native compiled suite replay. T013 only, 469f/227i/227k and C98 distinct builds remain OPEN.","evidence":pins}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T013":eval_t013,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

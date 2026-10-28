@@ -1,0 +1,118 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-469f\System\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\469f\all-core
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00900000 009a3000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 5d5a0000 5d898000   C:\Temp\UnrealDB\O06\Native-469f\System\Core.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+(8084.25c): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=61e10000 edx=00000000 esi=01db5e70 edi=00ba2000
+eip=778591a8 esp=01b4f32c ebp=01b4f358 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core+0x4a07e ".echo G3_NATIVE_CLASS_469F; dd @esi+14 L1; dd @esi+488 L1; dd @esi+4a0 L1; dd @esi+4a4 L1; gc"
+0:000> sxe -c ".echo BATCH_ORIGINAL_NATIVE_UNEXPECTED_AV; r; kb 5; q" av
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 72270000 7228c000   C:\WINDOWS\SysWOW64\bcrypt.dll
+ModLoad: 76440000 764ba000   C:\WINDOWS\SysWOW64\bcryptprimitives.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 70b10000 70b24000   C:\WINDOWS\SysWOW64\CRYPTSP.dll
+ModLoad: 706b0000 706e2000   C:\WINDOWS\SysWOW64\rsaenh.dll
+ModLoad: 70690000 7069a000   C:\WINDOWS\SysWOW64\CRYPTBASE.dll
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+G3_NATIVE_CLASS_469F
+5d789d54  00000002
+5d78a1c8  00000112
+5d78a1e0  5d789d40
+5d78a1e4  000002e8
+G3_NATIVE_CLASS_469F
+5d78b184  00000007
+5d78b5f8  0000013b
+5d78b610  5d789d40
+5d78b614  000002e8
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+(8084.25c): C++ EH exception - code e06d7363 (first chance)
+=======================================
+ucc.exe: UnrealOS execution environment
+Copyright 1999 Epic Games Inc
+=======================================
+
+Commandlet batchexport not found
+ModLoad: 75130000 75145000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+eax=00000000 ebx=77878240 ecx=00000000 edx=00000000 esi=00000000 edi=00000000
+eip=777b850c esp=01b4f6cc ebp=01b4f7a0 iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+ntdll!NtTerminateProcess+0xc:
+777b850c c20800          ret     8
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

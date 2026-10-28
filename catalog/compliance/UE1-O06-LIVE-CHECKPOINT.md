@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-BATCH-02-04-T069-V432-227K-18PASS-C98-NATIVE-CRASH-BLOCKED
-- **Last completed action:** Batched fixed T011-T032 audit, batch03 T017-T024 assessed 8/8 still BLOCKED and no unnecessary compiled retests. One grouped original compiled UT99 v432 and Unreal227k Core.u EndState.FriendlyName one-byte invalid-name probe identified source-selected bad FName signed index/count and exact archive Tell; both authentic original UCC logs SHA pinned, partial T069 current reader 18/18 exact matching source; C98 original retail run intercepted first-chance AV before attributable native target error, no parity proof. Scoped source-only rechecks T009 91/91 and T057 112/112 PASS; baseline 17 PASS 63 BLOCKED; user desktop C98 process stopped without affecting unrelated CDB.
-- **Resume at:** Continue grouped fixed backlog batches across T011-T032 native method oracles, prioritizing genuinely loadable old UFunction T011 and original UClass T012-T015, and original scalar T021-T024; T069 remains blocked until original C98 name validation cursor and other source-specific branches. Do not rerun complete compiled suites; PRD remains unchanged.
-- **Active changed at:** 2026-10-28T23:07:09+00:00
+- **Stage:** G3-18-OF-80-PASS-T013-UCLASS-BATCH-4ORIGINAL-LOADED
+- **Last completed action:** Fixed T013 fully CLOSED: one batched original native UClass Core.dll loader investigation across genuine v432 7/7 Core classes, 469f 2/35 reached, original 2012 227i 6/6 reached, original 2026 227k 2 reached. v432 Core all 7 native UClass flags, ClassWithin same actual Object, global FName config System, inherited refs, 128-bit GUID, 13 genuine dependency native referents by same-process UObject.Index, deep, CRC, imports, script and state scalars and physical FArchive cursor proven. 207/207 original compiled/source focused current acceptance PASS + earlier FULL 88 genuine Engine UClass and 608 defaults reused; fixed batch2 T013 PASS, overall 18/80 PASS, 62 BLOCKED, 0 FAIL. Other build source families remain blocked, not extrapolated.
+- **Resume at:** Continue grouped T011 old UT99 <=63 UFunction loadable fixture, T012 C98 direct loaded UClass scalars, T014 469f class method/source delta and T015 original 227i vs 227k loaded class/conditional branches in original noninteractive compiled loader; source-verified only, no duplicate G5 accepted Engine work and PRD not release-eligible.
+- **Active changed at:** 2026-10-28T23:37:22+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

@@ -49,3 +49,6 @@ catalog/compliance/evidence/o06/20261028-G3-T009-*-original-native-* -text
 # Original compiled v432 and 227k T069 FName malformed loader stdout, byte-preserved.
 catalog/compliance/evidence/o06/20261028-G3-T069-original-v432-malformed-FName.stdout.log -text
 catalog/compliance/evidence/o06/20261028-G3-T069-original-227k-malformed-FName.stdout.log -text
+# Original compiled x86 UClass source-family load transcripts and debugger commands (raw byte identical).
+catalog/compliance/evidence/o06/20261028-G3-UCLASS-*.log -text
+catalog/compliance/evidence/o06/20261028-G3-UCLASS-*.cmd -text

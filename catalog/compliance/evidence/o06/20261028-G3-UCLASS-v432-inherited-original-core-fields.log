@@ -1,0 +1,236 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-UCC\System\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\v432\refs-core
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(75a4.1704): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=798a0000 edx=00000000 esi=006f5e70 edi=0028d000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core+0x27b30 ".echo G3_CLASS_NATIVE_7_INHERITED;;dd @esi+14 L1;.echo G3_REF_SUPER;dd @esi+28 L1;.if (poi(@esi+28)!=0) {.echo NATIVE_REFERENT_OBJECT_INDEX;dd poi(@esi+28)+14 L1} .else {.echo NATIVE_NULL_REF};.echo G3_REF_NEXT;dd @esi+2c L1;.if (poi(@esi+2c)!=0) {.echo NATIVE_REFERENT_OBJECT_INDEX;dd poi(@esi+2c)+14 L1} .else {.echo NATIVE_NULL_REF};.echo G3_REF_SCRIPT_TEXT;dd @esi+34 L1;.if (poi(@esi+34)!=0) {.echo NATIVE_REFERENT_OBJECT_INDEX;dd poi(@esi+34)+14 L1} .else {.echo NATIVE_NULL_REF};.echo G3_REF_CHILDREN;dd @esi+38 L1;.if (poi(@esi+38)!=0) {.echo NATIVE_REFERENT_OBJECT_INDEX;dd poi(@esi+38)+14 L1} .else {.echo NATIVE_NULL_REF};.echo G3_CLASS_INHERITED_END;gc"
+0:000> sxe -c ".echo G3_NATIVE_UNEXPECTED_AV; kb 7; q" av
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 02530000 026c2000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 02530000 026c2000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 10300000 105c7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Engine.dll
+ModLoad: 11000000 11079000   C:\Temp\UnrealDB\O06\Native-UCC\System\Window.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\comdlg32.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+Loading package Core.u...
+G3_CLASS_NATIVE_7_INHERITED
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+102a177c  00000002
+G3_REF_SUPER
+102a1790  00000000
+NATIVE_NULL_REF
+G3_REF_NEXT
+102a1794  00000000
+NATIVE_NULL_REF
+G3_REF_SCRIPT_TEXT
+102a179c  028fea28
+NATIVE_REFERENT_OBJECT_INDEX
+028fea3c  00000243
+G3_REF_CHILDREN
+102a17a0  028ffa60
+NATIVE_REFERENT_OBJECT_INDEX
+028ffa74  0000027a
+G3_CLASS_INHERITED_END
+G3_CLASS_NATIVE_7_INHERITED
+1029b474  00000007
+G3_REF_SUPER
+1029b488  102a1768
+NATIVE_REFERENT_OBJECT_INDEX
+102a177c  00000002
+G3_REF_NEXT
+1029b48c  00000000
+NATIVE_NULL_REF
+G3_REF_SCRIPT_TEXT
+1029b494  02900350
+NATIVE_REFERENT_OBJECT_INDEX
+02900364  0000028f
+G3_REF_CHILDREN
+1029b498  028e9bb0
+NATIVE_REFERENT_OBJECT_INDEX
+028e9bc4  0000000a
+G3_CLASS_INHERITED_END
+G3_CLASS_NATIVE_7_INHERITED
+028e959c  0000028d
+G3_REF_SUPER
+028e95b0  1029b460
+NATIVE_REFERENT_OBJECT_INDEX
+1029b474  00000007
+G3_REF_NEXT
+028e95b4  00000000
+NATIVE_NULL_REF
+G3_REF_SCRIPT_TEXT
+028e95bc  029002f8
+NATIVE_REFERENT_OBJECT_INDEX
+0290030c  0000028c
+G3_REF_CHILDREN
+028e95c0  028e9b10
+NATIVE_REFERENT_OBJECT_INDEX
+028e9b24  0000028e
+G3_CLASS_INHERITED_END
+G3_CLASS_NATIVE_7_INHERITED
+1029af64  00000148
+G3_REF_SUPER
+1029af78  102a1768
+NATIVE_REFERENT_OBJECT_INDEX
+102a177c  00000002
+G3_REF_NEXT
+1029af7c  00000000
+NATIVE_NULL_REF
+G3_REF_SCRIPT_TEXT
+1029af84  028f23b0
+NATIVE_REFERENT_OBJECT_INDEX
+028f23c4  0000014d
+G3_REF_CHILDREN
+1029af88  028ffb00
+NATIVE_REFERENT_OBJECT_INDEX
+028ffb14  0000027b
+G3_CLASS_INHERITED_END
+G3_CLASS_NATIVE_7_INHERITED
+028f1eb4  00000149
+G3_REF_SUPER
+028f1ec8  102a1768
+NATIVE_REFERENT_OBJECT_INDEX
+102a177c  00000002
+G3_REF_NEXT
+028f1ecc  00000000
+NATIVE_NULL_REF
+G3_REF_SCRIPT_TEXT
+028f1ed4  023900e8
+NATIVE_REFERENT_OBJECT_INDEX
+023900fc  0000014a
+G3_REF_CHILDREN
+028f1ed8  00000000
+NATIVE_NULL_REF
+G3_CLASS_INHERITED_END
+G3_CLASS_NATIVE_7_INHERITED
+028fe2f4  00000276
+G3_REF_SUPER
+028fe308  102a1768
+NATIVE_REFERENT_OBJECT_INDEX
+102a177c  00000002
+G3_REF_NEXT
+028fe30c  00000000
+NATIVE_NULL_REF
+G3_REF_SCRIPT_TEXT
+028fe314  028fe7f0
+NATIVE_REFERENT_OBJECT_INDEX
+028fe804  0000023b
+G3_REF_CHILDREN
+028fe318  00000000
+NATIVE_NULL_REF
+G3_CLASS_INHERITED_END
+G3_CLASS_NATIVE_7_INHERITED
+02900434  00000296
+G3_REF_SUPER
+02900448  1029b460
+NATIVE_REFERENT_OBJECT_INDEX
+1029b474  00000007
+G3_REF_NEXT
+0290044c  00000000
+NATIVE_NULL_REF
+G3_REF_SCRIPT_TEXT
+02900454  02900d40
+NATIVE_REFERENT_OBJECT_INDEX
+02900d54  00000298
+G3_REF_CHILDREN
+02900458  02900930
+NATIVE_REFERENT_OBJECT_INDEX
+02900944  0000029b
+G3_CLASS_INHERITED_END
+No txt exporter found for Class Core.System
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+(75a4.1704): C++ EH exception - code e06d7363 (first chance)
+Can't export Class Core.System to file C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\v432\refs-core\System.txt
+
+History: UBatchExportCommandlet::Main
+
+Exiting due to error
+eax=00000000 ebx=77878240 ecx=00000000 edx=00000000 esi=00000001 edi=00000000
+eip=777b850c esp=001afddc ebp=001afeb4 iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000202
+ntdll!NtTerminateProcess+0xc:
+777b850c c20800          ret     8
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

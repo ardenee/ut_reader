@@ -1,0 +1,253 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-UCC\System\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\v432\remaining-core-fields
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(5234.7fe4): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=a1000000 edx=00000000 esi=00645e70 edi=003eb000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core+0x27b30 ".echo G3_NATIVE_CORE_COMPLETE_FIELDS;.echo ORIGINAL_CLASS_INDEX;dd @esi+14 L1;.echo ORIGINAL_FRIENDLY_SCRIPT_LINE;dd @esi+44 L6;.echo ORIGINAL_MASKS_STATE_LABEL;dd @esi+70 L6;.echo ORIGINAL_CLASS_GUID;dd @esi+490 L4;.echo ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY;dd @esi+4c0 L6;.echo ORIGINAL_DEP_RECORDS;dd poi(@esi+4c0) L6;.echo ORIGINAL_PACKAGE_IMPORT;dd poi(@esi+4cc) L2;.echo NATIVE_CORE_CLASS_RECORD_FINISHED;gc"
+0:000> sxe -c ".echo NATIVE_UCLASS_UNEXPECTED_AV; r; kb 8; q" av
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 024f0000 02682000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 024f0000 02682000   C:\Temp\UnrealDB\O06\Native-UCC\System\Editor.DLL
+ModLoad: 11000000 11079000   C:\Temp\UnrealDB\O06\Native-UCC\System\Window.dll
+ModLoad: 10300000 105c7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Engine.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\comdlg32.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+Loading package Core.u...
+G3_NATIVE_CORE_COMPLETE_FIELDS
+ORIGINAL_CLASS_INDEX
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+102a177c  00000002
+ORIGINAL_FRIENDLY_SCRIPT_LINE
+102a17ac  00000097 00000000 00000000 00000000
+102a17bc  ffffffff ffffffff
+ORIGINAL_MASKS_STATE_LABEL
+102a17d8  00000000 00000000 ffffffff ffffffff
+102a17e8  00000000 0000ffff
+ORIGINAL_CLASS_GUID
+102a1bf8  00000000 00000000 00000000 00000000
+ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY
+102a1c28  023e6bb0 00000001 00000001 028b9458
+102a1c38  00000001 00000001
+ORIGINAL_DEP_RECORDS
+023e6bb0  102a1768 00000001 5778cfb5 abababab
+023e6bc0  abababab feeefeee
+ORIGINAL_PACKAGE_IMPORT
+028b9458  00000014 abababab
+NATIVE_CORE_CLASS_RECORD_FINISHED
+G3_NATIVE_CORE_COMPLETE_FIELDS
+ORIGINAL_CLASS_INDEX
+1029b474  00000007
+ORIGINAL_FRIENDLY_SCRIPT_LINE
+1029b4a4  00000355 00000000 00000000 00000000
+1029b4b4  ffffffff ffffffff
+ORIGINAL_MASKS_STATE_LABEL
+1029b4d0  00000000 00000000 ffffffff ffffffff
+1029b4e0  00000000 0000ffff
+ORIGINAL_CLASS_GUID
+1029b8f0  00000000 00000000 00000000 00000000
+ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY
+1029b920  028d3a20 00000002 00000002 028d3a50
+1029b930  00000001 00000001
+ORIGINAL_DEP_RECORDS
+028d3a20  1029b460 00000001 793ee9aa 102a1768
+028d3a30  00000001 5778cfb5
+ORIGINAL_PACKAGE_IMPORT
+028d3a50  00000014 abababab
+NATIVE_CORE_CLASS_RECORD_FINISHED
+G3_NATIVE_CORE_COMPLETE_FIELDS
+ORIGINAL_CLASS_INDEX
+028b95a4  0000028d
+ORIGINAL_FRIENDLY_SCRIPT_LINE
+028b95d4  0000053c 00000000 00000000 00000000
+028b95e4  ffffffff ffffffff
+ORIGINAL_MASKS_STATE_LABEL
+028b9600  00000000 00000000 ffffffff ffffffff
+028b9610  00000000 0000ffff
+ORIGINAL_CLASS_GUID
+028b9a20  00000000 00000000 00000000 00000000
+ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY
+028b9a50  028d3d78 00000002 00000002 028d3da8
+028b9a60  00000001 00000001
+ORIGINAL_DEP_RECORDS
+028d3d78  028b9590 00000001 b54b96d6 1029b460
+028d3d88  00000001 793ee9aa
+ORIGINAL_PACKAGE_IMPORT
+028d3da8  00000014 abababab
+NATIVE_CORE_CLASS_RECORD_FINISHED
+G3_NATIVE_CORE_COMPLETE_FIELDS
+ORIGINAL_CLASS_INDEX
+1029af64  00000148
+ORIGINAL_FRIENDLY_SCRIPT_LINE
+1029af94  0000009c 00000000 00000000 00000000
+1029afa4  ffffffff ffffffff
+ORIGINAL_MASKS_STATE_LABEL
+1029afc0  00000000 00000000 ffffffff ffffffff
+1029afd0  00000000 0000ffff
+ORIGINAL_CLASS_GUID
+1029b3e0  00000000 00000000 00000000 00000000
+ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY
+1029b410  028d4130 00000002 00000002 028d4160
+1029b420  00000001 00000001
+ORIGINAL_DEP_RECORDS
+028d4130  1029af50 00000001 0eb2ba6f 102a1768
+028d4140  00000001 5778cfb5
+ORIGINAL_PACKAGE_IMPORT
+028d4160  00000014 abababab
+NATIVE_CORE_CLASS_RECORD_FINISHED
+G3_NATIVE_CORE_COMPLETE_FIELDS
+ORIGINAL_CLASS_INDEX
+028c1ebc  00000149
+ORIGINAL_FRIENDLY_SCRIPT_LINE
+028c1eec  0000053e 00000000 00000000 00000000
+028c1efc  ffffffff ffffffff
+ORIGINAL_MASKS_STATE_LABEL
+028c1f18  00000000 00000000 ffffffff ffffffff
+028c1f28  00000000 0000ffff
+ORIGINAL_CLASS_GUID
+028c2338  00000000 00000000 00000000 00000000
+ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY
+028c2368  028d41c8 00000002 00000002 028d41f8
+028c2378  00000001 00000001
+ORIGINAL_DEP_RECORDS
+028d41c8  028c1ea8 00000001 3020fa4b 102a1768
+028d41d8  00000001 5778cfb5
+ORIGINAL_PACKAGE_IMPORT
+028d41f8  00000014 abababab
+NATIVE_CORE_CLASS_RECORD_FINISHED
+G3_NATIVE_CORE_COMPLETE_FIELDS
+ORIGINAL_CLASS_INDEX
+028ce304  00000276
+ORIGINAL_FRIENDLY_SCRIPT_LINE
+028ce334  0000053d 00000000 00000000 00000000
+028ce344  ffffffff ffffffff
+ORIGINAL_MASKS_STATE_LABEL
+028ce360  00000000 00000000 ffffffff ffffffff
+028ce370  00000000 0000ffff
+ORIGINAL_CLASS_GUID
+028ce780  00000000 00000000 00000000 00000000
+ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY
+028ce7b0  028d60c0 00000002 00000002 028d60f0
+028ce7c0  00000001 00000001
+ORIGINAL_DEP_RECORDS
+028d60c0  028ce2f0 00000001 1ed5fb73 102a1768
+028d60d0  00000001 5778cfb5
+ORIGINAL_PACKAGE_IMPORT
+028d60f0  00000014 abababab
+NATIVE_CORE_CLASS_RECORD_FINISHED
+G3_NATIVE_CORE_COMPLETE_FIELDS
+ORIGINAL_CLASS_INDEX
+028d0444  00000296
+ORIGINAL_FRIENDLY_SCRIPT_LINE
+028d0474  0000062b 00000000 00000000 00000000
+028d0484  ffffffff ffffffff
+ORIGINAL_MASKS_STATE_LABEL
+028d04a0  00000000 00000000 ffffffff ffffffff
+028d04b0  00000000 0000ffff
+ORIGINAL_CLASS_GUID
+028d08c0  00000000 00000000 00000000 00000000
+ORIGINAL_DEPENDENCIES_AND_IMPORT_ARRAY
+028d08f0  028e2338 00000002 00000002 028e2368
+028d0900  00000001 00000001
+ORIGINAL_DEP_RECORDS
+028e2338  028d0430 00000001 6acdd81a 1029b460
+028e2348  00000001 793ee9aa
+ORIGINAL_PACKAGE_IMPORT
+028e2368  00000014 abababab
+NATIVE_CORE_CLASS_RECORD_FINISHED
+No txt exporter found for Class Core.System
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+(5234.7fe4): C++ EH exception - code e06d7363 (first chance)
+Can't export Class Core.System to file C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\v432\remaining-core-fields\System.txt
+
+History: UBatchExportCommandlet::Main
+
+Exiting due to error
+eax=00000000 ebx=77878240 ecx=00000000 edx=00000000 esi=00000001 edi=00000000
+eip=777b850c esp=001afddc ebp=001afeb4 iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000202
+ntdll!NtTerminateProcess+0xc:
+777b850c c20800          ret     8
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

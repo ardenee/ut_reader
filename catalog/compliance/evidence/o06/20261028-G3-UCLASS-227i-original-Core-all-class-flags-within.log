@@ -1,0 +1,137 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UE1-G3-NativeOracle\original227i\System\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\G3-BATCH-UCLASS-ORIGINAL\227i\all-core
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 00427000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 10100000 104f0000   C:\Temp\UE1-G3-NativeOracle\original227i\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 6f7c0000 6f7e6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+(6958.64c4): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=459f0000 edx=00000000 esi=00815e70 edi=00367000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core+0x1a12c ".echo G3_NATIVE_CLASS_227I; dd @esi+14 L1; dd @esi+488 L1; dd @esi+4a0 L1; dd @esi+4a4 L1; gc"
+0:000> sxe -c ".echo BATCH_ORIGINAL_NATIVE_UNEXPECTED_AV; r; kb 5; q" av
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+(6958.64c4): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 028b0000 02a11000   C:\Temp\UE1-G3-NativeOracle\original227i\System\Editor.DLL
+ModLoad: 028b0000 02a11000   C:\Temp\UE1-G3-NativeOracle\original227i\System\Editor.DLL
+ModLoad: 02a20000 02c74000   C:\Temp\UE1-G3-NativeOracle\original227i\System\Engine.dll
+ModLoad: 11000000 1106b000   C:\Temp\UE1-G3-NativeOracle\original227i\System\Window.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\COMDLG32.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+ModLoad: 02a20000 02c74000   C:\Temp\UE1-G3-NativeOracle\original227i\System\Engine.dll
+Loading package Core.u...
+G3_NATIVE_CLASS_227I
+104d4f24  00000002
+104d5398  00000112
+104d53b0  104d4f10
+104d53b4  000002e8
+G3_NATIVE_CLASS_227I
+104d592c  00000007
+104d5da0  0000013b
+104d5db8  104d4f10
+104d5dbc  000002e8
+G3_NATIVE_CLASS_227I
+0277fba4  0000028c
+02780018  0000003a
+02780030  104d4f10
+02780034  000002e8
+G3_NATIVE_CLASS_227I
+104d542c  00000148
+104d58a0  00000112
+104d58b8  104d4f10
+104d58bc  000002e8
+G3_NATIVE_CLASS_227I
+027ae58c  0000014d
+027aea00  0000001a
+027aea18  104d4f10
+027aea1c  000002e8
+G3_NATIVE_CLASS_227I
+027b2f6c  00000275
+027b33e0  0000001a
+027b33f8  104d4f10
+027b33fc  000002e8
+No txt exporter found for Class Core.System
+eax=00000000 ebx=77878240 ecx=00000000 edx=00000000 esi=00000001 edi=00000000
+eip=777b850c esp=001ad3d4 ebp=001ad4a8 iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+ntdll!NtTerminateProcess+0xc:
+777b850c c20800          ret     8
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

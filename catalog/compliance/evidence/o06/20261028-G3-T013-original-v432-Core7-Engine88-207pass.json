@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "checks": 207,
+  "failures": [],
+  "T013": "PASS",
+  "original_stock_Core_u_UClass_fully_compared": 7,
+  "native_Core_u_dependency_elements": 13,
+  "original_Engine_u_UClass_FULL_reused": 88,
+  "original_compiled_native_executions_by_this_verifier": 0,
+  "additional_original_469f_227i_227k_snapshots_preserved": "PARTIAL_NOT_ACCEPTED"
+}

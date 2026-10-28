@@ -1,0 +1,282 @@
+{
+  "original_core_u_sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70",
+  "current_class_reader_sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+  "original_compiled_source_profile": "ut99-v432",
+  "classes": [
+    {
+      "id": 2,
+      "name": "Object",
+      "ClassFlags": 274,
+      "ClassGuid": "00000000000000000000000000000000",
+      "deps": [
+        {
+          "class_reference": 3,
+          "deep": 1,
+          "script_text_crc": 1467535285
+        }
+      ],
+      "imports": [
+        {
+          "index": 5,
+          "text": "Core"
+        }
+      ],
+      "super": 0,
+      "next": 0,
+      "scriptText": 580,
+      "children": 635,
+      "friendly": "Object",
+      "line": -1,
+      "textpos": -1,
+      "scriptSize": 0,
+      "stateFlags": 0,
+      "labelOffset": 65535,
+      "probeMask": "0000000000000000",
+      "ignoreMask": "ffffffffffffffff",
+      "ClassWithin": 3,
+      "ClassConfigName": "System",
+      "native_required_file_archive_complete": true,
+      "original_export_super_reference": 0
+    },
+    {
+      "id": 7,
+      "name": "Commandlet",
+      "ClassFlags": 315,
+      "ClassGuid": "00000000000000000000000000000000",
+      "deps": [
+        {
+          "class_reference": 8,
+          "deep": 1,
+          "script_text_crc": 2034166186
+        },
+        {
+          "class_reference": 3,
+          "deep": 1,
+          "script_text_crc": 1467535285
+        }
+      ],
+      "imports": [
+        {
+          "index": 5,
+          "text": "Core"
+        }
+      ],
+      "super": 3,
+      "next": 0,
+      "scriptText": 656,
+      "children": 11,
+      "friendly": "Commandlet",
+      "line": -1,
+      "textpos": -1,
+      "scriptSize": 0,
+      "stateFlags": 0,
+      "labelOffset": 65535,
+      "probeMask": "0000000000000000",
+      "ignoreMask": "ffffffffffffffff",
+      "ClassWithin": 3,
+      "ClassConfigName": "System",
+      "native_required_file_archive_complete": true,
+      "original_export_super_reference": 3
+    },
+    {
+      "id": 328,
+      "name": "Subsystem",
+      "ClassFlags": 274,
+      "ClassGuid": "00000000000000000000000000000000",
+      "deps": [
+        {
+          "class_reference": 329,
+          "deep": 1,
+          "script_text_crc": 246594159
+        },
+        {
+          "class_reference": 3,
+          "deep": 1,
+          "script_text_crc": 1467535285
+        }
+      ],
+      "imports": [
+        {
+          "index": 5,
+          "text": "Core"
+        }
+      ],
+      "super": 3,
+      "next": 0,
+      "scriptText": 334,
+      "children": 636,
+      "friendly": "Subsystem",
+      "line": -1,
+      "textpos": -1,
+      "scriptSize": 0,
+      "stateFlags": 0,
+      "labelOffset": 65535,
+      "probeMask": "0000000000000000",
+      "ignoreMask": "ffffffffffffffff",
+      "ClassWithin": 3,
+      "ClassConfigName": "System",
+      "native_required_file_archive_complete": true,
+      "original_export_super_reference": 3
+    },
+    {
+      "id": 329,
+      "name": "Time",
+      "ClassFlags": 26,
+      "ClassGuid": "00000000000000000000000000000000",
+      "deps": [
+        {
+          "class_reference": 330,
+          "deep": 1,
+          "script_text_crc": 807467595
+        },
+        {
+          "class_reference": 3,
+          "deep": 1,
+          "script_text_crc": 1467535285
+        }
+      ],
+      "imports": [
+        {
+          "index": 5,
+          "text": "Core"
+        }
+      ],
+      "super": 3,
+      "next": 0,
+      "scriptText": 331,
+      "children": 0,
+      "friendly": "Time",
+      "line": -1,
+      "textpos": -1,
+      "scriptSize": 0,
+      "stateFlags": 0,
+      "labelOffset": 65535,
+      "probeMask": "0000000000000000",
+      "ignoreMask": "ffffffffffffffff",
+      "ClassWithin": 3,
+      "ClassConfigName": "System",
+      "native_required_file_archive_complete": true,
+      "original_export_super_reference": 3
+    },
+    {
+      "id": 630,
+      "name": "Locale",
+      "ClassFlags": 26,
+      "ClassGuid": "00000000000000000000000000000000",
+      "deps": [
+        {
+          "class_reference": 631,
+          "deep": 1,
+          "script_text_crc": 517340019
+        },
+        {
+          "class_reference": 3,
+          "deep": 1,
+          "script_text_crc": 1467535285
+        }
+      ],
+      "imports": [
+        {
+          "index": 5,
+          "text": "Core"
+        }
+      ],
+      "super": 3,
+      "next": 0,
+      "scriptText": 572,
+      "children": 0,
+      "friendly": "Locale",
+      "line": -1,
+      "textpos": -1,
+      "scriptSize": 0,
+      "stateFlags": 0,
+      "labelOffset": 65535,
+      "probeMask": "0000000000000000",
+      "ignoreMask": "ffffffffffffffff",
+      "ClassWithin": 3,
+      "ClassConfigName": "System",
+      "native_required_file_archive_complete": true,
+      "original_export_super_reference": 3
+    },
+    {
+      "id": 653,
+      "name": "HelloWorldCommandlet",
+      "ClassFlags": 58,
+      "ClassGuid": "00000000000000000000000000000000",
+      "deps": [
+        {
+          "class_reference": 654,
+          "deep": 1,
+          "script_text_crc": 3041629910
+        },
+        {
+          "class_reference": 8,
+          "deep": 1,
+          "script_text_crc": 2034166186
+        }
+      ],
+      "imports": [
+        {
+          "index": 5,
+          "text": "Core"
+        }
+      ],
+      "super": 8,
+      "next": 0,
+      "scriptText": 653,
+      "children": 655,
+      "friendly": "HelloWorldCommandlet",
+      "line": -1,
+      "textpos": -1,
+      "scriptSize": 0,
+      "stateFlags": 0,
+      "labelOffset": 65535,
+      "probeMask": "0000000000000000",
+      "ignoreMask": "ffffffffffffffff",
+      "ClassWithin": 3,
+      "ClassConfigName": "System",
+      "native_required_file_archive_complete": true,
+      "original_export_super_reference": 8
+    },
+    {
+      "id": 662,
+      "name": "SimpleCommandlet",
+      "ClassFlags": 58,
+      "ClassGuid": "00000000000000000000000000000000",
+      "deps": [
+        {
+          "class_reference": 663,
+          "deep": 1,
+          "script_text_crc": 1791875098
+        },
+        {
+          "class_reference": 8,
+          "deep": 1,
+          "script_text_crc": 2034166186
+        }
+      ],
+      "imports": [
+        {
+          "index": 5,
+          "text": "Core"
+        }
+      ],
+      "super": 8,
+      "next": 0,
+      "scriptText": 665,
+      "children": 668,
+      "friendly": "SimpleCommandlet",
+      "line": -1,
+      "textpos": -1,
+      "scriptSize": 0,
+      "stateFlags": 0,
+      "labelOffset": 65535,
+      "probeMask": "0000000000000000",
+      "ignoreMask": "ffffffffffffffff",
+      "ClassWithin": 3,
+      "ClassConfigName": "System",
+      "native_required_file_archive_complete": true,
+      "original_export_super_reference": 8
+    }
+  ]
+}
