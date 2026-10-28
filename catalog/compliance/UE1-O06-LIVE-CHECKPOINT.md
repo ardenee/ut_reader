@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-04-c227i-original-2012-script-compiled-save`
-- **Stage:** G3-04-C227I-2012-REAL-UCC-SAVE-1110-41-DEV-PASS-PRD-PENDING
-- **Last completed action:** TRUE original 2012 shipped 227i UCC.exe make compiled a NEW script Actor with State and 2 UFunction methods into its genuine 1110-byte 9-export version69/0 package, without newer 227k headers/ABI. Original fresh UCC.exe process loaded new file; CDB original 2012 Core!UFunction::Serialize recorded 2 newly compiled functions with one linker and 10/10 after-load flags/parm fields equal UnrealDB: AddOne 2/8/4 CanJump1/4/0. Original State source export had flags0 masks0/allones label offset12 child8, real reader equal. Original 2012 DLL UCC executable script original native saved package CDB trace and compiler hash pinned. New focused 41/41 DEV PASS, no earlier native engines retested. G3 FULL 5/16, native subproofs40 G3-04 thirteen; C98 1998 FObjectManager SAVE and original malformed/version still outstanding. PRD deployment pending.
-- **Resume at:** Commit and deploy real original 2012 native compiler save evidence and 41-check focused result SHA match DEV PRD, then work original 1998 C98 FObjectManager SAVE and truly unverified malformed/version paths. Do NOT repeat original 2012 compile or CDB after successful sealed evidence. Do not claim G3-04 FULL until all source-defined required branches closed.
-- **Active changed at:** 2026-10-28T09:12:45+00:00
-- **Latest DEV test states:** PASS 205; FAIL 1; STARTED 0
+- **Contract:** `g3-04-c98-original-1998-script-compiled-save`
+- **Stage:** G3-04-C98-MAY17-ORIGINAL-REAL-SAVE-1058-46-DEV-PASS-PRD-PENDING
+- **Last completed action:** Genuine original May17 1998 C98 FObjectManager SavePackage via original Unreal.exe -make generated original 1058-byte v61/0 Actor State and two UFunction original compiled file. Separate authentic 1998 native Unreal.exe -make LOAD and x86 CDB observed distinct new 2 UFunction and 1 UState postload, all original function loaded fields and State labels/masks match UnrealDB. New 46/46 original SHA-pinned scoped DEV PASS, no prior original compiled native suites rerun. Original C98 v432 469f 2012 C227i 2026 C227k positive SAVE/LOAD proven. G3 remains 5/16 FULL, native proofs41 G3-04 fourteen. PRD hash deployment pending.
+- **Resume at:** Push commit and selectively deploy true 1998 original compiled SAVE/LOAD evidence with SHA DEV PRD. Remaining G3-04 actual distinct source-version invalid/state transitions and parent G3-14 malformed FArchive exact archive error branches, do not repeat sealed original native SAVE and LOAD.
+- **Active changed at:** 2026-10-28T09:23:23+00:00
+- **Latest DEV test states:** PASS 206; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-28T09:21:48.8278036Z | verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php | PASS | 105 | catalog\compliance\evidence\o06\20261028T092148309Z-e776196c-DEV-verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php.txt |
+| 2026-10-28T09:21:48.3168090Z | verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php | STARTED |  | catalog\compliance\evidence\o06\20261028T092148309Z-e776196c-DEV-verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php.txt |
 | 2026-10-28T09:12:05.8094781Z | verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php | PASS | 119 | catalog\compliance\evidence\o06\20261028T091205184Z-43a940c1-DEV-verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php.txt |
 | 2026-10-28T09:12:05.1920569Z | verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php | STARTED |  | catalog\compliance\evidence\o06\20261028T091205184Z-43a940c1-DEV-verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php.txt |
 | 2026-10-28T02:10:10.7029348Z | verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php | PASS | 103 | catalog\compliance\evidence\o06\20261028T021010196Z-09cfc02d-DEV-verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-28T00:52:35.8895248Z | verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php | STARTED |  | catalog\compliance\evidence\o06\20261028T005235882Z-20be3f51-DEV-verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php.txt |
 | 2026-10-28T00:50:03.2017262Z | verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php | PASS | 101 | catalog\compliance\evidence\o06\20261028T005002683Z-a724978c-DEV-verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php.txt |
 | 2026-10-28T00:50:02.6927266Z | verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php | STARTED |  | catalog\compliance\evidence\o06\20261028T005002683Z-a724978c-DEV-verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php.txt |
-| 2026-10-27T23:37:43.8600287Z | verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php | PASS | 114 | catalog\compliance\evidence\o06\20261027T233743125Z-810c2ff6-DEV-verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php.txt |
-| 2026-10-27T23:37:43.1320277Z | verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php | STARTED |  | catalog\compliance\evidence\o06\20261027T233743125Z-810c2ff6-DEV-verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php.txt |
 
 ## Recovery procedure
 

@@ -1,6 +1,6 @@
 ﻿{
-    "updated_at_utc":  "2026-10-28T09:12:05.8379921Z",
-    "head_commit":  "a948f749",
+    "updated_at_utc":  "2026-10-28T09:21:48.8508354Z",
+    "head_commit":  "9ff9438b",
     "current_target":  "DEV",
     "current_source_sha256":  "97b67429a9c6b1765bafc515756fc79a3aaa1e25736e43bceb0ce43872224684",
     "tests":  [
@@ -711,6 +711,18 @@
                       "run_id":  "20261027T212522878Z-2d145d5e",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T212522878Z-2d145d5e-DEV-verify-ue1-o06-g3-04-c98-native-function-state.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php",
+                      "test":  "verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-28T09:21:48.8278036Z",
+                      "source_sha256":  "97b67429a9c6b1765bafc515756fc79a3aaa1e25736e43bceb0ce43872224684",
+                      "test_sha256":  "8bba2795605c9655c559b9f29f731d4d7a22653ff0cf1970d9b0be74a7bbe387",
+                      "run_id":  "20261028T092148309Z-e776196c",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261028T092148309Z-e776196c-DEV-verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-04-v432-function-link-native.php",

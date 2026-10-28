@@ -1570,6 +1570,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c98-original-1998-script-compiled-save": {
+      "description": "ONE genuine original May17 1998 retail x86 Unreal.exe -make plus Editor.dll (not modern UCC/SavePackage) invoking original FObjectManager::SavePackage to compile a disposable classic UnrealScript Actor with a State and two nonnative UFunctions, generating a truly original 1058-byte original native package version61/licensee0 with nine exports. Original compiled retail Core.dll and Editor.dll and two original Core/Engine packages unchanged. Separate fresh May17 1998 retail Unreal.exe -make (package already present: LOAD only, no native writer replay) logged Loading/Unloading G304C98Save and Microsoft x86 CDB captured post-LOAD at actual original UFunction::Serialize 10114359 and UState::Serialize 10114b69: exact new same-linker Function indices6/8 and State index5, eight true native UFunction field matches plus original UState ProbeMask, IgnoreMask, label offset12, matching UnrealDB. The independent May19 v1.200 source (Editor/UnEditor.cpp, Launch/Launch.cpp) documents equivalent command/FObjectManager path but is NOT claimed byte-identical to the May17 original compiled binaries. All original Core.dll/Engine.dll/Editor.dll/Unreal.exe, original source, user-created .uc, actual original SAVE .u, CDB command/log and original fresh Editor.log SHA256 pinned. 46/46 new scoped DEV assertions; no previous C98 original native or other engine suites rerun. C98 positive SAVE path now resolved; G3-04 remains OPEN only if exact additional malformed/version/state-transition source-defined acceptance is required.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicStructNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }
