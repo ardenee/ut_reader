@@ -691,7 +691,7 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
          "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-         "8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782"),
+         "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
          "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
@@ -732,13 +732,13 @@ def eval_t009(_row: dict[str, Any]) -> dict[str, Any]:
     Neither this evaluator nor the verifier reruns original compiled methods.
     """
     script="catalog/bin/verify-ue1-o06-g3-t009-three-original-native-malformed.php"
-    result_path="catalog/compliance/evidence/o06/20261028-G3-T009-three-original-native-six-negative-91pass.json"
+    result_path="catalog/compliance/evidence/o06/20261028-G3-batch-T009-native-error-regression-91pass.json"
     pins=[]
     for path,expected in [
-        (script,"be236dc234074196998b751ac7b6de8c783256b62768a513b447c688a8d6ec83"),
-        (result_path,"64cc9d53d6a69f68ac6aace28a626069f90dbb0c2d66cd75b62b02594513385a"),
+        (script,"1ade9c0d9a18171908b97d26cb1a58a22fb786694bd0512c9c1953413a651953"),
+        (result_path,"ec6c78721ed173a023e4d6dd58d84be022f80abd8ff5035b7eb7127b4cd22e45"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-         "8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782"),
+         "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
          "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",

@@ -1,0 +1,6 @@
+Loading package Core.u...
+Bad name index -63/326
+
+History: ULinkerLoad<<FName <- (LinkerLoad Transient.LinkerLoad1 43308)) <- UStruct::Serialize <- (Function Core.Object.EndState) <- UFunction::Serialize <- LoadObject <- (Function Core.Object.EndState 43308==43308/59214 43300 29) <- ULinkerLoad::Preload <- LinkProperties <- UStruct::Link <- UState::Link <- UClass::Link <- UStruct::Serialize <- (Class Core.Object) <- UState::Serialize <- UClass::Serialize <- (Class Core.Object) <- LoadObject <- (Class Core.Object 43308==43308/59214 5417 77) <- ULinkerLoad::Preload <- PreLoadObjects <- UObject::EndLoad <- UObject::LoadPackage <- UBatchExportCommandlet::Main
+
+Exiting due to error

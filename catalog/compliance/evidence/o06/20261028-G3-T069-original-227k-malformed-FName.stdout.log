@@ -1,0 +1,33 @@
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+<?int?Core.Errors.SerialSize?>
+Bad name index -63/566
+
+<?int?Core.Errors.History?>: ULinkerLoad<<FName <- (LinkerLoad Transient.LinkerLoad 67624))
+ <- UStruct::Serialize
+ <- (Function Core.Object.EndState)
+ <- UFunction::Serialize
+ <- LoadObject
+ <- (Function Core.Object.EndState 67624==67624/103686 67616 29)
+ <- ULinkerLoad::Preload
+ <- LinkProperties
+ <- UStruct::Link
+ <- UState::Link
+ <- UClass::Link
+ <- UStruct::Serialize
+ <- (Class Core.Object)
+ <- UState::Serialize
+ <- UClass::Serialize
+ <- (Class Core.Object)
+ <- LoadObject
+ <- (Class Core.Object 67624==67624/103686 9472 95)
+ <- ULinkerLoad::Preload
+ <- ULinkerLoad::Preload
+ <- PreLoadObjects
+ <- UObject::EndLoad
+ <- UObject::StaticLoadObject
+ <- (Core.Class Core.Core.Commandlet NULL)
+ <- UObject::StaticLoadClass
+
+
+Exiting due to error
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int

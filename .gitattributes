@@ -46,3 +46,6 @@ catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded
 catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.cmd -text
 # Exact original x86 debugger commands, compiled runtime stdout, and Tell machine evidence for fixed UE1 T009.
 catalog/compliance/evidence/o06/20261028-G3-T009-*-original-native-* -text
+# Original compiled v432 and 227k T069 FName malformed loader stdout, byte-preserved.
+catalog/compliance/evidence/o06/20261028-G3-T069-original-v432-malformed-FName.stdout.log -text
+catalog/compliance/evidence/o06/20261028-G3-T069-original-227k-malformed-FName.stdout.log -text

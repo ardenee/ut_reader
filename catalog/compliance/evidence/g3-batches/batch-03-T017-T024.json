@@ -4,7 +4,7 @@
     "T017",
     "T024"
   ],
-  "started_at": "2026-10-28T11:54:56+00:00",
+  "started_at": "2026-10-28T22:53:41+00:00",
   "tests": [
     {
       "id": "T017",
@@ -47,7 +47,7 @@
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     }
   ],
-  "finished_at": "2026-10-28T11:54:56+00:00",
+  "finished_at": "2026-10-28T22:53:41+00:00",
   "counts": {
     "PASS": 0,
     "FAIL": 0,

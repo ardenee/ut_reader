@@ -1,0 +1,32 @@
+{
+    "ok": true,
+    "checks": 18,
+    "failures": [],
+    "fixed_test": "T069",
+    "status": "PARTIAL_ONLY",
+    "original_compiled_profiles_verified": 2,
+    "original_C98_FName_native_oracle": "BLOCKED",
+    "original_UT99_469f_and_other_source_branches": "NOT_IN_THIS_ORACLE",
+    "source_sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1",
+    "original_engine_runs_in_this_verifier": 0,
+    "details": [
+        {
+            "profile": "v432",
+            "native_loader_message": "UE1 Bad name index -63/326 at archive cursor 43308",
+            "archive_modified_byte": 43307,
+            "physical_Tell": 43308,
+            "original_compiled_log_sha256": "f2bd406eeb0496cd3626ccf81453620f1b6f44b8d618421d0408613c8e690eee",
+            "reader_error": "UE1 Bad name index -63/326 at archive cursor 43308",
+            "accepted_for_this_original_profile": true
+        },
+        {
+            "profile": "227k",
+            "native_loader_message": "UE1 Bad name index -63/566 at archive cursor 67624",
+            "archive_modified_byte": 67623,
+            "physical_Tell": 67624,
+            "original_compiled_log_sha256": "a86520cad668bd75f540ea15b683f2ff928208a06f9e1b42a2c24d13247d0129",
+            "reader_error": "UE1 Bad name index -63/566 at archive cursor 67624",
+            "accepted_for_this_original_profile": true
+        }
+    ]
+}

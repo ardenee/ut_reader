@@ -29,7 +29,7 @@ $pins=[
  [$temp.'Native-227k/System/Core.dll','c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194'],
  [$temp.'Native-227k/System/UCC.exe','8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a'],
  [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php',
-  '8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782'],
+  '2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1'],
  [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php',
   'f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709'],
  [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php',

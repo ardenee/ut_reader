@@ -61,9 +61,20 @@ final class CatalogUE1ClassicStructNativeReader
             return $n;
         };
         $names=$pkg->getNames();
-        $name=static function(string $label)use($compact,$names):array{
+        $name=static function(string $label)use($compact,$names,$family,$actual227k,&$position):array{
             $id=$compact();
             if($id<0||!isset($names[$id])){
+                // Original shipped v432 and 227k ULinkerLoad::FName report
+                // the signed compact ID and the package's name count at
+                // physical Tell immediately after the bad compact index.
+                // Genuine one-byte EndState mutants: -63/326 Tell43308;
+                // -63/566 Tell67624. C98 is unproven and stays unchanged.
+                if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    ||$actual227k){
+                    throw new RuntimeException(sprintf(
+                        'UE1 Bad name index %d/%d at archive cursor %d',
+                        $id,count($names),$position));
+                }
                 throw new RuntimeException('Invalid UE1 '.$label.' FName index');
             }
             return ['index'=>$id,'text'=>(string)$names[$id]['name']];
