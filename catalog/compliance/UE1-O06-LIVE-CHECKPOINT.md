@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-04-t99-469f-original-malformed-physical-tell`
-- **Stage:** G3-04-469F-REAL-TELL235-PRD-DEPLOYED-C98-C227I-ABI-MAPPED
-- **Last completed action:** 469f real original compiled badnet physical FArchive Tell235 accepted 27/27 DEV, GitHub 4047404c and SHA checkpoint b276c7b3 pushed, PRD 18/18+3/3 hashes identical. Previous original v432 native SAVE/LOAD new 31/31 original 322-byte fixture, SHA PRD16/16+3/3. Total G3 original native subproofs39, G3-04 twelve and 5/16 FULL unchanged. New ABI-only investigation: May1998 C98 original Core.dll uses FObjectManager::SavePackage and parameterless appInit, not later UObject static; original2012 C227i Core.dll exports static SavePackage seven params, LoadPackage three and StaticConstructObject six. Generated x86 2012 import lib from exact 2222 original export signatures in C Temp only, not yet native fixture acceptance. No original binaries/source altered and no old CDB suites rerun.
-- **Resume at:** G3-04 truly OPEN C98 May1998 original FObjectManager native SAVE/LOAD, genuine 2012 C227i old-ABI SAVE/LOAD, plus distinct remaining version/malformed branches. Use matched original compiled API signatures and authoritative original source; no false inference from later SDK. Do not repeat v432/469f/C227k completed genuine Save/Load and malformed CDB oracles. Do not count API reconnaissance as native acceptance. After full closure move to other 11 G3 open contracts.
-- **Active changed at:** 2026-10-28T02:18:11+00:00
-- **Latest DEV test states:** PASS 204; FAIL 1; STARTED 0
+- **Contract:** `g3-04-c227i-original-2012-script-compiled-save`
+- **Stage:** G3-04-C227I-2012-REAL-UCC-SAVE-1110-41-DEV-PASS-PRD-PENDING
+- **Last completed action:** TRUE original 2012 shipped 227i UCC.exe make compiled a NEW script Actor with State and 2 UFunction methods into its genuine 1110-byte 9-export version69/0 package, without newer 227k headers/ABI. Original fresh UCC.exe process loaded new file; CDB original 2012 Core!UFunction::Serialize recorded 2 newly compiled functions with one linker and 10/10 after-load flags/parm fields equal UnrealDB: AddOne 2/8/4 CanJump1/4/0. Original State source export had flags0 masks0/allones label offset12 child8, real reader equal. Original 2012 DLL UCC executable script original native saved package CDB trace and compiler hash pinned. New focused 41/41 DEV PASS, no earlier native engines retested. G3 FULL 5/16, native subproofs40 G3-04 thirteen; C98 1998 FObjectManager SAVE and original malformed/version still outstanding. PRD deployment pending.
+- **Resume at:** Commit and deploy real original 2012 native compiler save evidence and 41-check focused result SHA match DEV PRD, then work original 1998 C98 FObjectManager SAVE and truly unverified malformed/version paths. Do NOT repeat original 2012 compile or CDB after successful sealed evidence. Do not claim G3-04 FULL until all source-defined required branches closed.
+- **Active changed at:** 2026-10-28T09:12:45+00:00
+- **Latest DEV test states:** PASS 205; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-28T09:12:05.8094781Z | verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php | PASS | 119 | catalog\compliance\evidence\o06\20261028T091205184Z-43a940c1-DEV-verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php.txt |
+| 2026-10-28T09:12:05.1920569Z | verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php | STARTED |  | catalog\compliance\evidence\o06\20261028T091205184Z-43a940c1-DEV-verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php.txt |
 | 2026-10-28T02:10:10.7029348Z | verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php | PASS | 103 | catalog\compliance\evidence\o06\20261028T021010196Z-09cfc02d-DEV-verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php.txt |
 | 2026-10-28T02:10:10.2049003Z | verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php | STARTED |  | catalog\compliance\evidence\o06\20261028T021010196Z-09cfc02d-DEV-verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php.txt |
 | 2026-10-28T01:57:44.2857246Z | verify-ue1-o06-g3-04-v432-original-native-save-load.php | PASS | 100 | catalog\compliance\evidence\o06\20261028T015743761Z-ea2d9132-DEV-verify-ue1-o06-g3-04-v432-original-native-save-load.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-28T00:50:02.6927266Z | verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php | STARTED |  | catalog\compliance\evidence\o06\20261028T005002683Z-a724978c-DEV-verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php.txt |
 | 2026-10-27T23:37:43.8600287Z | verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php | PASS | 114 | catalog\compliance\evidence\o06\20261027T233743125Z-810c2ff6-DEV-verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php.txt |
 | 2026-10-27T23:37:43.1320277Z | verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php | STARTED |  | catalog\compliance\evidence\o06\20261027T233743125Z-810c2ff6-DEV-verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php.txt |
-| 2026-10-27T23:07:53.7036921Z | verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php | PASS | 500 | catalog\compliance\evidence\o06\20261027T230752792Z-d7058fee-DEV-verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php.txt |
-| 2026-10-27T23:07:52.8007270Z | verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T230752792Z-d7058fee-DEV-verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php.txt |
 
 ## Recovery procedure
 

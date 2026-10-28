@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 41,
+    "failures": [],
+    "new_original_2012_native_SAVED_package_bytes": 1110,
+    "new_2012_compiled_state_exports": 1,
+    "new_2012_native_compiled_function_POSTLOAD_events": 2,
+    "new_2012_x86_native_field_comparisons": 10,
+    "existing_sealed_native_runs_reexecuted": false,
+    "C98_1998_original_SAVE_covered": false,
+    "g3_04_FULL": "OPEN"
+}

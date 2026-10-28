@@ -1,0 +1,51 @@
+Log: Log file open, 10/28/26 09:08:19
+Init: Name subsystem initialized
+Init: Detected: Microsoft Windows NT 6.2 (Build: 9200)
+Init: Version: 227 Subversion: 9
+Init: Compiled: Oct 28 2012 16:01:07
+Init: Command line: G3042012Probe
+Init: Base directory: C:\Temp\UnrealDB\O06\Native-C227i-G304\System\
+Init: Character set: Unicode
+Log: Bound to Core.dll
+Init: Object subsystem initialized
+Init: Computer: GAMEAMD
+Init: User: arden
+Init: Memory total: Phys=4194303K Pagef=4194303K Virt=4194176K
+Init: Working set: 32000 / 159000
+Init: CPU Speed=2592.033165 MHz
+Init: CPU Page size=4096, Processors / Cores=12
+Init: CPU Detected: PentiumPro-class processor (GenuineIntel)
+Init: CPU Features: CMov FPU RDTSC PAE MMX KNI
+Log: Forcing Unreal to run on CPU 0
+Log: Bound to Editor.dll
+Log: Bound to Engine.dll
+Log: Bound to Window.dll
+Log: 0.0ms Loading: Package Editor
+Log: 1.0ms Loading: Package Core
+Log: Checking package Core
+Log: 2.0ms Loading: Package Engine
+Log: Checking package Engine
+Log: Checking package Editor
+Log: Executing Class Editor.DumpIntCommandlet
+Log: 18.0ms Loading: Package G3042012Probe
+Log: =========================================
+Log: Loaded package, checking for classes..
+Log: =========================================
+Log: Saving G3042012Probe.int..
+Log: G3042012Probe.int could not be created.
+Exit: Preparing to exit.
+Log: Purging garbage
+Log: Unbound to Core.dll
+Log: Unbound to Editor.dll
+Log: Unbound to Engine.dll
+Log: Unbound to Window.dll
+Log: 1486.0ms Unloading: Package Editor
+Log: 1486.0ms Unloading: Package Core
+Log: 1486.0ms Unloading: Package Engine
+Log: 1486.0ms Unloading: Package G3042012Probe
+Log: Garbage: objects: 6734->0; refs: 0
+Exit: Object subsystem successfully closed.
+Exit: Exiting.
+Uninitialized: Name subsystem shut down
+Uninitialized: Allocation checking disabled
+Uninitialized: Log file closed, 10/28/26 09:08:20

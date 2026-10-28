@@ -1558,6 +1558,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c227i-original-2012-script-compiled-save": {
+      "description": "NEW original 2012 Unreal 227i x86 shipped UCC.exe make -nobind, NOT new 2026 SDK headers/ABI, invoked original UnrealScript compiler and genuine native SavePackage after compiling a disposable original UnrealScript class containing a UState and two UFunction definitions. Original writer created 1110-byte real version69/licensee0 nine-export .u with UState export6 and two distinct non-native UFunctions exports3 and7. Separate fresh actual original 2012 compiled UCC.exe DumpInt loaded the saved package (native runtime log). Original x86 CDB breakpoint on 2012 Core!UFunction::Serialize+0x110 captured both new original loaded functions, one original linker identity, and 10/10 real compiled after-LOAD fields match UnrealDB source-parity decoded parameter sizes/offsets: G304AddOne 2 parms size8 return offset4, G304CanJump 1 parm size4 return offset0, flags2 each. Native compiled original state archive has masks zero/all-ones, flags0, label offset12 and Children=8. Real original compiled binary Core.dll/Core.u/Engine.dll/Engine.u/Editor.dll/UCC.exe and disposable original script .uc, compiler-produced .u, actual new CDB command and transcript, fresh original runtime log all SHA pinned. Source profile unreal-v227 explicit: version69/licensee0 alone does not prove 2012 engine identity. 41/41 new focused assertions, old original 2012 Core/2012 v227k native load and 469f/v432 tests NOT rerun. 1998 FObjectManager SAVE and other original malformed/version behaviors still OPEN; G3-04 not FULL.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicFunctionLinkReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }
