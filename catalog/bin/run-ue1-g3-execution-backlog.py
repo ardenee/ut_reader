@@ -271,7 +271,169 @@ def eval_t007(_row: dict[str, Any]) -> dict[str, Any]:
       "Actual May17 1998 compiled original Core.dll stock Unreal.exe native UClass Object and UStruct Vector: real same-linker Children/ScriptText/Next index identity vs source-selected UnrealDB. CDB 0x10110c88 true serializer reaches both, 34/34 exact source-native checks PASS; prior 100 native script loads not repeated.",
       "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T067":eval_t067}
+def eval_t010(_row: dict[str, Any]) -> dict[str, Any]:
+    """Reuse actual C98/v432/227i/227k compiled script-memory parity, no native re-run.
+
+    This is the fixed T010 script-size/archive-footprint criterion only.
+    It does NOT close G3-12 opcode semantics or T009 malformed reference handling.
+    """
+    pins: list[dict[str, Any]]=[]
+    current_code="catalog/bin/verify-ue1-o06-g3-t010-current-script-sizes.php"
+    current_log="catalog/compliance/evidence/o06/20261028-G3-T010-current-reader-original-script-sizes.json"
+    pins.append(verify_pin(current_code,"f9c43e3c76a29aa1c558b3be5a41aa5b8272ca28ec8649aae0850f594d835099"))
+    pins.append(verify_pin(current_log,"140a0f7280ecd8d34d9f4ebb5a29fa428df200c827d1666986bd4251a4b3452b"))
+    current=json.loads((ROOT/current_log).read_text(encoding="utf-8"))
+    if current.get("ok") is not True or current.get("checks")!=40 or current.get("errors"):
+        raise AssertionError("New focused T010 current production-source acceptance not 40/40")
+    samples=current.get("captures",[])
+    if [(s.get("build"),s.get("export"),s.get("original_native_script_num"),
+         s.get("current_reader_script_num"),s.get("archive_bytes_consumed"))
+        for s in samples]!=[
+            ("C98-May17-original",454,0,0,None),
+            ("C98-May17-original",449,10,10,4),
+            ("C227i-2012-original",661,0,0,None),
+            ("C227i-2012-original",915,11,11,7)]:
+        raise AssertionError("T010 current production zero/nonzero/physical byte samples changed")
+    if current.get("native_executions_rerun")!=0 or current.get("old_acceptance_verifier_replays")!=0:
+        raise AssertionError("T010 must reuse original native evidence, not rerun old acceptance")
+    fresh_hashes=current["current_reader_source_sha"]
+    for source,expected in fresh_hashes.items():
+        pins.append(verify_pin(source,expected))
+    for source_manifest, native_key, source_key, binary_key, log_file, counts in [
+        (
+            "catalog/compliance/UE1-O06-G3-03-C98-MAY1998-100-ORIGINAL-NATIVE-96-SCRIPTS.json",
+            "true_actual_original_compiled_CDB_stdout_scripts_parser_and_register_SHA256",
+            "original_1998_reader_source_SHA",
+            "genuine_original_1998_shipped_DLL_packages_executables_SHA256",
+            "catalog/compliance/evidence/o06/20261027T184627555Z-2f411f41-DEV-verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php.txt",
+            {"checks":1492,"original_native_nonzero_scripts":96,
+             "original_retail_native_known_bytes_matched":175,
+             "source_pointer_fname_relocation_bytes_deliberately_masked":668,
+             "archive_script_compact_shorter_than_loaded_memory":94}
+        ),
+        (
+            "catalog/compliance/UE1-O06-G3-03-C227I-237-ORIGINAL-NATIVE-223-SCRIPTS.json",
+            "original_native_raw_logs_and_commands_SHA256",
+            "current_production_reader_SHA",
+            "native_original_shipped_binary_inputs",
+            "catalog/compliance/evidence/o06/20261027T182530828Z-11e0d1b7-DEV-verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php.txt",
+            {"checks":4412,"actual_original_native_C227i_script_buffers":223,
+             "original_compiled_native_known_script_bytes_matched":646,
+             "source_loader_script_memory_vs_archive_shorter_count":213}
+        )
+    ]:
+        file=ROOT/source_manifest
+        manifest=json.loads(file.read_text(encoding="utf-8-sig"))
+        pins.append({"path":source_manifest,"sha256":sha256(file)})
+        for item in manifest[native_key].values():
+            path=item["repo_path"]
+            pins.append(verify_pin(path,item["sha256"]))
+            if "bytes" in item and pins[-1]["bytes"]!=item["bytes"]:
+                raise AssertionError("Original native evidence byte length mismatch: "+path)
+        for item in manifest[source_key].values():
+            path=item["repo_path"]
+            if path in fresh_hashes and fresh_hashes[path]!=item["sha256"]:
+                # Source changed after the original compiled witness: original logs
+                # remain sealed; exact CURRENT source is verified by focused T010
+                # against that same original native memory, rather than claiming
+                # an outdated production reader checksum still matches.
+                pins.append({"historical_source_path":path,
+                             "old_sha256":item["sha256"],
+                             "current_sha256":fresh_hashes[path],
+                             "change_certification":"T010 current-source 40/40 original native"})
+            else:
+                pins.append(verify_pin(path,item["sha256"]))
+        for item in manifest[binary_key].values():
+            binary=pathlib.Path(item["path"])
+            if not binary.is_file() or sha256(binary)!=item["sha256"] or binary.stat().st_size!=item["bytes"]:
+                raise AssertionError("Original shipped binary SHA/size mismatch: "+str(binary))
+            pins.append({"original_binary":str(binary),"sha256":item["sha256"],"bytes":item["bytes"]})
+        if "original_v1200_May19_1998_source_UnClass_cpp_pin" in manifest:
+            item=manifest["original_v1200_May19_1998_source_UnClass_cpp_pin"]
+            source=pathlib.Path(item["path"])
+            if not source.is_file() or sha256(source)!=item["sha256"] or source.stat().st_size!=item["bytes"]:
+                raise AssertionError("C98 historic source file pin missing or changed")
+            pins.append({"historical_source":str(source),"sha256":item["sha256"]})
+        observed=json.loads((ROOT/log_file).read_text(encoding="utf-8-sig"))
+        if observed.get("ok") is not True or observed.get("errors") or observed.get("failed"):
+            raise AssertionError("Original engine script parity validator not successful: "+log_file)
+        for name, expected in counts.items():
+            if observed.get(name)!=expected:
+                raise AssertionError("Original compiled script invariant not proven: "+log_file+" "+name)
+        pins.append({"path":log_file,"sha256":sha256(ROOT/log_file),
+                     "reused_native_script_count":counts.get("original_native_nonzero_scripts",
+                                               counts.get("actual_original_native_C227i_script_buffers"))})
+    v432=eval_t003(_row)
+    c227k=eval_t005_t006(_row)
+    pins.extend(v432["evidence"])
+    pins.extend(c227k["evidence"])
+    return {"status":"PASS",
+            "result":(
+             "C98 original 96 nonzero/4 zero native Script.Num, 94 compact-widened, "
+             "175 exact known script bytes (668 native FName/UObject relocations intentionally masked); "
+             "stock v432 original 0/0, 10/6 and 2/2 native/archive bytes, 2 typed object refs; "
+             "2012 original 227i 223 nonzero scripts, 213 compact-widened and 646 native bytes; "
+             "original 2026 227k direct zero scripts plus source UFunction 11/7 native/archive bytes. "
+             "All saved SHA-pinned actual compiled CDB logs, original shipped binaries, "
+             "source-reader hashes, previously successful independent PHP comparisons and "
+             "v432/227k native source-selected checks verified WITHOUT native/PHP test replay. "
+             "This is T010 length/physical-archive criterion only; T009 and G3-12 stay OPEN."),
+            "evidence":pins}
+
+def eval_t032(_row: dict[str, Any]) -> dict[str, Any]:
+    """Original compiled 469f/227k Pointer/Net/Any method byte behaviour, not Any values."""
+    source="catalog/compliance/UE1-O06-G3-08-469F-VS-227K-POINTER-BUTTON-ANY-RUNTIME-SEMANTICS.json"
+    p=ROOT/source
+    m=json.loads(p.read_text(encoding="utf-8-sig"))
+    pins=[{"path":source,"sha256":sha256(p)}]
+    methods=m["original_matched_compiled_true_native_PE_exports_and_first24bytes"]
+    if set(methods)!={"T99-469f","C227k"}:
+        raise AssertionError("T032 original source profile set changed")
+    for build,dll in methods.items():
+        actual=pathlib.Path(dll["original_dll"])
+        if not actual.is_file() or actual.stat().st_size!=dll["bytes"] or sha256(actual)!=dll["sha256"]:
+            raise AssertionError("Actual original compiled binary missing/wrong: "+build)
+        pins.append({"original_compiled_DLL":str(actual),"sha256":dll["sha256"]})
+        with actual.open("rb") as stream:
+            for label,method in dll["native_exported_methods"].items():
+                stream.seek(method["PE_file_offset"])
+                if stream.read(24).hex()!=method["first_24_compiled_bytes_hex"]:
+                    raise AssertionError("Original shipped PE method bytes changed: "+build+" "+label)
+    original=m["original_real_CDB_compiled_native_instruction_logs"]
+    for label,pin in original.items():
+        data=verify_pin(pin["repo_path"],pin["sha256"])
+        if data["bytes"]!=pin["bytes"]:
+            raise AssertionError("Original native CDB log/command size mismatch: "+label)
+        pins.append(data)
+    reader=m["newly_updated_Reader"]
+    pins.append(verify_pin(reader,m["newly_updated_reader_SHA256"]))
+    test="catalog/bin/verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php"
+    pins.append({"path":test,"sha256":sha256(ROOT/test)})
+    log="catalog/compliance/evidence/o06/20261027T162644568Z-e469751b-DEV-verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php.txt"
+    logdata=json.loads((ROOT/log).read_text(encoding="utf-8-sig"))
+    for key,expected in {"ok":True,"checks":46,"passed":46,
+        "new_original_compiled_source_specific_runtime_operator_methods":8,
+        "genuine_469f_pointer_payload_bytes":4,
+        "genuine_C227k_pointer_button_payload_bytes":0,
+        "genuine_C227k_Any_dynamic_codec_unsupported":True,
+        "prior_native_positive_acceptance_tests_reexecuted":0}.items():
+        if logdata.get(key)!=expected:
+            raise AssertionError("T032 compiled original 46/46 evidence failed: "+key)
+    if logdata.get("failed") or m["G3_08_FULL_ACCEPTED"] is not False:
+        raise AssertionError("T032 prior source scope invalid")
+    if any([
+        m["T99_469f_PointerProperty_runtime_item_or_net_serialized_byte_count"]!=4,
+        m["C227k_Pointer_and_Button_serializeitem_byte_count"]!=0,
+        m["C227k_Pointer_and_Button_netserializeitem_byte_count"]!=0,
+        m["C227k_Pointer_and_Button_NetSerializeItem_true_return_value"]!=1,
+    ]):
+        raise AssertionError("Original 469f/227k compiled byte/Net return difference not proven")
+    pins.append({"path":log,"sha256":sha256(ROOT/log),"accepted_original_compiled_method_checks":46})
+    return {"status":"PASS",
+            "result":"Real compiled original 469f UPointerProperty::SerializeItem and NetSerializeItem serialize exactly 4 bytes (Net returns 1); original 227k UPointer/UButton items serialize 0 bytes and Net returns 1 without payload; separate UAnyProperty dispatch is dynamic and its instance codec remains OPEN under T025–T031. Exact original DLL PE bytes, CDB traces, current production source SHA and already sealed 46/46 source-selected byte-method checks verified, no native rerun.",
+            "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -311,7 +473,7 @@ def render_progress(register:dict[str,Any])->None:
         result=x.get("result") if x["status"]=="PASS" else x.get("blocking_reason")
         result=(result or "not yet processed").replace("|","/").replace("\n"," ")
         lines.append(f"| {x['id']} | {x['status']} | {result} |")
-    lines+=["","T001/T002 and T008/T067 have **complete source-specific actual original-native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
+    lines+=["","T001–T008, T010, T032 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
     PROGRESS.write_text("\n".join(lines),encoding="utf-8")
 
 def review_one(row:dict[str,Any],retry:bool)->dict[str,Any]:

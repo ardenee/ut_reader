@@ -1,7 +1,7 @@
 {
-  "contract": "g3-03-controlled-one-pass-blocked",
-  "stage": "G3-80-TESTS-BATCH01-T001-T008-ALL-PASS-9-OVERALL-PASS-71-BLOCKED",
-  "last_action": "Final T007 verified real May17 1998 ORIGINAL compiled Core.dll x86 under original Unreal.exe -make UClass Object Core.u export0 plus direct UStruct Vector export1 native after UStruct Serialize. Actual original compiled live same linker: Vector Children export222 ref223 and Next export421 ref422; Object Class ScriptText export230 ref231 and Children export456 ref457. Actual UnrealDB source family epic-ue1 ClassMetadataReader and UStruct native reader match original; 34/34 actual native source proof, CDB cmd/log and original binaries SHA sealed. Scoped ten-batch runner upgraded only T007 to PASS without touching previously PASS T001..T006/T008/T067. Now batch01 T001-T008 8/8 PASS; T067 prior sealed malformed pass; overall G3 test list 9/80 PASS, 71 BLOCKED, no FAIL, no PENDING, no S subtests; G3 gates still 5/16 fully closed, G3-03 not yet full pending T009/T010 method-specific. Source and compiled native untouched, no reader change, PRD final diff pending.",
-  "next_step": "Continue batch02 fixed T009 malformed UField/UStruct reference/ScriptSize in genuine source-selected originals and T010 archived compact scripts source-original byte vs loaded memory, then T011 v60..63 genuine UT99 legacy UFunction branch. Execute fixed list without user prompts, reuse every accepted SHA-pinned test, do not invent parity for blocked items. PRD code/doc selective SHA only.",
-  "updated_at_utc": "2026-10-28T13:03:29+00:00"
+  "contract": "g3-controlled-80-fixed-tests",
+  "stage": "G3-80-TESTS-11-PASS-69-BLOCKED-T010-T032-CLOSED",
+  "last_action": "T010 closed source-drift-safe 40/40 actual C98/227i plus sealed v432/227k, T032 closed from original 469f/227k compiled DLL/46/46 CDB evidence; NO original native rerun; 11/80 PASS, 69 BLOCKED, 0 FAIL; G3 groups 5/16 FULL",
+  "next_step": "Continue fixed T009 malformed UStruct Children/SuperField reference and invalid ScriptSize original C98/v432/227 compiled load cursor; T011 genuine UT99 v60-63 UFunction; then remaining T rows. No PRD deployment before T078-T080.",
+  "updated_at_utc": "2026-10-28T13:25:40+00:00"
 }

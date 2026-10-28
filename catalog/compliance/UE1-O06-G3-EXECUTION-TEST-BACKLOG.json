@@ -440,13 +440,270 @@
       "pass_criterion": "Reader consumes exact archive bytes and matches loaded script length; never compares relocated addresses as literal archived bytes.",
       "evidence": "Reuse C98 96 and C227i 223 scripts; obtain only missing distinct v432/227k evidence",
       "reuse": "Avoid repeating native script-byte proofs already accepted.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Measure original UStruct saved ScriptSize versus reconstructed in-memory Script.Num at a zero and nonzero boundary. PASS ONLY WHEN: Reader consumes exact archive bytes and matches loaded script length; never compares relocated addresses as literal archived bytes. ORACLE: Reuse C98 96 and C227i 223 scripts; obtain only missing distinct v432/227k evidence. Reuse before any new execution: Avoid repeating native script-byte proofs already accepted.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "c625e9fc1b274cb551cbef2bb85bfa0e1ca35ce8778a208a0d7924f574415cc8",
+      "result": "C98 original 96 nonzero/4 zero native Script.Num, 94 compact-widened, 175 exact known script bytes (668 native FName/UObject relocations intentionally masked); stock v432 original 0/0, 10/6 and 2/2 native/archive bytes, 2 typed object refs; 2012 original 227i 223 nonzero scripts, 213 compact-widened and 646 native bytes; original 2026 227k direct zero scripts plus source UFunction 11/7 native/archive bytes. All saved SHA-pinned actual compiled CDB logs, original shipped binaries, source-reader hashes, previously successful independent PHP comparisons and v432/227k native source-selected checks verified WITHOUT native/PHP test replay. This is T010 length/physical-archive criterion only; T009 and G3-12 stay OPEN.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T13:17:29+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t010-current-script-sizes.php",
+          "sha256": "f9c43e3c76a29aa1c558b3be5a41aa5b8272ca28ec8649aae0850f594d835099",
+          "bytes": 7276
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T010-current-reader-original-script-sizes.json",
+          "sha256": "580cb8bb7753c180552033f52cfb14211420ab8ea28a2c1a788eb3dfa1d12cd6",
+          "bytes": 4562
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "sha256": "863eac4bf29c109a8b8f32fdbd83bc140d1dacec88710c1e50dcc6efa4ffe21e",
+          "bytes": 6259
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "57e3d52253b1fe1d37e2e450f171b83f263939257518a83a6a5b4f8a0e85e2ad",
+          "bytes": 20297
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "sha256": "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6",
+          "bytes": 50236
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
+          "bytes": 59741
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-03-C98-MAY1998-100-ORIGINAL-NATIVE-96-SCRIPTS.json",
+          "sha256": "481bc10b917d7eea128a1638d31be2a5afdd1f84eb6edbf2592359040a76e7d0"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-ORIGINAL-UsTRUCT-REAL-CDB.log",
+          "sha256": "4c9384bf7a5160d1f09c664c6d5f881f5c81f884f92b66cd2767bb63dbd4ef18",
+          "bytes": 78586
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-ORIGINAL-UStruct-CDB-COMMAND.cmd",
+          "sha256": "b09c318ce6383e928fc9d915b4cd20253756a116200acd4a02aeda50e764395f",
+          "bytes": 341
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-SCRIPT-RECORD-PARSER.py",
+          "sha256": "5ab9a7f0b2e46e8ca5f7140ad171d7bc09110e284bd98f32fab05be3b5866a40",
+          "bytes": 2517
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-UStruct-96-SCRIPTS-NATIVE-VALUES.json",
+          "sha256": "238734b9afd79132bbc27a4935eeea1e77064eea3ec54d71329a4f151c7a12c5",
+          "bytes": 52559
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-UStruct-ORIGINAL-DISASSEMBLY-CDB.log",
+          "sha256": "5ded74fdbbde8383b028f1d5432d0da9df64303153b6413054ad8f38bdfb6168",
+          "bytes": 23504
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-UStruct-DISASM-COMMAND.cmd",
+          "sha256": "39972df10c24e965effd13bfcd8706e61e760392e047d02056c3fc4f4e97dfd1",
+          "bytes": 15
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "sha256": "863eac4bf29c109a8b8f32fdbd83bc140d1dacec88710c1e50dcc6efa4ffe21e",
+          "bytes": 6259
+        },
+        {
+          "historical_source_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "old_sha256": "e06eac12735c61d9852b4fce248c4b27176c9f9046ab31c0fce56f4bc16200af",
+          "current_sha256": "57e3d52253b1fe1d37e2e450f171b83f263939257518a83a6a5b4f8a0e85e2ad",
+          "change_certification": "T010 current-source 40/40 original native"
+        },
+        {
+          "historical_source_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "old_sha256": "bec8715a9c1c7419756f0ab32e3491a13c34a6143ba1bac30cd1db4a68b45ce2",
+          "current_sha256": "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6",
+          "change_certification": "T010 current-source 40/40 original native"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
+          "bytes": 59741
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
+          "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+          "bytes": 506368
+        },
+        {
+          "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.u",
+          "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c",
+          "bytes": 31472
+        },
+        {
+          "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Unreal.exe",
+          "sha256": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30",
+          "bytes": 24576
+        },
+        {
+          "historical_source": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+          "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T184627555Z-2f411f41-DEV-verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php.txt",
+          "sha256": "9a581791399049d6fd9599e7c9e83f3b57c95b033e1cb68a44111c2d140f6f06",
+          "reused_native_script_count": 96
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-03-C227I-237-ORIGINAL-NATIVE-223-SCRIPTS.json",
+          "sha256": "cd8ff5a0198bfca58ec04aa0056af74927ec0dd31cff818b93c59e43dec77aa9"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-UStruct-REAL-LOADED-CDB.log",
+          "sha256": "9ebecd178f84935ea4c4134cddaecec55be53da3ff1ef0972fafd8943e791f74",
+          "bytes": 135498
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-CDB.log",
+          "sha256": "01cf2d729a0f23f99e92492eb597e178e674a937b4ae5b88d14464c01f455c3b",
+          "bytes": 154692
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-UStruct-REAL-LOADED-COMMAND.cmd",
+          "sha256": "c6faeb697a9974f98e04b9f5f972d3ac99662581f47bd839a028a1aab56f13a2",
+          "bytes": 281
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-COMMAND.cmd",
+          "sha256": "819405efb1760c5fb28dab4438b5d27c0b8224577a895b7e52a6bfd6ab8acf4d",
+          "bytes": 203
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-223-CDB-PARSER.py",
+          "sha256": "c0f55f174d202f6b1b4fc40e67984463a1bcaa9d5f30735167d2b2157253aaf8",
+          "bytes": 3683
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-223-ORIGINAL-NATIVE-VALUES.json",
+          "sha256": "36923b929fa6bf05389f93be97203caa6ce08495b838bd53e877b6e31ae96b5c",
+          "bytes": 143091
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "sha256": "863eac4bf29c109a8b8f32fdbd83bc140d1dacec88710c1e50dcc6efa4ffe21e",
+          "bytes": 6259
+        },
+        {
+          "historical_source_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "old_sha256": "e06eac12735c61d9852b4fce248c4b27176c9f9046ab31c0fce56f4bc16200af",
+          "current_sha256": "57e3d52253b1fe1d37e2e450f171b83f263939257518a83a6a5b4f8a0e85e2ad",
+          "change_certification": "T010 current-source 40/40 original native"
+        },
+        {
+          "historical_source_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "old_sha256": "bec8715a9c1c7419756f0ab32e3491a13c34a6143ba1bac30cd1db4a68b45ce2",
+          "current_sha256": "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6",
+          "change_certification": "T010 current-source 40/40 original native"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
+          "bytes": 59741
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+          "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+          "bytes": 901120
+        },
+        {
+          "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+          "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b",
+          "bytes": 81184
+        },
+        {
+          "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\UCC.exe",
+          "sha256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672",
+          "bytes": 135680
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T182530828Z-11e0d1b7-DEV-verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php.txt",
+          "sha256": "cddda38294be9351375fa7228a60e52b106c099ab01ce8e4b0f5cfab1d007536",
+          "reused_native_script_count": 223
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.cpp",
+          "sha256": "c24ab8cd1b2f537ace55089bd800013e4fafaee5fd691b9ea6696396ab5463a8",
+          "bytes": 2195
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.log",
+          "sha256": "028d1ddc84ac2e6a97180030ccb187b53f2e7e5f31bfc07708e2eac9db11006b",
+          "bytes": 378
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-build.log",
+          "sha256": "3768474819f2ca0e78ae619c2a13a308320029d9df23fb3b931fd8f3b0e2dd1b",
+          "bytes": 3242
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "sha256": "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76",
+          "bytes": 1147
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "sha256": "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76",
+          "accepted_original_assertions": 31
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp",
+          "sha256": "9263998f6c69a5eb0955e83545831b84f3aeb034afc13d1039cfae06bf789a5a",
+          "bytes": 2377
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.log",
+          "sha256": "29afbd35450e4a969d28236a4971f75e596390d79ec8dd0c3d07abd81f18dbf1",
+          "bytes": 1428
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-build.log",
+          "sha256": "bfc038501ca57da99bff2fd33adc073a2c8cfa6f3b249f5db7381b1f5ee56ce6",
+          "bytes": 396
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "sha256": "ba4f0e4d9cb8e091d5af22067a3db992f3b1666eeac15627a0ab28e0fe1953de",
+          "bytes": 1735
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "sha256": "ba4f0e4d9cb8e091d5af22067a3db992f3b1666eeac15627a0ab28e0fe1953de",
+          "accepted_original_assertions": 87
+        },
+        {
+          "original_Core_dll_SHA256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+          "original_Core_u_SHA256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+        }
+      ]
     },
     {
       "id": "T011",
@@ -836,13 +1093,61 @@
       "pass_criterion": "No cross-build guessed data: correct 469f pointer 4-byte vs 227k no-data behavior; new value cases only for unverified branches.",
       "evidence": "Reuse sealed 469f vs 227k method disassembly, new oracle only if value behavior differs",
       "reuse": "Source absence explicitly supported N/A.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify branch-specific bytes/return code using original compiled methods, where class actually exists. PASS ONLY WHEN: No cross-build guessed data: correct 469f pointer 4-byte vs 227k no-data behavior; new value cases only for unverified branches. ORACLE: Reuse sealed 469f vs 227k method disassembly, new oracle only if value behavior differs. Reuse before any new execution: Source absence explicitly supported N/A.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "4c7d4e436f2a02cfa26996f74adc36275af8f56b17cec426e2bd7c2525c62c3c",
+      "result": "Real compiled original 469f UPointerProperty::SerializeItem and NetSerializeItem serialize exactly 4 bytes (Net returns 1); original 227k UPointer/UButton items serialize 0 bytes and Net returns 1 without payload; separate UAnyProperty dispatch is dynamic and its instance codec remains OPEN under T025–T031. Exact original DLL PE bytes, CDB traces, current production source SHA and already sealed 46/46 source-selected byte-method checks verified, no native rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T13:23:42+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/UE1-O06-G3-08-469F-VS-227K-POINTER-BUTTON-ANY-RUNTIME-SEMANTICS.json",
+          "sha256": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc"
+        },
+        {
+          "original_compiled_DLL": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+          "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+        },
+        {
+          "original_compiled_DLL": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-Windows\\System\\Core.dll",
+          "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-Pointer-Button-Any-RUNTIME-METHODS-CDB.txt",
+          "sha256": "9f9a3721d6146caf22d3cd2cced834ad63036f5ca4aa4d77183ed4c69d0118a6",
+          "bytes": 26252
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-T99-469F-Pointer-4-BYTE-RUNTIME-METHODS-CDB.txt",
+          "sha256": "1528223049c5948103b5df6645f3ccf4eef270de3459b797c8f7a2843bc49306",
+          "bytes": 11490
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-Pointer-Button-Any-RUNTIME-CDB-SCRIPT.txt",
+          "sha256": "b02f904d2883ddc1946fb5d686bd78dad88fb054917e2ee06f62602a40beb5fc",
+          "bytes": 368
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-T99-469F-Pointer-RUNTIME-CDB-SCRIPT.txt",
+          "sha256": "6a1f8ade95aecc0978614a7c64e7f1628aa0852120a18393bbd88b0f6c70134b",
+          "bytes": 109
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+          "sha256": "9f1f0b6cb770f0801610e57f32db30c99d2da4bd14b39ede4b1c834b0564e2b6",
+          "bytes": 17754
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php",
+          "sha256": "87eb6d8471bc54c280f6a147bd3b6ff74a1b2dfe7177a1d25b7570c5259e3b31"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T162644568Z-e469751b-DEV-verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php.txt",
+          "sha256": "ad2e9d166f4e602d651ec5c8ef50f9b3c059b2a23680492b86dea61a8112125c",
+          "accepted_original_compiled_method_checks": 46
+        }
+      ]
     },
     {
       "id": "T033",
