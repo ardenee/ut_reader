@@ -1,0 +1,19 @@
+{
+    "ok": true,
+    "checks": 34,
+    "failed": [],
+    "T007": "genuine original May17 C98 Core.dll/UClass Object and UStruct Vector Children, ScriptText, SuperField, Next actual same-linker native identity",
+    "native_Core_u_objects": {
+        "Object": {
+            "export": 0,
+            "children_ref": 457,
+            "script_text_ref": 231
+        },
+        "Vector": {
+            "export": 1,
+            "children_ref": 223,
+            "next_ref": 422
+        }
+    },
+    "already_sealed_100_C98_script_tests_rerun": false
+}

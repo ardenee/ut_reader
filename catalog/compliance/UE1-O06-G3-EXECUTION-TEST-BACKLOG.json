@@ -318,13 +318,39 @@
       "pass_criterion": "Match source-defined null-after-load vs archived non-null and actual Children/Super target; no false claim of pointer materialization.",
       "evidence": "Previously recorded May17 Class Object CDB pointer observation + only missing pointer lookup",
       "reuse": "C98 first 100 derived function/script native results sealed.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Map original compiled Children, ScriptText and SuperField live pointers to real linker export indices. PASS ONLY WHEN: Match source-defined null-after-load vs archived non-null and actual Children/Super target; no false claim of pointer materialization. ORACLE: Previously recorded May17 Class Object CDB pointer observation + only missing pointer lookup. Reuse before any new execution: C98 first 100 derived function/script native results sealed.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "e7a06201f7d99b11c5cf74e07e25ff2ce53a8435b1e0a5173210de9276ce42aa",
+      "result": "Actual May17 1998 compiled original Core.dll stock Unreal.exe native UClass Object and UStruct Vector: real same-linker Children/ScriptText/Next index identity vs source-selected UnrealDB. CDB 0x10110c88 true serializer reaches both, 34/34 exact source-native checks PASS; prior 100 native script loads not repeated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T13:03:06+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-ORIGINAL-LINKER-POINTERS.cmd",
+          "sha256": "2f1f34461c1787b7adb4cf550bdfa91fa4c2467752d16e85166e552c6c8a14fa",
+          "bytes": 608
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-ORIGINAL-LINKER-POINTERS.log",
+          "sha256": "412b5c33a6a68901bcacaf3e3ac2b56cc48178882715cf4f2072c631595a57ce",
+          "bytes": 10249
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-34-DEV-PASS.json",
+          "sha256": "fde527b3ed007cd741b008f6ae31f8f21cf00514aa08e9c2cbdaaa5bf6c553cc",
+          "bytes": 547
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-34-DEV-PASS.json",
+          "sha256": "fde527b3ed007cd741b008f6ae31f8f21cf00514aa08e9c2cbdaaa5bf6c553cc",
+          "accepted_original_assertions": 34
+        },
+        {
+          "original_1998_Core_dll_SHA256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+          "original_1998_Core_u_SHA256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+        }
+      ]
     },
     {
       "id": "T008",

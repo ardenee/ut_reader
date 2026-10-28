@@ -245,7 +245,33 @@ def eval_t005_t006(_row: dict[str, Any]) -> dict[str, Any]:
       "Original compiled 2026 Unreal 227k Core.dll: 6 direct UStruct source fields, names, zero-script, loaded Children/Next/SuperField/ScriptText linker identities and inherited nonzero script 11 memory/7 archive, 87/87 true original native vs reader PASS, no 2012 original rerun.",
       "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T008":eval_t008,"T067":eval_t067}
+def eval_t007(_row: dict[str, Any]) -> dict[str, Any]:
+    """Genuine original 1998 May17 Core DLL in original stock Unreal.exe -make."""
+    pins=[
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T007-C98-ORIGINAL-LINKER-POINTERS.cmd",
+                 "2f1f34461c1787b7adb4cf550bdfa91fa4c2467752d16e85166e552c6c8a14fa"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T007-C98-ORIGINAL-LINKER-POINTERS.log",
+                 "412b5c33a6a68901bcacaf3e3ac2b56cc48178882715cf4f2072c631595a57ce"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T007-C98-34-DEV-PASS.json",
+                 "fde527b3ed007cd741b008f6ae31f8f21cf00514aa08e9c2cbdaaa5bf6c553cc"),
+    ]
+    path="catalog/compliance/evidence/o06/20261028-G3-T007-C98-34-DEV-PASS.json"
+    pins.append(verified_pass_log(path,"checks",34))
+    result=json.loads((ROOT/path).read_text(encoding="utf-8-sig"))
+    fields=result.get("native_Core_u_objects",{})
+    expected={"Object":{"export":0,"children_ref":457,"script_text_ref":231},
+              "Vector":{"export":1,"children_ref":223,"next_ref":422}}
+    if fields!=expected:
+        raise AssertionError("C98 original native pointer-to-export source identity mismatch")
+    pins.append({"original_1998_Core_dll_SHA256":
+                   "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+                 "original_1998_Core_u_SHA256":
+                   "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"})
+    return {"status":"PASS","result":
+      "Actual May17 1998 compiled original Core.dll stock Unreal.exe native UClass Object and UStruct Vector: real same-linker Children/ScriptText/Next index identity vs source-selected UnrealDB. CDB 0x10110c88 true serializer reaches both, 34/34 exact source-native checks PASS; prior 100 native script loads not repeated.",
+      "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
