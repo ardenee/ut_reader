@@ -1497,6 +1497,31 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-t99-469f-engine-source-struct-functions": {
+      "description": "Actual original 469f SDK C++ udemo/inc/udemoprivate.h HUDLocalizedMessage declaration SHA-pinned; original immutable 1,251,453-byte Engine.u (69/0) SHA-pinned and inspected for EVERY UFunction (1271) and UState (63). Two real previously unresolved ClearMessage/CopyMessage runtime parameter layouts use a single explicit 469f-only, identity- and full 14-member-chain-guarded 64-byte original native/script struct, replacing unverified values with actual source-defined 64/128-byte function sizes. Wrong runtime family or wrong struct reference fails closed. One source-focused 1364-assertion run predates the distinct REAL compiled Engine postload oracle below and must not be rerun. Sealed C98/v432/469f Core/227 native tests not repeated.",
+      "readers": [
+        "CatalogUE1ClassicFunctionStructShapeReader.php",
+        "CatalogUE1ClassicFunctionLinkReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-469f-engine-structure-source.php"
+      ],
+      "affected": [],
+      "gate": []
+    },
+    "g3-04-t99-469f-engine-original-native-1422": {
+      "description": "ONE original unmodified OldUnreal UT99 v469f compiled x86 Core.dll loaded its untouched original Engine.u through new disposable native host linked against exact original 469f Core.lib with historically required MSVC /Zc:wchar_t- compiler ABI. A single CDB process at original compiled UFunction::Serialize+0x118/UState::Serialize+0x77 yielded 1591 distinct native method post-LOAD events: 169 Core.u bootstrap events excluded (prior sealed); 1422 unique genuine Engine.u exports, 1271 UFunction, 63 UState, 88 UClass inherited UState. Independent native/reader comparison 8375/8375 fields identical including 145 network RepOffset and the previous source-fixed ClearMessage/CopyMessage 64/128-byte parameter sizes. Original binaries SDK import library, probe compiled EXE, source/build script, actual CDB raw transcript/commands, raw structured parser and JSON SHA locked. Exactly one new 14091 assertion focused DEV oracle. G3-04 still open ONLY for unproven original loader SAVE/version and malformed branches outside this full Engine LOADED proof; do not repeat prior C98/v432/469f Core/227 native tests.",
+      "readers": [
+        "CatalogUE1ClassicFunctionLinkReader.php",
+        "CatalogUE1ClassicFunctionStructShapeReader.php",
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-469f-engine-native-postload.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

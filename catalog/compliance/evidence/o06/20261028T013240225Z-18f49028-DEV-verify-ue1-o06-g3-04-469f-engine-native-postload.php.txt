@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "checks": 14091,
+    "failed": [],
+    "original_native_CDB_events": 1591,
+    "new_distinct_original_engine_objects": 1422,
+    "engine_function_exports": 1271,
+    "engine_state_exports": 63,
+    "engine_class_inherited_state_exports": 88,
+    "engine_net_functions": 145,
+    "original_compiled_native_field_comparisons": 8375,
+    "native_field_matches": 8375,
+    "mismatches": 0,
+    "sealed_469f_Core_methods_reexecuted": false,
+    "g3_04_FULL": "OPEN: other distinct SAVE/version/malformed branches remain"
+}

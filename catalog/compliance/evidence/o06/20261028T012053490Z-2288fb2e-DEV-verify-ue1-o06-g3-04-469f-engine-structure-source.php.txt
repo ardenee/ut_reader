@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "assertions": 1364,
+    "failed": [],
+    "original_469f_engine_functions": 1271,
+    "original_469f_engine_states": 63,
+    "newly_source_resolved_functions": {
+        "ClearMessage": 4106,
+        "CopyMessage": 4108
+    },
+    "HUDLocalizedMessage_x86_bytes": 64,
+    "original_compiled_postload_Engine_oracle": "NOT EXECUTED; remains unverified",
+    "previous_sealed_native_test_runs": 0
+}

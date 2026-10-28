@@ -2,18 +2,22 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-04-c227k-original-badnet-physical-tell`
-- **Stage:** G3-04-C227K-NATIVE-TELL-221-26-DEV-PASS-PRD-17-17-SHA
-- **Last completed action:** Original 2026 227k compiled FArchive native numeric Tell221, attempted end223 export bound221: production false physical cursor fixed for explicit unreal-v227k overlay, 26/26 one new DEV focused PASS. Original Core.dll and debugger CDB command/raw numeric trace and compiled disassembly SHA pinned. GitHub main bab15d59 pushed, 17/17 DEV-to-PRD changed-file SHA256 identical, protected config and storage untouched; G3 remains 5/16 FULL, 11/16 compiled subproof and 35 distinct native subproofs (G3-04 eight). No previously sealed original engines re-executed.
-- **Resume at:** Next distinct G3-04 contract: original compiled UT99 v469f Engine UState, plus other genuine source-specific SAVE/version/malformed/State variations; reuse sealed 227k physical-Tell, SAVE+LOAD fixture and C98/v432/C227i/k UFunction traces without reruns. Close whole G3-04 only after all distinct method acceptance criteria have evidence; current G3 FULL 5/16.
-- **Active changed at:** 2026-10-28T00:54:33+00:00
-- **Latest DEV test states:** PASS 199; FAIL 1; STARTED 0
+- **Contract:** `g3-04-t99-469f-engine-original-native-1422`
+- **Stage:** G3-04-469F-ENGINE-1422-8375-14091-DEV-PASS-PRD-PENDING
+- **Last completed action:** Original compiled 469f x86 Core.dll loaded untouched Engine.u in disposable native host and CDB showed 1422 unique Engine objects: 1271 UFunction 63 UState 88 UClass inherited. 8375/8375 native LOADED fields equal UnrealDB, including 145 genuine NET and corrected ClearMessage/CopyMessage source-defined HUDLocalizedMessage x86 64-byte shape; all original SDK/payload/native probe SHA pinned. Source 1364/1364 DEV PASS, native 14091/14091 DEV PASS, no sealed native tests rerun. G3-04 original Engine loaded gap CLOSED, whole G3 remains 5/16 FULL, compiled native subproof 36 (G3-04 nine). Pending commit/push and PRD SHA.
+- **Resume at:** Commit, push and deploy completed 469f Engine bug fix plus full original compiled native evidence, then seal PRD checkpoint; remaining G3-04 original SAVE/version/malformed branches require distinct closure without retesting completed source/native LOAD proofs.
+- **Active changed at:** 2026-10-28T01:35:56+00:00
+- **Latest DEV test states:** PASS 201; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-28T01:32:41.8946085Z | verify-ue1-o06-g3-04-469f-engine-native-postload.php | PASS | 1251 | catalog\compliance\evidence\o06\20261028T013240225Z-18f49028-DEV-verify-ue1-o06-g3-04-469f-engine-native-postload.php.txt |
+| 2026-10-28T01:32:40.2326085Z | verify-ue1-o06-g3-04-469f-engine-native-postload.php | STARTED |  | catalog\compliance\evidence\o06\20261028T013240225Z-18f49028-DEV-verify-ue1-o06-g3-04-469f-engine-native-postload.php.txt |
+| 2026-10-28T01:20:55.1197396Z | verify-ue1-o06-g3-04-469f-engine-structure-source.php | PASS | 1207 | catalog\compliance\evidence\o06\20261028T012053490Z-2288fb2e-DEV-verify-ue1-o06-g3-04-469f-engine-structure-source.php.txt |
+| 2026-10-28T01:20:53.4987380Z | verify-ue1-o06-g3-04-469f-engine-structure-source.php | STARTED |  | catalog\compliance\evidence\o06\20261028T012053490Z-2288fb2e-DEV-verify-ue1-o06-g3-04-469f-engine-structure-source.php.txt |
 | 2026-10-28T00:52:36.4035265Z | verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php | PASS | 105 | catalog\compliance\evidence\o06\20261028T005235882Z-20be3f51-DEV-verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php.txt |
 | 2026-10-28T00:52:35.8895248Z | verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php | STARTED |  | catalog\compliance\evidence\o06\20261028T005235882Z-20be3f51-DEV-verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php.txt |
 | 2026-10-28T00:50:03.2017262Z | verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php | PASS | 101 | catalog\compliance\evidence\o06\20261028T005002683Z-a724978c-DEV-verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php.txt |
@@ -28,10 +32,6 @@
 | 2026-10-27T22:21:39.7290103Z | verify-ue1-o06-g3-04-469f-function-link-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T222139722Z-48d288e2-DEV-verify-ue1-o06-g3-04-469f-function-link-native.php.txt |
 | 2026-10-27T22:10:47.0565520Z | verify-ue1-o06-g3-04-v432-function-link-native.php | PASS | 672 | catalog\compliance\evidence\o06\20261027T221045979Z-f855d1b4-DEV-verify-ue1-o06-g3-04-v432-function-link-native.php.txt |
 | 2026-10-27T22:10:45.9875862Z | verify-ue1-o06-g3-04-v432-function-link-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T221045979Z-f855d1b4-DEV-verify-ue1-o06-g3-04-v432-function-link-native.php.txt |
-| 2026-10-27T21:25:23.4946391Z | verify-ue1-o06-g3-04-c98-native-function-state.php | PASS | 210 | catalog\compliance\evidence\o06\20261027T212522878Z-2d145d5e-DEV-verify-ue1-o06-g3-04-c98-native-function-state.php.txt |
-| 2026-10-27T21:25:22.8866459Z | verify-ue1-o06-g3-04-c98-native-function-state.php | STARTED |  | catalog\compliance\evidence\o06\20261027T212522878Z-2d145d5e-DEV-verify-ue1-o06-g3-04-c98-native-function-state.php.txt |
-| 2026-10-27T21:08:32.2643067Z | verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php | PASS | 227 | catalog\compliance\evidence\o06\20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt |
-| 2026-10-27T21:08:31.6393113Z | verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php | STARTED |  | catalog\compliance\evidence\o06\20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt |
 
 ## Recovery procedure
 

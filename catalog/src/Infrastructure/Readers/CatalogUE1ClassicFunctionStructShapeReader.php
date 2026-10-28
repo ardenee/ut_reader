@@ -15,12 +15,41 @@ final class CatalogUE1ClassicFunctionStructShapeReader
         string $file,CatalogUE1PackageReader $pkg,int $structReference,
         ?string $structName,string $profile
     ):?int{
-        if($profile!==CatalogUE1ClassicSourceFamily::UNREAL_V227
-            ||strtolower(basename($file))!=='engine.u')return null;
+        if(!in_array($profile,[
+            CatalogUE1ClassicSourceFamily::UNREAL_V227,
+            CatalogUE1ClassicSourceFamily::UT99_V469F,
+        ],true)||strtolower(basename($file))!=='engine.u')return null;
         $exp=$pkg->getExports();$imp=$pkg->getImports();
         $nativePkg=$pkg;$nativeFile=$file;$nativeIndex=null;
         $required=null;
-        if($structReference>0&&$structName==='MeshSocketInfo'){
+        if($profile===CatalogUE1ClassicSourceFamily::UT99_V469F
+            &&$structReference>0&&$structName==='HUDLocalizedMessage'
+            &&(int)($pkg->getHeader()['version']??0)===69
+            &&(int)($pkg->getHeader()['licenseeVersion']??0)===0){
+            $nativeIndex=$structReference-1;
+            // The original 469f SDK udemo/inc/udemoprivate.h declares
+            // HUDLocalizedMessage with these exact 14 members, in this
+            // precise order. The original Engine.u Struct/Children chain
+            // must confirm every field and Core.Color identity; a name
+            // match alone never authorizes these binary sizes.
+            $required=[
+                ['Message','ClassProperty',1,null,4],
+                ['Switch','IntProperty',1,null,4],
+                ['RelatedPRI','ObjectProperty',1,null,4],
+                ['OptionalObject','ObjectProperty',1,null,4],
+                ['EndOfLife','FloatProperty',1,null,4],
+                ['LifeTime','FloatProperty',1,null,4],
+                ['bDrawing','BoolProperty',1,null,4],
+                ['numLines','IntProperty',1,null,4],
+                ['StringMessage','StrProperty',1,null,12],
+                ['DrawColor','StructProperty',1,'Color',4],
+                ['StringFont','ObjectProperty',1,null,4],
+                ['XL','FloatProperty',1,null,4],
+                ['YL','FloatProperty',1,null,4],
+                ['YPos','FloatProperty',1,null,4],
+            ];
+        }elseif($profile===CatalogUE1ClassicSourceFamily::UNREAL_V227
+            &&$structReference>0&&$structName==='MeshSocketInfo'){
             $nativeIndex=$structReference-1;
             // Exact declared Engine.MeshSocketInfo struct, including its
             // fixed-size array and two Core native math members.
@@ -31,7 +60,8 @@ final class CatalogUE1ClassicFunctionStructShapeReader
                 ['Offset','StructProperty',1,'Vector',12],
                 ['RotOffset','StructProperty',1,'Rotator',12],
             ];
-        }elseif($structReference<0&&$structName==='BoundingBox'){
+        }elseif($profile===CatalogUE1ClassicSourceFamily::UNREAL_V227
+            &&$structReference<0&&$structName==='BoundingBox'){
             $import=$imp[-$structReference-1]??null;
             if(!is_array($import)
                 ||($import['classPackageText']??null)!=='Core'
@@ -67,7 +97,7 @@ final class CatalogUE1ClassicFunctionStructShapeReader
             :($cl>0?($exports[$cl-1]['objectNameText']??null):'Class');
         if($kind!=='Struct')return null;
         try{
-            $meta=self::readNative($nativeFile,$nativePkg,$nativeIndex);
+            $meta=self::readNative($nativeFile,$nativePkg,$nativeIndex,$profile);
         }catch(\Throwable){return null;}
         if(($meta['status']??null)!=='native_struct_record_complete'
             ||($meta['super_field_reference']??null)!==0
@@ -84,7 +114,7 @@ final class CatalogUE1ClassicFunctionStructShapeReader
             $actual=$class<0?($imports[-$class-1]['objectNameText']??null)
                 :($class>0?($exports[$class-1]['objectNameText']??null):'Class');
             if($actual!==$type)return null;
-            try{$prop=self::readNative($nativeFile,$nativePkg,$next-1);}
+            try{$prop=self::readNative($nativeFile,$nativePkg,$next-1,$profile);}
             catch(\Throwable){return null;}
             if(($prop['status']??null)!=='native_property_record_complete'
                 ||($prop['array_dim']??null)!==$dim)return null;
@@ -95,22 +125,29 @@ final class CatalogUE1ClassicFunctionStructShapeReader
                 if(($target['objectNameText']??null)!==$nested)return null;
                 if($ref<0&&(($target['classPackageText']??null)!=='Core'
                     ||($target['classNameText']??null)!=='Struct'))return null;
+                if($ref>0){
+                    $targetClass=(int)($target['classIndex']??0);
+                    $targetKind=$targetClass<0
+                        ?($imports[-$targetClass-1]['objectNameText']??null)
+                        :($targetClass>0?($exports[$targetClass-1]['objectNameText']??null):'Class');
+                    if($targetKind!=='Struct')return null;
+                }
             }
             $align=$type==='ByteProperty'?1:4;
             $byteSize=intdiv($byteSize+$align-1,$align)*$align+$dim*$element;
             $next=(int)($prop['next_field_reference']??0);
         }
         if($next!==0)return null;
-        // Original v227k native UProperty struct allocation has 4-byte
-        // tail alignment (BoundingBox 12+12+1 =>28).
+        // Original v227k / 469f x86 native UProperty layout aligns
+        // fields to 4, with a 4-byte tail alignment. A real
+        // HUDLocalizedMessage contains 14 source-defined members = 64 bytes.
         return intdiv($byteSize+3,4)*4;
     }
 
     /** @return array<string,mixed> */
     private static function readNative(
-        string $file,CatalogUE1PackageReader $pkg,int $index
+        string $file,CatalogUE1PackageReader $pkg,int $index,string $family
     ):array{
-        $family=CatalogUE1ClassicSourceFamily::UNREAL_V227;
         return CatalogUE1ClassicNativeObjectReader::inspect(
             $file,$pkg,$index,
             CatalogUE1ClassicTaggedPropertyReader::inspect($file,$pkg,$index,$family),

@@ -102,7 +102,10 @@ final class CatalogUE1ClassicFunctionLinkReader
                     $sizes+=['Quat'=>16,'InterpCurve'=>12,'Coords'=>48];
                 }
                 $element=$coreBuiltin?($sizes[$name]??null):null;
-                if($element===null&&$sourceProfile===CatalogUE1ClassicSourceFamily::UNREAL_V227){
+                if($element===null&&in_array($sourceProfile,[
+                    CatalogUE1ClassicSourceFamily::UNREAL_V227,
+                    CatalogUE1ClassicSourceFamily::UT99_V469F,
+                ],true)){
                     $element=CatalogUE1ClassicFunctionStructShapeReader::elementSize(
                         $path,$pkg,$ref,is_string($name)?$name:null,$sourceProfile);
                 }

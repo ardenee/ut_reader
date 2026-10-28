@@ -1,8 +1,8 @@
 ﻿{
-    "updated_at_utc":  "2026-10-28T00:52:36.4254962Z",
-    "head_commit":  "ffd3ce14",
+    "updated_at_utc":  "2026-10-28T01:32:41.9315825Z",
+    "head_commit":  "4fdd59a5",
     "current_target":  "DEV",
-    "current_source_sha256":  "f28aeaf90e9846e6da39976ece9a59f27afcd2f17496ee7c724406e4218103ec",
+    "current_source_sha256":  "97b67429a9c6b1765bafc515756fc79a3aaa1e25736e43bceb0ce43872224684",
     "tests":  [
                   {
                       "key":  "DEV:verify-ue1-classic-array-inner-values.php",
@@ -579,6 +579,30 @@
                       "run_id":  "20261027T210831632Z-5ff1e421",
                       "exit_code":  0,
                       "log":  "catalog\\compliance\\evidence\\o06\\20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-04-469f-engine-native-postload.php",
+                      "test":  "verify-ue1-o06-g3-04-469f-engine-native-postload.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-28T01:32:41.8946085Z",
+                      "source_sha256":  "97b67429a9c6b1765bafc515756fc79a3aaa1e25736e43bceb0ce43872224684",
+                      "test_sha256":  "557871186333bdbce276bb1275bdbc3425cf18b83cb90c2ac5def5a65f8299f6",
+                      "run_id":  "20261028T013240225Z-18f49028",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261028T013240225Z-18f49028-DEV-verify-ue1-o06-g3-04-469f-engine-native-postload.php.txt"
+                  },
+                  {
+                      "key":  "DEV:verify-ue1-o06-g3-04-469f-engine-structure-source.php",
+                      "test":  "verify-ue1-o06-g3-04-469f-engine-structure-source.php",
+                      "target":  "DEV",
+                      "state":  "PASS",
+                      "event_at_utc":  "2026-10-28T01:20:55.1197396Z",
+                      "source_sha256":  "97b67429a9c6b1765bafc515756fc79a3aaa1e25736e43bceb0ce43872224684",
+                      "test_sha256":  "0df08c63cd8db0c93b296e927352514dc77be24e27891be8e8123d0eca631fcb",
+                      "run_id":  "20261028T012053490Z-2288fb2e",
+                      "exit_code":  0,
+                      "log":  "catalog\\compliance\\evidence\\o06\\20261028T012053490Z-2288fb2e-DEV-verify-ue1-o06-g3-04-469f-engine-structure-source.php.txt"
                   },
                   {
                       "key":  "DEV:verify-ue1-o06-g3-04-469f-function-link-native.php",
