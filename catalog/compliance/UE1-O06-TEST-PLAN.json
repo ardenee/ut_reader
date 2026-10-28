@@ -1582,6 +1582,25 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-c98-may1998-original-badnet-physical-cursor": {
+      "description": "ONE new original May17 1998 retail compiled UFunction invalid-FUNC_Net branch: genuine previously SEALED original FObjectManager SAVE 1058-byte v61/0 package copied disposable, single byte original UFunction FunctionFlags position806 02=>42, original Core.dll unchanged; actual retail Unreal.exe -make load, x86 CDB original Core!appErrorf proves full diagnostic Function ...G304CanJump: Serial size mismatch: Got 42, Expected 40, so actual original engine consumed 42 physical bytes from start770 to cursor812 after source-defined RepOffset, versus declared40 and export end810. Existing UnrealDB correctly reports cursor812 and overrun2 but CONCRETE PRODUCT DEFECT falsely exposed loaded num/size/return from rejected original C98 function. Source-specific guard now fails closed, retains raw archived field reads but clears never-materialized loaded values, and suppresses postload-linked computation on an overrun. SHA pinned original engine, real CDB command/log, positive original saved 1058 byte file, single-byte mutant. No sealed positive original CDB scripts replayed. One focused new native-to-PHP comparison plus transitive affected PHP-only regressions. G3-04 FULL remains OPEN for independently distinct source-invalid/version/state-transition branches.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c98-original-badnet-native-cursor.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php",
+        "verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php",
+        "verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php",
+        "verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php",
+        "verify-ue1-o06-g3-04-v432-function-link-native.php",
+        "verify-ue1-o06-g3-04-469f-engine-native-postload.php",
+        "verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php"
+      ],
+      "gate": []
     }
   }
 }

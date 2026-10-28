@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "checks": 46,
+    "failed": [],
+    "new_original_1998_native_saved_bytes": 1058,
+    "new_C98_original_compiled_UFunction_POSTLOAD": 2,
+    "new_C98_original_compiled_UState_POSTLOAD": 1,
+    "new_C98_true_native_per_function_field_comparisons": 8,
+    "earlier_sealed_native_reexecuted": false,
+    "g3_04_FULL": "OPEN until all source-defined branches accepted"
+}

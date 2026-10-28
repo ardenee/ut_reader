@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "checks": 27,
+    "failures": [],
+    "actual_original_469f_native_FArchive_Tell": 235,
+    "original_function_export_end": 233,
+    "original_compiled_overrun_bytes": 2,
+    "reader_physical_cursor": 235,
+    "source_specific_227k_precheck_oracle_repeated": false,
+    "g3_04_FULL": "OPEN"
+}

@@ -218,7 +218,7 @@ final class CatalogUE1ClassicNativeObjectReader
                     CatalogUE1ClassicV432NativeDeltaReader::inspectSkeletalMesh(
                         $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
             }
-            $completeG3=static function(array $detail)use($record,&$pos,$exportLimit):array{
+            $completeG3=static function(array $detail)use($record,&$pos,$exportLimit,$nativeKind):array{
                 if($pos>$exportLimit){
                     // Other verified source archives may consume past an export
                     // and compare the resulting Tell() after Serialize.
@@ -229,6 +229,16 @@ final class CatalogUE1ClassicNativeObjectReader
                     $detail['expected_export_end']=$exportLimit;
                     $detail['serial_size_overrun_bytes']=$pos-$exportLimit;
                     $detail['extension_bytes']=0;
+                    if($nativeKind==='function'){
+                        // The original loader rejects this function: archived
+                        // values must not be presented as loaded runtime state.
+                        $detail['loaded_parms_size']=null;
+                        $detail['loaded_num_parms']=null;
+                        $detail['loaded_return_value_offset']=null;
+                        $detail['ut99_function_precompute_initial_values']=null;
+                        $detail['runtime_function_param_chain_linked']=false;
+                        $detail['source_function_link_status']='native_export_rejected';
+                    }
                 }
                 return array_replace($record,$detail);
             };
@@ -265,7 +275,8 @@ final class CatalogUE1ClassicNativeObjectReader
                         CatalogUE1ClassicSourceFamily::UT99_V432,
                         CatalogUE1ClassicSourceFamily::UNREAL_V227,
                     ],true)
-                    &&($detail['status']??null)==='native_function_record_complete'){
+                    &&($detail['status']??null)==='native_function_record_complete'
+                    &&$pos===$exportLimit){
                     $sourceProfile=in_array($sourceFamily,[
                         CatalogUE1ClassicSourceFamily::UT99_V469F,
                         CatalogUE1ClassicSourceFamily::UNREAL_V227I,

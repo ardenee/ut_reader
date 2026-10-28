@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 6473,
+    "fail": [],
+    "actual_original_compiled_events": 650,
+    "v432_functions": 619,
+    "states_and_classes": 31,
+    "net_functions": 44,
+    "original_persisted_matches": 2025,
+    "new_source_reconstructed_loaded_matches": 1857,
+    "total_native_field_comparisons": 3882,
+    "previously_sealed_compiled_runs_reexecuted": 0,
+    "G3_04_full": "OPEN (other original variants, SAVE and malformed native branches)"
+}

@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 33,
+    "failures": [],
+    "original_compiled_1998_native_Got": 42,
+    "original_compiled_Expected": 40,
+    "physical_cursor": 812,
+    "export_end": 810,
+    "overrun": 2,
+    "production_fix": "reject_loaded_fields_on_function_serial_overrun",
+    "original_1998_positive_suite_reexecuted": false,
+    "g3_04_FULL": "OPEN"
+}
