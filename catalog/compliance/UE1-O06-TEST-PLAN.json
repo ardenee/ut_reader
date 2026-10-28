@@ -1546,6 +1546,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-t99-469f-original-malformed-physical-tell": {
+      "description": "NEW original compiled 469f x86 Core.dll genuine numeric FArchive::Tell method returned235 after reading through one saved UFunction's 2-byte FUNC_Net RepOffset beyond original declared export end233. One-byte mutant of a genuine previously original native-SAVE 322-byte valid .u at position229 (FunctionFlags 0x02 to 0x42), only mutation verified byte for byte. Original immutable native 469f loader reports Core.Errors.SerialSize and rejects, and x86 CDB on true original Core!ULinkerLoad::Preload+0x139 immediately after its compiled virtual archive Tell call records actual physical235/start208/consumed27/expected25. Original compiled disasm, CDB command, CDB raw log, genuine original DLL, source, mutant and host/engine fatal runtime output SHA pinned; new 27-check native vs UnrealDB parity verifier. UnrealDB correctly reports 469f physical archive_cursor235, expected_export_end233, overrun2 and refuses unverified loaded parameters. Strong explicit source distinction from PREVIOUSLY SEALED 227k native FArchive Tell221/check-before-read; never apply 227k precheck behavior to 469f. No 227k original debugger or earlier 469f valid SAVE/LOAD engine sessions rerun. Full G3-04 OPEN for original C98/2012 C227i SAVE and other malformed/version branches.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicStructNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }

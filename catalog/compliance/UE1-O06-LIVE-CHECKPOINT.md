@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-04-t99-v432-original-native-save-load`
-- **Stage:** G3-04-V432-REAL-SAVE-LOAD-31-PRD-16-16-SHA
-- **Last completed action:** Genuine UT99 v432 native SavePackage and independent LoadPackage original compiled Core.dll UFunction UState new 322-byte package accepted 31/31 DEV original focused tests; real v432 SDK/EXE/SHA evidence pinned. GitHub c53677da pushed; PRD SHA256 16/16 identical; earlier original native runs not repeated. G3 full 5/16; 38 native subproofs; G3-04 11.
-- **Resume at:** Finish original C98 and original 2012 C227i SAVE variants and distinct version/malformed behavior. Do not use 2026 C227k header or library as if they were original 2012 ABI. Do not repeat v432/469f/227k completed native runs.
-- **Active changed at:** 2026-10-28T02:00:48+00:00
-- **Latest DEV test states:** PASS 203; FAIL 1; STARTED 0
+- **Contract:** `g3-04-t99-469f-original-malformed-physical-tell`
+- **Stage:** G3-04-469F-REAL-NATIVE-TELL-235-27-DEV-PASS-PRD-PENDING
+- **Last completed action:** New genuine original OldUnreal 469f x86 compiled FArchive::Tell captured after ULinkerLoad::Preload original virtual Tell return: native physical235, function serial start208, bytes consumed27, archived size25 and export end233. Single original native-saved fixture FUNC_Net one byte mutation, real Core.Errors.SerialSize and FailedLoadPackage. UnrealDB 469f correctly reports physically consumed235 and refuses invalid loaded values, 27/27 new scoped DEV PASS. Contrasts sealed original 227k check-before-read native Tell221, which was NOT rerun. Source disassembly/CDB raw logs/engine hashes pinned. G3 remains5/16 FULL, native subproofs39 G3-04 twelve; commit deployment pending.
+- **Resume at:** Commit push deploy 469f negative original compiled evidence and checkpoint. Finish only genuinely unverified C98 and 2012 C227i native SAVE and distinct real version/error branches, with strict compiler ABI matching. Do not re-run sealed 469f/227k/v432 compiled tests or falsely close full G3-04.
+- **Active changed at:** 2026-10-28T02:11:32+00:00
+- **Latest DEV test states:** PASS 204; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-28T02:10:10.7029348Z | verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php | PASS | 103 | catalog\compliance\evidence\o06\20261028T021010196Z-09cfc02d-DEV-verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php.txt |
+| 2026-10-28T02:10:10.2049003Z | verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php | STARTED |  | catalog\compliance\evidence\o06\20261028T021010196Z-09cfc02d-DEV-verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php.txt |
 | 2026-10-28T01:57:44.2857246Z | verify-ue1-o06-g3-04-v432-original-native-save-load.php | PASS | 100 | catalog\compliance\evidence\o06\20261028T015743761Z-ea2d9132-DEV-verify-ue1-o06-g3-04-v432-original-native-save-load.php.txt |
 | 2026-10-28T01:57:43.7687569Z | verify-ue1-o06-g3-04-v432-original-native-save-load.php | STARTED |  | catalog\compliance\evidence\o06\20261028T015743761Z-ea2d9132-DEV-verify-ue1-o06-g3-04-v432-original-native-save-load.php.txt |
 | 2026-10-28T01:42:07.4351437Z | verify-ue1-o06-g3-04-469f-original-native-save-load.php | PASS | 105 | catalog\compliance\evidence\o06\20261028T014206920Z-0166292d-DEV-verify-ue1-o06-g3-04-469f-original-native-save-load.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-27T23:37:43.1320277Z | verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php | STARTED |  | catalog\compliance\evidence\o06\20261027T233743125Z-810c2ff6-DEV-verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php.txt |
 | 2026-10-27T23:07:53.7036921Z | verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php | PASS | 500 | catalog\compliance\evidence\o06\20261027T230752792Z-d7058fee-DEV-verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php.txt |
 | 2026-10-27T23:07:52.8007270Z | verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T230752792Z-d7058fee-DEV-verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php.txt |
-| 2026-10-27T22:47:43.8679233Z | verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php | PASS | 600 | catalog\compliance\evidence\o06\20261027T224742849Z-12d7aabd-DEV-verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php.txt |
-| 2026-10-27T22:47:42.8569497Z | verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T224742849Z-12d7aabd-DEV-verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php.txt |
 
 ## Recovery procedure
 

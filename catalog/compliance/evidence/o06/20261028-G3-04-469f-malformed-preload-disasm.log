@@ -1,0 +1,337 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-04-469f-malformed-preload-disasm.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\G304469fBadNetReload.exe
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00940000 00986000   G304469fBadNetReload.exe
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 5eee0000 5f1d8000   C:\Temp\UnrealDB\O06\Native-469f\System\Core.dll
+ModLoad: 6a7c0000 6a7dd000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+(6108.664c): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=ce700000 edx=00000000 esi=01355d68 edi=00fe2000
+eip=778591a8 esp=010ffa04 ebp=010ffa30 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> x Core!*Preload*; uf Core!ULinkerLoad::Preload; q
+5eee8f00          Core!FArchive::Preload (<no parameter info>)
+5ef45530          Core!ULinkerLoad::Preload (<no parameter info>)
+Core!ULinkerLoad::Preload:
+5ef45530 55              push    ebp
+5ef45531 8bec            mov     ebp,esp
+5ef45533 6aff            push    0FFFFFFFFh
+5ef45535 68bd2b005f      push    offset Core!divsufsort+0x9299d (5f002bbd)
+5ef4553a 64a100000000    mov     eax,dword ptr fs:[00000000h]
+5ef45540 50              push    eax
+5ef45541 83ec30          sub     esp,30h
+5ef45544 53              push    ebx
+5ef45545 56              push    esi
+5ef45546 57              push    edi
+5ef45547 a100fa075f      mov     eax,dword ptr [Core!autoclassUPointerProperty+0x6130 (5f07fa00)]
+5ef4554c 33c5            xor     eax,ebp
+5ef4554e 50              push    eax
+5ef4554f 8d45f4          lea     eax,[ebp-0Ch]
+5ef45552 64a300000000    mov     dword ptr fs:[00000000h],eax
+5ef45558 8965f0          mov     dword ptr [ebp-10h],esp
+5ef4555b 8bd9            mov     ebx,ecx
+5ef4555d 895ddc          mov     dword ptr [ebp-24h],ebx
+5ef45560 c745fc00000000  mov     dword ptr [ebp-4],0
+5ef45567 8db35cffffff    lea     esi,[ebx-0A4h]
+5ef4556d 8bce            mov     ecx,esi
+5ef4556f e8ac9bfcff      call    Core!UObject::IsValid (5ef0f120)
+5ef45574 85c0            test    eax,eax
+5ef45576 7517            jne     Core!ULinkerLoad::Preload+0x5f (5ef4558f)
+
+Core!ULinkerLoad::Preload+0x48:
+5ef45578 68d9030000      push    3D9h
+5ef4557d 68886e015f      push    offset Core!FArchiveDummySave::`vftable'+0x5664 (5f016e88)
+5ef45582 6858d3005f      push    offset Core!UTextBufferFactory::`vftable'+0xaf0 (5f00d358)
+5ef45587 e8040d0100      call    Core!appFailAssert (5ef56290)
+5ef4558c 83c40c          add     esp,0Ch
+
+Core!ULinkerLoad::Preload+0x5f:
+5ef4558f 8b7d08          mov     edi,dword ptr [ebp+8]
+5ef45592 85ff            test    edi,edi
+5ef45594 7517            jne     Core!ULinkerLoad::Preload+0x7d (5ef455ad)
+
+Core!ULinkerLoad::Preload+0x66:
+5ef45596 68da030000      push    3DAh
+5ef4559b 68886e015f      push    offset Core!FArchiveDummySave::`vftable'+0x5664 (5f016e88)
+5ef455a0 68201d015f      push    offset Core!FArchiveDummySave::`vftable'+0x4fc (5f011d20)
+5ef455a5 e8e60c0100      call    Core!appFailAssert (5ef56290)
+5ef455aa 83c40c          add     esp,0Ch
+
+Core!ULinkerLoad::Preload+0x7d:
+5ef455ad 8b4f10          mov     ecx,dword ptr [edi+10h]
+5ef455b0 3bce            cmp     ecx,esi
+5ef455b2 0f85bd010000    jne     Core!ULinkerLoad::Preload+0x245 (5ef45775)
+
+Core!ULinkerLoad::Preload+0x88:
+5ef455b8 f7471c00020000  test    dword ptr [edi+1Ch],200h
+5ef455bf 0f84c0010000    je      Core!ULinkerLoad::Preload+0x255 (5ef45785)
+
+Core!ULinkerLoad::Preload+0x95:
+5ef455c5 68d80a105f      push    offset Core!UStruct::PrivateStaticClass (5f100ad8)
+5ef455ca 8bcf            mov     ecx,edi
+5ef455cc e8df94fcff      call    Core!UObject::IsA (5ef0eab0)
+5ef455d1 85c0            test    eax,eax
+5ef455d3 740f            je      Core!ULinkerLoad::Preload+0xb4 (5ef455e4)
+
+Core!ULinkerLoad::Preload+0xa5:
+5ef455d5 8b4f28          mov     ecx,dword ptr [edi+28h]
+5ef455d8 85c9            test    ecx,ecx
+5ef455da 7408            je      Core!ULinkerLoad::Preload+0xb4 (5ef455e4)
+
+Core!ULinkerLoad::Preload+0xac:
+5ef455dc 8b03            mov     eax,dword ptr [ebx]
+5ef455de 51              push    ecx
+5ef455df 8bcb            mov     ecx,ebx
+5ef455e1 ff5010          call    dword ptr [eax+10h]
+
+Core!ULinkerLoad::Preload+0xb4:
+5ef455e4 c645fc01        mov     byte ptr [ebp-4],1
+5ef455e8 8b4714          mov     eax,dword ptr [edi+14h]
+5ef455eb 8d0cc0          lea     ecx,[eax+eax*8]
+5ef455ee 8b43e0          mov     eax,dword ptr [ebx-20h]
+5ef455f1 8d3488          lea     esi,[eax+ecx*4]
+5ef455f4 8975ec          mov     dword ptr [ebp-14h],esi
+5ef455f7 397e1c          cmp     dword ptr [esi+1Ch],edi
+5ef455fa 7417            je      Core!ULinkerLoad::Preload+0xe3 (5ef45613)
+
+Core!ULinkerLoad::Preload+0xcc:
+5ef455fc 68ed030000      push    3EDh
+5ef45601 68886e015f      push    offset Core!FArchiveDummySave::`vftable'+0x5664 (5f016e88)
+5ef45606 685c79015f      push    offset Core!FArchiveDummySave::`vftable'+0x6138 (5f01795c)
+5ef4560b e8800c0100      call    Core!appFailAssert (5ef56290)
+5ef45610 83c40c          add     esp,0Ch
+
+Core!ULinkerLoad::Preload+0xe3:
+5ef45613 8b8b4c040000    mov     ecx,dword ptr [ebx+44Ch]
+5ef45619 8b01            mov     eax,dword ptr [ecx]
+5ef4561b ff5028          call    dword ptr [eax+28h]
+5ef4561e 8945e4          mov     dword ptr [ebp-1Ch],eax
+5ef45621 8b8b4c040000    mov     ecx,dword ptr [ebx+44Ch]
+5ef45627 8b11            mov     edx,dword ptr [ecx]
+5ef45629 ff7618          push    dword ptr [esi+18h]
+5ef4562c ff5234          call    dword ptr [edx+34h]
+5ef4562f 8b8b4c040000    mov     ecx,dword ptr [ebx+44Ch]
+5ef45635 8b01            mov     eax,dword ptr [ecx]
+5ef45637 ff7614          push    dword ptr [esi+14h]
+5ef4563a ff5040          call    dword ptr [eax+40h]
+5ef4563d 8b471c          mov     eax,dword ptr [edi+1Ch]
+5ef45640 25fffdffff      and     eax,0FFFFFDFFh
+5ef45645 89471c          mov     dword ptr [edi+1Ch],eax
+5ef45648 0d00800000      or      eax,8000h
+5ef4564d 89471c          mov     dword ptr [edi+1Ch],eax
+5ef45650 8b07            mov     eax,dword ptr [edi]
+5ef45652 53              push    ebx
+5ef45653 8bcf            mov     ecx,edi
+5ef45655 ff5028          call    dword ptr [eax+28h]
+5ef45658 81671cff7fffff  and     dword ptr [edi+1Ch],0FFFF7FFFh
+5ef4565f 8b7618          mov     esi,dword ptr [esi+18h]
+5ef45662 8b03            mov     eax,dword ptr [ebx]
+5ef45664 8bcb            mov     ecx,ebx
+5ef45666 ff5028          call    dword ptr [eax+28h]
+5ef45669 2bc6            sub     eax,esi
+5ef4566b 8b75ec          mov     esi,dword ptr [ebp-14h]
+5ef4566e 8b4e14          mov     ecx,dword ptr [esi+14h]
+5ef45671 894dec          mov     dword ptr [ebp-14h],ecx
+5ef45674 3bc1            cmp     eax,ecx
+5ef45676 0f84e2000000    je      Core!ULinkerLoad::Preload+0x22e (5ef4575e)
+
+Core!ULinkerLoad::Preload+0x14c:
+5ef4567c 57              push    edi
+5ef4567d e83ec3ffff      call    Core!UPackageMap::SupportsPackage+0xc0 (5ef419c0)
+5ef45682 83c404          add     esp,4
+5ef45685 85c0            test    eax,eax
+5ef45687 7570            jne     Core!ULinkerLoad::Preload+0x1c9 (5ef456f9)
+
+Core!ULinkerLoad::Preload+0x159:
+5ef45689 39053cf70c5f    cmp     dword ptr [Core!GIsEditor (5f0cf73c)],eax
+5ef4568f 7415            je      Core!ULinkerLoad::Preload+0x176 (5ef456a6)
+
+Core!ULinkerLoad::Preload+0x161:
+5ef45691 39057cf80f5f    cmp     dword ptr [Core!GLoadErrors+0x4 (5f0ff87c)],eax
+5ef45697 7560            jne     Core!ULinkerLoad::Preload+0x1c9 (5ef456f9)
+
+Core!ULinkerLoad::Preload+0x169:
+5ef45699 8b438c          mov     eax,dword ptr [ebx-74h]
+5ef4569c 25ffff0000      and     eax,0FFFFh
+5ef456a1 83f83c          cmp     eax,3Ch
+5ef456a4 7253            jb      Core!ULinkerLoad::Preload+0x1c9 (5ef456f9)
+
+Core!ULinkerLoad::Preload+0x176:
+5ef456a6 8b7618          mov     esi,dword ptr [esi+18h]
+5ef456a9 8b03            mov     eax,dword ptr [ebx]
+5ef456ab 8bcb            mov     ecx,ebx
+5ef456ad ff5028          call    dword ptr [eax+28h]
+5ef456b0 2bc6            sub     eax,esi
+5ef456b2 8945e8          mov     dword ptr [ebp-18h],eax
+5ef456b5 6a00            push    0
+5ef456b7 57              push    edi
+5ef456b8 8d45c4          lea     eax,[ebp-3Ch]
+5ef456bb 50              push    eax
+5ef456bc e8bf3ffcff      call    Core!UExporter::ExportText+0x10 (5ef09680)
+5ef456c1 83c40c          add     esp,0Ch
+5ef456c4 c645fc03        mov     byte ptr [ebp-4],3
+5ef456c8 83780400        cmp     dword ptr [eax+4],0
+5ef456cc 7404            je      Core!ULinkerLoad::Preload+0x1a2 (5ef456d2)
+
+Core!ULinkerLoad::Preload+0x19e:
+5ef456ce 8b30            mov     esi,dword ptr [eax]
+5ef456d0 eb05            jmp     Core!ULinkerLoad::Preload+0x1a7 (5ef456d7)
+
+Core!ULinkerLoad::Preload+0x1a2:
+5ef456d2 be1cac005f      mov     esi,offset Core!FArchive::`vftable'+0x54 (5f00ac1c)
+
+Core!ULinkerLoad::Preload+0x1a7:
+5ef456d7 6a00            push    0
+5ef456d9 ff35b493075f    push    dword ptr [Core!GPackage (5f0793b4)]
+5ef456df 687479015f      push    offset Core!FArchiveDummySave::`vftable'+0x6150 (5f017974)
+5ef456e4 e8c7c70000      call    Core!LocalizeError (5ef51eb0)
+5ef456e9 ff75ec          push    dword ptr [ebp-14h]
+5ef456ec ff75e8          push    dword ptr [ebp-18h]
+5ef456ef 56              push    esi
+5ef456f0 50              push    eax
+5ef456f1 ff35fc90075f    push    dword ptr [Core!GError (5f0790fc)]
+5ef456f7 eb51            jmp     Core!ULinkerLoad::Preload+0x21a (5ef4574a)
+
+Core!ULinkerLoad::Preload+0x1c9:
+5ef456f9 8b7618          mov     esi,dword ptr [esi+18h]
+5ef456fc 8b03            mov     eax,dword ptr [ebx]
+5ef456fe 8bcb            mov     ecx,ebx
+5ef45700 ff5028          call    dword ptr [eax+28h]
+5ef45703 2bc6            sub     eax,esi
+5ef45705 8945e8          mov     dword ptr [ebp-18h],eax
+5ef45708 6a00            push    0
+5ef4570a 57              push    edi
+5ef4570b 8d45c4          lea     eax,[ebp-3Ch]
+5ef4570e 50              push    eax
+5ef4570f e86c3ffcff      call    Core!UExporter::ExportText+0x10 (5ef09680)
+5ef45714 83c40c          add     esp,0Ch
+5ef45717 c645fc02        mov     byte ptr [ebp-4],2
+5ef4571b 83780400        cmp     dword ptr [eax+4],0
+5ef4571f 7404            je      Core!ULinkerLoad::Preload+0x1f5 (5ef45725)
+
+Core!ULinkerLoad::Preload+0x1f1:
+5ef45721 8b30            mov     esi,dword ptr [eax]
+5ef45723 eb05            jmp     Core!ULinkerLoad::Preload+0x1fa (5ef4572a)
+
+Core!ULinkerLoad::Preload+0x1f5:
+5ef45725 be1cac005f      mov     esi,offset Core!FArchive::`vftable'+0x54 (5f00ac1c)
+
+Core!ULinkerLoad::Preload+0x1fa:
+5ef4572a 6a00            push    0
+5ef4572c ff35b493075f    push    dword ptr [Core!GPackage (5f0793b4)]
+5ef45732 687479015f      push    offset Core!FArchiveDummySave::`vftable'+0x6150 (5f017974)
+5ef45737 e874c70000      call    Core!LocalizeError (5ef51eb0)
+5ef4573c ff75ec          push    dword ptr [ebp-14h]
+5ef4573f ff75e8          push    dword ptr [ebp-18h]
+5ef45742 56              push    esi
+5ef45743 50              push    eax
+5ef45744 ff3504d50c5f    push    dword ptr [Core!GWarn (5f0cd504)]
+
+Core!ULinkerLoad::Preload+0x21a:
+5ef4574a e8f1cb0000      call    Core!FOutputDevice::Logf (5ef52340)
+5ef4574f 83c420          add     esp,20h
+5ef45752 c645fc01        mov     byte ptr [ebp-4],1
+5ef45756 8d4dc4          lea     ecx,[ebp-3Ch]
+5ef45759 e88214fbff      call    Core!FString::~FString (5eef6be0)
+
+Core!ULinkerLoad::Preload+0x22e:
+5ef4575e 8b8b4c040000    mov     ecx,dword ptr [ebx+44Ch]
+5ef45764 8b01            mov     eax,dword ptr [ecx]
+5ef45766 ff75e4          push    dword ptr [ebp-1Ch]
+5ef45769 ff5034          call    dword ptr [eax+34h]
+5ef4576c c745fc00000000  mov     dword ptr [ebp-4],0
+5ef45773 eb10            jmp     Core!ULinkerLoad::Preload+0x255 (5ef45785)
+
+Core!ULinkerLoad::Preload+0x245:
+5ef45775 85c9            test    ecx,ecx
+5ef45777 740c            je      Core!ULinkerLoad::Preload+0x255 (5ef45785)
+
+Core!ULinkerLoad::Preload+0x249:
+5ef45779 81c1a4000000    add     ecx,0A4h
+5ef4577f 8b01            mov     eax,dword ptr [ecx]
+5ef45781 57              push    edi
+5ef45782 ff5010          call    dword ptr [eax+10h]
+
+Core!ULinkerLoad::Preload+0x255:
+5ef45785 c745fcffffffff  mov     dword ptr [ebp-4],0FFFFFFFFh
+5ef4578c 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+5ef4578f 64890d00000000  mov     dword ptr fs:[0],ecx
+5ef45796 59              pop     ecx
+5ef45797 5f              pop     edi
+5ef45798 5e              pop     esi
+5ef45799 5b              pop     ebx
+5ef4579a 8be5            mov     esp,ebp
+5ef4579c 5d              pop     ebp
+5ef4579d c20400          ret     4
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

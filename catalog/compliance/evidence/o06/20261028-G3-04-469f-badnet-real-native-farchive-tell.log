@@ -1,0 +1,123 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-04-469f-badnet-real-native-farchive-tell.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\G304469fBadNetReload.exe
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00940000 00986000   G304469fBadNetReload.exe
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 5eee0000 5f1d8000   C:\Temp\UnrealDB\O06\Native-469f\System\Core.dll
+ModLoad: 6a7c0000 6a7dd000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+(4818.58d8): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=061a0000 edx=00000000 esi=00805d68 edi=005c1000
+eip=778591a8 esp=006ff944 ebp=006ff970 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> sxd eh
+0:000> r $t0=0
+0:000> bp Core!ULinkerLoad::Preload+0x139 "r $t0=@$t0+1;.printf \"G304_469F_REAL_COMPILED_FARCHIVE_TELL event=%u native_tell=%u serial_start=%u actual_bytes=%u declared_size=%u\n\",@$t0,@eax,@esi,@eax-@esi,poi(poi(@ebp-0x14)+0x14);gc"
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 72270000 7228c000   C:\WINDOWS\SysWOW64\bcrypt.dll
+ModLoad: 76440000 764ba000   C:\WINDOWS\SysWOW64\bcryptprimitives.dll
+ModLoad: 70b10000 70b24000   C:\WINDOWS\SysWOW64\CRYPTSP.dll
+ModLoad: 706b0000 706e2000   C:\WINDOWS\SysWOW64\rsaenh.dll
+ModLoad: 70690000 7069a000   C:\WINDOWS\SysWOW64\CRYPTBASE.dll
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+G304_469F_REAL_COMPILED_FARCHIVE_TELL event=1 native_tell=235 serial_start=208 actual_bytes=27 declared_size=25 (4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 692b0000 69498000   C:\WINDOWS\SysWOW64\dbghelp.dll
+ModLoad: 753f0000 75490000   C:\WINDOWS\SysWOW64\OLEAUT32.dll
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+(4818.58d8): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 75130000 75145000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+eax=00000000 ebx=77878240 ecx=00000000 edx=00000000 esi=00000008 edi=00000000
+eip=777b850c esp=006ffce4 ebp=006ffdbc iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+ntdll!NtTerminateProcess+0xc:
+777b850c c20800          ret     8
+0:000> .echo G304_469F_NATIVE_PRELOAD_ARCHIVE_TELL_END
+G304_469F_NATIVE_PRELOAD_ARCHIVE_TELL_END
+0:000> r @$t0
+$t0=00000001
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

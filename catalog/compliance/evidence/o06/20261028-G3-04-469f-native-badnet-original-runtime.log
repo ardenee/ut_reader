@@ -1,0 +1,96 @@
+﻿Log: Log file open, 10/28/26 02:07:04
+Init: Name subsystem initialized
+Init: Version: 469
+Init: Revision: f (Preview)
+Init: Compiled: Oct 15 2026 21:12:21
+Init: Command line: 
+Init: Base directory: C:\Temp\UnrealDB\O06\Native-469f\System\
+Init: Character set: Unicode
+Log: Bound to Core.dll
+Init: Object subsystem initialized
+Log: Cd Path: 
+Init: Random Seed: A2B37888A982A40BF1BF7F9D15025F85
+Init: Detected: Microsoft Windows NT 6.2 (Build: 9200)
+Log: Enabling Data Executing Prevention
+Init: Computer: GAMEAMD
+Init: User: arden
+Init: Memory total: Phys=65388M Pagef=94075M Virt=2047M
+Init: Working set: 204800 / 1413120
+Init: CPU Page size=4096, Processors=12
+Init: CPU Detected: 11th Gen Intel(R) Core(TM) i5-11400 @ 2.60GHz (GenuineIntel)
+Init: CPU Features: INVARIANT_TSC CMov FPU RDTSC PAE MMX SSE SSE2 SSE3 SSSE3 SSE4_1 SSE4_2 AVX AVX2
+Init: Timer Frequency=2591.997165 MHz - Timing Source = RDTSC
+Localization: No localization: Core.Progress.Loading (int)
+Localization: No localization: Core.Progress.Loading (int)
+Localization: No localization: Core.Errors.SerialSize (int)
+Localization: No localization: Core.Errors.FailedLoadPackage (int)
+Warning: <?int?Core.Errors.FailedLoadPackage?>
+Critical: 
+eax=006effe8 ebx=5f1002c0 ecx=00000000 edx=00000800 esi=006f02f4 edi=00000800 eip=0094b350
+ebp=006f02c0 esp=006f02c0 cs=0023 ds=002b es=002b fs=0053 gs=002b flags=00000202
+In module 'C:\Temp\UnrealDB\O06\Native-469f\System\G304469fBadNetReload.exe' (107520 bytes) at address 0000B350
+Engine Version: 469f - Oct 28 2026 Preview
+
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 0094B350
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 00942F99
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 0094380E
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 00943B3D
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 0094B350
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 0094D038
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 00943C57
+Warning: No good exports found for G304469fBadNetReload.exe at 00940000 for 0094FAE1
+Critical: Simple backtrace (from SEH handler, not from exception point) (most recent call first), with relative to module base 00940000, if module not found:
+0. 0094B350 (00940000 +B350): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0xB350
+------------ Exception handler frames start ------------
+1. 00942F99 (00940000 +2F99): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0x2F99
+2. 0094380E (00940000 +380E): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0x380E
+3. 00943B3D (00940000 +3B3D): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0x3B3D
+4. 0094B350 (00940000 +B350): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0xB350
+------------ Exception handler frames end ------------
+5. 0094D038 (00940000 +D038): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0xD038
+6. 5EF52469 (5EEE0000 +72469): Core.dll(1790328 bytes)!?Logf@FOutputDevice@@QAAXPBGZZ @ 72340 +0x129
+7. 5EF14ACF (5EEE0000 +34ACF): Core.dll(1790328 bytes)!?SafeLoadError@UObject@@CAXKPBG0ZZ @ 34A10 +0xBF
+8. 5EF1036A (5EEE0000 +3036A): Core.dll(1790328 bytes)!?LoadPackage@UObject@@SAPAV1@PAV1@PBGK@Z @ 30250 +0x11A
+9. 00943C57 (00940000 +3C57): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0x3C57
+10. 0094FAE1 (00940000 +FAE1): G304469fBadNetReload.exe(107520 bytes)!Unknown @ 0 +0xFAE1
+11. 75C85D49 (75C70000 +15D49): KERNEL32.DLL(707744 bytes)!BaseThreadInitThunk @ 15D30 +0x19
+12. 777AC75B (77740000 +6C75B): ntdll.dll(1850232 bytes)!RtlInitializeExceptionChain @ 6C6F0 +0x6B
+13. 777AC6E1 (77740000 +6C6E1): ntdll.dll(1850232 bytes)!RtlGetAppContainerNamedObjectPath @ 6C4B0 +0x231
+
+Critical: Advanced backtrace (most recent call first):
+0. 0094B350: G304469fBadNetReload.exe(107520 bytes)!Unknown_0000b350 @ 0 +0x0
+	Possible params: 37 (25), 0 (0), 9808824 (95ABB8), 7279352 (6F12F8)
+1. 0094D038: G304469fBadNetReload.exe(107520 bytes)!Unknown_0000d038 @ 0 +0x0
+	Possible params: 7275252 (6F02F4), 760 (2F8), 0 (0), 1593879580 (5F00AC1C)
+2. 5EF52469: Core.dll(1790328 bytes)!FOutputDevice::Logf @ 72340 +0x129
+	Possible params: 9808824 (95ABB8), 1593894616 (5F00E6D8), 41321808 (2768550), 61954832 (3B15B10)
+3. 5EF14ACF: Core.dll(1790328 bytes)!UObject::SafeLoadError @ 34A10 +0xBF
+	Possible params: 1 (1), 7287284 (6F31F4), 41321728 (2768500), 7287284 (6F31F4)
+4. 5EF1036A: Core.dll(1790328 bytes)!UObject::LoadPackage @ 30250 +0x11A
+	Possible params: 0 (0), 9774084 (952404), 1 (1), -626671254 (FFFFFFFFDAA5C16A)
+5. 00943C57: G304469fBadNetReload.exe(107520 bytes)!Unknown_00003c57 @ 0 +0x0
+	Possible params: 1 (1), 8411616 (8059E0), 8484864 (817800), -626671342 (FFFFFFFFDAA5C112)
+6. 0094FAE1: G304469fBadNetReload.exe(107520 bytes)!Unknown_0000fae1 @ 0 +0x0
+	Possible params: 6033408 (5C1000), 1976065328 (75C85D30), 7339720 (6FFEC8), 2004535131 (777AC75B)
+7. 75C85D49: KERNEL32.DLL(707744 bytes)!BaseThreadInitThunk @ 15D30 +0x19
+	Possible params: 6033408 (5C1000), 1109984433 (422904B1), 0 (0), 0 (0)
+8. 777AC75B: ntdll.dll(1850232 bytes)!RtlInitializeExceptionChain @ 6C6F0 +0x6B
+	Possible params: -1 (FFFFFFFFFFFFFFFF), 2004837190 (777F6346), 0 (0), 0 (0)
+9. 777AC6E1: ntdll.dll(1850232 bytes)!RtlGetAppContainerNamedObjectPath @ 6C4B0 +0x231
+	Possible params: 9763728 (94FB90), 6033408 (5C1000), 0 (0), 0 (0)
+
+Critical: appError called:
+Critical: <?int?Core.Errors.FailedLoadPackage?>
+Exit: Executing UObject::StaticShutdownAfterError
+Critical: UObject::SafeLoadError
+Critical: UObject::LoadPackage
+Exit: Preparing to exit.
+Log: Collecting garbage
+Log: Purging garbage
+Log: Unbound to Core.dll
+Log: Unloading: Package G304469FFunctionStateBadNet
+Log: Unloading: Package Core
+Log: Garbage: objects: 63->0; refs: 0
+Exit: Object subsystem successfully closed.
+Exit: Exiting.
+Log: Log file closed, 10/28/26 02:07:05
