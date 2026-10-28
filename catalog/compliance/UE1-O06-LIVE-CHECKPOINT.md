@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-04-c98-original-1998-script-compiled-save`
-- **Stage:** G3-04-C98-MAY17-ORIGINAL-REAL-SAVE-1058-46-DEV-PASS-PRD-PENDING
-- **Last completed action:** Genuine original May17 1998 C98 FObjectManager SavePackage via original Unreal.exe -make generated original 1058-byte v61/0 Actor State and two UFunction original compiled file. Separate authentic 1998 native Unreal.exe -make LOAD and x86 CDB observed distinct new 2 UFunction and 1 UState postload, all original function loaded fields and State labels/masks match UnrealDB. New 46/46 original SHA-pinned scoped DEV PASS, no prior original compiled native suites rerun. Original C98 v432 469f 2012 C227i 2026 C227k positive SAVE/LOAD proven. G3 remains 5/16 FULL, native proofs41 G3-04 fourteen. PRD hash deployment pending.
-- **Resume at:** Push commit and selectively deploy true 1998 original compiled SAVE/LOAD evidence with SHA DEV PRD. Remaining G3-04 actual distinct source-version invalid/state transitions and parent G3-14 malformed FArchive exact archive error branches, do not repeat sealed original native SAVE and LOAD.
-- **Active changed at:** 2026-10-28T09:23:23+00:00
+- **Stage:** G3-04-C98-MAY17-REAL-SAVE-1058-46-PRD-16-16-SHA
+- **Last completed action:** Original May17 C98 retail Unreal.exe -make original FObjectManager SAVE generated true 1058-byte UState + two UFunction v61/0 artifact, separate retail original compiled load, original CDB real 2 methods plus state fields match UnrealDB. 46/46 focused DEV PASS, new SHA-pinned evidence GitHub main commit 9a2b7755 pushed and PRD 16/16 changed-file SHA256 identical, protected PRD config/storage untouched. No prior native suites rerun. Positive original C98, UT99 v432/469f, Unreal 2012 227i and 2026 227k SAVE behavior accepted. G3 full 5/16, native distinct 41 G3-04 fourteen; G3-04 FULL not yet accepted (method-specific malformed, version branches, state transitions). Old originals unmodified.
+- **Resume at:** Avoid repeating any sealed 1998/2012/469f/v432/227k native SAVE LOAD run. Address G3-04 only real still-unproven original method invalid/version/state-transition branches by source-case finite plan, separating generic FArchive malformed G3-14 and bytecode G3-12. Require complete source-defined acceptance before claiming G3-04 FULL.
+- **Active changed at:** 2026-10-28T09:24:04+00:00
 - **Latest DEV test states:** PASS 206; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
