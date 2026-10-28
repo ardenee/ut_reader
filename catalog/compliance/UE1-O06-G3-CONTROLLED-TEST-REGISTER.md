@@ -1,10 +1,12 @@
-# UE1 O06 G3 — controlled master test register
+# UE1 O06 G3 — acceptance group / closure register (16 groups)
+
+**IMPORTANT: This is NOT the individual test list.** The actual executable, finite **80-test T001–T080 backlog** is [UE1-O06-G3-EXECUTION-TEST-BACKLOG.md](UE1-O06-G3-EXECUTION-TEST-BACKLOG.md), with editable status JSON [here](UE1-O06-G3-EXECUTION-TEST-BACKLOG.json). Original source/version, exact stimulus, PASS expectation and evidence are listed **per test** there. This document retains only aggregate G3-XX acceptance decisions and the historical 52 planning criteria. Discovered tests append at the BOTTOM of the new backlog as S001, S002, ... and are handled after T001–T080. Do not keep treating G3-01..G3-16 as individual tests.
 
 **Baseline:** 2026-10-28 · **State:** PROPOSED / USER REVIEW — EXECUTION STOPPED · **Primary authority:** original Epic sources and actual compiled behavior, not UnrealDB-only tests.
 
-This document is the **single controlled execution list** for G3. It supersedes the *workflow* in older expandable plan/status narratives, without deleting historical tests or changing accepted technical evidence. The 16 existing contracts are fixed, with 52 baseline acceptance conditions (14 supported by already accepted/subscope evidence; this subcondition count is **not** a test pass count). Exactly 5/16 gates are fully ACCEPTED; 11 remain OPEN. No test will be run merely because it is listed here until the user approves the baseline.
+This document records the **16 broad G3 acceptance groups only**, not the individual test execution list. Use T001–T080 from the linked executable backlog. It supersedes the *workflow* in older expandable plan/status narratives, without deleting historical tests or changing accepted technical evidence. The 16 existing contracts are fixed, with 52 baseline acceptance conditions (14 supported by already accepted/subscope evidence; this subcondition count is **not** a test pass count). Exactly 5/16 gates are fully ACCEPTED; 11 remain OPEN. No test will be run merely because it is listed here until the user approves the baseline.
 
-## Mandatory rules (G3 only)
+## Historical group-acceptance rules (test execution is controlled by T001–T080 backlog instead)
 
 1. **No unplanned test execution.** Work through G3-01 → G3-16 **once**, reusing existing proof. Each gate gets ONE consolidated acceptance decision: `ACCEPTED`, `FAILED` (a named original-vs-UnrealDB defect), or `BLOCKED` (an exact missing prerequisite); `OPEN` denotes not decided. We do not create a new acceptance gate per discovery.
 2. **Evidence reuse.** Hash/source/version-valid completed native evidence remains sealed. No repeat of previously passing original CDB runs, no benchmark/count farming, and no re-running an unchanged scope just to increase confidence. One focused changed-behavior check is allowed only after a diagnosed production fix.
@@ -173,7 +175,7 @@ A checked condition is **already supported or sealed**, not a request to execute
 - [ ] Only after PASS: final code/doc commit, push main, selective DEV-to-PRD SHA verification; protect PRD config/storage.
 - [ ] Record complete O06 final evidence and mark G3 accepted; otherwise release stays BLOCKED.
 
-## Additional subtests — append-only, BELOW the initial 16 gates
+## Historical appendix (do not add tests here — S001+ goes to the bottom of the T001–T080 backlog)
 
 **None approved or scheduled as of the baseline.** Do not convert old exploratory or rejected attempts into passed subtests. Every future addition is entered as the **next S-number at the bottom**, never interleaved into the baseline.
 
