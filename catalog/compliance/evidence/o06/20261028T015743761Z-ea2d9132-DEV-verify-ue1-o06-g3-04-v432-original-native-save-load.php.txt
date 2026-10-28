@@ -1,0 +1,10 @@
+﻿{
+    "ok": true,
+    "checks": 31,
+    "failed": [],
+    "genuine_v432_compiled_SAVE_and_fresh_LOAD": true,
+    "export_count": 2,
+    "source_provenance": "ut99-v432",
+    "sealed_other_native_suites_rerun": false,
+    "g3_04_FULL": "OPEN: other source branches"
+}

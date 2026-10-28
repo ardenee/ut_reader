@@ -2,18 +2,20 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-04-t99-469f-original-native-save-load`
-- **Stage:** G3-04-469F-FULL-ENGINE-LOAD-1422-NATIVE-SAVE-LOAD-2-PRD-SHA
-- **Last completed action:** Original 469f Engine.u all 1422 original compiled UFunction/UState/UClass objects 8375/8375 native loaded values matched, 145 Net; fixed real 64/128-byte ClearMessage/CopyMessage loader gap. Original 469f Core.dll new native UState+UFunction SavePackage to 322-byte original package and fresh separate actual compiled LoadPackage 2 methods fields and child pointer matched, 37/37 original native SAVE/LOAD focused DEV PASS. Source and compiled 1364+14091 focused DEV PASS. GitHub commits 262f2c0d, ca2c72b9, cca93907 pushed main, first 23/23+3/3 and latest 20/20 DEV-to-PRD file SHA identical; PRD config and storage untouched. G3 GATES 5/16 FULL (no false closure), original native subproofs37 G3-04 ten. All sealed prior original native traces not rerun.
-- **Resume at:** Priority complete entire G3-04: only remaining distinct original C98 original May1998 SAVE, UT99 v432 SAVE and C227i original 2012 SAVE plus applicable malformed and version-specific FArchive real cursor cases. Reuse source-v400 inherited 469f and v227k actual writer evidence where identical; do not repeat any of the 1422 original 469f compiled Engine load, 469f writer, 227k writer and malformed cursor or 7 prior compiled method oracles. Close whole G3-04 when actual remaining branch semantics and source are covered; then move to other G3 contracts. DO NOT relabel G3 accepted from partial proofs.
-- **Active changed at:** 2026-10-28T01:45:29+00:00
-- **Latest DEV test states:** PASS 202; FAIL 1; STARTED 0
+- **Contract:** `g3-04-t99-v432-original-native-save-load`
+- **Stage:** G3-04-V432-ORIGINAL-NATIVE-SAVE-LOAD-31-DEV-PASS-PRD-PENDING
+- **Last completed action:** New distinct UT99 v432 real x86 Core.dll original SavePackage created 322-byte UState+UFunction package and newly compiled matching Core.dll host freshly LoadPackage d and verified in memory fields and pointers. UnrealDB reads original binary 25-byte Function offset208 and 40-byte State offset233, native masks, flags, computed params, child index, SHA pinned genuine original Core.dll/Core.lib/source hosts and original SAVED package, 31/31 focused DEV PASS. Other C98/469f/C227 original compiled tests not rerun. G3 5/16 FULL, original proofs38, G3-04 eleven. PRD deploy pending.
+- **Resume at:** Finish original 2012 C227i and original 1998 C98 distinct SAVE cases plus nonrepeated malformed/version branch evidence before G3-04 full sign-off. First commit/push this v432 genuine native proof and SHA deploy PRD, no repeated 469f/227k native tests.
+- **Active changed at:** 2026-10-28T01:59:10+00:00
+- **Latest DEV test states:** PASS 203; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
 ## Recent test events (append-only evidence retained)
 
 | UTC | Test | State | Duration (ms) | Evidence |
 |---|---|---|---:|---|
+| 2026-10-28T01:57:44.2857246Z | verify-ue1-o06-g3-04-v432-original-native-save-load.php | PASS | 100 | catalog\compliance\evidence\o06\20261028T015743761Z-ea2d9132-DEV-verify-ue1-o06-g3-04-v432-original-native-save-load.php.txt |
+| 2026-10-28T01:57:43.7687569Z | verify-ue1-o06-g3-04-v432-original-native-save-load.php | STARTED |  | catalog\compliance\evidence\o06\20261028T015743761Z-ea2d9132-DEV-verify-ue1-o06-g3-04-v432-original-native-save-load.php.txt |
 | 2026-10-28T01:42:07.4351437Z | verify-ue1-o06-g3-04-469f-original-native-save-load.php | PASS | 105 | catalog\compliance\evidence\o06\20261028T014206920Z-0166292d-DEV-verify-ue1-o06-g3-04-469f-original-native-save-load.php.txt |
 | 2026-10-28T01:42:06.9271737Z | verify-ue1-o06-g3-04-469f-original-native-save-load.php | STARTED |  | catalog\compliance\evidence\o06\20261028T014206920Z-0166292d-DEV-verify-ue1-o06-g3-04-469f-original-native-save-load.php.txt |
 | 2026-10-28T01:32:41.8946085Z | verify-ue1-o06-g3-04-469f-engine-native-postload.php | PASS | 1251 | catalog\compliance\evidence\o06\20261028T013240225Z-18f49028-DEV-verify-ue1-o06-g3-04-469f-engine-native-postload.php.txt |
@@ -30,8 +32,6 @@
 | 2026-10-27T23:07:52.8007270Z | verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T230752792Z-d7058fee-DEV-verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php.txt |
 | 2026-10-27T22:47:43.8679233Z | verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php | PASS | 600 | catalog\compliance\evidence\o06\20261027T224742849Z-12d7aabd-DEV-verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php.txt |
 | 2026-10-27T22:47:42.8569497Z | verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T224742849Z-12d7aabd-DEV-verify-ue1-o06-g3-04-c227i-c227k-function-link-native.php.txt |
-| 2026-10-27T22:21:40.3959739Z | verify-ue1-o06-g3-04-469f-function-link-native.php | PASS | 268 | catalog\compliance\evidence\o06\20261027T222139722Z-48d288e2-DEV-verify-ue1-o06-g3-04-469f-function-link-native.php.txt |
-| 2026-10-27T22:21:39.7290103Z | verify-ue1-o06-g3-04-469f-function-link-native.php | STARTED |  | catalog\compliance\evidence\o06\20261027T222139722Z-48d288e2-DEV-verify-ue1-o06-g3-04-469f-function-link-native.php.txt |
 
 ## Recovery procedure
 

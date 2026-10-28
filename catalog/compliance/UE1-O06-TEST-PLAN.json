@@ -1534,6 +1534,18 @@
       ],
       "affected": [],
       "gate": []
+    },
+    "g3-04-t99-v432-original-native-save-load": {
+      "description": "ONE distinct actual shipped UT99 v432 compiled Core.dll SavePackage created 322-byte package version69/licensee0 with two new real native UState/UFunction exports. Historical v432 SDK Core.lib and its original Core.h used for x86 MSVC /Zc:wchar_t- native host; header-only compatibility shims for miscapitalized i variable and removed MSVC CRT _heapchk, original SDK and shipped DLL untouched. Separate newly compiled native v432 Core.dll LoadPackage host reloaded the saved archive and established 64-bit masks, flags, native child UObject pointer equality and function flags/parameter values. UnrealDB independently reads the exact native SAVED package: Function 25 bytes offset208, State 40 bytes offset233, 31/31 new source+native original SHA locked positive assertions. First probe legacy 469F-labelled console markers inherited from isolated test host template do NOT imply 469f original DLL; matching SDK source, shipped v432 Core.dll, v432 original 322-byte save file and both x86 host EXEs pinned. Old 469f writer/227k writer/original C98 and v432 compiled LOAD oracles not rerun. G3-04 OPEN for C98/C227i SAVE and distinct malformed/version cases.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php",
+        "CatalogUE1ClassicStructNativeReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-v432-original-native-save-load.php"
+      ],
+      "affected": [],
+      "gate": []
     }
   }
 }
