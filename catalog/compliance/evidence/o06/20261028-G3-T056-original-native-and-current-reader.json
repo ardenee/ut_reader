@@ -1,0 +1,77 @@
+{
+    "ok": true,
+    "checks": 18,
+    "errors": [],
+    "original_compiled_native_rejection": "Bad expr token 15",
+    "cross_family_reason": "1998 EndCode has no source case in 469f/v432 UT99; 227 uses distinct MapKeyElement opcode",
+    "observations": [
+        {
+            "archive_offset": 797,
+            "source": "C98-1998",
+            "classification": "ACCEPT",
+            "physical_cursor": 798,
+            "native_style_error": null,
+            "status": "script_archive_expressions_decoded"
+        },
+        {
+            "archive_offset": 797,
+            "source": "UT99-v432",
+            "classification": "NATIVE_BAD_EXPR",
+            "physical_cursor": 798,
+            "native_style_error": "UE1 Bad expr token 15 at archive cursor 798",
+            "status": null
+        },
+        {
+            "archive_offset": 797,
+            "source": "UT99-469f",
+            "classification": "NATIVE_BAD_EXPR",
+            "physical_cursor": 798,
+            "native_style_error": "UE1 Bad expr token 15 at archive cursor 798",
+            "status": null
+        },
+        {
+            "archive_offset": 797,
+            "source": "C227",
+            "classification": "SOURCE_UNVERIFIED",
+            "physical_cursor": 798,
+            "native_style_error": null,
+            "status": "script_archive_token_unimplemented"
+        },
+        {
+            "archive_offset": 854,
+            "source": "C98-1998",
+            "classification": "ACCEPT",
+            "physical_cursor": 855,
+            "native_style_error": null,
+            "status": "script_archive_expressions_decoded"
+        },
+        {
+            "archive_offset": 854,
+            "source": "UT99-v432",
+            "classification": "NATIVE_BAD_EXPR",
+            "physical_cursor": 855,
+            "native_style_error": "UE1 Bad expr token 15 at archive cursor 855",
+            "status": null
+        },
+        {
+            "archive_offset": 854,
+            "source": "UT99-469f",
+            "classification": "NATIVE_BAD_EXPR",
+            "physical_cursor": 855,
+            "native_style_error": "UE1 Bad expr token 15 at archive cursor 855",
+            "status": null
+        },
+        {
+            "archive_offset": 854,
+            "source": "C227",
+            "classification": "SOURCE_UNVERIFIED",
+            "physical_cursor": 855,
+            "native_style_error": null,
+            "status": "script_archive_token_unimplemented"
+        }
+    ],
+    "reader_source_sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+    "original_compiled_engines_reexecuted": 0,
+    "previous_native_acceptance_replayed": 0,
+    "remaining_T011": "UT99 v60-v63 real loadable legacy function; still BLOCKED"
+}

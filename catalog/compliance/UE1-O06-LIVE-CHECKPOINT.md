@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-80-TESTS-11-PASS-69-BLOCKED-T010-T032-CLOSED
-- **Last completed action:** T010 closed source-drift-safe 40/40 actual C98/227i plus sealed v432/227k, T032 closed from original 469f/227k compiled DLL/46/46 CDB evidence; NO original native rerun; 11/80 PASS, 69 BLOCKED, 0 FAIL; G3 groups 5/16 FULL
-- **Resume at:** Continue fixed T009 malformed UStruct Children/SuperField reference and invalid ScriptSize original C98/v432/227 compiled load cursor; T011 genuine UT99 v60-63 UFunction; then remaining T rows. No PRD deployment before T078-T080.
-- **Active changed at:** 2026-10-28T13:25:40+00:00
+- **Stage:** G3-80-TESTS-12-PASS-68-BLOCKED-T056-SOURCE-FIX-SEALED
+- **Last completed action:** T056 original C98 EndCode 0x15 -> real compiled UT99 469f Bad expr token15 matched; 18/18 new focused parity, original 469f error native log copied/pinned, production old soft unsupported fixed only UT99 source; T010 acceptance still valid by SHA-checked single-branch source reverse-diff with no native rerun
+- **Resume at:** Continue fixed T009 malformed UStruct refs/ScriptSize and T011 genuinely loadable legacy UT99 v60-63 function, then T051 v432 stock branch/nested script using retained original G5 16 class dataset; 12/80 PASS, 68 BLOCKED, G3 5/16 FULL, no final PRD release until T078-T080.
+- **Active changed at:** 2026-10-28T13:35:09+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

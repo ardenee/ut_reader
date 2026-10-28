@@ -192,11 +192,18 @@ final class CatalogUE1ClassicScriptArchiveReader
                     case 0x0e: // 1998 ValidateObject no operand; UT99 EatString expression.
                         if ($modern) { $child(); }
                         break;
-                    case 0x15: // 1998 EndCode, absent in UT99.
+                    case 0x15: // Original 1998 EndCode; NOT defined by UT99 SerializeExpr.
                         if ($modern) {
-                            $unsupported = $v227
-                                ? 'Unreal v227 EX_MapKeyElement archive traversal unverified'
-                                : 'UT99 EX_EndCode opcode not source-defined';
+                            if ($v227) {
+                                // Unreal 227 uses this byte for a different token;
+                                // its original compiled archive traversal remains unproven.
+                                $unsupported = 'Unreal v227 EX_MapKeyElement archive traversal unverified';
+                            } else {
+                                // Actual original 469f Core.dll rejects the genuine 1998
+                                // v61 EndCode token with appErrorf("Bad expr token 15").
+                                // Preserve the physical cursor immediately after the token.
+                                throw new RuntimeException(sprintf('UE1 Bad expr token %02x at archive cursor %d', $token, $position));
+                            }
                         }
                         break;
                     case 0x06:

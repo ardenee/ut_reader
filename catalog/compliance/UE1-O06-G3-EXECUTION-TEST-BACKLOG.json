@@ -1573,13 +1573,56 @@
       "pass_criterion": "Source-defined behavior documented and UnrealDB emits matching compatibility/error status, never claims valid 469f Function load.",
       "evidence": "Recorded original 469f Bad expr token15 trace, no rerun",
       "reuse": "G3-04 old param-field branch remains distinct.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Classify whether error is intentionally unsupported old script version, invalid token, or wrong source family. PASS ONLY WHEN: Source-defined behavior documented and UnrealDB emits matching compatibility/error status, never claims valid 469f Function load. ORACLE: Recorded original 469f Bad expr token15 trace, no rerun. Reuse before any new execution: G3-04 old param-field branch remains distinct.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "4f1fd340f0affb86dfdd4a0bf285f6a2c6430bba136b374386f3f082571be7f2",
+      "result": "Fixed T056 cross-era compatibility: genuine 1998 FObjectManager-saved v61 UFunctions contain original EX_EndCode 0x15 (physical offsets797,854), legal C98 source; actual unmodified original 469f Core.dll loader FAILED with Bad expr token 15 (NOT a successful legacy UFunction load). UT99 original source omits that case; current UnrealDB now raises identical bad expression error instead of silently returning partial, with source-local cursors798/855 in focused 18/18 PHP parity. v227 separate opcode remains unverified; T011 and G3-04 stay BLOCKED. All original engine and CDB proof reused; zero replay.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T13:33:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t056-cross-era-endcode.php",
+          "sha256": "ab305e0683b582dd71b370105c59b3719eb8bf5a4fa32936673cdea1dd5167da",
+          "bytes": 5773
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T056-original-native-and-current-reader.json",
+          "sha256": "3894c649e12db4bbab4573e92b310147a1f32ca351df6512d8d0dee293a03d76",
+          "bytes": 2749
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T056-469f-original-cross-era-badexpr15.log",
+          "sha256": "58d27495400ef3d0b9daeb61f407258bf7c9827336456d0f8857519410570cf9",
+          "bytes": 6130
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-original-1998-native-SAVE.u",
+          "sha256": "4957034dc7629163ab7adabeedff1fc9cecc3def1d577c4aab31bec0763071a4",
+          "bytes": 1058
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+          "bytes": 20905
+        },
+        {
+          "original": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
+          "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+        },
+        {
+          "original": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+          "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+        },
+        {
+          "original": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+          "sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+        },
+        {
+          "preserved_T010_original_native": "PASS",
+          "current_script_source_reversible_delta": "only 0x15 UT99 error"
+        }
+      ]
     },
     {
       "id": "T057",

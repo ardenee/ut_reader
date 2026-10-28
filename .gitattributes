@@ -23,3 +23,5 @@ catalog/src/Infrastructure/Import/CatalogIoStoreMemberCatalogPublisher.php text 
 catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php text eol=lf
 catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php text eol=lf
 catalog/bin/verify-uedb5-b006-container-retry-integrity.php text eol=lf
+# Preserve original compiled 469f native log byte-for-byte (CRLF and spacing are SHA evidence).
+catalog/compliance/evidence/o06/20261028-G3-T056-469f-original-cross-era-badexpr15.log -text

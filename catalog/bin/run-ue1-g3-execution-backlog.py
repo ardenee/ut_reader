@@ -298,7 +298,48 @@ def eval_t010(_row: dict[str, Any]) -> dict[str, Any]:
         raise AssertionError("T010 must reuse original native evidence, not rerun old acceptance")
     fresh_hashes=current["current_reader_source_sha"]
     for source,expected in fresh_hashes.items():
-        pins.append(verify_pin(source,expected))
+        if source=="catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php" and sha256(ROOT/source)!=expected:
+            # After T010's 40/40 original-memory parity, T056 corrected ONLY
+            # the UT99 interpretation of original C98 EndCode (0x15).
+            # Reconstruct exactly the previously accepted source and verify
+            # its original SHA, while SHA-pinning the new code independently;
+            # neither C98 nor 227 script-size decoder paths were changed.
+            previous="""                    case 0x15: // 1998 EndCode, absent in UT99.
+                        if ($modern) {
+                            $unsupported = $v227
+                                ? 'Unreal v227 EX_MapKeyElement archive traversal unverified'
+                                : 'UT99 EX_EndCode opcode not source-defined';
+                        }
+                        break;"""
+            revised="""                    case 0x15: // Original 1998 EndCode; NOT defined by UT99 SerializeExpr.
+                        if ($modern) {
+                            if ($v227) {
+                                // Unreal 227 uses this byte for a different token;
+                                // its original compiled archive traversal remains unproven.
+                                $unsupported = 'Unreal v227 EX_MapKeyElement archive traversal unverified';
+                            } else {
+                                // Actual original 469f Core.dll rejects the genuine 1998
+                                // v61 EndCode token with appErrorf("Bad expr token 15").
+                                // Preserve the physical cursor immediately after the token.
+                                throw new RuntimeException(sprintf('UE1 Bad expr token %02x at archive cursor %d', $token, $position));
+                            }
+                        }
+                        break;"""
+            data=(ROOT/source).read_bytes()
+            newline=b"\r\n" if b"\r\n" in data else b"\n"
+            before=previous.replace("\n",newline.decode()).encode("utf-8")
+            after=revised.replace("\n",newline.decode()).encode("utf-8")
+            if data.count(after)!=1:
+                raise AssertionError("T010 exact source-only T056 delta absent or duplicated")
+            reconstructed=data.replace(after,before,1)
+            prior=hashlib.sha256(reconstructed).hexdigest()
+            live=sha256(ROOT/source)
+            if prior!=expected or live!="df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500":
+                raise AssertionError("T010 original source parity invalidated by unreviewed drift")
+            pins.append({"path":source,"historical_40_of_40_sha256":expected,
+                         "current_sha256":live,"only_change":"T056 UT99 invalid EX_EndCode0x15 branch; original C98 and 227 paths unmodified"})
+        else:
+            pins.append(verify_pin(source,expected))
     for source_manifest, native_key, source_key, binary_key, log_file, counts in [
         (
             "catalog/compliance/UE1-O06-G3-03-C98-MAY1998-100-ORIGINAL-NATIVE-96-SCRIPTS.json",
@@ -433,7 +474,62 @@ def eval_t032(_row: dict[str, Any]) -> dict[str, Any]:
             "result":"Real compiled original 469f UPointerProperty::SerializeItem and NetSerializeItem serialize exactly 4 bytes (Net returns 1); original 227k UPointer/UButton items serialize 0 bytes and Net returns 1 without payload; separate UAnyProperty dispatch is dynamic and its instance codec remains OPEN under T025–T031. Exact original DLL PE bytes, CDB traces, current production source SHA and already sealed 46/46 source-selected byte-method checks verified, no native rerun.",
             "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T067":eval_t067}
+def eval_t056(_row: dict[str, Any]) -> dict[str, Any]:
+    """C98 original EX_EndCode 0x15 is invalid in actual compiled 469f; NOT T011."""
+    p="catalog/bin/verify-ue1-o06-g3-t056-cross-era-endcode.php"
+    output="catalog/compliance/evidence/o06/20261028-G3-T056-original-native-and-current-reader.json"
+    native="catalog/compliance/evidence/o06/20261028-G3-T056-469f-original-cross-era-badexpr15.log"
+    original="catalog/compliance/evidence/o06/20261028-G3-04-C98-original-1998-native-SAVE.u"
+    current="catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php"
+    pins=[
+        verify_pin(p,"ab305e0683b582dd71b370105c59b3719eb8bf5a4fa32936673cdea1dd5167da"),
+        verify_pin(output,"3894c649e12db4bbab4573e92b310147a1f32ca351df6512d8d0dee293a03d76"),
+        verify_pin(native,"58d27495400ef3d0b9daeb61f407258bf7c9827336456d0f8857519410570cf9"),
+        verify_pin(original,"4957034dc7629163ab7adabeedff1fc9cecc3def1d577c4aab31bec0763071a4"),
+        verify_pin(current,"df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+    ]
+    for original_path,expected in [
+      (r"L:\Source\Games\UT99\OldUnreal-UTPatch469f-Windows-x86\System\Core.dll",
+       "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"),
+      (r"L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]\Core\Src\UnClass.cpp",
+       "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"),
+      (r"L:\Source\Games\UT99\Unreal Tournament [v1.400] [1999-11-30]\Core\Src\UnClass.cpp",
+       "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380")
+    ]:
+        fn=pathlib.Path(original_path)
+        if not fn.is_file() or sha256(fn)!=expected:
+            raise AssertionError("Original native/source original pin changed: "+original_path)
+        pins.append({"original":original_path,"sha256":expected})
+    log=(ROOT/native).read_text(encoding="utf-8",errors="replace")
+    if not all(s in log for s in ["Version: 469","Revision: f","Log: Bad expr token 15","FailedLoadPackage"]):
+        raise AssertionError("Actual original compiled 469f bad expression FAILURE missing")
+    sample=json.loads((ROOT/output).read_text(encoding="utf-8-sig"))
+    if sample.get("ok") is not True or sample.get("checks")!=18 or sample.get("errors"):
+        raise AssertionError("Source-selected fixed T056 acceptance is not 18/18")
+    if sample.get("reader_source_sha256")!="df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500":
+        raise AssertionError("T056 current production parser source drift")
+    if sample.get("original_compiled_engines_reexecuted")!=0 or sample.get("previous_native_acceptance_replayed")!=0:
+        raise AssertionError("T056 must NOT re-run any prior original C98/469f engine")
+    observed=sample.get("observations",[])
+    if len(observed)!=8:
+        raise AssertionError("T056 original physical opcode positions not fully classified")
+    for offset in [797,854]:
+        got=[s for s in observed if s.get("archive_offset")==offset]
+        if [(x.get("source"),x.get("classification"),x.get("physical_cursor")) for x in got]!=[
+          ("C98-1998","ACCEPT",offset+1),
+          ("UT99-v432","NATIVE_BAD_EXPR",offset+1),
+          ("UT99-469f","NATIVE_BAD_EXPR",offset+1),
+          ("C227","SOURCE_UNVERIFIED",offset+1)]:
+            raise AssertionError("T056 cross-source original 0x15 semantics differ: "+str(offset))
+    # T010 original C98+227 script byte counts remain stable under the single
+    # audited, reversible UT99 0x15 parser change; no native script rerun.
+    pins.append({"preserved_T010_original_native":eval_t010(_row)["status"],
+                 "current_script_source_reversible_delta":"only 0x15 UT99 error"})
+    return {"status":"PASS","result":
+       "Fixed T056 cross-era compatibility: genuine 1998 FObjectManager-saved v61 UFunctions contain original EX_EndCode 0x15 (physical offsets797,854), legal C98 source; actual unmodified original 469f Core.dll loader FAILED with Bad expr token 15 (NOT a successful legacy UFunction load). UT99 original source omits that case; current UnrealDB now raises identical bad expression error instead of silently returning partial, with source-local cursors798/855 in focused 18/18 PHP parity. v227 separate opcode remains unverified; T011 and G3-04 stay BLOCKED. All original engine and CDB proof reused; zero replay.",
+       "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T056":eval_t056,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -473,7 +569,7 @@ def render_progress(register:dict[str,Any])->None:
         result=x.get("result") if x["status"]=="PASS" else x.get("blocking_reason")
         result=(result or "not yet processed").replace("|","/").replace("\n"," ")
         lines.append(f"| {x['id']} | {x['status']} | {result} |")
-    lines+=["","T001–T008, T010, T032 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
+    lines+=["","T001–T008, T010, T032, T056 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
     PROGRESS.write_text("\n".join(lines),encoding="utf-8")
 
 def review_one(row:dict[str,Any],retry:bool)->dict[str,Any]:
