@@ -129,8 +129,15 @@ try{
     [$s]=$inspect('State',35,$struct().$state());
     $check('v35_UState_legacy_prefix',$s['status']==='native_state_record_complete');
     [$s]=$inspect('State',50,$struct().$state()."\xff");
-    $check('UState_extensions_not_hidden',$s['status']==='native_state_has_extension'
-        &&$s['extension_bytes']===1);
+    $check('UState_extra_export_size_rejected_by_native_Preload',
+        $s['status']==='native_export_serial_size_mismatch'
+        &&$s['source_serial_size_check_failed']===true
+        &&$s['serial_size_shortfall_bytes']===1
+        &&$s['probe_mask_hex']===null
+        &&$s['ignore_mask_hex']===null
+        &&$s['state_flags']===null
+        &&$s['label_table_offset']===null
+        &&$s['source_state_load_status']==='native_export_rejected');
     [$fn]=$inspect('Function',50,$struct().$function(50,true));
     $check('v50_UFunction_old_fields_NET',$fn['status']==='native_function_record_complete'
         &&$fn['legacy_parms_size']===16&&$fn['native_index']===7

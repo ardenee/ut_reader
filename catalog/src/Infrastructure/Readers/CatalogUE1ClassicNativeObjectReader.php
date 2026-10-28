@@ -219,10 +219,11 @@ final class CatalogUE1ClassicNativeObjectReader
                         $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
             }
             $completeG3=static function(array $detail)use($record,&$pos,$exportLimit,$nativeKind):array{
-                if($pos>$exportLimit||($nativeKind==='function'&&$pos<$exportLimit)){
-                    // Native UFunction Preload rejects either unequal length:
-                    // the original C98 loader reports both Got>Expected and
-                    // Got<Expected. 2026 v227k's pre-read guard is above.
+                if($pos>$exportLimit||(in_array($nativeKind,['function','state'],true)
+                    &&$pos<$exportLimit)){
+                    // Original C98 UFunction and UState Preload reject both
+                    // Got>Expected and Got<Expected. 227k's pre-read guard
+                    // is handled separately above.
                     $detail['status']='native_export_serial_size_mismatch';
                     $detail['source_serial_size_check_failed']=true;
                     $detail['archive_cursor']=$pos;
@@ -239,6 +240,15 @@ final class CatalogUE1ClassicNativeObjectReader
                         $detail['ut99_function_precompute_initial_values']=null;
                         $detail['runtime_function_param_chain_linked']=false;
                         $detail['source_function_link_status']='native_export_rejected';
+                    }elseif($nativeKind==='state'){
+                        // Archive bytes were physically decoded, but the
+                        // original loader aborts before a usable UState exists.
+                        foreach(['probe_mask_hex','ignore_mask_hex',
+                            'label_table_offset','state_flags'] as $member){
+                            $detail['archived_'.$member]=$detail[$member]??null;
+                            $detail[$member]=null;
+                        }
+                        $detail['source_state_load_status']='native_export_rejected';
                     }
                 }
                 return array_replace($record,$detail);

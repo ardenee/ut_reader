@@ -1,0 +1,11 @@
+﻿{
+    "ok": true,
+    "checks": 27,
+    "failed": [],
+    "true_original_native_Got": 40,
+    "true_original_native_Expected": 41,
+    "archive_cursor": 810,
+    "declared_export_end": 811,
+    "native_original_probes_repeated": false,
+    "G3_04_FULL": "OPEN"
+}

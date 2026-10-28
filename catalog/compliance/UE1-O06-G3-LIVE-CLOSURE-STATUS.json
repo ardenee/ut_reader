@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "date": "2026-10-27",
+  "date": "2026-10-28",
   "kind": "G3_LIVE_CLOSURE_STATUS_NOT_PREEXECUTION_PLAN",
   "full_contracts_required": 16,
   "full_contracts_accepted": 5,
-  "contracts_with_pinned_original_native_evidence": 10,
-  "distinct_original_native_source_subproofs": 27,
+  "contracts_with_pinned_original_native_evidence": 11,
+  "distinct_original_native_source_subproofs": 44,
   "C227_primary_blocker": "NONE: matching user-provided 2026 227k compiled Core.dll and SDK Core.lib now present with 57/57 original C227 method export matches. 2012 227i difference is historical only; actual outstanding method behaviors remain G3-03..15.",
   "contract_acceptance_rule": "Epic UE1 engine source baseline with cumulative actual game-source overrides through chronological revisions; missing game cpp means inherit last applicable method. Original archive architecture transitions are explicit replacements. Individual behavior parity and compiled loaded-value comparisons belong to G3-02..15; G3-16 runs only once all are accepted.",
   "original_native_proofs": {
@@ -327,8 +327,26 @@
       "id": "G3-04",
       "requirement": "UState and UFunction",
       "full_status": "OPEN",
-      "verified_original_native_subproof_ids": [],
-      "decisive_remaining_requirement": "Original compiled UState/UFunction flags, script, version exceptions and malformed cursor for each profile."
+      "verified_original_native_subproof_ids": [
+        "c98-may17-original-compiled-Core-Function-State",
+        "t99-v432-original-compiled-Core-Function-State",
+        "t99-469f-original-compiled-Core-Function-State",
+        "c227i-2012-original-compiled-Core-Function-State",
+        "c227k-2026-original-compiled-Core-Function-State",
+        "c227k-2026-original-compiled-Engine-Function-State",
+        "t99-469f-original-compiled-Engine-1422-methods",
+        "c227k-original-compiled-Function-State-SAVE-LOAD",
+        "t99-469f-original-compiled-Function-State-SAVE-LOAD",
+        "t99-v432-original-compiled-Function-State-SAVE-LOAD",
+        "c227i-2012-original-compiled-UnrealScript-SAVE-LOAD",
+        "c98-may17-original-FObjectManager-SAVE-fresh-LOAD",
+        "c227k-original-native-FArchive-malformed-cursor",
+        "t99-469f-original-native-FArchive-malformed-cursor",
+        "c98-may17-original-native-FUNC_Net-overrun",
+        "c98-may17-original-native-UFunction-shortfall",
+        "c98-may17-original-native-UState-shortfall"
+      ],
+      "decisive_remaining_requirement": "Exactly one direct method version-native criterion remains: UT99 v432/469f original compiled UFunction::Serialize for Ar.Ver()<=63 must show original legacy persisted fields plus runtime Children property recomputation. Existing source-typed <=63 synthetic fixture is accepted but does not substitute a successfully loaded genuine original UT99 native object. 469f loader of authentic C98 v61 package halted on inherited Bad expr token 15 (G3-12 owner), so this exploratory attempt is EXCLUDED from G3-04. Positive C98/T99/C227 State/Function SAVE LOAD and direct C98 malformed method cases, and 469f/227k physical cursor error cases already sealed; State runtime VfHash transitions G3-15 and bytecode G3-12, aggregate FArchive error G3-14, not falsely marked complete. G3-04 OPEN."
     },
     {
       "id": "G3-05",

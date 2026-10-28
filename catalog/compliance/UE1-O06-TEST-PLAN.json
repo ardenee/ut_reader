@@ -1622,6 +1622,28 @@
         "verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php"
       ],
       "gate": []
+    },
+    "g3-04-c98-original-state-short-export": {
+      "description": "ONE new true original May17 1998 retail compiled UState method malformed shortfall, not another UFunction case: genuine May17 FObjectManager original SAVE .u source state export#5 at708 size62, ONE original export-map byte1013 changes 0x3e->0x3f to claim size63, same original state data. Original retail unchanged x86 Core.dll under CDB Core!appErrorf reports State G304C98Save.G304C98Actor.G304State Serial size mismatch Got62 Expected63. Production previous native_state_has_extension with apparently loaded masks/flags was erroneous: source-correct now returns native_export_serial_size_mismatch, cursor770, end771, shortfall1, no loaded masks/flags and retains archived raw fields. New original raw compiled x86 CDB command/log and genuine original writer/mutant/Core.dll SHA-256 pinned. One 34-check focused native+reader comparison, original source format verifier and only affected PHP original-data regression scripts. No prior genuine original CDB script or sealed native tests replayed. G3-04 full status not automatically accepted by one subproof; original source method closure to be independently decided.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c98-original-state-underrun.php",
+        "verify-ue1-classic-struct-native.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-g3-04-c98-original-underconsumed-function.php",
+        "verify-ue1-o06-g3-04-c98-original-badnet-native-cursor.php",
+        "verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php",
+        "verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php",
+        "verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php",
+        "verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php",
+        "verify-ue1-o06-g3-04-v432-function-link-native.php",
+        "verify-ue1-o06-g3-04-469f-engine-native-postload.php",
+        "verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php"
+      ],
+      "gate": []
     }
   }
 }

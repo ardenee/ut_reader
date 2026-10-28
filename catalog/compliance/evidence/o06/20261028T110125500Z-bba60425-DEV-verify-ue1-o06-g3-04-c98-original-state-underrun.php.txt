@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 34,
+    "failed": [],
+    "native_original_loaded_state_success": false,
+    "native_Got": 62,
+    "native_Expected": 63,
+    "original_physical_archive_end": 770,
+    "original_declared_export_end": 771,
+    "original_compiled_positive_suites_reexecuted": false,
+    "g3_04_full": "OPEN"
+}
