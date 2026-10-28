@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-04-t99-469f-engine-original-native-1422`
-- **Stage:** G3-04-469F-ENGINE-1422-8375-14091-DEV-PASS-PRD-PENDING
-- **Last completed action:** Original compiled 469f x86 Core.dll loaded untouched Engine.u in disposable native host and CDB showed 1422 unique Engine objects: 1271 UFunction 63 UState 88 UClass inherited. 8375/8375 native LOADED fields equal UnrealDB, including 145 genuine NET and corrected ClearMessage/CopyMessage source-defined HUDLocalizedMessage x86 64-byte shape; all original SDK/payload/native probe SHA pinned. Source 1364/1364 DEV PASS, native 14091/14091 DEV PASS, no sealed native tests rerun. G3-04 original Engine loaded gap CLOSED, whole G3 remains 5/16 FULL, compiled native subproof 36 (G3-04 nine). Pending commit/push and PRD SHA.
-- **Resume at:** Commit, push and deploy completed 469f Engine bug fix plus full original compiled native evidence, then seal PRD checkpoint; remaining G3-04 original SAVE/version/malformed branches require distinct closure without retesting completed source/native LOAD proofs.
-- **Active changed at:** 2026-10-28T01:35:56+00:00
+- **Stage:** G3-04-469F-ENGINE-1422-8375-14091-DEV-PASS-PRD-23-23-SHA
+- **Last completed action:** Corrected original 469f HUDLocalizedMessage 14-member 64-byte native layout, restored ClearMessage parms 64 and CopyMessage 128; full original compiled x86 469f Engine.u LOAD parity: 1422 distinct native UFunction/UState/UClass inherited objects, 8375/8375 actual CDB compiled fields matched, 145 FUNC_Net, 0 mismatches, 14091/14091 native focused DEV PASS and source 1364/1364 PASS. Original raw CDB/SDK/host hashes pinned. GitHub main 262f2c0d pushed, exactly 23/23 changed-file DEV-to-PRD SHA256 match, protected PRD config/storage untouched. No previous sealed native suite rerun. G3 remains 5/16 FULL, native proofs36 (G3-04 nine). 469f Engine original compiled LOAD finished; whole G3-04 still OPEN for distinct SAVE/version/malformed.
+- **Resume at:** Do NOT redo 469f Engine load, 227k exact physical cursor, C98/v432/469f Core or 227i/k loaders. Complete remaining G3-04 source-defined SAVE/version/error behavior in a consolidated contract, then close G3-04 FULL only when original Epic source and applicable actual engine behavior matched. G3 currently 5/16 FULL.
+- **Active changed at:** 2026-10-28T01:37:17+00:00
 - **Latest DEV test states:** PASS 201; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
