@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `g3-04-c98-original-state-short-export`
-- **Stage:** G3-ALL-TESTS-STOPPED-CONTROLLED-16-GATE-52-CONDITION-REGISTER-USER-REVIEW
-- **Last completed action:** USER DIRECTIVE STOP repeated and unplanned G3 test execution. NO tests, native probes, fixture creation or reader changes performed in this planning batch. Created proposed canonical catalog/compliance/UE1-O06-G3-CONTROLLED-TEST-REGISTER.md: exactly existing 16 fixed gates, 52 baseline acceptance conditions (14 already checked as accepted/reused partial evidence; 5/16 complete gates), 11 open gates and a controlled empty append-only S-001 onward section. No new standalone gates; prospective newly discovered cases append only at end with parent source criterion, justification and approval. Updated AGENTS.md explicit approval gate so no work on G3 tests until user has reviewed and approved test register; initial pass continues to next planned gate after recording exact blocker. All original accepted evidence sealed, user-facing no new tests.
-- **Resume at:** NO G3 TEST EXECUTION. Await user approval or revision of exact 16-gate controlled baseline; ask user to review proposed list, then freeze acceptance wording and follow one-pass gate-by-gate decisions, append-only approved S-subtests at bottom. Never create new tests while running one baseline gate and never re-run sealed original CDB evidence.
-- **Active changed at:** 2026-10-28T11:20:34+00:00
+- **Contract:** `g3-01-chronological-source-inheritance`
+- **Stage:** G3-01-CLOSED-ACCEPTED-87-OF-87-SHA-SEALED-NO-TEST-RERUN
+- **Last completed action:** USER requested formal final closure of G3-01 fixed controlled baseline. Existing original Epic source/provenance acceptance 87/87 PASS reused without executing any test. Independently inspected pinned SHA256 against actual immutable original revision/source-chain manifest a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901, verifier 4ec651bb6f68b215188050f7541425cd2acc42cc5512dda751db843237a05f54, DEV scoped original PASS log eefa95a39439544273fdcc31043665e4ee1aa8ad4f6f3a1a7e9ce09f77e35c58, all match previous recorded acceptance metadata. Updated controlled master test register G3-01 CLOSED/ACCEPTED and live JSON formal_closure with 2/2 existing baseline acceptance conditions, no new tests/subtests/source modification. G3-01 scope only selected source-lineage and game/revision/provenance, original native loaded values G3-15 remain OPEN. G3 overall stays 5/16 fully accepted; all other statuses unchanged. Release GitHub/PRD closure docs pending.
+- **Resume at:** G3-01 permanently CLOSED/ACCEPTED unless the pinned source/provenance manifest changes or a concrete source-selection defect is found. User can now request the next planned G3-02 already accepted final evidence closure, WITHOUT rerunning its tests. No execution of new G3 tests/subtests before controlled register baseline approval. Preserve fixed 16-gate register and append-only subtests at end.
+- **Active changed at:** 2026-10-28T11:25:50+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

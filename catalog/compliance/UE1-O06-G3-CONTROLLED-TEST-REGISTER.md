@@ -18,7 +18,7 @@ This document is the **single controlled execution list** for G3. It supersedes 
 
 | Gate | One acceptance decision | Current status | Already accepted evidence / exact outstanding obligation |
 |---|---|---|---|
-| **G3-01** | Epic source lineage and version provenance | **ACCEPTED** | 87/87 accepted; original source chain, game overrides and negative wrong-provenance cases |
+| **G3-01** | Epic source lineage and version provenance | **CLOSED / ACCEPTED** | 87/87 original acceptance; three SHA-pinned source/verifier/result files independently checked against sealed recorded hashes on 2026-10-28. No test rerun or added subtest. |
 | **G3-02** | Complete Core serializer method and inheritance inventory | **ACCEPTED** | 1,318/1,318; 57 C227 symbols, 205 class-method declarations |
 | **G3-03** | UField / UStruct serialization | **OPEN** | C98 100 real structs/96 script loads; C227i 237 structs/223 scripts sealed; T99 partial native accepted |
 | **G3-04** | UState / UFunction serialization | **OPEN** | 17 sealed original compiled subproofs: five original SAVE paths, 469f 1,422 object loads, 1998/469f/227k malformed behavior |
@@ -43,7 +43,7 @@ A checked condition is **already supported or sealed**, not a request to execute
 
 ### G3-01 — Epic source lineage and version provenance
 
-**Gate status:** ACCEPTED. **Evidence known:** 87/87 accepted; original source chain, game overrides and negative wrong-provenance cases.
+**Final gate decision (2026-10-28): CLOSED / ACCEPTED.** 87/87 accepted original source-selection checks, without rerun. Both baseline acceptance conditions satisfied. **Sealed source manifest:** `catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json` SHA-256 `a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901`. **Sealed acceptance verifier:** `catalog/bin/verify-ue1-o06-g3-01-chronological-source-inheritance.php` SHA-256 `4ec651bb6f68b215188050f7541425cd2acc42cc5512dda751db843237a05f54`. **Original DEV 87/87 PASS result:** `catalog/compliance/evidence/o06/20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt` SHA-256 `eefa95a39439544273fdcc31043665e4ee1aa8ad4f6f3a1a7e9ce09f77e35c58`. **All three actual hashes match their pre-existing pinned closure manifest.** No new test, no new native probe, no changed serializer. **Scope boundary:** source lineage, inheritance, explicit provenance selection and version eligibility ONLY. C227 altered headers/class-specific bodies remain owned by G3-02/G3-03..15; original compiled loaded-value parity is G3-15. **Reopening condition:** a demonstrable change in a pinned source/verifier/manifest hash or a source-selection defect; new ordinary serializer behavior cannot reopen G3-01. **Next gate:** G3-02 (already accepted; no rerun).
 
 - [x] Freeze source-selection/version/build provenance evidence across UE1, Unreal revisions and UT99 v432 (v400 inherited), explicit 469f/227i/k overlays.
 - [x] Demonstrate incorrect game, revision and shared package-version selection fails rather than silently borrowing another game's serializer.

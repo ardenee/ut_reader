@@ -268,7 +268,19 @@
       "acceptance_manifest_sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901",
       "acceptance_verifier_sha256": "4ec651bb6f68b215188050f7541425cd2acc42cc5512dda751db843237a05f54",
       "acceptance_scoped_DEV_pass_log_sha256": "eefa95a39439544273fdcc31043665e4ee1aa8ad4f6f3a1a7e9ce09f77e35c58",
-      "acceptance_scoped_DEV_pass_log": "catalog/compliance/evidence/o06/20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt"
+      "acceptance_scoped_DEV_pass_log": "catalog/compliance/evidence/o06/20261027T102503120Z-98b1e087-DEV-verify-ue1-o06-g3-01-chronological-source-inheritance.php.txt",
+      "formal_closure": {
+        "decision": "CLOSED_ACCEPTED",
+        "date": "2026-10-28",
+        "evidence_validation": "Independent SHA-256 read of the already accepted manifest, verifier and original DEV 87/87 PASS log matched all three previously pinned hashes; no tests rerun.",
+        "baseline_conditions_total": 2,
+        "baseline_conditions_accepted": 2,
+        "scope": "Source lineage, cumulative original Epic game overrides, source-format boundaries and exact non-ambiguous loader/version provenance selection only.",
+        "future_serializer_behavior_owner": "G3-03..G3-15; actual native loaded value cross-profile parity G3-15",
+        "reopen_only_if": "Pinned source, acceptance verifier or original evidence hash changes, or a concrete source/provenance selection defect is demonstrated.",
+        "new_subtests": 0,
+        "next_gate": "G3-02 (already accepted; reuse evidence)"
+      }
     },
     {
       "id": "G3-02",
