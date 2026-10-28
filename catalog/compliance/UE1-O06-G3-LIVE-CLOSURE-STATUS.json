@@ -314,12 +314,24 @@
       "acceptance_manifest_sha256": "1422de5431bc3538e9f199b8163513d50fd18bd6ef4bb40bed02b97509af57d7",
       "acceptance_verifier_sha256": "37de321423dae3ec9e9b018e0ce6f72949b7cdcc29868714975a0e673b8400f8",
       "acceptance_scoped_DEV_pass_log_sha256": "481bb0ee08dcc80b1d9c02874bdb9b341a6fd991479228cde6b9020f32a95ebb",
-      "acceptance_scoped_DEV_pass_log": "catalog/compliance/evidence/o06/20261027T115222126Z-ecb4bae9-DEV-verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php.txt"
+      "acceptance_scoped_DEV_pass_log": "catalog/compliance/evidence/o06/20261027T115222126Z-ecb4bae9-DEV-verify-ue1-o06-g3-02-complete-cumulative-method-symbol-register.php.txt",
+      "formal_closure": {
+        "decision": "CLOSED_ACCEPTED",
+        "date": "2026-10-28",
+        "evidence_validation": "Independent SHA-256 read of the sealed 1318/1318 acceptance manifest, verifier and original DEV PASS log matched all three pre-existing pinned hashes, no tests rerun.",
+        "baseline_conditions_total": 2,
+        "baseline_conditions_accepted": 2,
+        "scope": "Epic original C98/UT99/C227 class and property serializer declaration, source-method symbol, cumulative inheritance and source exclusions, not behavioral LOAD/SAVE parity.",
+        "future_serializer_behavior_owner": "G3-03 through G3-15",
+        "reopen_only_if": "Pinned source and method manifest changes or an objectively demonstrated missing exported or declared serializer method.",
+        "new_subtests": 0,
+        "next_gate": "G3-03"
+      }
     },
     {
       "id": "G3-03",
       "requirement": "UField and UStruct",
-      "full_status": "OPEN",
+      "full_status": "BLOCKED",
       "verified_original_native_subproof_ids": [
         "c227i-field915",
         "t99-469f-matched-original-SDK-21-PointerProperty",
@@ -333,7 +345,27 @@
       "g3_03_new_real_C227i_original_native_manifest_sha256": "cd8ff5a0198bfca58ec04aa0056af74927ec0dd31cff818b93c59e43dec77aa9",
       "g3_03_new_real_C227i_original_native_PASS_sha256": "cddda38294be9351375fa7228a60e52b106c099ab01ce8e4b0f5cfab1d007536",
       "new_original_C98_May17_100_native_script_manifest_SHA256": "481bc10b917d7eea128a1638d31be2a5afdd1f84eb6edbf2592359040a76e7d0",
-      "new_original_C98_May17_1492_dev_scope_SHA256": "9a581791399049d6fd9599e7c9e83f3b57c95b033e1cb68a44111c2d140f6f06"
+      "new_original_C98_May17_1492_dev_scope_SHA256": "9a581791399049d6fd9599e7c9e83f3b57c95b033e1cb68a44111c2d140f6f06",
+      "controlled_one_pass_assessment": {
+        "decision": "BLOCKED_NOT_ACCEPTED",
+        "date": "2026-10-28",
+        "fixed_baseline_conditions_total": 4,
+        "confirmed_existing_evidence_conditions": 1,
+        "unfulfilled_baseline_conditions": [2, 3, 4],
+        "sealed_original_evidence_reused": {
+          "C98_May17_original_100_struct_96_script_SHA256": "481bc10b917d7eea128a1638d31be2a5afdd1f84eb6edbf2592359040a76e7d0",
+          "C227i_2012_original_237_struct_223_script_SHA256": "cd8ff5a0198bfca58ec04aa0056af74927ec0dd31cff818b93c59e43dec77aa9",
+          "T99_469f_original_25_prefix_SHA256": "38d58e4391a83b24465904c6a9ed12863f125abfdbf1a4d5d8b12d84386389a9",
+          "T99_469f_original_nine_direct_SHA256": "7398260b9f32468c2c63e63d736ff9a4664018f5a31d4103326de6828c8ae4f2",
+          "T99_469f_original_malformed_NAME_None_SHA256": "348c0c2aeb8d9c1dd39e51fbea1a57b16e751151a18c3044fd2af8b8efbb0fc7"
+        },
+        "single_blocker": "Incomplete complete-build original-native parity: original v432 and 2026 C227k direct UField/UStruct physical LOAD/SAVE/child-super/script-size cases not demonstrably covered by existing proofs; C98 Children/Super loaded target identity incomplete; method-owned invalid reference/size/EOF native archive-position equality not accepted.",
+        "external_contract_exclusions": "Actual script opcode/parser belongs G3-12, cross-method FArchive EOF/error matrix G3-14, full original compiled corpus parity G3-15; no duplicate testing.",
+        "new_tests_executed": 0,
+        "new_subtests_created": 0,
+        "next_gate": "G3-04 under fixed 16-gate sequence",
+        "acceptance_claim": false
+      }
     },
     {
       "id": "G3-04",
@@ -531,7 +563,9 @@
       "decisive_remaining_requirement": "Independent one-off whole-G3 gate after G3-01 through G3-15 meet their full acceptance requirements."
     }
   ],
-  "full_contracts_open": 11,
+  "full_contracts_open": 10,
+  "full_contracts_blocked": 1,
+  "full_contracts_not_accepted": 11,
   "source_revision_chain_manifest": {
     "path": "catalog/compliance/UE1-O06-G3-UNREAL-CHRONOLOGICAL-SOURCE-CHAIN.json",
     "sha256": "a6f737801ecb9634ed9ee797ef04bc0c5ced0d99ef6ac585d4e11a42eb683901"
