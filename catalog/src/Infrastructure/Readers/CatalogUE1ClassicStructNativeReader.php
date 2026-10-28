@@ -25,10 +25,21 @@ final class CatalogUE1ClassicStructNativeReader
         if(!in_array($kind,self::KINDS,true)){
             throw new RuntimeException('Unsupported classic field/struct native kind');
         }
-        $reference=static function(string $label)use($compact,$pkg):int{
+        $reference=static function(string $label)use($compact,$pkg,$family,&$position):int{
             $n=$compact();
-            if(($n<0 && -$n>count($pkg->getImports()))
+            $importCount=count($pkg->getImports());
+            if(($n<0 && -$n>$importCount)
                 ||($n>0 && $n>count($pkg->getExports()))){
+                // Genuine original May17 1998 Core.dll raises Bad import index
+                // with a zero-based import slot, after the compact index read.
+                // The observed Children=-63 against 16 imports has Tell=24224.
+                // Do not infer that other UE1 lineages use this diagnostic.
+                if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1
+                    &&$n<0){
+                    throw new RuntimeException(sprintf(
+                        'UE1 Bad import index %d/%d at archive cursor %d',
+                        -$n-1,$importCount,$position));
+                }
                 throw new RuntimeException('Invalid UE1 '.$label.' object reference');
             }
             return $n;
@@ -73,8 +84,24 @@ final class CatalogUE1ClassicStructNativeReader
         if($scriptSize<0){throw new RuntimeException('Negative UStruct ScriptSize');}
         $record['script_size']=$scriptSize;
         if($scriptSize!==0){
-            $script=CatalogUE1ClassicScriptArchiveReader::inspect(
-                $pkg,$version,$scriptSize,$read,$compact,$position,$family);
+            try{
+                $script=CatalogUE1ClassicScriptArchiveReader::inspect(
+                    $pkg,$version,$scriptSize,$read,$compact,$position,$family);
+            }catch(RuntimeException $e){
+                // Original May17 1998 UStruct::Serialize reports its iCode
+                // mismatch after SerializeExpr has consumed the expression.
+                // Preserve the actual cursor and use the compiled error text;
+                // the generic decoder's earlier budget exception is not the
+                // source-selected C98 diagnostic. Other families are unchanged.
+                if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1
+                    &&preg_match('/^UE1 SerializeExpr exceeded decoded script-memory ScriptSize \\(memory=(\\d+)\\/(\\d+),.*archive=(\\d+)\\)$/',
+                        $e->getMessage(),$m)){
+                    throw new RuntimeException(sprintf(
+                        'UE1 Script serialization mismatch: Got %d, expected %d at archive cursor %d',
+                        (int)$m[1],(int)$m[2],(int)$m[3]),0,$e);
+                }
+                throw $e;
+            }
             $record['script_archive']=$script;
             if($script['status']!=='script_archive_expressions_decoded'){
                 return array_replace($record,[

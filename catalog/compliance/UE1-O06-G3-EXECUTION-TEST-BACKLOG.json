@@ -425,10 +425,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Exercise the source-defined method-level rejection or null conversion, with declared physical cursor. PASS ONLY WHEN: Exact error/loaded rejection and failing cursor agree with corresponding original compiled method; no guessed stricter rules. ORACLE: Original version-specific error call and FArchive Tell for ONE named branch per actual distinct implementation. Reuse before any new execution: G3-14 owns generic EOF/error matrix, G3-12 owns opcode token bodies.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
-      "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "blocking_reason": "C98 MAY17 ORIGINAL NATIVE 2/2 BRANCH PROVEN, OTHER BUILDS OPEN: Genuine retail Core.u EndState Children byte24223 00->BF creates invalid compact import -63/16; actual shipped original Core.dll appErrorf Bad import index 62/16 and FArchive Tell 24224. Independent EndState ScriptSize byte24233 04->05 produces real original appErrorf Script serialization mismatch Got9 expected5 at FArchive Tell 24243. One-byte mutant Core.u SHAs, unchanged Core.dll SHA, exact raw CDB debugger transcripts and commands sealed in catalog/compliance/evidence/o06/20261028-G3-T009-C98-*. Focused current-reader 31/31 same native source error/cursor with no loaded state. Remaining mandatory: distinct original compiled UT99 v432 and Unreal 227k native error/Tell branches for matching direct reference/size corruption; do NOT infer from C98 or replay C98 native.",
+      "last_attempt_at": "2026-10-28T21:48:38+00:00",
+      "attempted_native_execution": true,
+      "assessment": "C98_NATIVE_ERROR_CURSOR_PROVEN_OTHER_LINEAGES_BLOCKED"
     },
     {
       "id": "T010",

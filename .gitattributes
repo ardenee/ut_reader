@@ -30,3 +30,8 @@ catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-native.
 catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json -text
 # Preserve original compiled stock v432 Pawn native byte trace exactly.
 catalog/compliance/evidence/o06/20261028-G3-T054-v432-Pawn-original-native-memory.log -text
+# Preserve the immutable C98 original compiled T009 debugger transcripts and commands.
+catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.log -text
+catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.log -text
+catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.cmd -text
+catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.cmd -text

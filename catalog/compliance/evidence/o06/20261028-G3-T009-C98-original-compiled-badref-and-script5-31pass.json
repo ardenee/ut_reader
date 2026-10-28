@@ -1,0 +1,30 @@
+{
+    "ok": true,
+    "checks": 31,
+    "errors": [],
+    "selected_source": "Unreal v1.200 May19 snapshot; original executable is May17 build, not claimed identical",
+    "original_native_1998_cases": 2,
+    "results": [
+        {
+            "branch": "invalid-Children-index",
+            "mutated_core_sha256": "a3df488cd43c8168900401fe386a8ac50932b157f7b48c0c1bcc6710c62143b5",
+            "native_error": "UE1 Bad import index 62/16 at archive cursor 24224",
+            "reader_error": "UE1 Bad import index 62/16 at archive cursor 24224",
+            "loaded": false,
+            "native_compiled_oracle_reexecuted": false
+        },
+        {
+            "branch": "invalid-ScriptSize-five",
+            "mutated_core_sha256": "930e76d7befc0767cb3bdff95fc02f9408c8eff73a737bf09c271c9a5cadd0ea",
+            "native_error": "UE1 Script serialization mismatch: Got 9, expected 5 at archive cursor 24243",
+            "reader_error": "UE1 Script serialization mismatch: Got 9, expected 5 at archive cursor 24243",
+            "loaded": false,
+            "native_compiled_oracle_reexecuted": false
+        }
+    ],
+    "C98_T009_branch": "NATIVE_PARITY_PROVEN",
+    "T009_FIXED_TEST": "BLOCKED_OTHER_DISTINCT_V432_AND_C227K",
+    "original_compiled_engine_reexecuted_by_this_verifier": 0,
+    "prior_positive_native_test_replay": 0,
+    "current_struct_reader_sha256": "23c7b307fd88af83851a005b0aca0f0be83560aafe122886be314ac2de445f5f"
+}
