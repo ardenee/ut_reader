@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updated_at_utc": "2026-10-28T10:02:48+00:00",
+  "updated_at_utc": "2026-10-28T10:18:09+00:00",
   "entries": [
     {
       "id": "R82:UActorList",
@@ -5944,14 +5944,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures; SOURCE_IMPLEMENTED_CLASSIC_SHARED 2026-10-23: C98 Core/Src/UnClass.cpp:236 native archive => CatalogUE1ClassicStructNativeReader.php.",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23. Native archive mapped; independent runtime/class instance oracle G5 deferred.",
-      "updated_at_utc": "2026-10-26T18:36:19+00:00",
+      "updated_at_utc": "2026-10-28T10:17:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T18:36:19.1204990Z",
-        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
-        "source_sha256": "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T183618545Z-2cfdad2e-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-28T10:17:39.8895183Z",
+        "test_sha256": "78a06b09cd9965573dd4a7a7572f5930e663a95498511eb223e1ce9d24135afb",
+        "source_sha256": "2d23de2dc4cd858fb42751f9ba292b45e96a94a421e7954aeefbe3bf181a88e6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261028T101739322Z-8d84a3f8-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6030,14 +6030,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: C98 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 implementation batch: v1.200 archived parameter ABI retained rather than replaced by later engine; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-26T18:36:19+00:00",
+      "updated_at_utc": "2026-10-28T10:17:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T18:36:19.1204990Z",
-        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
-        "source_sha256": "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T183618545Z-2cfdad2e-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-28T10:17:39.8895183Z",
+        "test_sha256": "78a06b09cd9965573dd4a7a7572f5930e663a95498511eb223e1ce9d24135afb",
+        "source_sha256": "2d23de2dc4cd858fb42751f9ba292b45e96a94a421e7954aeefbe3bf181a88e6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261028T101739322Z-8d84a3f8-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -6719,14 +6719,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: C98 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-26T18:36:19+00:00",
+      "updated_at_utc": "2026-10-28T10:17:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T18:36:19.1204990Z",
-        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
-        "source_sha256": "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T183618545Z-2cfdad2e-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-28T10:17:39.8895183Z",
+        "test_sha256": "78a06b09cd9965573dd4a7a7572f5930e663a95498511eb223e1ce9d24135afb",
+        "source_sha256": "2d23de2dc4cd858fb42751f9ba292b45e96a94a421e7954aeefbe3bf181a88e6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261028T101739322Z-8d84a3f8-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -8001,14 +8001,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic v1.200 Core/Src/UnClass.cpp:236,476,1358,1440; UT99 v400 Core/Src/UnClass.cpp:239,593,712,1342; synthetic v35/v50/v69 source fixtures; SOURCE_IMPLEMENTED_CLASSIC_SHARED 2026-10-23: T99 Core/Src/UnClass.cpp:239 native archive => CatalogUE1ClassicStructNativeReader.php.",
       "remaining": "UField refs, UStruct source headers (zero-script only), UState masks/flags and UFunction version-gated legacy/native/rep fields decoded. 22/22 source-defined package fixtures PASS. Nonzero SerializeExpr bytecode, genuine matching corpus, runtime field linking and broader source-version gates remain outstanding; not ACCEPTED. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SOURCE-TO-PHP MAPPED 2026-10-23. Native archive mapped; independent runtime/class instance oracle G5 deferred.",
-      "updated_at_utc": "2026-10-26T18:36:19+00:00",
+      "updated_at_utc": "2026-10-28T10:17:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T18:36:19.1204990Z",
-        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
-        "source_sha256": "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T183618545Z-2cfdad2e-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-28T10:17:39.8895183Z",
+        "test_sha256": "78a06b09cd9965573dd4a7a7572f5930e663a95498511eb223e1ce9d24135afb",
+        "source_sha256": "2d23de2dc4cd858fb42751f9ba292b45e96a94a421e7954aeefbe3bf181a88e6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261028T101739322Z-8d84a3f8-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -8176,14 +8176,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: T99 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 implementation batch: UT99 recomputes parameter ABI from child fields after reset; wire and unresolved runtime distinction retained; source-level implementation only, functional verification and PRD deployment deferred. ENGINE-MASTER-BATCH 2026-10-23 (IMPLEMENTED, VERIFICATION DEFERRED): canonical Epic UE1 engine source baseline selected before game-specific UT99 v400 overrides (explicit source-family override for legacy packages). No speculative model/mesh binary layout trials: pinned source rules for FSphere, legacy primitive, LightMapIndex, old UModel flags, palette alpha, UProperty flags, UFunction ABI, FPoly/BSP flags, script token dialect. No tests, PRD deployment or acceptance promotions. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-26T18:36:19+00:00",
+      "updated_at_utc": "2026-10-28T10:17:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T18:36:19.1204990Z",
-        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
-        "source_sha256": "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T183618545Z-2cfdad2e-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-28T10:17:39.8895183Z",
+        "test_sha256": "78a06b09cd9965573dd4a7a7572f5930e663a95498511eb223e1ce9d24135afb",
+        "source_sha256": "2d23de2dc4cd858fb42751f9ba292b45e96a94a421e7954aeefbe3bf181a88e6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261028T101739322Z-8d84a3f8-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",
@@ -9185,14 +9185,14 @@
       "test": "verify-ue1-classic-struct-native.php",
       "evidence": "Epic Unreal v1.200 Core/Src/UnClass.cpp:1095-1348 and Core/Inc/UnScript.h:65+; UT99 v400 Core/Src/UnClass.cpp:1076-1344 and Core/Inc/UnStack.h:75+; full recursive token fixture matrix with memory-vs-archive offsets and adversarial malformed expressions; SOURCE_ARCHIVE_MAPPED 2026-10-23: T99 Core/Src/UnClass.cpp explicit source serializer, PHP file archive structurally implemented and defined SerializeExpr token cases covered.",
       "remaining": "Source-typed recursive SerializeExpr branches for classic UClass/UStruct/UState/UFunction now include source-proven function parameter termination, recursive conversions, let, context, cast, arrays, struct ops, switch/case/labels, v1.200 BeginFunction and UT99 LetBool/New/UTF16 high-byte-loop. ScriptSize keeps C++ in-memory widths distinct from compact on-disk indices. Class 76/76 + Struct 26/26 source-fixture tests (in addition to nonempty UClass defaults). Outstanding: genuine script-loaded corpus/native engine comparison, historical engine-family discrimination for overlapping package versions, complete class-schema/default semantics and remaining source token contingencies; VM runtime not O06. G3 IMPLEMENTATION-ONLY 2026-10-23: source-family override passed from CLI/UObject into ClassMetadata, TaggedProperty, class-default property inheritance and imported class metadata, UField property chain, nested UArray/UStruct properties and script archives. Existing caches now distinguish selected source family. Canonical UE1 pre-v57 UClass two-FName trailer applied ONLY for Epic engine baseline, not UT99 game override. UT99 dynamic string legacy upgrades and Map/Array serialization selected by UT99 source rather than version-only gate. CLI offers explicit --ue1-source=ut99-v400 for legacy packages whose game lineage is known. No new tests, acceptance or PRD deploy. | SERIALIZED FILE METHOD MAPPED; no invented runtime UObject memory assignments or VM execution. G5 independent loaded-values and native oracle deferred; source-unsupported opcode is rejected instead of guessed.",
-      "updated_at_utc": "2026-10-26T18:36:19+00:00",
+      "updated_at_utc": "2026-10-28T10:17:40+00:00",
       "last_verification": {
         "target": "DEV",
         "state": "PASS",
-        "at_utc": "2026-10-26T18:36:19.1204990Z",
-        "test_sha256": "4e69107f801191e7c79a97ac813917d3ba00cc43d425927e88dc14c838d805eb",
-        "source_sha256": "3b12021d49afcda3c7761b25dcf2b7ed6bc0f87d826315f7c2e5189155579997",
-        "log": "catalog\\compliance\\evidence\\o06\\20261026T183618545Z-2cfdad2e-DEV-verify-ue1-classic-struct-native.php.txt"
+        "at_utc": "2026-10-28T10:17:39.8895183Z",
+        "test_sha256": "78a06b09cd9965573dd4a7a7572f5930e663a95498511eb223e1ce9d24135afb",
+        "source_sha256": "2d23de2dc4cd858fb42751f9ba292b45e96a94a421e7954aeefbe3bf181a88e6",
+        "log": "catalog\\compliance\\evidence\\o06\\20261028T101739322Z-8d84a3f8-DEV-verify-ue1-classic-struct-native.php.txt"
       },
       "source_mapping": {
         "implementation_status": "IMPLEMENTED",

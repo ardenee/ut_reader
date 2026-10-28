@@ -1,0 +1,149 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-04-c98-original-short-export-numeric.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\Unreal.exe -make
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 00409000   Unreal.exe
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 732c0000 7336f000   C:\WINDOWS\SysWOW64\apphelp.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 10100000 101ab000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304-Short\System\Core.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 00b40000 00bc5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 00b40000 00c50000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 10b00000 10b43000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304-Short\System\Window.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\comdlg32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+ModLoad: 10300000 1046e000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304-Short\System\Engine.dll
+(23bc.b80): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=6d380000 edx=00000000 esi=00625d68 edi=002d3000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core!appErrorf ".echo G304_C98_NATIVE_SHORT_SERIALSIZE_NUMERIC; da poi(@esp+4); dd @esp+4 L6; da poi(@esp+8); .printf \"G304_C98_SHORT_COMPILED_GOT=%u EXPECTED=%u\n\",poi(@esp+0xc),poi(@esp+0x10); ub 10130873 L18; kb 6; q"
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-C98-1998-G304-Short\System\Core.dll
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 74a20000 74a9e000   C:\WINDOWS\SysWOW64\uxtheme.dll
+ModLoad: 75ed0000 75fe7000   C:\WINDOWS\SysWOW64\MSCTF.dll
+ModLoad: 6e1c0000 6e3e7000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.26100.9711_none_85b4ef87f7b1112b\comctl32.DLL
+ModLoad: 64e00000 64eec000   C:\WINDOWS\SysWOW64\TextShaping.dll
+ModLoad: 75130000 75145000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+ModLoad: 76440000 764ba000   C:\WINDOWS\SysWOW64\bcryptPrimitives.dll
+ModLoad: 753f0000 75490000   C:\WINDOWS\SysWOW64\OLEAUT32.dll
+ModLoad: 763b0000 76439000   C:\WINDOWS\SysWOW64\clbcatq.dll
+ModLoad: 61890000 61992000   C:\WINDOWS\SysWOW64\textinputframework.dll
+ModLoad: 684c0000 685a0000   C:\WINDOWS\SysWOW64\CoreMessaging.dll
+ModLoad: 613d0000 61665000   C:\WINDOWS\SysWOW64\CoreUIComponents.dll
+ModLoad: 6f6c0000 6f7b9000   C:\WINDOWS\SysWOW64\wintypes.dll
+ModLoad: 70690000 7069a000   C:\WINDOWS\SysWOW64\CRYPTBASE.DLL
+ModLoad: 74970000 749c9000   C:\WINDOWS\SysWOW64\Oleacc.dll
+ModLoad: 10200000 102cc000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304-Short\System\Editor.DLL
+G304_C98_NATIVE_SHORT_SERIALSIZE_NUMERIC
+1018f138  "%s: Serial size mismatch: Got %i"
+1018f158  ", Expected %i"
+001adfe8  1018f138 1019e320 00000028 00000029
+001adff8  06ef5cc0 06ef5cc0
+1019e320  "Function G304C98Save.G304C98Acto"
+1019e340  "r.G304State.G304CanJump"
+G304_C98_SHORT_COMPILED_GOT=40 EXPECTED=41 Core!UObject::ConditionalDestroy+0x2e2da:
+10130833 7507            jne     Core!UObject::ConditionalDestroy+0x2e2e3 (1013083c)
+10130835 b801000000      mov     eax,1
+1013083a eb0c            jmp     Core!UObject::ConditionalDestroy+0x2e2ef (10130848)
+1013083c 8b4028          mov     eax,dword ptr [eax+28h]
+1013083f ebec            jmp     Core!UObject::ConditionalDestroy+0x2e2d4 (1013082d)
+10130841 33c0            xor     eax,eax
+10130843 85c9            test    ecx,ecx
+10130845 0f94c0          sete    al
+10130848 85c0            test    eax,eax
+1013084a 7416            je      Core!UObject::ConditionalDestroy+0x2e309 (10130862)
+1013084c 8b4628          mov     eax,dword ptr [esi+28h]
+1013084f 85c0            test    eax,eax
+10130851 740f            je      Core!UObject::ConditionalDestroy+0x2e309 (10130862)
+10130853 8b4e10          mov     ecx,dword ptr [esi+10h]
+10130856 50              push    eax
+10130857 81c190000000    add     ecx,90h
+1013085d 8b11            mov     edx,dword ptr [ecx]
+1013085f ff520c          call    dword ptr [edx+0Ch]
+10130862 8b461c          mov     eax,dword ptr [esi+1Ch]
+10130865 f6c402          test    ah,2
+10130868 7457            je      Core!UObject::ConditionalDestroy+0x2e368 (101308c1)
+1013086a 8b4e10          mov     ecx,dword ptr [esi+10h]
+1013086d 56              push    esi
+1013086e e8e716fdff      call    Core!UConst::operator new+0x5 (10101f5a)
+ChildEBP RetAddr      Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+001ae024 10130873     06ef5cc0 06ef5cc0 06ef3638 Core!appErrorf
+001ae050 1010f751     06ef5cc0 06ef3638 06ef5c28 Core!UObject::ConditionalDestroy+0x2e31a
+001ae080 10110bc0     06ef3638 06ef5c28 06ef3638 Core!UObject::ConditionalDestroy+0xd1f8
+001ae0b4 10114b32     06ef3638 06ef3638 06ef5c28 Core!UObject::ConditionalDestroy+0xe667
+001ae0e0 10112153     06ef3638 06ef5c28 06ef5c28 Core!UObject::ConditionalDestroy+0x125d9
+001ae118 10130873     06ef5c28 06ef5c28 06ef3638 Core!UObject::ConditionalDestroy+0xfbfa
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

@@ -219,15 +219,16 @@ final class CatalogUE1ClassicNativeObjectReader
                         $pkg,$ver,$read,$compact,$int,$pos,$limit,$seek));
             }
             $completeG3=static function(array $detail)use($record,&$pos,$exportLimit,$nativeKind):array{
-                if($pos>$exportLimit){
-                    // Other verified source archives may consume past an export
-                    // and compare the resulting Tell() after Serialize.
-                    // The 2026 v227k compiled BEFORE-read guard is above.
+                if($pos>$exportLimit||($nativeKind==='function'&&$pos<$exportLimit)){
+                    // Native UFunction Preload rejects either unequal length:
+                    // the original C98 loader reports both Got>Expected and
+                    // Got<Expected. 2026 v227k's pre-read guard is above.
                     $detail['status']='native_export_serial_size_mismatch';
                     $detail['source_serial_size_check_failed']=true;
                     $detail['archive_cursor']=$pos;
                     $detail['expected_export_end']=$exportLimit;
-                    $detail['serial_size_overrun_bytes']=$pos-$exportLimit;
+                    $detail['serial_size_overrun_bytes']=max(0,$pos-$exportLimit);
+                    $detail['serial_size_shortfall_bytes']=max(0,$exportLimit-$pos);
                     $detail['extension_bytes']=0;
                     if($nativeKind==='function'){
                         // The original loader rejects this function: archived

@@ -146,8 +146,13 @@ try{
     $check('v69_UFunction_NET_conditional_rep',$fn['status']==='native_function_record_complete'
         &&$fn['rep_offset']===22);
     [$fn]=$inspect('Function',69,$struct().$function(69,true)."\xff");
-    $check('UFunction_extra_bytes_not_complete',$fn['status']==='native_function_has_extension'
-        &&$fn['extension_bytes']===1);
+    $check('UFunction_extra_bytes_rejected_by_native_Preload',
+        $fn['status']==='native_export_serial_size_mismatch'
+        &&$fn['source_serial_size_check_failed']===true
+        &&$fn['serial_size_shortfall_bytes']===1
+        &&$fn['loaded_num_parms']===null
+        &&$fn['loaded_parms_size']===null
+        &&$fn['loaded_return_value_offset']===null);
     $check('reject_UField_bad_import',$reject('Field',50,$field(-2,0)));
     $check('reject_UField_bad_export',$reject('Field',69,$field(0,2)));
     $check('reject_UStruct_bad_script_text',$reject('Struct',69,$field().$compact(-2)));

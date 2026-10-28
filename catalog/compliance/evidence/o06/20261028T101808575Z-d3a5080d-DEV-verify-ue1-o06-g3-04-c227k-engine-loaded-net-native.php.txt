@@ -1,0 +1,50 @@
+﻿{
+    "ok": true,
+    "checks": 1555,
+    "failed": [],
+    "original_engine_unreal_exe_afterload_events": 220,
+    "actually_identified_engine_functions": 219,
+    "distinct_original_engine_export_indices": 219,
+    "source_ambiguous_original_events_excluded": 1,
+    "native_persisted_and_loaded_fields_exact": 1314,
+    "newly_resolved_functions": {
+        "3495": {
+            "name": "SetTimer",
+            "actual_parms_size": 20,
+            "actual_num_parms": 5,
+            "actual_return_offset": 65535
+        },
+        "7766": {
+            "name": "GetBoundingBox",
+            "actual_parms_size": 32,
+            "actual_num_parms": 2,
+            "actual_return_offset": 4
+        },
+        "8638": {
+            "name": "SetSocketInfo",
+            "actual_parms_size": 44,
+            "actual_num_parms": 1,
+            "actual_return_offset": 65535
+        },
+        "8797": {
+            "name": "GetSocketInfo",
+            "actual_parms_size": 12,
+            "actual_num_parms": 3,
+            "actual_return_offset": 8
+        }
+    },
+    "compiled_network_function_reps": [
+        {
+            "index": 3425,
+            "name": "BroadcastMessage",
+            "original_rep_offset": 697
+        },
+        {
+            "index": 3492,
+            "name": "DemoPlaySound",
+            "original_rep_offset": 100
+        }
+    ],
+    "previously_sealed_compiled_trace_reexecutions": 0,
+    "G3_04_full": "OPEN (source SAVE and malformed physical FArchive Tell and other engine versions)"
+}

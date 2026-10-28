@@ -1601,6 +1601,27 @@
         "verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php"
       ],
       "gate": []
+    },
+    "g3-04-c98-may1998-original-short-export-rejection": {
+      "description": "ONE genuinely new original May17 1998 retail x86 Core.dll native underconsumed UFunction malformed branch, distinct from last original FUNC_Net overrun: original C98 FObjectManager-compiled 1058-byte .u unchanged payload, ONE export-map byte1027 SerialSize40 to41; original unmodified 1998 Core.dll under CDB actually executes appErrorf 'Function G304C98Save.G304C98Actor.G304State.G304CanJump: Serial size mismatch: Got 40, Expected 41'. This proves original compiled UFunction less-than-declared bytes is fatal even though no physical read overrun. Production CatalogUE1ClassicNativeObjectReader previously incorrectly called it native_function_has_extension with loaded parameter fields despite original rejecting; now returns native_export_serial_size_mismatch, source_serial_size_check_failed, archive_cursor810, expected_export_end811, serial_size_shortfall_bytes1, no loaded parameters, raw source archived values retained. Source-version exact test verify-ue1-classic-struct-native.php updated to assert rejection of underconsumed UFunction. Original CDB command and trace, one-byte mutant original native SAVE, original retail Core.dll SHA256 pinned. New 27-check focused plus original source size fixture and seven affected PHP-only readers tests. No previously sealed original positive or malformed CDB runs repeated. G3-04 FULL remains OPEN for other distinct version/invalid/state branches and G3-14 independently owns general FArchive errors.",
+      "readers": [
+        "CatalogUE1ClassicNativeObjectReader.php"
+      ],
+      "focus": [
+        "verify-ue1-o06-g3-04-c98-original-underconsumed-function.php",
+        "verify-ue1-classic-struct-native.php"
+      ],
+      "affected": [
+        "verify-ue1-o06-g3-04-c98-original-badnet-native-cursor.php",
+        "verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php",
+        "verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php",
+        "verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php",
+        "verify-ue1-o06-g3-04-c227i-original-script-compiled-native-save.php",
+        "verify-ue1-o06-g3-04-v432-function-link-native.php",
+        "verify-ue1-o06-g3-04-469f-engine-native-postload.php",
+        "verify-ue1-o06-g3-04-c227k-engine-loaded-net-native.php"
+      ],
+      "gate": []
     }
   }
 }
