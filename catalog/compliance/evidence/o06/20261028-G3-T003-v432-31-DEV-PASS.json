@@ -1,0 +1,33 @@
+{
+    "ok": true,
+    "checks": 31,
+    "failed": [],
+    "T003": "Genuine original compiled v432 stock Core.dll / Engine.dll native zero + nonzero UStruct Script.Num, typed object relocations and archive byte size equality",
+    "native_objects": {
+        "Vector": {
+            "source_package": "Core.u",
+            "export_index": 0,
+            "native_script_bytes": 0,
+            "original_memory_hex": "",
+            "archived_script_bytes": 0,
+            "object_pointer_relocations": 0
+        },
+        "NotEqual_FloatFloat": {
+            "source_package": "Core.u",
+            "export_index": 286,
+            "native_script_bytes": 10,
+            "original_memory_hex": "29f8ce2b012940702b01",
+            "archived_script_bytes": 6,
+            "object_pointer_relocations": 2
+        },
+        "PostBeginPlay": {
+            "source_package": "Engine.u",
+            "export_index": 67,
+            "native_script_bytes": 2,
+            "original_memory_hex": "040b",
+            "archived_script_bytes": 2,
+            "object_pointer_relocations": 0
+        }
+    },
+    "previous_native_verifiers_reexecuted": false
+}

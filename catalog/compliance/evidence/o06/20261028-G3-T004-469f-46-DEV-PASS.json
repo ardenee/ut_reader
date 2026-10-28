@@ -1,0 +1,28 @@
+{
+    "ok": true,
+    "checks": 46,
+    "failed": [],
+    "T004": "Original compiled genuine 469f registry direct UStruct loaded field/member/linked target parity",
+    "source_selected_provenance": "ut99-v469f",
+    "native_loaded": {
+        "RegistryPropertyInfo": {
+            "native_export": 727,
+            "native_child_ref": 743,
+            "native_next_ref": 735,
+            "script_size": 0
+        },
+        "RegistryObjectInfo": {
+            "native_export": 728,
+            "native_child_ref": 759,
+            "native_next_ref": 0,
+            "script_size": 0
+        },
+        "PreferencesInfo": {
+            "native_export": 734,
+            "native_child_ref": 737,
+            "native_next_ref": 729,
+            "script_size": 0
+        }
+    },
+    "earlier_sealed_469f_direct_struct_tests_rerun": false
+}

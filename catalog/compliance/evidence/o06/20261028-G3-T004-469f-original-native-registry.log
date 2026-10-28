@@ -1,0 +1,8 @@
+G3_T004_469F_PACKAGE=03611A80
+G3_T004_469F_LOOKUP[0] obj=0366C570
+G3_T004_469F_NATIVE[0] export=727 script=0 line=0 textpos=0 name=RegistryPropertyInfo child_ref=743 next_ref=735 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T004_469F_LOOKUP[1] obj=0366C5E0
+G3_T004_469F_NATIVE[1] export=728 script=0 line=0 textpos=0 name=RegistryObjectInfo child_ref=759 next_ref=0 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T004_469F_LOOKUP[2] obj=0366C6C0
+G3_T004_469F_NATIVE[2] export=734 script=0 line=0 textpos=0 name=PreferencesInfo child_ref=737 next_ref=729 super_ref=0 scripttext_null=1 child_same_linker=1
+G3_T004_469F_LOADED_COUNT=3

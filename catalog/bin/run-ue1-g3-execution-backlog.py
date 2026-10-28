@@ -148,7 +148,69 @@ def eval_t001_t002(row: dict[str, Any]) -> dict[str, Any]:
         "Shared one native result validates both fixed tests; original loader not rerun.")
     return {"status":"PASS","result":detail,"evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T008":eval_t008,"T067":eval_t067}
+def eval_t003(_row: dict[str, Any]) -> dict[str, Any]:
+    """Compiled original v432 Core/Engine Script.Num and exact archive/memory bytes."""
+    pins=[
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.cpp",
+                 "c24ab8cd1b2f537ace55089bd800013e4fafaee5fd691b9ea6696396ab5463a8"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.log",
+                 "028d1ddc84ac2e6a97180030ccb187b53f2e7e5f31bfc07708e2eac9db11006b"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-build.log",
+                 "3768474819f2ca0e78ae619c2a13a308320029d9df23fb3b931fd8f3b0e2dd1b"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+                 "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76"),
+    ]
+    path="catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json"
+    pins.append(verified_pass_log(path,"checks",31))
+    original=json.loads((ROOT/path).read_text(encoding="utf-8-sig"))
+    targets=original.get("native_objects",{})
+    if set(targets)!={"Vector","NotEqual_FloatFloat","PostBeginPlay"}:
+        raise AssertionError("Missing original native v432 zero/nonzero memory probes")
+    expected={"Vector":(0,0,0,0),"NotEqual_FloatFloat":(286,10,6,2),
+              "PostBeginPlay":(67,2,2,0)}
+    for name,(idx,num,arch,refs) in expected.items():
+        t=targets[name]
+        if (t["export_index"],t["native_script_bytes"],t["archived_script_bytes"],
+            t["object_pointer_relocations"])!=(idx,num,arch,refs):
+            raise AssertionError("Original v432 script size/archived mismatch "+name)
+    return {"status":"PASS","result":
+      "Original v432 compiled Core/Engine native zero and nonzero UStruct script loaded-values: Vector 0/0, NotEqual_FloatFloat native 10 bytes vs archived 6 (two typed object relocations), Engine.PostBeginPlay 2/2. 31/31 focused actual native-to-UnrealDB checks PASS, exact original evidence SHA-pinned. No native rerun.",
+      "evidence":pins}
+
+def eval_t004(_row: dict[str, Any]) -> dict[str, Any]:
+    """Original 469f Core.dll directly loaded 3 previously unobserved registry structs."""
+    pins=[
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T004-469f-original-native-registry.cpp",
+                 "d28bcd92666e693fe8047cc68b9c09c51dc3e0eeff07d31876a8448262bd3364"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T004-469f-original-native-registry.log",
+                 "90728ef4696f4038aa5c1bea72bb6fb9d68bbeba790153063103216fd9d43ee8"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T004-469f-original-native-registry-build.log",
+                 "693f89d960ad05b59d075664da7fbaf475c096eb56ac1f50446e864e0f9daa4a"),
+      verify_pin("catalog/compliance/evidence/o06/20261028-G3-T004-469f-46-DEV-PASS.json",
+                 "a243825846068a1d1af281bcf60e667168e9346a16dfa3f0de4ffc368d86d36a"),
+    ]
+    path="catalog/compliance/evidence/o06/20261028-G3-T004-469f-46-DEV-PASS.json"
+    pins.append(verified_pass_log(path,"checks",46))
+    o=json.loads((ROOT/path).read_text(encoding="utf-8-sig"))
+    rows=o.get("native_loaded",{})
+    expected={"RegistryPropertyInfo":(727,743,735),
+              "RegistryObjectInfo":(728,759,0),"PreferencesInfo":(734,737,729)}
+    if set(rows)!=set(expected):
+        raise AssertionError("Original compiled 469f registry natives incomplete")
+    for name,(idx,child,nxt) in expected.items():
+        got=rows[name]
+        if (got.get("native_export"),got.get("native_child_ref"),
+            got.get("native_next_ref"),got.get("script_size"))!=(idx,child,nxt,0):
+            raise AssertionError("Original 469f native registry reference mismatch "+name)
+    pins.append({"original_compiled_Core_dll_sha256":
+                 "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+                 "original_469f_Core_u_sha256":
+                 "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0"})
+    return {"status":"PASS",
+            "result":"Original 469f compiled Core.dll native LOAD of previously unobserved direct RegistryPropertyInfo/RegistryObjectInfo/PreferencesInfo, 46/46 exact original-native loaded UStruct fields and live linked Children/Next vs UnrealDB reader PASS; previous nine direct struct probes not repeated.",
+            "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T008":eval_t008,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
