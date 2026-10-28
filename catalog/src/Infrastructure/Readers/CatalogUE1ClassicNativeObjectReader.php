@@ -262,7 +262,8 @@ final class CatalogUE1ClassicNativeObjectReader
                             $sourceFamily===CatalogUE1ClassicSourceFamily::UT99_V469F
                                 ?CatalogUE1ClassicSourceFamily::UT99_V469F:$family)
                         :CatalogUE1ClassicStructNativeReader::inspect(
-                            $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,$family);
+                            $nativeKind,$pkg,$ver,$read,$compact,$int,$pos,$limit,
+                            $sourceFamily??$family,(string)($ex['objectNameText']??''));
                 }catch(CatalogUE1ClassicNativeExportBoundaryReached $overrun){
                     // Native file cursor remains at the last valid byte.
                     // The attempted read end is diagnostic, NOT Tell().

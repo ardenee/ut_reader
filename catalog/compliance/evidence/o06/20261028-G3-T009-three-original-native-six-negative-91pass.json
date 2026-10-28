@@ -1,0 +1,92 @@
+{
+    "ok": true,
+    "checks": 91,
+    "errors": [],
+    "T009_original_compiled_distinct_engines": [
+        "C98-1998-retail",
+        "UT99-v432-stock",
+        "Unreal-v227k-2026-stock"
+    ],
+    "original_native_malformed_scenarios": 6,
+    "observations": [
+        {
+            "profile": "C98",
+            "original_export_index": 456,
+            "mutated_archive_byte_offset": 24223,
+            "one_byte_change": "00->BF",
+            "current_reader_error": "UE1 Bad import index 62/16 at archive cursor 24224",
+            "original_native_error_and_Tell_match": true,
+            "mutated_real_package_sha256": "a3df488cd43c8168900401fe386a8ac50932b157f7b48c0c1bcc6710c62143b5"
+        },
+        {
+            "profile": "C98",
+            "original_export_index": 456,
+            "mutated_archive_byte_offset": 24233,
+            "one_byte_change": "04->05",
+            "current_reader_error": "UE1 Script serialization mismatch: Got 9, expected 5 at archive cursor 24243",
+            "original_native_error_and_Tell_match": true,
+            "mutated_real_package_sha256": "930e76d7befc0767cb3bdff95fc02f9408c8eff73a737bf09c271c9a5cadd0ea"
+        },
+        {
+            "profile": "v432",
+            "original_export_index": 634,
+            "mutated_archive_byte_offset": 43306,
+            "one_byte_change": "00->BF",
+            "current_reader_error": "UE1 Bad import index 62/16 at archive cursor 43307",
+            "original_native_error_and_Tell_match": true,
+            "mutated_real_package_sha256": "9b2c51e1894e4820118d00fc728e354422318404f6214920c7da513b2f19e7aa"
+        },
+        {
+            "profile": "v432",
+            "original_export_index": 634,
+            "mutated_archive_byte_offset": 43316,
+            "one_byte_change": "02->03",
+            "current_reader_error": "UE1 Script serialization mismatch: Got 7, expected 3 at archive cursor 43324",
+            "original_native_error_and_Tell_match": true,
+            "mutated_real_package_sha256": "8012f3089b8dcf45f726562577f212499c1e2910094f8eaa7cad4f61b7f60980"
+        },
+        {
+            "profile": "227k",
+            "original_export_index": 633,
+            "mutated_archive_byte_offset": 67622,
+            "one_byte_change": "00->BF",
+            "current_reader_error": "UE1 227k <?int?Core.Errors.ImportIndex?> at archive cursor 67623",
+            "original_native_error_and_Tell_match": true,
+            "mutated_real_package_sha256": "2a5101a00bd61f61e57f41602cf6b506cd44ea8750a3fe3e58d12d2de0f73f6a"
+        },
+        {
+            "profile": "227k",
+            "original_export_index": 633,
+            "mutated_archive_byte_offset": 67632,
+            "one_byte_change": "02->03",
+            "current_reader_error": "Script (EndState) serialization failed: Size mismatch: Got 7, expected 3 at archive cursor 67640",
+            "original_native_error_and_Tell_match": true,
+            "mutated_real_package_sha256": "e82e6993d686714582cb19dbd3f12f42303621d663b43f0fd58b72280da11020"
+        }
+    ],
+    "compiled_engine_native_runs_reexecuted_by_verifier": 0,
+    "previous_completed_positive_native_tests_replayed": 0,
+    "pinned_original_source_binary_and_native_logs": {
+        "Core.u": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c",
+        "Core.dll": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+        "Unreal.exe": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30",
+        "UCC.exe": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a",
+        "CatalogUE1ClassicStructNativeReader.php": "8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782",
+        "CatalogUE1ClassicNativeObjectReader.php": "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709",
+        "CatalogUE1ClassicScriptArchiveReader.php": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+        "20261028-G3-T009-C98-Children-original-compiled-Tell.log": "c88cd8a413167d33e40168dacc3082faa0ca51d2af6bf61f2d3912f67f65df54",
+        "20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.log": "a4d88f4b4c7baadee6af3d743c76b354e375044f06b6330f12eaba815c4efe86",
+        "20261028-G3-T009-v432-original-native-Children-Tell.log": "5dfa15d8beb8afd9808776cc3976116b47806b6b2d5c6391e10d27c9431a520d",
+        "20261028-G3-T009-v432-original-native-Children-Tell.cmd": "092bd598b09550a99d2b659c6ecbe4e147b2474008478a1567ee3687be9fdcba",
+        "20261028-G3-T009-v432-original-native-ScriptSize-Tell.log": "2267d0ab6db79beb335315b195cd6afbfff0159a5d5d4df81187a5a8dd9f0a70",
+        "20261028-G3-T009-v432-original-native-ScriptSize-Tell.cmd": "9e92ee167c7aeb65a5c077ecd7c4a5daf9cce95e6a89286d0b43758b535ab611",
+        "20261028-G3-T009-v432-original-native-Tell-impl.log": "eddde0fa7996348455d5d034036008c554c19ee342254515cc21cced2cd390a6",
+        "20261028-G3-T009-227k-original-native-Children-Tell.log": "5f1fb38123da601dee3a2785bc4cdbae04edb340fd39869afa66501c7ef8d95d",
+        "20261028-G3-T009-227k-original-native-Children-Tell.cmd": "584fbec7d8f0da692afec954b5555cb549b83a167b3f0c387650f547cc81ddf4",
+        "20261028-G3-T009-227k-original-native-ScriptSize-Tell.log": "1d7522447f3f590f68de07f629c8c301a9cdd1f68730b4c553f78e23466a1b8d",
+        "20261028-G3-T009-227k-original-native-ScriptSize-Tell.cmd": "7e6ecd96753be7c1f37e191c6ae77868dd10e13eac08815465204f13e0700ed1",
+        "20261028-G3-T009-227k-original-native-Children-console.log": "4fcc8622ea7ea9c81485378a6f16b9004b7f4c5e56f2b3fdc9eab92fde48125e",
+        "20261028-G3-T009-227k-original-native-ScriptSize-console.log": "703053b17f40a77a91464a181e4fa8d934adfd7e2702ea1e498398e87c549c83"
+    },
+    "overall_G3_03": "OPEN_OTHER_FIXED_TEST_IDS"
+}

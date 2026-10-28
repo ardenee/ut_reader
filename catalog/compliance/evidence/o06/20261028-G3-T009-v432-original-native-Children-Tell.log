@@ -1,0 +1,122 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\T009-v432\invalid-Children-index\children-real-cursor
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\T009-v432\invalid-Children-index\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(3674.56ec): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=0b9c0000 edx=00000000 esi=00705e70 edi=003d2000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> r $t0=0
+0:000> bp 10126920 ".if (poi(@ecx+14)==0n634){r $t0=poi(@esp+4); .echo TARGET_ORIGINAL_V432_ENDSTATE_SOURCE; gc} .else {gc}"
+0:000> bp 10102cfc ".if (@$t0!=0){.echo NATIVE_V432_CHILDREN_BADIMPORT_APPTHROW; du poi(@esp+4); dd @$t0 L6; dd @$t0+444 L2; dd poi(@$t0+444)+3c L5; kb 9; q} .else {gc}"
+0:000> bp 1010284c ".if (@$t0!=0){.echo NATIVE_V432_CHILDREN_BADIMPORT_LOGF; du poi(@esp+4); dd @$t0 L6; dd @$t0+444 L2; dd poi(@$t0+444)+3c L5; kb 9; q} .else {gc}"
+0:000> bp 10102ad1 ".if (@$t0!=0){.echo NATIVE_V432_CHILDREN_BADIMPORT_LOGF_ENAME; du poi(@esp+8); dd @$t0 L6; dd @$t0+444 L2; dd poi(@$t0+444)+3c L5; kb 9; q} .else {gc}"
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\T009-v432\invalid-Children-index\System\Core.dll
+*** WARNING: Unable to verify checksum for UCC.exe
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+(3674.56ec): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 024b0000 02642000   C:\Temp\UnrealDB\O06\T009-v432\invalid-Children-index\System\Editor.DLL
+ModLoad: 024b0000 02642000   C:\Temp\UnrealDB\O06\T009-v432\invalid-Children-index\System\Editor.DLL
+ModLoad: 10300000 105c7000   C:\Temp\UnrealDB\O06\T009-v432\invalid-Children-index\System\Engine.dll
+ModLoad: 11000000 11079000   C:\Temp\UnrealDB\O06\T009-v432\invalid-Children-index\System\Window.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\comdlg32.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+Loading package Core.u...
+TARGET_ORIGINAL_V432_ENDSTATE_SOURCE
+NATIVE_V432_CHILDREN_BADIMPORT_LOGF
+004165c0  "?A"
+028578fc  10179250 00000045 00000190 00000000
+0285790c  00000001 00000000
+02857d40  02857da0 abababab
+02857ddc  0000a92b 0000a924 0000001d 7a000545
+02857dec  21bf0009
+ChildEBP RetAddr      Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+001af258 10147e2f     ffffffc1 028578fc 028578fc Core!FOutputDevice::Logf
+001af294 1012696c     028e0290 028e0258 028578fc Core!FRegistryObjectInfo::FRegistryObjectInfo+0x44972
+001af2cc 10128a93     028578fc 028578fc 028e0258 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x234af
+001af2fc 101454fa     028578fc 102a1768 028e0258 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x255d6
+001af340 10125a1c     028e0258 102a1768 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x4203d
+001af3e8 1012700c     028578fc 00000001 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2255f
+001af428 101277fd     028578fc 00000001 028578fc Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23b4f
+001af478 10126a51     028578fc 00000001 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x24340
+001af4b4 10126f53     00000000 00000000 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23594
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

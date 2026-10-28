@@ -1,0 +1,113 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\T009-227k\invalid-Children-index\children-native-Tell
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00d20000 00d5e000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 5d160000 5d89f000   C:\Temp\UnrealDB\O06\T009-227k\invalid-Children-index\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 6f7c0000 6f7e6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(53cc.55e0): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=dad00000 edx=00000000 esi=01e35e70 edi=00871000
+eip=778591a8 esp=01caf70c ebp=01caf738 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> r $t0=0
+0:000> bp Core+0x3a770 ".if (poi(@ecx+14)==0n633) {r $t0=poi(@esp+4); .echo T009_227K_TARGET_ENDSTATE; gc} .else {gc}"
+0:000> bp Core+0x73d60 ".if (@$t0!=0){.echo T009_227K_BADIMPORT_ORIGINAL_APPTHROW; r; du poi(@esp+4); dd @$t0+1c L2; dd poi(@$t0+1c)+20 L6; kb 9; q} .else {gc}"
+0:000> bp Core+0x6a860 ".if (@$t0!=0){.echo T009_227K_BADIMPORT_ORIGINAL_LOGF; r; du poi(@esp+4); dd @$t0+1c L2; dd poi(@$t0+1c)+20 L6; kb 9; q} .else {gc}"
+0:000> bp Core+0x6a930 ".if (@$t0!=0){.echo T009_227K_BADIMPORT_ORIGINAL_LOGF_ENAME; r; du poi(@esp+8); dd @$t0+1c L2; dd poi(@$t0+1c)+20 L6; kb 9; q} .else {gc}"
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+T009_227K_TARGET_ENDSTATE
+T009_227K_BADIMPORT_ORIGINAL_LOGF_ENAME
+eax=00000000 ebx=5d225fd8 ecx=f1b3271b edx=00000000 esi=5d287028 edi=00000000
+eip=5d1ca930 esp=01caea14 ebp=01caea88 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+Core!FOutputDevice::Logf:
+5d1ca930 55              push    ebp
+00000311  "????????????????????????????????"
+00000351  "????????????????????????????????"
+00000391  "????????????????????????????????"
+000003d1  "????????????????????????????????"
+00000411  "????????????????????????????????"
+00000451  "????????????????????????????????"
+00000491  "????????????????????????????????"
+000004d1  "????????????????????????????????"
+00000511  "????????????????????????????????"
+00000551  "????????????????????????????????"
+00000591  "????????????????????????????????"
+000005d1  "????????????????????????????????"
+01caec14  01e7ad4c 0001083d
+01e7ad6c  00010827 00010820 0000001d 7900085e
+01e7ad7c  21bf0009 0000029a
+ChildEBP RetAddr      Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+01caea10 5d1ca2aa     00d56e68 00000311 5d22ea10 Core!FOutputDevice::Logf
+01caea88 5d1ca3f2     01caeae4 5d22ea80 5d22d8c0 Core!Localize+0x20a
+01caeabc 5d1bf618     01caeae4 5d22d8c0 5d225fd8 Core!LocalizeError+0x42
+01caeb08 5d1797de     ffffffc1 f079cc53 01ec572c Core!ULinkerLoad::IndexToObject+0xd8
+01caeb48 5d1bdbf7     01ec576c 01caec08 01caeba8 Core!ULinkerLoad::operator<<+0x5e
+01caeb58 5d19a82e     01ec576c f079ccb3 01ec572c Core!operator<<+0xd7
+01caeba8 5d19a39d     01caebf8 f079ccc7 01ec5750 Core!UStruct::Serialize+0xbe
+01caebdc 5d1c0c13     01caebf8 f079cb43 01ec572c Core!UFunction::Serialize+0x3d
+01caec58 5d198fa1     01ec572c f079cbe3 5d292768 Core!ULinkerLoad::Preload+0x163
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

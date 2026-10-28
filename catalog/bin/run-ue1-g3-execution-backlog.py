@@ -691,9 +691,9 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
          "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-         "23c7b307fd88af83851a005b0aca0f0be83560aafe122886be314ac2de445f5f"),
+         "8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
-         "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6"),
+         "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
          "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128"),
     ]:
@@ -724,7 +724,68 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
         "result":"Three actual original compiled source-family nested EX_* scripts, no native reruns: C98 May17 retail Core.dll real Engine.u Grab export1613 13 expressions/7 top-level/30 in-memory vs23 archive, 18/18 deterministic compiled native bytes match; 1 UObject+2 FName typed slots (12 bytes intentionally masked). UT99 v432 sealed compiled Engine.Inventory 17 recursive expressions including EX_Skip/native conversion, 21/21 literal bytes/12 reloc bytes. Original Unreal 2012 C227i Core.RandRange 14 recursive expressions/2 top-level 26 memory/18 archive, 14/14 literal bytes/12 typed object bytes. 112/112 focused source/current/original verification PASS; total 53 native known bytes and 36 relocation bytes masked; no unknown process pointer addresses fabricated. T057 only, G3-12 overall still OPEN.",
         "evidence":pins+reused.get("evidence",[])}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
+def eval_t009(_row: dict[str, Any]) -> dict[str, Any]:
+    """Six source-distinct real compiled UStruct negative branches, C98/v432/227k.
+
+    Pin the focused PHP verifier and its immutable six original x86 native
+    failures, physical Tell witnesses and original shipped Core binaries.
+    Neither this evaluator nor the verifier reruns original compiled methods.
+    """
+    script="catalog/bin/verify-ue1-o06-g3-t009-three-original-native-malformed.php"
+    result_path="catalog/compliance/evidence/o06/20261028-G3-T009-three-original-native-six-negative-91pass.json"
+    pins=[]
+    for path,expected in [
+        (script,"be236dc234074196998b751ac7b6de8c783256b62768a513b447c688a8d6ec83"),
+        (result_path,"64cc9d53d6a69f68ac6aace28a626069f90dbb0c2d66cd75b62b02594513385a"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+         "8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+         "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+         "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.log",
+         "c88cd8a413167d33e40168dacc3082faa0ca51d2af6bf61f2d3912f67f65df54"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.log",
+         "a4d88f4b4c7baadee6af3d743c76b354e375044f06b6330f12eaba815c4efe86"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-Children-Tell.log",
+         "5dfa15d8beb8afd9808776cc3976116b47806b6b2d5c6391e10d27c9431a520d"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-ScriptSize-Tell.log",
+         "2267d0ab6db79beb335315b195cd6afbfff0159a5d5d4df81187a5a8dd9f0a70"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-Tell-impl.log",
+         "eddde0fa7996348455d5d034036008c554c19ee342254515cc21cced2cd390a6"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-Children-Tell.log",
+         "5f1fb38123da601dee3a2785bc4cdbae04edb340fd39869afa66501c7ef8d95d"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-ScriptSize-Tell.log",
+         "1d7522447f3f590f68de07f629c8c301a9cdd1f68730b4c553f78e23466a1b8d"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-Children-console.log",
+         "4fcc8622ea7ea9c81485378a6f16b9004b7f4c5e56f2b3fdc9eab92fde48125e"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-ScriptSize-console.log",
+         "703053b17f40a77a91464a181e4fa8d934adfd7e2702ea1e498398e87c549c83"),
+    ]:
+        pins.append(verify_pin(path,expected))
+    observed=json.loads((ROOT/result_path).read_text(encoding="utf-8-sig"))
+    if (observed.get("ok") is not True or observed.get("checks")!=91
+        or observed.get("errors") or observed.get("original_native_malformed_scenarios")!=6
+        or observed.get("compiled_engine_native_runs_reexecuted_by_verifier")!=0
+        or observed.get("previous_completed_positive_native_tests_replayed")!=0):
+        raise AssertionError("T009 original compiled six-negative 91/91 source-native acceptance missing")
+    samples=observed.get("observations",[])
+    expected=[
+        ("C98","UE1 Bad import index 62/16 at archive cursor 24224",24223),
+        ("C98","UE1 Script serialization mismatch: Got 9, expected 5 at archive cursor 24243",24233),
+        ("v432","UE1 Bad import index 62/16 at archive cursor 43307",43306),
+        ("v432","UE1 Script serialization mismatch: Got 7, expected 3 at archive cursor 43324",43316),
+        ("227k","UE1 227k <?int?Core.Errors.ImportIndex?> at archive cursor 67623",67622),
+        ("227k","Script (EndState) serialization failed: Size mismatch: Got 7, expected 3 at archive cursor 67640",67632),
+    ]
+    if len(samples)!=6 or [
+        (s.get("profile"),s.get("current_reader_error"),s.get("mutated_archive_byte_offset"))
+        for s in samples]!=expected or not all(s.get("original_native_error_and_Tell_match") is True for s in samples):
+        raise AssertionError("T009 per-build native method errors, 1-byte source offsets or physical Tell mismatch")
+    return {"status":"PASS","result":"Six genuinely compiled original native UStruct malformed branches: C98 retail EndState Children import index62/16 Tell24224 and ScriptSize9/5 Tell24243; stock v432 Children62/16 Tell43307 and ScriptSize7/3 Tell43324; original 2026 Unreal 227k localized ImportIndex Tell67623 and named ScriptSize7/3 Tell67640. Six independent one-byte real Core.u mutants, original loaded method/reader physical Tell disassembly, SHA-pinned native x86 logs and original binaries. Production source-selected 91/91 exact errors/cursors/rejected loaded state PASS; no native or prior accepted test rerun. Only T009 closed; G3-03 group remains OPEN.","evidence":pins}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

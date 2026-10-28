@@ -1,0 +1,178 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\script3-actual-FArchive-cursor
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(80c8.42c0): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=acce0000 edx=00000000 esi=00765e70 edi=003f3000
+eip=778591a8 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp /1 10126a32 ".echo T009_V432_ORIGINAL_COMPILED_UStruct_SCRIPT_MISMATCH; r; .echo ORIGINAL_COMPILER_ARCHIVE_EDI; dd @edi L16; .echo ORIGINAL_ARCHIVE_TO_READER; dd @edi+444 L6; .echo ORIGINAL_UNDERLYING_FILE_ARCHIVE; dd poi(@edi+444) L30; .echo ORIGINAL_FILE_ARCHIVE_VTABLE; dd poi(poi(@edi+444)) L16; .echo ORIGINAL_FILE_TELL_METHOD; u poi(poi(poi(@edi+444))+28) L16; kb 10; q"
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+(80c8.42c0): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 02530000 026c2000   C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\System\Editor.DLL
+ModLoad: 02530000 026c2000   C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\System\Editor.DLL
+ModLoad: 10300000 105c7000   C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\System\Engine.dll
+ModLoad: 11000000 11079000   C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\System\Window.dll
+ModLoad: 76fa0000 77059000   C:\WINDOWS\SysWOW64\comdlg32.dll
+ModLoad: 6b010000 6b0a1000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 76150000 76225000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 760c0000 76112000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+Loading package Core.u...
+T009_V432_ORIGINAL_COMPILED_UStruct_SCRIPT_MISMATCH
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\System\Core.dll
+eax=00000007 ebx=028f02c8 ecx=00000003 edx=004165c0 esi=028f0310 edi=028679cc
+eip=10126a32 esp=001af298 ebp=001af2cc iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000202
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23575:
+10126a32 6820971a10      push    offset Core!`string'+0x146c (101a9720)
+ORIGINAL_COMPILER_ARCHIVE_EDI
+028679cc  10179250 00000045 00000190 00000000
+028679dc  00000001 00000000 00000000 00000001
+028679ec  00000001 00000001 00000001 00000000
+028679fc  00000008 00000001 00000240 00000164
+02867a0c  00000281 0000016c 00000170 00000174
+02867a1c  00000178 0000017c
+ORIGINAL_ARCHIVE_TO_READER
+02867e10  02867e70 abababab abababab feeefeee
+02867e20  00000000 00000000
+ORIGINAL_UNDERLYING_FILE_ARCHIVE
+02867e70  0041120c 00000045 00000190 00000000
+02867e80  00000001 00000000 00000000 00000001
+02867e90  00000001 00000001 00000001 00000000
+02867ea0  00000244 004165c0 0000e74e 0000a93c
+02867eb0  0000a924 0000001d 7a000545 21000009
+02867ec0  00000143 00003996 00000003 00000b04
+02867ed0  00080000 ffffff00 ffffffff 000000ff
+02867ee0  00011200 00000000 00000000 00000000
+02867ef0  00000000 01030100 b5000000 015778cf
+02867f00  45070305 54000005 07000402 9e400e00
+02867f10  03008205 6b000000 07000401 9e4e2200
+02867f20  03008205 64000000 07000401 9e702000
+ORIGINAL_FILE_ARCHIVE_VTABLE
+0041120c  004010d7 00401230 0040d530 0040d52a
+0041121c  0040d524 0040d51e 0040d518 0040d512
+0041122c  0040d50c 0040d506 004010cd 0040113b
+0041123c  0040d500 004010d2 0040d4fa 0040d4f4
+0041124c  00401118 0040d4ee 0040119f 0040d4e8
+0041125c  00000000 00000000
+ORIGINAL_FILE_TELL_METHOD
+*** WARNING: Unable to verify checksum for UCC.exe
+UCC+0x10cd:
+004010cd e9ee160000      jmp     UCC+0x27c0 (004027c0)
+004010d2 e9a9150000      jmp     UCC+0x2680 (00402680)
+004010d7 e934190000      jmp     UCC+0x2a10 (00402a10)
+004010dc e99f1d0000      jmp     UCC+0x2e80 (00402e80)
+004010e1 e91a600000      jmp     UCC+0x7100 (00407100)
+004010e6 e905a10000      jmp     UCC+0xb1f0 (0040b1f0)
+004010eb e930140000      jmp     UCC+0x2520 (00402520)
+004010f0 e92b090000      jmp     UCC+0x1a20 (00401a20)
+004010f5 e9468c0000      jmp     UCC+0x9d40 (00409d40)
+004010fa e931a20000      jmp     UCC+0xb330 (0040b330)
+004010ff e91c740000      jmp     UCC+0x8520 (00408520)
+00401104 e9071d0000      jmp     UCC+0x2e10 (00402e10)
+00401109 e9c28d0000      jmp     UCC+0x9ed0 (00409ed0)
+0040110e e9fda60000      jmp     UCC+0xb810 (0040b810)
+00401113 e968870000      jmp     UCC+0x9880 (00409880)
+00401118 e9a3140000      jmp     UCC+0x25c0 (004025c0)
+0040111d e9de9d0000      jmp     UCC+0xaf00 (0040af00)
+00401122 e959960000      jmp     UCC+0xa780 (0040a780)
+00401127 e9e4950000      jmp     UCC+0xa710 (0040a710)
+0040112c e92f270000      jmp     UCC+0x3860 (00403860)
+00401131 e94a9c0000      jmp     UCC+0xad80 (0040ad80)
+00401136 e945660000      jmp     UCC+0x7780 (00407780)
+ChildEBP RetAddr      Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+001af2cc 10128a93     00000003 028679cc 028f02c8 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23575
+001af2fc 101454fa     028679cc 102a1768 028f02c8 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x255d6
+001af340 10125a1c     028f02c8 102a1768 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x4203d
+001af3e8 1012700c     028679cc 00000001 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2255f
+001af428 101277fd     028679cc 00000001 028679cc Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23b4f
+001af478 10126a51     028679cc 00000001 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x24340
+001af4b4 10126f53     00000000 00000000 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23594
+001af4e4 10127a94     028679cc 028679cc 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23a96
+001af518 101454fa     028679cc 02867928 102a1768 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x245d7
+001af55c 1015aadc     102a1768 1010284c 0244af60 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x4203d
+001af59c 1015a81a     1010284c 00000000 1010284c Core!FRegistryObjectInfo::FRegistryObjectInfo+0x5761f
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\T009-v432\invalid-ScriptSize-three\System\Editor.DLL
+001af5cc 0254e0cb     00000000 028d8b18 00000001 Core!FRegistryObjectInfo::FRegistryObjectInfo+0x5735d
+001af66c 00406025     1027b2ca 0040d73e 0040d73e Editor!UBitArray::UBitArray+0x1b6cc
+001aff00 0040d821     001af670 0266bf20 024228f0 UCC+0x6025
+001aff74 75c85d49     003f3000 75c85d30 001affdc UCC+0xd821
+001aff84 777ac75b     003f3000 94eefe8e 00000000 KERNEL32!BaseThreadInitThunk+0x19
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

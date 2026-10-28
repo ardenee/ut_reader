@@ -422,13 +422,85 @@
       "pass_criterion": "Exact error/loaded rejection and failing cursor agree with corresponding original compiled method; no guessed stricter rules.",
       "evidence": "Original version-specific error call and FArchive Tell for ONE named branch per actual distinct implementation",
       "reuse": "G3-14 owns generic EOF/error matrix, G3-12 owns opcode token bodies.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "C98 MAY17 ORIGINAL NATIVE 2/2 BRANCH PROVEN, OTHER BUILDS OPEN: Genuine retail Core.u EndState Children byte24223 00->BF creates invalid compact import -63/16; actual shipped original Core.dll appErrorf Bad import index 62/16 and FArchive Tell 24224. Independent EndState ScriptSize byte24233 04->05 produces real original appErrorf Script serialization mismatch Got9 expected5 at FArchive Tell 24243. One-byte mutant Core.u SHAs, unchanged Core.dll SHA, exact raw CDB debugger transcripts and commands sealed in catalog/compliance/evidence/o06/20261028-G3-T009-C98-*. Focused current-reader 31/31 same native source error/cursor with no loaded state. FURTHER ORIGINAL UT99 v432 COMPILED ERROR PROVEN, BUT CURSOR AND PARITY STILL OPEN: untouched stock v432 Core.u SHA ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70; stock Core.dll SHA 237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8. Two independent one-byte EndState export634 source mutations in disposable UCC system: Children byte43306 00->BF, original UCC emitted Bad import index 62/16; ScriptSize byte43316 02->03, original compiled UCC emitted Script serialization mismatch: Got 7, expected 3. SHA-pinned original native compiled stdout in 20261028-G3-T009-v432-original-{Children,ScriptSize}-error-no-Tell.log. Original native FArchive Tell was NOT captured (a CDB appErrorf symbol is absent; the exported appThrowf catches unrelated UCC startup errors). Current reader rejects both but emits Invalid UE1 Children object reference and SerializeExpr exceeded decoded ScriptSize rather than original method diagnostics: REAL CONFIRMED V432 ERROR-TEXT PARITY MISMATCH. Fix v432 source-selected error and validate native Tell, preserve 469f distinct semantics; original 227k native T009 branch still untested. Do not infer v432 Tell from C98 or pretend error-text mismatch is PASS.",
-      "last_attempt_at": "2026-10-28T21:48:38+00:00",
-      "attempted_native_execution": true,
-      "assessment": "C98_NATIVE_ERROR_CURSOR_PROVEN_OTHER_LINEAGES_BLOCKED"
+      "status": "PASS",
+      "evidence_sha": "e989d273994e971776aa647e99df144f5f8462fdea1ce91292d3d32cdefb2993",
+      "result": "Six genuinely compiled original native UStruct malformed branches: C98 retail EndState Children import index62/16 Tell24224 and ScriptSize9/5 Tell24243; stock v432 Children62/16 Tell43307 and ScriptSize7/3 Tell43324; original 2026 Unreal 227k localized ImportIndex Tell67623 and named ScriptSize7/3 Tell67640. Six independent one-byte real Core.u mutants, original loaded method/reader physical Tell disassembly, SHA-pinned native x86 logs and original binaries. Production source-selected 91/91 exact errors/cursors/rejected loaded state PASS; no native or prior accepted test rerun. Only T009 closed; G3-03 group remains OPEN.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T22:48:37+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t009-three-original-native-malformed.php",
+          "sha256": "be236dc234074196998b751ac7b6de8c783256b62768a513b447c688a8d6ec83",
+          "bytes": 10908
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-three-original-native-six-negative-91pass.json",
+          "sha256": "64cc9d53d6a69f68ac6aace28a626069f90dbb0c2d66cd75b62b02594513385a",
+          "bytes": 5754
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "sha256": "8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782",
+          "bytes": 9678
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "sha256": "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709",
+          "bytes": 50317
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+          "bytes": 20905
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.log",
+          "sha256": "c88cd8a413167d33e40168dacc3082faa0ca51d2af6bf61f2d3912f67f65df54",
+          "bytes": 7898
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.log",
+          "sha256": "a4d88f4b4c7baadee6af3d743c76b354e375044f06b6330f12eaba815c4efe86",
+          "bytes": 7770
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-Children-Tell.log",
+          "sha256": "5dfa15d8beb8afd9808776cc3976116b47806b6b2d5c6391e10d27c9431a520d",
+          "bytes": 8082
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-ScriptSize-Tell.log",
+          "sha256": "2267d0ab6db79beb335315b195cd6afbfff0159a5d5d4df81187a5a8dd9f0a70",
+          "bytes": 11255
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-Tell-impl.log",
+          "sha256": "eddde0fa7996348455d5d034036008c554c19ee342254515cc21cced2cd390a6",
+          "bytes": 4879
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-Children-Tell.log",
+          "sha256": "5f1fb38123da601dee3a2785bc4cdbae04edb340fd39869afa66501c7ef8d95d",
+          "bytes": 6968
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-ScriptSize-Tell.log",
+          "sha256": "1d7522447f3f590f68de07f629c8c301a9cdd1f68730b4c553f78e23466a1b8d",
+          "bytes": 9214
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-Children-console.log",
+          "sha256": "4fcc8622ea7ea9c81485378a6f16b9004b7f4c5e56f2b3fdc9eab92fde48125e",
+          "bytes": 496
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-ScriptSize-console.log",
+          "sha256": "703053b17f40a77a91464a181e4fa8d934adfd7e2702ea1e498398e87c549c83",
+          "bytes": 484
+        }
+      ]
     },
     {
       "id": "T010",

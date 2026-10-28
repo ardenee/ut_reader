@@ -1,0 +1,165 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+
+   EnableRedirectToV8JsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.26100.4948 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe batchexport Core.u Class txt C:\Temp\UnrealDB\O06\T009-227k\invalid-ScriptSize-three\original-script3-inner-archive
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00950000 0098e000   UCC.exe 
+ModLoad: 77740000 77900000   ntdll.dll
+ModLoad: 75c70000 75d60000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 773d0000 776a9000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 5d160000 5d89f000   C:\Temp\UnrealDB\O06\T009-227k\invalid-ScriptSize-three\System\Core.dll
+ModLoad: 754a0000 7568d000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 752a0000 752bc000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 6f7c0000 6f7e6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+ModLoad: 75190000 751c4000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76f70000 76f92000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76b30000 76c40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 05370000 05480000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 76c50000 76d3b000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 751f0000 75275000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 764c0000 76b2b000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 75d70000 75ec7000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 77130000 773c8000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 75ff0000 760ac000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76d50000 76dd5000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 762d0000 76397000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 75b70000 75bf5000   C:\WINDOWS\SysWOW64\sechost.dll
+(59a8.13c8): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=ba1c0000 edx=00000000 esi=02295e70 edi=01027000
+eip=778591a8 esp=0214f2c4 ebp=0214f2f0 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+778591a8 cc              int     3
+0:000> bp Core+0x3a8f7 ".echo T009_227K_UStruct_MISMATCH_UNDERLYING_ARCHIVE_TELL; r; .echo NATIVE_FARCHIVE_WRAPPER_TO_UNDERLYING; dd @ebx+1c L6; .echo NATIVE_UNDERLYING_LINKER_FARCHIVE; dd poi(@ebx+1c) L48; .echo UNDERLYING_FARCHIVE_VTABLE; dd poi(poi(@ebx+1c)) L19; .echo UNDERLYING_FARCHIVE_TELL_FUNCTION; u poi(poi(poi(@ebx+1c))+34) L20; kb 10; q"
+0:000> g
+ModLoad: 76120000 76145000   C:\WINDOWS\SysWOW64\IMM32.DLL
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+ModLoad: 6f0c0000 6f0ec000   C:\WINDOWS\SysWOW64\SspiCli.dll
+T009_227K_UStruct_MISMATCH_UNDERLYING_ARCHIVE_TELL
+eax=00000007 ebx=0214e7ac ecx=00000003 edx=40000060 esi=0214e7bc edi=0232588c
+eip=5d19a8f7 esp=0214e718 ebp=0214e75c iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000202
+Core!UStruct::Serialize+0x187:
+5d19a8f7 51              push    ecx
+NATIVE_FARCHIVE_WRAPPER_TO_UNDERLYING
+0214e7c8  022daf04 0001083d 023125d4 022daab0
+0214e7d8  6ff3f4fb 02324cec
+NATIVE_UNDERLYING_LINKER_FARCHIVE
+022daf04  00978120 00000045 000000e3 00000000
+022daf14  baadf079 00000204 00986ebc 00019506
+022daf24  00010838 00010820 0000001d 7900085e
+022daf34  21000009 0000029a 00008169 00000003
+022daf44  00000b04 00080000 00800000 085e0000
+022daf54  6000085e 10640010 02ad076e 845d0000
+022daf64  00020000 0b040000 00000000 5e000028
+022daf74  10650008 00000001 00000080 085e085e
+022daf84  00010000 00800000 085e0000 6300085e
+022daf94  10670010 02b30765 85700000 00250000
+022dafa4  70040000 19577070 05096801 69010400
+022dafb4  23271f09 01531600 1f160e6c 04160027
+022dafc4  0000000b 00000103 0000085e 00000001
+022dafd4  00400580 085e085e 01106900 00000000
+022dafe4  5e000000 00085e08 00000100 00000200
+022daff4  5e085e00 105c0008 00000001 00004001
+022db004  085e067c 00010000 30000000 085e0002
+022db014  0000085e 70106d00 00000c07 0001d100
+UNDERLYING_FARCHIVE_VTABLE
+00978120  00953740 00956770 00959240 00959246
+00978130  0095924c 00959252 00959264 00959258
+00978140  0095925e 0095926a 00959270 00959276
+00978150  0095927c 00957d30 00957d40 00959288
+00978160  0095928e 009565a0 00959294 0095929a
+00978170  00955b10 009592a6 00953b40 009592ac
+00978180  00410046
+UNDERLYING_FARCHIVE_TELL_FUNCTION
+UCC+0x7d30:
+00957d30 8b4120          mov     eax,dword ptr [ecx+20h]
+00957d33 c3              ret
+00957d34 cc              int     3
+00957d35 cc              int     3
+00957d36 cc              int     3
+00957d37 cc              int     3
+00957d38 cc              int     3
+00957d39 cc              int     3
+00957d3a cc              int     3
+00957d3b cc              int     3
+00957d3c cc              int     3
+00957d3d cc              int     3
+00957d3e cc              int     3
+00957d3f cc              int     3
+00957d40 8b411c          mov     eax,dword ptr [ecx+1Ch]
+00957d43 c3              ret
+00957d44 cc              int     3
+00957d45 cc              int     3
+00957d46 cc              int     3
+00957d47 cc              int     3
+00957d48 cc              int     3
+00957d49 cc              int     3
+00957d4a cc              int     3
+00957d4b cc              int     3
+00957d4c cc              int     3
+00957d4d cc              int     3
+00957d4e cc              int     3
+00957d4f cc              int     3
+00957d50 55              push    ebp
+00957d51 8bec            mov     ebp,esp
+00957d53 6aff            push    0FFFFFFFFh
+00957d55 68705f9700      push    offset UCC+0x25f70 (00975f70)
+ChildEBP RetAddr      Args to Child              
+WARNING: Stack unwind information not available. Following frames may be wrong.
+0214e75c 5d19a39d     0214e7ac 6ff3f497 023258b0 Core!UStruct::Serialize+0x187
+0214e790 5d1c0c13     0214e7ac 6ff3fb0b 0232588c Core!UFunction::Serialize+0x3d
+0214e80c 5d198fa1     0232588c 6ff3fbab 5d292768 Core!ULinkerLoad::Preload+0x163
+0214e8ac 5d198dcf     0214ea78 00000001 6ff3fbeb Core!UStruct::Link+0x101
+0214e8ec 5d198970     0214ea78 00000001 6ff3fa4f Core!UState::Link+0x3f
+0214e948 5d19a9bc     0214ea78 00000001 6ff3fa9b Core!UClass::Link+0x40
+0214e99c 5d19a5b0     0214ea78 6ff3faff 5d292768 Core!UStruct::Serialize+0x24c
+0214e9f8 5d199c70     0214ea78 6ff3f95b 5d29278c Core!UState::Serialize+0x40
+0214ea5c 5d1c0c13     0214ea78 6ff3f9df 5d29384c Core!UClass::Serialize+0x40
+0214ead8 5d1c0b6e     5d292768 6ff3f853 5d293828 Core!ULinkerLoad::Preload+0x163
+0214eb54 5d17f9bb     5d293828 6ff3f8c3 02307c74 Core!ULinkerLoad::Preload+0xbe
+0214ebc4 5d18ef90     6ff3ff23 5d1ca860 5d293828 Core!UObject::EndLoad+0x13b
+0214ec24 5d16b0bc     5d2b91f0 02307c74 00978bb0 Core!UObject::StaticLoadObject+0x1c0
+0214ec44 5d18eccd     00000000 00978bb0 00000000 Core!UCommandlet::execMain+0x7ec
+0214eca0 00958711     5d293828 00000000 00978bb0 Core!UObject::StaticLoadClass+0x6d
+0214f798 0095a56d     00000006 022a1280 022b1208 UCC+0x8711
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

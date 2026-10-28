@@ -19,26 +19,42 @@ final class CatalogUE1ClassicStructNativeReader
     public static function inspect(
         string $kind,CatalogUE1PackageReader $pkg,int $version,
         callable $read,callable $compact,callable $u32,int &$position,int $limit,
-        ?string $sourceFamily=null
+        ?string $sourceFamily=null,?string $objectName=null
     ):array{
         $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+        // The 2026 compiled v227k loader is distinct from original 2012 v227i.
+        // Package v69/licensee227 alone does not establish a loader revision.
+        $actual227k=$sourceFamily===CatalogUE1ClassicSourceFamily::UNREAL_V227K;
         if(!in_array($kind,self::KINDS,true)){
             throw new RuntimeException('Unsupported classic field/struct native kind');
         }
-        $reference=static function(string $label)use($compact,$pkg,$family,&$position):int{
+        $reference=static function(string $label)use(
+            $compact,$pkg,$family,$actual227k,&$position
+        ):int{
             $n=$compact();
             $importCount=count($pkg->getImports());
             if(($n<0 && -$n>$importCount)
                 ||($n>0 && $n>count($pkg->getExports()))){
-                // Genuine original May17 1998 Core.dll raises Bad import index
-                // with a zero-based import slot, after the compact index read.
-                // The observed Children=-63 against 16 imports has Tell=24224.
-                // Do not infer that other UE1 lineages use this diagnostic.
-                if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1
-                    &&$n<0){
+                // Actual original C98 May17 and UT99 v432 compiled Core.dll
+                // both report zero-based Bad import index 62/16 after reading
+                // the Children=-63 compact ref (native Tell 24224 / 43307).
+                // Unreal 227 is a distinct loader and stays unverified here.
+                if(in_array($family,[
+                    CatalogUE1ClassicSourceFamily::EPIC_UE1,
+                    CatalogUE1ClassicSourceFamily::UT99_V432,
+                ],true)&&$n<0){
                     throw new RuntimeException(sprintf(
                         'UE1 Bad import index %d/%d at archive cursor %d',
                         -$n-1,$importCount,$position));
+                }
+                if($actual227k&&$n<0){
+                    // Actual 2026 original v227k Core.dll IndexToObject emits the
+                    // Core.Errors.ImportIndex localization ID; on its shipped
+                    // UCC image Engine.int is absent and the ID is printed
+                    // literally. Original FArchive::Tell is 67623 in T009.
+                    throw new RuntimeException(sprintf(
+                        'UE1 227k <?int?Core.Errors.ImportIndex?> at archive cursor %d',
+                        $position));
                 }
                 throw new RuntimeException('Invalid UE1 '.$label.' object reference');
             }
@@ -88,13 +104,25 @@ final class CatalogUE1ClassicStructNativeReader
                 $script=CatalogUE1ClassicScriptArchiveReader::inspect(
                     $pkg,$version,$scriptSize,$read,$compact,$position,$family);
             }catch(RuntimeException $e){
-                // Original May17 1998 UStruct::Serialize reports its iCode
-                // mismatch after SerializeExpr has consumed the expression.
-                // Preserve the actual cursor and use the compiled error text;
-                // the generic decoder's earlier budget exception is not the
-                // source-selected C98 diagnostic. Other families are unchanged.
-                if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1
+                if($actual227k
                     &&preg_match('/^UE1 SerializeExpr exceeded decoded script-memory ScriptSize \\(memory=(\\d+)\\/(\\d+),.*archive=(\\d+)\\)$/',
+                        $e->getMessage(),$m)){
+                    // Original 227k Core.dll UStruct::Serialize throws this
+                    // source-specific named-script diagnostic, after its
+                    // real file reader Tell=67640 for EndState 7/3.
+                    throw new RuntimeException(sprintf(
+                        'Script (%s) serialization failed: Size mismatch: Got %d, expected %d at archive cursor %d',
+                        $objectName??'Unknown',(int)$m[1],(int)$m[2],(int)$m[3]),0,$e);
+                }
+                // Actual original May17 1998 and v432 UStruct::Serialize
+                // report the decoded iCode mismatch at the method-level
+                // failure (C98 9/5 Tell24243; v432 7/3 Tell43324).
+                // Generic SerializeExpr's earlier budget exception is not the
+                // original compiled method diagnostic; 227 remains separate.
+                if(in_array($family,[
+                    CatalogUE1ClassicSourceFamily::EPIC_UE1,
+                    CatalogUE1ClassicSourceFamily::UT99_V432,
+                ],true)&&preg_match('/^UE1 SerializeExpr exceeded decoded script-memory ScriptSize \\(memory=(\\d+)\\/(\\d+),.*archive=(\\d+)\\)$/',
                         $e->getMessage(),$m)){
                     throw new RuntimeException(sprintf(
                         'UE1 Script serialization mismatch: Got %d, expected %d at archive cursor %d',

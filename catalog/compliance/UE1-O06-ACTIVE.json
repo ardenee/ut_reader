@@ -1,7 +1,7 @@
 {
   "contract": "g3-controlled-80-fixed-tests",
-  "stage": "G3-16-OF-80-PASS-T057-C98-V432-C227-NATIVE-NESTED-CLOSED",
-  "last_action": "Fixed T057 full PASS using one NEW original compiled retail May17 C98 Core.dll -make Engine.Grab loaded30/archived23 13 recursive expressions, one UObject and two FName typed reloc (18/18 native literal bytes), plus sealed stock v432 Engine.Inventory 21/21 literal and original 2012 C227i Core.RandRange 14/14; 112/112 focused source+real native original verification, 53 literal native bytes matched and 36 original relocation bytes intentionally masked. 16 PASS/64 BLOCKED; no prior native repeats, no grouped G3-12 closure.",
-  "next_step": "T009 preserve verified C98 native error/Tell, resolve actual stock v432 error diagnostic mismatch and original FArchive Tell without conflating 469f, then original 227k distinct malformed; T011 genuine loadable original UT99 v60-63 UFunction legacy fields; T050 C98 Core.u same-script FName+Object missing; final gates T078-T080 not eligible, no PRD.",
-  "updated_at_utc": "2026-10-28T22:15:14+00:00"
+  "stage": "G3-17-OF-80-PASS-T009-ALL-THREE-NATIVE-MALFORMED-CLOSED",
+  "last_action": "Fixed T009 original native six negative C98 1998/v432/227k UFunction EndState UStruct malformed import and ScriptSize source-selected errors, live compiled FArchive Tell C98 24224/24243; v432 43307/43324; v227k 67623/67640. 91/91 scoped original/native/current SHA-pinned DEV acceptance PASS; original one-byte mutations, compiled x86 logs, original DLL/package and debugger commands preserved; source-only affected T057 regression 112/112 PASS, no compiled original reruns during verifiers. 17/80 PASS, 63 BLOCKED.",
+  "next_step": "T011 valid original UT99 <=v63 UFunction loaded old ABI triplet; inspect genuine archived original v61 C98 bytecode compatibility and source-selected v432/v469f compiled paths before ONE native valid-load acceptance. T012-T016 other distinct UClass original loaded metadata and flags; T050 original C98 Core.u same-script mixed Name/Object still BLOCKED; final PRD release gates T078-80 not eligible.",
+  "updated_at_utc": "2026-10-28T22:49:10+00:00"
 }
