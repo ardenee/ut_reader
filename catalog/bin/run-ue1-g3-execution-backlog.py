@@ -578,7 +578,92 @@ def eval_t051(_row: dict[str, Any]) -> dict[str, Any]:
        "result":"Stock original compiled UT99 v432 Core.u UStruct NotEqual_FloatFloat 10 native/6 archived bytes with two real object pointers; stock v432 Engine.u Inventory UClass script 33 original native memory bytes vs 25 archived, 17 expression nodes including source EX_Skip(0x18) control flow with nested 0x2d and 0x82 native call -> 0x9a -> 0x3a conversion -> 0x01 Role field. 21/21 deterministic native bytes exact and 12 native pointer bytes explicitly masked, actual pointer targets mapped. Prior 31/31 Core.u and new 25/25 Inventory direct native/current comparisons pinned; zero original compiled reruns. Only T051 script branch, not other G3-12 full closure.",
        "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T056":eval_t056,"T067":eval_t067}
+def eval_t054(_row: dict[str, Any]) -> dict[str, Any]:
+    """Fixed zero and >128-byte script, original compiled v432 Pawn/Vector and sealed C98/227i."""
+    script="catalog/bin/verify-ue1-o06-g3-t054-stock-original-script-size.php"
+    evidence="catalog/compliance/evidence/o06/20261028-G3-T054-original-Pawn314-zero-16pass.json"
+    native="catalog/compliance/evidence/o06/20261028-G3-T054-v432-Pawn-original-native-memory.log"
+    original_source="catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json"
+    originals=[
+        (script,"1c815fa817ab66ccf1bad31b26991b245b042d3d5f37b1d7bddd558867b7ed74"),
+        (evidence,"f5b877359e5911f4e2963f4674d7c30ad9507f37ef7a624900163a6754eab87e"),
+        (native,"4de2849090d8f76137cca84414fdd32713d8e747f11795300d84cafad8c39178"),
+        (original_source,"e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67"),
+        ("catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+         "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+         "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+    ]
+    pins=[verify_pin(path,sha) for path,sha in originals]
+    # The original compiled v432 engine and genuine Engine.u are immutable.
+    for p,sha in [
+        ("C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+         "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"),
+        ("C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+         "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8")
+    ]:
+        path=pathlib.Path(p)
+        if not path.is_file() or sha256(path)!=sha:
+            raise AssertionError("T054 original compiled native or package SHA changed: "+p)
+        pins.append({"original":p,"sha256":sha})
+    x=json.loads((ROOT/evidence).read_text(encoding="utf-8"))
+    expected={"ok":True,"checks":16,"errors":[],"zero_v432_Vector":0,
+       "long_v432_Pawn_memory_bytes":314,"archive_bytes":246,"memory_minus_archive":68,
+       "original_compiled_known_bytes_identical":202,"native_pointer_bytes_masked":112,
+       "original_C98_zero_script":0,"original_C227i_zero_script":0,
+       "original_native_engines_reexecuted":0,"old_positive_verifiers_rerun":0,
+       "current_script_reader_sha":"df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"}
+    for key,value in expected.items():
+        if x.get(key)!=value:
+            raise AssertionError("T054 16/16 original compiled cursor/length sample mismatch: "+key)
+    return {"status":"PASS","result":
+      "Original v432 compiled Core.u Vector zero Script.Num and zero archived bytes; original v432 Engine.u Pawn 314-byte real compiled native script (longer than one compact index byte), exactly 246 physical archived bytes, 28 UObject relocations (112 native bytes masked), 202/202 known actual native bytes equal, 68-byte compact widening. Source-selected original C98 and C227i zero script records independently sealed. Current production decoder 16/16; no native or previous verifier replay; no assertion that short C98/C227i samples also exceed 128.",
+      "evidence":pins}
+
+def eval_t055(_row: dict[str, Any]) -> dict[str, Any]:
+    """One original-invalid source-selected C98 EX opcode, original native FArchive Tell."""
+    script="catalog/bin/verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php"
+    result="catalog/compliance/evidence/o06/20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt"
+    native="catalog/compliance/evidence/o06/20261027-G3-03-C98-ORIGINAL-BAD-EXPR10-CURSOR-CDB.log"
+    command="catalog/compliance/evidence/o06/20261027-G3-03-C98-ORIGINAL-BAD-EXPR10-CURSOR-COMMAND.cmd"
+    pins=[verify_pin(p,sha) for p,sha in [
+      (script,"088d7caa45ea7d0dbdf7961a06a718b5a5a86df43ee0176419cecf2eae974605"),
+      (result,"fd78dd87ace49c7433c48e66a7c5655c5f8a3ab795ebf7a510db94808a222bba"),
+      (native,"81ee43b30a4543baab0564135e8ee5402fe4561552bdc786d3b3d503a4b42ef1"),
+      (command,"8eb4f37588de50535fb6807f8f0f24040b399e18fc6d2801c310bd571a20f74d"),
+    ]]
+    originals=[
+      (r"L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]\Core\Src\UnClass.cpp",
+       "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"),
+      ("C:/Temp/UE1-G3-NativeOracle/C98-USA-Retail-CD/retail-source/System/Core.dll",
+       "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"),
+      ("C:/Temp/UE1-G3-NativeOracle/C98-USA-Retail-CD/retail-source/System/Core.u",
+       "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"),
+    ]
+    for path,sha in originals:
+        p=pathlib.Path(path)
+        if not p.is_file() or sha256(p)!=sha:
+            raise AssertionError("T055 original shipped C98 binary/source different: "+path)
+        pins.append({"original":path,"sha256":sha})
+    raw=(ROOT/native).read_text(encoding="utf-8",errors="replace")
+    if not all(t in raw for t in ["G303_C98_ORIGINAL_BAD10_ARCHIVE_CURSOR",
+                 "Core!appErrorf","Bad expr token %02x","00005eae"]):
+        raise AssertionError("T055 original compiled native 0x10 error or physical Tell absent")
+    result_json=json.loads((ROOT/result).read_text(encoding="utf-8-sig"))
+    for key,expect in {"ok":True,"checks":54,"failed":[],
+       "native_error":"Bad expr token 10","native_archive_cursor":24238,
+       "previously_sealed_native_proofs_reexecuted":0}.items():
+        if result_json.get(key)!=expect:
+            raise AssertionError("T055 source-defined C98 invalid-token original parity failed: "+key)
+    # T056 changed ONLY the UT99 case for token 0x15; this checks that the
+    # 1998 source-selected case for invalid token 0x10 stayed unchanged.
+    if eval_t010(_row)["status"]!="PASS":
+        raise AssertionError("T055 source-only change reconciliation not certified")
+    return {"status":"PASS",
+       "result":"One named source-defined invalid SerializeExpr opcode: authentic retail May17 1998 original Core.u EndState export456 offset24237 mutated only 0x14->0x10; unchanged original C98 Core.dll under native CDB calls appErrorf(Bad expr token 10) at actual FArchive Tell24238; current C98 source branch rejects at exactly24238 with no loaded state. Previously sealed 54/54 direct source/native/physical byte checks SHA-verified; no original engine rerun. This ONE invalid-token test does not certify every malformed opcode or UT99/227 distinct branches.",
+       "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T010":eval_t010,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -618,7 +703,7 @@ def render_progress(register:dict[str,Any])->None:
         result=x.get("result") if x["status"]=="PASS" else x.get("blocking_reason")
         result=(result or "not yet processed").replace("|","/").replace("\n"," ")
         lines.append(f"| {x['id']} | {x['status']} | {result} |")
-    lines+=["","T001–T008, T010, T032, T051, T056 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
+    lines+=["","T001–T008, T010, T032, T051, T054–T056 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
     PROGRESS.write_text("\n".join(lines),encoding="utf-8")
 
 def review_one(row:dict[str,Any],retry:bool)->dict[str,Any]:

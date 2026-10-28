@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-13-OF-80-PASS-T050-FIRST100-NO-MIXED-NAME-OBJECT
-- **Last completed action:** T001-T008,T010,T032,T051,T056,T067 PASS; fixed T050 investigative PHP-only scan of original 1998 100 UStruct records (96 script,4 zero) identified 0 individual scripts with both FName/object relocations; T050 stays BLOCKED; no compiled native rerun or new suite replay
-- **Resume at:** Identify a genuine C98 Core.u mixed FName+UObject script outside initial 100 before doing any new original compiled loaded-memory oracle; T009 original malformed direct UStruct ref/ScriptSize and T011 authentic loadable legacy UT99 UFunction still BLOCKED. Continue fixed baseline, no speculative PASS or PRD release.
-- **Active changed at:** 2026-10-28T13:43:53+00:00
+- **Stage:** G3-80-TESTS-15-PASS-65-BLOCKED-T054-T055-CLOSED
+- **Last completed action:** Original v432 Pawn 314 loaded vs 246 archive with 202 exact native bytes and 112 pointer bytes, T054 16/16 PASS; original 1998 Bad expr token10 compiled FArchive Tell24238 T055 sealed 54/54 PASS; T050 full original 458-export Core.u scan of 109 scripts had no mixed Name+Object and zero exceptions so remains blocked; no native reruns
+- **Resume at:** Attempt T009 original compiled malformed direct UStruct ref/ScriptSize and T011 authentic loadable version60-63 UFunction; T050 requires different original compiled genuine Core.u with both typed relocations; continue fixed baseline with G3 5/16 FULL, do not deploy PRD before T078-T080.
+- **Active changed at:** 2026-10-28T20:07:44+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

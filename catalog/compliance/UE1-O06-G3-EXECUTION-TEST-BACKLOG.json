@@ -1585,13 +1585,53 @@
       "pass_criterion": "Exactly source-defined physical byte cursor and in-memory Script.Num, including compact-reference widening.",
       "evidence": "Original script-bearing package and compiled loader",
       "reuse": "G3-03 checks prefix fields; G3-12 owns opcode expansion.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare archived compact script footprint, ScriptSize and native decoded memory length. PASS ONLY WHEN: Exactly source-defined physical byte cursor and in-memory Script.Num, including compact-reference widening. ORACLE: Original script-bearing package and compiled loader. Reuse before any new execution: G3-03 checks prefix fields; G3-12 owns opcode expansion.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "e619c9bd364f9a32e3a2d89f2b9faa16a2d3f153ede7eafad012d09215796bf8",
+      "result": "Original v432 compiled Core.u Vector zero Script.Num and zero archived bytes; original v432 Engine.u Pawn 314-byte real compiled native script (longer than one compact index byte), exactly 246 physical archived bytes, 28 UObject relocations (112 native bytes masked), 202/202 known actual native bytes equal, 68-byte compact widening. Source-selected original C98 and C227i zero script records independently sealed. Current production decoder 16/16; no native or previous verifier replay; no assertion that short C98/C227i samples also exceed 128.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T20:05:19+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t054-stock-original-script-size.php",
+          "sha256": "1c815fa817ab66ccf1bad31b26991b245b042d3d5f37b1d7bddd558867b7ed74",
+          "bytes": 5137
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T054-original-Pawn314-zero-16pass.json",
+          "sha256": "f5b877359e5911f4e2963f4674d7c30ad9507f37ef7a624900163a6754eab87e",
+          "bytes": 530
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T054-v432-Pawn-original-native-memory.log",
+          "sha256": "4de2849090d8f76137cca84414fdd32713d8e747f11795300d84cafad8c39178",
+          "bytes": 5147
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json",
+          "sha256": "e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67",
+          "bytes": 38624
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "sha256": "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76",
+          "bytes": 1147
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
+          "bytes": 20905
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
+          "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+        },
+        {
+          "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Core.dll",
+          "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+        }
+      ]
     },
     {
       "id": "T055",
@@ -1603,13 +1643,47 @@
       "pass_criterion": "Reject only original-invalid token and report exact consumed cursor.",
       "evidence": "G3-03 previous 469f malformed NAME_None is different branch; v61 Bad expr 15 exploration excluded as a G3-04 proof.",
       "reuse": "No repeat of earlier rejected synthetic cross-era load.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original compiled token failure and UnrealDB diagnostic at same native Tell. PASS ONLY WHEN: Reject only original-invalid token and report exact consumed cursor. ORACLE: G3-03 previous 469f malformed NAME_None is different branch; v61 Bad expr 15 exploration excluded as a G3-04 proof.. Reuse before any new execution: No repeat of earlier rejected synthetic cross-era load.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "14c563daa6346c53bfe8877d1e3fb768755ac5a18bf4e3735831593e37146231",
+      "result": "One named source-defined invalid SerializeExpr opcode: authentic retail May17 1998 original Core.u EndState export456 offset24237 mutated only 0x14->0x10; unchanged original C98 Core.dll under native CDB calls appErrorf(Bad expr token 10) at actual FArchive Tell24238; current C98 source branch rejects at exactly24238 with no loaded state. Previously sealed 54/54 direct source/native/physical byte checks SHA-verified; no original engine rerun. This ONE invalid-token test does not certify every malformed opcode or UT99/227 distinct branches.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T20:06:16+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php",
+          "sha256": "088d7caa45ea7d0dbdf7961a06a718b5a5a86df43ee0176419cecf2eae974605",
+          "bytes": 5684
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt",
+          "sha256": "fd78dd87ace49c7433c48e66a7c5655c5f8a3ab795ebf7a510db94808a222bba",
+          "bytes": 394
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-ORIGINAL-BAD-EXPR10-CURSOR-CDB.log",
+          "sha256": "81ee43b30a4543baab0564135e8ee5402fe4561552bdc786d3b3d503a4b42ef1",
+          "bytes": 10281
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-ORIGINAL-BAD-EXPR10-CURSOR-COMMAND.cmd",
+          "sha256": "8eb4f37588de50535fb6807f8f0f24040b399e18fc6d2801c310bd571a20f74d",
+          "bytes": 314
+        },
+        {
+          "original": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+          "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+        },
+        {
+          "original": "C:/Temp/UE1-G3-NativeOracle/C98-USA-Retail-CD/retail-source/System/Core.dll",
+          "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+        },
+        {
+          "original": "C:/Temp/UE1-G3-NativeOracle/C98-USA-Retail-CD/retail-source/System/Core.u",
+          "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+        }
+      ]
     },
     {
       "id": "T056",

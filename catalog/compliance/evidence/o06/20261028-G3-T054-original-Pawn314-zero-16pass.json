@@ -1,0 +1,16 @@
+{
+    "ok": true,
+    "checks": 16,
+    "errors": [],
+    "zero_v432_Vector": 0,
+    "long_v432_Pawn_memory_bytes": 314,
+    "archive_bytes": 246,
+    "memory_minus_archive": 68,
+    "original_compiled_known_bytes_identical": 202,
+    "native_pointer_bytes_masked": 112,
+    "original_C98_zero_script": 0,
+    "original_C227i_zero_script": 0,
+    "original_native_engines_reexecuted": 0,
+    "old_positive_verifiers_rerun": 0,
+    "current_script_reader_sha": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"
+}
