@@ -955,10 +955,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Check original class-default construction and override in each distinct implementation. PASS ONLY WHEN: UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path. ORACLE: G5 v432 default values reused; 469f original native delta only if needed. Reuse before any new execution: No repeat of accepted v432 full UClass.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: v432 original class defaults exist, but 469f original loaded override/config difference not independently captured. Acceptance still requires: UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T018",
@@ -973,10 +973,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify original loaded nonzero default and class layout for each genuine revision. PASS ONLY WHEN: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches. ORACLE: Genuine 2012/2026 Core/Engine class defaults under compiled loader. Reuse before any new execution: Do not conflate with G3-15 full-corpus coverage.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 227i/227k original compiled class-default, Within and Config actual loaded runtime values not fully compared. Acceptance still requires: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T019",
@@ -991,10 +991,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare saved tag and original loaded default or external INI/localization override under controlled original config. PASS ONLY WHEN: Correct native loaded value, exclusion/precedence and source version for each behavior; absent source feature marked supported N/A. ORACLE: Actual engine with isolated INI/profile fixture + source-defined rules. Reuse before any new execution: Generic tagged parsing G3-13, this test owns class-side effects.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: isolated INI and localized native class-default precedence still absent in C98, v432, C227. Acceptance still requires: Correct native loaded value, exclusion/precedence and source version for each behavior; absent source feature marked supported N/A.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T020",
@@ -1009,10 +1009,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load controlled corrupted class export and capture real native rejection/offset; ensure invalid class not shown as loaded. PASS ONLY WHEN: Correct original rejection or source-permitted null, accurate method cursor and no invented defaults. ORACLE: One genuine native error path per actual different compiled branch. Reuse before any new execution: General FArchive mismatch details only in G3-14.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: genuine invalid UClass flag/Within native failure and physical Tell required per distinct compiled build. Acceptance still requires: Correct original rejection or source-permitted null, accurate method cursor and no invented defaults.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T021",
@@ -1027,10 +1027,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Archive-load each source-applicable property through original native SerializeItem. PASS ONLY WHEN: Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle. ORACLE: Original compiled SerializeItem + genuine values or source-equivalent fixture. Reuse before any new execution: Existing primitive/null tests reused.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 227k original FAny INT is a different serializer; real generic Byte/Int positive/negative and 1/4 byte archive Tell across source families still missing. Acceptance still requires: Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T022",
@@ -1045,10 +1045,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare native saved/loaded raw bit pattern and UnrealDB value, including -0 where representable. PASS ONLY WHEN: Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization. ORACLE: Native float load/save or original compiled operator + source-independent bit oracle. Reuse before any new execution: Only distinct original methods, not one extra CDB per number.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 227k FAny FLOAT native bit words only; genuine generic FloatProperty loaded IEEE754 and four-byte FArchive Tell cross-family missing. Acceptance still requires: Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T023",
@@ -1063,10 +1063,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify source-defined bool mask, packed field, array index and original loaded booleans. PASS ONLY WHEN: Both true/false and indexed bit selection match native declared field storage, not inferred byte bool. ORACLE: Source selected Bool/Property SerializeItem + loaded field. Reuse before any new execution: G3-07 base property metadata accepted.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 227k FAny BOOL is distinct from bit-indexed UBoolProperty field/array storage; original both boolean values and indexed bit native proof missing. Acceptance still requires: Both true/false and indexed bit selection match native declared field storage, not inferred byte bool.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T024",
@@ -1081,10 +1081,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original compiled loaded global/name-table identity with serialized index. PASS ONLY WHEN: Nonzero native name text/index resolves exactly; None remains genuine null sentinel. ORACLE: Original compiled global FName lookup + UnrealDB name table. Reuse before any new execution: G3-06 enum FNames already sealed but scalar value different.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: stock v432 native FName mapping exists for ClassConfig; real scalar tagged NAME nonzero/None original loaded-value identity cross-build missing. Acceptance still requires: Nonzero native name text/index resolves exactly; None remains genuine null sentinel.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T025",
@@ -1099,10 +1099,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify actual old string class storage and source-legal conversion to dynamic StrProperty where applicable. PASS ONLY WHEN: Exact array length, character termination and resulting runtime string match original compiled source-selected behavior. ORACLE: Original original compiled package at both sides of source-defined conversion gate. Reuse before any new execution: Reuse G5 v432 fixed-string fixture; no G5 rerun.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: original retail C98 has 66 loaded UStringProperty StringSize metadata; actual fixed-length string value on both sides of conversion boundary missing. Acceptance still requires: Exact array length, character termination and resulting runtime string match original compiled source-selected behavior.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T026",
@@ -1117,10 +1117,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare source archived count and native loaded string, physical consumed bytes. PASS ONLY WHEN: Correct count, terminal NUL behavior, exact archive end and no unbounded read. ORACLE: One native method oracle for each genuinely distinct source family. Reuse before any new execution: Old source string tests reuse first.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 227k original FAny STRING4 is a different dynamic subtype; original native generic UStr/FString empty, one and nonempty count/terminal/cursor for distinct source families missing. Acceptance still requires: Correct count, terminal NUL behavior, exact archive end and no unbounded read.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T027",
@@ -1135,10 +1135,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare stock original loader count and normalized loaded units for a legal UTF16 sample. PASS ONLY WHEN: Matches original code unit count and archive cursor, without gratuitous UTF conversion. ORACLE: Original x86 string operator source/compiled and native load. Reuse before any new execution: Do not assume every original game/build supports UTF16; source eligibility required.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: source-permitted negative UTF16LE count and exact original native code units/physical archive cursor across 227i/227k missing. Acceptance still requires: Matches original code unit count and archive cursor, without gratuitous UTF conversion.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T028",
@@ -1153,10 +1153,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Observe source-specific original error, consumed cursor and rejection of loaded state. PASS ONLY WHEN: Reader errors only where original does and reports same failing archive position. ORACLE: Existing sealed invalid terminal/count probes reused; new native only if distinct branch missing. Reuse before any new execution: Shared generic EOF error G3-14.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: actual original malformed FString terminal/count native error and FArchive Tell for each different source method missing; allocator UB is not an error oracle. Acceptance still requires: Reader errors only where original does and reports same failing archive position.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T029",
@@ -1171,10 +1171,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native SerializeItem LOAD+SAVE a source-legal nonzero name. PASS ONLY WHEN: Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None. ORACLE: 2026 Core.dll direct native archive + original FName table. Reuse before any new execution: Previous type5 zero already sealed.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: genuine original 227k Any NAME5 zero accepted; required nonzero live registered global FName/load and source table identity still missing. Acceptance still requires: Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T030",
@@ -1189,10 +1189,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Native LOAD+SAVE valid nonnull struct payload with fully constructed object and inner member. PASS ONLY WHEN: Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success. ORACLE: Original fully initialized SDK object/Core.dll, no unsupported mock. Reuse before any new execution: Previous null STRUCT6 failed due incomplete mock, not accepted.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: original 227k Any STRUCT6 positive fully initialized UStruct value missing; incomplete SDK mock allocator failure expressly excluded. Acceptance still requires: Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T031",
@@ -1207,10 +1207,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native SerializeItem loads and saves a nonnull genuine object reference. PASS ONLY WHEN: Correct object identity, tag7, saved object reference and cursor; null type7 proof reused. ORACLE: Genuine Core.dll linker and object-backed archive. Reuse before any new execution: Previous null OBJECT7 sealed.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: native original Any OBJECT7 null exists; nonnull genuine linker-backed UObject ref, tag7 and archive cursor still missing. Acceptance still requires: Correct object identity, tag7, saved object reference and cursor; null type7 proof reused.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T032",
@@ -1291,10 +1291,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture actual native loaded Caption text and source field after original class Serialize; verify archived ANSI length and result. PASS ONLY WHEN: Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption. ORACLE: 2026 genuine Core.dll runtime loaded field; reuse 2 package objects and compiled disassembly. Reuse before any new execution: Do not repeat known source-only caption verifier.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 227k static original ScriptedAI.u declarations and compiled method disassembly exist; both actual original loaded Caption FString values in real object memory still unobserved. Acceptance still requires: Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T034",
@@ -1309,10 +1309,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Use original SerializeBin; compare member order, sizes and real loaded values. PASS ONLY WHEN: Exact member offsets, value bytes and inheritance match original compiled C98. ORACLE: Original native loaded struct + declared source member graph. Reuse before any new execution: G3-03 struct declarations not value storage.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: C98 original 600 property reference identities exist; actual struct two-member loaded values and inherited member offsets absent. Acceptance still requires: Exact member offsets, value bytes and inheritance match original compiled C98.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T035",
@@ -1327,10 +1327,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load original native struct member values and verify imported identity plus member order. PASS ONLY WHEN: Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does. ORACLE: Original compiled Engine.u+Core.u import chain with genuine class object. Reuse before any new execution: No inferred struct size from name alone.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 469f original 25 UStruct references exist; real imported Core.Struct member value and resolved original loader class chain missing. Acceptance still requires: Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T036",
@@ -1345,10 +1345,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original SerializeBin load and loaded field offset against reader. PASS ONLY WHEN: Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class. ORACLE: 2012/2026 native class/type plus genuine archive. Reuse before any new execution: 227i and 227k method deltas separately handled.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: 227i real 668 property identities exist; 227i/227k original fully linked nested struct members and loaded bytes not proven. Acceptance still requires: Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T037",
@@ -1363,10 +1363,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare real native serialized count, loaded string and physical archive cursor. PASS ONLY WHEN: UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation. ORACLE: G5 sealed original v432 nested source-legal success if applicable; new only missing variants. Reuse before any new execution: Known uninitialized allocator crash excluded, never counted pass.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: v432 nested original FSTRING evidence present; fixed nested class source-specific loaded string length/value or source-legal allocation handling not fully established. Acceptance still requires: UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T038",
@@ -1381,10 +1381,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native item load of array-of-struct with deterministic initialized memory. PASS ONLY WHEN: Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason. ORACLE: Original compiler fixture with initialized nested elements. Reuse before any new execution: G3-11 owns outer array count, here owns struct member codec.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: real source UProperty identities only; original loaded struct array two distinct members and signed count/bytes missing. Acceptance still requires: Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T039",
@@ -1399,10 +1399,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load original native inherited struct and compare declared offsets and physical member payload. PASS ONLY WHEN: Reader does not collapse inherited member layout, actual offsets and values match original. ORACLE: Original linked ancestry + native SerializeBin for one member. Reuse before any new execution: G3-03 Children targets reused.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: v432 original inherited UClass fields proven; actual inherited struct member offset and runtime SerializeBin member value still missing. Acceptance still requires: Reader does not collapse inherited member layout, actual offsets and values match original.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T040",
@@ -1417,10 +1417,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Invoke source-defined original error for one invalid member reference and one truncated legal struct value. PASS ONLY WHEN: Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior. ORACLE: Original compiled malformed input + current decoder. Reuse before any new execution: G3-14 crosscutting EOF template owns shared cursor implementation.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "blocking_reason": "SHORT BATCH: actual original malformed nested struct member rejection and source-specific FArchive Tell missing; generic negative tagged-property oracle is not nested member proof. Acceptance still requires: Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior.",
+      "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
     },
     {
       "id": "T041",

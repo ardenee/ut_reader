@@ -1,0 +1,343 @@
+{
+  "schema": 1,
+  "utc": "2026-10-28T23:43:31+00:00",
+  "scope": "24 ORIGINAL FROZEN tests T017-T040 in 3 batches of 8",
+  "execution": "SHORT EVIDENCE-ONLY REVIEW: zero original engine reruns; never a pass by source existence alone",
+  "new_compiled_native_evidence": 0,
+  "fixed_tests_reviewed": 24,
+  "already_PASS_skipped": 1,
+  "blocked_precise_criteria_refreshed": 23,
+  "newly_PROMOTED_to_PASS": 0,
+  "tests": [
+    {
+      "test_id": "T017",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json",
+          "sha256": "ae3e23e5e3b5ef7e7fab363fbd1ae7a75f80591212fac6bd2af7575638fa6e3b",
+          "manifest_keys": 24
+        }
+      ],
+      "exact_unproven_requirement": "v432 original class defaults exist, but 469f original loaded override/config difference not independently captured",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T018",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-C227I-UPROPERTY-668-EXACT-IDENTITIES.json",
+          "sha256": "3b3d4e779644fe5f620df60e4cc94c6b1969f746ebe2b85e76e094f734304996",
+          "manifest_keys": 24
+        }
+      ],
+      "exact_unproven_requirement": "227i/227k original compiled class-default, Within and Config actual loaded runtime values not fully compared",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T019",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json",
+          "sha256": "ae3e23e5e3b5ef7e7fab363fbd1ae7a75f80591212fac6bd2af7575638fa6e3b",
+          "manifest_keys": 24
+        }
+      ],
+      "exact_unproven_requirement": "isolated INI and localized native class-default precedence still absent in C98, v432, C227",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T020",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-DEP-ERROR-PHYSICAL-ORIGIN.json",
+          "sha256": "288f5aa0f92231171674bed36bc7328b80f14dc719839afeb8e20fb205acff21",
+          "manifest_keys": 17
+        }
+      ],
+      "exact_unproven_requirement": "genuine invalid UClass flag/Within native failure and physical Tell required per distinct compiled build",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T021",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-ACTUAL-COMPILED-FANY-NULL-INT-FLOAT-BOOL-LOAD-SAVE.json",
+          "sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
+          "manifest_keys": 25
+        }
+      ],
+      "exact_unproven_requirement": "227k original FAny INT is a different serializer; real generic Byte/Int positive/negative and 1/4 byte archive Tell across source families still missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T022",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-ACTUAL-COMPILED-FANY-NULL-INT-FLOAT-BOOL-LOAD-SAVE.json",
+          "sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
+          "manifest_keys": 25
+        }
+      ],
+      "exact_unproven_requirement": "227k FAny FLOAT native bit words only; genuine generic FloatProperty loaded IEEE754 and four-byte FArchive Tell cross-family missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T023",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-ACTUAL-COMPILED-FANY-NULL-INT-FLOAT-BOOL-LOAD-SAVE.json",
+          "sha256": "23538896031db58b9aa5dd54ff710baa7546e6f718d11fbae9b242e9858e807c",
+          "manifest_keys": 25
+        }
+      ],
+      "exact_unproven_requirement": "227k FAny BOOL is distinct from bit-indexed UBoolProperty field/array storage; original both boolean values and indexed bit native proof missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T024",
+      "fixed_batch": 3,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-UCLASS-FULL-NESTED-MEMORY.json",
+          "sha256": "101b1df629a3e37af4fe09bd88c5137e20e4f859d1f0a9fa14d52ce3c6a2915b",
+          "manifest_keys": 16
+        }
+      ],
+      "exact_unproven_requirement": "stock v432 native FName mapping exists for ClassConfig; real scalar tagged NAME nonzero/None original loaded-value identity cross-build missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T025",
+      "fixed_batch": 4,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-C98-MAY1998-USTRING-66-LOADED.json",
+          "sha256": "fdef03ff417cda89fca8af115279116a833f4ac84242db9688e2cec2073c23bf",
+          "manifest_keys": 19
+        }
+      ],
+      "exact_unproven_requirement": "original retail C98 has 66 loaded UStringProperty StringSize metadata; actual fixed-length string value on both sides of conversion boundary missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T026",
+      "fixed_batch": 4,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-REAL-NATIVE-ANY-STRING-LOAD-SAVE-ROUNDTRIP.json",
+          "sha256": "6a6cb8ceee19f18ecb7ba6b91ad01bf091c2306a8e11198045f132a6e0fcf66a",
+          "manifest_keys": 23
+        }
+      ],
+      "exact_unproven_requirement": "227k original FAny STRING4 is a different dynamic subtype; original native generic UStr/FString empty, one and nonempty count/terminal/cursor for distinct source families missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T027",
+      "fixed_batch": 4,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-REAL-NATIVE-ANY-STRING-LOAD-SAVE-ROUNDTRIP.json",
+          "sha256": "6a6cb8ceee19f18ecb7ba6b91ad01bf091c2306a8e11198045f132a6e0fcf66a",
+          "manifest_keys": 23
+        }
+      ],
+      "exact_unproven_requirement": "source-permitted negative UTF16LE count and exact original native code units/physical archive cursor across 227i/227k missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T028",
+      "fixed_batch": 4,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-T99-UOBJECT-FSTRING-ALLOCATOR-CONDITIONAL.json",
+          "sha256": "dba4760cf32bf9daa6378684ae2ee66ed1ecd91ee8ab7d32ec9419590a0052f2",
+          "manifest_keys": 19
+        }
+      ],
+      "exact_unproven_requirement": "actual original malformed FString terminal/count native error and FArchive Tell for each different source method missing; allocator UB is not an error oracle",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T029",
+      "fixed_batch": 4,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-ORIGINAL-NATIVE-ANY-NAME5-ZERO.json",
+          "sha256": "eeccd713c40fdb04222af613fb19b185be1f6c9e913da0c926bc87e5740ee050",
+          "manifest_keys": 16
+        }
+      ],
+      "exact_unproven_requirement": "genuine original 227k Any NAME5 zero accepted; required nonzero live registered global FName/load and source table identity still missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T030",
+      "fixed_batch": 4,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-ORIGINAL-NATIVE-ANY-NAME5-ZERO.json",
+          "sha256": "eeccd713c40fdb04222af613fb19b185be1f6c9e913da0c926bc87e5740ee050",
+          "manifest_keys": 16
+        }
+      ],
+      "exact_unproven_requirement": "original 227k Any STRUCT6 positive fully initialized UStruct value missing; incomplete SDK mock allocator failure expressly excluded",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T031",
+      "fixed_batch": 4,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-08-C227K-REAL-OBJECT7-NULL-LOAD-SAVE.json",
+          "sha256": "e7fb894b6812e9f163a40e1bcfd5ad32ffe9fd87aca31cdaa0bc2fde4c6f33f8",
+          "manifest_keys": 18
+        }
+      ],
+      "exact_unproven_requirement": "native original Any OBJECT7 null exists; nonnull genuine linker-backed UObject ref, tag7 and archive cursor still missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T032",
+      "fixed_batch": 4,
+      "status": "PASS_REUSED_NOT_REEXECUTED",
+      "reused_source_or_native_manifest_sha256": [],
+      "exact_unproven_requirement": "already PASS; skip and do not rerun original native pointer oracle",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T033",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-C227K-TWO-GENUINE-UButton-Caption-Serialize.json",
+          "sha256": "3284b2fa98be71cce3815ad4f7df5c74bd14cd3954193548c8fa37fdb49c59bc",
+          "manifest_keys": 19
+        }
+      ],
+      "exact_unproven_requirement": "227k static original ScriptedAI.u declarations and compiled method disassembly exist; both actual original loaded Caption FString values in real object memory still unobserved",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T034",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-C98-MAY1998-600-REFERENCE-LOADED.json",
+          "sha256": "50139b8dd8a0faa0afdfa9a8ada825ad6bd76af9e7d185139d7adf92eebe452b",
+          "manifest_keys": 16
+        }
+      ],
+      "exact_unproven_requirement": "C98 original 600 property reference identities exist; actual struct two-member loaded values and inherited member offsets absent",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T035",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-T99-469F-25-NATIVE-UStruct-LOADED-VALUES.json",
+          "sha256": "38d58e4391a83b24465904c6a9ed12863f125abfdbf1a4d5d8b12d84386389a9",
+          "manifest_keys": 23
+        }
+      ],
+      "exact_unproven_requirement": "469f original 25 UStruct references exist; real imported Core.Struct member value and resolved original loader class chain missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T036",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-C227I-UPROPERTY-668-EXACT-IDENTITIES.json",
+          "sha256": "3b3d4e779644fe5f620df60e4cc94c6b1969f746ebe2b85e76e094f734304996",
+          "manifest_keys": 24
+        }
+      ],
+      "exact_unproven_requirement": "227i real 668 property identities exist; 227i/227k original fully linked nested struct members and loaded bytes not proven",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T037",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-T99-UOBJECT-NATIVE-STRUCT-FSTRING-FINAL-ORACLE.json",
+          "sha256": "bdfd5fb380e229c1933aa4d0f14b8b388f54f5b2f220e6e35d2ab7d50ff272d1",
+          "manifest_keys": 32
+        }
+      ],
+      "exact_unproven_requirement": "v432 nested original FSTRING evidence present; fixed nested class source-specific loaded string length/value or source-legal allocation handling not fully established",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T038",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G3-C227I-UPROPERTY-668-EXACT-IDENTITIES.json",
+          "sha256": "3b3d4e779644fe5f620df60e4cc94c6b1969f746ebe2b85e76e094f734304996",
+          "manifest_keys": 24
+        }
+      ],
+      "exact_unproven_requirement": "real source UProperty identities only; original loaded struct array two distinct members and signed count/bytes missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T039",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-UCLASS-INHERITED-NATIVE-88.json",
+          "sha256": "e8c777867eb0743d972e69b6099ac8b4bf31bcb73100ae22cf1b205ce98d3de3",
+          "manifest_keys": 15
+        }
+      ],
+      "exact_unproven_requirement": "v432 original inherited UClass fields proven; actual inherited struct member offset and runtime SerializeBin member value still missing",
+      "original_native_engine_execution_in_this_check": false
+    },
+    {
+      "test_id": "T040",
+      "fixed_batch": 5,
+      "status": "BLOCKED_SOURCE_SPECIFIC_ORACLE_MISSING",
+      "reused_source_or_native_manifest_sha256": [
+        {
+          "relative_path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-TAG-NEGATIVE-4.json",
+          "sha256": "0cd2de769a06cf2f1ce8c498553e361cf8ea0b1b5bf7e516021be31a2c5f7bc3",
+          "manifest_keys": 14
+        }
+      ],
+      "exact_unproven_requirement": "actual original malformed nested struct member rejection and source-specific FArchive Tell missing; generic negative tagged-property oracle is not nested member proof",
+      "original_native_engine_execution_in_this_check": false
+    }
+  ]
+}

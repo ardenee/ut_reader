@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-18-OF-80-PASS-T013-UCLASS-BATCH-4ORIGINAL-LOADED
-- **Last completed action:** Fixed T013 fully CLOSED: one batched original native UClass Core.dll loader investigation across genuine v432 7/7 Core classes, 469f 2/35 reached, original 2012 227i 6/6 reached, original 2026 227k 2 reached. v432 Core all 7 native UClass flags, ClassWithin same actual Object, global FName config System, inherited refs, 128-bit GUID, 13 genuine dependency native referents by same-process UObject.Index, deep, CRC, imports, script and state scalars and physical FArchive cursor proven. 207/207 original compiled/source focused current acceptance PASS + earlier FULL 88 genuine Engine UClass and 608 defaults reused; fixed batch2 T013 PASS, overall 18/80 PASS, 62 BLOCKED, 0 FAIL. Other build source families remain blocked, not extrapolated.
-- **Resume at:** Continue grouped T011 old UT99 <=63 UFunction loadable fixture, T012 C98 direct loaded UClass scalars, T014 469f class method/source delta and T015 original 227i vs 227k loaded class/conditional branches in original noninteractive compiled loader; source-verified only, no duplicate G5 accepted Engine work and PRD not release-eligible.
-- **Active changed at:** 2026-10-28T23:37:22+00:00
+- **Stage:** G3-FAST-3X8-24-FIXED-REVIEWED-18PASS-62BLOCKED
+- **Last completed action:** Fast-source/original-native SHA evidence audit completed T017-T040 in three eight-ID groups. 24 fixed IDs assessed; 23 currently BLOCKED now have precise missing source-native value/error/cursor reason; T032 original PASS was skipped; no original compiled native reruns, no synthetic promotions or added T-IDs. Total fixed 18 PASS 62 BLOCKED, G3 not accepted. Short-batch throughput rule documented in AGENTS.md.
+- **Resume at:** Short batches of eight: T041-T048, then T049-T056. Each T-ID one bounded original native decision at most; record blocker and advance; only source-native exact acceptance can upgrade to PASS. No PRD release.
+- **Active changed at:** 2026-10-28T23:44:30+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
