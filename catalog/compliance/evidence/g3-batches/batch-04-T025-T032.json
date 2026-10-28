@@ -1,0 +1,57 @@
+{
+  "batch": 4,
+  "range": [
+    "T025",
+    "T032"
+  ],
+  "started_at": "2026-10-28T11:54:56+00:00",
+  "tests": [
+    {
+      "id": "T025",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    },
+    {
+      "id": "T026",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    },
+    {
+      "id": "T027",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    },
+    {
+      "id": "T028",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    },
+    {
+      "id": "T029",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    },
+    {
+      "id": "T030",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    },
+    {
+      "id": "T031",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    },
+    {
+      "id": "T032",
+      "status": "BLOCKED",
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+    }
+  ],
+  "finished_at": "2026-10-28T11:54:56+00:00",
+  "counts": {
+    "PASS": 0,
+    "FAIL": 0,
+    "BLOCKED": 8,
+    "PENDING": 0
+  }
+}

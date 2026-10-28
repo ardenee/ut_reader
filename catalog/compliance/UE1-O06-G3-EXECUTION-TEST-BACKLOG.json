@@ -1,7 +1,7 @@
 {
   "schema": "ue1-g3-execution-test-backlog-v1",
   "date": "2026-10-28",
-  "state": "PROPOSED_FOR_USER_REVIEW_NO_TEST_EXECUTION",
+  "state": "USER_APPROVED_2026_10_28_10_BATCHES_ACTIVE_ORACLE_GAPS_BLOCKED",
   "numbering": "T001..T080 frozen initial list. New discovered tasks append after the initial list as S001 etc and execute after baseline; never insert in active queue.",
   "source_truth": "Original Epic UE1 game/engine source and actual compiled native, source-selected build",
   "status_values": [
@@ -24,10 +24,46 @@
       "pass_criterion": "Each captured field and physical archive boundary matches source-selected UnrealDB; source memory/byte count is not mistaken for on-disk count.",
       "evidence": "Original v432 x86 CDB post-Serialize + PHP archive comparison",
       "reuse": "469f nine-direct proof is reusable context, NOT v432 proof.",
-      "status": "PENDING",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": null
+      "status": "PASS",
+      "evidence_sha": "be532daa65e484ba1d65df16d425be3e57f44c7ffd1b214ce18f4e07baed9fca",
+      "result": "Original v432 Core.dll native LOAD of Vector/Rotator/Color/Plane: all 78 actual loaded-field, FName text, serialized archive-boundary, Children/Next/SuperField same-linker reference checks match UnrealDB. Shared one native result validates both fixed tests; original loader not rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T12:15:14+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.cpp",
+          "sha256": "19dab366d13b5b969cf843e853912b921763b4a04cbf446a26bbc09cb15d8736",
+          "bytes": 2405
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.log",
+          "sha256": "a58bd237eddb2cf39ca4a0c529123bc1a37af65193cce348dc2b60213e60c041",
+          "bytes": 2712
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-build.log",
+          "sha256": "501bd99ace97080d8ab9abbc2cc65282395ad45e6aeff704c0a54c861ad00dad",
+          "bytes": 3250
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "sha256": "cb123f78d6a7db030ce2fa1db4a0b650804a7303e3316fd4d5a567d8b099e865",
+          "bytes": 1260
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "sha256": "cb123f78d6a7db030ce2fa1db4a0b650804a7303e3316fd4d5a567d8b099e865",
+          "accepted_original_assertions": 78
+        },
+        {
+          "source": "actual original v432 x86 Core.dll",
+          "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+          "original_Core_u_sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70",
+          "runtime_original_native_fields_compared": 4
+        }
+      ]
     },
     {
       "id": "T002",
@@ -39,10 +75,46 @@
       "pass_criterion": "Both targets match stored compact references after original native resolution, or a source-defined null/unreachable exception is documented.",
       "evidence": "Native post-LOAD pointer-to-export-index + source mapping",
       "reuse": "G3-07 base metadata does not cover live UField pointer identity.",
-      "status": "PENDING",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": null
+      "status": "PASS",
+      "evidence_sha": "be532daa65e484ba1d65df16d425be3e57f44c7ffd1b214ce18f4e07baed9fca",
+      "result": "Original v432 Core.dll native LOAD of Vector/Rotator/Color/Plane: all 78 actual loaded-field, FName text, serialized archive-boundary, Children/Next/SuperField same-linker reference checks match UnrealDB. Shared one native result validates both fixed tests; original loader not rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T12:15:14+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.cpp",
+          "sha256": "19dab366d13b5b969cf843e853912b921763b4a04cbf446a26bbc09cb15d8736",
+          "bytes": 2405
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.log",
+          "sha256": "a58bd237eddb2cf39ca4a0c529123bc1a37af65193cce348dc2b60213e60c041",
+          "bytes": 2712
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-build.log",
+          "sha256": "501bd99ace97080d8ab9abbc2cc65282395ad45e6aeff704c0a54c861ad00dad",
+          "bytes": 3250
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "sha256": "cb123f78d6a7db030ce2fa1db4a0b650804a7303e3316fd4d5a567d8b099e865",
+          "bytes": 1260
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "sha256": "cb123f78d6a7db030ce2fa1db4a0b650804a7303e3316fd4d5a567d8b099e865",
+          "accepted_original_assertions": 78
+        },
+        {
+          "source": "actual original v432 x86 Core.dll",
+          "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+          "original_Core_u_sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70",
+          "runtime_original_native_fields_compared": 4
+        }
+      ]
     },
     {
       "id": "T003",
@@ -54,10 +126,13 @@
       "pass_criterion": "Decoder matches native length and deterministic bytes; relocated UObject/FName words masked by type, not declared equal.",
       "evidence": "One grouped original compiled observation; crosscheck pinned v432 G5 scripts",
       "reuse": "Do not repeat G3-12 opcode coverage.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Observe original native Script.Num, decoded byte buffer length, saved ScriptSize and archive Tell for both cases. PASS ONLY WHEN: Decoder matches native length and deterministic bytes; relocated UObject/FName words masked by type, not declared equal. ORACLE: One grouped original compiled observation; crosscheck pinned v432 G5 scripts. Reuse before any new execution: Do not repeat G3-12 opcode coverage.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T004",
@@ -69,10 +144,13 @@
       "pass_criterion": "Either source/compiled proven unreachability with explicit exclusion, or all observable direct loaded fields match UnrealDB.",
       "evidence": "Original compiled reachability + loaded-value comparison",
       "reuse": "Nine other direct 469f UStructs are already sealed.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Establish actual original 469f loader reachability; if loadable, capture their previously unobserved direct UStruct values. PASS ONLY WHEN: Either source/compiled proven unreachability with explicit exclusion, or all observable direct loaded fields match UnrealDB. ORACLE: Original compiled reachability + loaded-value comparison. Reuse before any new execution: Nine other direct 469f UStructs are already sealed.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T005",
@@ -84,10 +162,13 @@
       "pass_criterion": "Each direct native field, zero/nonzero script and declared length matches 227k-selected decoder.",
       "evidence": "2026 original Core.dll + original Core.u; one grouped native observation",
       "reuse": "2012 227i 237-object evidence sealed, not interchangeable with 227k.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture real 2026 Core.dll direct UStruct post-LOAD names, line/textpos, script sizes and source references. PASS ONLY WHEN: Each direct native field, zero/nonzero script and declared length matches 227k-selected decoder. ORACLE: 2026 original Core.dll + original Core.u; one grouped native observation. Reuse before any new execution: 2012 227i 237-object evidence sealed, not interchangeable with 227k.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T006",
@@ -99,10 +180,13 @@
       "pass_criterion": "Every mandatory pointer identity matches reader; true runtime nulls reported separately from nonzero archived refs.",
       "evidence": "Original x86 pointer-to-export mapping; no PHP-synthesized pointer address",
       "reuse": "C227i 232 Children pointers already sealed.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Dereference original loaded pointers against same-linker export table; compare original archived indices. PASS ONLY WHEN: Every mandatory pointer identity matches reader; true runtime nulls reported separately from nonzero archived refs. ORACLE: Original x86 pointer-to-export mapping; no PHP-synthesized pointer address. Reuse before any new execution: C227i 232 Children pointers already sealed.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T007",
@@ -114,10 +198,13 @@
       "pass_criterion": "Match source-defined null-after-load vs archived non-null and actual Children/Super target; no false claim of pointer materialization.",
       "evidence": "Previously recorded May17 Class Object CDB pointer observation + only missing pointer lookup",
       "reuse": "C98 first 100 derived function/script native results sealed.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Map original compiled Children, ScriptText and SuperField live pointers to real linker export indices. PASS ONLY WHEN: Match source-defined null-after-load vs archived non-null and actual Children/Super target; no false claim of pointer materialization. ORACLE: Previously recorded May17 Class Object CDB pointer observation + only missing pointer lookup. Reuse before any new execution: C98 first 100 derived function/script native results sealed.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T008",
@@ -129,10 +216,55 @@
       "pass_criterion": "Native-writer bytes prove inherited SAVE for each distinct method implementation, or one exact missing-version proof is identified.",
       "evidence": "SHA-sealed original writer files + method disassembly; new native run only if no applicable writer proof",
       "reuse": "Crosscheck original SAVE gates in G3-04 without re-executing.",
-      "status": "PENDING",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": null
+      "status": "PASS",
+      "evidence_sha": "3090c60e415f2ac31cae1fb23cb732acff6a083726de2a15cd16ac91a4c072f4",
+      "result": "Four genuine source-selected original native Core.dll SavePackage/FObjectManager-produced UState/UFunction files, inherited UStruct/UField persisted prefix and fresh original native LOAD verified with 46/31/37/45 acceptance assertions. No native reexecution.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-original-1998-native-SAVE.u",
+          "sha256": "4957034dc7629163ab7adabeedff1fc9cecc3def1d577c4aab31bec0763071a4",
+          "bytes": 1058
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028T092148309Z-e776196c-DEV-verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php.txt",
+          "sha256": "e203b5426af4f249bab09c1f04e5d82309920e842a15a0469d7a0b72036506ea",
+          "accepted_original_assertions": 46
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-V432-original-native-save.u",
+          "sha256": "545439a4526dd9108fd3c12f3b6f1eaf37ad2c91cf3729e684e12fc8dc903ad6",
+          "bytes": 322
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028T015743761Z-ea2d9132-DEV-verify-ue1-o06-g3-04-v432-original-native-save-load.php.txt",
+          "sha256": "465521d2717224d944859fe9e1008cdcb4d7af22314180398e78b7ed3260dde0",
+          "accepted_original_assertions": 31
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-469f-function-state-original-saved.u",
+          "sha256": "f389aeba411529cbbc9b52d0c814925db3d39b324629ac293090a5e81d88a9c3",
+          "bytes": 322
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028T014206920Z-0166292d-DEV-verify-ue1-o06-g3-04-469f-original-native-save-load.php.txt",
+          "sha256": "8bafbe2f4364d927597aec57c3a2267225674bf226531c13e2686ff4b4b7223b",
+          "accepted_original_assertions": 37
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G304FunctionStateFixture.u",
+          "sha256": "1a9a98e156c15d66cf9c12e58110b50a622e7e965e24d1586b9b2dedcc4edb63",
+          "bytes": 310
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T233743125Z-810c2ff6-DEV-verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php.txt",
+          "sha256": "8ee7457d6b770a408590661919ec80d6d72c82598537f9cc285e9b33de528ff0",
+          "accepted_original_assertions": 45
+        }
+      ],
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "attempted_native_execution": false
     },
     {
       "id": "T009",
@@ -144,10 +276,13 @@
       "pass_criterion": "Exact error/loaded rejection and failing cursor agree with corresponding original compiled method; no guessed stricter rules.",
       "evidence": "Original version-specific error call and FArchive Tell for ONE named branch per actual distinct implementation",
       "reuse": "G3-14 owns generic EOF/error matrix, G3-12 owns opcode token bodies.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Exercise the source-defined method-level rejection or null conversion, with declared physical cursor. PASS ONLY WHEN: Exact error/loaded rejection and failing cursor agree with corresponding original compiled method; no guessed stricter rules. ORACLE: Original version-specific error call and FArchive Tell for ONE named branch per actual distinct implementation. Reuse before any new execution: G3-14 owns generic EOF/error matrix, G3-12 owns opcode token bodies.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T010",
@@ -159,10 +294,13 @@
       "pass_criterion": "Reader consumes exact archive bytes and matches loaded script length; never compares relocated addresses as literal archived bytes.",
       "evidence": "Reuse C98 96 and C227i 223 scripts; obtain only missing distinct v432/227k evidence",
       "reuse": "Avoid repeating native script-byte proofs already accepted.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Measure original UStruct saved ScriptSize versus reconstructed in-memory Script.Num at a zero and nonzero boundary. PASS ONLY WHEN: Reader consumes exact archive bytes and matches loaded script length; never compares relocated addresses as literal archived bytes. ORACLE: Reuse C98 96 and C227i 223 scripts; obtain only missing distinct v432/227k evidence. Reuse before any new execution: Avoid repeating native script-byte proofs already accepted.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T011",
@@ -174,10 +312,13 @@
       "pass_criterion": "Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout.",
       "evidence": "One original native loaded-value trace against valid file and source branch; no 69 repeat",
       "reuse": "Excluded C98 bytecode and top-level synthetic attempts cannot count.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load through authentic original UT99 compiled UFunction::Serialize <=63 branch; record archived triplet and after-link runtime triplet. PASS ONLY WHEN: Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout. ORACLE: One original native loaded-value trace against valid file and source branch; no 69 repeat. Reuse before any new execution: Excluded C98 bytecode and top-level synthetic attempts cannot count.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T012",
@@ -189,10 +330,13 @@
       "pass_criterion": "Byte order, source-version branch and loaded class flags/refs match C98 reader for real exports.",
       "evidence": "Original compiled retail Core.dll, Class Object evidence reuse first",
       "reuse": "G3-02 declaration inventory already accepted.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture original compiled UClass archived metadata, superclass/within and native postload flags. PASS ONLY WHEN: Byte order, source-version branch and loaded class flags/refs match C98 reader for real exports. ORACLE: Original compiled retail Core.dll, Class Object evidence reuse first. Reuse before any new execution: G3-02 declaration inventory already accepted.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T013",
@@ -204,10 +348,13 @@
       "pass_criterion": "Every source-applicable archived field and loaded scalar/reference matches v432 reader and valid class hierarchy.",
       "evidence": "Stock v432 Core.dll + existing G5 native UClass evidence",
       "reuse": "Only uncovered fields; do not rerun v432 G5.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture compiled UClass Serialize fields, ClassWithin, ClassFlags and inherited superclass identities. PASS ONLY WHEN: Every source-applicable archived field and loaded scalar/reference matches v432 reader and valid class hierarchy. ORACLE: Stock v432 Core.dll + existing G5 native UClass evidence. Reuse before any new execution: Only uncovered fields; do not rerun v432 G5.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T014",
@@ -219,10 +366,13 @@
       "pass_criterion": "Any actual 469f-only UClass field/branch is represented; unchanged inherited fields proved equivalent without duplicate full loads.",
       "evidence": "Reuse 469f 88 UClass-inherited UState events; original UClass method disassembly for direct delta",
       "reuse": "Do not infer version69 means v432 equals 469f.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare native loaded UClass direct fields against v432 source-inherited baseline and compiled difference. PASS ONLY WHEN: Any actual 469f-only UClass field/branch is represented; unchanged inherited fields proved equivalent without duplicate full loads. ORACLE: Reuse 469f 88 UClass-inherited UState events; original UClass method disassembly for direct delta. Reuse before any new execution: Do not infer version69 means v432 equals 469f.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T015",
@@ -234,10 +384,13 @@
       "pass_criterion": "Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance.",
       "evidence": "Original shipped Core.dll + own Core.u, focused class field oracle",
       "reuse": "Do not reuse 227k as proof for different 2012 ABI.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original 2012 and 2026 UClass loaded fields and class/version gates. PASS ONLY WHEN: Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance. ORACLE: Original shipped Core.dll + own Core.u, focused class field oracle. Reuse before any new execution: Do not reuse 227k as proof for different 2012 ABI.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T016",
@@ -249,10 +402,13 @@
       "pass_criterion": "Loaded default value and super/override outcome match source-selected original, not merely static bytes.",
       "evidence": "May17 genuine Unreal Core/Engine original compiled class-default observation",
       "reuse": "Tagged serialization mechanics delegated G3-13.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load original native class defaults then compare inherited field value and saved source tag. PASS ONLY WHEN: Loaded default value and super/override outcome match source-selected original, not merely static bytes. ORACLE: May17 genuine Unreal Core/Engine original compiled class-default observation. Reuse before any new execution: Tagged serialization mechanics delegated G3-13.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T017",
@@ -264,10 +420,13 @@
       "pass_criterion": "UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path.",
       "evidence": "G5 v432 default values reused; 469f original native delta only if needed",
       "reuse": "No repeat of accepted v432 full UClass.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Check original class-default construction and override in each distinct implementation. PASS ONLY WHEN: UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path. ORACLE: G5 v432 default values reused; 469f original native delta only if needed. Reuse before any new execution: No repeat of accepted v432 full UClass.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T018",
@@ -279,10 +438,13 @@
       "pass_criterion": "Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
       "evidence": "Genuine 2012/2026 Core/Engine class defaults under compiled loader",
       "reuse": "Do not conflate with G3-15 full-corpus coverage.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify original loaded nonzero default and class layout for each genuine revision. PASS ONLY WHEN: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches. ORACLE: Genuine 2012/2026 Core/Engine class defaults under compiled loader. Reuse before any new execution: Do not conflate with G3-15 full-corpus coverage.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T019",
@@ -294,10 +456,13 @@
       "pass_criterion": "Correct native loaded value, exclusion/precedence and source version for each behavior; absent source feature marked supported N/A.",
       "evidence": "Actual engine with isolated INI/profile fixture + source-defined rules",
       "reuse": "Generic tagged parsing G3-13, this test owns class-side effects.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare saved tag and original loaded default or external INI/localization override under controlled original config. PASS ONLY WHEN: Correct native loaded value, exclusion/precedence and source version for each behavior; absent source feature marked supported N/A. ORACLE: Actual engine with isolated INI/profile fixture + source-defined rules. Reuse before any new execution: Generic tagged parsing G3-13, this test owns class-side effects.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T020",
@@ -309,10 +474,13 @@
       "pass_criterion": "Correct original rejection or source-permitted null, accurate method cursor and no invented defaults.",
       "evidence": "One genuine native error path per actual different compiled branch",
       "reuse": "General FArchive mismatch details only in G3-14.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load controlled corrupted class export and capture real native rejection/offset; ensure invalid class not shown as loaded. PASS ONLY WHEN: Correct original rejection or source-permitted null, accurate method cursor and no invented defaults. ORACLE: One genuine native error path per actual different compiled branch. Reuse before any new execution: General FArchive mismatch details only in G3-14.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T021",
@@ -324,10 +492,13 @@
       "pass_criterion": "Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle.",
       "evidence": "Original compiled SerializeItem + genuine values or source-equivalent fixture",
       "reuse": "Existing primitive/null tests reused.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Archive-load each source-applicable property through original native SerializeItem. PASS ONLY WHEN: Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle. ORACLE: Original compiled SerializeItem + genuine values or source-equivalent fixture. Reuse before any new execution: Existing primitive/null tests reused.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T022",
@@ -339,10 +510,13 @@
       "pass_criterion": "Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization.",
       "evidence": "Native float load/save or original compiled operator + source-independent bit oracle",
       "reuse": "Only distinct original methods, not one extra CDB per number.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare native saved/loaded raw bit pattern and UnrealDB value, including -0 where representable. PASS ONLY WHEN: Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization. ORACLE: Native float load/save or original compiled operator + source-independent bit oracle. Reuse before any new execution: Only distinct original methods, not one extra CDB per number.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T023",
@@ -354,10 +528,13 @@
       "pass_criterion": "Both true/false and indexed bit selection match native declared field storage, not inferred byte bool.",
       "evidence": "Source selected Bool/Property SerializeItem + loaded field",
       "reuse": "G3-07 base property metadata accepted.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify source-defined bool mask, packed field, array index and original loaded booleans. PASS ONLY WHEN: Both true/false and indexed bit selection match native declared field storage, not inferred byte bool. ORACLE: Source selected Bool/Property SerializeItem + loaded field. Reuse before any new execution: G3-07 base property metadata accepted.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T024",
@@ -369,10 +546,13 @@
       "pass_criterion": "Nonzero native name text/index resolves exactly; None remains genuine null sentinel.",
       "evidence": "Original compiled global FName lookup + UnrealDB name table",
       "reuse": "G3-06 enum FNames already sealed but scalar value different.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original compiled loaded global/name-table identity with serialized index. PASS ONLY WHEN: Nonzero native name text/index resolves exactly; None remains genuine null sentinel. ORACLE: Original compiled global FName lookup + UnrealDB name table. Reuse before any new execution: G3-06 enum FNames already sealed but scalar value different.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T025",
@@ -384,10 +564,13 @@
       "pass_criterion": "Exact array length, character termination and resulting runtime string match original compiled source-selected behavior.",
       "evidence": "Original original compiled package at both sides of source-defined conversion gate",
       "reuse": "Reuse G5 v432 fixed-string fixture; no G5 rerun.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify actual old string class storage and source-legal conversion to dynamic StrProperty where applicable. PASS ONLY WHEN: Exact array length, character termination and resulting runtime string match original compiled source-selected behavior. ORACLE: Original original compiled package at both sides of source-defined conversion gate. Reuse before any new execution: Reuse G5 v432 fixed-string fixture; no G5 rerun.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T026",
@@ -399,10 +582,13 @@
       "pass_criterion": "Correct count, terminal NUL behavior, exact archive end and no unbounded read.",
       "evidence": "One native method oracle for each genuinely distinct source family",
       "reuse": "Old source string tests reuse first.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare source archived count and native loaded string, physical consumed bytes. PASS ONLY WHEN: Correct count, terminal NUL behavior, exact archive end and no unbounded read. ORACLE: One native method oracle for each genuinely distinct source family. Reuse before any new execution: Old source string tests reuse first.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T027",
@@ -414,10 +600,13 @@
       "pass_criterion": "Matches original code unit count and archive cursor, without gratuitous UTF conversion.",
       "evidence": "Original x86 string operator source/compiled and native load",
       "reuse": "Do not assume every original game/build supports UTF16; source eligibility required.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare stock original loader count and normalized loaded units for a legal UTF16 sample. PASS ONLY WHEN: Matches original code unit count and archive cursor, without gratuitous UTF conversion. ORACLE: Original x86 string operator source/compiled and native load. Reuse before any new execution: Do not assume every original game/build supports UTF16; source eligibility required.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T028",
@@ -429,10 +618,13 @@
       "pass_criterion": "Reader errors only where original does and reports same failing archive position.",
       "evidence": "Existing sealed invalid terminal/count probes reused; new native only if distinct branch missing",
       "reuse": "Shared generic EOF error G3-14.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Observe source-specific original error, consumed cursor and rejection of loaded state. PASS ONLY WHEN: Reader errors only where original does and reports same failing archive position. ORACLE: Existing sealed invalid terminal/count probes reused; new native only if distinct branch missing. Reuse before any new execution: Shared generic EOF error G3-14.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T029",
@@ -444,10 +636,13 @@
       "pass_criterion": "Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None.",
       "evidence": "2026 Core.dll direct native archive + original FName table",
       "reuse": "Previous type5 zero already sealed.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native SerializeItem LOAD+SAVE a source-legal nonzero name. PASS ONLY WHEN: Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None. ORACLE: 2026 Core.dll direct native archive + original FName table. Reuse before any new execution: Previous type5 zero already sealed.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T030",
@@ -459,10 +654,13 @@
       "pass_criterion": "Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success.",
       "evidence": "Original fully initialized SDK object/Core.dll, no unsupported mock",
       "reuse": "Previous null STRUCT6 failed due incomplete mock, not accepted.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Native LOAD+SAVE valid nonnull struct payload with fully constructed object and inner member. PASS ONLY WHEN: Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success. ORACLE: Original fully initialized SDK object/Core.dll, no unsupported mock. Reuse before any new execution: Previous null STRUCT6 failed due incomplete mock, not accepted.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T031",
@@ -474,10 +672,13 @@
       "pass_criterion": "Correct object identity, tag7, saved object reference and cursor; null type7 proof reused.",
       "evidence": "Genuine Core.dll linker and object-backed archive",
       "reuse": "Previous null OBJECT7 sealed.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native SerializeItem loads and saves a nonnull genuine object reference. PASS ONLY WHEN: Correct object identity, tag7, saved object reference and cursor; null type7 proof reused. ORACLE: Genuine Core.dll linker and object-backed archive. Reuse before any new execution: Previous null OBJECT7 sealed.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T032",
@@ -489,10 +690,13 @@
       "pass_criterion": "No cross-build guessed data: correct 469f pointer 4-byte vs 227k no-data behavior; new value cases only for unverified branches.",
       "evidence": "Reuse sealed 469f vs 227k method disassembly, new oracle only if value behavior differs",
       "reuse": "Source absence explicitly supported N/A.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify branch-specific bytes/return code using original compiled methods, where class actually exists. PASS ONLY WHEN: No cross-build guessed data: correct 469f pointer 4-byte vs 227k no-data behavior; new value cases only for unverified branches. ORACLE: Reuse sealed 469f vs 227k method disassembly, new oracle only if value behavior differs. Reuse before any new execution: Source absence explicitly supported N/A.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T033",
@@ -504,10 +708,13 @@
       "pass_criterion": "Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
       "evidence": "2026 genuine Core.dll runtime loaded field; reuse 2 package objects and compiled disassembly",
       "reuse": "Do not repeat known source-only caption verifier.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture actual native loaded Caption text and source field after original class Serialize; verify archived ANSI length and result. PASS ONLY WHEN: Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption. ORACLE: 2026 genuine Core.dll runtime loaded field; reuse 2 package objects and compiled disassembly. Reuse before any new execution: Do not repeat known source-only caption verifier.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T034",
@@ -519,10 +726,13 @@
       "pass_criterion": "Exact member offsets, value bytes and inheritance match original compiled C98.",
       "evidence": "Original native loaded struct + declared source member graph",
       "reuse": "G3-03 struct declarations not value storage.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Use original SerializeBin; compare member order, sizes and real loaded values. PASS ONLY WHEN: Exact member offsets, value bytes and inheritance match original compiled C98. ORACLE: Original native loaded struct + declared source member graph. Reuse before any new execution: G3-03 struct declarations not value storage.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T035",
@@ -534,10 +744,13 @@
       "pass_criterion": "Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does.",
       "evidence": "Original compiled Engine.u+Core.u import chain with genuine class object",
       "reuse": "No inferred struct size from name alone.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load original native struct member values and verify imported identity plus member order. PASS ONLY WHEN: Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does. ORACLE: Original compiled Engine.u+Core.u import chain with genuine class object. Reuse before any new execution: No inferred struct size from name alone.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T036",
@@ -549,10 +762,13 @@
       "pass_criterion": "Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
       "evidence": "2012/2026 native class/type plus genuine archive",
       "reuse": "227i and 227k method deltas separately handled.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original SerializeBin load and loaded field offset against reader. PASS ONLY WHEN: Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class. ORACLE: 2012/2026 native class/type plus genuine archive. Reuse before any new execution: 227i and 227k method deltas separately handled.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T037",
@@ -564,10 +780,13 @@
       "pass_criterion": "UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation.",
       "evidence": "G5 sealed original v432 nested source-legal success if applicable; new only missing variants",
       "reuse": "Known uninitialized allocator crash excluded, never counted pass.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare real native serialized count, loaded string and physical archive cursor. PASS ONLY WHEN: UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation. ORACLE: G5 sealed original v432 nested source-legal success if applicable; new only missing variants. Reuse before any new execution: Known uninitialized allocator crash excluded, never counted pass.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T038",
@@ -579,10 +798,13 @@
       "pass_criterion": "Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason.",
       "evidence": "Original compiler fixture with initialized nested elements",
       "reuse": "G3-11 owns outer array count, here owns struct member codec.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native item load of array-of-struct with deterministic initialized memory. PASS ONLY WHEN: Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason. ORACLE: Original compiler fixture with initialized nested elements. Reuse before any new execution: G3-11 owns outer array count, here owns struct member codec.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T039",
@@ -594,10 +816,13 @@
       "pass_criterion": "Reader does not collapse inherited member layout, actual offsets and values match original.",
       "evidence": "Original linked ancestry + native SerializeBin for one member",
       "reuse": "G3-03 Children targets reused.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load original native inherited struct and compare declared offsets and physical member payload. PASS ONLY WHEN: Reader does not collapse inherited member layout, actual offsets and values match original. ORACLE: Original linked ancestry + native SerializeBin for one member. Reuse before any new execution: G3-03 Children targets reused.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T040",
@@ -609,10 +834,13 @@
       "pass_criterion": "Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior.",
       "evidence": "Original compiled malformed input + current decoder",
       "reuse": "G3-14 crosscutting EOF template owns shared cursor implementation.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Invoke source-defined original error for one invalid member reference and one truncated legal struct value. PASS ONLY WHEN: Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior. ORACLE: Original compiled malformed input + current decoder. Reuse before any new execution: G3-14 crosscutting EOF template owns shared cursor implementation.",
+      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T041",
@@ -624,10 +852,13 @@
       "pass_criterion": "Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code.",
       "evidence": "Original genuine file or source-shaped array fixture and compiled native operator",
       "reuse": "Existing 2012 four array-inner oracle reused if suitable.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: LOAD and SAVE under original native array operator. PASS ONLY WHEN: Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code. ORACLE: Original genuine file or source-shaped array fixture and compiled native operator. Reuse before any new execution: Existing 2012 four array-inner oracle reused if suitable.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T042",
@@ -639,10 +870,13 @@
       "pass_criterion": "Every nonnull reference target matches native linker, null stays null; exact read count.",
       "evidence": "Original native linker fixture and source-selected inner type",
       "reuse": "G3-09 declaration refs already closed; this is array values.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original item count and actual loaded link identity for both elements. PASS ONLY WHEN: Every nonnull reference target matches native linker, null stays null; exact read count. ORACLE: Original native linker fixture and source-selected inner type. Reuse before any new execution: G3-09 declaration refs already closed; this is array values.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T043",
@@ -654,10 +888,13 @@
       "pass_criterion": "Two native values and serialized footprint match, with true stock allocator failures excluded explicitly.",
       "evidence": "Original compiled native array/struct fixture",
       "reuse": "G3-10 owns per-member content; this checks iteration/count.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Check outer count and member traversal on actual fully initialized original runtime. PASS ONLY WHEN: Two native values and serialized footprint match, with true stock allocator failures excluded explicitly. ORACLE: Original compiled native array/struct fixture. Reuse before any new execution: G3-10 owns per-member content; this checks iteration/count.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T044",
@@ -669,10 +906,13 @@
       "pass_criterion": "Matches source versions without rewriting absent or uninitialized strings.",
       "evidence": "Original compiled initialized string array fixture",
       "reuse": "Reuse G5 stable nested string proof.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare native repeated per-element FString sizes, final array cursor and loaded strings. PASS ONLY WHEN: Matches source versions without rewriting absent or uninitialized strings. ORACLE: Original compiled initialized string array fixture. Reuse before any new execution: Reuse G5 stable nested string proof.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T045",
@@ -684,10 +924,13 @@
       "pass_criterion": "Exactly two values of source ElementSize decoded; no dynamic count or extra bytes invented.",
       "evidence": "Original C227 native Core method and original declaration",
       "reuse": "Source absence in C98/T99 explicitly N/A.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native SerializeItem/Serialize of fixed array under source-selected C227. PASS ONLY WHEN: Exactly two values of source ElementSize decoded; no dynamic count or extra bytes invented. ORACLE: Original C227 native Core method and original declaration. Reuse before any new execution: Source absence in C98/T99 explicitly N/A.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T046",
@@ -699,10 +942,13 @@
       "pass_criterion": "Serialized bytes and native loaded array values equal source-specific fixed semantics.",
       "evidence": "Original C227 compiler fixture with nested inner property",
       "reuse": "Only where class source defines supported inner.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify original fixed-count iteration, offset and source type size. PASS ONLY WHEN: Serialized bytes and native loaded array values equal source-specific fixed semantics. ORACLE: Original C227 compiler fixture with nested inner property. Reuse before any new execution: Only where class source defines supported inner.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T047",
@@ -714,10 +960,13 @@
       "pass_criterion": "Reader consumes exactly original no-data bytes and never invents entries; nonempty case either proven or source-excluded.",
       "evidence": "Original 227 compiled method disassembly/real archive",
       "reuse": "Existing map no-data script reused.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Observe original compiled map SerializeItem class behavior and record source-defined unsupported branch if no nonempty storage. PASS ONLY WHEN: Reader consumes exactly original no-data bytes and never invents entries; nonempty case either proven or source-excluded. ORACLE: Original 227 compiled method disassembly/real archive. Reuse before any new execution: Existing map no-data script reused.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T048",
@@ -729,10 +978,13 @@
       "pass_criterion": "Same method-specific error and failing cursor; bounded decoder must not fabricate elements.",
       "evidence": "Original compiled actual FArchive failure at named branch",
       "reuse": "G3-14 owns crosscutting low-level Count/EOF.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Feed one genuine legal array then one controlled count mutation through actual original archive. PASS ONLY WHEN: Same method-specific error and failing cursor; bounded decoder must not fabricate elements. ORACLE: Original compiled actual FArchive failure at named branch. Reuse before any new execution: G3-14 owns crosscutting low-level Count/EOF.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T049",
@@ -744,10 +996,13 @@
       "pass_criterion": "Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
       "evidence": "Original C227 Core symbol method and value fixture",
       "reuse": "G3-02 confirms method exists, not behavior.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Use one source-valid value suppressed by ShouldSerializeItem and one serialized value, where implemented. PASS ONLY WHEN: Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded. ORACLE: Original C227 Core symbol method and value fixture. Reuse before any new execution: G3-02 confirms method exists, not behavior.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T050",
@@ -759,10 +1014,13 @@
       "pass_criterion": "Known byte positions match; relocatable Name/Object words compare by resolved target not literal ASLR address.",
       "evidence": "Reuse 96 true original C98 script memory buffers; cover only untested token types",
       "reuse": "No blanket rerun of 100 scripts.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Run original compiled SerializeExpr and capture loaded script buffer typed relocation positions. PASS ONLY WHEN: Known byte positions match; relocatable Name/Object words compare by resolved target not literal ASLR address. ORACLE: Reuse 96 true original C98 script memory buffers; cover only untested token types. Reuse before any new execution: No blanket rerun of 100 scripts.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T051",
@@ -774,10 +1032,13 @@
       "pass_criterion": "Existing original native source proof covers branch+size or precise missing opcode identified without replay.",
       "evidence": "G5 original v432 script evidence and source opcode declaration",
       "reuse": "v432 accepted G5 not entire G3.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Use sealed G5 native bytecode parser proof to map source-defined opcodes and memory size. PASS ONLY WHEN: Existing original native source proof covers branch+size or precise missing opcode identified without replay. ORACLE: G5 original v432 script evidence and source opcode declaration. Reuse before any new execution: v432 accepted G5 not entire G3.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T052",
@@ -789,10 +1050,13 @@
       "pass_criterion": "Every real delta implemented/covered; byte-for-byte identity proof accepted if truly no delta.",
       "evidence": "469f native source/REA + genuine loaded bytes",
       "reuse": "No invented 469f-only opcode.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Diff original compiled SerializeExpr behavior against v432 code and genuine script corpus. PASS ONLY WHEN: Every real delta implemented/covered; byte-for-byte identity proof accepted if truly no delta. ORACLE: 469f native source/REA + genuine loaded bytes. Reuse before any new execution: No invented 469f-only opcode.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T053",
@@ -804,10 +1068,13 @@
       "pass_criterion": "Typed relocation targets and actual compiled in-memory bytes match current reader; size/offset match source.",
       "evidence": "C227i sealed 223 buffer proof reused, 227k native delta only",
       "reuse": "Unrelocated known bytes not double-tested.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture actual loaded 2012/2026 native script memory for uncovered opcode families. PASS ONLY WHEN: Typed relocation targets and actual compiled in-memory bytes match current reader; size/offset match source. ORACLE: C227i sealed 223 buffer proof reused, 227k native delta only. Reuse before any new execution: Unrelocated known bytes not double-tested.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T054",
@@ -819,10 +1086,13 @@
       "pass_criterion": "Exactly source-defined physical byte cursor and in-memory Script.Num, including compact-reference widening.",
       "evidence": "Original script-bearing package and compiled loader",
       "reuse": "G3-03 checks prefix fields; G3-12 owns opcode expansion.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare archived compact script footprint, ScriptSize and native decoded memory length. PASS ONLY WHEN: Exactly source-defined physical byte cursor and in-memory Script.Num, including compact-reference widening. ORACLE: Original script-bearing package and compiled loader. Reuse before any new execution: G3-03 checks prefix fields; G3-12 owns opcode expansion.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T055",
@@ -834,10 +1104,13 @@
       "pass_criterion": "Reject only original-invalid token and report exact consumed cursor.",
       "evidence": "G3-03 previous 469f malformed NAME_None is different branch; v61 Bad expr 15 exploration excluded as a G3-04 proof.",
       "reuse": "No repeat of earlier rejected synthetic cross-era load.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original compiled token failure and UnrealDB diagnostic at same native Tell. PASS ONLY WHEN: Reject only original-invalid token and report exact consumed cursor. ORACLE: G3-03 previous 469f malformed NAME_None is different branch; v61 Bad expr 15 exploration excluded as a G3-04 proof.. Reuse before any new execution: No repeat of earlier rejected synthetic cross-era load.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T056",
@@ -849,10 +1122,13 @@
       "pass_criterion": "Source-defined behavior documented and UnrealDB emits matching compatibility/error status, never claims valid 469f Function load.",
       "evidence": "Recorded original 469f Bad expr token15 trace, no rerun",
       "reuse": "G3-04 old param-field branch remains distinct.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Classify whether error is intentionally unsupported old script version, invalid token, or wrong source family. PASS ONLY WHEN: Source-defined behavior documented and UnrealDB emits matching compatibility/error status, never claims valid 469f Function load. ORACLE: Recorded original 469f Bad expr token15 trace, no rerun. Reuse before any new execution: G3-04 old param-field branch remains distinct.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T057",
@@ -864,10 +1140,13 @@
       "pass_criterion": "Reader matches typed recursion, consumes exact bytes, and handles unknown reference without invented values.",
       "evidence": "Source opcode table plus original compiled memory values",
       "reuse": "Only original source-legal cases.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original recursive token dispatch, count and actual loaded binary memory bytes. PASS ONLY WHEN: Reader matches typed recursion, consumes exact bytes, and handles unknown reference without invented values. ORACLE: Source opcode table plus original compiled memory values. Reuse before any new execution: Only original source-legal cases.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T058",
@@ -879,10 +1158,13 @@
       "pass_criterion": "UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
       "evidence": "G5 original UObject saved fields reused where profile same",
       "reuse": "Do not repeat sealed 1998 positive already covering this exact case.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Native LOAD of tagged values and compare type/name/index, count and cursor. PASS ONLY WHEN: UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes. ORACLE: G5 original UObject saved fields reused where profile same. Reuse before any new execution: Do not repeat sealed 1998 positive already covering this exact case.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T059",
@@ -894,10 +1176,13 @@
       "pass_criterion": "Original tag order, type alias, payload and last cursor match; 469f only separately where source delta.",
       "evidence": "G5 v432 original default corpus reused; 469f delta via Core/Engine",
       "reuse": "G3-05 owns construction and superclass overlay.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare tagged stream and loaded non-default values against original engine. PASS ONLY WHEN: Original tag order, type alias, payload and last cursor match; 469f only separately where source delta. ORACLE: G5 v432 original default corpus reused; 469f delta via Core/Engine. Reuse before any new execution: G3-05 owns construction and superclass overlay.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T060",
@@ -909,10 +1194,13 @@
       "pass_criterion": "Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts.",
       "evidence": "2012/2026 original Core/Engine native defaults",
       "reuse": "G3-08 handles leaf numeric/string codecs.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original compiled tag parser and source version/category name variants. PASS ONLY WHEN: Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts. ORACLE: 2012/2026 original Core/Engine native defaults. Reuse before any new execution: G3-08 handles leaf numeric/string codecs.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T061",
@@ -924,10 +1212,13 @@
       "pass_criterion": "Reader preserves inherited/default field according to original, not inventing serialized zero.",
       "evidence": "Actual native loaded class and empty/partial tag stream",
       "reuse": "G3-05 owns class default initialization; here owns missing tag effect.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Observe native default-then-tag overlay when tag is missing. PASS ONLY WHEN: Reader preserves inherited/default field according to original, not inventing serialized zero. ORACLE: Actual native loaded class and empty/partial tag stream. Reuse before any new execution: G3-05 owns class default initialization; here owns missing tag effect.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T062",
@@ -939,10 +1230,13 @@
       "pass_criterion": "Only original source permits override; resulting runtime value/priority equal original compiled engine.",
       "evidence": "Original engine isolated config profile and native loaded value",
       "reuse": "Do not change canonical source or production config.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load same saved package twice with two source-legal configurations. PASS ONLY WHEN: Only original source permits override; resulting runtime value/priority equal original compiled engine. ORACLE: Original engine isolated config profile and native loaded value. Reuse before any new execution: Do not change canonical source or production config.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T063",
@@ -954,10 +1248,13 @@
       "pass_criterion": "Correct transient omission/reset and source-defined archived field count.",
       "evidence": "Genuine original SavePackage fixture per distinct method and class",
       "reuse": "G3-05 owns declared flag presence.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native SAVE and independent LOAD of controlled object. PASS ONLY WHEN: Correct transient omission/reset and source-defined archived field count. ORACLE: Genuine original SavePackage fixture per distinct method and class. Reuse before any new execution: G3-05 owns declared flag presence.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T064",
@@ -969,10 +1266,13 @@
       "pass_criterion": "Original native failure/recovery and exact failing archive offset match; no fabricated defaults.",
       "evidence": "Original compiled tagged-property error + UnrealDB",
       "reuse": "Shared FArchive physical EOF G3-14 separately.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Test one source-defined corrupt tag per distinct error branch. PASS ONLY WHEN: Original native failure/recovery and exact failing archive offset match; no fabricated defaults. ORACLE: Original compiled tagged-property error + UnrealDB. Reuse before any new execution: Shared FArchive physical EOF G3-14 separately.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T065",
@@ -984,10 +1284,13 @@
       "pass_criterion": "Exact branch-selected archive fields and cursor; same numeric v69 from different families must not substitute source.",
       "evidence": "Source-version manifest + original compiled representative evidence",
       "reuse": "Reuse G3-04 single pending <=63 native test, not clone it.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Enumerate original source-gated ranges and test lowest/highest applicable version with same source family. PASS ONLY WHEN: Exact branch-selected archive fields and cursor; same numeric v69 from different families must not substitute source. ORACLE: Source-version manifest + original compiled representative evidence. Reuse before any new execution: Reuse G3-04 single pending <=63 native test, not clone it.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T066",
@@ -999,10 +1302,13 @@
       "pass_criterion": "Reader throws at original moment with identical cursor and source native error class.",
       "evidence": "Original compiled FArchive native diagnostic trace or sealed equivalent",
       "reuse": "No one test per object or per package file.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original FArchive attempted read and physical Tell for one shared underlying operator. PASS ONLY WHEN: Reader throws at original moment with identical cursor and source native error class. ORACLE: Original compiled FArchive native diagnostic trace or sealed equivalent. Reuse before any new execution: No one test per object or per package file.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T067",
@@ -1014,10 +1320,47 @@
       "pass_criterion": "A single cross-engine check confirms BEFORE/AFTER read guards, false loaded values suppressed.",
       "evidence": "Cross-compare sealed original x86 raw CDB, no new original native execution",
       "reuse": "Do not create another malformed size fixture.",
-      "status": "PENDING",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": null
+      "status": "PASS",
+      "evidence_sha": "13f88e0312f7dd3042c48c49dfeb1fd0f4adc055231527de6e9576f22c037064",
+      "result": "Three direct original C98 binary error values (42/40,40/41,62/63), actual 469f FArchive Tell and 227k original check-before-read disassembly/real Tell, all observed and source-scoped already. No native reexecution.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-badnet-original-numeric.log",
+          "sha256": "8fb96fd8f8ddac117ced29f419b46a2991c1b5977974fc2ce5512d0f414b9f0a",
+          "native_diagnostic": "G304_C98_COMPILED_GOT=42 EXPECTED=40"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-short-original-native-numeric.log",
+          "sha256": "bfb39b1ef23a16780a0973da02aff8c60025883a306172d8dd9f4b14234f3ec5",
+          "native_diagnostic": "G304_C98_SHORT_COMPILED_GOT=40 EXPECTED=41"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-state-short-original-numeric.log",
+          "sha256": "3201dae0681eec12b0b33f0deea062803d9d875772cd90aea2eb171736194c3b",
+          "native_diagnostic": "G304_C98_STATE_SHORT_COMPILED_GOT=62 EXPECTED=63"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-469f-badnet-real-native-farchive-tell.log",
+          "sha256": "e4891e18c06d68f9852651c7c9c3e93e1439f264c6a489e039cca4a4407f5f32",
+          "native_diagnostic": ""
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php",
+          "sha256": "4a318b07c0e1f95b1242d211bd374b2be1c8029cf1340dc9139d9cef6cf9a773"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php",
+          "sha256": "d2d31e3537dfdf7afb53be5c86f403cad10abc788d858c2f569da7ba2b767909"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-g3-04-c227k-wrapped-boundary-actual-tell.log",
+          "sha256": "7718289c6883ea0c78c26fd1c2d502c41c402851eb26c3668168baf7346be76b"
+        }
+      ],
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "attempted_native_execution": false
     },
     {
       "id": "T068",
@@ -1029,10 +1372,13 @@
       "pass_criterion": "Same source-valid negative handling and same source-invalid error; no arbitrary extra policy.",
       "evidence": "Existing original negative test references + uncovered native operator branch only",
       "reuse": "G3-08 and G3-11 own leaf decoders.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare source conversion, native error/recovery and physical Tell for each distinct operator implementation. PASS ONLY WHEN: Same source-valid negative handling and same source-invalid error; no arbitrary extra policy. ORACLE: Existing original negative test references + uncovered native operator branch only. Reuse before any new execution: G3-08 and G3-11 own leaf decoders.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T069",
@@ -1044,10 +1390,13 @@
       "pass_criterion": "Same null/throw rule and failing archive cursor; no misleading resolved name.",
       "evidence": "Original native lookup branch + real source package indexed maps",
       "reuse": "G3-03 NAME_None assertion sealed for 469f.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original compiled name/ref resolution errors and reader provenance. PASS ONLY WHEN: Same null/throw rule and failing archive cursor; no misleading resolved name. ORACLE: Original native lookup branch + real source package indexed maps. Reuse before any new execution: G3-03 NAME_None assertion sealed for 469f.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T070",
@@ -1059,10 +1408,13 @@
       "pass_criterion": "Reader honors original FArchive physical read and serialization size check in correct source order.",
       "evidence": "Source-defined original Preload/linker trace and reader archive cursor",
       "reuse": "Use only actual distinct implementation, not duplicate native per profile.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Test one stock original file with physically readable extension and one true EOF case. PASS ONLY WHEN: Reader honors original FArchive physical read and serialization size check in correct source order. ORACLE: Source-defined original Preload/linker trace and reader archive cursor. Reuse before any new execution: Use only actual distinct implementation, not duplicate native per profile.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T071",
@@ -1074,10 +1426,13 @@
       "pass_criterion": "No unowned mandatory error branch; explicit excluded native undefined behavior and no duplicate test case.",
       "evidence": "Read-only source/matrix reconciliation plus one native trace per still-unproven distinct branch",
       "reuse": "The register itself is the fixed input list; newly discovered beyond scope go appendix.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Cross-reference every G3-03..13 source-defined error and version gate to one concrete test ID/evidence SHA. PASS ONLY WHEN: No unowned mandatory error branch; explicit excluded native undefined behavior and no duplicate test case. ORACLE: Read-only source/matrix reconciliation plus one native trace per still-unproven distinct branch. Reuse before any new execution: The register itself is the fixed input list; newly discovered beyond scope go appendix.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T072",
@@ -1089,10 +1444,13 @@
       "pass_criterion": "100% of required observable fields matched or each unobservable direct type has an explicit documented exclusion.",
       "evidence": "Reuse C98 direct loaded native registers and G3-03..13 closure proofs; compare only missing types",
       "reuse": "Not a new full CDB replay.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Enumerate methods actually reached by original compiled loader and match type-correct loaded values to reader. PASS ONLY WHEN: 100% of required observable fields matched or each unobservable direct type has an explicit documented exclusion. ORACLE: Reuse C98 direct loaded native registers and G3-03..13 closure proofs; compare only missing types. Reuse before any new execution: Not a new full CDB replay.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T073",
@@ -1104,10 +1462,13 @@
       "pass_criterion": "Zero unexplained source-applicable method/type gaps and no false 469f-v432 equivalence.",
       "evidence": "Aggregate existing sealed original native snapshots and owner gate evidence",
       "reuse": "Avoid proof-count inflation per export.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Union existing 650 v432 function/state and 469f 1422 Engine plus other class proofs, identify genuine missing method classes. PASS ONLY WHEN: Zero unexplained source-applicable method/type gaps and no false 469f-v432 equivalence. ORACLE: Aggregate existing sealed original native snapshots and owner gate evidence. Reuse before any new execution: Avoid proof-count inflation per export.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T074",
@@ -1119,10 +1480,13 @@
       "pass_criterion": "Zero missing mandatory C227 method oracle; 227i and 227k build deltas explicitly separated.",
       "evidence": "Reuse original 237 native and 227k saved fixture; only uncovered fields target native",
       "reuse": "Do not equate distinct compiled versions.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Reconcile all required C227 types, own actual native loaded references and script flags. PASS ONLY WHEN: Zero missing mandatory C227 method oracle; 227i and 227k build deltas explicitly separated. ORACLE: Reuse original 237 native and 227k saved fixture; only uncovered fields target native. Reuse before any new execution: Do not equate distinct compiled versions.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T075",
@@ -1134,10 +1498,13 @@
       "pass_criterion": "No value presented as actual runtime pointer unless native observed; exact source-backed sizes and identities.",
       "evidence": "Original per-build native linker reference index mapping",
       "reuse": "G3-03 child refs and G3-04 param chain feed this.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare actual compiled layout outputs for imported struct, property chains and runtime materialized refs. PASS ONLY WHEN: No value presented as actual runtime pointer unless native observed; exact source-backed sizes and identities. ORACLE: Original per-build native linker reference index mapping. Reuse before any new execution: G3-03 child refs and G3-04 param chain feed this.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T076",
@@ -1149,10 +1516,13 @@
       "pass_criterion": "Reader source-selected provider precedence and references equal original native loaded values; missing provider reported accurately.",
       "evidence": "Actual shipped Core/Engine and documented dependency cases; owner gates sealed",
       "reuse": "Do not rescan 235k files without a named gap.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare one distinct provider-resolution/import case per documented game/build and verify reconstructed package names. PASS ONLY WHEN: Reader source-selected provider precedence and references equal original native loaded values; missing provider reported accurately. ORACLE: Actual shipped Core/Engine and documented dependency cases; owner gates sealed. Reuse before any new execution: Do not rescan 235k files without a named gap.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T077",
@@ -1164,10 +1534,13 @@
       "pass_criterion": "Every original method gate has verified owner/oracle and zero unexplained parity mismatches.",
       "evidence": "Read-only evidence join from G3-01..14, not a new test suite",
       "reuse": "Any failure gives concrete owner gate and stops final G3-16.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Assign one SHA-verified native acceptance record or explicit exclusion to every source-required behavior. PASS ONLY WHEN: Every original method gate has verified owner/oracle and zero unexplained parity mismatches. ORACLE: Read-only evidence join from G3-01..14, not a new test suite. Reuse before any new execution: Any failure gives concrete owner gate and stops final G3-16.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T078",
@@ -1179,10 +1552,13 @@
       "pass_criterion": "One exact final release decision; no historical PASS counts mistaken for full closure.",
       "evidence": "Deterministic static register/status SHA and proof linkage",
       "reuse": "Blocked while any required T row is pending.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Verify every mandatory test row terminal PASS or source-justified N/A, with approved append-only S-subtests resolved; check no BLOCKED/FAIL remains. PASS ONLY WHEN: One exact final release decision; no historical PASS counts mistaken for full closure. ORACLE: Deterministic static register/status SHA and proof linkage. Reuse before any new execution: Blocked while any required T row is pending.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T079",
@@ -1194,10 +1570,13 @@
       "pass_criterion": "All mandatory assert counts PASS, no source-branch gaps, no native test replay merely to farm passes.",
       "evidence": "Single independent G3 verifier composed of accepted immutable proof artifacts",
       "reuse": "Execute only after T001... backlog terminal.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Run ONE final combined gate covering complete source/version, actual original loaded-value method family and malformed evidence. PASS ONLY WHEN: All mandatory assert counts PASS, no source-branch gaps, no native test replay merely to farm passes. ORACLE: Single independent G3 verifier composed of accepted immutable proof artifacts. Reuse before any new execution: Execute only after T001... backlog terminal.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     },
     {
       "id": "T080",
@@ -1209,10 +1588,13 @@
       "pass_criterion": "GitHub main and DEV clean, PRD changed files identical SHA, no protected config/storage copied.",
       "evidence": "Git and SHA256 PRD deployment log + final project status",
       "reuse": "No PRD deployment until one-time release gate PASS.",
-      "status": "PENDING",
+      "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": null
+      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Commit/push final source/documentation and selectively deploy; SHA compare every changed file excluding config/storage. PASS ONLY WHEN: GitHub main and DEV clean, PRD changed files identical SHA, no protected config/storage copied. ORACLE: Git and SHA256 PRD deployment log + final project status. Reuse before any new execution: No PRD deployment until one-time release gate PASS.",
+      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "attempted_native_execution": false,
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     }
   ],
   "appendix": [],

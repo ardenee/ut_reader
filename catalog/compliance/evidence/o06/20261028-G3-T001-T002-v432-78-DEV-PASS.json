@@ -1,0 +1,42 @@
+﻿{
+    "ok": true,
+    "checks": 78,
+    "failed": [],
+    "T001": "PASS original v432 Vector/Rotator/Color loaded native fields vs reader",
+    "T002": "PASS original v432 UField Next/SuperField child identities including Plane->Vector",
+    "original_native_loaded_objects": {
+        "Vector": {
+            "export": 0,
+            "child": 576,
+            "next": 590,
+            "super": -1,
+            "script_size": 0,
+            "original_loaded_native_props_size": 12
+        },
+        "Rotator": {
+            "export": 1,
+            "child": 568,
+            "next": 32,
+            "super": -1,
+            "script_size": 0,
+            "original_loaded_native_props_size": 12
+        },
+        "Color": {
+            "export": 535,
+            "child": 293,
+            "next": 546,
+            "super": -1,
+            "script_size": 0,
+            "original_loaded_native_props_size": 4
+        },
+        "Plane": {
+            "export": 32,
+            "child": 564,
+            "next": 0,
+            "super": 0,
+            "script_size": 0,
+            "original_loaded_native_props_size": 16
+        }
+    },
+    "original_compiled_native_reexecuted_from_previous_sealed_tests": false
+}

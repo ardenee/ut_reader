@@ -1,6 +1,8 @@
 # UE1 G3 — Individual executable test backlog (NOT the 16 acceptance gates)
 
-**28 October 2026 · PROPOSED / AWAITING USER REVIEW · NO TESTS EXECUTED**
+**28 October 2026 · USER APPROVED THE 80 FIXED TESTS · EXECUTING 10 RESUMABLE BATCHES**
+
+**Live results:** [80-test machine-readable status](UE1-O06-G3-EXECUTION-TEST-BACKLOG.json) and [10-batch progress](UE1-O06-G3-EXECUTION-PROGRESS.md). Original native parity is never assumed: BLOCKED means missing source-specific proof, not a pass.
 
 These are the **individual pending tests**, each with a defined original engine/version, actual input or fixture, single operation, expected original-to-UnrealDB result and evidence requirement. The previous 16 `G3-XX` entries are *acceptance group headings only* and are NOT tests. This backlog replaces the earlier 52 broad acceptance statements as the work queue. The 5 sealed accepted gates G3-01, G3-02, G3-06, G3-07, G3-09 have **no tests to repeat**. Other previously passing original native cases are explicitly identified as REUSE, not to be rerun.
 
