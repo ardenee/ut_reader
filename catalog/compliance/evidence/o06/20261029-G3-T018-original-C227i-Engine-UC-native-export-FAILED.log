@@ -1,0 +1,8 @@
+Loading package Engine.u...
+Exported Class Engine.Engine to C:\Temp\UnrealDB\O06\G3-T018-original-2012-C227i-Engine-native-export\Engine.uc
+Exported Class Engine.SecurityData to C:\Temp\UnrealDB\O06\G3-T018-original-2012-C227i-Engine-native-export\SecurityData.uc
+General protection fault!
+
+History: UExporter::FindExporter <- UExporter::ExportToOutputDevice <- UClassExporterUC::ExportText <- UExporter::ExportToOutputDevice <- UExporter::ExportToFile <- UBatchExportCommandlet::Main
+
+Exiting due to error

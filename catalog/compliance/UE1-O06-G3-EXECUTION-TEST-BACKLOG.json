@@ -1175,7 +1175,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original 227i vs 227k class flags/Within/Config already fully closed in T015, but revised original class CDO loaded value for each build not yet established. Do not substitute class metadata. FULL REQUIRED: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
+      "blocking_reason": "ACTUAL ORIGINAL COMPILED C227i 2012 NATIVE UC EXPORTER FAILURE 2026-10-29: original stock Core.dll SHA 287b5eb6, Engine.u SHA 931ffb4d original UCC.exe batchexport Engine.u Class uc produced original Engine.uc and SecurityData.uc then actual compiled UClassExporterUC::ExportText general protection fault BEFORE actor default object fields. NOT a passing native CDO case. Raw byte-preserved failure log catalog/compliance/evidence/o06/20261029-G3-T018-original-C227i-Engine-UC-native-export-FAILED.log sha256 cd28d28352d34a9e147a23122ca591858d36a2bb52234a12e2db539e7d343d66. Genuine 2012-vs-2026 archived class tag counts differ Actor33->238 Pawn46->204 HUD3->10 PlayerPawn33->189 GameInfo43->115 LevelInfo14->84; source-only archived differences cannot replace actual 2012 loaded CDO. Need original 2012 compiled GameInfo or other changed CDO native loaded-value oracle, no repeat 2026 already accepted. FIXED PASS CRITERION: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
       "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
       "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT",
@@ -1597,10 +1597,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "SHORT BATCH: 227i real 668 property identities exist; 227i/227k original fully linked nested struct members and loaded bytes not proven. Acceptance still requires: Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
+      "blocking_reason": "2026-10-29 ORIGINAL COMPILED GROUPED C227k SIX CDO: New original compiled 227k six genuine CDO native output shows Pawn.RotationRate actual (Pitch=4096,Yaw=50000,Roll=3072); real original 2026 Engine.u Pawn tagged StructProperty Rotator source, Epic SDK UnMath.h FRotator serializer Pitch/Yaw/Roll. This proves scalar struct values but does NOT yet prove an actual nested struct linked outer/inner UProperty member offsets/ArrayDim native. T036 BLOCKED pending exact original member offsets and loaded nested member. REQUIRED: Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
       "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T037",
@@ -2357,13 +2358,48 @@
       "pass_criterion": "Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts.",
       "evidence": "2012/2026 original Core/Engine native defaults",
       "reuse": "G3-08 handles leaf numeric/string codecs.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST B08: 2012 227i and 2026 227k original compiled tagged nonzero default loaded values absent. REQUIRED: Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts.",
-      "last_attempt_at": "2026-10-29T00:09:10+00:00",
+      "status": "PASS",
+      "evidence_sha": "edc11156458cf3c4cc4e68fb60c83fcf9778ce6fdfc5796bef9424addabeb7d1",
+      "result": "Genuine 2026 C227k original compiled Core.dll loaded true Engine.u six CDOs; actual mixed GameInfo tagged Bool bPauseable=True, Int MaxPlayers=16, FName DefaultPlayerState=PlayerWalking, real archive FName index59 not UT99 index63. Native loaded values, source-specific real archive field types/offset order and complete serialized class consumption verified. Actual Pawn Health=100, AirControl=0.05, PlayerPawn.bCanJump=True further source-valid nonzero values. Shared source-selected original compiled native six CDO 902/902 acceptance checks, no original engine reruns in verifier.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T03:33:07+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php",
+          "sha256": "e6e24608c01c6bedc070709e13b3252e68c9ed6f79e1f1c70ed45baee0ee0f4a",
+          "bytes": 8539
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "sha256": "760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66",
+          "bytes": 1068
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "sha256": "f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d",
+          "bytes": 105966
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO-probe.cpp",
+          "sha256": "bf74e2ae67c5c61ed7407d7c9c69b4358b823eeda82e95079b78c08aeafa161b",
+          "bytes": 2925
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+          "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Engine.u",
+          "sha256": "a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e"
+        }
+      ]
     },
     {
       "id": "T061",
@@ -2375,13 +2411,48 @@
       "pass_criterion": "Reader preserves inherited/default field according to original, not inventing serialized zero.",
       "evidence": "Actual native loaded class and empty/partial tag stream",
       "reuse": "G3-05 owns class default initialization; here owns missing tag effect.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST B08: Compiled C98 and C227 missing-tag inherited/default value overlay not witnessed. REQUIRED: Reader preserves inherited/default field according to original, not inventing serialized zero.",
-      "last_attempt_at": "2026-10-29T00:09:10+00:00",
+      "status": "PASS",
+      "evidence_sha": "edc11156458cf3c4cc4e68fb60c83fcf9778ce6fdfc5796bef9424addabeb7d1",
+      "result": "Actual original C227k source serialized PlayerPawn has NO Health/AirControl/bHidden tags. Genuine Pawn archive contains Health=100 and AirControl=0.05, Actor original bHidden=False; compiled original PlayerPawn CDO physically loads inherited Health=100/AirControl=0.05/bHidden=False, while explicit PlayerPawn bCanJump=True overrides original Pawn.bCanJump=False. Archive reader correctly reports absence rather than inventing zero; loaded-values oracle independently proves source-defined inheritance. Shared source-selected original compiled native six CDO 902/902 acceptance checks, no original engine reruns in verifier.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T03:33:07+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php",
+          "sha256": "e6e24608c01c6bedc070709e13b3252e68c9ed6f79e1f1c70ed45baee0ee0f4a",
+          "bytes": 8539
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "sha256": "760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66",
+          "bytes": 1068
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "sha256": "f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d",
+          "bytes": 105966
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO-probe.cpp",
+          "sha256": "bf74e2ae67c5c61ed7407d7c9c69b4358b823eeda82e95079b78c08aeafa161b",
+          "bytes": 2925
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+          "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Engine.u",
+          "sha256": "a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e"
+        }
+      ]
     },
     {
       "id": "T062",

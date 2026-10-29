@@ -1,0 +1,42 @@
+{
+    "ok": true,
+    "checks": 902,
+    "failures": [],
+    "T060": "PASS",
+    "T061": "PASS",
+    "native_loaded_C227k_classes": [
+        "Actor",
+        "Pawn",
+        "PlayerPawn",
+        "HUD",
+        "GameInfo",
+        "LevelInfo"
+    ],
+    "native_CDO_property_lines_by_class": {
+        "Actor": 238,
+        "Pawn": 405,
+        "PlayerPawn": 541,
+        "HUD": 245,
+        "GameInfo": 353,
+        "LevelInfo": 390
+    },
+    "genuine_original_source_serialized_default_tag_counts": {
+        "Pawn": 204,
+        "Actor": 238,
+        "LevelInfo": 84,
+        "PlayerPawn": 189,
+        "GameInfo": 115,
+        "HUD": 10
+    },
+    "C227k_original_true_source_FName_index59": "PlayerWalking",
+    "native_original_PlayerPawn_inherits_parent_Pawn_unsaved_fields": {
+        "Health": "100",
+        "AirControl": "0.05",
+        "bHidden": "False"
+    },
+    "native_original_PlayerPawn_overrides_parent_Pawn_bCanJump": {
+        "Pawn": "False",
+        "PlayerPawn": "True"
+    },
+    "original_compiled_engine_sessions_rerun_by_verifier": 0
+}

@@ -999,7 +999,44 @@ def eval_t035(row: dict[str, Any]) -> dict[str, Any]:
        "Genuine stock UT99 v432 and 469f Engine.u HUD.WhiteColor StructProperty import Core.Struct Color resolved by exact original ImportMap identity; original source archive saved FColor 4 bytes 00 80 FF 00 with physical offsets 79888 and 75673, both complete source archives. Actual original compiled 469f HUD CDO loaded R0 G128 B255 A0; previously accepted original compiled v432 native 607 exact loaded properties including all 16 real StructProperty values (only config String override). Shared 33/33 original source/native imported struct PASS, no original native retest.","evidence":pins}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T067":eval_t067}
+def eval_t060_t061(row: dict[str, Any]) -> dict[str, Any]:
+    """One original compiled 2026 C227k Engine.u six-class CDO session."""
+    b="catalog/compliance/evidence/o06/"
+    pins=[verify_pin(name,h) for name,h in [
+      ("catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php","e6e24608c01c6bedc070709e13b3252e68c9ed6f79e1f1c70ed45baee0ee0f4a"),
+      (b+"20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json","760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66"),
+      (b+"20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log","f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d"),
+      (b+"20261029-G3-T060-T061-C227k-original-Engine-6-CDO-probe.cpp","bf74e2ae67c5c61ed7407d7c9c69b4358b823eeda82e95079b78c08aeafa161b"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468"),
+    ]]
+    for path,digest in [
+      (r"C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll","c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"),
+      (r"C:\Temp\UnrealDB\O06\Native-227k\System\Engine.u","a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e")
+    ]:
+        p=pathlib.Path(path)
+        if not p.is_file() or sha256(p)!=digest:
+            raise AssertionError("Original compiled 227k binary/package modified: "+path)
+        pins.append({"original":path,"sha256":digest})
+    j=json.loads((ROOT/b/"20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json").read_text(encoding="utf-8"))
+    if not (j.get("ok") is True and j.get("failures")==[] and j.get("checks")==902
+            and j.get("T060")=="PASS" and j.get("T061")=="PASS"
+            and j.get("original_compiled_engine_sessions_rerun_by_verifier")==0
+            and sorted(j.get("native_loaded_C227k_classes",[]))==sorted(["Actor","Pawn","PlayerPawn","HUD","GameInfo","LevelInfo"])
+            and j.get("C227k_original_true_source_FName_index59")=="PlayerWalking"):
+        raise AssertionError("Original compiled C227k six genuine CDO class and source archive proof incomplete")
+    if row["id"]=="T060":
+        reason=("Genuine 2026 C227k original compiled Core.dll loaded true Engine.u six CDOs; actual mixed GameInfo tagged Bool bPauseable=True, Int MaxPlayers=16, FName DefaultPlayerState=PlayerWalking, real archive FName index59 not UT99 index63. Native loaded values, source-specific real archive field types/offset order and complete serialized class consumption verified. Actual Pawn Health=100, AirControl=0.05, PlayerPawn.bCanJump=True further source-valid nonzero values.")
+    elif row["id"]=="T061":
+        inherited=j.get("native_original_PlayerPawn_inherits_parent_Pawn_unsaved_fields",{})
+        if inherited!={"Health":"100","AirControl":"0.05","bHidden":"False"}:
+            raise AssertionError("C227k actual unsaved PlayerPawn inherited nonzero parent fields missing")
+        reason=("Actual original C227k source serialized PlayerPawn has NO Health/AirControl/bHidden tags. Genuine Pawn archive contains Health=100 and AirControl=0.05, Actor original bHidden=False; compiled original PlayerPawn CDO physically loads inherited Health=100/AirControl=0.05/bHidden=False, while explicit PlayerPawn bCanJump=True overrides original Pawn.bCanJump=False. Archive reader correctly reports absence rather than inventing zero; loaded-values oracle independently proves source-defined inheritance.")
+    else:
+        raise AssertionError("T060/T061 evaluator called for wrong fixed ID")
+    return {"status":"PASS","result":reason+" Shared source-selected original compiled native six CDO 902/902 acceptance checks, no original engine reruns in verifier.","evidence":pins}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

@@ -1,0 +1,4769 @@
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+G5_NATIVE_DIRECT_PACKAGE_BEGIN editor=1 client=0 server=0
+G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=00946BDC editor=1 native_error=0
+G3_T060_ORIGINAL_227K_CDO_BEGIN Class Engine.Actor|defaultPtr=009A1BCC
+G5_NATIVE_TAG_VALUE CollisionGroups=2147483647
+
+G5_NATIVE_TAG_VALUE CollisionFlag=2
+
+G5_NATIVE_TAG_VALUE LatentInt=0
+
+G5_NATIVE_TAG_VALUE RandomDelayTime=0.5
+
+G5_NATIVE_TAG_VALUE TimerRate=0.0
+
+G5_NATIVE_TAG_VALUE TimerCounter=0.0
+
+G5_NATIVE_TAG_VALUE LifeSpan=0.0
+
+G5_NATIVE_TAG_VALUE AnimFrame=0.0
+
+G5_NATIVE_TAG_VALUE AnimRate=0.0
+
+G5_NATIVE_TAG_VALUE TweenRate=0.0
+
+G5_NATIVE_TAG_VALUE LODBias=1.0
+
+G5_NATIVE_TAG_VALUE LatentFloat=0.0
+
+G5_NATIVE_TAG_VALUE OddsOfAppearing=1.0
+
+G5_NATIVE_TAG_VALUE DrawScale=1.0
+
+G5_NATIVE_TAG_VALUE ScaleGlow=1.0
+
+G5_NATIVE_TAG_VALUE VisibilityRadius=0.0
+
+G5_NATIVE_TAG_VALUE VisibilityHeight=0.0
+
+G5_NATIVE_TAG_VALUE SpriteProjForward=32.0
+
+G5_NATIVE_TAG_VALUE AmbientGlowPulseSpeed=0.0
+
+G5_NATIVE_TAG_VALUE TransientSoundVolume=1.0
+
+G5_NATIVE_TAG_VALUE TransientSoundRadius=0.0
+
+G5_NATIVE_TAG_VALUE CollisionRadius=22.0
+
+G5_NATIVE_TAG_VALUE CollisionHeight=22.0
+
+G5_NATIVE_TAG_VALUE NormalLightRadius=0.0
+
+G5_NATIVE_TAG_VALUE Mass=100.0
+
+G5_NATIVE_TAG_VALUE Buoyancy=0.0
+
+G5_NATIVE_TAG_VALUE PhysAlpha=0.0
+
+G5_NATIVE_TAG_VALUE PhysRate=0.0
+
+G5_NATIVE_TAG_VALUE AnimLast=0.0
+
+G5_NATIVE_TAG_VALUE AnimMinRate=0.0
+
+G5_NATIVE_TAG_VALUE OldAnimRate=0.0
+
+G5_NATIVE_TAG_VALUE NetPriority=1.0
+
+G5_NATIVE_TAG_VALUE NetUpdateFrequency=100.0
+
+G5_NATIVE_TAG_VALUE CollisionOverride=None
+
+G5_NATIVE_TAG_VALUE PhysicsData=None
+
+G5_NATIVE_TAG_VALUE Owner=None
+
+G5_NATIVE_TAG_VALUE SkelAnim=None
+
+G5_NATIVE_TAG_VALUE AnimationNotify=None
+
+G5_NATIVE_TAG_VALUE Level=None
+
+G5_NATIVE_TAG_VALUE XLevel=None
+
+G5_NATIVE_TAG_VALUE Target=None
+
+G5_NATIVE_TAG_VALUE Instigator=None
+
+G5_NATIVE_TAG_VALUE Inventory=None
+
+G5_NATIVE_TAG_VALUE Base=None
+
+G5_NATIVE_TAG_VALUE LatentActor=None
+
+G5_NATIVE_TAG_VALUE Touching(0)=None
+
+G5_NATIVE_TAG_VALUE Touching(1)=None
+
+G5_NATIVE_TAG_VALUE Touching(2)=None
+
+G5_NATIVE_TAG_VALUE Touching(3)=None
+
+G5_NATIVE_TAG_VALUE Deleted=None
+
+G5_NATIVE_TAG_VALUE HitActor=None
+
+G5_NATIVE_TAG_VALUE Sprite=None
+
+G5_NATIVE_TAG_VALUE Texture=Texture'Engine.S_Actor'
+
+G5_NATIVE_TAG_VALUE Skin=None
+
+G5_NATIVE_TAG_VALUE Mesh=None
+
+G5_NATIVE_TAG_VALUE ShadowMesh=None
+
+G5_NATIVE_TAG_VALUE Brush=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(0)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(1)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(2)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(3)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(4)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(5)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(6)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(7)=None
+
+G5_NATIVE_TAG_VALUE AmbientSound=None
+
+G5_NATIVE_TAG_VALUE InitialState="None"
+
+G5_NATIVE_TAG_VALUE Group="None"
+
+G5_NATIVE_TAG_VALUE AnimSequence="None"
+
+G5_NATIVE_TAG_VALUE Tag="None"
+
+G5_NATIVE_TAG_VALUE Event="None"
+
+G5_NATIVE_TAG_VALUE AttachedBone="None"
+
+G5_NATIVE_TAG_VALUE AttachTag="None"
+
+G5_NATIVE_TAG_VALUE RenderIteratorClass=None
+
+G5_NATIVE_TAG_VALUE ActorRenderColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ActorGUnlitColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE AmbientGlowColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE RelativeLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RelativeRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DrawScale3D=(X=1.0,Y=1.0,Z=1.0)
+
+G5_NATIVE_TAG_VALUE Region=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Location=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Rotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE OldLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ColLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Velocity=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Acceleration=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE PrePivot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RotationRate=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DesiredRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE SimAnim=(W=0.0,X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE UserData=()
+
+G5_NATIVE_TAG_VALUE RenderPass=RP_Auto
+
+G5_NATIVE_TAG_VALUE LastHitBox=HITBOX_Default
+
+G5_NATIVE_TAG_VALUE Physics=PHYS_None
+
+G5_NATIVE_TAG_VALUE Role=ROLE_Authority
+
+G5_NATIVE_TAG_VALUE RemoteRole=ROLE_DumbProxy
+
+G5_NATIVE_TAG_VALUE StandingCount=0
+
+G5_NATIVE_TAG_VALUE MiscNumber=0
+
+G5_NATIVE_TAG_VALUE LatentByte=0
+
+G5_NATIVE_TAG_VALUE DrawType=DT_Sprite
+
+G5_NATIVE_TAG_VALUE Style=STY_Normal
+
+G5_NATIVE_TAG_VALUE AmbientGlow=0
+
+G5_NATIVE_TAG_VALUE Fatness=128
+
+G5_NATIVE_TAG_VALUE SoundRadius=32
+
+G5_NATIVE_TAG_VALUE SoundVolume=128
+
+G5_NATIVE_TAG_VALUE SoundPitch=64
+
+G5_NATIVE_TAG_VALUE LightType=LT_None
+
+G5_NATIVE_TAG_VALUE LightEffect=LE_None
+
+G5_NATIVE_TAG_VALUE LightBrightness=0
+
+G5_NATIVE_TAG_VALUE LightHue=0
+
+G5_NATIVE_TAG_VALUE LightSaturation=0
+
+G5_NATIVE_TAG_VALUE LightRadius=0
+
+G5_NATIVE_TAG_VALUE LightPeriod=0
+
+G5_NATIVE_TAG_VALUE LightPhase=0
+
+G5_NATIVE_TAG_VALUE LightCone=0
+
+G5_NATIVE_TAG_VALUE VolumeBrightness=0
+
+G5_NATIVE_TAG_VALUE VolumeRadius=0
+
+G5_NATIVE_TAG_VALUE VolumeFog=0
+
+G5_NATIVE_TAG_VALUE DodgeDir=DODGE_None
+
+G5_NATIVE_TAG_VALUE bStatic=False
+
+G5_NATIVE_TAG_VALUE bHidden=False
+
+G5_NATIVE_TAG_VALUE bNoDelete=False
+
+G5_NATIVE_TAG_VALUE bAnimFinished=False
+
+G5_NATIVE_TAG_VALUE bAnimLoop=False
+
+G5_NATIVE_TAG_VALUE bAnimNotify=False
+
+G5_NATIVE_TAG_VALUE bAnimByOwner=False
+
+G5_NATIVE_TAG_VALUE bDeleteMe=False
+
+G5_NATIVE_TAG_VALUE bDynamicLight=False
+
+G5_NATIVE_TAG_VALUE bTimerLoop=False
+
+G5_NATIVE_TAG_VALUE bNetNotify=False
+
+G5_NATIVE_TAG_VALUE bHandleOwnCorona=False
+
+G5_NATIVE_TAG_VALUE bRenderMultiEnviroMaps=False
+
+G5_NATIVE_TAG_VALUE bWorldGeometry=False
+
+G5_NATIVE_TAG_VALUE bUseMeshCollision=False
+
+G5_NATIVE_TAG_VALUE bEditorSelectRender=False
+
+G5_NATIVE_TAG_VALUE bNoDynamicShadowCast=False
+
+G5_NATIVE_TAG_VALUE bProjectorDecal=False
+
+G5_NATIVE_TAG_VALUE bUseLitSprite=False
+
+G5_NATIVE_TAG_VALUE bTickRealTime=False
+
+G5_NATIVE_TAG_VALUE bHiddenEd=False
+
+G5_NATIVE_TAG_VALUE bDirectional=False
+
+G5_NATIVE_TAG_VALUE bSelected=False
+
+G5_NATIVE_TAG_VALUE bMemorized=False
+
+G5_NATIVE_TAG_VALUE bHighlighted=False
+
+G5_NATIVE_TAG_VALUE bEdLocked=False
+
+G5_NATIVE_TAG_VALUE bEdShouldSnap=False
+
+G5_NATIVE_TAG_VALUE bDifficulty0=True
+
+G5_NATIVE_TAG_VALUE bDifficulty1=True
+
+G5_NATIVE_TAG_VALUE bDifficulty2=True
+
+G5_NATIVE_TAG_VALUE bDifficulty3=True
+
+G5_NATIVE_TAG_VALUE bSinglePlayer=True
+
+G5_NATIVE_TAG_VALUE bNet=True
+
+G5_NATIVE_TAG_VALUE bNetSpecial=True
+
+G5_NATIVE_TAG_VALUE bCanTeleport=False
+
+G5_NATIVE_TAG_VALUE bIsSecretGoal=False
+
+G5_NATIVE_TAG_VALUE bIsKillGoal=False
+
+G5_NATIVE_TAG_VALUE bIsItemGoal=False
+
+G5_NATIVE_TAG_VALUE bCollideWhenPlacing=False
+
+G5_NATIVE_TAG_VALUE bTravel=False
+
+G5_NATIVE_TAG_VALUE bMovable=True
+
+G5_NATIVE_TAG_VALUE bHighDetail=False
+
+G5_NATIVE_TAG_VALUE bStasis=False
+
+G5_NATIVE_TAG_VALUE bForceStasis=False
+
+G5_NATIVE_TAG_VALUE bIsPawn=False
+
+G5_NATIVE_TAG_VALUE bIsPlayerPawn=False
+
+G5_NATIVE_TAG_VALUE bIsProjectile=False
+
+G5_NATIVE_TAG_VALUE bIsStaticMesh=False
+
+G5_NATIVE_TAG_VALUE bNetTemporary=False
+
+G5_NATIVE_TAG_VALUE bNetOptional=False
+
+G5_NATIVE_TAG_VALUE bReplicateInstigator=False
+
+G5_NATIVE_TAG_VALUE bTrailerSameRotation=False
+
+G5_NATIVE_TAG_VALUE bUnlit=False
+
+G5_NATIVE_TAG_VALUE bNoSmooth=False
+
+G5_NATIVE_TAG_VALUE bParticles=False
+
+G5_NATIVE_TAG_VALUE bRandomFrame=False
+
+G5_NATIVE_TAG_VALUE bMeshEnviroMap=False
+
+G5_NATIVE_TAG_VALUE bFilterByVolume=False
+
+G5_NATIVE_TAG_VALUE bMeshCurvy=False
+
+G5_NATIVE_TAG_VALUE bShadowCast=False
+
+G5_NATIVE_TAG_VALUE bCustomDrawActor=False
+
+G5_NATIVE_TAG_VALUE bOnlyRenderCurrentZone=False
+
+G5_NATIVE_TAG_VALUE bOwnerNoSee=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerSee=False
+
+G5_NATIVE_TAG_VALUE bIsMover=False
+
+G5_NATIVE_TAG_VALUE bAlwaysRelevant=False
+
+G5_NATIVE_TAG_VALUE bAlwaysTick=False
+
+G5_NATIVE_TAG_VALUE bHurtEntry=False
+
+G5_NATIVE_TAG_VALUE bGameRelevant=False
+
+G5_NATIVE_TAG_VALUE bCarriedItem=False
+
+G5_NATIVE_TAG_VALUE bForcePhysicsUpdate=False
+
+G5_NATIVE_TAG_VALUE bSkipActorReplication=False
+
+G5_NATIVE_TAG_VALUE bRepAnimations=True
+
+G5_NATIVE_TAG_VALUE bRepAmbientSound=True
+
+G5_NATIVE_TAG_VALUE bSimulatedPawnRep=False
+
+G5_NATIVE_TAG_VALUE bRepMesh=True
+
+G5_NATIVE_TAG_VALUE bNetInitialRotation=False
+
+G5_NATIVE_TAG_VALUE bNetInitialVelocity=False
+
+G5_NATIVE_TAG_VALUE bNetInitExactLocation=False
+
+G5_NATIVE_TAG_VALUE bOptionalNetOwner=False
+
+G5_NATIVE_TAG_VALUE bCollideActors=False
+
+G5_NATIVE_TAG_VALUE bCollideWorld=False
+
+G5_NATIVE_TAG_VALUE bBlockActors=False
+
+G5_NATIVE_TAG_VALUE bBlockPlayers=False
+
+G5_NATIVE_TAG_VALUE bProjTarget=False
+
+G5_NATIVE_TAG_VALUE bPathCollision=False
+
+G5_NATIVE_TAG_VALUE bBlockZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockNonZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockAISight=False
+
+G5_NATIVE_TAG_VALUE bBlockTextureTrace=False
+
+G5_NATIVE_TAG_VALUE bBlockRigidBodyPhys=False
+
+G5_NATIVE_TAG_VALUE bSpecialLit=False
+
+G5_NATIVE_TAG_VALUE bActorShadows=False
+
+G5_NATIVE_TAG_VALUE bCorona=False
+
+G5_NATIVE_TAG_VALUE bFOVFadingCorona=False
+
+G5_NATIVE_TAG_VALUE bForcedCorona=False
+
+G5_NATIVE_TAG_VALUE bCoronaByLight=False
+
+G5_NATIVE_TAG_VALUE bLensFlare=False
+
+G5_NATIVE_TAG_VALUE bDarkLight=False
+
+G5_NATIVE_TAG_VALUE bZoneNormalLight=True
+
+G5_NATIVE_TAG_VALUE bNetInitial=False
+
+G5_NATIVE_TAG_VALUE bNetOwner=False
+
+G5_NATIVE_TAG_VALUE bNetRelevant=False
+
+G5_NATIVE_TAG_VALUE bNetSee=False
+
+G5_NATIVE_TAG_VALUE bNetHear=False
+
+G5_NATIVE_TAG_VALUE bNetFeel=False
+
+G5_NATIVE_TAG_VALUE bSimulatedPawn=False
+
+G5_NATIVE_TAG_VALUE bDemoRecording=False
+
+G5_NATIVE_TAG_VALUE bClientDemoNetFunc=False
+
+G5_NATIVE_TAG_VALUE bBounce=False
+
+G5_NATIVE_TAG_VALUE bFixedRotationDir=False
+
+G5_NATIVE_TAG_VALUE bRotateToDesired=False
+
+G5_NATIVE_TAG_VALUE bInterpolating=False
+
+G5_NATIVE_TAG_VALUE bJustTeleported=True
+
+G5_NATIVE_TAG_VALUE bCrossLevelNetwork=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerRelevant=False
+
+G5_NATIVE_TAG_VALUE bOnlyDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bForceDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bAlwaysNetDirty=False
+
+G5_NATIVE_TAG_VALUE bTraceHitBoxes=False
+
+G5_NATIVE_TAG_VALUE bTextureAnimOnce=False
+
+G5_NATIVE_TAG_VALUE bOnlyDrawWithBase=False
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionXY=True
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionZ=True
+
+G5_NATIVE_TAG_VALUE bDirtyDynBsp=False
+
+G5_NATIVE_TAG_VALUE bSerializeMeshInst=False
+
+G5_NATIVE_TAG_VALUE bSpecialBrushActor=False
+
+G5_NATIVE_TAG_VALUE bNetInterpolatePos=False
+
+G5_NATIVE_TAG_VALUE bHardAttach=False
+
+G5_NATIVE_TAG_VALUE bIsFrobable=False
+
+G3_T060_ORIGINAL_227K_CDO_END Class Engine.Actor
+G3_T060_ORIGINAL_227K_CDO_BEGIN Class Engine.LevelInfo|defaultPtr=00978D04
+G5_NATIVE_TAG_VALUE RecommendedEnemies=0
+
+G5_NATIVE_TAG_VALUE RecommendedTeammates=0
+
+G5_NATIVE_TAG_VALUE HubStackLevel=0
+
+G5_NATIVE_TAG_VALUE EdBuildOpt=149007
+
+G5_NATIVE_TAG_VALUE MaxCommonRadius=70
+
+G5_NATIVE_TAG_VALUE MaxCommonHeight=70
+
+G5_NATIVE_TAG_VALUE MinCommonHeight=40
+
+G5_NATIVE_TAG_VALUE MinCommonRadius=24
+
+G5_NATIVE_TAG_VALUE CommonRadius=52
+
+G5_NATIVE_TAG_VALUE HumanRadius=18
+
+G5_NATIVE_TAG_VALUE HumanHeight=39
+
+G5_NATIVE_TAG_VALUE TimeDilation=1.0
+
+G5_NATIVE_TAG_VALUE TimeSeconds=0.0
+
+G5_NATIVE_TAG_VALUE RealTimeSeconds=0.0
+
+G5_NATIVE_TAG_VALUE NetTimeSeconds=0.0
+
+G5_NATIVE_TAG_VALUE LastActivityTime=0.0
+
+G5_NATIVE_TAG_VALUE PlayerDoppler=0.0
+
+G5_NATIVE_TAG_VALUE Brightness=1.0
+
+G5_NATIVE_TAG_VALUE NextSwitchCountdown=0.0
+
+G5_NATIVE_TAG_VALUE DemoTimeDilation=1.0
+
+G5_NATIVE_TAG_VALUE Summary=None
+
+G5_NATIVE_TAG_VALUE Song=None
+
+G5_NATIVE_TAG_VALUE backup_Song=None
+
+G5_NATIVE_TAG_VALUE Screenshot=None
+
+G5_NATIVE_TAG_VALUE DefaultTexture=Texture'Engine.DefaultTexture'
+
+G5_NATIVE_TAG_VALUE WhiteTexture=Texture'Engine.WhiteTexture'
+
+G5_NATIVE_TAG_VALUE TemplateLightTex=Texture'Engine.S_Lightgrey'
+
+G5_NATIVE_TAG_VALUE Game=None
+
+G5_NATIVE_TAG_VALUE NavigationPointList=None
+
+G5_NATIVE_TAG_VALUE PawnList=None
+
+G5_NATIVE_TAG_VALUE SpawnNotify=None
+
+G5_NATIVE_TAG_VALUE DynamicZonesList=None
+
+G5_NATIVE_TAG_VALUE ChildLevel=None
+
+G5_NATIVE_TAG_VALUE ParentLevel=None
+
+G5_NATIVE_TAG_VALUE DefaultGameType=None
+
+G5_NATIVE_TAG_VALUE FootprintManager=Class'Engine.FootStepManager'
+
+G5_NATIVE_TAG_VALUE RealCrouchInfoClass=None
+
+G5_NATIVE_TAG_VALUE EdViewports(0)=(CameraLocation=(X=0.0,Y=0.0,Z=0.0),CameraRotation=(Pitch=0,Yaw=0,Roll=0),OrthoZoom=0.0)
+
+G5_NATIVE_TAG_VALUE EdViewports(1)=(CameraLocation=(X=0.0,Y=0.0,Z=0.0),CameraRotation=(Pitch=0,Yaw=0,Roll=0),OrthoZoom=0.0)
+
+G5_NATIVE_TAG_VALUE EdViewports(2)=(CameraLocation=(X=0.0,Y=0.0,Z=0.0),CameraRotation=(Pitch=0,Yaw=0,Roll=0),OrthoZoom=0.0)
+
+G5_NATIVE_TAG_VALUE EdViewports(3)=(CameraLocation=(X=0.0,Y=0.0,Z=0.0),CameraRotation=(Pitch=0,Yaw=0,Roll=0),OrthoZoom=0.0)
+
+G5_NATIVE_TAG_VALUE Title="Untitled"
+
+G5_NATIVE_TAG_VALUE Author="Anonymous"
+
+G5_NATIVE_TAG_VALUE IdealPlayerCount=""
+
+G5_NATIVE_TAG_VALUE LevelEnterText=""
+
+G5_NATIVE_TAG_VALUE LocalizedPkg=""
+
+G5_NATIVE_TAG_VALUE Pauser=""
+
+G5_NATIVE_TAG_VALUE VisibleGroups="None"
+
+G5_NATIVE_TAG_VALUE LockedGroups=""
+
+G5_NATIVE_TAG_VALUE ComputerName=""
+
+G5_NATIVE_TAG_VALUE EngineVersion=""
+
+G5_NATIVE_TAG_VALUE EngineSubVersion=""
+
+G5_NATIVE_TAG_VALUE MinNetVersion=""
+
+G5_NATIVE_TAG_VALUE NextURL=""
+
+G5_NATIVE_TAG_VALUE SongSection=0
+
+G5_NATIVE_TAG_VALUE SongVolume=255
+
+G5_NATIVE_TAG_VALUE CdTrack=255
+
+G5_NATIVE_TAG_VALUE backup_SongSection=0
+
+G5_NATIVE_TAG_VALUE NetMode=NM_Standalone
+
+G5_NATIVE_TAG_VALUE ServerTravelType=TRAVEL_Relative
+
+G5_NATIVE_TAG_VALUE MaxPortalDepth=3
+
+G5_NATIVE_TAG_VALUE MapWorldSize=WORLDSIZE_UE1
+
+G5_NATIVE_TAG_VALUE bLonePlayer=False
+
+G5_NATIVE_TAG_VALUE bBegunPlay=False
+
+G5_NATIVE_TAG_VALUE bPlayersOnly=False
+
+G5_NATIVE_TAG_VALUE bHighDetailMode=True
+
+G5_NATIVE_TAG_VALUE bStartup=False
+
+G5_NATIVE_TAG_VALUE bHumansOnly=False
+
+G5_NATIVE_TAG_VALUE bNoCheating=False
+
+G5_NATIVE_TAG_VALUE bAllowFOV=False
+
+G5_NATIVE_TAG_VALUE bSupportsRealCrouching=False
+
+G5_NATIVE_TAG_VALUE bSupportsCrouchJump=False
+
+G5_NATIVE_TAG_VALUE bEnhancedIcePhysics=False
+
+G5_NATIVE_TAG_VALUE bSpecularLight=False
+
+G5_NATIVE_TAG_VALUE bDisableSpeclarLight=False
+
+G5_NATIVE_TAG_VALUE bNetworkTimeSeconds=False
+
+G5_NATIVE_TAG_VALUE bMirrorMode=False
+
+G5_NATIVE_TAG_VALUE bDisableRbPhysics=False
+
+G5_NATIVE_TAG_VALUE bDisableSubLevelRbPhys=False
+
+G5_NATIVE_TAG_VALUE bPauseRigidBodies=False
+
+G5_NATIVE_TAG_VALUE bRequireHighChannels=False
+
+G5_NATIVE_TAG_VALUE bShouldStasisLevel=True
+
+G5_NATIVE_TAG_VALUE bShouldChangeMusicTrack=True
+
+G5_NATIVE_TAG_VALUE bPortalLights=False
+
+G5_NATIVE_TAG_VALUE bNextItems=False
+
+G5_NATIVE_TAG_VALUE bCheckWalkSurfaces=False
+
+G5_NATIVE_TAG_VALUE bUTZoneVelocity=False
+
+G5_NATIVE_TAG_VALUE bPlayerSpawnTrigger=True
+
+G5_NATIVE_TAG_VALUE ZonePlayerCount=0
+
+G5_NATIVE_TAG_VALUE NumCarcasses=0
+
+G5_NATIVE_TAG_VALUE DamagePerSec=0
+
+G5_NATIVE_TAG_VALUE MaxCarcasses=2
+
+G5_NATIVE_TAG_VALUE FogMode=0
+
+G5_NATIVE_TAG_VALUE CutoffHz=6000
+
+G5_NATIVE_TAG_VALUE MinLightingPolyCount=1000
+
+G5_NATIVE_TAG_VALUE MaxLightingPolyCount=5000
+
+G5_NATIVE_TAG_VALUE MinWalkableZ=0.7
+
+G5_NATIVE_TAG_VALUE ZoneGroundFriction=4.0
+
+G5_NATIVE_TAG_VALUE ZoneFluidFriction=1.2
+
+G5_NATIVE_TAG_VALUE ZoneTerminalVelocity=2500.0
+
+G5_NATIVE_TAG_VALUE ZoneTimeDilation=1.0
+
+G5_NATIVE_TAG_VALUE FogDistanceStart=0.0
+
+G5_NATIVE_TAG_VALUE FogDistance=0.0
+
+G5_NATIVE_TAG_VALUE FadeTime=0.0
+
+G5_NATIVE_TAG_VALUE FogDensity=0.0
+
+G5_NATIVE_TAG_VALUE EnvironmentUScale=1.0
+
+G5_NATIVE_TAG_VALUE EnvironmentVScale=1.0
+
+G5_NATIVE_TAG_VALUE TexUPanSpeed=1.0
+
+G5_NATIVE_TAG_VALUE TexVPanSpeed=1.0
+
+G5_NATIVE_TAG_VALUE DirtyShadowLevel=0.25
+
+G5_NATIVE_TAG_VALUE LightSharpnessFactor=1.0
+
+G5_NATIVE_TAG_VALUE LightNormalMinAng=0.0
+
+G5_NATIVE_TAG_VALUE SpeedOfSound=8000.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(0)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(1)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(2)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(3)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(4)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(5)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(6)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(7)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(8)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(9)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(10)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareOffset(11)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(0)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(1)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(2)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(3)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(4)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(5)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(6)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(7)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(8)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(9)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(10)=0.0
+
+G5_NATIVE_TAG_VALUE LensFlareScale(11)=0.0
+
+G5_NATIVE_TAG_VALUE LocationID=None
+
+G5_NATIVE_TAG_VALUE EntrySound=None
+
+G5_NATIVE_TAG_VALUE ExitSound=None
+
+G5_NATIVE_TAG_VALUE SkyZone=None
+
+G5_NATIVE_TAG_VALUE EnvironmentMap=None
+
+G5_NATIVE_TAG_VALUE LensFlare(0)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(1)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(2)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(3)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(4)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(5)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(6)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(7)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(8)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(9)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(10)=None
+
+G5_NATIVE_TAG_VALUE LensFlare(11)=None
+
+G5_NATIVE_TAG_VALUE CameraModifier=None
+
+G5_NATIVE_TAG_VALUE ZoneTag="None"
+
+G5_NATIVE_TAG_VALUE SkyZoneInfoTag="None"
+
+G5_NATIVE_TAG_VALUE SkyZoneInfoLevelID="None"
+
+G5_NATIVE_TAG_VALUE ZonePlayerEvent="None"
+
+G5_NATIVE_TAG_VALUE DamageType="None"
+
+G5_NATIVE_TAG_VALUE EntryActor=None
+
+G5_NATIVE_TAG_VALUE ExitActor=None
+
+G5_NATIVE_TAG_VALUE ZoneGravity=(X=0.0,Y=0.0,Z=-950.0)
+
+G5_NATIVE_TAG_VALUE ZoneVelocity=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE FogColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE EnvironmentColor=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ViewFlash=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ViewFog=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE DamageString=""
+
+G5_NATIVE_TAG_VALUE ZoneName=""
+
+G5_NATIVE_TAG_VALUE LocationStrings(0)=""
+
+G5_NATIVE_TAG_VALUE LocationStrings(1)=""
+
+G5_NATIVE_TAG_VALUE LocationStrings(2)=""
+
+G5_NATIVE_TAG_VALUE LocationStrings(3)=""
+
+G5_NATIVE_TAG_VALUE AmbientBrightness=0
+
+G5_NATIVE_TAG_VALUE AmbientHue=0
+
+G5_NATIVE_TAG_VALUE AmbientSaturation=255
+
+G5_NATIVE_TAG_VALUE LightMapDetailLevels(0)=4
+
+G5_NATIVE_TAG_VALUE LightMapDetailLevels(1)=5
+
+G5_NATIVE_TAG_VALUE LightMapDetailLevels(2)=6
+
+G5_NATIVE_TAG_VALUE LightMapDetailLevels(3)=7
+
+G5_NATIVE_TAG_VALUE MasterGain=100
+
+G5_NATIVE_TAG_VALUE Delay(0)=20
+
+G5_NATIVE_TAG_VALUE Delay(1)=34
+
+G5_NATIVE_TAG_VALUE Delay(2)=0
+
+G5_NATIVE_TAG_VALUE Delay(3)=0
+
+G5_NATIVE_TAG_VALUE Delay(4)=0
+
+G5_NATIVE_TAG_VALUE Delay(5)=0
+
+G5_NATIVE_TAG_VALUE Gain(0)=150
+
+G5_NATIVE_TAG_VALUE Gain(1)=70
+
+G5_NATIVE_TAG_VALUE Gain(2)=0
+
+G5_NATIVE_TAG_VALUE Gain(3)=0
+
+G5_NATIVE_TAG_VALUE Gain(4)=0
+
+G5_NATIVE_TAG_VALUE Gain(5)=0
+
+G5_NATIVE_TAG_VALUE EFXAmbients=REVERB_PRESET_NONE
+
+G5_NATIVE_TAG_VALUE MinLightCount=8
+
+G5_NATIVE_TAG_VALUE MaxLightCount=32
+
+G5_NATIVE_TAG_VALUE bWaterZone=False
+
+G5_NATIVE_TAG_VALUE bFogZone=False
+
+G5_NATIVE_TAG_VALUE bKillZone=False
+
+G5_NATIVE_TAG_VALUE bNeutralZone=False
+
+G5_NATIVE_TAG_VALUE bGravityZone=False
+
+G5_NATIVE_TAG_VALUE bPainZone=False
+
+G5_NATIVE_TAG_VALUE bDestructive=False
+
+G5_NATIVE_TAG_VALUE bNoInventory=False
+
+G5_NATIVE_TAG_VALUE bMoveProjectiles=True
+
+G5_NATIVE_TAG_VALUE bReverbZone=False
+
+G5_NATIVE_TAG_VALUE bRaytraceReverb=False
+
+G5_NATIVE_TAG_VALUE bRepZoneProperties=True
+
+G5_NATIVE_TAG_VALUE bDistanceFogClips=False
+
+G5_NATIVE_TAG_VALUE bDistanceFog=False
+
+G5_NATIVE_TAG_VALUE bZoneBasedFog=False
+
+G5_NATIVE_TAG_VALUE CollisionGroups=2147483647
+
+G5_NATIVE_TAG_VALUE CollisionFlag=2
+
+G5_NATIVE_TAG_VALUE LatentInt=0
+
+G5_NATIVE_TAG_VALUE RandomDelayTime=0.5
+
+G5_NATIVE_TAG_VALUE TimerRate=0.0
+
+G5_NATIVE_TAG_VALUE TimerCounter=0.0
+
+G5_NATIVE_TAG_VALUE LifeSpan=0.0
+
+G5_NATIVE_TAG_VALUE AnimFrame=0.0
+
+G5_NATIVE_TAG_VALUE AnimRate=0.0
+
+G5_NATIVE_TAG_VALUE TweenRate=0.0
+
+G5_NATIVE_TAG_VALUE LODBias=1.0
+
+G5_NATIVE_TAG_VALUE LatentFloat=0.0
+
+G5_NATIVE_TAG_VALUE OddsOfAppearing=1.0
+
+G5_NATIVE_TAG_VALUE DrawScale=1.0
+
+G5_NATIVE_TAG_VALUE ScaleGlow=1.0
+
+G5_NATIVE_TAG_VALUE VisibilityRadius=0.0
+
+G5_NATIVE_TAG_VALUE VisibilityHeight=0.0
+
+G5_NATIVE_TAG_VALUE SpriteProjForward=32.0
+
+G5_NATIVE_TAG_VALUE AmbientGlowPulseSpeed=0.0
+
+G5_NATIVE_TAG_VALUE TransientSoundVolume=1.0
+
+G5_NATIVE_TAG_VALUE TransientSoundRadius=0.0
+
+G5_NATIVE_TAG_VALUE CollisionRadius=22.0
+
+G5_NATIVE_TAG_VALUE CollisionHeight=22.0
+
+G5_NATIVE_TAG_VALUE NormalLightRadius=0.0
+
+G5_NATIVE_TAG_VALUE Mass=100.0
+
+G5_NATIVE_TAG_VALUE Buoyancy=0.0
+
+G5_NATIVE_TAG_VALUE PhysAlpha=0.0
+
+G5_NATIVE_TAG_VALUE PhysRate=0.0
+
+G5_NATIVE_TAG_VALUE AnimLast=0.0
+
+G5_NATIVE_TAG_VALUE AnimMinRate=0.0
+
+G5_NATIVE_TAG_VALUE OldAnimRate=0.0
+
+G5_NATIVE_TAG_VALUE NetPriority=1.0
+
+G5_NATIVE_TAG_VALUE NetUpdateFrequency=0.25
+
+G5_NATIVE_TAG_VALUE CollisionOverride=None
+
+G5_NATIVE_TAG_VALUE PhysicsData=None
+
+G5_NATIVE_TAG_VALUE Owner=None
+
+G5_NATIVE_TAG_VALUE SkelAnim=None
+
+G5_NATIVE_TAG_VALUE AnimationNotify=None
+
+G5_NATIVE_TAG_VALUE Level=None
+
+G5_NATIVE_TAG_VALUE XLevel=None
+
+G5_NATIVE_TAG_VALUE Target=None
+
+G5_NATIVE_TAG_VALUE Instigator=None
+
+G5_NATIVE_TAG_VALUE Inventory=None
+
+G5_NATIVE_TAG_VALUE Base=None
+
+G5_NATIVE_TAG_VALUE LatentActor=None
+
+G5_NATIVE_TAG_VALUE Touching(0)=None
+
+G5_NATIVE_TAG_VALUE Touching(1)=None
+
+G5_NATIVE_TAG_VALUE Touching(2)=None
+
+G5_NATIVE_TAG_VALUE Touching(3)=None
+
+G5_NATIVE_TAG_VALUE Deleted=None
+
+G5_NATIVE_TAG_VALUE HitActor=None
+
+G5_NATIVE_TAG_VALUE Sprite=None
+
+G5_NATIVE_TAG_VALUE Texture=Texture'Engine.S_ZoneInfo'
+
+G5_NATIVE_TAG_VALUE Skin=None
+
+G5_NATIVE_TAG_VALUE Mesh=None
+
+G5_NATIVE_TAG_VALUE ShadowMesh=None
+
+G5_NATIVE_TAG_VALUE Brush=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(0)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(1)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(2)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(3)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(4)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(5)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(6)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(7)=None
+
+G5_NATIVE_TAG_VALUE AmbientSound=None
+
+G5_NATIVE_TAG_VALUE InitialState="None"
+
+G5_NATIVE_TAG_VALUE Group="None"
+
+G5_NATIVE_TAG_VALUE AnimSequence="None"
+
+G5_NATIVE_TAG_VALUE Tag="None"
+
+G5_NATIVE_TAG_VALUE Event="None"
+
+G5_NATIVE_TAG_VALUE AttachedBone="None"
+
+G5_NATIVE_TAG_VALUE AttachTag="None"
+
+G5_NATIVE_TAG_VALUE RenderIteratorClass=None
+
+G5_NATIVE_TAG_VALUE ActorRenderColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ActorGUnlitColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE AmbientGlowColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE RelativeLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RelativeRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DrawScale3D=(X=1.0,Y=1.0,Z=1.0)
+
+G5_NATIVE_TAG_VALUE Region=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Location=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Rotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE OldLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ColLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Velocity=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Acceleration=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE PrePivot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RotationRate=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DesiredRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE SimAnim=(W=0.0,X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE UserData=()
+
+G5_NATIVE_TAG_VALUE RenderPass=RP_Auto
+
+G5_NATIVE_TAG_VALUE LastHitBox=HITBOX_Default
+
+G5_NATIVE_TAG_VALUE Physics=PHYS_None
+
+G5_NATIVE_TAG_VALUE Role=ROLE_Authority
+
+G5_NATIVE_TAG_VALUE RemoteRole=ROLE_DumbProxy
+
+G5_NATIVE_TAG_VALUE StandingCount=0
+
+G5_NATIVE_TAG_VALUE MiscNumber=0
+
+G5_NATIVE_TAG_VALUE LatentByte=0
+
+G5_NATIVE_TAG_VALUE DrawType=DT_Sprite
+
+G5_NATIVE_TAG_VALUE Style=STY_Normal
+
+G5_NATIVE_TAG_VALUE AmbientGlow=0
+
+G5_NATIVE_TAG_VALUE Fatness=128
+
+G5_NATIVE_TAG_VALUE SoundRadius=32
+
+G5_NATIVE_TAG_VALUE SoundVolume=128
+
+G5_NATIVE_TAG_VALUE SoundPitch=64
+
+G5_NATIVE_TAG_VALUE LightType=LT_None
+
+G5_NATIVE_TAG_VALUE LightEffect=LE_None
+
+G5_NATIVE_TAG_VALUE LightBrightness=0
+
+G5_NATIVE_TAG_VALUE LightHue=0
+
+G5_NATIVE_TAG_VALUE LightSaturation=0
+
+G5_NATIVE_TAG_VALUE LightRadius=0
+
+G5_NATIVE_TAG_VALUE LightPeriod=0
+
+G5_NATIVE_TAG_VALUE LightPhase=0
+
+G5_NATIVE_TAG_VALUE LightCone=0
+
+G5_NATIVE_TAG_VALUE VolumeBrightness=0
+
+G5_NATIVE_TAG_VALUE VolumeRadius=0
+
+G5_NATIVE_TAG_VALUE VolumeFog=0
+
+G5_NATIVE_TAG_VALUE DodgeDir=DODGE_None
+
+G5_NATIVE_TAG_VALUE bStatic=True
+
+G5_NATIVE_TAG_VALUE bHidden=True
+
+G5_NATIVE_TAG_VALUE bNoDelete=True
+
+G5_NATIVE_TAG_VALUE bAnimFinished=False
+
+G5_NATIVE_TAG_VALUE bAnimLoop=False
+
+G5_NATIVE_TAG_VALUE bAnimNotify=False
+
+G5_NATIVE_TAG_VALUE bAnimByOwner=False
+
+G5_NATIVE_TAG_VALUE bDeleteMe=False
+
+G5_NATIVE_TAG_VALUE bDynamicLight=False
+
+G5_NATIVE_TAG_VALUE bTimerLoop=False
+
+G5_NATIVE_TAG_VALUE bNetNotify=False
+
+G5_NATIVE_TAG_VALUE bHandleOwnCorona=False
+
+G5_NATIVE_TAG_VALUE bRenderMultiEnviroMaps=False
+
+G5_NATIVE_TAG_VALUE bWorldGeometry=True
+
+G5_NATIVE_TAG_VALUE bUseMeshCollision=False
+
+G5_NATIVE_TAG_VALUE bEditorSelectRender=False
+
+G5_NATIVE_TAG_VALUE bNoDynamicShadowCast=False
+
+G5_NATIVE_TAG_VALUE bProjectorDecal=False
+
+G5_NATIVE_TAG_VALUE bUseLitSprite=False
+
+G5_NATIVE_TAG_VALUE bTickRealTime=False
+
+G5_NATIVE_TAG_VALUE bHiddenEd=True
+
+G5_NATIVE_TAG_VALUE bDirectional=False
+
+G5_NATIVE_TAG_VALUE bSelected=False
+
+G5_NATIVE_TAG_VALUE bMemorized=False
+
+G5_NATIVE_TAG_VALUE bHighlighted=False
+
+G5_NATIVE_TAG_VALUE bEdLocked=False
+
+G5_NATIVE_TAG_VALUE bEdShouldSnap=False
+
+G5_NATIVE_TAG_VALUE bDifficulty0=True
+
+G5_NATIVE_TAG_VALUE bDifficulty1=True
+
+G5_NATIVE_TAG_VALUE bDifficulty2=True
+
+G5_NATIVE_TAG_VALUE bDifficulty3=True
+
+G5_NATIVE_TAG_VALUE bSinglePlayer=True
+
+G5_NATIVE_TAG_VALUE bNet=True
+
+G5_NATIVE_TAG_VALUE bNetSpecial=True
+
+G5_NATIVE_TAG_VALUE bCanTeleport=False
+
+G5_NATIVE_TAG_VALUE bIsSecretGoal=False
+
+G5_NATIVE_TAG_VALUE bIsKillGoal=False
+
+G5_NATIVE_TAG_VALUE bIsItemGoal=False
+
+G5_NATIVE_TAG_VALUE bCollideWhenPlacing=False
+
+G5_NATIVE_TAG_VALUE bTravel=False
+
+G5_NATIVE_TAG_VALUE bMovable=True
+
+G5_NATIVE_TAG_VALUE bHighDetail=False
+
+G5_NATIVE_TAG_VALUE bStasis=False
+
+G5_NATIVE_TAG_VALUE bForceStasis=False
+
+G5_NATIVE_TAG_VALUE bIsPawn=False
+
+G5_NATIVE_TAG_VALUE bIsPlayerPawn=False
+
+G5_NATIVE_TAG_VALUE bIsProjectile=False
+
+G5_NATIVE_TAG_VALUE bIsStaticMesh=False
+
+G5_NATIVE_TAG_VALUE bNetTemporary=False
+
+G5_NATIVE_TAG_VALUE bNetOptional=False
+
+G5_NATIVE_TAG_VALUE bReplicateInstigator=False
+
+G5_NATIVE_TAG_VALUE bTrailerSameRotation=False
+
+G5_NATIVE_TAG_VALUE bUnlit=False
+
+G5_NATIVE_TAG_VALUE bNoSmooth=False
+
+G5_NATIVE_TAG_VALUE bParticles=False
+
+G5_NATIVE_TAG_VALUE bRandomFrame=False
+
+G5_NATIVE_TAG_VALUE bMeshEnviroMap=False
+
+G5_NATIVE_TAG_VALUE bFilterByVolume=False
+
+G5_NATIVE_TAG_VALUE bMeshCurvy=False
+
+G5_NATIVE_TAG_VALUE bShadowCast=False
+
+G5_NATIVE_TAG_VALUE bCustomDrawActor=False
+
+G5_NATIVE_TAG_VALUE bOnlyRenderCurrentZone=False
+
+G5_NATIVE_TAG_VALUE bOwnerNoSee=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerSee=False
+
+G5_NATIVE_TAG_VALUE bIsMover=False
+
+G5_NATIVE_TAG_VALUE bAlwaysRelevant=True
+
+G5_NATIVE_TAG_VALUE bAlwaysTick=False
+
+G5_NATIVE_TAG_VALUE bHurtEntry=False
+
+G5_NATIVE_TAG_VALUE bGameRelevant=False
+
+G5_NATIVE_TAG_VALUE bCarriedItem=False
+
+G5_NATIVE_TAG_VALUE bForcePhysicsUpdate=False
+
+G5_NATIVE_TAG_VALUE bSkipActorReplication=False
+
+G5_NATIVE_TAG_VALUE bRepAnimations=True
+
+G5_NATIVE_TAG_VALUE bRepAmbientSound=True
+
+G5_NATIVE_TAG_VALUE bSimulatedPawnRep=False
+
+G5_NATIVE_TAG_VALUE bRepMesh=True
+
+G5_NATIVE_TAG_VALUE bNetInitialRotation=False
+
+G5_NATIVE_TAG_VALUE bNetInitialVelocity=False
+
+G5_NATIVE_TAG_VALUE bNetInitExactLocation=False
+
+G5_NATIVE_TAG_VALUE bOptionalNetOwner=False
+
+G5_NATIVE_TAG_VALUE bCollideActors=False
+
+G5_NATIVE_TAG_VALUE bCollideWorld=False
+
+G5_NATIVE_TAG_VALUE bBlockActors=False
+
+G5_NATIVE_TAG_VALUE bBlockPlayers=False
+
+G5_NATIVE_TAG_VALUE bProjTarget=False
+
+G5_NATIVE_TAG_VALUE bPathCollision=False
+
+G5_NATIVE_TAG_VALUE bBlockZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockNonZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockAISight=False
+
+G5_NATIVE_TAG_VALUE bBlockTextureTrace=False
+
+G5_NATIVE_TAG_VALUE bBlockRigidBodyPhys=False
+
+G5_NATIVE_TAG_VALUE bSpecialLit=False
+
+G5_NATIVE_TAG_VALUE bActorShadows=False
+
+G5_NATIVE_TAG_VALUE bCorona=False
+
+G5_NATIVE_TAG_VALUE bFOVFadingCorona=False
+
+G5_NATIVE_TAG_VALUE bForcedCorona=False
+
+G5_NATIVE_TAG_VALUE bCoronaByLight=False
+
+G5_NATIVE_TAG_VALUE bLensFlare=False
+
+G5_NATIVE_TAG_VALUE bDarkLight=False
+
+G5_NATIVE_TAG_VALUE bZoneNormalLight=True
+
+G5_NATIVE_TAG_VALUE bNetInitial=False
+
+G5_NATIVE_TAG_VALUE bNetOwner=False
+
+G5_NATIVE_TAG_VALUE bNetRelevant=False
+
+G5_NATIVE_TAG_VALUE bNetSee=False
+
+G5_NATIVE_TAG_VALUE bNetHear=False
+
+G5_NATIVE_TAG_VALUE bNetFeel=False
+
+G5_NATIVE_TAG_VALUE bSimulatedPawn=False
+
+G5_NATIVE_TAG_VALUE bDemoRecording=False
+
+G5_NATIVE_TAG_VALUE bClientDemoNetFunc=False
+
+G5_NATIVE_TAG_VALUE bBounce=False
+
+G5_NATIVE_TAG_VALUE bFixedRotationDir=False
+
+G5_NATIVE_TAG_VALUE bRotateToDesired=False
+
+G5_NATIVE_TAG_VALUE bInterpolating=False
+
+G5_NATIVE_TAG_VALUE bJustTeleported=True
+
+G5_NATIVE_TAG_VALUE bCrossLevelNetwork=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerRelevant=False
+
+G5_NATIVE_TAG_VALUE bOnlyDirtyReplication=True
+
+G5_NATIVE_TAG_VALUE bForceDirtyReplication=True
+
+G5_NATIVE_TAG_VALUE bAlwaysNetDirty=False
+
+G5_NATIVE_TAG_VALUE bTraceHitBoxes=False
+
+G5_NATIVE_TAG_VALUE bTextureAnimOnce=False
+
+G5_NATIVE_TAG_VALUE bOnlyDrawWithBase=False
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionXY=True
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionZ=True
+
+G5_NATIVE_TAG_VALUE bDirtyDynBsp=False
+
+G5_NATIVE_TAG_VALUE bSerializeMeshInst=False
+
+G5_NATIVE_TAG_VALUE bSpecialBrushActor=False
+
+G5_NATIVE_TAG_VALUE bNetInterpolatePos=False
+
+G5_NATIVE_TAG_VALUE bHardAttach=False
+
+G5_NATIVE_TAG_VALUE bIsFrobable=False
+
+G3_T060_ORIGINAL_227K_CDO_END Class Engine.LevelInfo
+G3_T060_ORIGINAL_227K_CDO_BEGIN Class Engine.GameInfo|defaultPtr=02AC6B34
+G5_NATIVE_TAG_VALUE ItemGoals=0
+
+G5_NATIVE_TAG_VALUE KillGoals=0
+
+G5_NATIVE_TAG_VALUE SecretGoals=0
+
+G5_NATIVE_TAG_VALUE MaxSpectators=2
+
+G5_NATIVE_TAG_VALUE NumSpectators=0
+
+G5_NATIVE_TAG_VALUE MaxPlayers=16
+
+G5_NATIVE_TAG_VALUE NumPlayers=0
+
+G5_NATIVE_TAG_VALUE CurrentID=0
+
+G5_NATIVE_TAG_VALUE SentText=0
+
+G5_NATIVE_TAG_VALUE GameMaxChannels=1024
+
+G5_NATIVE_TAG_VALUE BleedingDamageMin=5
+
+G5_NATIVE_TAG_VALUE BleedingDamageMax=20
+
+G5_NATIVE_TAG_VALUE DesiredMaxChannels=1024
+
+G5_NATIVE_TAG_VALUE AutoAim=0.93
+
+G5_NATIVE_TAG_VALUE GameSpeed=1.0
+
+G5_NATIVE_TAG_VALUE StartTime=0.0
+
+G5_NATIVE_TAG_VALUE BaseMutator=None
+
+G5_NATIVE_TAG_VALUE GameReplicationInfo=None
+
+G5_NATIVE_TAG_VALUE LocalLog=None
+
+G5_NATIVE_TAG_VALUE WorldLog=None
+
+G5_NATIVE_TAG_VALUE GameRules=None
+
+G5_NATIVE_TAG_VALUE AccessManager=None
+
+G5_NATIVE_TAG_VALUE DefaultPlayerState="PlayerWalking"
+
+G5_NATIVE_TAG_VALUE DefaultPlayerClass=None
+
+G5_NATIVE_TAG_VALUE DefaultWeapon=None
+
+G5_NATIVE_TAG_VALUE ScoreBoardType=None
+
+G5_NATIVE_TAG_VALUE GameMenuType=None
+
+G5_NATIVE_TAG_VALUE HUDType=None
+
+G5_NATIVE_TAG_VALUE MapListType=None
+
+G5_NATIVE_TAG_VALUE MutatorClass=Class'Engine.Mutator'
+
+G5_NATIVE_TAG_VALUE WaterZoneType=None
+
+G5_NATIVE_TAG_VALUE GameReplicationInfoClass=None
+
+G5_NATIVE_TAG_VALUE AdminPassword=""
+
+G5_NATIVE_TAG_VALUE GamePassword=""
+
+G5_NATIVE_TAG_VALUE BotMenuType="UMenu.UMenuBotConfigSClient"
+
+G5_NATIVE_TAG_VALUE RulesMenuType="UMenu.UMenuGameRulesSClient"
+
+G5_NATIVE_TAG_VALUE SettingsMenuType="UMenu.UMenuGameSettingsSClient"
+
+G5_NATIVE_TAG_VALUE GameUMenuType="UMenu.UMenuGameMenu"
+
+G5_NATIVE_TAG_VALUE MultiplayerUMenuType="UMenu.UMenuMultiplayerMenu"
+
+G5_NATIVE_TAG_VALUE GameOptionsMenuType="UMenu.UMenuOptionsMenu"
+
+G5_NATIVE_TAG_VALUE MapPrefix=""
+
+G5_NATIVE_TAG_VALUE BeaconName=""
+
+G5_NATIVE_TAG_VALUE SpecialDamageString=""
+
+G5_NATIVE_TAG_VALUE FemSpecialDamageString=""
+
+G5_NATIVE_TAG_VALUE ServerLogName="Server.log"
+
+G5_NATIVE_TAG_VALUE LocalLogFileName=""
+
+G5_NATIVE_TAG_VALUE WorldLogFileName=""
+
+G5_NATIVE_TAG_VALUE LocalBatcherURL="..\NetGamesUSA.com\ngStats\ngStatsUT.exe"
+
+G5_NATIVE_TAG_VALUE LocalBatcherParams=""
+
+G5_NATIVE_TAG_VALUE LocalStatsURL="..\NetGamesUSA.com\ngStats\html\ngStats_Main.html"
+
+G5_NATIVE_TAG_VALUE WorldBatcherURL="..\NetGamesUSA.com\ngWorldStats\bin\ngWorldStats.exe"
+
+G5_NATIVE_TAG_VALUE WorldBatcherParams="-d ..\NetGamesUSA.com\ngWorldStats\logs"
+
+G5_NATIVE_TAG_VALUE WorldStatsURL="http://www.netgamesusa.com"
+
+G5_NATIVE_TAG_VALUE SwitchLevelMessage="Switching Levels"
+
+G5_NATIVE_TAG_VALUE DefaultPlayerName="Player"
+
+G5_NATIVE_TAG_VALUE LeftMessage=" left the game."
+
+G5_NATIVE_TAG_VALUE FemLeftMessage=""
+
+G5_NATIVE_TAG_VALUE FailedSpawnMessage="Failed to spawn player actor"
+
+G5_NATIVE_TAG_VALUE FailedPlaceMessage="Could not find starting spot (level might need a 'PlayerStart' actor)"
+
+G5_NATIVE_TAG_VALUE FailedTeamMessage="Could not find team for player"
+
+G5_NATIVE_TAG_VALUE NameChangedMessage="Name changed to "
+
+G5_NATIVE_TAG_VALUE EnteredMessage=" entered the game."
+
+G5_NATIVE_TAG_VALUE FemEnteredMessage=""
+
+G5_NATIVE_TAG_VALUE GameName="Game"
+
+G5_NATIVE_TAG_VALUE MaxedOutMessage="Server is already at capacity."
+
+G5_NATIVE_TAG_VALUE MaxedOutSpectatorsMsg="Max spectators exceeded"
+
+G5_NATIVE_TAG_VALUE WrongPassword="The password you entered is incorrect."
+
+G5_NATIVE_TAG_VALUE NeedPassword="You need to enter a password to join this game."
+
+G5_NATIVE_TAG_VALUE MaleGender="his"
+
+G5_NATIVE_TAG_VALUE FemaleGender="her"
+
+G5_NATIVE_TAG_VALUE AccessManagerClass="Engine.AdminAccessManager"
+
+G5_NATIVE_TAG_VALUE InventoryDataIni="InventoryData"
+
+G5_NATIVE_TAG_VALUE ServerSceneClass=""
+
+G5_NATIVE_TAG_VALUE TravelMapData=()
+
+G5_NATIVE_TAG_VALUE Difficulty=1
+
+G5_NATIVE_TAG_VALUE bNoMonsters=False
+
+G5_NATIVE_TAG_VALUE bMuteSpectators=False
+
+G5_NATIVE_TAG_VALUE bHumansOnly=False
+
+G5_NATIVE_TAG_VALUE bRestartLevel=True
+
+G5_NATIVE_TAG_VALUE bPauseable=True
+
+G5_NATIVE_TAG_VALUE bCoopWeaponMode=False
+
+G5_NATIVE_TAG_VALUE bClassicDeathmessages=False
+
+G5_NATIVE_TAG_VALUE bLowGore=False
+
+G5_NATIVE_TAG_VALUE bCanChangeSkin=True
+
+G5_NATIVE_TAG_VALUE bTeamGame=False
+
+G5_NATIVE_TAG_VALUE bVeryLowGore=False
+
+G5_NATIVE_TAG_VALUE bNoCheating=True
+
+G5_NATIVE_TAG_VALUE bDeathMatch=False
+
+G5_NATIVE_TAG_VALUE bGameEnded=False
+
+G5_NATIVE_TAG_VALUE bOverTime=False
+
+G5_NATIVE_TAG_VALUE bLocalLog=False
+
+G5_NATIVE_TAG_VALUE bLocalLogQuery=True
+
+G5_NATIVE_TAG_VALUE bWorldLog=False
+
+G5_NATIVE_TAG_VALUE bLoggingGame=False
+
+G5_NATIVE_TAG_VALUE bBleedingEnabled=False
+
+G5_NATIVE_TAG_VALUE bBleedingDamageEnabled=False
+
+G5_NATIVE_TAG_VALUE bAllHealthStopsBleeding=False
+
+G5_NATIVE_TAG_VALUE bBandagesStopBleeding=False
+
+G5_NATIVE_TAG_VALUE bMessageAdminsAliases=True
+
+G5_NATIVE_TAG_VALUE bLogNewPlayerAliases=True
+
+G5_NATIVE_TAG_VALUE bLogDownloadsToClient=False
+
+G5_NATIVE_TAG_VALUE bHandleDownloadMessaging=False
+
+G5_NATIVE_TAG_VALUE bUseClientReplicationInfo=True
+
+G5_NATIVE_TAG_VALUE bShowRecoilAnimations=True
+
+G5_NATIVE_TAG_VALUE bCastShadow=True
+
+G5_NATIVE_TAG_VALUE bDecoShadows=True
+
+G5_NATIVE_TAG_VALUE bCastProjectorShadows=False
+
+G5_NATIVE_TAG_VALUE bUseRealtimeShadow=True
+
+G5_NATIVE_TAG_VALUE bMultiThreadedShadows=True
+
+G5_NATIVE_TAG_VALUE bNoWalkInAir=True
+
+G5_NATIVE_TAG_VALUE bProjectorDecals=False
+
+G5_NATIVE_TAG_VALUE bAlwaysEnhancedSightCheck=True
+
+G5_NATIVE_TAG_VALUE bRestrictMoversRetriggering=False
+
+G5_NATIVE_TAG_VALUE bUseClassicBalance=True
+
+G5_NATIVE_TAG_VALUE bLoadPlayerClass=True
+
+G5_NATIVE_TAG_VALUE CollisionGroups=2147483647
+
+G5_NATIVE_TAG_VALUE CollisionFlag=2
+
+G5_NATIVE_TAG_VALUE LatentInt=0
+
+G5_NATIVE_TAG_VALUE RandomDelayTime=0.5
+
+G5_NATIVE_TAG_VALUE TimerRate=0.0
+
+G5_NATIVE_TAG_VALUE TimerCounter=0.0
+
+G5_NATIVE_TAG_VALUE LifeSpan=0.0
+
+G5_NATIVE_TAG_VALUE AnimFrame=0.0
+
+G5_NATIVE_TAG_VALUE AnimRate=0.0
+
+G5_NATIVE_TAG_VALUE TweenRate=0.0
+
+G5_NATIVE_TAG_VALUE LODBias=1.0
+
+G5_NATIVE_TAG_VALUE LatentFloat=0.0
+
+G5_NATIVE_TAG_VALUE OddsOfAppearing=1.0
+
+G5_NATIVE_TAG_VALUE DrawScale=1.0
+
+G5_NATIVE_TAG_VALUE ScaleGlow=1.0
+
+G5_NATIVE_TAG_VALUE VisibilityRadius=0.0
+
+G5_NATIVE_TAG_VALUE VisibilityHeight=0.0
+
+G5_NATIVE_TAG_VALUE SpriteProjForward=32.0
+
+G5_NATIVE_TAG_VALUE AmbientGlowPulseSpeed=0.0
+
+G5_NATIVE_TAG_VALUE TransientSoundVolume=1.0
+
+G5_NATIVE_TAG_VALUE TransientSoundRadius=0.0
+
+G5_NATIVE_TAG_VALUE CollisionRadius=22.0
+
+G5_NATIVE_TAG_VALUE CollisionHeight=22.0
+
+G5_NATIVE_TAG_VALUE NormalLightRadius=0.0
+
+G5_NATIVE_TAG_VALUE Mass=100.0
+
+G5_NATIVE_TAG_VALUE Buoyancy=0.0
+
+G5_NATIVE_TAG_VALUE PhysAlpha=0.0
+
+G5_NATIVE_TAG_VALUE PhysRate=0.0
+
+G5_NATIVE_TAG_VALUE AnimLast=0.0
+
+G5_NATIVE_TAG_VALUE AnimMinRate=0.0
+
+G5_NATIVE_TAG_VALUE OldAnimRate=0.0
+
+G5_NATIVE_TAG_VALUE NetPriority=1.0
+
+G5_NATIVE_TAG_VALUE NetUpdateFrequency=100.0
+
+G5_NATIVE_TAG_VALUE CollisionOverride=None
+
+G5_NATIVE_TAG_VALUE PhysicsData=None
+
+G5_NATIVE_TAG_VALUE Owner=None
+
+G5_NATIVE_TAG_VALUE SkelAnim=None
+
+G5_NATIVE_TAG_VALUE AnimationNotify=None
+
+G5_NATIVE_TAG_VALUE Level=None
+
+G5_NATIVE_TAG_VALUE XLevel=None
+
+G5_NATIVE_TAG_VALUE Target=None
+
+G5_NATIVE_TAG_VALUE Instigator=None
+
+G5_NATIVE_TAG_VALUE Inventory=None
+
+G5_NATIVE_TAG_VALUE Base=None
+
+G5_NATIVE_TAG_VALUE LatentActor=None
+
+G5_NATIVE_TAG_VALUE Touching(0)=None
+
+G5_NATIVE_TAG_VALUE Touching(1)=None
+
+G5_NATIVE_TAG_VALUE Touching(2)=None
+
+G5_NATIVE_TAG_VALUE Touching(3)=None
+
+G5_NATIVE_TAG_VALUE Deleted=None
+
+G5_NATIVE_TAG_VALUE HitActor=None
+
+G5_NATIVE_TAG_VALUE Sprite=None
+
+G5_NATIVE_TAG_VALUE Texture=Texture'Engine.S_Actor'
+
+G5_NATIVE_TAG_VALUE Skin=None
+
+G5_NATIVE_TAG_VALUE Mesh=None
+
+G5_NATIVE_TAG_VALUE ShadowMesh=None
+
+G5_NATIVE_TAG_VALUE Brush=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(0)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(1)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(2)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(3)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(4)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(5)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(6)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(7)=None
+
+G5_NATIVE_TAG_VALUE AmbientSound=None
+
+G5_NATIVE_TAG_VALUE InitialState="None"
+
+G5_NATIVE_TAG_VALUE Group="None"
+
+G5_NATIVE_TAG_VALUE AnimSequence="None"
+
+G5_NATIVE_TAG_VALUE Tag="None"
+
+G5_NATIVE_TAG_VALUE Event="None"
+
+G5_NATIVE_TAG_VALUE AttachedBone="None"
+
+G5_NATIVE_TAG_VALUE AttachTag="None"
+
+G5_NATIVE_TAG_VALUE RenderIteratorClass=None
+
+G5_NATIVE_TAG_VALUE ActorRenderColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ActorGUnlitColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE AmbientGlowColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE RelativeLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RelativeRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DrawScale3D=(X=1.0,Y=1.0,Z=1.0)
+
+G5_NATIVE_TAG_VALUE Region=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Location=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Rotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE OldLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ColLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Velocity=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Acceleration=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE PrePivot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RotationRate=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DesiredRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE SimAnim=(W=0.0,X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE UserData=()
+
+G5_NATIVE_TAG_VALUE RenderPass=RP_Auto
+
+G5_NATIVE_TAG_VALUE LastHitBox=HITBOX_Default
+
+G5_NATIVE_TAG_VALUE Physics=PHYS_None
+
+G5_NATIVE_TAG_VALUE Role=ROLE_Authority
+
+G5_NATIVE_TAG_VALUE RemoteRole=ROLE_DumbProxy
+
+G5_NATIVE_TAG_VALUE StandingCount=0
+
+G5_NATIVE_TAG_VALUE MiscNumber=0
+
+G5_NATIVE_TAG_VALUE LatentByte=0
+
+G5_NATIVE_TAG_VALUE DrawType=DT_Sprite
+
+G5_NATIVE_TAG_VALUE Style=STY_Normal
+
+G5_NATIVE_TAG_VALUE AmbientGlow=0
+
+G5_NATIVE_TAG_VALUE Fatness=128
+
+G5_NATIVE_TAG_VALUE SoundRadius=32
+
+G5_NATIVE_TAG_VALUE SoundVolume=128
+
+G5_NATIVE_TAG_VALUE SoundPitch=64
+
+G5_NATIVE_TAG_VALUE LightType=LT_None
+
+G5_NATIVE_TAG_VALUE LightEffect=LE_None
+
+G5_NATIVE_TAG_VALUE LightBrightness=0
+
+G5_NATIVE_TAG_VALUE LightHue=0
+
+G5_NATIVE_TAG_VALUE LightSaturation=0
+
+G5_NATIVE_TAG_VALUE LightRadius=0
+
+G5_NATIVE_TAG_VALUE LightPeriod=0
+
+G5_NATIVE_TAG_VALUE LightPhase=0
+
+G5_NATIVE_TAG_VALUE LightCone=0
+
+G5_NATIVE_TAG_VALUE VolumeBrightness=0
+
+G5_NATIVE_TAG_VALUE VolumeRadius=0
+
+G5_NATIVE_TAG_VALUE VolumeFog=0
+
+G5_NATIVE_TAG_VALUE DodgeDir=DODGE_None
+
+G5_NATIVE_TAG_VALUE bStatic=False
+
+G5_NATIVE_TAG_VALUE bHidden=True
+
+G5_NATIVE_TAG_VALUE bNoDelete=False
+
+G5_NATIVE_TAG_VALUE bAnimFinished=False
+
+G5_NATIVE_TAG_VALUE bAnimLoop=False
+
+G5_NATIVE_TAG_VALUE bAnimNotify=False
+
+G5_NATIVE_TAG_VALUE bAnimByOwner=False
+
+G5_NATIVE_TAG_VALUE bDeleteMe=False
+
+G5_NATIVE_TAG_VALUE bDynamicLight=False
+
+G5_NATIVE_TAG_VALUE bTimerLoop=False
+
+G5_NATIVE_TAG_VALUE bNetNotify=False
+
+G5_NATIVE_TAG_VALUE bHandleOwnCorona=False
+
+G5_NATIVE_TAG_VALUE bRenderMultiEnviroMaps=False
+
+G5_NATIVE_TAG_VALUE bWorldGeometry=False
+
+G5_NATIVE_TAG_VALUE bUseMeshCollision=False
+
+G5_NATIVE_TAG_VALUE bEditorSelectRender=False
+
+G5_NATIVE_TAG_VALUE bNoDynamicShadowCast=False
+
+G5_NATIVE_TAG_VALUE bProjectorDecal=False
+
+G5_NATIVE_TAG_VALUE bUseLitSprite=False
+
+G5_NATIVE_TAG_VALUE bTickRealTime=False
+
+G5_NATIVE_TAG_VALUE bHiddenEd=False
+
+G5_NATIVE_TAG_VALUE bDirectional=False
+
+G5_NATIVE_TAG_VALUE bSelected=False
+
+G5_NATIVE_TAG_VALUE bMemorized=False
+
+G5_NATIVE_TAG_VALUE bHighlighted=False
+
+G5_NATIVE_TAG_VALUE bEdLocked=False
+
+G5_NATIVE_TAG_VALUE bEdShouldSnap=False
+
+G5_NATIVE_TAG_VALUE bDifficulty0=True
+
+G5_NATIVE_TAG_VALUE bDifficulty1=True
+
+G5_NATIVE_TAG_VALUE bDifficulty2=True
+
+G5_NATIVE_TAG_VALUE bDifficulty3=True
+
+G5_NATIVE_TAG_VALUE bSinglePlayer=True
+
+G5_NATIVE_TAG_VALUE bNet=True
+
+G5_NATIVE_TAG_VALUE bNetSpecial=True
+
+G5_NATIVE_TAG_VALUE bCanTeleport=False
+
+G5_NATIVE_TAG_VALUE bIsSecretGoal=False
+
+G5_NATIVE_TAG_VALUE bIsKillGoal=False
+
+G5_NATIVE_TAG_VALUE bIsItemGoal=False
+
+G5_NATIVE_TAG_VALUE bCollideWhenPlacing=False
+
+G5_NATIVE_TAG_VALUE bTravel=False
+
+G5_NATIVE_TAG_VALUE bMovable=True
+
+G5_NATIVE_TAG_VALUE bHighDetail=False
+
+G5_NATIVE_TAG_VALUE bStasis=False
+
+G5_NATIVE_TAG_VALUE bForceStasis=False
+
+G5_NATIVE_TAG_VALUE bIsPawn=False
+
+G5_NATIVE_TAG_VALUE bIsPlayerPawn=False
+
+G5_NATIVE_TAG_VALUE bIsProjectile=False
+
+G5_NATIVE_TAG_VALUE bIsStaticMesh=False
+
+G5_NATIVE_TAG_VALUE bNetTemporary=False
+
+G5_NATIVE_TAG_VALUE bNetOptional=False
+
+G5_NATIVE_TAG_VALUE bReplicateInstigator=False
+
+G5_NATIVE_TAG_VALUE bTrailerSameRotation=False
+
+G5_NATIVE_TAG_VALUE bUnlit=False
+
+G5_NATIVE_TAG_VALUE bNoSmooth=False
+
+G5_NATIVE_TAG_VALUE bParticles=False
+
+G5_NATIVE_TAG_VALUE bRandomFrame=False
+
+G5_NATIVE_TAG_VALUE bMeshEnviroMap=False
+
+G5_NATIVE_TAG_VALUE bFilterByVolume=False
+
+G5_NATIVE_TAG_VALUE bMeshCurvy=False
+
+G5_NATIVE_TAG_VALUE bShadowCast=False
+
+G5_NATIVE_TAG_VALUE bCustomDrawActor=False
+
+G5_NATIVE_TAG_VALUE bOnlyRenderCurrentZone=False
+
+G5_NATIVE_TAG_VALUE bOwnerNoSee=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerSee=False
+
+G5_NATIVE_TAG_VALUE bIsMover=False
+
+G5_NATIVE_TAG_VALUE bAlwaysRelevant=False
+
+G5_NATIVE_TAG_VALUE bAlwaysTick=False
+
+G5_NATIVE_TAG_VALUE bHurtEntry=False
+
+G5_NATIVE_TAG_VALUE bGameRelevant=False
+
+G5_NATIVE_TAG_VALUE bCarriedItem=False
+
+G5_NATIVE_TAG_VALUE bForcePhysicsUpdate=False
+
+G5_NATIVE_TAG_VALUE bSkipActorReplication=False
+
+G5_NATIVE_TAG_VALUE bRepAnimations=True
+
+G5_NATIVE_TAG_VALUE bRepAmbientSound=True
+
+G5_NATIVE_TAG_VALUE bSimulatedPawnRep=False
+
+G5_NATIVE_TAG_VALUE bRepMesh=True
+
+G5_NATIVE_TAG_VALUE bNetInitialRotation=False
+
+G5_NATIVE_TAG_VALUE bNetInitialVelocity=False
+
+G5_NATIVE_TAG_VALUE bNetInitExactLocation=False
+
+G5_NATIVE_TAG_VALUE bOptionalNetOwner=False
+
+G5_NATIVE_TAG_VALUE bCollideActors=False
+
+G5_NATIVE_TAG_VALUE bCollideWorld=False
+
+G5_NATIVE_TAG_VALUE bBlockActors=False
+
+G5_NATIVE_TAG_VALUE bBlockPlayers=False
+
+G5_NATIVE_TAG_VALUE bProjTarget=False
+
+G5_NATIVE_TAG_VALUE bPathCollision=False
+
+G5_NATIVE_TAG_VALUE bBlockZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockNonZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockAISight=False
+
+G5_NATIVE_TAG_VALUE bBlockTextureTrace=False
+
+G5_NATIVE_TAG_VALUE bBlockRigidBodyPhys=False
+
+G5_NATIVE_TAG_VALUE bSpecialLit=False
+
+G5_NATIVE_TAG_VALUE bActorShadows=False
+
+G5_NATIVE_TAG_VALUE bCorona=False
+
+G5_NATIVE_TAG_VALUE bFOVFadingCorona=False
+
+G5_NATIVE_TAG_VALUE bForcedCorona=False
+
+G5_NATIVE_TAG_VALUE bCoronaByLight=False
+
+G5_NATIVE_TAG_VALUE bLensFlare=False
+
+G5_NATIVE_TAG_VALUE bDarkLight=False
+
+G5_NATIVE_TAG_VALUE bZoneNormalLight=True
+
+G5_NATIVE_TAG_VALUE bNetInitial=False
+
+G5_NATIVE_TAG_VALUE bNetOwner=False
+
+G5_NATIVE_TAG_VALUE bNetRelevant=False
+
+G5_NATIVE_TAG_VALUE bNetSee=False
+
+G5_NATIVE_TAG_VALUE bNetHear=False
+
+G5_NATIVE_TAG_VALUE bNetFeel=False
+
+G5_NATIVE_TAG_VALUE bSimulatedPawn=False
+
+G5_NATIVE_TAG_VALUE bDemoRecording=False
+
+G5_NATIVE_TAG_VALUE bClientDemoNetFunc=False
+
+G5_NATIVE_TAG_VALUE bBounce=False
+
+G5_NATIVE_TAG_VALUE bFixedRotationDir=False
+
+G5_NATIVE_TAG_VALUE bRotateToDesired=False
+
+G5_NATIVE_TAG_VALUE bInterpolating=False
+
+G5_NATIVE_TAG_VALUE bJustTeleported=True
+
+G5_NATIVE_TAG_VALUE bCrossLevelNetwork=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerRelevant=False
+
+G5_NATIVE_TAG_VALUE bOnlyDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bForceDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bAlwaysNetDirty=False
+
+G5_NATIVE_TAG_VALUE bTraceHitBoxes=False
+
+G5_NATIVE_TAG_VALUE bTextureAnimOnce=False
+
+G5_NATIVE_TAG_VALUE bOnlyDrawWithBase=False
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionXY=True
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionZ=True
+
+G5_NATIVE_TAG_VALUE bDirtyDynBsp=False
+
+G5_NATIVE_TAG_VALUE bSerializeMeshInst=False
+
+G5_NATIVE_TAG_VALUE bSpecialBrushActor=False
+
+G5_NATIVE_TAG_VALUE bNetInterpolatePos=False
+
+G5_NATIVE_TAG_VALUE bHardAttach=False
+
+G5_NATIVE_TAG_VALUE bIsFrobable=False
+
+G3_T060_ORIGINAL_227K_CDO_END Class Engine.GameInfo
+G3_T060_ORIGINAL_227K_CDO_BEGIN Class Engine.PlayerPawn|defaultPtr=02AA7FB4
+G5_NATIVE_TAG_VALUE shakemag=0
+
+G5_NATIVE_TAG_VALUE NetSpeed=10000
+
+G5_NATIVE_TAG_VALUE LanSpeed=20000
+
+G5_NATIVE_TAG_VALUE DodgeClickTimer=0.0
+
+G5_NATIVE_TAG_VALUE DodgeClickTime=0.25
+
+G5_NATIVE_TAG_VALUE Bob=0.016
+
+G5_NATIVE_TAG_VALUE bobtime=0.0
+
+G5_NATIVE_TAG_VALUE DesiredFlashScale=0.0
+
+G5_NATIVE_TAG_VALUE ConstantGlowScale=0.0
+
+G5_NATIVE_TAG_VALUE InstantFlash=0.0
+
+G5_NATIVE_TAG_VALUE DesiredFOV=90.0
+
+G5_NATIVE_TAG_VALUE DefaultFOV=90.0
+
+G5_NATIVE_TAG_VALUE shaketimer=0.0
+
+G5_NATIVE_TAG_VALUE shakevert=0.0
+
+G5_NATIVE_TAG_VALUE maxshake=0.0
+
+G5_NATIVE_TAG_VALUE verttimer=0.0
+
+G5_NATIVE_TAG_VALUE MyAutoAim=1.0
+
+G5_NATIVE_TAG_VALUE Handedness=-1.0
+
+G5_NATIVE_TAG_VALUE MainFOV=90.0
+
+G5_NATIVE_TAG_VALUE ZoomLevel=0.0
+
+G5_NATIVE_TAG_VALUE MouseSensitivity=3.0
+
+G5_NATIVE_TAG_VALUE SmoothMouseX=0.0
+
+G5_NATIVE_TAG_VALUE SmoothMouseY=0.0
+
+G5_NATIVE_TAG_VALUE KbdAccel=0.0
+
+G5_NATIVE_TAG_VALUE MouseSmoothThreshold=0.16
+
+G5_NATIVE_TAG_VALUE CrouchHeightPct=0.55
+
+G5_NATIVE_TAG_VALUE SpecialCollisionHeight=0.0
+
+G5_NATIVE_TAG_VALUE PrePivotZModifier=0.0
+
+G5_NATIVE_TAG_VALUE aBaseX=0.0
+
+G5_NATIVE_TAG_VALUE aBaseY=0.0
+
+G5_NATIVE_TAG_VALUE aBaseZ=0.0
+
+G5_NATIVE_TAG_VALUE aMouseX=0.0
+
+G5_NATIVE_TAG_VALUE aMouseY=0.0
+
+G5_NATIVE_TAG_VALUE aForward=0.0
+
+G5_NATIVE_TAG_VALUE aTurn=0.0
+
+G5_NATIVE_TAG_VALUE aStrafe=0.0
+
+G5_NATIVE_TAG_VALUE aUp=0.0
+
+G5_NATIVE_TAG_VALUE aLookUp=0.0
+
+G5_NATIVE_TAG_VALUE aExtra4=0.0
+
+G5_NATIVE_TAG_VALUE aExtra3=0.0
+
+G5_NATIVE_TAG_VALUE aExtra2=0.0
+
+G5_NATIVE_TAG_VALUE aExtra1=0.0
+
+G5_NATIVE_TAG_VALUE aExtra0=0.0
+
+G5_NATIVE_TAG_VALUE CurrentTimeStamp=0.0
+
+G5_NATIVE_TAG_VALUE LastUpdateTime=0.0
+
+G5_NATIVE_TAG_VALUE ServerTimeStamp=0.0
+
+G5_NATIVE_TAG_VALUE TimeMargin=0.0
+
+G5_NATIVE_TAG_VALUE MaxTimeMargin=1.0
+
+G5_NATIVE_TAG_VALUE ProgressTimeOut=0.0
+
+G5_NATIVE_TAG_VALUE Player=None
+
+G5_NATIVE_TAG_VALUE ViewTarget=None
+
+G5_NATIVE_TAG_VALUE myHUD=None
+
+G5_NATIVE_TAG_VALUE Scoring=None
+
+G5_NATIVE_TAG_VALUE Song=None
+
+G5_NATIVE_TAG_VALUE JumpSound=None
+
+G5_NATIVE_TAG_VALUE CameraModifier=None
+
+G5_NATIVE_TAG_VALUE LocalInteractions=None
+
+G5_NATIVE_TAG_VALUE GameReplicationInfo=None
+
+G5_NATIVE_TAG_VALUE ClientReplicationInfo=None
+
+G5_NATIVE_TAG_VALUE FirstPlayerAffector=None
+
+G5_NATIVE_TAG_VALUE CustomPlayerStateInfo=None
+
+G5_NATIVE_TAG_VALUE RealCrouchInfo=None
+
+G5_NATIVE_TAG_VALUE ActiveLadder=None
+
+G5_NATIVE_TAG_VALUE WeaponPriority(0)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(1)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(2)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(3)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(4)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(5)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(6)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(7)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(8)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(9)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(10)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(11)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(12)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(13)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(14)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(15)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(16)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(17)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(18)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(19)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(20)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(21)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(22)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(23)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(24)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(25)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(26)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(27)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(28)="None"
+
+G5_NATIVE_TAG_VALUE WeaponPriority(29)="None"
+
+G5_NATIVE_TAG_VALUE HUDType=None
+
+G5_NATIVE_TAG_VALUE ScoringType=None
+
+G5_NATIVE_TAG_VALUE CarcassType=None
+
+G5_NATIVE_TAG_VALUE SpecialMenu=None
+
+G5_NATIVE_TAG_VALUE FlashScale=(X=1.0,Y=1.0,Z=1.0)
+
+G5_NATIVE_TAG_VALUE FlashFog=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE CurrentFlashFog=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE DesiredFlashFog=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ConstantGlowFog=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE InstantFog=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE CameraRegion=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE ProgressColor(0)=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ProgressColor(1)=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ProgressColor(2)=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ProgressColor(3)=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ProgressColor(4)=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE Password=""
+
+G5_NATIVE_TAG_VALUE DelayedCommand=""
+
+G5_NATIVE_TAG_VALUE ProgressMessage(0)=""
+
+G5_NATIVE_TAG_VALUE ProgressMessage(1)=""
+
+G5_NATIVE_TAG_VALUE ProgressMessage(2)=""
+
+G5_NATIVE_TAG_VALUE ProgressMessage(3)=""
+
+G5_NATIVE_TAG_VALUE ProgressMessage(4)=""
+
+G5_NATIVE_TAG_VALUE QuickSaveString="Quick Saving"
+
+G5_NATIVE_TAG_VALUE NoPauseMessage="Game is not pauseable"
+
+G5_NATIVE_TAG_VALUE ViewingFrom="Now viewing from "
+
+G5_NATIVE_TAG_VALUE OwnCamera="own camera"
+
+G5_NATIVE_TAG_VALUE FailedView="Failed to change view."
+
+G5_NATIVE_TAG_VALUE CantChangeNameMsg="You can't change your name during a global logged game."
+
+G5_NATIVE_TAG_VALUE ngWorldSecret=""
+
+G5_NATIVE_TAG_VALUE SongSection=0
+
+G5_NATIVE_TAG_VALUE SongVolume=255
+
+G5_NATIVE_TAG_VALUE CdTrack=255
+
+G5_NATIVE_TAG_VALUE Transition=MTRAN_None
+
+G5_NATIVE_TAG_VALUE bNetworkIncompability=False
+
+G5_NATIVE_TAG_VALUE bAdmin=False
+
+G5_NATIVE_TAG_VALUE bLookUpStairs=False
+
+G5_NATIVE_TAG_VALUE bSnapToLevel=False
+
+G5_NATIVE_TAG_VALUE bAlwaysMouseLook=True
+
+G5_NATIVE_TAG_VALUE bKeyboardLook=False
+
+G5_NATIVE_TAG_VALUE bWasForward=False
+
+G5_NATIVE_TAG_VALUE bWasBack=False
+
+G5_NATIVE_TAG_VALUE bWasLeft=False
+
+G5_NATIVE_TAG_VALUE bWasRight=False
+
+G5_NATIVE_TAG_VALUE bEdgeForward=False
+
+G5_NATIVE_TAG_VALUE bEdgeBack=False
+
+G5_NATIVE_TAG_VALUE bEdgeLeft=False
+
+G5_NATIVE_TAG_VALUE bEdgeRight=False
+
+G5_NATIVE_TAG_VALUE bIsCrouching=False
+
+G5_NATIVE_TAG_VALUE bShakeDir=False
+
+G5_NATIVE_TAG_VALUE bAnimTransition=False
+
+G5_NATIVE_TAG_VALUE bIsTurning=False
+
+G5_NATIVE_TAG_VALUE bFrozen=False
+
+G5_NATIVE_TAG_VALUE bInvertMouse=False
+
+G5_NATIVE_TAG_VALUE bShowScores=False
+
+G5_NATIVE_TAG_VALUE bShowMenu=False
+
+G5_NATIVE_TAG_VALUE bSpecialMenu=False
+
+G5_NATIVE_TAG_VALUE bWokeUp=False
+
+G5_NATIVE_TAG_VALUE bPressedJump=False
+
+G5_NATIVE_TAG_VALUE bUpdatePosition=False
+
+G5_NATIVE_TAG_VALUE bDelayedCommand=False
+
+G5_NATIVE_TAG_VALUE bRising=False
+
+G5_NATIVE_TAG_VALUE bReducedVis=False
+
+G5_NATIVE_TAG_VALUE bCenterView=False
+
+G5_NATIVE_TAG_VALUE bMaxMouseSmoothing=False
+
+G5_NATIVE_TAG_VALUE bMouseZeroed=False
+
+G5_NATIVE_TAG_VALUE bReadyToPlay=False
+
+G5_NATIVE_TAG_VALUE bNoFlash=False
+
+G5_NATIVE_TAG_VALUE bNoVoices=False
+
+G5_NATIVE_TAG_VALUE bMessageBeep=True
+
+G5_NATIVE_TAG_VALUE bZooming=False
+
+G5_NATIVE_TAG_VALUE bSinglePlayer=False
+
+G5_NATIVE_TAG_VALUE bJustFired=False
+
+G5_NATIVE_TAG_VALUE bJustAltFired=False
+
+G5_NATIVE_TAG_VALUE bIsTyping=False
+
+G5_NATIVE_TAG_VALUE bFixedCamera=False
+
+G5_NATIVE_TAG_VALUE bMouseSmoothing=True
+
+G5_NATIVE_TAG_VALUE bRepTargetViewRotation=True
+
+G5_NATIVE_TAG_VALUE bNeverAutoSwitch=False
+
+G5_NATIVE_TAG_VALUE bIgnoreMusicChange=False
+
+G5_NATIVE_TAG_VALUE bIsReducedCrouch=False
+
+G5_NATIVE_TAG_VALUE bCanChangeBehindView=True
+
+G5_NATIVE_TAG_VALUE bIsSpectatorClass=False
+
+G5_NATIVE_TAG_VALUE DieCount=0
+
+G5_NATIVE_TAG_VALUE ItemCount=0
+
+G5_NATIVE_TAG_VALUE KillCount=0
+
+G5_NATIVE_TAG_VALUE SecretCount=0
+
+G5_NATIVE_TAG_VALUE Spree=0
+
+G5_NATIVE_TAG_VALUE Health=100
+
+G5_NATIVE_TAG_VALUE SightCounter=0.0
+
+G5_NATIVE_TAG_VALUE PainTime=0.0
+
+G5_NATIVE_TAG_VALUE SpeechTime=0.0
+
+G5_NATIVE_TAG_VALUE AvgPhysicsTime=0.1
+
+G5_NATIVE_TAG_VALUE MoveTimer=0.0
+
+G5_NATIVE_TAG_VALUE DesiredSpeed=0.3
+
+G5_NATIVE_TAG_VALUE MaxDesiredSpeed=1.0
+
+G5_NATIVE_TAG_VALUE MeleeRange=0.0
+
+G5_NATIVE_TAG_VALUE SerpentineDist=0.0
+
+G5_NATIVE_TAG_VALUE SerpentineTime=0.0
+
+G5_NATIVE_TAG_VALUE GroundSpeed=320.0
+
+G5_NATIVE_TAG_VALUE WaterSpeed=200.0
+
+G5_NATIVE_TAG_VALUE AirSpeed=0.0
+
+G5_NATIVE_TAG_VALUE AccelRate=500.0
+
+G5_NATIVE_TAG_VALUE JumpZ=325.0
+
+G5_NATIVE_TAG_VALUE MaxStepHeight=25.0
+
+G5_NATIVE_TAG_VALUE AirControl=0.05
+
+G5_NATIVE_TAG_VALUE WalkingPct=0.3
+
+G5_NATIVE_TAG_VALUE ShoveCollisionRadius=0.6
+
+G5_NATIVE_TAG_VALUE MinHitWall=0.0
+
+G5_NATIVE_TAG_VALUE Alertness=0.0
+
+G5_NATIVE_TAG_VALUE Stimulus=0.0
+
+G5_NATIVE_TAG_VALUE SightRadius=4100.0
+
+G5_NATIVE_TAG_VALUE PeripheralVision=0.0
+
+G5_NATIVE_TAG_VALUE HearingThreshold=1.0
+
+G5_NATIVE_TAG_VALUE HuntOffDistance=0.0
+
+G5_NATIVE_TAG_VALUE LastSeenTime=0.0
+
+G5_NATIVE_TAG_VALUE BaseEyeHeight=0.0
+
+G5_NATIVE_TAG_VALUE EyeHeight=0.0
+
+G5_NATIVE_TAG_VALUE SplashTime=0.0
+
+G5_NATIVE_TAG_VALUE OrthoZoom=40000.0
+
+G5_NATIVE_TAG_VALUE FovAngle=90.0
+
+G5_NATIVE_TAG_VALUE ReducedDamagePct=0.0
+
+G5_NATIVE_TAG_VALUE UnderWaterTime=0.0
+
+G5_NATIVE_TAG_VALUE Skill=0.0
+
+G5_NATIVE_TAG_VALUE SpecialPause=0.0
+
+G5_NATIVE_TAG_VALUE noise1time=-10.0
+
+G5_NATIVE_TAG_VALUE noise1loudness=0.0
+
+G5_NATIVE_TAG_VALUE noise2time=-10.0
+
+G5_NATIVE_TAG_VALUE noise2loudness=0.0
+
+G5_NATIVE_TAG_VALUE LastPainSound=0.0
+
+G5_NATIVE_TAG_VALUE CombatStyle=0.0
+
+G5_NATIVE_TAG_VALUE SoundDampening=1.0
+
+G5_NATIVE_TAG_VALUE DamageScaling=1.0
+
+G5_NATIVE_TAG_VALUE OldMessageTime=0.0
+
+G5_NATIVE_TAG_VALUE SightDistanceMulti=1.0
+
+G5_NATIVE_TAG_VALUE BeaconOffset=1.05
+
+G5_NATIVE_TAG_VALUE MaxFrobDistance=112.0
+
+G5_NATIVE_TAG_VALUE MoveTarget=None
+
+G5_NATIVE_TAG_VALUE FaceTarget=None
+
+G5_NATIVE_TAG_VALUE PhysicsAnim=None
+
+G5_NATIVE_TAG_VALUE Enemy=None
+
+G5_NATIVE_TAG_VALUE GroundTexture=None
+
+G5_NATIVE_TAG_VALUE Weapon=None
+
+G5_NATIVE_TAG_VALUE PendingWeapon=None
+
+G5_NATIVE_TAG_VALUE SelectedItem=None
+
+G5_NATIVE_TAG_VALUE SpecialGoal=None
+
+G5_NATIVE_TAG_VALUE noise1other=None
+
+G5_NATIVE_TAG_VALUE noise2other=None
+
+G5_NATIVE_TAG_VALUE nextPawn=None
+
+G5_NATIVE_TAG_VALUE HitSound1=None
+
+G5_NATIVE_TAG_VALUE HitSound2=None
+
+G5_NATIVE_TAG_VALUE Land=None
+
+G5_NATIVE_TAG_VALUE Die=None
+
+G5_NATIVE_TAG_VALUE WaterStep=None
+
+G5_NATIVE_TAG_VALUE home=None
+
+G5_NATIVE_TAG_VALUE carriedDecoration=None
+
+G5_NATIVE_TAG_VALUE RouteCache(0)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(1)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(2)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(3)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(4)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(5)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(6)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(7)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(8)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(9)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(10)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(11)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(12)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(13)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(14)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(15)=None
+
+G5_NATIVE_TAG_VALUE PlayerReplicationInfo=None
+
+G5_NATIVE_TAG_VALUE BleedingActor=None
+
+G5_NATIVE_TAG_VALUE ReducedDamageType="None"
+
+G5_NATIVE_TAG_VALUE NextState="None"
+
+G5_NATIVE_TAG_VALUE NextLabel="None"
+
+G5_NATIVE_TAG_VALUE AlarmTag="None"
+
+G5_NATIVE_TAG_VALUE SharedAlarmTag="None"
+
+G5_NATIVE_TAG_VALUE PlayerReStartState="PlayerWalking"
+
+G5_NATIVE_TAG_VALUE DropWhenKilled=None
+
+G5_NATIVE_TAG_VALUE VoiceType=None
+
+G5_NATIVE_TAG_VALUE PlayerReplicationInfoClass=Class'Engine.PlayerReplicationInfo'
+
+G5_NATIVE_TAG_VALUE Pawn_BloodsprayClass=None
+
+G5_NATIVE_TAG_VALUE Pawn_BleedingClass=None
+
+G5_NATIVE_TAG_VALUE FootRegion=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE HeadRegion=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Destination=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Focus=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE MovementStart=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE LastSeenPos=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE LastSeeingPos=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ViewRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE WalkBob=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Floor=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE noise1spot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE noise2spot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE MenuName=""
+
+G5_NATIVE_TAG_VALUE MenuNameDative=""
+
+G5_NATIVE_TAG_VALUE NameArticle=" a "
+
+G5_NATIVE_TAG_VALUE lastPhoneme=""
+
+G5_NATIVE_TAG_VALUE nextPhoneme=""
+
+G5_NATIVE_TAG_VALUE Visibility=128
+
+G5_NATIVE_TAG_VALUE AttitudeToPlayer=ATTITUDE_Hate
+
+G5_NATIVE_TAG_VALUE Intelligence=BRAINS_MAMMAL
+
+G5_NATIVE_TAG_VALUE bZoom=0
+
+G5_NATIVE_TAG_VALUE bRun=0
+
+G5_NATIVE_TAG_VALUE bLook=0
+
+G5_NATIVE_TAG_VALUE bDuck=0
+
+G5_NATIVE_TAG_VALUE bSnapLevel=0
+
+G5_NATIVE_TAG_VALUE bStrafe=0
+
+G5_NATIVE_TAG_VALUE bFire=0
+
+G5_NATIVE_TAG_VALUE bAltFire=0
+
+G5_NATIVE_TAG_VALUE bFreeLook=0
+
+G5_NATIVE_TAG_VALUE bExtra0=0
+
+G5_NATIVE_TAG_VALUE bExtra1=0
+
+G5_NATIVE_TAG_VALUE bExtra2=0
+
+G5_NATIVE_TAG_VALUE bExtra3=0
+
+G5_NATIVE_TAG_VALUE VoicePitch=0
+
+G5_NATIVE_TAG_VALUE SightCheckType=SEE_None
+
+G5_NATIVE_TAG_VALUE bBehindView=False
+
+G5_NATIVE_TAG_VALUE bIsPlayer=True
+
+G5_NATIVE_TAG_VALUE bJustLanded=False
+
+G5_NATIVE_TAG_VALUE bUpAndOut=False
+
+G5_NATIVE_TAG_VALUE bIsWalking=False
+
+G5_NATIVE_TAG_VALUE bHitSlopedWall=False
+
+G5_NATIVE_TAG_VALUE bNeverSwitchOnPickup=False
+
+G5_NATIVE_TAG_VALUE bWarping=False
+
+G5_NATIVE_TAG_VALUE bUpdatingDisplay=False
+
+G5_NATIVE_TAG_VALUE bClientSimFall=True
+
+G5_NATIVE_TAG_VALUE bClientTick=False
+
+G5_NATIVE_TAG_VALUE bUseNoWalkInAir=True
+
+G5_NATIVE_TAG_VALUE bNoStopAtLedge=False
+
+G5_NATIVE_TAG_VALUE bPostRender2D=False
+
+G5_NATIVE_TAG_VALUE bShovePawns=False
+
+G5_NATIVE_TAG_VALUE bCanStrafe=False
+
+G5_NATIVE_TAG_VALUE bFixedStart=False
+
+G5_NATIVE_TAG_VALUE bReducedSpeed=False
+
+G5_NATIVE_TAG_VALUE bCanJump=True
+
+G5_NATIVE_TAG_VALUE bCanWalk=False
+
+G5_NATIVE_TAG_VALUE bCanSwim=False
+
+G5_NATIVE_TAG_VALUE bCanFly=False
+
+G5_NATIVE_TAG_VALUE bCanOpenDoors=False
+
+G5_NATIVE_TAG_VALUE bCanDoSpecial=False
+
+G5_NATIVE_TAG_VALUE bDrowning=False
+
+G5_NATIVE_TAG_VALUE bLOSflag=False
+
+G5_NATIVE_TAG_VALUE bFromWall=False
+
+G5_NATIVE_TAG_VALUE bHunting=False
+
+G5_NATIVE_TAG_VALUE bAvoidLedges=False
+
+G5_NATIVE_TAG_VALUE bStopAtLedges=False
+
+G5_NATIVE_TAG_VALUE bJumpOffPawn=False
+
+G5_NATIVE_TAG_VALUE bShootSpecial=False
+
+G5_NATIVE_TAG_VALUE bAutoActivate=False
+
+G5_NATIVE_TAG_VALUE bIsHuman=False
+
+G5_NATIVE_TAG_VALUE bIsFemale=False
+
+G5_NATIVE_TAG_VALUE bIsMultiSkinned=False
+
+G5_NATIVE_TAG_VALUE bCountJumps=False
+
+G5_NATIVE_TAG_VALUE bEnhancedSightCheck=False
+
+G5_NATIVE_TAG_VALUE bRepHealth=True
+
+G5_NATIVE_TAG_VALUE bDoAutoSerpentine=False
+
+G5_NATIVE_TAG_VALUE bIsCrawler=False
+
+G5_NATIVE_TAG_VALUE bIsBleeding=False
+
+G5_NATIVE_TAG_VALUE bIsAmbientCreature=False
+
+G5_NATIVE_TAG_VALUE bIsSpeaking=False
+
+G5_NATIVE_TAG_VALUE bWasSpeaking=False
+
+G5_NATIVE_TAG_VALUE bNoPhysicsRotation=False
+
+G5_NATIVE_TAG_VALUE CollisionGroups=2147483647
+
+G5_NATIVE_TAG_VALUE CollisionFlag=8
+
+G5_NATIVE_TAG_VALUE LatentInt=0
+
+G5_NATIVE_TAG_VALUE RandomDelayTime=0.5
+
+G5_NATIVE_TAG_VALUE TimerRate=0.0
+
+G5_NATIVE_TAG_VALUE TimerCounter=0.0
+
+G5_NATIVE_TAG_VALUE LifeSpan=0.0
+
+G5_NATIVE_TAG_VALUE AnimFrame=0.0
+
+G5_NATIVE_TAG_VALUE AnimRate=0.0
+
+G5_NATIVE_TAG_VALUE TweenRate=0.0
+
+G5_NATIVE_TAG_VALUE LODBias=1.0
+
+G5_NATIVE_TAG_VALUE LatentFloat=0.0
+
+G5_NATIVE_TAG_VALUE OddsOfAppearing=1.0
+
+G5_NATIVE_TAG_VALUE DrawScale=1.0
+
+G5_NATIVE_TAG_VALUE ScaleGlow=1.0
+
+G5_NATIVE_TAG_VALUE VisibilityRadius=0.0
+
+G5_NATIVE_TAG_VALUE VisibilityHeight=0.0
+
+G5_NATIVE_TAG_VALUE SpriteProjForward=32.0
+
+G5_NATIVE_TAG_VALUE AmbientGlowPulseSpeed=0.0
+
+G5_NATIVE_TAG_VALUE TransientSoundVolume=2.0
+
+G5_NATIVE_TAG_VALUE TransientSoundRadius=0.0
+
+G5_NATIVE_TAG_VALUE CollisionRadius=22.0
+
+G5_NATIVE_TAG_VALUE CollisionHeight=22.0
+
+G5_NATIVE_TAG_VALUE NormalLightRadius=0.0
+
+G5_NATIVE_TAG_VALUE Mass=100.0
+
+G5_NATIVE_TAG_VALUE Buoyancy=0.0
+
+G5_NATIVE_TAG_VALUE PhysAlpha=0.0
+
+G5_NATIVE_TAG_VALUE PhysRate=0.0
+
+G5_NATIVE_TAG_VALUE AnimLast=0.0
+
+G5_NATIVE_TAG_VALUE AnimMinRate=0.0
+
+G5_NATIVE_TAG_VALUE OldAnimRate=0.0
+
+G5_NATIVE_TAG_VALUE NetPriority=8.0
+
+G5_NATIVE_TAG_VALUE NetUpdateFrequency=100.0
+
+G5_NATIVE_TAG_VALUE CollisionOverride=None
+
+G5_NATIVE_TAG_VALUE PhysicsData=None
+
+G5_NATIVE_TAG_VALUE Owner=None
+
+G5_NATIVE_TAG_VALUE SkelAnim=None
+
+G5_NATIVE_TAG_VALUE AnimationNotify=None
+
+G5_NATIVE_TAG_VALUE Level=None
+
+G5_NATIVE_TAG_VALUE XLevel=None
+
+G5_NATIVE_TAG_VALUE Target=None
+
+G5_NATIVE_TAG_VALUE Instigator=None
+
+G5_NATIVE_TAG_VALUE Inventory=None
+
+G5_NATIVE_TAG_VALUE Base=None
+
+G5_NATIVE_TAG_VALUE LatentActor=None
+
+G5_NATIVE_TAG_VALUE Touching(0)=None
+
+G5_NATIVE_TAG_VALUE Touching(1)=None
+
+G5_NATIVE_TAG_VALUE Touching(2)=None
+
+G5_NATIVE_TAG_VALUE Touching(3)=None
+
+G5_NATIVE_TAG_VALUE Deleted=None
+
+G5_NATIVE_TAG_VALUE HitActor=None
+
+G5_NATIVE_TAG_VALUE Sprite=None
+
+G5_NATIVE_TAG_VALUE Texture=Texture'Engine.S_Pawn'
+
+G5_NATIVE_TAG_VALUE Skin=None
+
+G5_NATIVE_TAG_VALUE Mesh=None
+
+G5_NATIVE_TAG_VALUE ShadowMesh=None
+
+G5_NATIVE_TAG_VALUE Brush=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(0)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(1)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(2)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(3)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(4)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(5)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(6)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(7)=None
+
+G5_NATIVE_TAG_VALUE AmbientSound=None
+
+G5_NATIVE_TAG_VALUE InitialState="None"
+
+G5_NATIVE_TAG_VALUE Group="None"
+
+G5_NATIVE_TAG_VALUE AnimSequence="Fighter"
+
+G5_NATIVE_TAG_VALUE Tag="None"
+
+G5_NATIVE_TAG_VALUE Event="None"
+
+G5_NATIVE_TAG_VALUE AttachedBone="None"
+
+G5_NATIVE_TAG_VALUE AttachTag="None"
+
+G5_NATIVE_TAG_VALUE RenderIteratorClass=None
+
+G5_NATIVE_TAG_VALUE ActorRenderColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ActorGUnlitColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE AmbientGlowColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE RelativeLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RelativeRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DrawScale3D=(X=1.0,Y=1.0,Z=1.0)
+
+G5_NATIVE_TAG_VALUE Region=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Location=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Rotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE OldLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ColLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Velocity=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Acceleration=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE PrePivot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RotationRate=(Pitch=4096,Yaw=50000,Roll=3072)
+
+G5_NATIVE_TAG_VALUE DesiredRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE SimAnim=(W=0.0,X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE UserData=()
+
+G5_NATIVE_TAG_VALUE RenderPass=RP_Auto
+
+G5_NATIVE_TAG_VALUE LastHitBox=HITBOX_Default
+
+G5_NATIVE_TAG_VALUE Physics=PHYS_None
+
+G5_NATIVE_TAG_VALUE Role=ROLE_Authority
+
+G5_NATIVE_TAG_VALUE RemoteRole=ROLE_SimulatedProxy
+
+G5_NATIVE_TAG_VALUE StandingCount=0
+
+G5_NATIVE_TAG_VALUE MiscNumber=0
+
+G5_NATIVE_TAG_VALUE LatentByte=0
+
+G5_NATIVE_TAG_VALUE DrawType=DT_Sprite
+
+G5_NATIVE_TAG_VALUE Style=STY_Normal
+
+G5_NATIVE_TAG_VALUE AmbientGlow=0
+
+G5_NATIVE_TAG_VALUE Fatness=128
+
+G5_NATIVE_TAG_VALUE SoundRadius=9
+
+G5_NATIVE_TAG_VALUE SoundVolume=240
+
+G5_NATIVE_TAG_VALUE SoundPitch=64
+
+G5_NATIVE_TAG_VALUE LightType=LT_None
+
+G5_NATIVE_TAG_VALUE LightEffect=LE_None
+
+G5_NATIVE_TAG_VALUE LightBrightness=0
+
+G5_NATIVE_TAG_VALUE LightHue=0
+
+G5_NATIVE_TAG_VALUE LightSaturation=0
+
+G5_NATIVE_TAG_VALUE LightRadius=0
+
+G5_NATIVE_TAG_VALUE LightPeriod=0
+
+G5_NATIVE_TAG_VALUE LightPhase=0
+
+G5_NATIVE_TAG_VALUE LightCone=0
+
+G5_NATIVE_TAG_VALUE VolumeBrightness=0
+
+G5_NATIVE_TAG_VALUE VolumeRadius=0
+
+G5_NATIVE_TAG_VALUE VolumeFog=0
+
+G5_NATIVE_TAG_VALUE DodgeDir=DODGE_None
+
+G5_NATIVE_TAG_VALUE bStatic=False
+
+G5_NATIVE_TAG_VALUE bHidden=False
+
+G5_NATIVE_TAG_VALUE bNoDelete=False
+
+G5_NATIVE_TAG_VALUE bAnimFinished=False
+
+G5_NATIVE_TAG_VALUE bAnimLoop=False
+
+G5_NATIVE_TAG_VALUE bAnimNotify=False
+
+G5_NATIVE_TAG_VALUE bAnimByOwner=False
+
+G5_NATIVE_TAG_VALUE bDeleteMe=False
+
+G5_NATIVE_TAG_VALUE bDynamicLight=False
+
+G5_NATIVE_TAG_VALUE bTimerLoop=False
+
+G5_NATIVE_TAG_VALUE bNetNotify=True
+
+G5_NATIVE_TAG_VALUE bHandleOwnCorona=False
+
+G5_NATIVE_TAG_VALUE bRenderMultiEnviroMaps=False
+
+G5_NATIVE_TAG_VALUE bWorldGeometry=False
+
+G5_NATIVE_TAG_VALUE bUseMeshCollision=False
+
+G5_NATIVE_TAG_VALUE bEditorSelectRender=False
+
+G5_NATIVE_TAG_VALUE bNoDynamicShadowCast=True
+
+G5_NATIVE_TAG_VALUE bProjectorDecal=False
+
+G5_NATIVE_TAG_VALUE bUseLitSprite=False
+
+G5_NATIVE_TAG_VALUE bTickRealTime=False
+
+G5_NATIVE_TAG_VALUE bHiddenEd=False
+
+G5_NATIVE_TAG_VALUE bDirectional=True
+
+G5_NATIVE_TAG_VALUE bSelected=False
+
+G5_NATIVE_TAG_VALUE bMemorized=False
+
+G5_NATIVE_TAG_VALUE bHighlighted=False
+
+G5_NATIVE_TAG_VALUE bEdLocked=False
+
+G5_NATIVE_TAG_VALUE bEdShouldSnap=False
+
+G5_NATIVE_TAG_VALUE bDifficulty0=True
+
+G5_NATIVE_TAG_VALUE bDifficulty1=True
+
+G5_NATIVE_TAG_VALUE bDifficulty2=True
+
+G5_NATIVE_TAG_VALUE bDifficulty3=True
+
+G5_NATIVE_TAG_VALUE bSinglePlayer=True
+
+G5_NATIVE_TAG_VALUE bNet=True
+
+G5_NATIVE_TAG_VALUE bNetSpecial=True
+
+G5_NATIVE_TAG_VALUE bCanTeleport=True
+
+G5_NATIVE_TAG_VALUE bIsSecretGoal=False
+
+G5_NATIVE_TAG_VALUE bIsKillGoal=True
+
+G5_NATIVE_TAG_VALUE bIsItemGoal=False
+
+G5_NATIVE_TAG_VALUE bCollideWhenPlacing=False
+
+G5_NATIVE_TAG_VALUE bTravel=True
+
+G5_NATIVE_TAG_VALUE bMovable=True
+
+G5_NATIVE_TAG_VALUE bHighDetail=False
+
+G5_NATIVE_TAG_VALUE bStasis=False
+
+G5_NATIVE_TAG_VALUE bForceStasis=False
+
+G5_NATIVE_TAG_VALUE bIsPawn=True
+
+G5_NATIVE_TAG_VALUE bIsPlayerPawn=True
+
+G5_NATIVE_TAG_VALUE bIsProjectile=False
+
+G5_NATIVE_TAG_VALUE bIsStaticMesh=False
+
+G5_NATIVE_TAG_VALUE bNetTemporary=False
+
+G5_NATIVE_TAG_VALUE bNetOptional=False
+
+G5_NATIVE_TAG_VALUE bReplicateInstigator=False
+
+G5_NATIVE_TAG_VALUE bTrailerSameRotation=False
+
+G5_NATIVE_TAG_VALUE bUnlit=False
+
+G5_NATIVE_TAG_VALUE bNoSmooth=False
+
+G5_NATIVE_TAG_VALUE bParticles=False
+
+G5_NATIVE_TAG_VALUE bRandomFrame=False
+
+G5_NATIVE_TAG_VALUE bMeshEnviroMap=False
+
+G5_NATIVE_TAG_VALUE bFilterByVolume=False
+
+G5_NATIVE_TAG_VALUE bMeshCurvy=False
+
+G5_NATIVE_TAG_VALUE bShadowCast=False
+
+G5_NATIVE_TAG_VALUE bCustomDrawActor=False
+
+G5_NATIVE_TAG_VALUE bOnlyRenderCurrentZone=False
+
+G5_NATIVE_TAG_VALUE bOwnerNoSee=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerSee=False
+
+G5_NATIVE_TAG_VALUE bIsMover=False
+
+G5_NATIVE_TAG_VALUE bAlwaysRelevant=False
+
+G5_NATIVE_TAG_VALUE bAlwaysTick=False
+
+G5_NATIVE_TAG_VALUE bHurtEntry=False
+
+G5_NATIVE_TAG_VALUE bGameRelevant=False
+
+G5_NATIVE_TAG_VALUE bCarriedItem=False
+
+G5_NATIVE_TAG_VALUE bForcePhysicsUpdate=False
+
+G5_NATIVE_TAG_VALUE bSkipActorReplication=False
+
+G5_NATIVE_TAG_VALUE bRepAnimations=True
+
+G5_NATIVE_TAG_VALUE bRepAmbientSound=True
+
+G5_NATIVE_TAG_VALUE bSimulatedPawnRep=False
+
+G5_NATIVE_TAG_VALUE bRepMesh=True
+
+G5_NATIVE_TAG_VALUE bNetInitialRotation=False
+
+G5_NATIVE_TAG_VALUE bNetInitialVelocity=False
+
+G5_NATIVE_TAG_VALUE bNetInitExactLocation=False
+
+G5_NATIVE_TAG_VALUE bOptionalNetOwner=False
+
+G5_NATIVE_TAG_VALUE bCollideActors=True
+
+G5_NATIVE_TAG_VALUE bCollideWorld=True
+
+G5_NATIVE_TAG_VALUE bBlockActors=True
+
+G5_NATIVE_TAG_VALUE bBlockPlayers=True
+
+G5_NATIVE_TAG_VALUE bProjTarget=True
+
+G5_NATIVE_TAG_VALUE bPathCollision=False
+
+G5_NATIVE_TAG_VALUE bBlockZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockNonZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockAISight=False
+
+G5_NATIVE_TAG_VALUE bBlockTextureTrace=False
+
+G5_NATIVE_TAG_VALUE bBlockRigidBodyPhys=False
+
+G5_NATIVE_TAG_VALUE bSpecialLit=False
+
+G5_NATIVE_TAG_VALUE bActorShadows=False
+
+G5_NATIVE_TAG_VALUE bCorona=False
+
+G5_NATIVE_TAG_VALUE bFOVFadingCorona=False
+
+G5_NATIVE_TAG_VALUE bForcedCorona=False
+
+G5_NATIVE_TAG_VALUE bCoronaByLight=False
+
+G5_NATIVE_TAG_VALUE bLensFlare=False
+
+G5_NATIVE_TAG_VALUE bDarkLight=False
+
+G5_NATIVE_TAG_VALUE bZoneNormalLight=True
+
+G5_NATIVE_TAG_VALUE bNetInitial=False
+
+G5_NATIVE_TAG_VALUE bNetOwner=False
+
+G5_NATIVE_TAG_VALUE bNetRelevant=False
+
+G5_NATIVE_TAG_VALUE bNetSee=False
+
+G5_NATIVE_TAG_VALUE bNetHear=False
+
+G5_NATIVE_TAG_VALUE bNetFeel=False
+
+G5_NATIVE_TAG_VALUE bSimulatedPawn=False
+
+G5_NATIVE_TAG_VALUE bDemoRecording=False
+
+G5_NATIVE_TAG_VALUE bClientDemoNetFunc=False
+
+G5_NATIVE_TAG_VALUE bBounce=False
+
+G5_NATIVE_TAG_VALUE bFixedRotationDir=False
+
+G5_NATIVE_TAG_VALUE bRotateToDesired=True
+
+G5_NATIVE_TAG_VALUE bInterpolating=False
+
+G5_NATIVE_TAG_VALUE bJustTeleported=True
+
+G5_NATIVE_TAG_VALUE bCrossLevelNetwork=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerRelevant=False
+
+G5_NATIVE_TAG_VALUE bOnlyDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bForceDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bAlwaysNetDirty=True
+
+G5_NATIVE_TAG_VALUE bTraceHitBoxes=False
+
+G5_NATIVE_TAG_VALUE bTextureAnimOnce=False
+
+G5_NATIVE_TAG_VALUE bOnlyDrawWithBase=False
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionXY=True
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionZ=True
+
+G5_NATIVE_TAG_VALUE bDirtyDynBsp=False
+
+G5_NATIVE_TAG_VALUE bSerializeMeshInst=False
+
+G5_NATIVE_TAG_VALUE bSpecialBrushActor=False
+
+G5_NATIVE_TAG_VALUE bNetInterpolatePos=False
+
+G5_NATIVE_TAG_VALUE bHardAttach=False
+
+G5_NATIVE_TAG_VALUE bIsFrobable=False
+
+G3_T060_ORIGINAL_227K_CDO_END Class Engine.PlayerPawn
+G3_T060_ORIGINAL_227K_CDO_BEGIN Class Engine.Pawn|defaultPtr=0097FC3C
+G5_NATIVE_TAG_VALUE DieCount=0
+
+G5_NATIVE_TAG_VALUE ItemCount=0
+
+G5_NATIVE_TAG_VALUE KillCount=0
+
+G5_NATIVE_TAG_VALUE SecretCount=0
+
+G5_NATIVE_TAG_VALUE Spree=0
+
+G5_NATIVE_TAG_VALUE Health=100
+
+G5_NATIVE_TAG_VALUE SightCounter=0.0
+
+G5_NATIVE_TAG_VALUE PainTime=0.0
+
+G5_NATIVE_TAG_VALUE SpeechTime=0.0
+
+G5_NATIVE_TAG_VALUE AvgPhysicsTime=0.1
+
+G5_NATIVE_TAG_VALUE MoveTimer=0.0
+
+G5_NATIVE_TAG_VALUE DesiredSpeed=0.0
+
+G5_NATIVE_TAG_VALUE MaxDesiredSpeed=1.0
+
+G5_NATIVE_TAG_VALUE MeleeRange=0.0
+
+G5_NATIVE_TAG_VALUE SerpentineDist=0.0
+
+G5_NATIVE_TAG_VALUE SerpentineTime=0.0
+
+G5_NATIVE_TAG_VALUE GroundSpeed=320.0
+
+G5_NATIVE_TAG_VALUE WaterSpeed=200.0
+
+G5_NATIVE_TAG_VALUE AirSpeed=0.0
+
+G5_NATIVE_TAG_VALUE AccelRate=500.0
+
+G5_NATIVE_TAG_VALUE JumpZ=325.0
+
+G5_NATIVE_TAG_VALUE MaxStepHeight=25.0
+
+G5_NATIVE_TAG_VALUE AirControl=0.05
+
+G5_NATIVE_TAG_VALUE WalkingPct=0.3
+
+G5_NATIVE_TAG_VALUE ShoveCollisionRadius=0.6
+
+G5_NATIVE_TAG_VALUE MinHitWall=0.0
+
+G5_NATIVE_TAG_VALUE Alertness=0.0
+
+G5_NATIVE_TAG_VALUE Stimulus=0.0
+
+G5_NATIVE_TAG_VALUE SightRadius=2500.0
+
+G5_NATIVE_TAG_VALUE PeripheralVision=0.0
+
+G5_NATIVE_TAG_VALUE HearingThreshold=1.0
+
+G5_NATIVE_TAG_VALUE HuntOffDistance=0.0
+
+G5_NATIVE_TAG_VALUE LastSeenTime=0.0
+
+G5_NATIVE_TAG_VALUE BaseEyeHeight=0.0
+
+G5_NATIVE_TAG_VALUE EyeHeight=0.0
+
+G5_NATIVE_TAG_VALUE SplashTime=0.0
+
+G5_NATIVE_TAG_VALUE OrthoZoom=40000.0
+
+G5_NATIVE_TAG_VALUE FovAngle=90.0
+
+G5_NATIVE_TAG_VALUE ReducedDamagePct=0.0
+
+G5_NATIVE_TAG_VALUE UnderWaterTime=0.0
+
+G5_NATIVE_TAG_VALUE Skill=0.0
+
+G5_NATIVE_TAG_VALUE SpecialPause=0.0
+
+G5_NATIVE_TAG_VALUE noise1time=-10.0
+
+G5_NATIVE_TAG_VALUE noise1loudness=0.0
+
+G5_NATIVE_TAG_VALUE noise2time=-10.0
+
+G5_NATIVE_TAG_VALUE noise2loudness=0.0
+
+G5_NATIVE_TAG_VALUE LastPainSound=0.0
+
+G5_NATIVE_TAG_VALUE CombatStyle=0.0
+
+G5_NATIVE_TAG_VALUE SoundDampening=1.0
+
+G5_NATIVE_TAG_VALUE DamageScaling=1.0
+
+G5_NATIVE_TAG_VALUE OldMessageTime=0.0
+
+G5_NATIVE_TAG_VALUE SightDistanceMulti=1.0
+
+G5_NATIVE_TAG_VALUE BeaconOffset=1.05
+
+G5_NATIVE_TAG_VALUE MaxFrobDistance=112.0
+
+G5_NATIVE_TAG_VALUE MoveTarget=None
+
+G5_NATIVE_TAG_VALUE FaceTarget=None
+
+G5_NATIVE_TAG_VALUE PhysicsAnim=None
+
+G5_NATIVE_TAG_VALUE Enemy=None
+
+G5_NATIVE_TAG_VALUE GroundTexture=None
+
+G5_NATIVE_TAG_VALUE Weapon=None
+
+G5_NATIVE_TAG_VALUE PendingWeapon=None
+
+G5_NATIVE_TAG_VALUE SelectedItem=None
+
+G5_NATIVE_TAG_VALUE SpecialGoal=None
+
+G5_NATIVE_TAG_VALUE noise1other=None
+
+G5_NATIVE_TAG_VALUE noise2other=None
+
+G5_NATIVE_TAG_VALUE nextPawn=None
+
+G5_NATIVE_TAG_VALUE HitSound1=None
+
+G5_NATIVE_TAG_VALUE HitSound2=None
+
+G5_NATIVE_TAG_VALUE Land=None
+
+G5_NATIVE_TAG_VALUE Die=None
+
+G5_NATIVE_TAG_VALUE WaterStep=None
+
+G5_NATIVE_TAG_VALUE home=None
+
+G5_NATIVE_TAG_VALUE carriedDecoration=None
+
+G5_NATIVE_TAG_VALUE RouteCache(0)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(1)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(2)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(3)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(4)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(5)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(6)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(7)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(8)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(9)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(10)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(11)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(12)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(13)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(14)=None
+
+G5_NATIVE_TAG_VALUE RouteCache(15)=None
+
+G5_NATIVE_TAG_VALUE PlayerReplicationInfo=None
+
+G5_NATIVE_TAG_VALUE BleedingActor=None
+
+G5_NATIVE_TAG_VALUE ReducedDamageType="None"
+
+G5_NATIVE_TAG_VALUE NextState="None"
+
+G5_NATIVE_TAG_VALUE NextLabel="None"
+
+G5_NATIVE_TAG_VALUE AlarmTag="None"
+
+G5_NATIVE_TAG_VALUE SharedAlarmTag="None"
+
+G5_NATIVE_TAG_VALUE PlayerReStartState="PlayerWalking"
+
+G5_NATIVE_TAG_VALUE DropWhenKilled=None
+
+G5_NATIVE_TAG_VALUE VoiceType=None
+
+G5_NATIVE_TAG_VALUE PlayerReplicationInfoClass=Class'Engine.PlayerReplicationInfo'
+
+G5_NATIVE_TAG_VALUE Pawn_BloodsprayClass=None
+
+G5_NATIVE_TAG_VALUE Pawn_BleedingClass=None
+
+G5_NATIVE_TAG_VALUE FootRegion=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE HeadRegion=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Destination=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Focus=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE MovementStart=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE LastSeenPos=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE LastSeeingPos=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ViewRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE WalkBob=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Floor=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE noise1spot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE noise2spot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE MenuName=""
+
+G5_NATIVE_TAG_VALUE MenuNameDative=""
+
+G5_NATIVE_TAG_VALUE NameArticle=" a "
+
+G5_NATIVE_TAG_VALUE lastPhoneme=""
+
+G5_NATIVE_TAG_VALUE nextPhoneme=""
+
+G5_NATIVE_TAG_VALUE Visibility=128
+
+G5_NATIVE_TAG_VALUE AttitudeToPlayer=ATTITUDE_Hate
+
+G5_NATIVE_TAG_VALUE Intelligence=BRAINS_MAMMAL
+
+G5_NATIVE_TAG_VALUE bZoom=0
+
+G5_NATIVE_TAG_VALUE bRun=0
+
+G5_NATIVE_TAG_VALUE bLook=0
+
+G5_NATIVE_TAG_VALUE bDuck=0
+
+G5_NATIVE_TAG_VALUE bSnapLevel=0
+
+G5_NATIVE_TAG_VALUE bStrafe=0
+
+G5_NATIVE_TAG_VALUE bFire=0
+
+G5_NATIVE_TAG_VALUE bAltFire=0
+
+G5_NATIVE_TAG_VALUE bFreeLook=0
+
+G5_NATIVE_TAG_VALUE bExtra0=0
+
+G5_NATIVE_TAG_VALUE bExtra1=0
+
+G5_NATIVE_TAG_VALUE bExtra2=0
+
+G5_NATIVE_TAG_VALUE bExtra3=0
+
+G5_NATIVE_TAG_VALUE VoicePitch=0
+
+G5_NATIVE_TAG_VALUE SightCheckType=SEE_PlayersOnly
+
+G5_NATIVE_TAG_VALUE bBehindView=False
+
+G5_NATIVE_TAG_VALUE bIsPlayer=False
+
+G5_NATIVE_TAG_VALUE bJustLanded=False
+
+G5_NATIVE_TAG_VALUE bUpAndOut=False
+
+G5_NATIVE_TAG_VALUE bIsWalking=False
+
+G5_NATIVE_TAG_VALUE bHitSlopedWall=False
+
+G5_NATIVE_TAG_VALUE bNeverSwitchOnPickup=False
+
+G5_NATIVE_TAG_VALUE bWarping=False
+
+G5_NATIVE_TAG_VALUE bUpdatingDisplay=False
+
+G5_NATIVE_TAG_VALUE bClientSimFall=False
+
+G5_NATIVE_TAG_VALUE bClientTick=False
+
+G5_NATIVE_TAG_VALUE bUseNoWalkInAir=True
+
+G5_NATIVE_TAG_VALUE bNoStopAtLedge=False
+
+G5_NATIVE_TAG_VALUE bPostRender2D=False
+
+G5_NATIVE_TAG_VALUE bShovePawns=False
+
+G5_NATIVE_TAG_VALUE bCanStrafe=False
+
+G5_NATIVE_TAG_VALUE bFixedStart=False
+
+G5_NATIVE_TAG_VALUE bReducedSpeed=False
+
+G5_NATIVE_TAG_VALUE bCanJump=False
+
+G5_NATIVE_TAG_VALUE bCanWalk=False
+
+G5_NATIVE_TAG_VALUE bCanSwim=False
+
+G5_NATIVE_TAG_VALUE bCanFly=False
+
+G5_NATIVE_TAG_VALUE bCanOpenDoors=False
+
+G5_NATIVE_TAG_VALUE bCanDoSpecial=False
+
+G5_NATIVE_TAG_VALUE bDrowning=False
+
+G5_NATIVE_TAG_VALUE bLOSflag=False
+
+G5_NATIVE_TAG_VALUE bFromWall=False
+
+G5_NATIVE_TAG_VALUE bHunting=False
+
+G5_NATIVE_TAG_VALUE bAvoidLedges=False
+
+G5_NATIVE_TAG_VALUE bStopAtLedges=False
+
+G5_NATIVE_TAG_VALUE bJumpOffPawn=False
+
+G5_NATIVE_TAG_VALUE bShootSpecial=False
+
+G5_NATIVE_TAG_VALUE bAutoActivate=False
+
+G5_NATIVE_TAG_VALUE bIsHuman=False
+
+G5_NATIVE_TAG_VALUE bIsFemale=False
+
+G5_NATIVE_TAG_VALUE bIsMultiSkinned=False
+
+G5_NATIVE_TAG_VALUE bCountJumps=False
+
+G5_NATIVE_TAG_VALUE bEnhancedSightCheck=False
+
+G5_NATIVE_TAG_VALUE bRepHealth=True
+
+G5_NATIVE_TAG_VALUE bDoAutoSerpentine=False
+
+G5_NATIVE_TAG_VALUE bIsCrawler=False
+
+G5_NATIVE_TAG_VALUE bIsBleeding=False
+
+G5_NATIVE_TAG_VALUE bIsAmbientCreature=False
+
+G5_NATIVE_TAG_VALUE bIsSpeaking=False
+
+G5_NATIVE_TAG_VALUE bWasSpeaking=False
+
+G5_NATIVE_TAG_VALUE bNoPhysicsRotation=False
+
+G5_NATIVE_TAG_VALUE CollisionGroups=2147483647
+
+G5_NATIVE_TAG_VALUE CollisionFlag=4
+
+G5_NATIVE_TAG_VALUE LatentInt=0
+
+G5_NATIVE_TAG_VALUE RandomDelayTime=0.5
+
+G5_NATIVE_TAG_VALUE TimerRate=0.0
+
+G5_NATIVE_TAG_VALUE TimerCounter=0.0
+
+G5_NATIVE_TAG_VALUE LifeSpan=0.0
+
+G5_NATIVE_TAG_VALUE AnimFrame=0.0
+
+G5_NATIVE_TAG_VALUE AnimRate=0.0
+
+G5_NATIVE_TAG_VALUE TweenRate=0.0
+
+G5_NATIVE_TAG_VALUE LODBias=1.0
+
+G5_NATIVE_TAG_VALUE LatentFloat=0.0
+
+G5_NATIVE_TAG_VALUE OddsOfAppearing=1.0
+
+G5_NATIVE_TAG_VALUE DrawScale=1.0
+
+G5_NATIVE_TAG_VALUE ScaleGlow=1.0
+
+G5_NATIVE_TAG_VALUE VisibilityRadius=0.0
+
+G5_NATIVE_TAG_VALUE VisibilityHeight=0.0
+
+G5_NATIVE_TAG_VALUE SpriteProjForward=32.0
+
+G5_NATIVE_TAG_VALUE AmbientGlowPulseSpeed=0.0
+
+G5_NATIVE_TAG_VALUE TransientSoundVolume=2.0
+
+G5_NATIVE_TAG_VALUE TransientSoundRadius=0.0
+
+G5_NATIVE_TAG_VALUE CollisionRadius=22.0
+
+G5_NATIVE_TAG_VALUE CollisionHeight=22.0
+
+G5_NATIVE_TAG_VALUE NormalLightRadius=0.0
+
+G5_NATIVE_TAG_VALUE Mass=100.0
+
+G5_NATIVE_TAG_VALUE Buoyancy=0.0
+
+G5_NATIVE_TAG_VALUE PhysAlpha=0.0
+
+G5_NATIVE_TAG_VALUE PhysRate=0.0
+
+G5_NATIVE_TAG_VALUE AnimLast=0.0
+
+G5_NATIVE_TAG_VALUE AnimMinRate=0.0
+
+G5_NATIVE_TAG_VALUE OldAnimRate=0.0
+
+G5_NATIVE_TAG_VALUE NetPriority=4.0
+
+G5_NATIVE_TAG_VALUE NetUpdateFrequency=100.0
+
+G5_NATIVE_TAG_VALUE CollisionOverride=None
+
+G5_NATIVE_TAG_VALUE PhysicsData=None
+
+G5_NATIVE_TAG_VALUE Owner=None
+
+G5_NATIVE_TAG_VALUE SkelAnim=None
+
+G5_NATIVE_TAG_VALUE AnimationNotify=None
+
+G5_NATIVE_TAG_VALUE Level=None
+
+G5_NATIVE_TAG_VALUE XLevel=None
+
+G5_NATIVE_TAG_VALUE Target=None
+
+G5_NATIVE_TAG_VALUE Instigator=None
+
+G5_NATIVE_TAG_VALUE Inventory=None
+
+G5_NATIVE_TAG_VALUE Base=None
+
+G5_NATIVE_TAG_VALUE LatentActor=None
+
+G5_NATIVE_TAG_VALUE Touching(0)=None
+
+G5_NATIVE_TAG_VALUE Touching(1)=None
+
+G5_NATIVE_TAG_VALUE Touching(2)=None
+
+G5_NATIVE_TAG_VALUE Touching(3)=None
+
+G5_NATIVE_TAG_VALUE Deleted=None
+
+G5_NATIVE_TAG_VALUE HitActor=None
+
+G5_NATIVE_TAG_VALUE Sprite=None
+
+G5_NATIVE_TAG_VALUE Texture=Texture'Engine.S_Pawn'
+
+G5_NATIVE_TAG_VALUE Skin=None
+
+G5_NATIVE_TAG_VALUE Mesh=None
+
+G5_NATIVE_TAG_VALUE ShadowMesh=None
+
+G5_NATIVE_TAG_VALUE Brush=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(0)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(1)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(2)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(3)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(4)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(5)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(6)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(7)=None
+
+G5_NATIVE_TAG_VALUE AmbientSound=None
+
+G5_NATIVE_TAG_VALUE InitialState="None"
+
+G5_NATIVE_TAG_VALUE Group="None"
+
+G5_NATIVE_TAG_VALUE AnimSequence="Fighter"
+
+G5_NATIVE_TAG_VALUE Tag="None"
+
+G5_NATIVE_TAG_VALUE Event="None"
+
+G5_NATIVE_TAG_VALUE AttachedBone="None"
+
+G5_NATIVE_TAG_VALUE AttachTag="None"
+
+G5_NATIVE_TAG_VALUE RenderIteratorClass=None
+
+G5_NATIVE_TAG_VALUE ActorRenderColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ActorGUnlitColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE AmbientGlowColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE RelativeLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RelativeRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DrawScale3D=(X=1.0,Y=1.0,Z=1.0)
+
+G5_NATIVE_TAG_VALUE Region=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Location=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Rotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE OldLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ColLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Velocity=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Acceleration=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE PrePivot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RotationRate=(Pitch=4096,Yaw=50000,Roll=3072)
+
+G5_NATIVE_TAG_VALUE DesiredRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE SimAnim=(W=0.0,X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE UserData=()
+
+G5_NATIVE_TAG_VALUE RenderPass=RP_Auto
+
+G5_NATIVE_TAG_VALUE LastHitBox=HITBOX_Default
+
+G5_NATIVE_TAG_VALUE Physics=PHYS_None
+
+G5_NATIVE_TAG_VALUE Role=ROLE_Authority
+
+G5_NATIVE_TAG_VALUE RemoteRole=ROLE_SimulatedProxy
+
+G5_NATIVE_TAG_VALUE StandingCount=0
+
+G5_NATIVE_TAG_VALUE MiscNumber=0
+
+G5_NATIVE_TAG_VALUE LatentByte=0
+
+G5_NATIVE_TAG_VALUE DrawType=DT_Sprite
+
+G5_NATIVE_TAG_VALUE Style=STY_Normal
+
+G5_NATIVE_TAG_VALUE AmbientGlow=0
+
+G5_NATIVE_TAG_VALUE Fatness=128
+
+G5_NATIVE_TAG_VALUE SoundRadius=9
+
+G5_NATIVE_TAG_VALUE SoundVolume=240
+
+G5_NATIVE_TAG_VALUE SoundPitch=64
+
+G5_NATIVE_TAG_VALUE LightType=LT_None
+
+G5_NATIVE_TAG_VALUE LightEffect=LE_None
+
+G5_NATIVE_TAG_VALUE LightBrightness=0
+
+G5_NATIVE_TAG_VALUE LightHue=0
+
+G5_NATIVE_TAG_VALUE LightSaturation=0
+
+G5_NATIVE_TAG_VALUE LightRadius=0
+
+G5_NATIVE_TAG_VALUE LightPeriod=0
+
+G5_NATIVE_TAG_VALUE LightPhase=0
+
+G5_NATIVE_TAG_VALUE LightCone=0
+
+G5_NATIVE_TAG_VALUE VolumeBrightness=0
+
+G5_NATIVE_TAG_VALUE VolumeRadius=0
+
+G5_NATIVE_TAG_VALUE VolumeFog=0
+
+G5_NATIVE_TAG_VALUE DodgeDir=DODGE_None
+
+G5_NATIVE_TAG_VALUE bStatic=False
+
+G5_NATIVE_TAG_VALUE bHidden=False
+
+G5_NATIVE_TAG_VALUE bNoDelete=False
+
+G5_NATIVE_TAG_VALUE bAnimFinished=False
+
+G5_NATIVE_TAG_VALUE bAnimLoop=False
+
+G5_NATIVE_TAG_VALUE bAnimNotify=False
+
+G5_NATIVE_TAG_VALUE bAnimByOwner=False
+
+G5_NATIVE_TAG_VALUE bDeleteMe=False
+
+G5_NATIVE_TAG_VALUE bDynamicLight=False
+
+G5_NATIVE_TAG_VALUE bTimerLoop=False
+
+G5_NATIVE_TAG_VALUE bNetNotify=False
+
+G5_NATIVE_TAG_VALUE bHandleOwnCorona=False
+
+G5_NATIVE_TAG_VALUE bRenderMultiEnviroMaps=False
+
+G5_NATIVE_TAG_VALUE bWorldGeometry=False
+
+G5_NATIVE_TAG_VALUE bUseMeshCollision=False
+
+G5_NATIVE_TAG_VALUE bEditorSelectRender=False
+
+G5_NATIVE_TAG_VALUE bNoDynamicShadowCast=True
+
+G5_NATIVE_TAG_VALUE bProjectorDecal=False
+
+G5_NATIVE_TAG_VALUE bUseLitSprite=False
+
+G5_NATIVE_TAG_VALUE bTickRealTime=False
+
+G5_NATIVE_TAG_VALUE bHiddenEd=False
+
+G5_NATIVE_TAG_VALUE bDirectional=True
+
+G5_NATIVE_TAG_VALUE bSelected=False
+
+G5_NATIVE_TAG_VALUE bMemorized=False
+
+G5_NATIVE_TAG_VALUE bHighlighted=False
+
+G5_NATIVE_TAG_VALUE bEdLocked=False
+
+G5_NATIVE_TAG_VALUE bEdShouldSnap=False
+
+G5_NATIVE_TAG_VALUE bDifficulty0=True
+
+G5_NATIVE_TAG_VALUE bDifficulty1=True
+
+G5_NATIVE_TAG_VALUE bDifficulty2=True
+
+G5_NATIVE_TAG_VALUE bDifficulty3=True
+
+G5_NATIVE_TAG_VALUE bSinglePlayer=True
+
+G5_NATIVE_TAG_VALUE bNet=True
+
+G5_NATIVE_TAG_VALUE bNetSpecial=True
+
+G5_NATIVE_TAG_VALUE bCanTeleport=True
+
+G5_NATIVE_TAG_VALUE bIsSecretGoal=False
+
+G5_NATIVE_TAG_VALUE bIsKillGoal=True
+
+G5_NATIVE_TAG_VALUE bIsItemGoal=False
+
+G5_NATIVE_TAG_VALUE bCollideWhenPlacing=False
+
+G5_NATIVE_TAG_VALUE bTravel=False
+
+G5_NATIVE_TAG_VALUE bMovable=True
+
+G5_NATIVE_TAG_VALUE bHighDetail=False
+
+G5_NATIVE_TAG_VALUE bStasis=True
+
+G5_NATIVE_TAG_VALUE bForceStasis=False
+
+G5_NATIVE_TAG_VALUE bIsPawn=True
+
+G5_NATIVE_TAG_VALUE bIsPlayerPawn=False
+
+G5_NATIVE_TAG_VALUE bIsProjectile=False
+
+G5_NATIVE_TAG_VALUE bIsStaticMesh=False
+
+G5_NATIVE_TAG_VALUE bNetTemporary=False
+
+G5_NATIVE_TAG_VALUE bNetOptional=False
+
+G5_NATIVE_TAG_VALUE bReplicateInstigator=False
+
+G5_NATIVE_TAG_VALUE bTrailerSameRotation=False
+
+G5_NATIVE_TAG_VALUE bUnlit=False
+
+G5_NATIVE_TAG_VALUE bNoSmooth=False
+
+G5_NATIVE_TAG_VALUE bParticles=False
+
+G5_NATIVE_TAG_VALUE bRandomFrame=False
+
+G5_NATIVE_TAG_VALUE bMeshEnviroMap=False
+
+G5_NATIVE_TAG_VALUE bFilterByVolume=False
+
+G5_NATIVE_TAG_VALUE bMeshCurvy=False
+
+G5_NATIVE_TAG_VALUE bShadowCast=False
+
+G5_NATIVE_TAG_VALUE bCustomDrawActor=False
+
+G5_NATIVE_TAG_VALUE bOnlyRenderCurrentZone=False
+
+G5_NATIVE_TAG_VALUE bOwnerNoSee=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerSee=False
+
+G5_NATIVE_TAG_VALUE bIsMover=False
+
+G5_NATIVE_TAG_VALUE bAlwaysRelevant=False
+
+G5_NATIVE_TAG_VALUE bAlwaysTick=False
+
+G5_NATIVE_TAG_VALUE bHurtEntry=False
+
+G5_NATIVE_TAG_VALUE bGameRelevant=False
+
+G5_NATIVE_TAG_VALUE bCarriedItem=False
+
+G5_NATIVE_TAG_VALUE bForcePhysicsUpdate=False
+
+G5_NATIVE_TAG_VALUE bSkipActorReplication=False
+
+G5_NATIVE_TAG_VALUE bRepAnimations=True
+
+G5_NATIVE_TAG_VALUE bRepAmbientSound=True
+
+G5_NATIVE_TAG_VALUE bSimulatedPawnRep=False
+
+G5_NATIVE_TAG_VALUE bRepMesh=True
+
+G5_NATIVE_TAG_VALUE bNetInitialRotation=False
+
+G5_NATIVE_TAG_VALUE bNetInitialVelocity=False
+
+G5_NATIVE_TAG_VALUE bNetInitExactLocation=False
+
+G5_NATIVE_TAG_VALUE bOptionalNetOwner=False
+
+G5_NATIVE_TAG_VALUE bCollideActors=True
+
+G5_NATIVE_TAG_VALUE bCollideWorld=True
+
+G5_NATIVE_TAG_VALUE bBlockActors=True
+
+G5_NATIVE_TAG_VALUE bBlockPlayers=True
+
+G5_NATIVE_TAG_VALUE bProjTarget=True
+
+G5_NATIVE_TAG_VALUE bPathCollision=False
+
+G5_NATIVE_TAG_VALUE bBlockZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockNonZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockAISight=False
+
+G5_NATIVE_TAG_VALUE bBlockTextureTrace=False
+
+G5_NATIVE_TAG_VALUE bBlockRigidBodyPhys=False
+
+G5_NATIVE_TAG_VALUE bSpecialLit=False
+
+G5_NATIVE_TAG_VALUE bActorShadows=False
+
+G5_NATIVE_TAG_VALUE bCorona=False
+
+G5_NATIVE_TAG_VALUE bFOVFadingCorona=False
+
+G5_NATIVE_TAG_VALUE bForcedCorona=False
+
+G5_NATIVE_TAG_VALUE bCoronaByLight=False
+
+G5_NATIVE_TAG_VALUE bLensFlare=False
+
+G5_NATIVE_TAG_VALUE bDarkLight=False
+
+G5_NATIVE_TAG_VALUE bZoneNormalLight=True
+
+G5_NATIVE_TAG_VALUE bNetInitial=False
+
+G5_NATIVE_TAG_VALUE bNetOwner=False
+
+G5_NATIVE_TAG_VALUE bNetRelevant=False
+
+G5_NATIVE_TAG_VALUE bNetSee=False
+
+G5_NATIVE_TAG_VALUE bNetHear=False
+
+G5_NATIVE_TAG_VALUE bNetFeel=False
+
+G5_NATIVE_TAG_VALUE bSimulatedPawn=False
+
+G5_NATIVE_TAG_VALUE bDemoRecording=False
+
+G5_NATIVE_TAG_VALUE bClientDemoNetFunc=False
+
+G5_NATIVE_TAG_VALUE bBounce=False
+
+G5_NATIVE_TAG_VALUE bFixedRotationDir=False
+
+G5_NATIVE_TAG_VALUE bRotateToDesired=True
+
+G5_NATIVE_TAG_VALUE bInterpolating=False
+
+G5_NATIVE_TAG_VALUE bJustTeleported=True
+
+G5_NATIVE_TAG_VALUE bCrossLevelNetwork=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerRelevant=False
+
+G5_NATIVE_TAG_VALUE bOnlyDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bForceDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bAlwaysNetDirty=False
+
+G5_NATIVE_TAG_VALUE bTraceHitBoxes=False
+
+G5_NATIVE_TAG_VALUE bTextureAnimOnce=False
+
+G5_NATIVE_TAG_VALUE bOnlyDrawWithBase=False
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionXY=True
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionZ=True
+
+G5_NATIVE_TAG_VALUE bDirtyDynBsp=False
+
+G5_NATIVE_TAG_VALUE bSerializeMeshInst=False
+
+G5_NATIVE_TAG_VALUE bSpecialBrushActor=False
+
+G5_NATIVE_TAG_VALUE bNetInterpolatePos=False
+
+G5_NATIVE_TAG_VALUE bHardAttach=False
+
+G5_NATIVE_TAG_VALUE bIsFrobable=False
+
+G3_T060_ORIGINAL_227K_CDO_END Class Engine.Pawn
+G3_T060_ORIGINAL_227K_CDO_BEGIN Class Engine.HUD|defaultPtr=02AEED6C
+G5_NATIVE_TAG_VALUE HudMode=0
+
+G5_NATIVE_TAG_VALUE Crosshair=0
+
+G5_NATIVE_TAG_VALUE HudScaler=2.0
+
+G5_NATIVE_TAG_VALUE CrosshairScale=2.0
+
+G5_NATIVE_TAG_VALUE MainMenu=None
+
+G5_NATIVE_TAG_VALUE MainMenuType=None
+
+G5_NATIVE_TAG_VALUE HUDConfigWindowType="UMenu.UMenuHUDConfigCW"
+
+G5_NATIVE_TAG_VALUE CollisionGroups=2147483647
+
+G5_NATIVE_TAG_VALUE CollisionFlag=2
+
+G5_NATIVE_TAG_VALUE LatentInt=0
+
+G5_NATIVE_TAG_VALUE RandomDelayTime=0.5
+
+G5_NATIVE_TAG_VALUE TimerRate=0.0
+
+G5_NATIVE_TAG_VALUE TimerCounter=0.0
+
+G5_NATIVE_TAG_VALUE LifeSpan=0.0
+
+G5_NATIVE_TAG_VALUE AnimFrame=0.0
+
+G5_NATIVE_TAG_VALUE AnimRate=0.0
+
+G5_NATIVE_TAG_VALUE TweenRate=0.0
+
+G5_NATIVE_TAG_VALUE LODBias=1.0
+
+G5_NATIVE_TAG_VALUE LatentFloat=0.0
+
+G5_NATIVE_TAG_VALUE OddsOfAppearing=1.0
+
+G5_NATIVE_TAG_VALUE DrawScale=1.0
+
+G5_NATIVE_TAG_VALUE ScaleGlow=1.0
+
+G5_NATIVE_TAG_VALUE VisibilityRadius=0.0
+
+G5_NATIVE_TAG_VALUE VisibilityHeight=0.0
+
+G5_NATIVE_TAG_VALUE SpriteProjForward=32.0
+
+G5_NATIVE_TAG_VALUE AmbientGlowPulseSpeed=0.0
+
+G5_NATIVE_TAG_VALUE TransientSoundVolume=1.0
+
+G5_NATIVE_TAG_VALUE TransientSoundRadius=0.0
+
+G5_NATIVE_TAG_VALUE CollisionRadius=22.0
+
+G5_NATIVE_TAG_VALUE CollisionHeight=22.0
+
+G5_NATIVE_TAG_VALUE NormalLightRadius=0.0
+
+G5_NATIVE_TAG_VALUE Mass=100.0
+
+G5_NATIVE_TAG_VALUE Buoyancy=0.0
+
+G5_NATIVE_TAG_VALUE PhysAlpha=0.0
+
+G5_NATIVE_TAG_VALUE PhysRate=0.0
+
+G5_NATIVE_TAG_VALUE AnimLast=0.0
+
+G5_NATIVE_TAG_VALUE AnimMinRate=0.0
+
+G5_NATIVE_TAG_VALUE OldAnimRate=0.0
+
+G5_NATIVE_TAG_VALUE NetPriority=1.0
+
+G5_NATIVE_TAG_VALUE NetUpdateFrequency=100.0
+
+G5_NATIVE_TAG_VALUE CollisionOverride=None
+
+G5_NATIVE_TAG_VALUE PhysicsData=None
+
+G5_NATIVE_TAG_VALUE Owner=None
+
+G5_NATIVE_TAG_VALUE SkelAnim=None
+
+G5_NATIVE_TAG_VALUE AnimationNotify=None
+
+G5_NATIVE_TAG_VALUE Level=None
+
+G5_NATIVE_TAG_VALUE XLevel=None
+
+G5_NATIVE_TAG_VALUE Target=None
+
+G5_NATIVE_TAG_VALUE Instigator=None
+
+G5_NATIVE_TAG_VALUE Inventory=None
+
+G5_NATIVE_TAG_VALUE Base=None
+
+G5_NATIVE_TAG_VALUE LatentActor=None
+
+G5_NATIVE_TAG_VALUE Touching(0)=None
+
+G5_NATIVE_TAG_VALUE Touching(1)=None
+
+G5_NATIVE_TAG_VALUE Touching(2)=None
+
+G5_NATIVE_TAG_VALUE Touching(3)=None
+
+G5_NATIVE_TAG_VALUE Deleted=None
+
+G5_NATIVE_TAG_VALUE HitActor=None
+
+G5_NATIVE_TAG_VALUE Sprite=None
+
+G5_NATIVE_TAG_VALUE Texture=Texture'Engine.S_Actor'
+
+G5_NATIVE_TAG_VALUE Skin=None
+
+G5_NATIVE_TAG_VALUE Mesh=None
+
+G5_NATIVE_TAG_VALUE ShadowMesh=None
+
+G5_NATIVE_TAG_VALUE Brush=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(0)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(1)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(2)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(3)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(4)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(5)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(6)=None
+
+G5_NATIVE_TAG_VALUE MultiSkins(7)=None
+
+G5_NATIVE_TAG_VALUE AmbientSound=None
+
+G5_NATIVE_TAG_VALUE InitialState="None"
+
+G5_NATIVE_TAG_VALUE Group="None"
+
+G5_NATIVE_TAG_VALUE AnimSequence="None"
+
+G5_NATIVE_TAG_VALUE Tag="None"
+
+G5_NATIVE_TAG_VALUE Event="None"
+
+G5_NATIVE_TAG_VALUE AttachedBone="None"
+
+G5_NATIVE_TAG_VALUE AttachTag="None"
+
+G5_NATIVE_TAG_VALUE RenderIteratorClass=None
+
+G5_NATIVE_TAG_VALUE ActorRenderColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE ActorGUnlitColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE AmbientGlowColor=(R=0,G=0,B=0,A=0)
+
+G5_NATIVE_TAG_VALUE RelativeLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RelativeRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DrawScale3D=(X=1.0,Y=1.0,Z=1.0)
+
+G5_NATIVE_TAG_VALUE Region=(Zone=None,iLeaf=0,ZoneNumber=0)
+
+G5_NATIVE_TAG_VALUE Location=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Rotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE OldLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE ColLocation=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Velocity=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE Acceleration=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE PrePivot=(X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE RotationRate=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE DesiredRotation=(Pitch=0,Yaw=0,Roll=0)
+
+G5_NATIVE_TAG_VALUE SimAnim=(W=0.0,X=0.0,Y=0.0,Z=0.0)
+
+G5_NATIVE_TAG_VALUE UserData=()
+
+G5_NATIVE_TAG_VALUE RenderPass=RP_Auto
+
+G5_NATIVE_TAG_VALUE LastHitBox=HITBOX_Default
+
+G5_NATIVE_TAG_VALUE Physics=PHYS_None
+
+G5_NATIVE_TAG_VALUE Role=ROLE_Authority
+
+G5_NATIVE_TAG_VALUE RemoteRole=ROLE_SimulatedProxy
+
+G5_NATIVE_TAG_VALUE StandingCount=0
+
+G5_NATIVE_TAG_VALUE MiscNumber=0
+
+G5_NATIVE_TAG_VALUE LatentByte=0
+
+G5_NATIVE_TAG_VALUE DrawType=DT_Sprite
+
+G5_NATIVE_TAG_VALUE Style=STY_Normal
+
+G5_NATIVE_TAG_VALUE AmbientGlow=0
+
+G5_NATIVE_TAG_VALUE Fatness=128
+
+G5_NATIVE_TAG_VALUE SoundRadius=32
+
+G5_NATIVE_TAG_VALUE SoundVolume=128
+
+G5_NATIVE_TAG_VALUE SoundPitch=64
+
+G5_NATIVE_TAG_VALUE LightType=LT_None
+
+G5_NATIVE_TAG_VALUE LightEffect=LE_None
+
+G5_NATIVE_TAG_VALUE LightBrightness=0
+
+G5_NATIVE_TAG_VALUE LightHue=0
+
+G5_NATIVE_TAG_VALUE LightSaturation=0
+
+G5_NATIVE_TAG_VALUE LightRadius=0
+
+G5_NATIVE_TAG_VALUE LightPeriod=0
+
+G5_NATIVE_TAG_VALUE LightPhase=0
+
+G5_NATIVE_TAG_VALUE LightCone=0
+
+G5_NATIVE_TAG_VALUE VolumeBrightness=0
+
+G5_NATIVE_TAG_VALUE VolumeRadius=0
+
+G5_NATIVE_TAG_VALUE VolumeFog=0
+
+G5_NATIVE_TAG_VALUE DodgeDir=DODGE_None
+
+G5_NATIVE_TAG_VALUE bStatic=False
+
+G5_NATIVE_TAG_VALUE bHidden=True
+
+G5_NATIVE_TAG_VALUE bNoDelete=False
+
+G5_NATIVE_TAG_VALUE bAnimFinished=False
+
+G5_NATIVE_TAG_VALUE bAnimLoop=False
+
+G5_NATIVE_TAG_VALUE bAnimNotify=False
+
+G5_NATIVE_TAG_VALUE bAnimByOwner=False
+
+G5_NATIVE_TAG_VALUE bDeleteMe=False
+
+G5_NATIVE_TAG_VALUE bDynamicLight=False
+
+G5_NATIVE_TAG_VALUE bTimerLoop=False
+
+G5_NATIVE_TAG_VALUE bNetNotify=False
+
+G5_NATIVE_TAG_VALUE bHandleOwnCorona=False
+
+G5_NATIVE_TAG_VALUE bRenderMultiEnviroMaps=False
+
+G5_NATIVE_TAG_VALUE bWorldGeometry=False
+
+G5_NATIVE_TAG_VALUE bUseMeshCollision=False
+
+G5_NATIVE_TAG_VALUE bEditorSelectRender=False
+
+G5_NATIVE_TAG_VALUE bNoDynamicShadowCast=False
+
+G5_NATIVE_TAG_VALUE bProjectorDecal=False
+
+G5_NATIVE_TAG_VALUE bUseLitSprite=False
+
+G5_NATIVE_TAG_VALUE bTickRealTime=False
+
+G5_NATIVE_TAG_VALUE bHiddenEd=False
+
+G5_NATIVE_TAG_VALUE bDirectional=False
+
+G5_NATIVE_TAG_VALUE bSelected=False
+
+G5_NATIVE_TAG_VALUE bMemorized=False
+
+G5_NATIVE_TAG_VALUE bHighlighted=False
+
+G5_NATIVE_TAG_VALUE bEdLocked=False
+
+G5_NATIVE_TAG_VALUE bEdShouldSnap=False
+
+G5_NATIVE_TAG_VALUE bDifficulty0=True
+
+G5_NATIVE_TAG_VALUE bDifficulty1=True
+
+G5_NATIVE_TAG_VALUE bDifficulty2=True
+
+G5_NATIVE_TAG_VALUE bDifficulty3=True
+
+G5_NATIVE_TAG_VALUE bSinglePlayer=True
+
+G5_NATIVE_TAG_VALUE bNet=True
+
+G5_NATIVE_TAG_VALUE bNetSpecial=True
+
+G5_NATIVE_TAG_VALUE bCanTeleport=False
+
+G5_NATIVE_TAG_VALUE bIsSecretGoal=False
+
+G5_NATIVE_TAG_VALUE bIsKillGoal=False
+
+G5_NATIVE_TAG_VALUE bIsItemGoal=False
+
+G5_NATIVE_TAG_VALUE bCollideWhenPlacing=False
+
+G5_NATIVE_TAG_VALUE bTravel=False
+
+G5_NATIVE_TAG_VALUE bMovable=True
+
+G5_NATIVE_TAG_VALUE bHighDetail=False
+
+G5_NATIVE_TAG_VALUE bStasis=False
+
+G5_NATIVE_TAG_VALUE bForceStasis=False
+
+G5_NATIVE_TAG_VALUE bIsPawn=False
+
+G5_NATIVE_TAG_VALUE bIsPlayerPawn=False
+
+G5_NATIVE_TAG_VALUE bIsProjectile=False
+
+G5_NATIVE_TAG_VALUE bIsStaticMesh=False
+
+G5_NATIVE_TAG_VALUE bNetTemporary=False
+
+G5_NATIVE_TAG_VALUE bNetOptional=False
+
+G5_NATIVE_TAG_VALUE bReplicateInstigator=False
+
+G5_NATIVE_TAG_VALUE bTrailerSameRotation=False
+
+G5_NATIVE_TAG_VALUE bUnlit=False
+
+G5_NATIVE_TAG_VALUE bNoSmooth=False
+
+G5_NATIVE_TAG_VALUE bParticles=False
+
+G5_NATIVE_TAG_VALUE bRandomFrame=False
+
+G5_NATIVE_TAG_VALUE bMeshEnviroMap=False
+
+G5_NATIVE_TAG_VALUE bFilterByVolume=False
+
+G5_NATIVE_TAG_VALUE bMeshCurvy=False
+
+G5_NATIVE_TAG_VALUE bShadowCast=False
+
+G5_NATIVE_TAG_VALUE bCustomDrawActor=False
+
+G5_NATIVE_TAG_VALUE bOnlyRenderCurrentZone=False
+
+G5_NATIVE_TAG_VALUE bOwnerNoSee=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerSee=False
+
+G5_NATIVE_TAG_VALUE bIsMover=False
+
+G5_NATIVE_TAG_VALUE bAlwaysRelevant=False
+
+G5_NATIVE_TAG_VALUE bAlwaysTick=False
+
+G5_NATIVE_TAG_VALUE bHurtEntry=False
+
+G5_NATIVE_TAG_VALUE bGameRelevant=False
+
+G5_NATIVE_TAG_VALUE bCarriedItem=False
+
+G5_NATIVE_TAG_VALUE bForcePhysicsUpdate=False
+
+G5_NATIVE_TAG_VALUE bSkipActorReplication=False
+
+G5_NATIVE_TAG_VALUE bRepAnimations=True
+
+G5_NATIVE_TAG_VALUE bRepAmbientSound=True
+
+G5_NATIVE_TAG_VALUE bSimulatedPawnRep=False
+
+G5_NATIVE_TAG_VALUE bRepMesh=True
+
+G5_NATIVE_TAG_VALUE bNetInitialRotation=False
+
+G5_NATIVE_TAG_VALUE bNetInitialVelocity=False
+
+G5_NATIVE_TAG_VALUE bNetInitExactLocation=False
+
+G5_NATIVE_TAG_VALUE bOptionalNetOwner=False
+
+G5_NATIVE_TAG_VALUE bCollideActors=False
+
+G5_NATIVE_TAG_VALUE bCollideWorld=False
+
+G5_NATIVE_TAG_VALUE bBlockActors=False
+
+G5_NATIVE_TAG_VALUE bBlockPlayers=False
+
+G5_NATIVE_TAG_VALUE bProjTarget=False
+
+G5_NATIVE_TAG_VALUE bPathCollision=False
+
+G5_NATIVE_TAG_VALUE bBlockZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockNonZeroExtentTraces=True
+
+G5_NATIVE_TAG_VALUE bBlockAISight=False
+
+G5_NATIVE_TAG_VALUE bBlockTextureTrace=False
+
+G5_NATIVE_TAG_VALUE bBlockRigidBodyPhys=False
+
+G5_NATIVE_TAG_VALUE bSpecialLit=False
+
+G5_NATIVE_TAG_VALUE bActorShadows=False
+
+G5_NATIVE_TAG_VALUE bCorona=False
+
+G5_NATIVE_TAG_VALUE bFOVFadingCorona=False
+
+G5_NATIVE_TAG_VALUE bForcedCorona=False
+
+G5_NATIVE_TAG_VALUE bCoronaByLight=False
+
+G5_NATIVE_TAG_VALUE bLensFlare=False
+
+G5_NATIVE_TAG_VALUE bDarkLight=False
+
+G5_NATIVE_TAG_VALUE bZoneNormalLight=True
+
+G5_NATIVE_TAG_VALUE bNetInitial=False
+
+G5_NATIVE_TAG_VALUE bNetOwner=False
+
+G5_NATIVE_TAG_VALUE bNetRelevant=False
+
+G5_NATIVE_TAG_VALUE bNetSee=False
+
+G5_NATIVE_TAG_VALUE bNetHear=False
+
+G5_NATIVE_TAG_VALUE bNetFeel=False
+
+G5_NATIVE_TAG_VALUE bSimulatedPawn=False
+
+G5_NATIVE_TAG_VALUE bDemoRecording=False
+
+G5_NATIVE_TAG_VALUE bClientDemoNetFunc=False
+
+G5_NATIVE_TAG_VALUE bBounce=False
+
+G5_NATIVE_TAG_VALUE bFixedRotationDir=False
+
+G5_NATIVE_TAG_VALUE bRotateToDesired=False
+
+G5_NATIVE_TAG_VALUE bInterpolating=False
+
+G5_NATIVE_TAG_VALUE bJustTeleported=True
+
+G5_NATIVE_TAG_VALUE bCrossLevelNetwork=False
+
+G5_NATIVE_TAG_VALUE bOnlyOwnerRelevant=False
+
+G5_NATIVE_TAG_VALUE bOnlyDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bForceDirtyReplication=False
+
+G5_NATIVE_TAG_VALUE bAlwaysNetDirty=False
+
+G5_NATIVE_TAG_VALUE bTraceHitBoxes=False
+
+G5_NATIVE_TAG_VALUE bTextureAnimOnce=False
+
+G5_NATIVE_TAG_VALUE bOnlyDrawWithBase=False
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionXY=True
+
+G5_NATIVE_TAG_VALUE bAllowRootMotionZ=True
+
+G5_NATIVE_TAG_VALUE bDirtyDynBsp=False
+
+G5_NATIVE_TAG_VALUE bSerializeMeshInst=False
+
+G5_NATIVE_TAG_VALUE bSpecialBrushActor=False
+
+G5_NATIVE_TAG_VALUE bNetInterpolatePos=False
+
+G5_NATIVE_TAG_VALUE bHardAttach=False
+
+G5_NATIVE_TAG_VALUE bIsFrobable=False
+
+G3_T060_ORIGINAL_227K_CDO_END Class Engine.HUD
+G5_NATIVE_OBJECT_COUNT 6
