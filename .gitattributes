@@ -58,3 +58,7 @@ catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-Engine-UClass-loa
 # Original compiled UE1 C227k Core/Engine native loaded fields and ArrayProperty outputs
 catalog/compliance/evidence/o06/20261029-G3-T015-C227k-*-original-native.log -text
 catalog/compliance/evidence/o06/20261029-G3-T049-C227k-ArrayProperty-original-native.log -text
+catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-postload-original-native.log -text
+catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-postload-original-native.cmd -text
+catalog/compliance/evidence/o06/20261029-G3-T012-C98-Core-original-native.log -text
+catalog/compliance/evidence/o06/20261029-G3-T012-C98-Core-original-native.cmd -text

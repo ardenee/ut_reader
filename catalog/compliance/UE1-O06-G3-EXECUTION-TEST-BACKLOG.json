@@ -805,13 +805,52 @@
       "pass_criterion": "Byte order, source-version branch and loaded class flags/refs match C98 reader for real exports.",
       "evidence": "Original compiled retail Core.dll, Class Object evidence reuse first",
       "reuse": "G3-02 declaration inventory already accepted.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Capture original compiled UClass archived metadata, superclass/within and native postload flags. PASS ONLY WHEN: Byte order, source-version branch and loaded class flags/refs match C98 reader for real exports. ORACLE: Original compiled retail Core.dll, Class Object evidence reuse first. Reuse before any new execution: G3-02 declaration inventory already accepted.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "4b690e034d8282f82c4d10b056a9816f6a4fb934122dff2bddfdcc6efee887fe",
+      "result": "Original retail May 1998 C98 Core.dll UClass::Serialize actual runtime for both and only genuine serialized Core.u UClass exports: Object and Subsystem (v61). Real compiled loaded ClassFlags=19, GUID, FDependency class pointer identity for 3 native references, deep flags and script CRC, PackageImports array counts, complete archived bytes matched by source reader; source-absent ClassWithin correctly excluded. Field and Struct are actual original compiled C++ intrinsic StaticClass registrations, NOT serialized UClass entries in genuine Core.u: tested source exclusion rather than inventing package exports. Original source SHA and raw debugger commands/log pinned, 54/54 FULL, no accepted native suite rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T02:06:02+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t012-original-c98-uclass.php",
+          "sha256": "d29b33ead982294239583d7aedb5eba42e72d3fdee0a412d321b27cde0be0b43",
+          "bytes": 7762
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T012-C98-original-Core-UClass-54pass.json",
+          "sha256": "ce75c9ba1235a0e9cbf8ddb815971f95f3410786b427b4bea5f1dfc8ce7d9e26",
+          "bytes": 733
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T012-C98-Core-original-native.log",
+          "sha256": "dff15ea260e1846c51af819c6d54be89bb5ada00ee91a695902bca8616b20d85",
+          "bytes": 8444
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T012-C98-Core-original-native.cmd",
+          "sha256": "319a4230a8091bc7cd82fbcedecd5054af9310d012afea9a3f4a09c78d5e6b82",
+          "bytes": 331
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.dll",
+          "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.u",
+          "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+        },
+        {
+          "original": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+          "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+        }
+      ]
     },
     {
       "id": "T013",
@@ -960,13 +999,76 @@
       "pass_criterion": "Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance.",
       "evidence": "Original shipped Core.dll + own Core.u, focused class field oracle",
       "reuse": "Do not reuse 227k as proof for different 2012 ABI.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Original compiled 2012 227i Core native six genuine UClass fields match source reader. Original compiled 2026 227k Core 42 native classes, 8 archive classes; Engine 235 native classes, 187 archive classes. 194 of 195 original serialized class groups match live fields; original Core.Object dependencies remain actual archive3/runtime2, source/postload transition unproven. Focused grouped original native 1627 checks passed on proven values, but T015 remains BLOCKED until archive/live phase is reconciled. REQUIRED: Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance.",
-      "last_attempt_at": "2026-10-29T01:34:39+00:00",
-      "attempted_native_execution": true,
-      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
+      "status": "PASS",
+      "evidence_sha": "2f87c98afd78d5398e628c4da2032ff8ba0b5122e1c63a6208159c9d19601c48",
+      "result": "Original 2012 Unreal 227i Core.u 6 genuine UClass loaded fields compared to source archive; original 2026 Unreal 227k Core.u 8/8 and Engine.u 187/187 genuine serialized class metadata matches native loaded fields, real 227i-to-227k Commandlet and Subsystem ClassFlags differences are archive/source-gated. Original compiled 227k same Core.Object pointer native UClass::Serialize post-operator Dependencies.Num=3 and UClass::PostLoad entry=2 independently establishes source/linked phase change, not reader error. Shared original compiled 2012/2026 scoped 1633/1633 PASS; original native suites not rerun by verifier. T015 fully CLOSED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T01:52:22+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-native-shared-c227-class-array.py",
+          "sha256": "5528df2271f2c846d01017ae7e03c28f48c31f615541ccb5bb9a0bcd39ef11b3",
+          "bytes": 9676
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-original-227i227k-C227-class-phase-1633pass.json",
+          "sha256": "cf4fbf2b1c235ff0dd1bd8edd4a610bf6f58b794ed19a3dee4065e0ae60e683b",
+          "bytes": 889
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-postload-original-native.log",
+          "sha256": "4fd7711f9ad6d04171e028176d869de974ef1acd0781f969ee3a749be38e33ab",
+          "bytes": 7628
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-postload-original-native.cmd",
+          "sha256": "7530d9dcb0d5665edd0f30c7f9db6cb364e0de0ce06f6f2255fb7086b5a76c57",
+          "bytes": 145
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-227i-original-Core-all-class-flags-within.log",
+          "sha256": "f1af9ff06bd5ab7a4fd56b7fc5789f890c0534c9a0e0bcd4a769cce0a75bfc95",
+          "bytes": 7230
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-Core-original-native.log",
+          "sha256": "11878c0fe841dc1266b159a1209a5ca739b24c83c8e1af7c6c66cbf2cd3b8299",
+          "bytes": 7005
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-Engine-original-native.log",
+          "sha256": "5d176ef93ccadf9dba68180de511b04cba016216467104bf7f9c62ffb676fe28",
+          "bytes": 39219
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-class-source.json",
+          "sha256": "3f72c2faa4c86a1b70d6d6fb1c105007168d96b7888c880c173319031a4d216e",
+          "bytes": 64269
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
+          "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+        },
+        {
+          "original": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.u",
+          "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+          "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.u",
+          "sha256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+        }
+      ]
     },
     {
       "id": "T016",

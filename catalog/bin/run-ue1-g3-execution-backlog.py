@@ -785,6 +785,38 @@ def eval_t009(_row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":"Six genuinely compiled original native UStruct malformed branches: C98 retail EndState Children import index62/16 Tell24224 and ScriptSize9/5 Tell24243; stock v432 Children62/16 Tell43307 and ScriptSize7/3 Tell43324; original 2026 Unreal 227k localized ImportIndex Tell67623 and named ScriptSize7/3 Tell67640. Six independent one-byte real Core.u mutants, original loaded method/reader physical Tell disassembly, SHA-pinned native x86 logs and original binaries. Production source-selected 91/91 exact errors/cursors/rejected loaded state PASS; no native or prior accepted test rerun. Only T009 closed; G3-03 group remains OPEN.","evidence":pins}
 
 
+def eval_t012(_row: dict[str, Any]) -> dict[str, Any]:
+    """Original May 1998 Core.u UClass: all actually serialized class records."""
+    b="catalog/compliance/evidence/o06/"
+    pins=[verify_pin(p,h) for p,h in [
+        ("catalog/bin/verify-ue1-o06-g3-t012-original-c98-uclass.php","d29b33ead982294239583d7aedb5eba42e72d3fdee0a412d321b27cde0be0b43"),
+        (b+"20261029-G3-T012-C98-original-Core-UClass-54pass.json","ce75c9ba1235a0e9cbf8ddb815971f95f3410786b427b4bea5f1dfc8ce7d9e26"),
+        (b+"20261029-G3-T012-C98-Core-original-native.log","dff15ea260e1846c51af819c6d54be89bb5ada00ee91a695902bca8616b20d85"),
+        (b+"20261029-G3-T012-C98-Core-original-native.cmd","319a4230a8091bc7cd82fbcedecd5054af9310d012afea9a3f4a09c78d5e6b82"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468"),
+    ]]
+    originals=[
+      (r"C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll","9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"),
+      (r"C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.u","7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"),
+      (r"L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]\Core\Src\UnClass.cpp","ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"),
+    ]
+    for name,expected in originals:
+        path=pathlib.Path(name)
+        if not path.is_file() or sha256(path)!=expected:
+            raise AssertionError("T012 original 1998 Epic source/compiled binary changed: "+name)
+        pins.append({"original":name,"sha256":expected})
+    result=json.loads((ROOT/b/"20261029-G3-T012-C98-original-Core-UClass-54pass.json").read_text(encoding="utf-8"))
+    if not (result.get("ok") is True and result.get("checks")==54
+            and result.get("failures")==[] and result.get("T012")=="PASS"
+            and result.get("source_version")==61
+            and result.get("native_original_C98_serialized_Core_UClass_count")==2
+            and result.get("source_nonexport_intrinsics")==["Core.Field","Core.Struct"]
+            and result.get("original_compiled_native_reruns_by_this_verifier")==0):
+        raise AssertionError("T012 genuine C98 compiled native UClass fields/refs/source exclusion incomplete")
+    return {"status":"PASS","result":
+      "Original retail May 1998 C98 Core.dll UClass::Serialize actual runtime for both and only genuine serialized Core.u UClass exports: Object and Subsystem (v61). Real compiled loaded ClassFlags=19, GUID, FDependency class pointer identity for 3 native references, deep flags and script CRC, PackageImports array counts, complete archived bytes matched by source reader; source-absent ClassWithin correctly excluded. Field and Struct are actual original compiled C++ intrinsic StaticClass registrations, NOT serialized UClass entries in genuine Core.u: tested source exclusion rather than inventing package exports. Original source SHA and raw debugger commands/log pinned, 54/54 FULL, no accepted native suite rerun.","evidence":pins}
+
+
 def eval_t013(_row: dict[str, Any]) -> dict[str, Any]:
     """Original UT99 v432 complete UClass Core.u seven + sealed Engine.u 88."""
     base="catalog/compliance/evidence/o06/"
@@ -851,7 +883,47 @@ def eval_t014(_row: dict[str, Any]) -> dict[str, Any]:
       "Original compiled 469f Core.dll and Engine.dll plus correct SDK-built x86 class probe loaded genuine Engine.u successfully: 132 real runtime registered UClasses, 88 genuine serialized UClass exports individually compared 6 direct native live fields and complete file consumption; 45 real v432-v469f archived field differences identified, 856/856 FULL focused parity, prior v432 original 88-class gate reused, zero original reruns by verifier. T014 only.","evidence":pins}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T013":eval_t013,"T014":eval_t014,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
+def eval_t015(_row: dict[str, Any]) -> dict[str, Any]:
+    """Authentic 2012 C227i + 2026 C227k UClass archive and loaded phase."""
+    b="catalog/compliance/evidence/o06/"
+    expected=[
+      ("catalog/bin/verify-ue1-o06-g3-native-shared-c227-class-array.py","5528df2271f2c846d01017ae7e03c28f48c31f615541ccb5bb9a0bcd39ef11b3"),
+      (b+"20261029-G3-T015-original-227i227k-C227-class-phase-1633pass.json","cf4fbf2b1c235ff0dd1bd8edd4a610bf6f58b794ed19a3dee4065e0ae60e683b"),
+      (b+"20261029-G3-T015-C227k-archive-postload-original-native.log","4fd7711f9ad6d04171e028176d869de974ef1acd0781f969ee3a749be38e33ab"),
+      (b+"20261029-G3-T015-C227k-archive-postload-original-native.cmd","7530d9dcb0d5665edd0f30c7f9db6cb364e0de0ce06f6f2255fb7086b5a76c57"),
+      (b+"20261028-G3-UCLASS-227i-original-Core-all-class-flags-within.log","f1af9ff06bd5ab7a4fd56b7fc5789f890c0534c9a0e0bcd4a769cce0a75bfc95"),
+      (b+"20261029-G3-T015-C227k-Core-original-native.log","11878c0fe841dc1266b159a1209a5ca739b24c83c8e1af7c6c66cbf2cd3b8299"),
+      (b+"20261029-G3-T015-C227k-Engine-original-native.log","5d176ef93ccadf9dba68180de511b04cba016216467104bf7f9c62ffb676fe28"),
+      (b+"20261029-G3-T015-C227k-archive-class-source.json","3f72c2faa4c86a1b70d6d6fb1c105007168d96b7888c880c173319031a4d216e"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468"),
+    ]
+    pins=[verify_pin(path,h) for path,h in expected]
+    originals=[
+      (r"C:\Temp\UE1-G3-NativeOracle\original227i\System\Core.dll","287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"),
+      (r"C:\Temp\UE1-G3-NativeOracle\original227i\System\Core.u","bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"),
+      (r"C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll","c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"),
+      (r"C:\Temp\UnrealDB\O06\Native-227k\System\Core.u","28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"),
+    ]
+    for name,hash_expected in originals:
+        path=pathlib.Path(name)
+        if not path.is_file() or sha256(path)!=hash_expected:
+            raise AssertionError("T015 original compiled 227 binary source drift: "+name)
+        pins.append({"original":name,"sha256":hash_expected})
+    result=json.loads((ROOT/b/"20261029-G3-T015-original-227i227k-C227-class-phase-1633pass.json").read_text(encoding="utf-8"))
+    if not (result.get("ok") is True and result.get("failures")==[]
+            and result.get("checks")==1633
+            and result.get("T015")=="PASS_ORIGINAL_2012_2026_CLASS_METADATA_AND_NATIVE_PHASE"
+            and result.get("original_2012_Core_native_class_fields_compared")==6
+            and result["original_2026_native"]["Core"]["fully_matching_direct_native"]==8
+            and result["original_2026_native"]["Core"]["archive_live_dependency_phase_proven"]==1
+            and result["original_2026_native"]["Engine"]["fully_matching_direct_native"]==187
+            and result.get("original_compiled_native_reruns_during_verifier")==0):
+        raise AssertionError("T015 original C227i and C227k complete loaded class field/phase native evidence missing")
+    return {"status":"PASS","result":
+      "Original 2012 Unreal 227i Core.u 6 genuine UClass loaded fields compared to source archive; original 2026 Unreal 227k Core.u 8/8 and Engine.u 187/187 genuine serialized class metadata matches native loaded fields, real 227i-to-227k Commandlet and Subsystem ClassFlags differences are archive/source-gated. Original compiled 227k same Core.Object pointer native UClass::Serialize post-operator Dependencies.Num=3 and UClass::PostLoad entry=2 independently establishes source/linked phase change, not reader error. Shared original compiled 2012/2026 scoped 1633/1633 PASS; original native suites not rerun by verifier. T015 fully CLOSED.","evidence":pins}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

@@ -1,0 +1,29 @@
+{
+    "ok": true,
+    "checks": 54,
+    "failures": [],
+    "T012": "PASS",
+    "native_original_C98_serialized_Core_UClass_count": 2,
+    "source_nonexport_intrinsics": [
+        "Core.Field",
+        "Core.Struct"
+    ],
+    "original_compiled_native_reruns_by_this_verifier": 0,
+    "source_version": 61,
+    "real_classes": [
+        {
+            "export_index": 0,
+            "name": "Object",
+            "flags": 19,
+            "genuine_dependencies": 1,
+            "source_file_archive_complete": true
+        },
+        {
+            "export_index": 229,
+            "name": "Subsystem",
+            "flags": 19,
+            "genuine_dependencies": 2,
+            "source_file_archive_complete": true
+        }
+    ]
+}

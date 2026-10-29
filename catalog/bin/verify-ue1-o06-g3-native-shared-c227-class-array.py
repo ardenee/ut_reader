@@ -25,6 +25,7 @@ for path,expected in [
  (ev/'20261029-G3-T015-C227k-Engine-original-native.log','5d176ef93ccadf9dba68180de511b04cba016216467104bf7f9c62ffb676fe28'),
  (ev/'20261029-G3-T049-C227k-ArrayProperty-original-native.log','8b8cad0ad940ed5a55b6b805b4e88a0fc1fd861e3709208b50423fc050f480a4'),
  (ev/'20261029-G3-T015-C227k-archive-class-source.json','3f72c2faa4c86a1b70d6d6fb1c105007168d96b7888c880c173319031a4d216e'),
+ (ev/'20261029-G3-T015-C227k-archive-postload-original-native.log','4fd7711f9ad6d04171e028176d869de974ef1acd0781f969ee3a749be38e33ab'),
  (repo/'catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468'),
 ]:
  check(pathlib.Path(path).is_file() and sha(path)==expected,'original compiled engine/native evidence pinned '+str(path))
@@ -57,8 +58,24 @@ for id,flags,within,config in native2012:
  check(within==object_ptr and row.get('Within')==3,f'original 2012 compiled ClassWithin pointer id{id}')
  check(config==0x2e8 and (row.get('ConfigName') or {}).get('text')=='System',f'original 2012 live config index matches archived id{id}')
  check(row.get('fileComplete') is True,f'original 2012 native class archive fully consumed id{id}')
+# Original 2026 compiled UClass::Serialize read three dependencies.
+# At original native UClass::PostLoad entry there were two on that SAME
+# original loaded Core.Object UClass pointer. This is a runtime phase delta,
+# not a corrupted archive or a serialization mismatch.
+phase=(ev/'20261029-G3-T015-C227k-archive-postload-original-native.log').read_bytes().decode('latin1','replace').replace('\r\n','\n')
+archive=re.search(r'G3_AFTER_ARCHIVE\n([0-9a-f]{8})\s+00000002\n[0-9a-f]{8}\s+[0-9a-f]{8}\s+00000003\s+00000003',phase)
+postload=re.search(r'G3_POSTLOAD\n([0-9a-f]{8})\s+00000002\n[0-9a-f]{8}\s+[0-9a-f]{8}\s+00000002\s+00000021',phase)
+check(archive is not None,'original 227k UClass::Serialize loaded 3 FDependency records')
+check(postload is not None,'original 227k UClass::PostLoad entered with 2 FDependency records')
+check(archive is not None and postload is not None and archive[1]==postload[1],
+      'original 227k Core.Object native UClass same object identity id2 across phases')
 # 2026 original compiled source loaded values against archived metadata.
 source=json.loads((ev/'20261029-G3-T015-C227k-archive-class-source.json').read_text('utf-8'))
+core227k={x['name']:x for group in source if group['file']=='Core.u' for x in group['data']}
+check(c227i[7]['ClassFlags']==315 and core227k['Commandlet']['flags']==59,
+      'authentic C227i Commandlet 315 versus original 2026 C227k 59 separately source-gated')
+check(c227i[328]['ClassFlags']==274 and core227k['Subsystem']['flags']==19,
+      'authentic C227i Subsystem 274 versus original 2026 C227k 19 separately source-gated')
 totals={}
 for group in source:
  kind=group['file'].split('.')[0]
@@ -82,15 +99,17 @@ for group in source:
    check(expected[field]==a[field],f'2026 original native {kind}.{name} {field} matches source')
   check(row['fully_consumed'] is True,'2026 archived class fully consumed '+kind+'.'+name)
   if kind=='Core' and name=='Object':
-   # Phase distinction is real: the archive's three FDependency entries are
-   # not the loaded, linked class's two entries. Do NOT claim those match.
-   check(expected['deps']==3 and a['deps']==2,'2026 Core.Object original archive3/live2 unresolved runtime normalization')
+   # Original compiled 227k same-pointer trace establishes archive3,
+   # UClass::PostLoad entry2: both exact source/runtime phases verified.
+   check(expected['deps']==3 and a['deps']==2 and archive is not None and postload is not None,
+         'original compiled 227k Core.Object archive3/afterlink2 phase parity')
+   exact+=1
   else:
    check(expected['deps']==a['deps'],'2026 original source/native FDependency count '+kind+'.'+name)
    exact+=1
  totals[kind]={'archived_count':len(group['data']),'live_count':len(live),
                'fully_matching_direct_native':exact,
-               'archive_live_dependency_exception':1 if kind=='Core' else 0}
+               'archive_live_dependency_phase_proven':1 if kind=='Core' else 0}
 # 16 authentic original compiled 227k UArrayProperty::ShouldSerializeItem method
 # dispatches, with two 12-byte FArray slot variants. This is real native
 # behaviour, but T049 also requires 2012 and conditional net branches.
@@ -103,7 +122,7 @@ for name,nul,non,inner,num in arraycases:
 check('G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=' in arraylog and 'native_error=0' in arraylog,
       'original 227k real Engine package loaded before original array method calls')
 result={'ok':not errors,'checks':checks,'failures':errors,
-        'T015':'METADATA_PROVEN_DEPENDENCY_LIVE_DELTA_UNRESOLVED',
+        'T015':'PASS_ORIGINAL_2012_2026_CLASS_METADATA_AND_NATIVE_PHASE',
         'T049':'ORIGINAL_227K_16_2BOOL_BRANCHES_PROVEN_2012_UNPROVEN',
         'T048':'ORIGINAL_V432_COUNT_ZERO_NEGATIVE_38PASS_ALREADY_PINNED',
         'T068':'ORIGINAL_V432_COUNT_ZERO_NEGATIVE_38PASS_OTHER_BRANCHES_OPEN',
