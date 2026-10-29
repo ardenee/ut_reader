@@ -1,0 +1,46 @@
+{
+  "time": "2026-10-29T00:08:03+00:00",
+  "eight_fixed_ids": [
+    [
+      "T057",
+      "PASS_REUSED"
+    ],
+    [
+      "T058",
+      "BLOCKED",
+      "C98 original UObject named tagged value and NAME_None physical cursor not observed; old UConst/UEnum native is not this oracle"
+    ],
+    [
+      "T059",
+      "BLOCKED",
+      "Original 469f mixed Bool/Int/Name tag order and physical final Tell unverified"
+    ],
+    [
+      "T060",
+      "BLOCKED",
+      "2012 227i and 2026 227k original compiled tagged nonzero default loaded values absent"
+    ],
+    [
+      "T061",
+      "BLOCKED",
+      "Compiled C98 and C227 missing-tag inherited/default value overlay not witnessed"
+    ],
+    [
+      "T062",
+      "BLOCKED",
+      "Original compiled isolated INI/localized override precedence and runtime values missing"
+    ],
+    [
+      "T063",
+      "BLOCKED",
+      "Original compiled transient SAVE omission/reset and saved tag count missing"
+    ],
+    [
+      "T064",
+      "BLOCKED",
+      "Original compiled C98/C227 malformed type/index/missing terminal real failing Tell missing"
+    ]
+  ],
+  "new_native_runs": 0,
+  "new_passes": 0
+}

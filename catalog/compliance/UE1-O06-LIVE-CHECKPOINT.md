@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-FAST-BATCH-06-07-16-IDS-69-SOURCE-CHECKS
-- **Last completed action:** Two grouped eight-ID batches T041-T048 and T049-T056 assessed; 12 BLOCKED with exact missing authentic original source-family native values/cursors; existing T051 T054 T055 T056 PASS skipped without rerun. Source-selected existing UT99 v69 struct/fixed/dynamic array verifier was broken by ambiguous version69 and repaired with explicit ut99-v432 across all call sites; 69/69 short new reader/source branch checks PASS, not original compiled equivalence. Two bounded original v432 custom native array count zero/negative isolated probes failed before result with 0xC0000409/zero output, excluded and not promoted. No new fixed test PASS, overall 18 PASS 62 BLOCKED; no PRD deployment.
-- **Resume at:** Next eight IDs T057-T064: reuse T057 and find genuine C98 tagged termination oracle for T058, compare v432/469f mixed tags T059 and 227i/k real tagged default T060; unresolved source-family value/error cases BLOCKED immediately and move on. Keep bounded native original process budget, no accepted CDB replay.
-- **Active changed at:** 2026-10-29T00:06:25+00:00
+- **Stage:** G3-FAST-THREE-BATCHES-T041-T064-24-IDS-SOURCE69
+- **Last completed action:** Completed three 8-ID fixed batches T041-T048, T049-T056, T057-T064. Preexisting T051,T054,T055,T056,T057 PASS skipped. 19 blocked tests have precise distinct original compiled source/native branches documented; zero invented PASS. Scoped UT99 source-selected struct-array 69/69 verifier repaired and passed; original compiled noninteractive array test standalone failed 0xC0000409 before any usable value oracle, excluded. T058 original C98 property tag+None loader not evidenced by earlier UConst/UEnum. Total fixed 18 PASS 62 BLOCKED.
+- **Resume at:** B09 T065-T072 and B10 T073-T080 in 8-ID groups; release T078-080 cannot pass until actual original compiled branch coverage fixed. Prioritize small original native oracles that actually cover missing T source/value/cursor, stop at one bounded attempt per fixed ID; no PRD.
+- **Active changed at:** 2026-10-29T00:09:23+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

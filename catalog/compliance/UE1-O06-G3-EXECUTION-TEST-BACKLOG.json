@@ -2014,10 +2014,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Native LOAD of tagged values and compare type/name/index, count and cursor. PASS ONLY WHEN: UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes. ORACLE: G5 original UObject saved fields reused where profile same. Reuse before any new execution: Do not repeat sealed 1998 positive already covering this exact case.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "FAST B08: C98 original UObject named tagged value and NAME_None physical cursor not observed; old UConst/UEnum native is not this oracle. REQUIRED: UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
+      "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T059",
@@ -2032,10 +2032,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare tagged stream and loaded non-default values against original engine. PASS ONLY WHEN: Original tag order, type alias, payload and last cursor match; 469f only separately where source delta. ORACLE: G5 v432 original default corpus reused; 469f delta via Core/Engine. Reuse before any new execution: G3-05 owns construction and superclass overlay.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "FAST B08: Original 469f mixed Bool/Int/Name tag order and physical final Tell unverified. REQUIRED: Original tag order, type alias, payload and last cursor match; 469f only separately where source delta.",
+      "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T060",
@@ -2050,10 +2050,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original compiled tag parser and source version/category name variants. PASS ONLY WHEN: Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts. ORACLE: 2012/2026 original Core/Engine native defaults. Reuse before any new execution: G3-08 handles leaf numeric/string codecs.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "FAST B08: 2012 227i and 2026 227k original compiled tagged nonzero default loaded values absent. REQUIRED: Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts.",
+      "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T061",
@@ -2068,10 +2068,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Observe native default-then-tag overlay when tag is missing. PASS ONLY WHEN: Reader preserves inherited/default field according to original, not inventing serialized zero. ORACLE: Actual native loaded class and empty/partial tag stream. Reuse before any new execution: G3-05 owns class default initialization; here owns missing tag effect.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "FAST B08: Compiled C98 and C227 missing-tag inherited/default value overlay not witnessed. REQUIRED: Reader preserves inherited/default field according to original, not inventing serialized zero.",
+      "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T062",
@@ -2086,10 +2086,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load same saved package twice with two source-legal configurations. PASS ONLY WHEN: Only original source permits override; resulting runtime value/priority equal original compiled engine. ORACLE: Original engine isolated config profile and native loaded value. Reuse before any new execution: Do not change canonical source or production config.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "FAST B08: Original compiled isolated INI/localized override precedence and runtime values missing. REQUIRED: Only original source permits override; resulting runtime value/priority equal original compiled engine.",
+      "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T063",
@@ -2104,10 +2104,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original native SAVE and independent LOAD of controlled object. PASS ONLY WHEN: Correct transient omission/reset and source-defined archived field count. ORACLE: Genuine original SavePackage fixture per distinct method and class. Reuse before any new execution: G3-05 owns declared flag presence.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "FAST B08: Original compiled transient SAVE omission/reset and saved tag count missing. REQUIRED: Correct transient omission/reset and source-defined archived field count.",
+      "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T064",
@@ -2122,10 +2122,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Test one source-defined corrupt tag per distinct error branch. PASS ONLY WHEN: Original native failure/recovery and exact failing archive offset match; no fabricated defaults. ORACLE: Original compiled tagged-property error + UnrealDB. Reuse before any new execution: Shared FArchive physical EOF G3-14 separately.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "FAST B08: Original compiled C98/C227 malformed type/index/missing terminal real failing Tell missing. REQUIRED: Original native failure/recovery and exact failing archive offset match; no fabricated defaults.",
+      "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T065",
