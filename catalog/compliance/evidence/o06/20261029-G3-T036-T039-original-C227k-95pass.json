@@ -1,0 +1,77 @@
+{
+    "ok": true,
+    "checks": 95,
+    "failures": [],
+    "T036": "PASS",
+    "T039": "PASS",
+    "original_native_2026_linked_struct_property_count": 10,
+    "original_native_2026_member_offset_events": 36,
+    "native_227k_Pawn_RotationRate": {
+        "Pitch": {
+            "offset": 0,
+            "dim": 1,
+            "element_size": 4,
+            "native_value": 4096
+        },
+        "Yaw": {
+            "offset": 4,
+            "dim": 1,
+            "element_size": 4,
+            "native_value": 50000
+        },
+        "Roll": {
+            "offset": 8,
+            "dim": 1,
+            "element_size": 4,
+            "native_value": 3072
+        }
+    },
+    "native_227k_Actor_SimAnim_inherited_Plane": {
+        "W": {
+            "offset": 12,
+            "dim": 1,
+            "element_size": 4,
+            "native_value": null
+        },
+        "X": {
+            "offset": 0,
+            "dim": 1,
+            "element_size": 4,
+            "native_value": null
+        },
+        "Y": {
+            "offset": 4,
+            "dim": 1,
+            "element_size": 4,
+            "native_value": null
+        },
+        "Z": {
+            "offset": 8,
+            "dim": 1,
+            "element_size": 4,
+            "native_value": null
+        }
+    },
+    "archive_fplane_2012_2026_common_source_serializer": "FVector XYZ then FLOAT W",
+    "native_original_227k_Engine_Actor_flat_vs_inherited": {
+        "Rotator": {
+            "class": "Actor",
+            "property": "RotationRate",
+            "struct": "Rotator",
+            "offset": 620,
+            "dim": 1,
+            "element_size": 12,
+            "super": 0
+        },
+        "Plane": {
+            "class": "Actor",
+            "property": "SimAnim",
+            "struct": "Plane",
+            "offset": 644,
+            "dim": 1,
+            "element_size": 16,
+            "super": 1
+        }
+    },
+    "new_original_compiled_engine_reruns_during_verifier": 0
+}

@@ -1594,14 +1594,67 @@
       "pass_criterion": "Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
       "evidence": "2012/2026 native class/type plus genuine archive",
       "reuse": "227i and 227k method deltas separately handled.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL COMPILED GROUPED C227k SIX CDO: New original compiled 227k six genuine CDO native output shows Pawn.RotationRate actual (Pitch=4096,Yaw=50000,Roll=3072); real original 2026 Engine.u Pawn tagged StructProperty Rotator source, Epic SDK UnMath.h FRotator serializer Pitch/Yaw/Roll. This proves scalar struct values but does NOT yet prove an actual nested struct linked outer/inner UProperty member offsets/ArrayDim native. T036 BLOCKED pending exact original member offsets and loaded nested member. REQUIRED: Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "b25d003ff5d970d0c48b2ce500bdcc3ce3cac4e3f4f9f7bd8deb5e8476094218",
+      "result": "Original 2026 227k compiled Engine.u Pawn native UStructProperty RotationRate owner offset620, array dimension1, element size12; imported Core.Struct Rotator actual member Pitch/Yaw/Roll offsets0/4/8, loaded values 4096,50000,3072. Reader source-selected genuine Pawn FPropertyTag physical 12 bytes 0010000050c30000000c0000 exactly, original native CDO independently matches, inherited PlayerPawn values match. One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T03:53:54+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT",
-      "last_grouped_native_assessment": "2026-10-29"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-29",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php",
+          "sha256": "b4224496d7a938e30a37825b27fa02b58ae074fc91a25ac52a87c850567bce68",
+          "bytes": 10441
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-original-C227k-95pass.json",
+          "sha256": "506bb85d67b408283f8018235a1880bd45f8291ef31c018d6a786ec6f66a16db",
+          "bytes": 1967
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-native.log",
+          "sha256": "edce7870d4a3522ed053bfe1a5b115e345ac4fd6ba87ffdbd40fdb5bfb1849da",
+          "bytes": 6666
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-probe.cpp",
+          "sha256": "59dfc53678899142459a1511cb06f332a545ffaa436592cdf16cab8301c87e9e",
+          "bytes": 4456
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "sha256": "760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66",
+          "bytes": 1068
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "sha256": "f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d",
+          "bytes": 105966
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "d8f4aaea7bda3cf3272151b19e195ebe04d21486041046a20709c25b01e5c82b",
+          "bytes": 61784
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+          "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Engine.u",
+          "sha256": "a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e"
+        },
+        {
+          "original": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnMath.h",
+          "sha256": "7db6a8e314ccb8a5943330c677763bfb4ac948b3a595b81400034689d0cec677"
+        },
+        {
+          "original": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnMath.h",
+          "sha256": "2c53261003b3176e63fe7f8b9c47e7f8013cb460e7bdc6fb4433a895b49c91e0"
+        }
+      ]
     },
     {
       "id": "T037",
@@ -1649,13 +1702,66 @@
       "pass_criterion": "Reader does not collapse inherited member layout, actual offsets and values match original.",
       "evidence": "Original linked ancestry + native SerializeBin for one member",
       "reuse": "G3-03 Children targets reused.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: v432 original inherited UClass fields proven; actual inherited struct member offset and runtime SerializeBin member value still missing. Acceptance still requires: Reader does not collapse inherited member layout, actual offsets and values match original.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "b25d003ff5d970d0c48b2ce500bdcc3ce3cac4e3f4f9f7bd8deb5e8476094218",
+      "result": "Original compiled 227k Engine.u Actor.SimAnim UStructProperty offset644, 1x16, native Struct Core.Object.Plane has actual nonnull SuperStruct FVector; original compiled member PropertyLink order W, X, Y, Z with physical offsets12,0,4,8. Original 2012 and 2026 Epic UnMath.h FPlane::operator<< archives inherited FVector XYZ then local W. Original 227k Engine.u saved sixteen zero float bytes, compiled CDO reports W/X/Y/Z zero; reader now decodes Plane as inherited ordered x,y,z,w rather than opaque/falsely flat. Separate original native Rotator demonstrates flat 12-byte struct. One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T03:53:54+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php",
+          "sha256": "b4224496d7a938e30a37825b27fa02b58ae074fc91a25ac52a87c850567bce68",
+          "bytes": 10441
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-original-C227k-95pass.json",
+          "sha256": "506bb85d67b408283f8018235a1880bd45f8291ef31c018d6a786ec6f66a16db",
+          "bytes": 1967
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-native.log",
+          "sha256": "edce7870d4a3522ed053bfe1a5b115e345ac4fd6ba87ffdbd40fdb5bfb1849da",
+          "bytes": 6666
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-probe.cpp",
+          "sha256": "59dfc53678899142459a1511cb06f332a545ffaa436592cdf16cab8301c87e9e",
+          "bytes": 4456
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "sha256": "760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66",
+          "bytes": 1068
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "sha256": "f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d",
+          "bytes": 105966
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "d8f4aaea7bda3cf3272151b19e195ebe04d21486041046a20709c25b01e5c82b",
+          "bytes": 61784
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+          "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Engine.u",
+          "sha256": "a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e"
+        },
+        {
+          "original": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnMath.h",
+          "sha256": "7db6a8e314ccb8a5943330c677763bfb4ac948b3a595b81400034689d0cec677"
+        },
+        {
+          "original": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnMath.h",
+          "sha256": "2c53261003b3176e63fe7f8b9c47e7f8013cb460e7bdc6fb4433a895b49c91e0"
+        }
+      ]
     },
     {
       "id": "T040",

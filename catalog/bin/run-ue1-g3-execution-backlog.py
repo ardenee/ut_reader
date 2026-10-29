@@ -1036,7 +1036,53 @@ def eval_t060_t061(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":reason+" Shared source-selected original compiled native six CDO 902/902 acceptance checks, no original engine reruns in verifier.","evidence":pins}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T067":eval_t067}
+def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
+    """Authentic original 227k compiled Engine.u property/member links and CDO."""
+    b="catalog/compliance/evidence/o06/"
+    evidence=[verify_pin(n,h) for n,h in [
+      ("catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php","b4224496d7a938e30a37825b27fa02b58ae074fc91a25ac52a87c850567bce68"),
+      (b+"20261029-G3-T036-T039-original-C227k-95pass.json","506bb85d67b408283f8018235a1880bd45f8291ef31c018d6a786ec6f66a16db"),
+      (b+"20261029-G3-T036-T039-C227k-original-nested-struct-native.log","edce7870d4a3522ed053bfe1a5b115e345ac4fd6ba87ffdbd40fdb5bfb1849da"),
+      (b+"20261029-G3-T036-T039-C227k-original-nested-struct-probe.cpp","59dfc53678899142459a1511cb06f332a545ffaa436592cdf16cab8301c87e9e"),
+      (b+"20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json","760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66"),
+      (b+"20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log","f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php","d8f4aaea7bda3cf3272151b19e195ebe04d21486041046a20709c25b01e5c82b"),
+    ]]
+    for name,sha in [
+      (r"C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll","c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"),
+      (r"C:\Temp\UnrealDB\O06\Native-227k\System\Engine.u","a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e"),
+      (r"L:\Source\Games\Unreal\Unreal [v1.227]\Core\Inc\UnMath.h","7db6a8e314ccb8a5943330c677763bfb4ac948b3a595b81400034689d0cec677"),
+      (r"L:\Source\Games\Unreal\OldUnreal-UnrealPatch227k-SDK-Windows\Core\Inc\UnMath.h","2c53261003b3176e63fe7f8b9c47e7f8013cb460e7bdc6fb4433a895b49c91e0")
+    ]:
+        p=pathlib.Path(name)
+        if not p.is_file() or sha256(p)!=sha:
+            raise AssertionError("T036/T039 original compiled/native source SHA changed: "+name)
+        evidence.append({"original":name,"sha256":sha})
+    j=json.loads((ROOT/b/"20261029-G3-T036-T039-original-C227k-95pass.json").read_text(encoding="utf-8"))
+    if not (j.get("ok") is True and j.get("failures")==[] and j.get("checks")==95
+        and j.get("T036")=="PASS" and j.get("T039")=="PASS"
+        and j.get("original_native_2026_linked_struct_property_count")==10
+        and j.get("original_native_2026_member_offset_events")==36
+        and j.get("new_original_compiled_engine_reruns_during_verifier")==0):
+        raise AssertionError("T036/T039 real linked native 227k struct member values/offsets not complete")
+    if row["id"]=="T036":
+        native=j["native_227k_Pawn_RotationRate"]
+        if not (native["Pitch"]["native_value"]==4096 and native["Pitch"]["offset"]==0
+           and native["Yaw"]["native_value"]==50000 and native["Yaw"]["offset"]==4
+           and native["Roll"]["native_value"]==3072 and native["Roll"]["offset"]==8):
+            raise AssertionError("original linked 227k Rotator nonzero member memory mismatch")
+        explanation=("Original 2026 227k compiled Engine.u Pawn native UStructProperty RotationRate owner offset620, array dimension1, element size12; imported Core.Struct Rotator actual member Pitch/Yaw/Roll offsets0/4/8, loaded values 4096,50000,3072. Reader source-selected genuine Pawn FPropertyTag physical 12 bytes 0010000050c30000000c0000 exactly, original native CDO independently matches, inherited PlayerPawn values match.")
+    elif row["id"]=="T039":
+        members=j["native_227k_Actor_SimAnim_inherited_Plane"]
+        if not ([(k,v["offset"]) for k,v in members.items()]==[("W",12),("X",0),("Y",4),("Z",8)]):
+            raise AssertionError("original native subclass Plane member offsets flattened or reordered")
+        explanation=("Original compiled 227k Engine.u Actor.SimAnim UStructProperty offset644, 1x16, native Struct Core.Object.Plane has actual nonnull SuperStruct FVector; original compiled member PropertyLink order W, X, Y, Z with physical offsets12,0,4,8. Original 2012 and 2026 Epic UnMath.h FPlane::operator<< archives inherited FVector XYZ then local W. Original 227k Engine.u saved sixteen zero float bytes, compiled CDO reports W/X/Y/Z zero; reader now decodes Plane as inherited ordered x,y,z,w rather than opaque/falsely flat. Separate original native Rotator demonstrates flat 12-byte struct.")
+    else:
+        raise AssertionError("Not a fixed G3 nested/inherited test ID")
+    return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

@@ -640,6 +640,21 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         $f=array_values(unpack('g3',$raw));
                         $value=['x'=>$f[0],'y'=>$f[1],'z'=>$f[2]];
                         $valueKind='fvector_float32_xyz';
+                    }elseif($structName==='plane'&&$tagSize===16
+                        &&$family===CatalogUE1ClassicSourceFamily::UNREAL_V227){
+                        // Both 2012 227i and 2026 227k original UnMath.h
+                        // FPlane operator<< serialize FVector X/Y/Z then W.
+                        // Original 2026 227k compiled Core.dll native
+                        // UStructProperty::Struct = Core.Object.Plane,
+                        // super=Core.Object.Vector: inherited X/Y/Z offsets
+                        // 0/4/8 and local W offset12. Actual original
+                        // FPlane C++ serializer writes four FLOAT32 fields.
+                        // Preserve this distinct inherited layout; never
+                        // flatten or guess an unknown UStruct's members.
+                        $f=array_values(unpack('g4',$raw));
+                        $value=['x'=>$f[0],'y'=>$f[1],
+                            'z'=>$f[2],'w'=>$f[3]];
+                        $valueKind='fplane_inherited_fvector_xyz_w_float32';
                     }elseif(($structName==='rotator'||
                         ($version<=61&&$structName==='rotation'))&&$tagSize===12){
                         // FRotator::operator<< archives three INT32 angles.

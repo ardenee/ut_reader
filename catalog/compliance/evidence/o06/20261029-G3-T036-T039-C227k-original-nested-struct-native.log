@@ -1,0 +1,55 @@
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+G5_NATIVE_DIRECT_PACKAGE_BEGIN editor=1 client=0 server=0
+G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=0121449C editor=1 native_error=0
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.Actor|property=RotationRate|struct=Struct Core.Object.Rotator|offset=620|array_dim=1|element_size=12|super=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Actor|property=RotationRate|member=Pitch|offset=0|array_dim=1|element_size=4|value=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Actor|property=RotationRate|member=Yaw|offset=4|array_dim=1|element_size=4|value=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Actor|property=RotationRate|member=Roll|offset=8|array_dim=1|element_size=4|value=0
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.Actor|property=SimAnim|struct=Struct Core.Object.Plane|offset=644|array_dim=1|element_size=16|super=1
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Actor|property=SimAnim|member=W|offset=12|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Actor|property=SimAnim|member=X|offset=0|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Actor|property=SimAnim|member=Y|offset=4|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Actor|property=SimAnim|member=Z|offset=8|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_CLASS_STRUCTS class=Class Engine.Actor|sampled=2
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.PlayerPawn|property=DistanceFogColor|struct=Struct Core.Object.Plane|offset=2044|array_dim=1|element_size=16|super=1
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogColor|member=W|offset=12|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogColor|member=X|offset=0|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogColor|member=Y|offset=4|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogColor|member=Z|offset=8|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.PlayerPawn|property=DistanceFogBlend|struct=Struct Core.Object.Plane|offset=2060|array_dim=1|element_size=16|super=1
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogBlend|member=W|offset=12|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogBlend|member=X|offset=0|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogBlend|member=Y|offset=4|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=DistanceFogBlend|member=Z|offset=8|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.PlayerPawn|property=RotationRate|struct=Struct Core.Object.Rotator|offset=620|array_dim=1|element_size=12|super=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=RotationRate|member=Pitch|offset=0|array_dim=1|element_size=4|value=4096
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=RotationRate|member=Yaw|offset=4|array_dim=1|element_size=4|value=50000
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=RotationRate|member=Roll|offset=8|array_dim=1|element_size=4|value=3072
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.PlayerPawn|property=SimAnim|struct=Struct Core.Object.Plane|offset=644|array_dim=1|element_size=16|super=1
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=SimAnim|member=W|offset=12|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=SimAnim|member=X|offset=0|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=SimAnim|member=Y|offset=4|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.PlayerPawn|property=SimAnim|member=Z|offset=8|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_CLASS_STRUCTS class=Class Engine.PlayerPawn|sampled=4
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.Pawn|property=RotationRate|struct=Struct Core.Object.Rotator|offset=620|array_dim=1|element_size=12|super=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Pawn|property=RotationRate|member=Pitch|offset=0|array_dim=1|element_size=4|value=4096
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Pawn|property=RotationRate|member=Yaw|offset=4|array_dim=1|element_size=4|value=50000
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Pawn|property=RotationRate|member=Roll|offset=8|array_dim=1|element_size=4|value=3072
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.Pawn|property=SimAnim|struct=Struct Core.Object.Plane|offset=644|array_dim=1|element_size=16|super=1
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Pawn|property=SimAnim|member=W|offset=12|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Pawn|property=SimAnim|member=X|offset=0|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Pawn|property=SimAnim|member=Y|offset=4|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.Pawn|property=SimAnim|member=Z|offset=8|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_CLASS_STRUCTS class=Class Engine.Pawn|sampled=2
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.HUD|property=RotationRate|struct=Struct Core.Object.Rotator|offset=620|array_dim=1|element_size=12|super=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.HUD|property=RotationRate|member=Pitch|offset=0|array_dim=1|element_size=4|value=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.HUD|property=RotationRate|member=Yaw|offset=4|array_dim=1|element_size=4|value=0
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.HUD|property=RotationRate|member=Roll|offset=8|array_dim=1|element_size=4|value=0
+G3_T036_T039_NATIVE_STRUCT class=Class Engine.HUD|property=SimAnim|struct=Struct Core.Object.Plane|offset=644|array_dim=1|element_size=16|super=1
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.HUD|property=SimAnim|member=W|offset=12|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.HUD|property=SimAnim|member=X|offset=0|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.HUD|property=SimAnim|member=Y|offset=4|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_MEMBER class=Class Engine.HUD|property=SimAnim|member=Z|offset=8|array_dim=1|element_size=4
+G3_T036_T039_NATIVE_CLASS_STRUCTS class=Class Engine.HUD|sampled=2
+G5_NATIVE_OBJECT_COUNT 10
