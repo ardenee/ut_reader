@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-23PASS-57BLOCKED-T017-T059-ORIGINAL-469F-ACTOR-CLOSED
-- **Last completed action:** Grouped native acceptance: T017 and T059 original compiled 469f genuine Engine.u CDO loaded Pawn HUD GameInfo 1078 runtime fields. Source original v432 88 native compiled classes reused and 469f 88, actual HUD bHidden inherited Actor False overridden True, GameInfo Bool bPauseable True Int MaxPlayers16 FName PlayerWalking original index63/physical ordered tagged archive. Shared 902/902 fully PASS; fixed baseline 23 PASS 57 BLOCKED. T049 new original compiled 227k real UInt-inner Engine.u 24 native NetSerializeItem calls and exact 2/10/18 byte output, original 227i net immediate return, missing 2012 ShouldSerializeItem actual runtime so BLOCKED. T033 original ScriptedAI loader native PackageNotFound, T011 79 older UT99 source packages but all texture not old UFunction. PRD unchanged.
-- **Resume at:** Execute group of real original C98 inherited actor CDO T016, C227i ShouldSerializeItem native conditional T049, C227 k ScriptedAI genuine load T033, other per-source TRUE package LOAD and corrupted cursor tests. Only close original engine fully compared fixed IDs, no new ad-hoc tests.
-- **Active changed at:** 2026-10-29T02:53:31+00:00
+- **Stage:** G3-24PASS-56BLOCKED-T035-IMPORTED-COLOR-CLOSED
+- **Last completed action:** Fixed T035 FULL original compiled UT99 v432/469f imported Core.Struct Color HUD.WhiteColor: source real ImportMap class Core.Struct Color both builds, original tagged 4-byte 00 80 FF 00 at 79888/75673, 469f original compiled HUD CDO native R0 G128 B255 A0, reused v432 compiled native 16 struct values all original saved-exact from previously accepted 607/608 default test (one Config Str override). 33/33 native/source comparisons PASS, no native reruns; frozen G3 24 PASS 56 BLOCKED. Earlier batch closed T017 T059 jointly 902/902 real compiled. T049 still blocked 227i actual ShouldSerializeItem. PRD unchanged.
+- **Resume at:** Next original engine grouped tests: C98 real inherited/default and named NAME_None final archive cursor, true 227i source-visible ShouldSerializeItem call and ScriptedAI.u whole original loader dependency resolution; cross-family original native malformed cursor. No repetition of accepted C227/UT v469f grouped oracles.
+- **Active changed at:** 2026-10-29T03:02:05+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

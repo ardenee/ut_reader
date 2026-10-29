@@ -1528,13 +1528,61 @@
       "pass_criterion": "Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does.",
       "evidence": "Original compiled Engine.u+Core.u import chain with genuine class object",
       "reuse": "No inferred struct size from name alone.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: 469f original 25 UStruct references exist; real imported Core.Struct member value and resolved original loader class chain missing. Acceptance still requires: Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "ba193049f3187f6ef861314f5362f205df2b4a64aa9d783fa58fa6ee2994a935",
+      "result": "Genuine stock UT99 v432 and 469f Engine.u HUD.WhiteColor StructProperty import Core.Struct Color resolved by exact original ImportMap identity; original source archive saved FColor 4 bytes 00 80 FF 00 with physical offsets 79888 and 75673, both complete source archives. Actual original compiled 469f HUD CDO loaded R0 G128 B255 A0; previously accepted original compiled v432 native 607 exact loaded properties including all 16 real StructProperty values (only config String override). Shared 33/33 original source/native imported struct PASS, no original native retest.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T03:01:17+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t035-original-v432-469f-imported-color.php",
+          "sha256": "f061a4b4e079e29778c09c7a823e860673d4824d51d87168e47b4e3718d86d1f",
+          "bytes": 6874
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T035-original-v432-469f-Core-Color-33pass.json",
+          "sha256": "bf74d3f97d1322d1264f0df0e3208b2fe634c0ac4e86b79274e8a68d16a33869",
+          "bytes": 1066
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log",
+          "sha256": "c3c7fa3246e9ad41d6a03556852d0a0f726e94e1ea31c5aa1d442af1802acb99",
+          "bytes": 50032
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json",
+          "sha256": "ae3e23e5e3b5ef7e7fab363fbd1ae7a75f80591212fac6bd2af7575638fa6e3b",
+          "bytes": 2975
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g5-uclass-defaults-native-608.php",
+          "sha256": "62d7f69c747a5f4c1b0fe430d76caab882cdb87e70839fb025cf27c69e8f1738",
+          "bytes": 10553
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.u",
+          "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.u",
+          "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+          "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
+          "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+        }
+      ]
     },
     {
       "id": "T036",

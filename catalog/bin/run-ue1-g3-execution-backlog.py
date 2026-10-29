@@ -965,7 +965,41 @@ def eval_t017_t059(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":reason+" Shared original compiled frozen 902/902 checks PASS; no original engine reruns.","evidence":pins}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T067":eval_t067}
+def eval_t035(row: dict[str, Any]) -> dict[str, Any]:
+    """Genuine source-selected original UT99 v432/469f imported Core.Struct Color."""
+    b="catalog/compliance/evidence/o06/"
+    evidence=[
+      ("catalog/bin/verify-ue1-o06-g3-t035-original-v432-469f-imported-color.php","f061a4b4e079e29778c09c7a823e860673d4824d51d87168e47b4e3718d86d1f"),
+      (b+"20261029-G3-T035-original-v432-469f-Core-Color-33pass.json","bf74d3f97d1322d1264f0df0e3208b2fe634c0ac4e86b79274e8a68d16a33869"),
+      (b+"20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log","c3c7fa3246e9ad41d6a03556852d0a0f726e94e1ea31c5aa1d442af1802acb99"),
+      ("catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json","ae3e23e5e3b5ef7e7fab363fbd1ae7a75f80591212fac6bd2af7575638fa6e3b"),
+      ("catalog/bin/verify-ue1-o06-g5-uclass-defaults-native-608.php","62d7f69c747a5f4c1b0fe430d76caab882cdb87e70839fb025cf27c69e8f1738"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468")
+    ]
+    pins=[verify_pin(p,h) for p,h in evidence]
+    for path,digest in [
+       (r"C:\Temp\UnrealDB\O06\Native-UCC\System\Engine.u","d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"),
+       (r"C:\Temp\UnrealDB\O06\Native-469f\System\Engine.u","6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"),
+       (r"C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll","237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"),
+       (r"C:\Temp\UnrealDB\O06\Native-469f\System\Core.dll","80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2")
+    ]:
+        f=pathlib.Path(path)
+        if not f.is_file() or sha256(f)!=digest:
+            raise AssertionError("T035 original compiled UT99 Core/Engine stock source changed: "+path)
+        pins.append({"original":path,"sha256":digest})
+    result=json.loads((ROOT/b/"20261029-G3-T035-original-v432-469f-Core-Color-33pass.json").read_text(encoding="utf-8"))
+    fields=result.get("genuine_Engine_HUD_WhiteColor_import_Core_Struct_Color",{})
+    if not (row["id"]=="T035" and result.get("ok") is True and result.get("checks")==33
+           and result.get("failures")==[] and result.get("T035")=="PASS"
+           and result.get("source_profiles")==["v432","v469f"]
+           and all(fields.get(p,{}).get("raw_hex")=="0080ff00" for p in ("v432","v469f"))
+           and result.get("original_engine_native_sessions_rerun_by_verifier")==0):
+        raise AssertionError("T035 original imported FColor native and original source byte parity missing")
+    return {"status":"PASS","result":
+       "Genuine stock UT99 v432 and 469f Engine.u HUD.WhiteColor StructProperty import Core.Struct Color resolved by exact original ImportMap identity; original source archive saved FColor 4 bytes 00 80 FF 00 with physical offsets 79888 and 75673, both complete source archives. Actual original compiled 469f HUD CDO loaded R0 G128 B255 A0; previously accepted original compiled v432 native 607 exact loaded properties including all 16 real StructProperty values (only config String override). Shared 33/33 original source/native imported struct PASS, no original native retest.","evidence":pins}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

@@ -1,0 +1,39 @@
+{
+    "ok": true,
+    "checks": 33,
+    "failures": [],
+    "T035": "PASS",
+    "source_profiles": [
+        "v432",
+        "v469f"
+    ],
+    "genuine_Engine_HUD_WhiteColor_import_Core_Struct_Color": {
+        "v432": {
+            "source_tag_offset": 79884,
+            "physical_value_offset": 79888,
+            "raw_hex": "0080ff00",
+            "genuine_Color_import_table_index": 27,
+            "original_loaded": [
+                0,
+                128,
+                255,
+                0
+            ]
+        },
+        "v469f": {
+            "source_tag_offset": 75669,
+            "physical_value_offset": 75673,
+            "raw_hex": "0080ff00",
+            "genuine_Color_import_table_index": 26,
+            "original_loaded": [
+                0,
+                128,
+                255,
+                0
+            ]
+        }
+    },
+    "original_compiled_469f_loaded_FColor": "R=0,G=128,B=255,A=0",
+    "original_v432_preaccepted_all_16_StructProperty_native_bytes": true,
+    "original_engine_native_sessions_rerun_by_verifier": 0
+}
