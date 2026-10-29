@@ -898,13 +898,57 @@
       "pass_criterion": "Any actual 469f-only UClass field/branch is represented; unchanged inherited fields proved equivalent without duplicate full loads.",
       "evidence": "Reuse 469f 88 UClass-inherited UState events; original UClass method disassembly for direct delta",
       "reuse": "Do not infer version69 means v432 equals 469f.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare native loaded UClass direct fields against v432 source-inherited baseline and compiled difference. PASS ONLY WHEN: Any actual 469f-only UClass field/branch is represented; unchanged inherited fields proved equivalent without duplicate full loads. ORACLE: Reuse 469f 88 UClass-inherited UState events; original UClass method disassembly for direct delta. Reuse before any new execution: Do not infer version69 means v432 equals 469f.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "5b367523d103ab9fd1b4df8af934ca4b88165c3bfe80c7aea6137e98d7a76987",
+      "result": "Original compiled 469f Core.dll and Engine.dll plus correct SDK-built x86 class probe loaded genuine Engine.u successfully: 132 real runtime registered UClasses, 88 genuine serialized UClass exports individually compared 6 direct native live fields and complete file consumption; 45 real v432-v469f archived field differences identified, 856/856 FULL focused parity, prior v432 original 88-class gate reused, zero original reruns by verifier. T014 only.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T00:43:50+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t014-original-469f-uclass-live.php",
+          "sha256": "b1a5394c4ed2007da7c9c9172b4db87eff24b2c6d913b70460a7893add6d1d1e",
+          "bytes": 7017
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-Engine-UClass-loaded-values.log",
+          "sha256": "0d5380ced4ff0178c925a767b25f7466661c3075118750606dde2b5e2cc54e57",
+          "bytes": 21044
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-native-uclass-probe.cpp",
+          "sha256": "a97aed65eb129f253ed51bab15bce3feefb7563fd5c45c2db8851e412474b2f1",
+          "bytes": 3016
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-UClass-856pass.json",
+          "sha256": "0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f",
+          "bytes": 6361
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+          "sha256": "772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e",
+          "bytes": 1984
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\G3-REAL-T059-469F-ENTRY\\System\\Core.dll",
+          "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\G3-REAL-T059-469F-ENTRY\\System\\Engine.dll",
+          "sha256": "625dabea278e314714a45c931c98ba6282a9198378499144429aa979a1a0570f"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\G3-REAL-T059-469F-ENTRY\\System\\Engine.u",
+          "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+        }
+      ]
     },
     {
       "id": "T015",
@@ -919,10 +963,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare original 2012 and 2026 UClass loaded fields and class/version gates. PASS ONLY WHEN: Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance. ORACLE: Original shipped Core.dll + own Core.u, focused class field oracle. Reuse before any new execution: Do not reuse 227k as proof for different 2012 ABI.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
-      "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Original compiled 2012 227i Core native six genuine UClass fields match source reader. Original compiled 2026 227k Core 42 native classes, 8 archive classes; Engine 235 native classes, 187 archive classes. 194 of 195 original serialized class groups match live fields; original Core.Object dependencies remain actual archive3/runtime2, source/postload transition unproven. Focused grouped original native 1627 checks passed on proven values, but T015 remains BLOCKED until archive/live phase is reconciled. REQUIRED: Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance.",
+      "last_attempt_at": "2026-10-29T01:34:39+00:00",
+      "attempted_native_execution": true,
+      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
     },
     {
       "id": "T016",
@@ -1561,10 +1605,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "FAST 2x8: Prior v432 original malformed array count2/count4 and bad refs (6 cases) retained; distinct C98/227 native failing Tell absent. Two NEW isolated v432 standalone harness cases exited 0xC0000409 before loader output; DO NOT infer archive/error semantic. REQUIRED: Same method-specific error and failing cursor; bounded decoder must not fabricate elements.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Original compiled UT99 v432 generated genuine array count3 mutations to 0 and -1 both executed: Serial size mismatch Got8 Expected29, actual Tell259, current reader matches tagged stream and no loaded negative FArray fabrication, 38/38 focused original native. Other source family malformed array cases still missing, BLOCKED. REQUIRED: Same method-specific error and failing cursor; bounded decoder must not fabricate elements.",
+      "last_attempt_at": "2026-10-29T01:34:39+00:00",
       "attempted_native_execution": true,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
     },
     {
       "id": "T049",
@@ -1579,10 +1623,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "FAST 2x8: 2012/2026 original UArrayProperty ShouldSerializeItem/NetSerializeItem result and bytes, or exact source-excluded net branch, missing. REQUIRED: Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
-      "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Actual original 2026 227k Core.dll UArrayProperty::ShouldSerializeItem method confirmed 12-byte FArray stride, inner method dispatch, 16 real Engine.u ArrayProperty methods invoked with null/nonnull correctly shaped two-slot records, 32 native BOOL returns all true. 2012 227i original native returns and conditional network serialization bytes remain unproven, BLOCKED. REQUIRED: Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
+      "last_attempt_at": "2026-10-29T01:34:39+00:00",
+      "attempted_native_execution": true,
+      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
     },
     {
       "id": "T050",
@@ -2228,10 +2272,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare source conversion, native error/recovery and physical Tell for each distinct operator implementation. PASS ONLY WHEN: Same source-valid negative handling and same source-invalid error; no arbitrary extra policy. ORACLE: Existing original negative test references + uncovered native operator branch only. Reuse before any new execution: G3-08 and G3-11 own leaf decoders.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
-      "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Original UT99 v432 signed array count negative/zero genuine loader failure Got8 Expected29 at Tell259 matches corrected current reader signed AR_INDEX behavior, 38/38 checks. Different original C98 and C227 name/string/huge count operators not yet native-verified; BLOCKED. REQUIRED: Same source-valid negative handling and same source-invalid error; no arbitrary extra policy.",
+      "last_attempt_at": "2026-10-29T01:34:39+00:00",
+      "attempted_native_execution": true,
+      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
     },
     {
       "id": "T069",

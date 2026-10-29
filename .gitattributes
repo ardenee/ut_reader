@@ -52,3 +52,9 @@ catalog/compliance/evidence/o06/20261028-G3-T069-original-227k-malformed-FName.s
 # Original compiled x86 UClass source-family load transcripts and debugger commands (raw byte identical).
 catalog/compliance/evidence/o06/20261028-G3-UCLASS-*.log -text
 catalog/compliance/evidence/o06/20261028-G3-UCLASS-*.cmd -text
+# Original compiled UT99 v432 array count mutated native stdout (byte-preserving)
+catalog/compliance/evidence/o06/20261029-G3-T048-T068-UT99-v432-original-*.stdout.log -text
+catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-Engine-UClass-loaded-values.log -text
+# Original compiled UE1 C227k Core/Engine native loaded fields and ArrayProperty outputs
+catalog/compliance/evidence/o06/20261029-G3-T015-C227k-*-original-native.log -text
+catalog/compliance/evidence/o06/20261029-G3-T049-C227k-ArrayProperty-original-native.log -text

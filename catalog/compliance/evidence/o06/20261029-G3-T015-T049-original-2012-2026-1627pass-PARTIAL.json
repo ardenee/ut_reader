@@ -1,0 +1,26 @@
+{
+  "ok": true,
+  "checks": 1627,
+  "failures": [],
+  "T015": "METADATA_PROVEN_DEPENDENCY_LIVE_DELTA_UNRESOLVED",
+  "T049": "ORIGINAL_227K_16_2BOOL_BRANCHES_PROVEN_2012_UNPROVEN",
+  "T048": "ORIGINAL_V432_COUNT_ZERO_NEGATIVE_38PASS_ALREADY_PINNED",
+  "T068": "ORIGINAL_V432_COUNT_ZERO_NEGATIVE_38PASS_OTHER_BRANCHES_OPEN",
+  "original_2012_Core_native_class_fields_compared": 6,
+  "original_2026_native": {
+    "Core": {
+      "archived_count": 8,
+      "live_count": 42,
+      "fully_matching_direct_native": 7,
+      "archive_live_dependency_exception": 1
+    },
+    "Engine": {
+      "archived_count": 187,
+      "live_count": 235,
+      "fully_matching_direct_native": 187,
+      "archive_live_dependency_exception": 0
+    }
+  },
+  "original_227k_ArrayProperty_native_property_count": 16,
+  "original_compiled_native_reruns_during_verifier": 0
+}

@@ -1,0 +1,293 @@
+{
+    "ok": true,
+    "checks": 856,
+    "errors": [],
+    "fixed_test": "T014",
+    "status": "PASS",
+    "original_469f_Engine_runtime_live_UClass_count": 132,
+    "original_469f_serialized_UClass_compared_to_native": 88,
+    "original_469f_compiler_registered_only_UClass": 44,
+    "v432_original_previously_accepted_full_UClass": 88,
+    "actual_469f_vs_v432_archived_direct_field_changes_count": 45,
+    "original_compiled_native_sessions_reexecuted_by_verifier": 0,
+    "actual_v469f_vs_v432_changes": {
+        "Pawn": {
+            "deps": {
+                "v432": 220,
+                "v469f": 13
+            }
+        },
+        "Actor": {
+            "deps": {
+                "v432": 39,
+                "v469f": 6
+            }
+        },
+        "Inventory": {
+            "deps": {
+                "v432": 114,
+                "v469f": 13
+            }
+        },
+        "PlayerPawn": {
+            "deps": {
+                "v432": 688,
+                "v469f": 26
+            }
+        },
+        "PlayerReplicationInfo": {
+            "deps": {
+                "v432": 12,
+                "v469f": 8
+            }
+        },
+        "Weapon": {
+            "deps": {
+                "v432": 204,
+                "v469f": 13
+            }
+        },
+        "GameInfo": {
+            "deps": {
+                "v432": 449,
+                "v469f": 18
+            }
+        },
+        "ZoneInfo": {
+            "deps": {
+                "v432": 17,
+                "v469f": 6
+            }
+        },
+        "Canvas": {
+            "flags": {
+                "v432": 274,
+                "v469f": 278
+            },
+            "deps": {
+                "v432": 8,
+                "v469f": 3
+            }
+        },
+        "SavedMove": {
+            "deps": {
+                "v432": 2,
+                "v469f": 3
+            }
+        },
+        "StatLog": {
+            "deps": {
+                "v432": 137,
+                "v469f": 10
+            }
+        },
+        "Ammo": {
+            "deps": {
+                "v432": 42,
+                "v469f": 7
+            }
+        },
+        "NavigationPoint": {
+            "deps": {
+                "v432": 7,
+                "v469f": 4
+            }
+        },
+        "Mutator": {
+            "deps": {
+                "v432": 52,
+                "v469f": 10
+            }
+        },
+        "Mover": {
+            "deps": {
+                "v432": 137,
+                "v469f": 8
+            }
+        },
+        "HUD": {
+            "deps": {
+                "v432": 5,
+                "v469f": 3
+            }
+        },
+        "Decoration": {
+            "deps": {
+                "v432": 42,
+                "v469f": 7
+            }
+        },
+        "TestInfo": {
+            "deps": {
+                "v432": 37,
+                "v469f": 7
+            }
+        },
+        "GameReplicationInfo": {
+            "deps": {
+                "v432": 12,
+                "v469f": 5
+            }
+        },
+        "Menu": {
+            "deps": {
+                "v432": 17,
+                "v469f": 8
+            }
+        },
+        "LiftExit": {
+            "deps": {
+                "v432": 16,
+                "v469f": 4
+            }
+        },
+        "Trigger": {
+            "deps": {
+                "v432": 35,
+                "v469f": 6
+            }
+        },
+        "LocalMessage": {
+            "deps": {
+                "v432": 13,
+                "v469f": 6
+            }
+        },
+        "locationid": {
+            "deps": {
+                "v432": 9,
+                "v469f": 3
+            }
+        },
+        "Carcass": {
+            "deps": {
+                "v432": 8,
+                "v469f": 4
+            }
+        },
+        "InterpolationPoint": {
+            "deps": {
+                "v432": 16,
+                "v469f": 4
+            }
+        },
+        "Projectile": {
+            "deps": {
+                "v432": 16,
+                "v469f": 5
+            }
+        },
+        "Teleporter": {
+            "deps": {
+                "v432": 59,
+                "v469f": 6
+            }
+        },
+        "SpawnNotify": {
+            "deps": {
+                "v432": 15,
+                "v469f": 3
+            }
+        },
+        "Fragment": {
+            "deps": {
+                "v432": 14,
+                "v469f": 6
+            }
+        },
+        "WarpZoneInfo": {
+            "deps": {
+                "v432": 35,
+                "v469f": 6
+            }
+        },
+        "Console": {
+            "flags": {
+                "v432": 314,
+                "v469f": 318
+            },
+            "deps": {
+                "v432": 187,
+                "v469f": 9
+            }
+        },
+        "PlayerStart": {
+            "deps": {
+                "v432": 10,
+                "v469f": 6
+            }
+        },
+        "Pickup": {
+            "deps": {
+                "v432": 83,
+                "v469f": 7
+            }
+        },
+        "Spectator": {
+            "deps": {
+                "v432": 19,
+                "v469f": 6
+            }
+        },
+        "ZoneTrigger": {
+            "deps": {
+                "v432": 10,
+                "v469f": 5
+            }
+        },
+        "Counter": {
+            "deps": {
+                "v432": 5,
+                "v469f": 4
+            }
+        },
+        "StatLogFile": {
+            "deps": {
+                "v432": 18,
+                "v469f": 8
+            }
+        },
+        "WayBeacon": {
+            "deps": {
+                "v432": 6,
+                "v469f": 5
+            }
+        },
+        "TriggerLight": {
+            "deps": {
+                "v432": 16,
+                "v469f": 3
+            }
+        },
+        "SpecialEvent": {
+            "deps": {
+                "v432": 32,
+                "v469f": 8
+            }
+        },
+        "MusicEvent": {
+            "deps": {
+                "v432": 8,
+                "v469f": 5
+            }
+        },
+        "DemoRecSpectator": {
+            "deps": {
+                "v432": 15,
+                "v469f": 5
+            }
+        },
+        "WarpZoneMarker": {
+            "deps": {
+                "v432": 7,
+                "v469f": 5
+            }
+        },
+        "LiftCenter": {
+            "deps": {
+                "v432": 71,
+                "v469f": 7
+            }
+        }
+    }
+}

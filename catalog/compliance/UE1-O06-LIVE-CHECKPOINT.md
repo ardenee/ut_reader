@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-FAST-THREE-BATCHES-T041-T064-24-IDS-SOURCE69
-- **Last completed action:** Completed three 8-ID fixed batches T041-T048, T049-T056, T057-T064. Preexisting T051,T054,T055,T056,T057 PASS skipped. 19 blocked tests have precise distinct original compiled source/native branches documented; zero invented PASS. Scoped UT99 source-selected struct-array 69/69 verifier repaired and passed; original compiled noninteractive array test standalone failed 0xC0000409 before any usable value oracle, excluded. T058 original C98 property tag+None loader not evidenced by earlier UConst/UEnum. Total fixed 18 PASS 62 BLOCKED.
-- **Resume at:** B09 T065-T072 and B10 T073-T080 in 8-ID groups; release T078-080 cannot pass until actual original compiled branch coverage fixed. Prioritize small original native oracles that actually cover missing T source/value/cursor, stop at one bounded attempt per fixed ID; no PRD.
-- **Active changed at:** 2026-10-29T00:09:23+00:00
+- **Stage:** G3-19-PASS-61-BLOCKED-ACTUAL-GROUPED-C227-ARRAY-UCLASS
+- **Last completed action:** Completed grouped original compiled native execution T014, T015, T048, T049 and T068: T014 original shipped 469f Engine 88/88 archived UClass vs native (132 live) with 45 profile differences and 856/856 focused PASS; frozen register now 19 PASS 61 BLOCKED. Shared original 2012 227i CDB Core class six and actual 2026 227k x86 Core 42 live / 8 archived, Engine 235 live /187 archived, plus 227k UArrayProperty 16 real native methods returning 32 original booleans, grouped verifier 1627/1627. One 227k Core.Object archive3/live2 dependency difference remains original compiled phase-source unproved so T015 not FULL; T049 needs 2012/net. Original v432 two one-byte compact count zero/-1 now genuine native loader errors Got8 Expected29 Tell259, corrected reader source negative-count premature throw, 38/38 real-native focused parity; T048/T068 remain other source profiles. Previously accepted T057 112/112 and array source 61/61 unaffected; G3 NOT ACCEPTED, PRD unchanged.
+- **Resume at:** Run next batch of missing original native method cases in source-selected groups. Target original Core.Object serialize-return vs postlinked Dependencies 3 vs2, C227i native conditional array/Net branch and C98 genuine tagged/malformed physical EOF. Do not repeat accepted original probes or substitute documentation for tests.
+- **Active changed at:** 2026-10-29T01:35:00+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

@@ -299,11 +299,15 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     // before the native linker reports its true failure.
                     if($streamState!==null)$streamState['allow_overread']=true;
                     [$count,$raw]=$readLinkerIndex();
-                    if($count<0){
-                        throw new RuntimeException(
-                            'UE1 v432 dynamic array negative count at archive offset '
-                            .($offset+$position));
-                    }
+                    // Original compiled v432 UArrayProperty::SerializeItem
+                    // reads signed AR_INDEX(n) then calls FArray::Add(n,c)
+                    // and loops only while i<n. It does NOT throw here for
+                    // negative n. A genuine count 3 -> -1 one-byte mutation
+                    // continues until ULinkerLoad's later serial-size check:
+                    // native Got 8, Expected 29, FArchive::Tell 259 (not 255).
+                    // Keep the signed value as an archive observation, never
+                    // claim a negative-sized TArray successfully loaded.
+                    $negativeArrayCount=$count<0;
                     // Epic UArrayProperty::SerializeItem does not bound
                     // the element count by the export's SerialSize.
                     // ULinkerLoad reads the physical file stream and reports
@@ -438,7 +442,15 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         'inner_property_kind'=>$innerKind,
                         'serialized_element_bytes'=>strlen($raw),
                         'preview_first_32'=>$elements,
-                        'all_values_previewed'=>$count<=32];
+                        'all_values_previewed'=>$count>=0&&$count<=32];
+                    if($negativeArrayCount){
+                        // The original loader may have an invalid TArray
+                        // after FArray::Add(n,c); the archive parser cannot
+                        // claim a successfully materialized native value.
+                        $arrayDecoded['native_loaded_value_parity']='NOT_VERIFIED';
+                        $arrayDecoded['source_runtime_risk']=
+                            'Original v432 FArray::Add receives a negative signed count';
+                    }
                     $structHasDynamicString=false;
                     if($innerKind==='structproperty'
                         &&is_array($structLayout)){

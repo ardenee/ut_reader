@@ -1,0 +1,21 @@
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+G5_NATIVE_DIRECT_PACKAGE_BEGIN editor=1 client=0 server=0
+G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=00FC16CC editor=1 native_error=0
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.Mesh.Textures null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.SkeletalMesh.IKSolvers null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.HUD.Overlays null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.Projector.DecalActors null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.GameInfo.ModifyTravelList.TravelList null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.Actor.RealTouching null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.Actor.ProjectorList null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.BlockingActor.BlockingClasses null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.BlockingActor.IgnoreSubClasses null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.BlockingActor.ScriptBlocking null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.LevelInfo.ObjList null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.Teleporter.PostTouch.TList null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.BlockingVolume.BlockedClasses null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.LevelInfo.CleanupDestroyedNotify null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.GameInfo.ModifyActorTravelList.TravelList null=1 nonnull=1 innerKind=5 num=1
+G3_T049_ORIGINAL_227K_ARRAY_SHOULD_SERIALIZE name=ArrayProperty Engine.Actor.AnimSets null=1 nonnull=1 innerKind=5 num=1
+G5_NATIVE_OBJECT_COUNT 16

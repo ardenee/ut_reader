@@ -1,0 +1,33 @@
+{
+    "ok": true,
+    "checks": 38,
+    "failures": [],
+    "T048": "PARTIAL_V432_ONLY",
+    "T068": "PARTIAL_V432_ONLY",
+    "native_shipped_compiled_v432_cases_verified": 2,
+    "compiled_UE1_engines_reexecuted": 0,
+    "original_mutant_archive_source_byte_offset": 254,
+    "current_reader_sha256": "814a77b35a0ced3bea73d0f33486baea52f61c652f318be36a91e0f9f92b4988",
+    "cases": [
+        {
+            "case": "array_count_zero",
+            "original_compiled_x86_error": "Serial size mismatch: Got 8, Expected 29",
+            "native_true_physical_Tell": 259,
+            "reader_on_disk_tag_cursor": 259,
+            "original_native_rejected_object": true,
+            "archive_only_count": 0,
+            "reader_claims_native_loaded_value": false,
+            "original_engine_reexecuted_during_verifier": false
+        },
+        {
+            "case": "array_count_negative_one",
+            "original_compiled_x86_error": "Serial size mismatch: Got 8, Expected 29",
+            "native_true_physical_Tell": 259,
+            "reader_on_disk_tag_cursor": 259,
+            "original_native_rejected_object": true,
+            "archive_only_count": -1,
+            "reader_claims_native_loaded_value": false,
+            "original_engine_reexecuted_during_verifier": false
+        }
+    ]
+}

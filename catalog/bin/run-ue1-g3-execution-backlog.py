@@ -814,7 +814,44 @@ def eval_t013(_row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":"Original shipped compiled UT99 v432 Core.dll UClass::Serialize loaded all 7 genuine Core.u classes; all archived ClassFlags, real ClassWithin/UField ref identities, global FName config, script/state scalars, GUIDs, 13 fully initialized FDependency elements (native same-process UObject.Index, deep, CRC), PackageImports and original archive consumption verified. Genuine v432 native ClassFlags loaded 274 with FArchive Tell 5458->5462. Reuses previously fully accepted original 88 genuine Engine.u classes with 7/7 source gates and 608 defaults. Current source/native 207/207 focused verifier, no prior native compiled suite replay. T013 only, 469f/227i/227k and C98 distinct builds remain OPEN.","evidence":pins}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T013":eval_t013,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
+def eval_t014(_row: dict[str, Any]) -> dict[str, Any]:
+    """Real compiled UT99 469f native UClass Engine fields, 88 archived vs 132 live."""
+    base="catalog/compliance/evidence/o06/"
+    expected=[
+        ("catalog/bin/verify-ue1-o06-g3-t014-original-469f-uclass-live.php","b1a5394c4ed2007da7c9c9172b4db87eff24b2c6d913b70460a7893add6d1d1e"),
+        (base+"20261029-G3-T014-original-469f-Engine-UClass-loaded-values.log","0d5380ced4ff0178c925a767b25f7466661c3075118750606dde2b5e2cc54e57"),
+        (base+"20261029-G3-T014-original-469f-native-uclass-probe.cpp","a97aed65eb129f253ed51bab15bce3feefb7563fd5c45c2db8851e412474b2f1"),
+        (base+"20261029-G3-T014-original-469f-UClass-856pass.json","0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468"),
+        ("catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json","772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e"),
+    ]
+    pins=[verify_pin(path,h) for path,h in expected]
+    original=[
+      (r"C:\Temp\UnrealDB\O06\G3-REAL-T059-469F-ENTRY\System\Core.dll","80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"),
+      (r"C:\Temp\UnrealDB\O06\G3-REAL-T059-469F-ENTRY\System\Engine.dll","625dabea278e314714a45c931c98ba6282a9198378499144429aa979a1a0570f"),
+      (r"C:\Temp\UnrealDB\O06\G3-REAL-T059-469F-ENTRY\System\Engine.u","6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"),
+    ]
+    for fn,h in original:
+        fp=pathlib.Path(fn)
+        if not fp.is_file() or sha256(fp)!=h:
+            raise AssertionError("T014 original compiled 469f binary changed: "+fn)
+        pins.append({"original":fn,"sha256":h})
+    result=json.loads((ROOT/base/"20261029-G3-T014-original-469f-UClass-856pass.json").read_text(encoding="utf-8-sig"))
+    required={"ok":True,"checks":856,"errors":[],"status":"PASS",
+      "original_469f_Engine_runtime_live_UClass_count":132,
+      "original_469f_serialized_UClass_compared_to_native":88,
+      "original_469f_compiler_registered_only_UClass":44,
+      "v432_original_previously_accepted_full_UClass":88,
+      "actual_469f_vs_v432_archived_direct_field_changes_count":45,
+      "original_compiled_native_sessions_reexecuted_by_verifier":0}
+    for key,v in required.items():
+        if result.get(key)!=v:
+            raise AssertionError("T014 original native/full class value check "+key)
+    return {"status":"PASS","result":
+      "Original compiled 469f Core.dll and Engine.dll plus correct SDK-built x86 class probe loaded genuine Engine.u successfully: 132 real runtime registered UClasses, 88 genuine serialized UClass exports individually compared 6 direct native live fields and complete file consumption; 45 real v432-v469f archived field differences identified, 856/856 FULL focused parity, prior v432 original 88-class gate reused, zero original reruns by verifier. T014 only.","evidence":pins}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T013":eval_t013,"T014":eval_t014,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
