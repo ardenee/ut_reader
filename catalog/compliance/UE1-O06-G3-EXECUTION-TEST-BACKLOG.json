@@ -2642,13 +2642,45 @@
       "pass_criterion": "Reader throws at original moment with identical cursor and source native error class.",
       "evidence": "Original compiled FArchive native diagnostic trace or sealed equivalent",
       "reuse": "No one test per object or per package file.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Original FArchive attempted read and physical Tell for one shared underlying operator. PASS ONLY WHEN: Reader throws at original moment with identical cursor and source native error class. ORACLE: Original compiled FArchive native diagnostic trace or sealed equivalent. Reuse before any new execution: No one test per object or per package file.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "09e07ae79b9013a6175f208ee2d568948fbd8da72ad3c39724fb6bc601c3ebd8",
+      "result": "Original compiled stock UT99 v432 Core.dll, exact native-produced 283-byte package, one-byte legal FString count21->50: FArchiveFileReader next FPropertyTag FName FCompactIndex<< tries at physical EOF 283+1/283 after field; original Tell283, source-selected UnrealDB now reports matching physical EOF at next TagName and no loaded value. Previous sealed mid-field FString<< EOF 283+1/283 reused, different actual native stack, same operator. Source-specific previously mismatching generic missing NAME_None diagnostic corrected; 19/19 original native/current source checks PASS. Earlier physically truncated file failed during import-map Seek and explicitly excluded, not native-field proof. No claim of all source builds or full G3 release.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T10:00:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t066-original-v432-EOF-before-vs-mid-field.php",
+          "sha256": "96953ee4938d6dc7fc08e4fbbe9421ae12190d8a4e47685e222fbbc7e1d3f436",
+          "bytes": 5430
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "1c0fc76e5199e36044242898479b554c8e4bcc7b7388411cf2b9a19a91ce4b55",
+          "bytes": 62562
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.u",
+          "sha256": "d13f25c1167f0a4d807dde51e5602c9d27b2a38a682c179ad9aa57ade800b4b2",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.log",
+          "sha256": "89158262860cabe7fd253c2b65d2639d906a6fd94bc4a80840009715fca7d8f8",
+          "bytes": 1426
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-v432-preload-early-rejection.log",
+          "sha256": "bc0c69c0dfeeee93089e91f377e0e2692aa49c238cff738a6e87664632d938c9",
+          "bytes": 876
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-original-v432-19pass.json",
+          "sha256": "a1b235285f512db2a5177001f7e874837d3febdc35742dd9deaf8ff2095f57fe",
+          "accepted_original_assertions": 19
+        }
+      ]
     },
     {
       "id": "T067",
@@ -2748,13 +2780,45 @@
       "pass_criterion": "Reader honors original FArchive physical read and serialization size check in correct source order.",
       "evidence": "Source-defined original Preload/linker trace and reader archive cursor",
       "reuse": "Use only actual distinct implementation, not duplicate native per profile.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Test one stock original file with physically readable extension and one true EOF case. PASS ONLY WHEN: Reader honors original FArchive physical read and serialization size check in correct source order. ORACLE: Source-defined original Preload/linker trace and reader archive cursor. Reuse before any new execution: Use only actual distinct implementation, not duplicate native per profile.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "0be4a936f2ba13bb30105950e08f3efa4734fbff0368296adf88c7c71e2ea72b",
+      "result": "Original compiled stock UT99 v432 Core.dll on genuine native-produced 283-byte direct FString package: one-byte count21->22 reads beyond nominal export into physically readable file; ORIGINAL fails Bad name index -5242879/9, FArchive Tell262, reader same name and Tell262 with resolved source imports. Prior sealed original true physical EOF 283+1/283 also matches reader physical EOF283. Source/native/current reader 19/19 focused PASS; one new original native execution, previous accepted native EOF reused. Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T09:55:27+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t070-original-v432-physical-boundary.php",
+          "sha256": "aeae20006c4b799850acdfe87bc832463a5f96be3ab11962962b6f231a7ff852",
+          "bytes": 5719
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "d8f4aaea7bda3cf3272151b19e195ebe04d21486041046a20709c25b01e5c82b",
+          "bytes": 61784
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json",
+          "sha256": "3a47f8f88889df8e8cef3cba03c4310877ad78edc1d0d2059f18e8e13c20859b",
+          "bytes": 3381
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable-one-byte.u",
+          "sha256": "f814c88c487bd0707b9f7730001d4a51ef86aa739fe19ddcb4dd6d143c4a0a71",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable.log",
+          "sha256": "edb68d238e598428e7fd2b415918dae67fc68144bdc2ac23d3c64a361fccb545",
+          "bytes": 1340
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T070-original-v432-19pass.json",
+          "sha256": "76c9b00fadcc4ba04b001e367d19d550fa0ac38d0778affbd4dfe118cc13f375",
+          "accepted_original_assertions": 19
+        }
+      ]
     },
     {
       "id": "T071",

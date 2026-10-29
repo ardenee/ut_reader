@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 19,
+    "failures": [],
+    "test": "T070",
+    "native_original": "stock UT99 v432 Core.dll",
+    "native_new_execution_count": 1,
+    "previous_compiled_original_execution_reused": true,
+    "extra_nominal_export_error": "Bad name index -5242879/9 at physical Tell262",
+    "physical_EOF_error": "ReadFile beyond EOF 283+1/283",
+    "full_G3_accepted": false
+}

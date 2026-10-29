@@ -1082,7 +1082,59 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T067":eval_t067}
+def eval_t066(_row:dict[str,Any])->dict[str,Any]:
+    """One stock original v432 FArchive native operator: next-field EOF vs mid-FString EOF."""
+    pins=[
+        verify_pin("catalog/bin/verify-ue1-o06-g3-t066-original-v432-EOF-before-vs-mid-field.php",
+                   "96953ee4938d6dc7fc08e4fbbe9421ae12190d8a4e47685e222fbbc7e1d3f436"),
+        verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+                   "1c0fc76e5199e36044242898479b554c8e4bcc7b7388411cf2b9a19a91ce4b55"),
+        verify_pin("catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.u",
+                   "d13f25c1167f0a4d807dde51e5602c9d27b2a38a682c179ad9aa57ade800b4b2"),
+        verify_pin("catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.log",
+                   "89158262860cabe7fd253c2b65d2639d906a6fd94bc4a80840009715fca7d8f8"),
+        verify_pin("catalog/compliance/evidence/o06/20261029-G3-T066-v432-preload-early-rejection.log",
+                   "bc0c69c0dfeeee93089e91f377e0e2692aa49c238cff738a6e87664632d938c9"),
+        verified_pass_log("catalog/compliance/evidence/o06/20261029-G3-T066-original-v432-19pass.json","checks",19)
+    ]
+    return {"status":"PASS","result":
+        "Original compiled stock UT99 v432 Core.dll, exact native-produced 283-byte package, "
+        "one-byte legal FString count21->50: FArchiveFileReader next FPropertyTag FName FCompactIndex<< "
+        "tries at physical EOF 283+1/283 after field; original Tell283, source-selected UnrealDB "
+        "now reports matching physical EOF at next TagName and no loaded value. Previous sealed "
+        "mid-field FString<< EOF 283+1/283 reused, different actual native stack, same operator. "
+        "Source-specific previously mismatching generic missing NAME_None diagnostic corrected; "
+        "19/19 original native/current source checks PASS. Earlier physically truncated file "
+        "failed during import-map Seek and explicitly excluded, not native-field proof. "
+        "No claim of all source builds or full G3 release.",
+        "evidence":pins}
+
+def eval_t070(_row:dict[str,Any])->dict[str,Any]:
+    """Original compiled v432 genuine archive: read through export end vs true physical EOF."""
+    pins=[
+        verify_pin("catalog/bin/verify-ue1-o06-g3-t070-original-v432-physical-boundary.php",
+                   "aeae20006c4b799850acdfe87bc832463a5f96be3ab11962962b6f231a7ff852"),
+        verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+                   "1c0fc76e5199e36044242898479b554c8e4bcc7b7388411cf2b9a19a91ce4b55"),
+        verify_pin("catalog/compliance/UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json",
+                   "3a47f8f88889df8e8cef3cba03c4310877ad78edc1d0d2059f18e8e13c20859b"),
+        verify_pin("catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable-one-byte.u",
+                   "f814c88c487bd0707b9f7730001d4a51ef86aa739fe19ddcb4dd6d143c4a0a71"),
+        verify_pin("catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable.log",
+                   "edb68d238e598428e7fd2b415918dae67fc68144bdc2ac23d3c64a361fccb545"),
+        verified_pass_log("catalog/compliance/evidence/o06/20261029-G3-T070-original-v432-19pass.json",
+                          "checks",19)
+    ]
+    return {"status":"PASS","result":
+        "Original compiled stock UT99 v432 Core.dll on genuine native-produced 283-byte direct FString package: "
+        "one-byte count21->22 reads beyond nominal export into physically readable file; ORIGINAL fails "
+        "Bad name index -5242879/9, FArchive Tell262, reader same name and Tell262 with resolved source imports. "
+        "Prior sealed original true physical EOF 283+1/283 also matches reader physical EOF283. "
+        "Source/native/current reader 19/19 focused PASS; one new original native execution, previous accepted native EOF reused. "
+        "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
+        "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -1122,7 +1174,7 @@ def render_progress(register:dict[str,Any])->None:
         result=x.get("result") if x["status"]=="PASS" else x.get("blocking_reason")
         result=(result or "not yet processed").replace("|","/").replace("\n"," ")
         lines.append(f"| {x['id']} | {x['status']} | {result} |")
-    lines+=["","T001–T008, T010, T032, T051, T054–T056 and T067 have **source-specific, SHA-pinned original compiled/native evidence evaluators** in this runner. Other blocked tests need their specified original compiled oracle; a new evaluator is added for an existing fixed T-test only after genuine source/native proof. No inferred PASS. Status ledger retains exact missing procedure. Missing acceptance is not a defect diagnosis.",""]
+    lines+=["","Source-specific SHA-pinned evaluators available for these original native-evidence test IDs: **"+", ".join(sorted(EVALUATORS))+"**. Other BLOCKED IDs require exactly their named original compiled oracle; new evaluators must prove the existing fixed row without adding tests or speculating PASS.",""]
     PROGRESS.write_text("\n".join(lines),encoding="utf-8")
 
 def review_one(row:dict[str,Any],retry:bool)->dict[str,Any]:

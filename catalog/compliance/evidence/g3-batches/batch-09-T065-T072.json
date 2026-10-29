@@ -4,7 +4,7 @@
     "T065",
     "T072"
   ],
-  "started_at": "2026-10-28T11:54:57+00:00",
+  "started_at": "2026-10-29T10:01:46+00:00",
   "tests": [
     {
       "id": "T065",
@@ -13,8 +13,8 @@
     },
     {
       "id": "T066",
-      "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T067",
@@ -24,17 +24,17 @@
     {
       "id": "T068",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
     },
     {
       "id": "T069",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "ORIGINAL_V432_AND_227K_NAME_ERRORS_MATCH_C98_UNPROVEN_PARTIAL"
     },
     {
       "id": "T070",
-      "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T071",
@@ -47,11 +47,11 @@
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     }
   ],
-  "finished_at": "2026-10-28T11:54:57+00:00",
+  "finished_at": "2026-10-29T10:01:46+00:00",
   "counts": {
-    "PASS": 1,
+    "PASS": 3,
     "FAIL": 0,
-    "BLOCKED": 7,
+    "BLOCKED": 5,
     "PENDING": 0
   }
 }

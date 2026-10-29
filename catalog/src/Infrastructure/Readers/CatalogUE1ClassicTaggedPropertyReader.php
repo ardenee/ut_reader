@@ -757,6 +757,18 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     'value_kind'=>$valueKind,
                     'value'=>$value,'value_sha256'=>$raw!==''?hash('sha256',$raw):null];
             }
+            if(!$end
+                &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                &&($streamState['allow_overread']??false)
+                &&$position>=($streamState['physical_limit']??PHP_INT_MAX)){
+                // A source-valid FString may finish exactly at physical EOF.
+                // Original compiled v432 still attempts the NEXT FPropertyTag
+                // FName compact index, failing FArchiveFileReader::Serialize
+                // at that physical Tell, not a preview-only missing-None check.
+                throw new RuntimeException(
+                    'UE1 v432 ULinkerLoad::Serialize physical EOF at archive offset '
+                    .($offset+$position).' during FPropertyTag TagName<<FName');
+            }
             if(!$end){throw new RuntimeException('UE1 property tags have no NAME_None terminator within archive bounds');}
         return $tags;
     }

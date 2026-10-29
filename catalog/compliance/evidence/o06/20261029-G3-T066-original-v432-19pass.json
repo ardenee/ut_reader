@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 19,
+    "failures": [],
+    "test": "T066",
+    "build": "stock UT99 v432",
+    "native_compiled_new_execution_count": 1,
+    "previous_original_compiled_mid_field_EOF_reused": true,
+    "before_field": "original FCompactIndex<< next TagName at FArchive Tell283",
+    "mid_field": "original FString<< physical EOF at Tell283",
+    "excluded_early_import_seek": true,
+    "G3_full_accepted": false
+}
