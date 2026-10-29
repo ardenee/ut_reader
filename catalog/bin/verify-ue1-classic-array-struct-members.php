@@ -137,9 +137,9 @@ $run=static function(string $label,bool $fixed,string $value,
     $memberOuter,$intDim,$parentSuper,$refs));
   $pkg=new P($path);
   $check($label.'_package_valid',$pkg->validatePackage()===[]);
-  $meta=T::inspect($path,$pkg,0);
-  $native=N::inspect($path,$pkg,1,T::inspect($path,$pkg,1));
-  $actualStruct=N::inspect($path,$pkg,2,T::inspect($path,$pkg,2));
+  $meta=T::inspect($path,$pkg,0,'ut99-v432');
+  $native=N::inspect($path,$pkg,1,T::inspect($path,$pkg,1,'ut99-v432'),'ut99-v432');
+  $actualStruct=N::inspect($path,$pkg,2,T::inspect($path,$pkg,2,'ut99-v432'),'ut99-v432');
   $check($label.'_native_UStructProperty_with_real_UStruct',
     $native['property_kind']==='structproperty'
     &&$native['subclass_fields']['struct_reference']===$struct
@@ -147,7 +147,7 @@ $run=static function(string $label,bool $fixed,string $value,
     &&$actualStruct['children_reference']===4);
   $fake=['export_index'=>0,'children_reference'=>1,
     'super_field_reference'=>0];
-  $result=S::inspect($path,$pkg,$fake,$meta['tags']);
+  $result=S::inspect($path,$pkg,$fake,$meta['tags'],'ut99-v432');
   $sample=$result['array_value_samples'][0]??[];
   $check($label.'_source_matched_status',
     ($sample['status']??'')===$expected
@@ -261,12 +261,12 @@ foreach([
   file_put_contents($file,$build(false,$bytes,7,3,5,0,3,2,0,true));
   $pkg=new P($file);
   $check($label.'_valid_UE1_export_maps',$pkg->validatePackage()===[]);
-  $meta=T::inspect($file,$pkg,0);
+  $meta=T::inspect($file,$pkg,0,'ut99-v432');
   $threw=false;
   try{
    S::inspect($file,$pkg,
      ['export_index'=>0,'children_reference'=>1,
-      'super_field_reference'=>0],$meta['tags']);
+      'super_field_reference'=>0],$meta['tags'],'ut99-v432');
   }catch(RuntimeException $e){
    $threw=str_contains($e->getMessage(),$why);
   }

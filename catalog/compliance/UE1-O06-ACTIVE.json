@@ -1,7 +1,7 @@
 {
   "contract": "g3-controlled-80-fixed-tests",
-  "stage": "G3-FAST-3X8-24-FIXED-REVIEWED-18PASS-62BLOCKED",
-  "last_action": "Fast-source/original-native SHA evidence audit completed T017-T040 in three eight-ID groups. 24 fixed IDs assessed; 23 currently BLOCKED now have precise missing source-native value/error/cursor reason; T032 original PASS was skipped; no original compiled native reruns, no synthetic promotions or added T-IDs. Total fixed 18 PASS 62 BLOCKED, G3 not accepted. Short-batch throughput rule documented in AGENTS.md.",
-  "next_step": "Short batches of eight: T041-T048, then T049-T056. Each T-ID one bounded original native decision at most; record blocker and advance; only source-native exact acceptance can upgrade to PASS. No PRD release.",
-  "updated_at_utc": "2026-10-28T23:44:30+00:00"
+  "stage": "G3-FAST-BATCH-06-07-16-IDS-69-SOURCE-CHECKS",
+  "last_action": "Two grouped eight-ID batches T041-T048 and T049-T056 assessed; 12 BLOCKED with exact missing authentic original source-family native values/cursors; existing T051 T054 T055 T056 PASS skipped without rerun. Source-selected existing UT99 v69 struct/fixed/dynamic array verifier was broken by ambiguous version69 and repaired with explicit ut99-v432 across all call sites; 69/69 short new reader/source branch checks PASS, not original compiled equivalence. Two bounded original v432 custom native array count zero/negative isolated probes failed before result with 0xC0000409/zero output, excluded and not promoted. No new fixed test PASS, overall 18 PASS 62 BLOCKED; no PRD deployment.",
+  "next_step": "Next eight IDs T057-T064: reuse T057 and find genuine C98 tagged termination oracle for T058, compare v432/469f mixed tags T059 and 227i/k real tagged default T060; unresolved source-family value/error cases BLOCKED immediately and move on. Keep bounded native original process budget, no accepted CDB replay.",
+  "updated_at_utc": "2026-10-29T00:06:25+00:00"
 }

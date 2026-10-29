@@ -1,0 +1,372 @@
+{
+  "schema": 1,
+  "date": "2026-10-29T00:05:32+00:00",
+  "fixed_groups": [
+    "T041-T048",
+    "T049-T056"
+  ],
+  "fixed_ids_processed": 16,
+  "PASS_previously_accepted_skipped": 4,
+  "BLOCKED_distinct_criteria_recorded": 12,
+  "new_PASS": 0,
+  "previous_native_original_reruns": 0,
+  "original_native_engine_probe_status": "Two isolated v432 negative/zero Array.Num byte patches, authentic Core.dll SHA 237dbe38..., 0xC0000409 with empty output, no engine method reached; NOT accepted as original oracle",
+  "current_reader_existing_synthetic_struct_array_source_check": {
+    "sha256_verifier": "99936286eba414e66bfdda199de00a25259415d5b9ebe472fb7ff732c3612543",
+    "checks": 69,
+    "passed": 69,
+    "status": "SOURCE_PROFILE_ONLY_NOT_NATIVE"
+  },
+  "retained_original_compiled_oracle_pins": {
+    "v432_arrays": {
+      "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+      "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+    },
+    "227i_property_declarations": {
+      "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+      "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+    },
+    "source_string": {
+      "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+      "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+    },
+    "original_recursive_native": {
+      "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+      "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+    }
+  },
+  "tests": [
+    {
+      "id": "T041",
+      "status": "BLOCKED",
+      "reason": "Original compiled v432 Int array (11,42,-7) is sealed; C98 and C227 genuine zero-count/two-value runtime and physical cursor not established.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T042",
+      "status": "BLOCKED",
+      "reason": "Original v432 NAME (Alpha,Beta), Object (Actor,None) arrays sealed; distinct C98 and 227 original linker-backed null/nonnull array values missing.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T043",
+      "status": "BLOCKED",
+      "reason": "Synthetic UT99 source-selected two struct elements now 69/69; ORIGINAL compiled cross-family nested UStruct array member values/footprint missing.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": true,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T044",
+      "status": "BLOCKED",
+      "reason": "Prior v432 FString inner branch source evidence; original C98/227 actual loaded empty and nonempty FString array payload missing.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T045",
+      "status": "BLOCKED",
+      "reason": "2012 C227i original compiled UFixedArrayProperty::Serialize method disassembled, but no original runtime 2-element fixed primitive instance loaded (227k separate).",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T046",
+      "status": "BLOCKED",
+      "reason": "Source-profile selected synthetic 2-element FixedArray UStruct checks pass 69/69; original 2012/2026 compiled fixed nested/Name loaded bytes absent.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": true,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T047",
+      "status": "BLOCKED",
+      "reason": "2012 compiled UMapProperty::Serialize method present; original map instance and source-based proof for nonempty map exclusion still missing.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T048",
+      "status": "BLOCKED",
+      "reason": "Prior v432 original malformed array count2/count4 and bad refs (6 cases) retained; distinct C98/227 native failing Tell absent. Two NEW isolated v432 standalone harness cases exited 0xC0000409 before loader output; DO NOT infer archive/error semantic.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": true,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T049",
+      "status": "BLOCKED",
+      "reason": "2012/2026 original UArrayProperty ShouldSerializeItem/NetSerializeItem result and bytes, or exact source-excluded net branch, missing.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T050",
+      "status": "BLOCKED",
+      "reason": "Authentic 1998 C98 Core.u has no SAME script with both nonzero FName and UObject relocations; Engine.u cross-type native success T057 cannot replace Core.u fixture.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T051",
+      "status": "PASS_PREVIOUSLY_SEALED_SKIPPED",
+      "new_native": false
+    },
+    {
+      "id": "T052",
+      "status": "BLOCKED",
+      "reason": "Original v432-versus-469f serialized bytecode opcode table equivalence or a genuine 469f-only divergence still not established for complete switch.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T053",
+      "status": "BLOCKED",
+      "reason": "2012/2026 genuine compiled typed UObject+FName relocations and struct/default nested memory in one source script still incomplete; prior C227i RandRange success T057 insufficient.",
+      "real_original_v432_g5_and_C227i_manifest_SHA_reused": [
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UOBJECT-NATIVE-DYNAMIC-ARRAY-6.json",
+          "sha256": "cafa05bb65017779f6276f41f038f4e473a7e50a8a3aeb1d0242489fd3f3008d"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C227I-ARRAY-FOUR-EXACT-ORIGINAL-NATIVE-INNER.json",
+          "sha256": "e68d86d18fe78e442c1a8c82c17e8660656a69734813328547d01d641708fd31"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-C98-T99-RAW-STRING-FIXEDARRAY-COUNT-SOURCE.json",
+          "sha256": "c7dddc7e8c2c54feb9d3c318a2cd1c6a4251873958bf8ecbe93ba4435939ba17"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "sha256": "c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc"
+        }
+      ],
+      "synthetic_source_array_69check_applies": false,
+      "new_native": false,
+      "native_outcome_attributed": false
+    },
+    {
+      "id": "T054",
+      "status": "PASS_PREVIOUSLY_SEALED_SKIPPED",
+      "new_native": false
+    },
+    {
+      "id": "T055",
+      "status": "PASS_PREVIOUSLY_SEALED_SKIPPED",
+      "new_native": false
+    },
+    {
+      "id": "T056",
+      "status": "PASS_PREVIOUSLY_SEALED_SKIPPED",
+      "new_native": false
+    }
+  ]
+}
