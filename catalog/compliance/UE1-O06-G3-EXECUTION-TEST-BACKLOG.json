@@ -1081,14 +1081,56 @@
       "pass_criterion": "Loaded default value and super/override outcome match source-selected original, not merely static bytes.",
       "evidence": "May17 genuine Unreal Core/Engine original compiled class-default observation",
       "reuse": "Tagged serialization mechanics delegated G3-13.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original 1998 C98 Core.u only Object and Subsystem serialized Class exports; no genuine inherited override default fixture on this original C98 file. New 469f compiled Actor/HUD override T017 is not C98. Need actual C98 class CDO native. FULL REQUIRED: Loaded default value and super/override outcome match source-selected original, not merely static bytes.",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "240b4adb117c6b0f015a4cb3568a6bab83b419a8e2ab4ee133243aa80b173fd1",
+      "result": "Real original retail May17 1998 x86 Unreal.exe -make compiled v61 G3C98Defaults.u parent/child classes; original May17 Core.dll UClass::Serialize post-tag compiled CDB memory of both genuine class defaults proved parent INT G3Magic=123 and FLOAT G3Scale=1.25, child explicitly overrides INT=456 and INHERITS unchanged FLOAT1.25 despite absent child tag. Original native default array 452 bytes, actual member offsets 444/448, stock memory float bits 0x3fa00000. Actual original generated parent two tags/child only override bytes vs source selected UnrealDB class reader match; 33/33 independent native/source/archive checks PASS. No original compiled replay by verifier; this is only C98 T016, not C227 T018, and is not generic G3 full acceptance.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T23:36:45+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
-      "last_grouped_native_assessment": "2026-10-29"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-29",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t016-original-c98-native-default-inheritance.php",
+          "sha256": "c84ff41ab0d586804e86d3705bdb64ae916d5637b36e4513dfb6d115477a7020",
+          "bytes": 6833
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
+          "sha256": "d428680c17d6d2e38786daeecdb984ac8d657c4578aec570d45bd012545ffe41",
+          "bytes": 7809
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-breakpoint.cmd",
+          "sha256": "376bf8165dc275948efe550f236f70420f1e86811fc94e399fbd3937643de68c",
+          "bytes": 157
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-G3C98Defaults.u",
+          "sha256": "766e4654a9985cd241307fdf78f496f890fcde3706799f872b41c94cb97cbddf",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-parent.uc",
+          "sha256": "01615d512f5082715246a445abdb0c57a30251731230eb8e29e87720ab1c2da0",
+          "bytes": 125
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-child.uc",
+          "sha256": "45e545b3a1d8fc622fb76b26e4521a2f06a0f28ed76838e3c2ae7375db776e69",
+          "bytes": 77
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-package-load.log",
+          "sha256": "49ffb6204c3326162e8eea774f10c38f759a1d2763211332bc29293043c137c6",
+          "bytes": 1573
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-defaults-33pass.json",
+          "sha256": "a78b41a3296440649368e9c1a4223c2d727745be0df1808c2301ed81dcdb1134",
+          "accepted_original_assertions": 33
+        }
+      ]
     },
     {
       "id": "T017",

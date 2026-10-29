@@ -67,3 +67,6 @@ catalog/compliance/evidence/o06/20261029-G3-T049-C227k-original-24-NetSerialize-
 catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log -text
 catalog/compliance/evidence/o06/20261029-G3-T018-original-C227i-Engine-UC-native-export-FAILED.log -text
 catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-native.log -text
+
+# Preserve exact original May17 C98 T016 native compiler, debugger and fixture evidence SHA-256.
+catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-* -text

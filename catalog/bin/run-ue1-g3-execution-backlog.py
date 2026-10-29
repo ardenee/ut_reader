@@ -1082,6 +1082,36 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
+def eval_t016(_row:dict[str,Any])->dict[str,Any]:
+    """C98 May17 actual compiled class defaults parent/child native inherited scalar values."""
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t016-original-c98-native-default-inheritance.php",
+                 "c84ff41ab0d586804e86d3705bdb64ae916d5637b36e4513dfb6d115477a7020"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
+                 "d428680c17d6d2e38786daeecdb984ac8d657c4578aec570d45bd012545ffe41"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-breakpoint.cmd",
+                 "376bf8165dc275948efe550f236f70420f1e86811fc94e399fbd3937643de68c"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-G3C98Defaults.u",
+                 "766e4654a9985cd241307fdf78f496f890fcde3706799f872b41c94cb97cbddf"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-parent.uc",
+                 "01615d512f5082715246a445abdb0c57a30251731230eb8e29e87720ab1c2da0"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-child.uc",
+                 "45e545b3a1d8fc622fb76b26e4521a2f06a0f28ed76838e3c2ae7375db776e69"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-package-load.log",
+                 "49ffb6204c3326162e8eea774f10c38f759a1d2763211332bc29293043c137c6"),
+      verified_pass_log("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-defaults-33pass.json","checks",33)
+    ]
+    return {"status":"PASS","result":
+      "Real original retail May17 1998 x86 Unreal.exe -make compiled v61 G3C98Defaults.u parent/child classes; "
+      "original May17 Core.dll UClass::Serialize post-tag compiled CDB memory of both genuine class defaults "
+      "proved parent INT G3Magic=123 and FLOAT G3Scale=1.25, child explicitly overrides INT=456 and "
+      "INHERITS unchanged FLOAT1.25 despite absent child tag. Original native default array 452 bytes, "
+      "actual member offsets 444/448, stock memory float bits 0x3fa00000. Actual original generated "
+      "parent two tags/child only override bytes vs source selected UnrealDB class reader match; "
+      "33/33 independent native/source/archive checks PASS. No original compiled replay by verifier; "
+      "this is only C98 T016, not C227 T018, and is not generic G3 full acceptance.",
+      "evidence":pins}
+
 def eval_t066(_row:dict[str,Any])->dict[str,Any]:
     """One stock original v432 FArchive native operator: next-field EOF vs mid-FString EOF."""
     pins=[
@@ -1134,7 +1164,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

@@ -1,0 +1,29 @@
+﻿{
+    "ok": true,
+    "checks": 33,
+    "failures": [],
+    "fixed_test": "T016",
+    "authentic_compiled_engine": "Unreal retail C98 May17 1998",
+    "source_archive_version": 61,
+    "native_loaded_parent_child": [
+        {
+            "class": "G3C98Parent",
+            "native_object_size": 452,
+            "magic_offset": 444,
+            "native_loaded_int": 123,
+            "scale_offset": 448,
+            "native_loaded_float_bits": "3fa00000"
+        },
+        {
+            "class": "G3C98Child",
+            "native_object_size": 452,
+            "magic_offset": 444,
+            "native_loaded_int": 456,
+            "scale_offset": 448,
+            "native_loaded_float_bits": "3fa00000"
+        }
+    ],
+    "native_original_executions_in_verifier": 0,
+    "source_archive_only_is_not_native_proof": true,
+    "G3_global_accepted": false
+}
