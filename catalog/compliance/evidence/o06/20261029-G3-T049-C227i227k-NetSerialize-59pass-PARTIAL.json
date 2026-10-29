@@ -1,0 +1,40 @@
+{
+  "ok": true,
+  "checks": 59,
+  "failures": [],
+  "fixed_test": "T049",
+  "status": "PARTIAL_ONLY",
+  "original_2012_native_NetSerializeItem": {
+    "return": 1,
+    "serialized_bytes": 0,
+    "named_PE_export_ShouldSerializeItem": false,
+    "original_compiled_ShouldSerializeItem_runtime": "UNVERIFIED"
+  },
+  "original_2026_native_NetSerializeItem": {
+    "real_Engine_IntArray_properties": 8,
+    "native_successful_calls": 24,
+    "cases": [
+      {
+        "case": 0,
+        "length": 2,
+        "hex": "0000"
+      },
+      {
+        "case": 1,
+        "length": 10,
+        "hex": "0100000000000B000000"
+      },
+      {
+        "case": 2,
+        "length": 18,
+        "hex": "0200000000000B00000003000000F9FFFFFF"
+      }
+    ]
+  },
+  "original_2026_native_ShouldSerializeItem": {
+    "real_Engine_object_array_properties": 16,
+    "native_boolean_calls": 32
+  },
+  "reader_network_scope": "runtime instance network codecs explicitly UNSUPPORTED; only package archive metadata decoded",
+  "original_compiled_native_sessions_rerun_by_verifier": 0
+}

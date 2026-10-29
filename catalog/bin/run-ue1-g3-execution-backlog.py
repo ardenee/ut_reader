@@ -923,7 +923,49 @@ def eval_t015(_row: dict[str, Any]) -> dict[str, Any]:
       "Original 2012 Unreal 227i Core.u 6 genuine UClass loaded fields compared to source archive; original 2026 Unreal 227k Core.u 8/8 and Engine.u 187/187 genuine serialized class metadata matches native loaded fields, real 227i-to-227k Commandlet and Subsystem ClassFlags differences are archive/source-gated. Original compiled 227k same Core.Object pointer native UClass::Serialize post-operator Dependencies.Num=3 and UClass::PostLoad entry=2 independently establishes source/linked phase change, not reader error. Shared original compiled 2012/2026 scoped 1633/1633 PASS; original native suites not rerun by verifier. T015 fully CLOSED.","evidence":pins}
 
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T067":eval_t067}
+def eval_t017_t059(row: dict[str, Any]) -> dict[str, Any]:
+    """Frozen G3 Actor CDO + mixed Bool/Int/Name shared original 469f native oracle."""
+    b="catalog/compliance/evidence/o06/"
+    pinned=[
+        ("catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php","2604e72c9a840bbe04f6b44dd4f82b28a42aa3e17d3733d397c1749873e90081"),
+        (b+"20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json","184d662a2ebdff10898993a4b9364e951a3a4d5fc7f674c0d34e28a5d2a8d3a2"),
+        (b+"20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log","c3c7fa3246e9ad41d6a03556852d0a0f726e94e1ea31c5aa1d442af1802acb99"),
+        (b+"20261029-G3-T017-T059-original-469f-three-actor-native-probe.cpp","a770685fe57d2afee5a171c1cf7cabb3e4fb1ebdf63172982f4a658073aa6434"),
+        (b+"20261029-G3-T017-T059-original-v432-469f-actor-source.json","936faa24264f8adba488eb28fc877b52e0eab9846feb027b12e8573e0b7cc67f"),
+        ("catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json","772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e"),
+        (b+"20261029-G3-T014-original-469f-UClass-856pass.json","0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468")
+    ]
+    pins=[verify_pin(name,digest) for name,digest in pinned]
+    for name,digest in [
+        (r"C:\Temp\UnrealDB\O06\Native-469f\System\Core.dll","80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"),
+        (r"C:\Temp\UnrealDB\O06\Native-469f\System\Engine.u","6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"),
+        (r"C:\Temp\UnrealDB\O06\Native-UCC\System\Engine.u","d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695")
+    ]:
+        source=pathlib.Path(name)
+        if not source.is_file() or sha256(source)!=digest:
+            raise AssertionError("Original UT99 compiled stock file drift: "+name)
+        pins.append({"original":name,"sha256":digest})
+    v=json.loads((ROOT/b/"20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json").read_text(encoding="utf-8"))
+    if not (v.get("ok") is True and v.get("checks")==902 and v.get("failures")==[]
+            and v.get("T017")=="PASS" and v.get("T059")=="PASS"
+            and v.get("original_compiled_native_sessions_rerun_by_verifier")==0):
+        raise AssertionError("Shared original 469f actual compiled actor and v432 source parity incomplete")
+    if row["id"]=="T017":
+        if v.get("source_Actor_bHidden_false_loaded_inherited_Pawn")!="False" or v.get("source_HUD_override_true_native")!="True":
+            raise AssertionError("Original compiled actor inherited vs overridden default mismatch")
+        reason=("Original 469f actual compiled Engine.u actor CDO: Pawn inherits Actor.bHidden=False, HUD overrides bHidden=True; original v432 actor/HUD archived fields and preaccepted real compiled 88 UClass/608 native default values reused. SuperField identities, original source tags, physical archive and real loaded outcomes verified.")
+    elif row["id"]=="T059":
+        actual=v.get("original_compiled_mixed_GameInfo_loaded") or {}
+        if actual.get("bPauseable")!="True" or actual.get("MaxPlayers")!="16" or actual.get("DefaultPlayerState")!='"PlayerWalking"':
+            raise AssertionError("Original compiled GameInfo mixed Bool/Int/Name value mismatch")
+        reason=("Original compiled 469f GameInfo CDO native Bool bPauseable=True, Int MaxPlayers=16 and Name DefaultPlayerState=PlayerWalking; real original 469f and v432 archive tag type/order, name index=63 and fully consumed UClass physical archive match. Reused sealed original v432 native defaults.")
+    else:
+        raise AssertionError("Unexpected fixed G3 ID for actor defaults")
+    return {"status":"PASS","result":reason+" Shared original compiled frozen 902/902 checks PASS; no original engine reruns.","evidence":pins}
+
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T017":eval_t017_t059,"T032":eval_t032,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T067":eval_t067}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

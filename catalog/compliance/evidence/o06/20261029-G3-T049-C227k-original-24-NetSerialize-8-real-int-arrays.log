@@ -1,0 +1,29 @@
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+Invalid language setting or translation not existing (Missing Engine.int). Falling back to int
+G5_NATIVE_DIRECT_PACKAGE_BEGIN editor=1 client=0 server=0
+G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=01588DDC editor=1 native_error=0
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Polys.ExtraFlags|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Polys.ExtraFlags|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Polys.ExtraFlags|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Model.ExtraFlags|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Model.ExtraFlags|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Model.ExtraFlags|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Projector.DecalNodes|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Projector.DecalNodes|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Projector.DecalNodes|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Decal.SurfList|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Decal.SurfList|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Decal.SurfList|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Mover.NotifyLightMaps|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Mover.NotifyLightMaps|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Mover.NotifyLightMaps|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Light.ShadowMoverInfo.BspSurfs|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Light.ShadowMoverInfo.BspSurfs|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.Light.ShadowMoverInfo.BspSurfs|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.TerrainInfo.TerrainDataInfo.EdgeTurn|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.TerrainInfo.TerrainDataInfo.EdgeTurn|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.TerrainInfo.TerrainDataInfo.EdgeTurn|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.TerrainInfo.TerrainDataInfo.Visibility|case=0|result=1|output_size=2|output_hex=0000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.TerrainInfo.TerrainDataInfo.Visibility|case=1|result=1|output_size=10|output_hex=0100000000000B000000
+G3_T049_ORIGINAL_227K_INT_NET name=ArrayProperty Engine.TerrainInfo.TerrainDataInfo.Visibility|case=2|result=1|output_size=18|output_hex=0200000000000B00000003000000F9FFFFFF
+G5_NATIVE_OBJECT_COUNT 8

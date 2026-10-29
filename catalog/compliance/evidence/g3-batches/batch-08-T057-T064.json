@@ -4,7 +4,7 @@
     "T057",
     "T064"
   ],
-  "started_at": "2026-10-28T22:14:34+00:00",
+  "started_at": "2026-10-29T02:50:38+00:00",
   "tests": [
     {
       "id": "T057",
@@ -14,44 +14,44 @@
     {
       "id": "T058",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T059",
-      "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T060",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T061",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T062",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T063",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     },
     {
       "id": "T064",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     }
   ],
-  "finished_at": "2026-10-28T22:14:34+00:00",
+  "finished_at": "2026-10-29T02:50:38+00:00",
   "counts": {
-    "PASS": 1,
+    "PASS": 2,
     "FAIL": 0,
-    "BLOCKED": 7,
+    "BLOCKED": 6,
     "PENDING": 0
   }
 }

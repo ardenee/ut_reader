@@ -790,10 +790,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load through authentic original UT99 compiled UFunction::Serialize <=63 branch; record archived triplet and after-link runtime triplet. PASS ONLY WHEN: Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout. ORACLE: One original native loaded-value trace against valid file and source branch; no 69 repeat. Reuse before any new execution: Excluded C98 bytecode and top-level synthetic attempts cannot count.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: 79 stock original UT99 v61/v63 packages found among 165 valid genuine source packages, all 79 texture .utx and zero .u/.unr scripts; no native loadable 60-63 UFunction legacy saved triplet. Do not use rejected original C98 v61 incompatible bad opcode 0x15. FULL REQUIRED: Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout.",
       "last_attempt_at": "2026-10-28T11:54:56+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T012",
@@ -1083,10 +1084,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Load original native class defaults then compare inherited field value and saved source tag. PASS ONLY WHEN: Loaded default value and super/override outcome match source-selected original, not merely static bytes. ORACLE: May17 genuine Unreal Core/Engine original compiled class-default observation. Reuse before any new execution: Tagged serialization mechanics delegated G3-13.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original 1998 C98 Core.u only Object and Subsystem serialized Class exports; no genuine inherited override default fixture on this original C98 file. New 469f compiled Actor/HUD override T017 is not C98. Need actual C98 class CDO native. FULL REQUIRED: Loaded default value and super/override outcome match source-selected original, not merely static bytes.",
       "last_attempt_at": "2026-10-28T11:54:56+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T017",
@@ -1098,13 +1100,67 @@
       "pass_criterion": "UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path.",
       "evidence": "G5 v432 default values reused; 469f original native delta only if needed",
       "reuse": "No repeat of accepted v432 full UClass.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: v432 original class defaults exist, but 469f original loaded override/config difference not independently captured. Acceptance still requires: UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "84c0e972710f666db8075927656d898611dc7178df3b1af8b49afbd4e29b8a98",
+      "result": "Original 469f actual compiled Engine.u actor CDO: Pawn inherits Actor.bHidden=False, HUD overrides bHidden=True; original v432 actor/HUD archived fields and preaccepted real compiled 88 UClass/608 native default values reused. SuperField identities, original source tags, physical archive and real loaded outcomes verified. Shared original compiled frozen 902/902 checks PASS; no original engine reruns.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T02:50:26+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php",
+          "sha256": "2604e72c9a840bbe04f6b44dd4f82b28a42aa3e17d3733d397c1749873e90081",
+          "bytes": 9904
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json",
+          "sha256": "184d662a2ebdff10898993a4b9364e951a3a4d5fc7f674c0d34e28a5d2a8d3a2",
+          "bytes": 2637
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log",
+          "sha256": "c3c7fa3246e9ad41d6a03556852d0a0f726e94e1ea31c5aa1d442af1802acb99",
+          "bytes": 50032
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-probe.cpp",
+          "sha256": "a770685fe57d2afee5a171c1cf7cabb3e4fb1ebdf63172982f4a658073aa6434",
+          "bytes": 2776
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-v432-469f-actor-source.json",
+          "sha256": "936faa24264f8adba488eb28fc877b52e0eab9846feb027b12e8573e0b7cc67f",
+          "bytes": 16832
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+          "sha256": "772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e",
+          "bytes": 1984
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-UClass-856pass.json",
+          "sha256": "0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f",
+          "bytes": 6361
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
+          "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.u",
+          "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.u",
+          "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+        }
+      ]
     },
     {
       "id": "T018",
@@ -1119,10 +1175,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "SHORT BATCH: 227i/227k original compiled class-default, Within and Config actual loaded runtime values not fully compared. Acceptance still requires: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original 227i vs 227k class flags/Within/Config already fully closed in T015, but revised original class CDO loaded value for each build not yet established. Do not substitute class metadata. FULL REQUIRED: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
       "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T019",
@@ -1437,10 +1494,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "SHORT BATCH: 227k static original ScriptedAI.u declarations and compiled method disassembly exist; both actual original loaded Caption FString values in real object memory still unobserved. Acceptance still requires: Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original 227k original stock ScriptedAI.u real MoveCamButton/MovePointButton caption archive known; new compiled native UButton loader in isolated fixture returns PackageNotFound for both package name and absolute path, no native UButton property memory loaded. FULL REQUIRED: Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
       "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T034",
@@ -1581,10 +1639,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "FAST 2x8: Original compiled v432 Int array (11,42,-7) is sealed; C98 and C227 genuine zero-count/two-value runtime and physical cursor not established. REQUIRED: Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: New original 2026 227k UArrayProperty NetSerializeItem saved three actual UInt-inner array cases on eight genuine Engine.u fields, 24 native calls; T041 requires package source LOAD plus C98/v432/C227, not net SAVE. FULL REQUIRED: Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code.",
       "last_attempt_at": "2026-10-29T00:05:32+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T042",
@@ -1725,10 +1784,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Actual original 2026 227k Core.dll UArrayProperty::ShouldSerializeItem method confirmed 12-byte FArray stride, inner method dispatch, 16 real Engine.u ArrayProperty methods invoked with null/nonnull correctly shaped two-slot records, 32 native BOOL returns all true. 2012 227i original native returns and conditional network serialization bytes remain unproven, BLOCKED. REQUIRED: Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: New original 2026 227k NetSerializeItem compiled 8 authentic UInt-inner Engine.u array properties x zero/one/two values: 24 native successes and 2,10,18 exact output bytes. Prior 16 genuine C227k ShouldSerialize methods 32 true returns. Original C227i compiled NetSerializeItem native mov eax,1;ret 0xc writes no bytes, BUT source SDK declares ShouldSerializeItem and its actual runtime bool source is still unproven (missing named PE export is not proof of absence). 59/59 scoped partial validator; T049 remains BLOCKED. FULL REQUIRED: Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
       "last_attempt_at": "2026-10-29T01:34:39+00:00",
       "attempted_native_execution": true,
-      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
+      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T050",
@@ -1827,10 +1887,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "FAST 2x8: Original v432-versus-469f serialized bytecode opcode table equivalence or a genuine 469f-only divergence still not established for complete switch. REQUIRED: Every real delta implemented/covered; byte-for-byte identity proof accepted if truly no delta.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: v432 Core.dll SerializeExpr RVA0x2860 vs 469f RVA0x4ac20, not compiled semantic equivalence proof. Need opcode switch differential or actual source-gated distinct opcode. FULL REQUIRED: Every real delta implemented/covered; byte-for-byte identity proof accepted if truly no delta.",
       "last_attempt_at": "2026-10-29T00:05:32+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T053",
@@ -2160,10 +2221,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "FAST B08: C98 original UObject named tagged value and NAME_None physical cursor not observed; old UConst/UEnum native is not this oracle. REQUIRED: UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
+      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original C98 Core serialized UClass accepted T012 is not a named tagged UObject with final NAME_None; still need native loaded named value and physical FArchive Tell at terminator. FULL REQUIRED: UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
       "last_attempt_at": "2026-10-29T00:09:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING",
+      "last_grouped_native_assessment": "2026-10-29"
     },
     {
       "id": "T059",
@@ -2175,13 +2237,67 @@
       "pass_criterion": "Original tag order, type alias, payload and last cursor match; 469f only separately where source delta.",
       "evidence": "G5 v432 original default corpus reused; 469f delta via Core/Engine",
       "reuse": "G3-05 owns construction and superclass overlay.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST B08: Original 469f mixed Bool/Int/Name tag order and physical final Tell unverified. REQUIRED: Original tag order, type alias, payload and last cursor match; 469f only separately where source delta.",
-      "last_attempt_at": "2026-10-29T00:09:10+00:00",
+      "status": "PASS",
+      "evidence_sha": "84c0e972710f666db8075927656d898611dc7178df3b1af8b49afbd4e29b8a98",
+      "result": "Original compiled 469f GameInfo CDO native Bool bPauseable=True, Int MaxPlayers=16 and Name DefaultPlayerState=PlayerWalking; real original 469f and v432 archive tag type/order, name index=63 and fully consumed UClass physical archive match. Reused sealed original v432 native defaults. Shared original compiled frozen 902/902 checks PASS; no original engine reruns.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-29T02:50:38+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php",
+          "sha256": "2604e72c9a840bbe04f6b44dd4f82b28a42aa3e17d3733d397c1749873e90081",
+          "bytes": 9904
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json",
+          "sha256": "184d662a2ebdff10898993a4b9364e951a3a4d5fc7f674c0d34e28a5d2a8d3a2",
+          "bytes": 2637
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log",
+          "sha256": "c3c7fa3246e9ad41d6a03556852d0a0f726e94e1ea31c5aa1d442af1802acb99",
+          "bytes": 50032
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-probe.cpp",
+          "sha256": "a770685fe57d2afee5a171c1cf7cabb3e4fb1ebdf63172982f4a658073aa6434",
+          "bytes": 2776
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-v432-469f-actor-source.json",
+          "sha256": "936faa24264f8adba488eb28fc877b52e0eab9846feb027b12e8573e0b7cc67f",
+          "bytes": 16832
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+          "sha256": "772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e",
+          "bytes": 1984
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-UClass-856pass.json",
+          "sha256": "0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f",
+          "bytes": 6361
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
+          "bytes": 16212
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
+          "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.u",
+          "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+        },
+        {
+          "original": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.u",
+          "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+        }
+      ]
     },
     {
       "id": "T060",

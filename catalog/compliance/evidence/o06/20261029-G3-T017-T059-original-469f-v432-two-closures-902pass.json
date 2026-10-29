@@ -1,0 +1,87 @@
+{
+    "ok": true,
+    "checks": 902,
+    "failures": [],
+    "T017": "PASS",
+    "T059": "PASS",
+    "original_469f_compiled_actor_default_classes": [
+        "Pawn",
+        "HUD",
+        "GameInfo"
+    ],
+    "source_Actor_bHidden_false_loaded_inherited_Pawn": "False",
+    "source_HUD_override_true_native": "True",
+    "original_compiled_mixed_GameInfo_loaded": {
+        "bPauseable": "True",
+        "MaxPlayers": "16",
+        "DefaultPlayerState": "\"PlayerWalking\""
+    },
+    "v432_and_469f_real_archive_tag_order": {
+        "v432": {
+            "class_export": 11,
+            "serialized_tags": 37,
+            "native_compared_properties": {
+                "bPauseable": {
+                    "type": "BoolProperty",
+                    "value": true,
+                    "ordinal": 2,
+                    "offset": 73019,
+                    "name_index": 1421
+                },
+                "MaxPlayers": {
+                    "type": "IntProperty",
+                    "value": 16,
+                    "ordinal": 28,
+                    "offset": 73686,
+                    "name_index": 1398
+                },
+                "DefaultPlayerState": {
+                    "type": "NameProperty",
+                    "value": 63,
+                    "ordinal": 32,
+                    "offset": 73716,
+                    "name_index": 1651
+                }
+            },
+            "tag_offsets": [
+                73019,
+                73686,
+                73716
+            ]
+        },
+        "v469f": {
+            "class_export": 11,
+            "serialized_tags": 353,
+            "native_compared_properties": {
+                "bPauseable": {
+                    "type": "BoolProperty",
+                    "value": true,
+                    "ordinal": 8,
+                    "offset": 68622,
+                    "name_index": 1421
+                },
+                "MaxPlayers": {
+                    "type": "IntProperty",
+                    "value": 16,
+                    "ordinal": 59,
+                    "offset": 69398,
+                    "name_index": 1398
+                },
+                "DefaultPlayerState": {
+                    "type": "NameProperty",
+                    "value": 63,
+                    "ordinal": 69,
+                    "offset": 69448,
+                    "name_index": 1651
+                }
+            },
+            "tag_offsets": [
+                68622,
+                69398,
+                69448
+            ]
+        }
+    },
+    "already_accepted_v432_native_UClass_classes": 88,
+    "original_compiled_native_sessions_rerun_by_verifier": 0
+}
