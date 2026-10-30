@@ -93,3 +93,6 @@ catalog/compliance/evidence/o06/20261030-G3-STR-BULK-* -text
 # G3 B04 malformed original UT99/227k native archive bytes and B08 original 227k runtime/INI evidence.
 catalog/compliance/evidence/o06/20261030-G3-B04-T028-* -text
 catalog/compliance/evidence/o06/20261030-G3-B08-* -text
+
+# G3 B06 genuinely compiled C227i/C227k struct/string arrays and negative-count original binaries.
+catalog/compliance/evidence/o06/20261030-G3-B06-AGG-* -text

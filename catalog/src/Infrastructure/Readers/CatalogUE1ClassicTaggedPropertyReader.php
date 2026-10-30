@@ -222,8 +222,36 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $width=match($innerKind){
                         'byteproperty'=>1,'intproperty','floatproperty'=>4,
                         'nameproperty','objectproperty','classproperty'=>-1,
+                        // Original C227i UCC compiled two source-legal
+                        // array<string> and array<struct> values, genuine
+                        // C227k native saved + separate native process loaded
+                        // each via UStrProperty and UStruct::SerializeBin.
+                        'strproperty'=>-2,'structproperty'=>-3,
                         default=>0
                     };
+                    $structLayout=null;
+                    if($width===-3){
+                        $structLayout=CatalogUE1ClassicStructArrayValueReader::resolve(
+                            $ownerPath,$ownerPkg,
+                            (int)($inner['subclass_fields']['struct_reference']??0),
+                            $family);
+                        if(($structLayout['status']??null)!=='struct_local_field_layout_resolved'){
+                            $width=0;
+                        }else{
+                            // Decode only this source-proven field serializer
+                            // set; no recursive or inferred native memory.
+                            foreach($structLayout['fields'] as $field){
+                                if(!$field['skip_persistent_archive']
+                                    &&!in_array($field['kind'],[
+                                        'byteproperty','boolproperty','intproperty',
+                                        'floatproperty','nameproperty',
+                                        'objectproperty','classproperty'
+                                    ],true)){
+                                    $width=0;break;
+                                }
+                            }
+                        }
+                    }
                     if($width!==0){
                         $loadPolicy='native_source_property_SerializeItem';
                         [$count,$raw]=$readLinkerIndex();
@@ -265,6 +293,62 @@ final class CatalogUE1ClassicTaggedPropertyReader
                                         $row=$valuePkg->getImports()[-$ref-1]??null;
                                         $linked[]=$row===null?null:
                                             (string)($row['objectNameText']??'');
+                                    }
+                                }elseif($width===-2){
+                                    // Real v227k UStrProperty::SerializeItem
+                                    // archives signed FString count + units,
+                                    // ignoring enclosing advisory Tag.Size.
+                                    [$chars,$prefix]=$readLinkerIndex();
+                                    $unit=(ord($prefix[0])&128)!==0?2:1;
+                                    $available=max(0,(int)($streamState['physical_limit']
+                                        ??$archiveLimit)-$position);
+                                    if(abs($chars)>intdiv($available,$unit)){
+                                        throw new RuntimeException(
+                                            'UE1 v227 FString array physical FArchive EOF at '
+                                            .($offset+(int)($streamState['physical_limit']
+                                                ??$archiveLimit)));
+                                    }
+                                    $itemRaw=$prefix.$read(abs($chars)*$unit);
+                                    $cursor=0;
+                                    $result=CatalogUE1ClassicFStringArchiveReader::decodeAt(
+                                        $itemRaw,$cursor);
+                                    if($result===null||$cursor!==strlen($itemRaw)){
+                                        throw new RuntimeException(
+                                            'UE1 v227 original nested FString archive unverified');
+                                    }
+                                    $v=$result['value']+
+                                        ['archive_value_kind'=>$result['value_kind']];
+                                }elseif($width===-3){
+                                    // Exact original UStruct::SerializeBin local
+                                    // TFieldIterator order. FName is an
+                                    // AR_INDEX resolved in the VALUE package.
+                                    $itemRaw='';
+                                    foreach($structLayout['fields'] as $field){
+                                        if($field['skip_persistent_archive'])continue;
+                                        for($j=0;$j<$field['array_dim'];$j++){
+                                            if(in_array($field['kind'],[
+                                                'nameproperty','objectproperty',
+                                                'classproperty'],true)){
+                                                [$ref,$part]=$readLinkerIndex();
+                                                $validateLinkerIndex($ref,
+                                                    $field['kind']==='nameproperty'
+                                                        ?'name':'object');
+                                            }else{
+                                                $size=in_array($field['kind'],[
+                                                    'byteproperty','boolproperty'
+                                                ],true)?1:4;
+                                                $part=$read($size);
+                                            }
+                                            $itemRaw.=$part;
+                                        }
+                                    }
+                                    $cursor=0;
+                                    $v=CatalogUE1ClassicStructArrayValueReader::readAt(
+                                        $itemRaw,$cursor,$structLayout,$a<32,$valuePkg);
+                                    if(($v['status']??null)!=='struct_field_values_decoded'
+                                        ||$cursor!==strlen($itemRaw)){
+                                        throw new RuntimeException(
+                                            'UE1 v227 original array UStruct::SerializeBin values unverified');
                                     }
                                 }else{
                                     $itemRaw=$read($width);

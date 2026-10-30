@@ -1,0 +1,35 @@
+﻿{
+    "ok": true,
+    "checks": 85,
+    "failures": [],
+    "full_original_fixed_ids": {
+        "T043": "PASS",
+        "T044": "PASS"
+    },
+    "original_2012_compiler_warnings": 0,
+    "real_original_2026_SavedPackage_bytes": 308,
+    "real_original_2026_native_struct_values": [
+        [
+            101,
+            1.25,
+            "Alpha"
+        ],
+        [
+            -202,
+            -2.75,
+            "Gamma"
+        ]
+    ],
+    "real_original_2026_native_class_default_strings": [
+        "",
+        "Hello-227"
+    ],
+    "real_original_2026_native_loaded_instance_strings": [
+        "Alpha-227",
+        "Gamma-227"
+    ],
+    "original_227k_native_negative_array": "PARTIAL_CRASH_NOT_ARCHIVE_CURSOR_T048_BLOCKED",
+    "original_fixed_array": "UProperty_ArrayDim2_not_UFixedArrayProperty_T045_T046_BLOCKED",
+    "prior_accepted_native_probes_reexecuted": 0,
+    "G3_full_accepted": false
+}
