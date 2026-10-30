@@ -24,8 +24,8 @@ foreach([
  [$ev.'20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json','760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66'],
  ['L:/Source/Games/Unreal/Unreal [v1.227]/Core/Inc/UnMath.h','7db6a8e314ccb8a5943330c677763bfb4ac948b3a595b81400034689d0cec677'],
  ['L:/Source/Games/Unreal/OldUnreal-UnrealPatch227k-SDK-Windows/Core/Inc/UnMath.h','2c53261003b3176e63fe7f8b9c47e7f8013cb460e7bdc6fb4433a895b49c91e0'],
- [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php','90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd'],
- [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468']
+ [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php','38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1'],
+ [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386']
 ] as [$file,$sha])$ck(is_file($file)&&hash_file('sha256',$file)===$sha,
     'original compiled/sources or exact current reader SHA256 '.basename($file));
 $session=str_replace("\r",'',(string)file_get_contents($ev.'20261029-G3-T036-T039-C227k-original-nested-struct-native.log'));

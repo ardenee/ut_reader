@@ -24,7 +24,7 @@ $files=[
  [$ev.'20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json','184d662a2ebdff10898993a4b9364e951a3a4d5fc7f674c0d34e28a5d2a8d3a2'],
  [$root.'/catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json','ae3e23e5e3b5ef7e7fab363fbd1ae7a75f80591212fac6bd2af7575638fa6e3b'],
  [$root.'/catalog/bin/verify-ue1-o06-g5-uclass-defaults-native-608.php','62d7f69c747a5f4c1b0fe430d76caab882cdb87e70839fb025cf27c69e8f1738'],
- [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468']
+ [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386']
 ];
 foreach($files as [$path,$hash])$ck(is_file($path)&&hash_file('sha256',$path)===$hash,'original source/compiled session SHA256 '.$path);
 $previous=json_decode((string)file_get_contents($root.'/catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json'),true,512,JSON_THROW_ON_ERROR);

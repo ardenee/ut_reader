@@ -22,7 +22,7 @@ $items=[
  [$ev.'20261029-G3-T016-C98-original-compiler-parent.uc','01615d512f5082715246a445abdb0c57a30251731230eb8e29e87720ab1c2da0'],
  [$ev.'20261029-G3-T016-C98-original-compiler-child.uc','45e545b3a1d8fc622fb76b26e4521a2f06a0f28ed76838e3c2ae7375db776e69'],
  [$ev.'20261029-G3-T016-C98-original-compiler-package-load.log','49ffb6204c3326162e8eea774f10c38f759a1d2763211332bc29293043c137c6'],
- [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468']
+ [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386']
 ];
 foreach($items as [$file,$sha])$ck(is_file($file)&&hash_file('sha256',$file)===$sha,
  'source/original native SHA '.basename($file));

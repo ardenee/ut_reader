@@ -25,6 +25,19 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
     private static array $packageCache=[];
 
     /**
+     * UClass default fields from this exact original package's linked
+     * UStruct.Children/UField.Next property chain, no global name guess.
+     * External superclass defaults remain independent and unresolved.
+     * @return array<string,array<string,mixed>>
+     */
+    public static function resolveLocalClassDefaultDeclarations(
+        string $path,CatalogUE1PackageReader $pkg,int $childrenRef,
+        string $sourceFamily
+    ):array{
+        return self::fieldChain($path,$pkg,$childrenRef,$sourceFamily);
+    }
+
+    /**
      * Resolve an ordinary UObject instance's real UClass property declarations.
      * Follow only pinned package export/import identities, then Epic's
      * UStruct.Children / UField.Next / SuperField chain. This is the same
@@ -193,6 +206,12 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 &&$tagKind==='stringproperty'&&$declKind==='strproperty';
             $typeValid=$tagKind===$declKind
                 ||($tagKind==='objectproperty'&&$declKind==='classproperty')
+                // Genuine 2026 compiled original C227k UAnyProperty::GetID()
+                // returns NAME_VectorProperty (11) even for live Any Type5
+                // and Type7 values. ONLY a verified actual Any declaration
+                // permits this alias; a real FVector remains a FVector.
+                ||($family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                    &&$tagKind==='vectorproperty'&&$declKind==='anyproperty')
                 ||$legacyStringUpgrade;
             $arrayValid=(int)($tag['array_index']??-1)>=0
                 &&(int)($tag['array_index']??-1)<(int)$decl['array_dim'];

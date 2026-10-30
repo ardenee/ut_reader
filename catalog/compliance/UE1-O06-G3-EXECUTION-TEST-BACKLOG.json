@@ -1789,13 +1789,70 @@
       "pass_criterion": "Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None.",
       "evidence": "2026 Core.dll direct native archive + original FName table",
       "reuse": "Previous type5 zero already sealed.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: genuine original 227k Any NAME5 zero accepted; required nonzero live registered global FName/load and source table identity still missing. Acceptance still requires: Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "90d89ed7f7cef81e86e902e2f2656d6750d5aae4e47ae3c62e1f93d117df4d66",
+      "result": "Actual shipped original 2026 Unreal 227k UCC.exe, after isolated original SystemLocalized int registration, successfully compiled bona fide source class var any NameValue with default NameValue='G3NameAlpha' to genuine 670-byte lic227 UClass .u without warnings. Independent ORIGINAL 2026 compiled Core.dll UObject::LoadPackage and reflected GetDefaultObject UAnyProperty field NameValue offset776 actually loaded runtime dynamic type5, real FName text G3NameAlpha (not mock FArchive or zero NAME_None). Source-linked original FPropertyTag GetID reports VectorProperty11 alias, but exact Children/Next UAnyProperty declaration validates it; actual serial tag 2 bytes hex0508: subtype5 + compact FName index8, real ULinker NameMap[8] text G3NameAlpha. Current production shared UClass defaults reader decodes exact native type5 and signed linker index + text, schema accepts source-only 11->Any alias and consumes full original UClass export (no opaque false type mismatch). Correct SaveVerified wire0508, invalid FName linker index fails closed; original source/native/current parity and 57/57 grouped acceptance fully PASS. G3 mandatory other Any6 remains BLOCKED, no added test IDs, production PRD untouched.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T19:31:25+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php",
+          "sha256": "0e3d274adec3d1e54fc634008fc899602ed96986e03647b9a0cbe4effacfb271",
+          "bytes": 12539
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+          "sha256": "a5b8ee67a2b8a25c1112d489359bc520ab403c478febacfd87057c9f653263ef",
+          "bytes": 14510
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php",
+          "sha256": "392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925",
+          "bytes": 34369
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386",
+          "bytes": 17242
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1",
+          "bytes": 78200
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5.u",
+          "sha256": "9ff07cb368a4e71591b01f1eb185bc8c5bd121a58b3b409757aaea2d1577d37f",
+          "bytes": 670
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7.u",
+          "sha256": "66370a1ea9cca94863250d85342b308780a486fdde543a32f31779bb93fd323b",
+          "bytes": 653
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5-native-LOAD.log",
+          "sha256": "0668e321804c850a581f49242c875f98bc687f1546bbde610d398334e45fe31c",
+          "bytes": 1002
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7-native-LOAD.log",
+          "sha256": "43fde188db29aac6d77962d3eed6be641eb9d67cdea93a93ad2f2d4513080dd3",
+          "bytes": 1020
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-STRUCT6-REJECT.log",
+          "sha256": "2eedd2ec9666713fad5a0b71e90ef1a942651deb5be83d4e756e4b3c9f2f4648",
+          "bytes": 2246
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-T029-T031-original-native-57pass.json",
+          "sha256": "2b911feaffe487bae3acce3dbc2638ff1719ea76f654e337a4b6b9b95bc53d51",
+          "accepted_original_assertions": 57
+        }
+      ]
     },
     {
       "id": "T030",
@@ -1825,13 +1882,70 @@
       "pass_criterion": "Correct object identity, tag7, saved object reference and cursor; null type7 proof reused.",
       "evidence": "Genuine Core.dll linker and object-backed archive",
       "reuse": "Previous null OBJECT7 sealed.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: native original Any OBJECT7 null exists; nonnull genuine linker-backed UObject ref, tag7 and archive cursor still missing. Acceptance still requires: Correct object identity, tag7, saved object reference and cursor; null type7 proof reused.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "90d89ed7f7cef81e86e902e2f2656d6750d5aae4e47ae3c62e1f93d117df4d66",
+      "result": "Actual shipped original 2026 Unreal 227k UCC.exe successfully compiled bona fide source class var any ObjectValue with default ObjectValue=class'Engine.Actor' to genuine 653-byte lic227 UClass .u without warnings. Independent ORIGINAL 2026 compiled Core.dll UObject::LoadPackage and reflected GetDefaultObject real UAnyProperty ObjectValue offset780 actually loaded dynamic Any type7 and exact real UObject full name Class Engine.Actor. Actual original UClass default VectorProperty11 aliases source-linked UAnyProperty field via Children/Next; raw original field bytes hex0782 = dynamic subtype7 plus signed compact object ImportMap ref -2, original ImportMap[-2] Class Actor whose actual outer -3 is Package Engine. Production native source-linked class default parses those TWO precise archive bytes, resolves source ImportMap true identity and real runtime class, no fake process pointer and no fabricated null/12-byte vector; source GetID alias corrected, validates all THREE class declarations, original class archive Tell exact. Original genuine Any6 STRUCT initializer separately FAILED original UCC ImportText and remains BLOCKED T030. One grouped 57/57 original independent compiled LOAD/Save source/current verifier; no accepted native engine reexecution. G3 mandatory other Any6 remains BLOCKED, no added test IDs, production PRD untouched.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T19:31:25+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php",
+          "sha256": "0e3d274adec3d1e54fc634008fc899602ed96986e03647b9a0cbe4effacfb271",
+          "bytes": 12539
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+          "sha256": "a5b8ee67a2b8a25c1112d489359bc520ab403c478febacfd87057c9f653263ef",
+          "bytes": 14510
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php",
+          "sha256": "392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925",
+          "bytes": 34369
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386",
+          "bytes": 17242
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1",
+          "bytes": 78200
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5.u",
+          "sha256": "9ff07cb368a4e71591b01f1eb185bc8c5bd121a58b3b409757aaea2d1577d37f",
+          "bytes": 670
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7.u",
+          "sha256": "66370a1ea9cca94863250d85342b308780a486fdde543a32f31779bb93fd323b",
+          "bytes": 653
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5-native-LOAD.log",
+          "sha256": "0668e321804c850a581f49242c875f98bc687f1546bbde610d398334e45fe31c",
+          "bytes": 1002
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7-native-LOAD.log",
+          "sha256": "43fde188db29aac6d77962d3eed6be641eb9d67cdea93a93ad2f2d4513080dd3",
+          "bytes": 1020
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-STRUCT6-REJECT.log",
+          "sha256": "2eedd2ec9666713fad5a0b71e90ef1a942651deb5be83d4e756e4b3c9f2f4648",
+          "bytes": 2246
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-T029-T031-original-native-57pass.json",
+          "sha256": "2b911feaffe487bae3acce3dbc2638ff1719ea76f654e337a4b6b9b95bc53d51",
+          "accepted_original_assertions": 57
+        }
+      ]
     },
     {
       "id": "T032",

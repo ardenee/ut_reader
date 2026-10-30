@@ -26,7 +26,7 @@ foreach($hashes as $name=>$sha)$check(is_file($ev.$name)&&hash_file('sha256',$ev
 foreach([
  'C:/Temp/UnrealDB/O06/Native-227k/System/Core.dll'=>'c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194',
  'C:/Temp/UnrealDB/O06/Native-C227i-G304/System/Core.dll'=>'287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897',
- $repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php'=>'90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd'
+ $repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php'=>'38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1'
 ] as $f=>$sha)$check(is_file($f)&&hash_file('sha256',$f)===$sha,'actual original Core/production source pin '.basename($f));
 $dir='C:/Temp/UnrealDB/O06/';
 $files=[

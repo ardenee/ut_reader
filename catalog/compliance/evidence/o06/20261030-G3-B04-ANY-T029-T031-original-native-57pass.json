@@ -1,0 +1,27 @@
+﻿{
+    "ok": true,
+    "checks": 57,
+    "failures": [],
+    "full_frozen_g3_ids": {
+        "T029": "PASS",
+        "T031": "PASS"
+    },
+    "T030": "BLOCKED_original_227k_UCC_Any6_ImportText_failed",
+    "native_source": "genuine original 2026 shipped UCC compiled and original Core.dll CDO loaded independently",
+    "T029": {
+        "original_loaded_name": "G3NameAlpha",
+        "source_name_map_index": 8,
+        "native_type": 5,
+        "true_source_wire": "0508",
+        "serialized_bytes": 2
+    },
+    "T031": {
+        "original_loaded_object": "Class Engine.Actor",
+        "source_import_map_ref": -2,
+        "native_type": 7,
+        "true_source_wire": "0782",
+        "serialized_bytes": 2
+    },
+    "previously_accepted_original_native_engine_executions_repeated": 0,
+    "overall_G3_complete": false
+}

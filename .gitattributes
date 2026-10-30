@@ -111,3 +111,5 @@ catalog/compliance/evidence/o06/20261030-G3-MAP-* -text
 catalog/compliance/evidence/o06/20261030-G3-T049-* -text
 # Actual original 2012/2026 compiled UArrayProperty ABI vtable closure proof.
 catalog/compliance/evidence/o06/20261030-G3-T049-2012-ABI-vtable-38pass.json -text
+# Genuine 2026 227k native UCC compiled Any type5/type7 and CDO LOAD original binary evidence.
+catalog/compliance/evidence/o06/20261030-G3-B04-ANY-* -text

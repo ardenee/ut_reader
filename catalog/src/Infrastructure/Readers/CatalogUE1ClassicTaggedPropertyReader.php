@@ -399,7 +399,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     // an explicit decoder capability error, NOT an invented
                     // Epic FArchive error or a guessed 12-byte FVector.
                     $anyDecoded=CatalogUE1ClassicAnyPropertyValueReader::
-                        readFromArchive($read,$position,$family);
+                        readFromArchive($read,$position,$family,$valuePkg);
                     $raw=hex2bin($anyDecoded['raw_archive_bytes_hex']);
                 }elseif($loadPolicy==='native_source_fixed_StringProperty_to_StrProperty_upgrade'){
                     // Original compiled UT99 v432 UnClass.cpp:
@@ -1001,7 +1001,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
      */
     public static function inspectClassDefaults(
         string $path,CatalogUE1PackageReader $package,int $start,int $end,int $version,
-        ?string $sourceFamily=null
+        ?string $sourceFamily=null,?array $sourceDeclarations=null
     ): array {
         $length=filesize($path);
         if($start<0||$end<=$start||$end>$length){
@@ -1045,7 +1045,15 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 }
                 return ['index'=>$id,'text'=>(string)$names[$id]['name']];
             };
-            $tags=self::parseTags($read,$u8,$name,$compact,$version,$start,$position,$size,$sourceFamily);
+            $tags=self::parseTags(
+                $read,$u8,$name,$compact,$version,$start,$position,$size,
+                $sourceFamily,$sourceDeclarations,
+                $sourceDeclarations!==null
+                    ?['names'=>count($package->getNames()),
+                      'exports'=>count($package->getExports()),
+                      'imports'=>count($package->getImports())]
+                    :null,
+                $sourceDeclarations!==null?$package:null);
             return ['tags'=>$tags,'tag_end_offset'=>$start+$position,
                 'schema_verified'=>false,'source_archive_mode'=>'UClass-defaults'];
         }finally{fclose($fp);}

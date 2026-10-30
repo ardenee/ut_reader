@@ -231,8 +231,20 @@ final class CatalogUE1ClassicClassMetadataReader
             // archive as ordinary UObject properties. Structural envelopes
             // decode here; accurate value semantics still require the class
             // property schema, not merely the encoded tag type.
+            // Default-tag VectorProperty (11) is genuine v227
+            // UAnyProperty only when *this* class defines a linked
+            // UAnyProperty field. The original 2026 compiled UCC
+            // G3Any227K defaults and matching real CDO type5/type7
+            // require the local Children/Next source identity.
+            // Keep this disabled in recursive metadata scans.
+            $defaultLocalFields=$verifyDefaultDeclarations
+                ?CatalogUE1ClassicClassDefaultSchemaReader::
+                    resolveLocalClassDefaultDeclarations(
+                        $path,$pkg,(int)($record['children_reference']??0),
+                        $family)
+                :null;
             $defaults=CatalogUE1ClassicTaggedPropertyReader::inspectClassDefaults(
-                $path,$pkg,$position,$end,$version,$family);
+                $path,$pkg,$position,$end,$version,$family,$defaultLocalFields);
             $position=$defaults['tag_end_offset'];
             // inspectClassDefaults uses its own file handle. Restore this
             // reader's physical cursor before the legacy v<57 trailer:

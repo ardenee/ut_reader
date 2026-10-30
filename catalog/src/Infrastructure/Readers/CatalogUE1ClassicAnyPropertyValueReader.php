@@ -37,7 +37,8 @@ final class CatalogUE1ClassicAnyPropertyValueReader
      * @return array<string,mixed>
      */
     public static function readFromArchive(
-        callable $read,int &$position,string $sourceFamily
+        callable $read,int &$position,string $sourceFamily,
+        ?CatalogUE1PackageReader $linkerPkg=null
     ):array{
         if($sourceFamily!==CatalogUE1ClassicSourceFamily::UNREAL_V227){
             throw new RuntimeException(
@@ -82,27 +83,52 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             }
             $payload=$countBytes.$stringBytes;
         }elseif($type===5){
-            // Original shipped 227k UAnyProperty::SerializeItem calls
-            // FArchive's virtual FName operator (slot +0x1c). Executed
-            // through original x86 Core.dll for the ZERO-valued name only:
-            // native LOAD/SAVE wire hex 05 00 00 00 00.
-            // Arbitrary names require real name-table/archive remapping,
-            // which has not been native-proven in this mock archive.
-            $payload=$read(4);
-            if(strlen($payload)!==4||$payload!=="\0\0\0\0"){
-                throw new RuntimeException(
-                    'Unreal v227 Any nonzero NAME value requires native name-table mapping');
+            if($linkerPkg!==null){
+                // Genuine 2026 compiled C227k original-UCC class default:
+                // dynamic Any subtype 5 followed by ULinkerLoad FName's
+                // signed AR_INDEX. Genuine native loaded name G3NameAlpha
+                // from exactly 05 08, NOT the mock ABI's 4-byte zero.
+                [$index,$payload]=self::readLinkerCompact($read);
+                $names=$linkerPkg->getNames();
+                if($index<0||!isset($names[$index])){
+                    throw new RuntimeException(
+                        'UE1 v227 ULinkerLoad<<FName Any invalid name index '.$index
+                        .' at archive offset '.$position);
+                }
+                $value=['name_index'=>$index,
+                    'resolved_text'=>(string)$names[$index]['name']];
+                $valueKind='native_any_linker_fname';
+            }else{
+                // An older original Core.dll ABI shim proved only
+                // NAME_None using four raw bytes; do not pretend its
+                // FArchive implementation was genuine ULinkerLoad.
+                $payload=$read(4);
+                if(strlen($payload)!==4||$payload!=="\0\0\0\0"){
+                    throw new RuntimeException(
+                        'Unreal v227 Any nonzero NAME requires real linker');
+                }
+                $value=['name_index'=>0,'resolved_text'=>null];
+                $valueKind='native_any_zero_fname';
             }
         }elseif($type===7){
-            // Original shipped compiled 227k UAnyProperty::SerializeItem
-            // invokes FArchive's virtual UObject* operation (+0x18).
-            // An actual x86 run confirmed only NULL reference:
-            // 07 00 00 00 00 on both LOAD and SAVE.
-            // A nonzero object needs genuine ULinker object resolution.
-            $payload=$read(4);
-            if(strlen($payload)!==4||$payload!=="\0\0\0\0"){
-                throw new RuntimeException(
-                    'Unreal v227 Any nonnull OBJECT requires native linker mapping');
+            if($linkerPkg!==null){
+                // Genuine 2026 original native CDO loaded
+                // 07 82 => index -2 => import Class Engine.Actor.
+                // Resolve the ORIGINAL ImportMap outer chain; do
+                // not turn bare indices into fake package names.
+                [$index,$payload]=self::readLinkerCompact($read);
+                $full=self::resolveLinkerObject($linkerPkg,$index);
+                $value=['object_reference'=>$index,
+                    'resolved_object'=>$full];
+                $valueKind='native_any_linker_object';
+            }else{
+                $payload=$read(4);
+                if(strlen($payload)!==4||$payload!=="\0\0\0\0"){
+                    throw new RuntimeException(
+                        'Unreal v227 Any nonnull OBJECT requires real linker');
+                }
+                $value=['object_reference'=>0,'resolved_object'=>null];
+                $valueKind='native_any_null_object';
             }
         }elseif($type===6){
             throw new RuntimeException(
@@ -115,14 +141,13 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             }
         }
         $raw=$first.$payload;
-        $value=match($type){
+        $value=$value??match($type){
             0=>null,
             1=>self::signed32($payload),
             2=>(float)unpack('g',$payload)[1],
             3=>ord($payload)!==0,
             4=>substr($stringBytes,0,-1),
-            5=>['name_index'=>0,'resolved_text'=>null],
-            7=>['object_reference'=>0,'resolved_object'=>null],
+            default=>null,
         };
         return [
             'status'=>'native_227k_any_value_original_compiled_subtype_verified',
@@ -130,12 +155,11 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             'original_any_type_id'=>$type,
             'original_any_type_name'=>self::TYPES[$type],
             'value'=>$value,
-            'value_kind'=>match($type){
+            'value_kind'=>$valueKind??match($type){
                 0=>'native_any_null',1=>'native_any_int32',
                 2=>'native_any_float32',3=>'native_any_bool',
                 4=>'native_any_ansi_string',
-                5=>'native_any_zero_fname',
-                7=>'native_any_null_object',
+                default=>'native_any_unverified'
             },
             'serialized_byte_count'=>$position-$start,
             'raw_archive_bytes_hex'=>bin2hex($raw),
@@ -151,7 +175,8 @@ final class CatalogUE1ClassicAnyPropertyValueReader
      * original FString compact count and its null-terminated ANSI bytes.
      */
     public static function saveVerified(
-        int $type,string $rawValue,string $sourceFamily
+        int $type,string $rawValue,string $sourceFamily,
+        ?CatalogUE1PackageReader $linkerPkg=null
     ):string{
         if($sourceFamily!==CatalogUE1ClassicSourceFamily::UNREAL_V227){
             throw new RuntimeException('UAny source provenance is not Unreal v227');
@@ -170,6 +195,32 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                     'Unreal v227 Any STRING SAVE unsupported compact, Unicode or malformed payload');
             }
             return chr($type).$rawValue;
+        }
+        if($type===5&&$linkerPkg!==null){
+            $offset=0;
+            $read=static function(int $n)use($rawValue,&$offset):string{
+                $out=substr($rawValue,$offset,$n);$offset+=strlen($out);
+                return $out;
+            };
+            [$index,$bytes]=self::readLinkerCompact($read);
+            if($offset!==strlen($rawValue)
+                ||$index<0||!isset($linkerPkg->getNames()[$index])){
+                throw new RuntimeException('Unreal v227 Any NAME save invalid linker FName');
+            }
+            return "\x05".$bytes;
+        }
+        if($type===7&&$linkerPkg!==null){
+            $offset=0;
+            $read=static function(int $n)use($rawValue,&$offset):string{
+                $out=substr($rawValue,$offset,$n);$offset+=strlen($out);
+                return $out;
+            };
+            [$index,$bytes]=self::readLinkerCompact($read);
+            if($offset!==strlen($rawValue)){
+                throw new RuntimeException('Unreal v227 Any OBJECT save malformed compact');
+            }
+            self::resolveLinkerObject($linkerPkg,$index);
+            return "\x07".$bytes;
         }
         if($type===5){
             if($rawValue!=="\0\0\0\0"){
@@ -194,6 +245,69 @@ final class CatalogUE1ClassicAnyPropertyValueReader
             throw new RuntimeException('Unreal v227 Any noncanonical BOOL byte not verified');
         }
         return chr($type).$rawValue;
+    }
+
+    /** @return array{0:int,1:string} */
+    private static function readLinkerCompact(callable $read):array{
+        $raw=$read(1);
+        if(strlen($raw)!==1){
+            throw new RuntimeException('Unreal v227 Any compact reference truncated');
+        }
+        $first=ord($raw);$number=$first&0x3f;
+        $shift=6;$more=($first&0x40)!==0;
+        while($more){
+            if(strlen($raw)>=5){
+                throw new RuntimeException('Unreal v227 Any compact reference overflow');
+            }
+            $byte=$read(1);
+            if(strlen($byte)!==1){
+                throw new RuntimeException('Unreal v227 Any compact reference truncated');
+            }
+            $raw.=$byte;$b=ord($byte);
+            $number|=($b&0x7f)<<$shift;
+            $more=($b&0x80)!==0;$shift+=7;
+        }
+        return [($first&0x80)?-$number:$number,$raw];
+    }
+
+    private static function resolveLinkerObject(
+        CatalogUE1PackageReader $pkg,int $index
+    ):?string{
+        if($index===0)return null;
+        $imports=$pkg->getImports();$exports=$pkg->getExports();
+        $full=[];$leafClass=null;$visited=[];
+        for($depth=0;$index!==0&&$depth<64;$depth++){
+            if(isset($visited[$index])){
+                throw new RuntimeException('UE1 v227 Any UObject outer cycle');
+            }
+            $visited[$index]=true;
+            $obj=$index<0?($imports[-$index-1]??null)
+                :($exports[$index-1]??null);
+            if(!is_array($obj)){
+                throw new RuntimeException(
+                    'UE1 v227 Any invalid linker object reference '.$index);
+            }
+            if($leafClass===null){
+                if($index>0){
+                    // The export's classIndex requires a second
+                    // class-path resolution. Fail closed rather than
+                    // guessing a UClass for unsupported export targets.
+                    throw new RuntimeException(
+                        'UE1 v227 Any positive UObject class identity not verified');
+                }
+                $leafClass=(string)($obj['classNameText']??'');
+                if($leafClass===''){
+                    throw new RuntimeException('UE1 v227 Any import class unresolved');
+                }
+            }
+            $full[]=(string)($obj['objectNameText']??'');
+            if(end($full)===''){
+                throw new RuntimeException('UE1 v227 Any import object name unresolved');
+            }
+            $index=(int)($obj['outerIndex']??0);
+        }
+        if($index!==0)throw new RuntimeException('UE1 v227 Any UObject outer depth exceeded');
+        return $leafClass.' '.implode('.',array_reverse($full));
     }
 
     private static function signed32(string $raw):int
