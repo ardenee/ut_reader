@@ -1,0 +1,19 @@
+﻿{
+    "ok": true,
+    "checks": 27,
+    "failures": [],
+    "fixed_test": "T058",
+    "compiled_native": "original retail May17 1998 Core.dll",
+    "original_loaded_class": "C98 UClass::Serialize invokes UStruct::SerializeTaggedProperties on UObject default storage",
+    "native_archive_physical_cursors": [
+        374,
+        467
+    ],
+    "named_tag_counts": [
+        2,
+        1
+    ],
+    "source_archive_name_none_index": 0,
+    "original_native_reruns_from_verifier": 0,
+    "g3_full_accepted": false
+}

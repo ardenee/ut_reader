@@ -2415,14 +2415,46 @@
       "pass_criterion": "UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
       "evidence": "G5 original UObject saved fields reused where profile same",
       "reuse": "Do not repeat sealed 1998 positive already covering this exact case.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original C98 Core serialized UClass accepted T012 is not a named tagged UObject with final NAME_None; still need native loaded named value and physical FArchive Tell at terminator. FULL REQUIRED: UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
-      "last_attempt_at": "2026-10-29T00:09:10+00:00",
+      "status": "PASS",
+      "evidence_sha": "eb7b2ffad2ef1609516e54fc91bfb64205bd2ab0bef31d5ae3a884131d9e3e0b",
+      "result": "Actual original retail May17 C98 Unreal.exe compiler generated genuine v61 parent/child UClass default UObject tagged streams in pinned genuine G3C98Defaults.u: Parent FName G3Magic indexed4 IntProperty value123 and G3Scale indexed7 FloatProperty1.25 then REAL single-byte NAME_None index0; Child named G3Magic value456 then NAME_None, no saved inherited float. Original compiled source native UClass::Serialize calls UStruct::SerializeTaggedProperties on UObject default storage; original CDB at compiled Core+0x12b2d returns AFTER loaded defaults and shows exact FArchiveFileLoad::Pos 374 (parent export end) and 467 (child export end) at same physical archive state, original package length761, in full agreement with source-selected UnrealDB tagged decoder actual tag names/indices/values/physical cursor. Authentic compiled May17 original loaded class CDO values from T016 sealed without repeated original native run. Independent original/source/archive 27/27 checks PASS. Specific C98 named tagged property/terminal fixed T058 only; C98 malformed tag negative T064 and cross-family T021-24 remain blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T00:10:06+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING",
-      "last_grouped_native_assessment": "2026-10-29"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-29",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t058-original-c98-tag-terminal.php",
+          "sha256": "a3802ec3bf1b19640adcbac25d39638c76f7b9a3dd4f14df796a3d94dc3c41b6",
+          "bytes": 6046
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Pos.log",
+          "sha256": "f84395f6975f9392113195fd63577a9d3b47c1d813a6b2436aab413200d17d11",
+          "bytes": 7731
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Pos.cmd",
+          "sha256": "da7d55d647b7e3a1763ae7770e6b4d4efef8a920c6c3b4b454a752c5c89e77e9",
+          "bytes": 162
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-G3C98Defaults.u",
+          "sha256": "766e4654a9985cd241307fdf78f496f890fcde3706799f872b41c94cb97cbddf",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
+          "sha256": "d428680c17d6d2e38786daeecdb984ac8d657c4578aec570d45bd012545ffe41",
+          "bytes": 7809
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-tag-terminal-27pass.json",
+          "sha256": "29ba37ccb27e735d5b683e0ddb591179fca58a4b93cbd54129687dbde74b5208",
+          "accepted_original_assertions": 27
+        }
+      ]
     },
     {
       "id": "T059",

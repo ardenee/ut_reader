@@ -1112,6 +1112,36 @@ def eval_t016(_row:dict[str,Any])->dict[str,Any]:
       "this is only C98 T016, not C227 T018, and is not generic G3 full acceptance.",
       "evidence":pins}
 
+def eval_t058(_row:dict[str,Any])->dict[str,Any]:
+    """Original May17 C98 compiled tagged-object class-default LOAD, physical NAME_None and native archive cursor."""
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t058-original-c98-tag-terminal.php",
+                 "a3802ec3bf1b19640adcbac25d39638c76f7b9a3dd4f14df796a3d94dc3c41b6"),
+      verify_pin("catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Pos.log",
+                 "f84395f6975f9392113195fd63577a9d3b47c1d813a6b2436aab413200d17d11"),
+      verify_pin("catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Pos.cmd",
+                 "da7d55d647b7e3a1763ae7770e6b4d4efef8a920c6c3b4b454a752c5c89e77e9"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-G3C98Defaults.u",
+                 "766e4654a9985cd241307fdf78f496f890fcde3706799f872b41c94cb97cbddf"),
+      verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
+                 "d428680c17d6d2e38786daeecdb984ac8d657c4578aec570d45bd012545ffe41"),
+      verified_pass_log("catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-tag-terminal-27pass.json","checks",27)
+    ]
+    return {"status":"PASS","result":
+      "Actual original retail May17 C98 Unreal.exe compiler generated genuine v61 parent/child UClass "
+      "default UObject tagged streams in pinned genuine G3C98Defaults.u: Parent FName G3Magic indexed4 "
+      "IntProperty value123 and G3Scale indexed7 FloatProperty1.25 then REAL single-byte NAME_None index0; "
+      "Child named G3Magic value456 then NAME_None, no saved inherited float. "
+      "Original compiled source native UClass::Serialize calls UStruct::SerializeTaggedProperties on UObject "
+      "default storage; original CDB at compiled Core+0x12b2d returns AFTER loaded defaults and shows exact "
+      "FArchiveFileLoad::Pos 374 (parent export end) and 467 (child export end) at same physical archive "
+      "state, original package length761, in full agreement with source-selected UnrealDB tagged decoder "
+      "actual tag names/indices/values/physical cursor. Authentic compiled May17 original loaded class "
+      "CDO values from T016 sealed without repeated original native run. Independent original/source/archive "
+      "27/27 checks PASS. Specific C98 named tagged property/terminal fixed T058 only; C98 malformed "
+      "tag negative T064 and cross-family T021-24 remain blocked.",
+      "evidence":pins}
+
 def eval_t066(_row:dict[str,Any])->dict[str,Any]:
     """One stock original v432 FArchive native operator: next-field EOF vs mid-FString EOF."""
     pins=[
@@ -1164,7 +1194,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
