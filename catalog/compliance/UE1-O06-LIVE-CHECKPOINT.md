@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-32PASS-48BLOCKED-T058-ORIGINAL-C98-TAG-TERMINAL-CLOSED
-- **Last completed action:** Fixed T058 now PASS, 27/27 independently pinned original May17 1998 retail C98 source/native compiler archive and true compiled loader FArchiveFileLoad.Pos after named tagged UClass default UObject values. Original parent two INT/FLOAT tags and NAME_None at physical end374, child one INT override and NAME_None end467; compiled after UClass::Serialize CDB yields exact same 374 and467 real file positions; native loaded values from sealed T016 reused, no replay. Frozen B08 eight T057-T064 assessed 5PASS 3BLOCKED T062/63/64 requiring config/transient-SAVE/bad-tag distinct original method. Frozen 80: 32 PASS 48 BLOCKED 0 FAIL 0 PENDING. G3 full NOT accepted, PRD unchanged.
-- **Resume at:** Continue a grouped original C227i 2012 runtime native loaded-value oracle for T018, source-legal Config/Localized/Transient for T019 T062 T063, and C98/227 missing T064 malformed tag diagnostics. No repeat accepted compiled probes or extra IDs; verify hashes and push DEV only.
-- **Active changed at:** 2026-10-30T00:11:20+00:00
+- **Stage:** G3-33PASS-47BLOCKED-C98-BULK-T034-9ID-NATIVE
+- **Last completed action:** One NEW original May17 1998 C98 source-legal compiled native package G3C98Bulk.u, source original actual Core.dll CDB memory, current source reader; 9 FROZEN IDs grouped T019 T021 T022 T023 T024 T034 T041 T062 T063, 25/25 independent native/source/reader proofs accepted, ONLY T034 fully source/native PASS. Native inherited struct actual CDO offset488 parent INT BX789/FLOAT BY2.5 child BYTE CZ17 in-memory offsets0,4,8, original SerializeBin wire at1220 in child-first CZ,BX,BY order; UnrealDB linked original UField graphs and 9/9 decoded; all 8 other source-family/INI/SAVE/bool/name/dynamic-array criteria remain BLOCKED. One grouped B05 T033-T040 ran 4 PASS 4 BLOCKED. Fixed 80 33PASS 47BLOCKED, no failed tests, G3 NOT ACCEPTED PRD untouched.
+- **Resume at:** Prioritize one bulk UT99 v432/Unreal C227 original compiled negative zero/int/packed bool/name fixture for T021-T024 and genuine source-legal nested array/struct for T037 T038 T040 T041 T043 T044. Reuse sealed original G5Array/G5Nested/G5StructString evidence; no rerun accepted native; no new test IDs, no production deploy.
+- **Active changed at:** 2026-10-30T09:36:21+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

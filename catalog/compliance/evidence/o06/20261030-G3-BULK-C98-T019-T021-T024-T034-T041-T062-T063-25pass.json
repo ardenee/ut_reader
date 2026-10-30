@@ -1,0 +1,30 @@
+﻿{
+    "ok": true,
+    "checks": 25,
+    "failures": [],
+    "original_1998_compiled_shared_fixture": true,
+    "native_loaded_struct_address": "0618a488",
+    "original_native_array_bytes": [
+        789,
+        2.5,
+        17
+    ],
+    "source_struct_archived_sequence": {
+        "CZ": 17,
+        "BX": 789,
+        "BY": 2.5
+    },
+    "fixed_T_IDs_grouped_status": {
+        "T019": "BLOCKED: only C98 single native config profile, C227/v432 and isolated two-profile override absent",
+        "T021": "BLOCKED: C98 byte/int positive, negative, max saved, UT99 and C227 native edge operators outstanding",
+        "T022": "BLOCKED: C98 float -1.5/0.375/0 archived; negative zero and other original source families outstanding",
+        "T023": "BLOCKED: C98 bool true plus omitted false, original runtime bool mask/index across families outstanding",
+        "T024": "BLOCKED: original real named tag G3BulkName and omitted None, compiled global native FName identity across families outstanding",
+        "T034": "PASS: original C98 inherited local struct compiler archive and compiled loaded native member offsets/values",
+        "T041": "BLOCKED: C98 static int[2] is NOT UT99/C227 dynamic array<int> LOAD+SAVE; source class unavailable in C98",
+        "T062": "BLOCKED: original compiled controlled INI/localized two-profile and all applicable build precedence outstanding",
+        "T063": "BLOCKED: original C98 transient default omission observed, independent object native SAVE+LOAD per family outstanding"
+    },
+    "T034": "PASS",
+    "original_compiled_executions_repeated_by_verifier": 0
+}

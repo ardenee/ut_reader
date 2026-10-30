@@ -1552,13 +1552,50 @@
       "pass_criterion": "Exact member offsets, value bytes and inheritance match original compiled C98.",
       "evidence": "Original native loaded struct + declared source member graph",
       "reuse": "G3-03 struct declarations not value storage.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: C98 original 600 property reference identities exist; actual struct two-member loaded values and inherited member offsets absent. Acceptance still requires: Exact member offsets, value bytes and inheritance match original compiled C98.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "93d75438756d914940747636b142559495a4f508b5d934975f513d7ac7163b84",
+      "result": "One new originally compiled May17 1998 x86 retail Unreal.exe -make genuine v61 G3C98Bulk.u with local struct G3Child expands G3Base, BX INT789, BY FLOAT2.5, CZ BYTE17. One original compiled Core.dll UClass::Serialize CDB postload trace of actual class export5 and 540-byte native CDO: G3Struct member memory begins at CDO+488; parent BX789 offset0, BY2.5 IEEE0x40200000 offset4, child CZ17 offset8, all observed genuine process memory. Original compiler archive physical 9-byte struct payload at 1220 is CHILD-FIRST CZ=17, BX=789, BY=2.5, per true original UStruct::SerializeBin TFieldIterator<UProperty> inheritance traversal, despite parent-first native memory layout. UnrealDB existing source-selected struct resolver follows exact actual UStruct.Children/Next/SuperField graphs, decodes inherited members CZ,BX,BY exactly and consumes 9/9 bytes. SHA-pinned source/original compiler/native loaded memory 25/25 PASS. Same grouped 9-ID fixture also exercised C98 int/byte/float/bool/name/config/transient/static array but those IDs stay BLOCKED for genuinely missing cross-family/both-profile/specific SAVE oracles. No original accepted native test rerun, no unverified runtime pointer fabricated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T09:33:51+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-c98-t034-and-scalars.php",
+          "sha256": "2920c05218a2ff862f7559b687acabd5cd2dd05ed70a2c3b54db6d35d4d753a1",
+          "bytes": 8808
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.u",
+          "sha256": "40fa22b955451b489d13b8b19e478c55965efcfb569b497cf8a312e6c73521a1",
+          "bytes": 1877
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.uc",
+          "sha256": "5b8e70c48cb6c9e5d97ef6cf5113f138adf7298878b2c9e06db8325c1224e8c1",
+          "bytes": 742
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-loaded-values.log",
+          "sha256": "4e0bb7746aeaa33b6bc6f86419e1471748305085f7cd97db9acd388301cecd94",
+          "bytes": 12418
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-CDB.cmd",
+          "sha256": "b8c1c18120c2adbc2145b9f64d0f5d4475337211f948fd095db4c1f91334b6cd",
+          "bytes": 201
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-successful-Editor.log",
+          "sha256": "5a6e3f620e2f62f6c9dc6b554b8822718f144f4c2e6d2a73e3dc2601b54ca9b7",
+          "bytes": 1641
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-T019-T021-T024-T034-T041-T062-T063-25pass.json",
+          "sha256": "fe103b2bafbad2a9e5d784a317e8d7f465c94d55c9cc15a8accfcc0e26685d85",
+          "accepted_original_assertions": 25
+        }
+      ]
     },
     {
       "id": "T035",

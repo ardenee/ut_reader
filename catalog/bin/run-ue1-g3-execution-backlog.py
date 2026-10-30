@@ -1082,6 +1082,39 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
+def eval_t034(_row:dict[str,Any])->dict[str,Any]:
+    """Original May17 C98 native inherited UStruct SerializeBin in one grouped 9-ID compiled fixture."""
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-bulk-c98-t034-and-scalars.php",
+                 "2920c05218a2ff862f7559b687acabd5cd2dd05ed70a2c3b54db6d35d4d753a1"),
+      verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.u",
+                 "40fa22b955451b489d13b8b19e478c55965efcfb569b497cf8a312e6c73521a1"),
+      verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.uc",
+                 "5b8e70c48cb6c9e5d97ef6cf5113f138adf7298878b2c9e06db8325c1224e8c1"),
+      verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-loaded-values.log",
+                 "4e0bb7746aeaa33b6bc6f86419e1471748305085f7cd97db9acd388301cecd94"),
+      verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-CDB.cmd",
+                 "b8c1c18120c2adbc2145b9f64d0f5d4475337211f948fd095db4c1f91334b6cd"),
+      verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-successful-Editor.log",
+                 "5a6e3f620e2f62f6c9dc6b554b8822718f144f4c2e6d2a73e3dc2601b54ca9b7"),
+      verified_pass_log("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-T019-T021-T024-T034-T041-T062-T063-25pass.json","checks",25)
+    ]
+    return {"status":"PASS","result":
+      "One new originally compiled May17 1998 x86 retail Unreal.exe -make genuine v61 G3C98Bulk.u with "
+      "local struct G3Child expands G3Base, BX INT789, BY FLOAT2.5, CZ BYTE17. One original compiled "
+      "Core.dll UClass::Serialize CDB postload trace of actual class export5 and 540-byte native CDO: "
+      "G3Struct member memory begins at CDO+488; parent BX789 offset0, BY2.5 IEEE0x40200000 offset4, "
+      "child CZ17 offset8, all observed genuine process memory. Original compiler archive physical "
+      "9-byte struct payload at 1220 is CHILD-FIRST CZ=17, BX=789, BY=2.5, per true original "
+      "UStruct::SerializeBin TFieldIterator<UProperty> inheritance traversal, despite parent-first "
+      "native memory layout. UnrealDB existing source-selected struct resolver follows exact actual "
+      "UStruct.Children/Next/SuperField graphs, decodes inherited members CZ,BX,BY exactly and "
+      "consumes 9/9 bytes. SHA-pinned source/original compiler/native loaded memory 25/25 PASS. "
+      "Same grouped 9-ID fixture also exercised C98 int/byte/float/bool/name/config/transient/static "
+      "array but those IDs stay BLOCKED for genuinely missing cross-family/both-profile/specific SAVE "
+      "oracles. No original accepted native test rerun, no unverified runtime pointer fabricated.",
+      "evidence":pins}
+
 def eval_t016(_row:dict[str,Any])->dict[str,Any]:
     """C98 May17 actual compiled class defaults parent/child native inherited scalar values."""
     pins=[
@@ -1194,7 +1227,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T032":eval_t032,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

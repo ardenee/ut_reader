@@ -73,3 +73,6 @@ catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-* -text
 
 # Exact compiled C98 T058 file-archive original debugger transcript and command, no EOL conversions.
 catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Pos.* -text
+
+# Unmodified original C98 retail compiled multi-property oracle, 9-ID bulk T034 evidence.
+catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-* -text
