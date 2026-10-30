@@ -1082,6 +1082,37 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
+def eval_t025_t027_original_string_bulk(row:dict[str,Any])->dict[str,Any]:
+    """Original C98 and UT99 fixed string, C227k UTF16 48-check native proof, two full closures."""
+    b="catalog/compliance/evidence/o06/"
+    checks=[
+       verify_pin("catalog/bin/verify-ue1-o06-g3-bulk-fixed-unicode-two-native.php",
+                  "28831a1a7a8243adf71313c028476f99fcde8460f3832841d7a35f1968e570ba"),
+       verify_pin(b+"20261030-G3-STR-BULK-C227k-UNICODE-original-SAVE.u",
+                  "e900861a8bf851bfb340e008f042f5529fa4eb144490f46bbad585af8091a14b"),
+       verify_pin(b+"20261030-G3-STR-BULK-C227k-UNICODE-original-LOAD.log",
+                  "9e7149a3b9afec14924dc63f6ec06db8566c7bd6da147b2bf29e07dc16eec803"),
+       verify_pin(b+"20261030-G3-STR-BULK-C227k-UTF16-direct-original-native.log",
+                  "4fcda84026672f2adcefe6d3b9861c9d91c42499da414241c9352aa8d77f90a2"),
+       verify_pin(b+"20261030-G3-STR-BULK-C98-fixed-string-original-CDB.log",
+                  "dbd454fd8acee2ca6af5a44d8de659ffc82235083bf2690fcb3ad6e1fac76d0f"),
+       verify_pin(b+"20261030-G3-STR-BULK-V432-legacy-converted-original.u",
+                  "cb737f15004d37f0a49458acf5adf14fcfd2344a7624c07826ff924cc44c4ecc"),
+       verify_pin(b+"20261030-G3-STR-BULK-V432-legacy-converted-original-LOAD.log",
+                  "2733758f8a5eb4ebb54af189b4275def046ca40f5a44e20df855e4df1198b281"),
+       verified_pass_log(b+"20261030-G3-STR-BULK-T025-T027-original-48pass.json","checks",48),
+    ]
+    j=json.loads((ROOT/b/"20261030-G3-STR-BULK-T025-T027-original-48pass.json").read_text(encoding="utf-8-sig"))
+    if j.get("original_g3_fixed_ids",{}).get(row["id"])!="PASS":
+       raise AssertionError("Original grouped true native string verifier does not close "+row["id"])
+    decisions={
+      "T025":"Real original May17 1998 retail compiler v61 G3C98Bulk.u original UStringProperty G3Local with 32-character capacity via native property record export22; 11+terminal NUL 12 physical bytes. Original retail 1998 Core.dll CDB observed native CDO DefaultBulk ASCII string terminated immediately by zero, original class default archive complete. Distinct original UT99 v432 archived historical StringProperty type7 in source-linked dynamic UStrProperty class, original stock v432 Core.dll LOAD successfully converted to runtime QAlpha-direct-FString; current reader correct source-specific conversion gate, exact 22 physical bytes, no false unknown-tag skip.",
+      "T027":"Original 2026 227k compiled Core.dll UStrProperty::SerializeItem direct SAVE+LOAD of UTF16LE non-BMP surrogate D83D DE80: signed AR_INDEX -3 and exact 7 bytes 833dd880de0000, original native FBufferReader Tell7 and true loaded two code units. Single BMP Omega original signed -2 exact 5 bytes. Original native SavePackage of a new genuine 280-byte .u saved those two Unicode values and a SECOND separate compiled original Core.dll process reloaded actual D83D,DE80 and 03A9. Production source-linked v227 tag reader decoded both signed counts, physical spans and archive end. Original embedded-NUL source branch was ASCII and did not safely preserve original mixed characters; decoder preserves raw bytes without invented UTF conversion."
+    }
+    return {"status":"PASS","result":decisions[row["id"]]+
+      " Joint original C98/UT99 v432/C227 source/real native/current reader 48/48 PASS; T028 malformed branch separately BLOCKED.","evidence":checks}
+
+
 def eval_t022_t023_t026(row:dict[str,Any])->dict[str,Any]:
     """One original multi-profile compiled float/BOOL/FString native method fixture; 3 fixed IDs."""
     base="catalog/compliance/evidence/o06/"
@@ -1297,7 +1328,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T026":eval_t022_t023_t026,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

@@ -86,3 +86,6 @@ catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81
 
 # G3 grouped original C227i compiler / 227k native exact SAVE, LOAD, direct float and UT99 FString.
 catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-* -text
+
+# Frozen original C98 stock memory, UT99 v432 legacy fixed string and C227k true Unicode archives.
+catalog/compliance/evidence/o06/20261030-G3-STR-BULK-* -text

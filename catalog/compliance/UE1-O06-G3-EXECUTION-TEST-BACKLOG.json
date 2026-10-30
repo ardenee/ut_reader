@@ -1539,13 +1539,55 @@
       "pass_criterion": "Exact array length, character termination and resulting runtime string match original compiled source-selected behavior.",
       "evidence": "Original original compiled package at both sides of source-defined conversion gate",
       "reuse": "Reuse G5 v432 fixed-string fixture; no G5 rerun.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: original retail C98 has 66 loaded UStringProperty StringSize metadata; actual fixed-length string value on both sides of conversion boundary missing. Acceptance still requires: Exact array length, character termination and resulting runtime string match original compiled source-selected behavior.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "85087d23519fb010f931efb7cc239e8e216d7c4fee559d28f1d173f806de122d",
+      "result": "Real original May17 1998 retail compiler v61 G3C98Bulk.u original UStringProperty G3Local with 32-character capacity via native property record export22; 11+terminal NUL 12 physical bytes. Original retail 1998 Core.dll CDB observed native CDO DefaultBulk ASCII string terminated immediately by zero, original class default archive complete. Distinct original UT99 v432 archived historical StringProperty type7 in source-linked dynamic UStrProperty class, original stock v432 Core.dll LOAD successfully converted to runtime QAlpha-direct-FString; current reader correct source-specific conversion gate, exact 22 physical bytes, no false unknown-tag skip. Joint original C98/UT99 v432/C227 source/real native/current reader 48/48 PASS; T028 malformed branch separately BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T15:28:03+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-fixed-unicode-two-native.php",
+          "sha256": "28831a1a7a8243adf71313c028476f99fcde8460f3832841d7a35f1968e570ba",
+          "bytes": 12608
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-SAVE.u",
+          "sha256": "e900861a8bf851bfb340e008f042f5529fa4eb144490f46bbad585af8091a14b",
+          "bytes": 280
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-LOAD.log",
+          "sha256": "9e7149a3b9afec14924dc63f6ec06db8566c7bd6da147b2bf29e07dc16eec803",
+          "bytes": 26860
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UTF16-direct-original-native.log",
+          "sha256": "4fcda84026672f2adcefe6d3b9861c9d91c42499da414241c9352aa8d77f90a2",
+          "bytes": 26922
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C98-fixed-string-original-CDB.log",
+          "sha256": "dbd454fd8acee2ca6af5a44d8de659ffc82235083bf2690fcb3ad6e1fac76d0f",
+          "bytes": 10375
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original.u",
+          "sha256": "cb737f15004d37f0a49458acf5adf14fcfd2344a7624c07826ff924cc44c4ecc",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original-LOAD.log",
+          "sha256": "2733758f8a5eb4ebb54af189b4275def046ca40f5a44e20df855e4df1198b281",
+          "bytes": 1795
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-T025-T027-original-48pass.json",
+          "sha256": "c983fefd27ab8c0dfef97298a5065efa97b1300da19b2ee172d2454062b6a180",
+          "accepted_original_assertions": 48
+        }
+      ]
     },
     {
       "id": "T026",
@@ -1622,13 +1664,55 @@
       "pass_criterion": "Matches original code unit count and archive cursor, without gratuitous UTF conversion.",
       "evidence": "Original x86 string operator source/compiled and native load",
       "reuse": "Do not assume every original game/build supports UTF16; source eligibility required.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: source-permitted negative UTF16LE count and exact original native code units/physical archive cursor across 227i/227k missing. Acceptance still requires: Matches original code unit count and archive cursor, without gratuitous UTF conversion.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "85087d23519fb010f931efb7cc239e8e216d7c4fee559d28f1d173f806de122d",
+      "result": "Original 2026 227k compiled Core.dll UStrProperty::SerializeItem direct SAVE+LOAD of UTF16LE non-BMP surrogate D83D DE80: signed AR_INDEX -3 and exact 7 bytes 833dd880de0000, original native FBufferReader Tell7 and true loaded two code units. Single BMP Omega original signed -2 exact 5 bytes. Original native SavePackage of a new genuine 280-byte .u saved those two Unicode values and a SECOND separate compiled original Core.dll process reloaded actual D83D,DE80 and 03A9. Production source-linked v227 tag reader decoded both signed counts, physical spans and archive end. Original embedded-NUL source branch was ASCII and did not safely preserve original mixed characters; decoder preserves raw bytes without invented UTF conversion. Joint original C98/UT99 v432/C227 source/real native/current reader 48/48 PASS; T028 malformed branch separately BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T15:28:03+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-fixed-unicode-two-native.php",
+          "sha256": "28831a1a7a8243adf71313c028476f99fcde8460f3832841d7a35f1968e570ba",
+          "bytes": 12608
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-SAVE.u",
+          "sha256": "e900861a8bf851bfb340e008f042f5529fa4eb144490f46bbad585af8091a14b",
+          "bytes": 280
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-LOAD.log",
+          "sha256": "9e7149a3b9afec14924dc63f6ec06db8566c7bd6da147b2bf29e07dc16eec803",
+          "bytes": 26860
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UTF16-direct-original-native.log",
+          "sha256": "4fcda84026672f2adcefe6d3b9861c9d91c42499da414241c9352aa8d77f90a2",
+          "bytes": 26922
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C98-fixed-string-original-CDB.log",
+          "sha256": "dbd454fd8acee2ca6af5a44d8de659ffc82235083bf2690fcb3ad6e1fac76d0f",
+          "bytes": 10375
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original.u",
+          "sha256": "cb737f15004d37f0a49458acf5adf14fcfd2344a7624c07826ff924cc44c4ecc",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original-LOAD.log",
+          "sha256": "2733758f8a5eb4ebb54af189b4275def046ca40f5a44e20df855e4df1198b281",
+          "bytes": 1795
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-T025-T027-original-48pass.json",
+          "sha256": "c983fefd27ab8c0dfef97298a5065efa97b1300da19b2ee172d2454062b6a180",
+          "accepted_original_assertions": 48
+        }
+      ]
     },
     {
       "id": "T028",

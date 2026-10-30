@@ -1,0 +1,20 @@
+﻿{
+    "ok": true,
+    "checks": 48,
+    "failures": [],
+    "original_g3_fixed_ids": {
+        "T025": "PASS",
+        "T027": "PASS"
+    },
+    "genuine_original_native_executions_during_verifier": 0,
+    "source_selected_original_1998_fixed_capacity": 32,
+    "v432_true_legacy_fixed_to_dynamic_native_loaded": true,
+    "v227k_genuine_saved_unicode_archive_bytes": 280,
+    "v227k_separate_native_reloaded_code_units": [
+        "D83D",
+        "DE80",
+        "03A9"
+    ],
+    "T028_malformed_FString": "BLOCKED_separate_original_error_cursors_still_required",
+    "overall_G3_accepted": false
+}
