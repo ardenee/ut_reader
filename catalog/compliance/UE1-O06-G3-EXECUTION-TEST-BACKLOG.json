@@ -1269,13 +1269,65 @@
       "pass_criterion": "Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle.",
       "evidence": "Original compiled SerializeItem + genuine values or source-equivalent fixture",
       "reuse": "Existing primitive/null tests reused.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: 227k original FAny INT is a different serializer; real generic Byte/Int positive/negative and 1/4 byte archive Tell across source families still missing. Acceptance still requires: Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "result": "Original C98 May1998 retail UClass compiled int/byte values; UT99 v432 genuine native SAVE+LOAD signed INT11/42/-7, and original 2012 C227i compiler + genuine 2026 C227k LOAD of 1-byte MaxByte255 and 4-byte signed BigNeg=-2147483647, C98 negative and INT_MAX, source-selected actual physical byte counts and absent zero tags. One SHA sealed joint 81/81 verifier. Distinct source families explicitly selected, no v227k AnyProperty substitution. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T10:16:58+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
+          "bytes": 11386
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
+          "bytes": 69230
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "sha256": "e181c4a49aa51ba914baeead9a9f4c95f0a0154534bd92bbfb70c41f32adb50f",
+          "bytes": 1518
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "sha256": "8d2e0ad732ade2b4954aa8982fd0c787565a61109bc5c62a64e7411ae6ee1b4a",
+          "bytes": 302
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "sha256": "257e7b1815465c5ef4bdbaa90f8c2f5c3923471799df67dcdc4c88d03b6c254b",
+          "bytes": 50288
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "sha256": "6d613ab5619c7ef121f4193e833a0fa0cd6ab5ad76cd11d1e2bd5f853b9a69a7",
+          "bytes": 24968
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "sha256": "2436d2545135a8ca02d5f1e71252daf3314be6e5b02c371a7db8ae5450e16ff3",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "sha256": "fe457ecf0730adb6264423c0dfc299839b06d534f873ae77fab86a4b019f19f0",
+          "bytes": 1928
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "sha256": "901efb94e5de2c8cf9a7dc0e08eb9606621f541398ead5f3da9dd848bf0645de",
+          "bytes": 7817
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "sha256": "89b7e1e002d93f466e26874f5d0486d67cf2909ea21b898b50a13fd83205f413",
+          "accepted_original_assertions": 81
+        }
+      ]
     },
     {
       "id": "T022",
@@ -1323,13 +1375,65 @@
       "pass_criterion": "Nonzero native name text/index resolves exactly; None remains genuine null sentinel.",
       "evidence": "Original compiled global FName lookup + UnrealDB name table",
       "reuse": "G3-06 enum FNames already sealed but scalar value different.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: stock v432 native FName mapping exists for ClassConfig; real scalar tagged NAME nonzero/None original loaded-value identity cross-build missing. Acceptance still requires: Nonzero native name text/index resolves exactly; None remains genuine null sentinel.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "result": "Original C98 retail compiled genuine FName G3BulkName archived FName15 maps real global name-index0xE34 native CDO, following explicit None member is native global index0. Reuses already accepted original UT99 v432 GameInfo DefaultPlayerState/PlayerWalking FName, and 2012 original C227i UCC compiled NonZeroName=Alpha vs NoneName omitted, original 227k compiled native shows Alpha and genuine None; actual mapped name/index correctness, including original linked 227k FName[Alpha,Gamma] array names. Source-resolved 81/81 multi-ID proof. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T10:16:58+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
+          "bytes": 11386
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
+          "bytes": 69230
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "sha256": "e181c4a49aa51ba914baeead9a9f4c95f0a0154534bd92bbfb70c41f32adb50f",
+          "bytes": 1518
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "sha256": "8d2e0ad732ade2b4954aa8982fd0c787565a61109bc5c62a64e7411ae6ee1b4a",
+          "bytes": 302
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "sha256": "257e7b1815465c5ef4bdbaa90f8c2f5c3923471799df67dcdc4c88d03b6c254b",
+          "bytes": 50288
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "sha256": "6d613ab5619c7ef121f4193e833a0fa0cd6ab5ad76cd11d1e2bd5f853b9a69a7",
+          "bytes": 24968
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "sha256": "2436d2545135a8ca02d5f1e71252daf3314be6e5b02c371a7db8ae5450e16ff3",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "sha256": "fe457ecf0730adb6264423c0dfc299839b06d534f873ae77fab86a4b019f19f0",
+          "bytes": 1928
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "sha256": "901efb94e5de2c8cf9a7dc0e08eb9606621f541398ead5f3da9dd848bf0645de",
+          "bytes": 7817
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "sha256": "89b7e1e002d93f466e26874f5d0486d67cf2909ea21b898b50a13fd83205f413",
+          "accepted_original_assertions": 81
+        }
+      ]
     },
     {
       "id": "T025",
@@ -1870,14 +1974,66 @@
       "pass_criterion": "Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code.",
       "evidence": "Original genuine file or source-shaped array fixture and compiled native operator",
       "reuse": "Existing 2012 four array-inner oracle reused if suitable.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: New original 2026 227k UArrayProperty NetSerializeItem saved three actual UInt-inner array cases on eight genuine Engine.u fields, 24 native calls; T041 requires package source LOAD plus C98/v432/C227, not net SAVE. FULL REQUIRED: Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "status": "PASS",
+      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "result": "C98 original v1.200 has no UArrayProperty (source-excluded). Genuine UT99 v432 original SavePackage + independently compiled LOAD of array<int> (11,42,-7), count3 and 13 archived bytes matched preaccepted source-selected reader. Genuine original 2012 C227i UCC compiler class file loaded by 2026 original 227k Core.dll; new 227k original native SavePackage real array (11,42,-7), independent second ORIGINAL compiled process LOAD of same 302-byte .u, identical 3 values and exact 13-byte count+3-int archive, runtime source-linked production 227k codec now implemented; 81/81 joint oracle PASS. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T10:16:58+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED",
-      "last_grouped_native_assessment": "2026-10-29"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-29",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
+          "bytes": 11386
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
+          "bytes": 69230
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "sha256": "e181c4a49aa51ba914baeead9a9f4c95f0a0154534bd92bbfb70c41f32adb50f",
+          "bytes": 1518
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "sha256": "8d2e0ad732ade2b4954aa8982fd0c787565a61109bc5c62a64e7411ae6ee1b4a",
+          "bytes": 302
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "sha256": "257e7b1815465c5ef4bdbaa90f8c2f5c3923471799df67dcdc4c88d03b6c254b",
+          "bytes": 50288
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "sha256": "6d613ab5619c7ef121f4193e833a0fa0cd6ab5ad76cd11d1e2bd5f853b9a69a7",
+          "bytes": 24968
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "sha256": "2436d2545135a8ca02d5f1e71252daf3314be6e5b02c371a7db8ae5450e16ff3",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "sha256": "fe457ecf0730adb6264423c0dfc299839b06d534f873ae77fab86a4b019f19f0",
+          "bytes": 1928
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "sha256": "901efb94e5de2c8cf9a7dc0e08eb9606621f541398ead5f3da9dd848bf0645de",
+          "bytes": 7817
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "sha256": "89b7e1e002d93f466e26874f5d0486d67cf2909ea21b898b50a13fd83205f413",
+          "accepted_original_assertions": 81
+        }
+      ]
     },
     {
       "id": "T042",
@@ -1889,13 +2045,65 @@
       "pass_criterion": "Every nonnull reference target matches native linker, null stays null; exact read count.",
       "evidence": "Original native linker fixture and source-selected inner type",
       "reuse": "G3-09 declaration refs already closed; this is array values.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST 2x8: Original v432 NAME (Alpha,Beta), Object (Actor,None) arrays sealed; distinct C98 and 227 original linker-backed null/nonnull array values missing. REQUIRED: Every nonnull reference target matches native linker, null stays null; exact read count.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "status": "PASS",
+      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "result": "C98 original v1.200 dynamic UArrayProperty source-absent. Genuine original UT99 v432 SavePackage plus independent native LOAD: array<Name> Alpha/Beta and array<UObject*> self/None, source-derived 3/3 serialized bytes each. New original 2012 compiled C227i class + genuine original 2026 C227k SavePackage and distinct native process LOAD: NAME Alpha/Gamma, UObject export ref1 points to ArrayObject itself and zero ref remains None; original linker FName map resolves both names, exact 3/3 physical value bytes and current production 227k source-resolved typed array decoder. Joint original/native/source 81/81 checks PASS. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T10:16:58+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
+          "bytes": 11386
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
+          "bytes": 69230
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "sha256": "e181c4a49aa51ba914baeead9a9f4c95f0a0154534bd92bbfb70c41f32adb50f",
+          "bytes": 1518
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "sha256": "8d2e0ad732ade2b4954aa8982fd0c787565a61109bc5c62a64e7411ae6ee1b4a",
+          "bytes": 302
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "sha256": "257e7b1815465c5ef4bdbaa90f8c2f5c3923471799df67dcdc4c88d03b6c254b",
+          "bytes": 50288
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "sha256": "6d613ab5619c7ef121f4193e833a0fa0cd6ab5ad76cd11d1e2bd5f853b9a69a7",
+          "bytes": 24968
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "sha256": "2436d2545135a8ca02d5f1e71252daf3314be6e5b02c371a7db8ae5450e16ff3",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "sha256": "fe457ecf0730adb6264423c0dfc299839b06d534f873ae77fab86a4b019f19f0",
+          "bytes": 1928
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "sha256": "901efb94e5de2c8cf9a7dc0e08eb9606621f541398ead5f3da9dd848bf0645de",
+          "bytes": 7817
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "sha256": "89b7e1e002d93f466e26874f5d0486d67cf2909ea21b898b50a13fd83205f413",
+          "accepted_original_assertions": 81
+        }
+      ]
     },
     {
       "id": "T043",

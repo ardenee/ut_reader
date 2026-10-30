@@ -76,3 +76,10 @@ catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Po
 
 # Unmodified original C98 retail compiled multi-property oracle, 9-ID bulk T034 evidence.
 catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-* -text
+
+# G3 B03+B06 original 2012 C227i compiler + native 2026 C227k + UT99 v432 + C98 bytes.
+catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-* -text
+catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-* -text
+catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-* -text
+catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-* -text
+catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json -text

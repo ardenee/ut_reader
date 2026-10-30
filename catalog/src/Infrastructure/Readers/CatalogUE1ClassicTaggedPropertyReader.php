@@ -55,7 +55,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 return [(($first&128)!==0?-$v:$v),$raw];
             };
             $validateLinkerIndex=static function(int $index,string $kind)
-                use($linkerLimits,$offset,&$position):void{
+                use($linkerLimits,$offset,&$position,$family):void{
                 if($linkerLimits===null)return;
                 $bad=$kind==='name'
                     ?($index<0||$index >= (int)$linkerLimits['names'])
@@ -64,7 +64,8 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 if($bad){
                     $origin=$kind==='name'?'ULinkerLoad<<FName':'IndexToObject';
                     throw new RuntimeException(
-                        'UE1 v432 '.$origin.' invalid '.$kind.' index '.$index
+                        'UE1 '.($family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                            ?'v227':'v432').' '.$origin.' invalid '.$kind.' index '.$index
                         .' at archive offset '.($offset+$position));
                 }
             };
@@ -176,7 +177,108 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 // but the payload is a compact serialized package reference.
                 // This compatibility gate is observed corpus behaviour,
                 // NOT claimed to be documented by the later v1.200 source.
-                if($loadPolicy==='native_227k_resolved_AnyProperty_SerializeItem'){
+                // Original genuine 2012 v227i UCC-compiled class, loaded by original
+                // 2026 v227k Core.dll: UArrayProperty::SerializeItem reads a signed
+                // compact element count then each actual Inner::SerializeItem.
+                // A second ORIGINAL compiled v227k process reloaded its own
+                // SavePackage of int/name/UObject arrays, including self + None.
+                // Only decode an exact resolved UClass member and linked Inner.
+                // Other v227 array subtypes stay archive-only, never guessed.
+                if($family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                    &&$type===9&&is_array($declaration)
+                    &&strtolower((string)($declaration['kind']??''))==='arrayproperty'
+                    &&$arrayIndex>=0
+                    &&$arrayIndex<(int)($declaration['array_dim']??0)
+                    &&(((int)($declaration['property_flags']??0))&0x00003000)===0
+                    &&($declaration['owner_package']??null)
+                        instanceof CatalogUE1PackageReader
+                    &&is_string($declaration['owner_path']??null)
+                    &&(int)($declaration['inner_reference']??0)>0
+                    &&$valuePkg!==null){
+                    $ownerPkg=$declaration['owner_package'];
+                    $ownerPath=(string)$declaration['owner_path'];
+                    $innerIndex=(int)$declaration['inner_reference']-1;
+                    $innerHeader=self::inspect(
+                        $ownerPath,$ownerPkg,$innerIndex,$family);
+                    $inner=CatalogUE1ClassicNativeObjectReader::inspect(
+                        $ownerPath,$ownerPkg,$innerIndex,$innerHeader,$family);
+                    $innerKind=($inner['status']??'')==='native_property_record_complete'
+                        ?(string)($inner['property_kind']??''):'';
+                    $width=match($innerKind){
+                        'byteproperty'=>1,'intproperty','floatproperty'=>4,
+                        'nameproperty','objectproperty','classproperty'=>-1,
+                        default=>0
+                    };
+                    if($width!==0){
+                        $loadPolicy='native_source_property_SerializeItem';
+                        [$count,$raw]=$readLinkerIndex();
+                        // A negative native FArray count is an error/UB contract
+                        // for T048 and not a verified positive-value array.
+                        if($count<0){
+                            $arrayDecoded=[
+                                'element_count'=>$count,
+                                'inner_property_kind'=>$innerKind,
+                                'native_loaded_value_parity'=>'NOT_VERIFIED',
+                                'source_runtime_risk'=>'v227 negative FArray element count'
+                            ];
+                        }else{
+                            $minBytes=$width>0?$width:1;
+                            $available=$streamState['physical_limit']??$archiveLimit;
+                            if($count>intdiv(max(0,$available-$position),$minBytes)){
+                                throw new RuntimeException(
+                                    'UE1 v227 array element span exceeds physical FArchive at '
+                                    .($offset+$position));
+                            }
+                            $elements=[];$linked=[];
+                            for($a=0;$a<$count;$a++){
+                                if($width===-1){
+                                    [$ref,$itemRaw]=$readLinkerIndex();
+                                    $refKind=$innerKind==='nameproperty'?'name':'object';
+                                    $validateLinkerIndex($ref,$refKind);
+                                    $v=$ref;
+                                    if($refKind==='name'){
+                                        $row=$valuePkg->getNames()[$ref]??null;
+                                        $linked[]=$row===null?null:
+                                            (string)($row['name']??$row['text']??'');
+                                    }elseif($ref===0){
+                                        $linked[]=null;
+                                    }elseif($ref>0){
+                                        $row=$valuePkg->getExports()[$ref-1]??null;
+                                        $linked[]=$row===null?null:
+                                            (string)($row['objectNameText']??'');
+                                    }else{
+                                        $row=$valuePkg->getImports()[-$ref-1]??null;
+                                        $linked[]=$row===null?null:
+                                            (string)($row['objectNameText']??'');
+                                    }
+                                }else{
+                                    $itemRaw=$read($width);
+                                    if($innerKind==='byteproperty'){
+                                        $v=ord($itemRaw);
+                                    }elseif($innerKind==='intproperty'){
+                                        $i=(int)unpack('V',$itemRaw)[1];
+                                        $v=$i>=0x80000000?$i-0x100000000:$i;
+                                    }else{
+                                        $v=unpack('g',$itemRaw)[1];
+                                    }
+                                }
+                                $raw.=$itemRaw;
+                                if($a<32)$elements[]=$v;
+                            }
+                            $arrayDecoded=[
+                                'element_count'=>$count,
+                                'inner_property_kind'=>$innerKind,
+                                'serialized_element_bytes'=>strlen($raw),
+                                'preview_first_32'=>$elements,
+                                'all_values_previewed'=>$count<=32,
+                                'linked_names_or_objects_first_32'=>array_slice($linked,0,32),
+                                'native_oracle'=>'genuine original compiled v227k SavePackage and independent LOAD'
+                            ];
+                        }
+                    }else{
+                        $raw=$read($loadSize);
+                    }
+                }elseif($loadPolicy==='native_227k_resolved_AnyProperty_SerializeItem'){
                     // Exact original compiled 227k FAnyProperty methods
                     // independently executed for NULL/INT/FLOAT/BOOL/STRING on
                     // both LOAD and SAVE. Unsupported subtype5..7 throws
@@ -954,7 +1056,10 @@ final class CatalogUE1ClassicTaggedPropertyReader
             $tags=self::parseTags(
                 $read,$u8,$name,$compact,$version,$offset,$position,$size,
                 $family,$schema,
-                $schema!==null&&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                $schema!==null&&in_array($family,[
+                    CatalogUE1ClassicSourceFamily::UT99_V432,
+                    CatalogUE1ClassicSourceFamily::UNREAL_V227
+                ],true)
                     ?['names'=>count($names),
                         'exports'=>count($package->getExports()),
                         'imports'=>count($package->getImports())]

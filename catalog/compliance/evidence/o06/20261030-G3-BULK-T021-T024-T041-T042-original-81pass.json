@@ -1,0 +1,21 @@
+﻿{
+    "ok": true,
+    "checks": 81,
+    "failures": [],
+    "grouped_original_compiled_fixed_tests": {
+        "T021": "PASS",
+        "T024": "PASS",
+        "T041": "PASS",
+        "T042": "PASS"
+    },
+    "C98_dynamic_array": "source_defined_absent_NA",
+    "original_native_runs_in_verifier": 0,
+    "original_v227k_native_SAVE_bytes": 302,
+    "production_227k_tagged_arrays_decode": [
+        "int_3",
+        "FName_2",
+        "UObject_self_null_2"
+    ],
+    "original_C227i_2012_compiled_file_v69_and_2026_loader_distinct": true,
+    "G3_full_acceptance": false
+}
