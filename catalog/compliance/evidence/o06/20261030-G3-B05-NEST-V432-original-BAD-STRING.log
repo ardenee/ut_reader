@@ -1,0 +1,9 @@
+﻿G5_NATIVE_DIRECT_PACKAGE_BEGIN editor=1 client=0 server=0
+ReadFile beyond EOF 309+1/309
+
+
+
+History: ULinkerLoad::Serialize <- FString<< <- UStruct::SerializeBin <- (Struct G5StructStringProbe.G5StructStringProbeActor.G5CaptionRecord Label[0]) <- FPropertyTag::SerializeTaggedProperty <- LoadStream <- (Count 0) <- UStruct::SerializeTaggedProperties <- (OneRecord[-1]) <- UObject::Serialize <- (G5StructStringProbeActor G5StructStringDirectBad.G5StructStringActor) <- AActor::Serialize <- LoadObject <- (G5StructStringProbeActor G5StructStringDirectBad.G5StructStringActor 309==309/309 257 24) <- ULinkerLoad::Preload <- PreLoadObjects <- UObject::EndLoad <- UObject::LoadPackage
+
+Exiting due to error
+G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=00000000 editor=1 native_error=1

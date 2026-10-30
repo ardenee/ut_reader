@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "checks": 55,
+    "failures": [],
+    "full_frozen_g3_ids": {
+        "T037": "PASS",
+        "T038": "PASS",
+        "T040": "PASS"
+    },
+    "T037": {
+        "original_v432_nested_nonempty_FString": "Direct-Record",
+        "original_live_loaded_marker": 71,
+        "physical_value_bytes": 19
+    },
+    "T038": {
+        "original_227k_nonempty_struct_count": 2,
+        "original_227k_zero_struct_count": 0,
+        "zero_count_recovery_bytes": 18
+    },
+    "T040": {
+        "original_227k_invalid_nested_FName_physical_error": 244,
+        "original_v432_nested_FString_physical_EOF": 309
+    },
+    "previously_accepted_native_probes_reexecuted": 0,
+    "G3_overall_accepted": false
+}

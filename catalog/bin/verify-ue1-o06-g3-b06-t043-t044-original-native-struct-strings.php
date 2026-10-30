@@ -163,7 +163,7 @@ $ck(str_contains($zero,'G3_B06_NATIVE_RELOADED_ARRAY name=Pairs count=0 innerSiz
 $ck(str_contains($neg,'<?int?Core.Errors.SerialSize?>')
  &&!str_contains($neg,'G3_B06_227_RELOADED_COUNT 1'),
  'partial T048 source-negative original native serial-size error then process access violation; not a trustworthy cursor oracle; T048 BLOCKED');
-$ck(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php')==='855ef589b455d6ed7430710c02a8db0b4750992ea22b9665402d3de6126fe8cc',
+$ck(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php')==='c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61',
  'production UE1 source-linked inner struct and FString codec exact new implementation pinned');
 $ok=$fail===[];
 echo json_encode(['ok'=>$ok,'checks'=>$n,'failures'=>$fail,

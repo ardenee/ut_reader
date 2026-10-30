@@ -374,6 +374,21 @@ final class CatalogUE1ClassicTaggedPropertyReader
                                 'native_oracle'=>'genuine original compiled v227k SavePackage and independent LOAD'
                             ];
                         }
+                        if($width===-3&&$count===0&&$tagSize>strlen($raw)){
+                            // Actual original C227k native read 0 array items
+                            // (one AR_INDEX byte), reported mismatch with
+                            // old Tag.Size 19, then sought to that tag end.
+                            // Preserve skipped unconsumed bytes, not fabricated
+                            // array members; this is NOT the v432 branch.
+                            $skipped=$read($tagSize-strlen($raw));
+                            $raw.=$skipped;
+                            $arrayDecoded['native_227k_tag_size_recovery']=[
+                                'source_reported_actual_value_bytes'=>1,
+                                'original_declared_tag_bytes'=>$tagSize,
+                                'recovered_archive_byte_count'=>strlen($skipped),
+                                'loaded_struct_count'=>0
+                            ];
+                        }
                     }else{
                         $raw=$read($loadSize);
                     }

@@ -2121,13 +2121,65 @@
       "pass_criterion": "UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation.",
       "evidence": "G5 sealed original v432 nested source-legal success if applicable; new only missing variants",
       "reuse": "Known uninitialized allocator crash excluded, never counted pass.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: v432 nested original FSTRING evidence present; fixed nested class source-specific loaded string length/value or source-legal allocation handling not fully established. Acceptance still requires: UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "20c64fef2704ff99e88525db48561458f82cddaa605da7ca9ee569cd12d74e09",
+      "result": "Original UT99 v432 compiled Core.dll loaded actual source-legal direct nested G5CaptionRecord (FString Label, INT Marker) with nonempty Label=Direct-Record and Marker71. Original native SavePackage archived OneRecord struct exactly 19 bytes (signed FString count14, 13 ANSI chars plus zero, 4 INT marker), and later ORIGINAL stock Core.dll loaded native live CDO/instance Label=Direct-Record, Marker71. Source-linked production UStruct::SerializeBin reader resolves native field order (FString then INT), exact 19-byte value span, label length/count/terminator, no false stock v432 allocator-uninitialized nested string array claim; latter remains explicitly excluded. Joint SHA-pinned original v432 and original C227k source/native/reader 55/55 acceptance checks, 3 NEW frozen B05 closures in one batch. No previously accepted native engine execution repeated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T17:35:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
+          "sha256": "974b69d77bb41f1b54359a90019eb4a752f5debfdf47a53fe3b5748d36e1ae7d",
+          "bytes": 13424
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61",
+          "bytes": 77076
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
+          "sha256": "c65dd008e97a431b0b8166f1e80359303a2316f3e0df3b5a1b9b5556ee93c96f",
+          "bytes": 309
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
+          "sha256": "607f914e8e797f23c08a11233ea1aab7f47d89af98988e722634d5f10e2a9226",
+          "bytes": 3960
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-BAD-STRING.log",
+          "sha256": "4d3cf87aef0127f995baf384866df7e5981b17101ee7557c45df94450626feb8",
+          "bytes": 782
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.u",
+          "sha256": "85664998a635464788fe6479d86bbc992bfb34eabfb8a61ac6b5fe5d5b9b8d2b",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.log",
+          "sha256": "f815170f2e241eee1eddb283171c0cf2027b28635481148a7899a16964d6a601",
+          "bytes": 2102
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "sha256": "34a00b4f5bdf78dd56ef62a79f62684b6159fb0ecfc43e630eaa08c7ee09d8f7",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-arrayZero-native.log",
+          "sha256": "e3b5858aa37af3fac5b53571abd36fae819a66cfe50400cc272606e73f7e250f",
+          "bytes": 25358
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-three-original-55pass.json",
+          "sha256": "b9130382b24f96b09e40bafc41125e3f6e525b510ddcd117ca8b7b9187e825f4",
+          "accepted_original_assertions": 55
+        }
+      ]
     },
     {
       "id": "T038",
@@ -2139,13 +2191,65 @@
       "pass_criterion": "Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason.",
       "evidence": "Original compiler fixture with initialized nested elements",
       "reuse": "G3-11 owns outer array count, here owns struct member codec.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: real source UProperty identities only; original loaded struct array two distinct members and signed count/bytes missing. Acceptance still requires: Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "20c64fef2704ff99e88525db48561458f82cddaa605da7ca9ee569cd12d74e09",
+      "result": "Original 2012 C227i UCC compiled source-defined G3Tuple struct with Number INT, Fraction FLOAT, Label FName, v227k genuine Core.dll compiled native saved 308-byte .u with two distinct struct values (101,1.25,Alpha) and (-202,-2.75,Gamma). A separate original Core.dll native process independently reloaded both and confirmed exact six values, stride12, 19 serialized bytes. Second native original v227k zero-count single-byte mutation of exactly count2->0 at offset234 produced original warning size mismatch Got1 Expected19, *successfully* loaded one object with Pairs count0, and continued to two genuine FString fields. Production source-linked exact Count0 decoder now performs original v227-specific 18-byte tag-end resync and reads subsequent tag fields without inventing struct members; both native SavePackage and two actual original process load outcomes match. Joint SHA-pinned original v432 and original C227k source/native/reader 55/55 acceptance checks, 3 NEW frozen B05 closures in one batch. No previously accepted native engine execution repeated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T17:35:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
+          "sha256": "974b69d77bb41f1b54359a90019eb4a752f5debfdf47a53fe3b5748d36e1ae7d",
+          "bytes": 13424
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61",
+          "bytes": 77076
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
+          "sha256": "c65dd008e97a431b0b8166f1e80359303a2316f3e0df3b5a1b9b5556ee93c96f",
+          "bytes": 309
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
+          "sha256": "607f914e8e797f23c08a11233ea1aab7f47d89af98988e722634d5f10e2a9226",
+          "bytes": 3960
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-BAD-STRING.log",
+          "sha256": "4d3cf87aef0127f995baf384866df7e5981b17101ee7557c45df94450626feb8",
+          "bytes": 782
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.u",
+          "sha256": "85664998a635464788fe6479d86bbc992bfb34eabfb8a61ac6b5fe5d5b9b8d2b",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.log",
+          "sha256": "f815170f2e241eee1eddb283171c0cf2027b28635481148a7899a16964d6a601",
+          "bytes": 2102
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "sha256": "34a00b4f5bdf78dd56ef62a79f62684b6159fb0ecfc43e630eaa08c7ee09d8f7",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-arrayZero-native.log",
+          "sha256": "e3b5858aa37af3fac5b53571abd36fae819a66cfe50400cc272606e73f7e250f",
+          "bytes": 25358
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-three-original-55pass.json",
+          "sha256": "b9130382b24f96b09e40bafc41125e3f6e525b510ddcd117ca8b7b9187e825f4",
+          "accepted_original_assertions": 55
+        }
+      ]
     },
     {
       "id": "T039",
@@ -2228,13 +2332,65 @@
       "pass_criterion": "Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior.",
       "evidence": "Original compiled malformed input + current decoder",
       "reuse": "G3-14 crosscutting EOF template owns shared cursor implementation.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: actual original malformed nested struct member rejection and source-specific FArchive Tell missing; generic negative tagged-property oracle is not nested member proof. Acceptance still requires: Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "20c64fef2704ff99e88525db48561458f82cddaa605da7ca9ee569cd12d74e09",
+      "result": "TWO distinct source-defined original nested failures, not duplicated outer generic corruption. First original true UT99 v432 compiled stock Core.dll on one-byte mutated legal G5CaptionRecord Label FString emitted native ReadFile beyond EOF 309+1/309 with actual FArchive stack ULinkerLoad::Serialize <- FString<< <- UStruct::SerializeBin <- FPropertyTag::SerializeTaggedProperty, returned NULL package/native_error1; production same physical offset309 and method. Second original 2026 C227k saved array<UStruct G3Tuple> with a single nested *member* FName compact linker index changed original 4 to invalid63 at archive offset243. Original stock compiled Core.dll emitted Bad name index63/12 with ULinkerLoad<<FName <- UStruct::SerializeBin trace, actual physical Tell244, null runtime bad1. Production source-selected native linked name reader rejects same nonzero invalid nested reference at exact offset244. Both actual changed source files remain 308/309 bytes with exactly one modified byte; no invented loaded field. Joint SHA-pinned original v432 and original C227k source/native/reader 55/55 acceptance checks, 3 NEW frozen B05 closures in one batch. No previously accepted native engine execution repeated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T17:35:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
+          "sha256": "974b69d77bb41f1b54359a90019eb4a752f5debfdf47a53fe3b5748d36e1ae7d",
+          "bytes": 13424
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61",
+          "bytes": 77076
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
+          "sha256": "c65dd008e97a431b0b8166f1e80359303a2316f3e0df3b5a1b9b5556ee93c96f",
+          "bytes": 309
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
+          "sha256": "607f914e8e797f23c08a11233ea1aab7f47d89af98988e722634d5f10e2a9226",
+          "bytes": 3960
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-BAD-STRING.log",
+          "sha256": "4d3cf87aef0127f995baf384866df7e5981b17101ee7557c45df94450626feb8",
+          "bytes": 782
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.u",
+          "sha256": "85664998a635464788fe6479d86bbc992bfb34eabfb8a61ac6b5fe5d5b9b8d2b",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.log",
+          "sha256": "f815170f2e241eee1eddb283171c0cf2027b28635481148a7899a16964d6a601",
+          "bytes": 2102
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "sha256": "34a00b4f5bdf78dd56ef62a79f62684b6159fb0ecfc43e630eaa08c7ee09d8f7",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-arrayZero-native.log",
+          "sha256": "e3b5858aa37af3fac5b53571abd36fae819a66cfe50400cc272606e73f7e250f",
+          "bytes": 25358
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-three-original-55pass.json",
+          "sha256": "b9130382b24f96b09e40bafc41125e3f6e525b510ddcd117ca8b7b9187e825f4",
+          "accepted_original_assertions": 55
+        }
+      ]
     },
     {
       "id": "T041",
