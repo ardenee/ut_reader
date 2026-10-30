@@ -1724,13 +1724,60 @@
       "pass_criterion": "Reader errors only where original does and reports same failing archive position.",
       "evidence": "Existing sealed invalid terminal/count probes reused; new native only if distinct branch missing",
       "reuse": "Shared generic EOF error G3-14.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: actual original malformed FString terminal/count native error and FArchive Tell for each different source method missing; allocator UB is not an error oracle. Acceptance still requires: Reader errors only where original does and reports same failing archive position.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "d1ad6e60988c62673105cbf190b0e2b1ec866ffeadb4a06f2299df49e4d69cd1",
+      "result": "One original UT99 v432 compiled direct FString class + genuine original shipped native Core.dll LOAD of one-byte mutated count75 in 283-byte real .u. True native ULinkerLoad::Serialize <- FString<< FArchive attempted 283+1/283, returned null package and native_error1. Current UT99 source-selected reader fails at EXACT original physical Tell283, with no fabricated loaded state. Same original 2026 C227k compiled Core.dll, distinct real source-selected saved v69/licensee227 253-byte package: one-byte invalid terminal and one-byte oversized count each genuinely LOADED fully with no fatal error; oversized count emitted original source-specific property size mismatch got4 expected3 and original native object loaded B. Reader correctly does not invent errors, retains raw opaque malformed payload, consumes exactly to archive end225. Frozen one T028 FULL PASS, 40/40 deterministic original compiler/native/current checks and no accepted native tests rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T16:04:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t028-original-native-fstring-error-parity.php",
+          "sha256": "6a74b2ff0851c16d1a87ef24e13419f8e6e6e90a96304ad00f29e3193d77b217",
+          "bytes": 9180
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-V432-original-EOF.u",
+          "sha256": "6ddf59b77ba21e9ede85ac84505fd6c281b6b0225454a5b51f3a9a622c6b0277",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-V432-original-EOF.log",
+          "sha256": "8bdd114a9bdc48d7a780ff31863dbae25b7826288cdc8cb7ffc742b8fd5589a1",
+          "bytes": 676
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadNul.u",
+          "sha256": "9f93c7c3e94d1f09b95a27136773ba12bb611c45b5bc6d4aa3220704581e3993",
+          "bytes": 253
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadCount.u",
+          "sha256": "c30b443cd26315ed6be00750c846e9852f5b41b219d43c2dea59a031b3341c81",
+          "bytes": 253
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadNul.log",
+          "sha256": "53d92ec894ca8fc8b6aea5bebd6bbd55678566768c44bfd8b7c137dae3dc4c3b",
+          "bytes": 26216
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadCount.log",
+          "sha256": "c539e7dff35c8319731db9694202b1589e8fa53852d30e9b5dc2643686d01144",
+          "bytes": 26460
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
+          "bytes": 70308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-original-native-40pass.json",
+          "sha256": "fb9f35c2f6d10806cda938f590203592001fc50b94a884284b603a80a003547c",
+          "accepted_original_assertions": 40
+        }
+      ]
     },
     {
       "id": "T029",
@@ -3114,13 +3161,55 @@
       "pass_criterion": "Only original source permits override; resulting runtime value/priority equal original compiled engine.",
       "evidence": "Original engine isolated config profile and native loaded value",
       "reuse": "Do not change canonical source or production config.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST B08: Original compiled isolated INI/localized override precedence and runtime values missing. REQUIRED: Only original source permits override; resulting runtime value/priority equal original compiled engine.",
-      "last_attempt_at": "2026-10-29T00:09:10+00:00",
+      "status": "PASS",
+      "evidence_sha": "812dd0de1633fbf262665fbbf5b21def3c4384e0f37dda74c0524e1a812c786f",
+      "result": "Genuine original 2012 C227i UCC-compiled source legal class config(User), real CPF_Config and CPF_Localized fields; one untouched 2026 original C227k compiled Core.dll saved 242-byte runtime package independently reloaded in two SEPARATE native processes with isolated User.ini ConfigValue111/222. Both actually loaded intended different values despite same saved archive and default444. Paired original separate live .int localization files Native Alpha/Beta were loaded into genuine original native CDO from same source LocalMessage default Default Message via UObject::LoadLocalized and CLASS_Localized flag, original native CPF_Localized flag00408000. Identical PersistValue888 and transient0 in both profiles. Exact original INI source/content native logs/byte saved package SHA pinned, User.ini and temporary .int restored after runs. Original compiler/native/current sealed joint 66/66 checks; zero accepted original-native tests rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T16:04:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b08-t062-t063-original-config-transient.php",
+          "sha256": "6a1950d242eab2409ef74b2a05120e9b5c3179af002b4b11eb9da45b0a3b38c4",
+          "bytes": 12604
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227i-original-config-transient.u",
+          "sha256": "3fd8ba1a4b74a15b741d5df597c7b275917a09df80e9dd1e2c520614a51b5c5a",
+          "bytes": 821
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-SavePackage.u",
+          "sha256": "58bb406f532cbf52ebad10be3d5ee77d48dbfdfb2bc101c8bf071d35bab16a44",
+          "bytes": 242
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-SAVE.log",
+          "sha256": "911549e7b0019a7788b1e733cdee286b07f60a797a669abf7b20f64622d7a61d",
+          "bytes": 49164
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-LOAD.log",
+          "sha256": "41deae31ef05381397d80f950bd807863b8fbc12f5e41183c00edda16297c230",
+          "bytes": 23906
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-111.log",
+          "sha256": "79c9c2b58679c02c23746fcbe183ad89d83ef02975cb471fce22939c57d6a54a",
+          "bytes": 24256
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-222.log",
+          "sha256": "184333d09df3c244b56d63c9e15902d883a356569cb8e75de0997007956f8fb2",
+          "bytes": 24254
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T062-T063-original-native-66pass.json",
+          "sha256": "fae774b54c96b7578967edc61ca4208e7e4bc9abad9e4a2f39906193db8abab7",
+          "accepted_original_assertions": 66
+        }
+      ]
     },
     {
       "id": "T063",
@@ -3132,13 +3221,55 @@
       "pass_criterion": "Correct transient omission/reset and source-defined archived field count.",
       "evidence": "Genuine original SavePackage fixture per distinct method and class",
       "reuse": "G3-05 owns declared flag presence.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST B08: Original compiled transient SAVE omission/reset and saved tag count missing. REQUIRED: Correct transient omission/reset and source-defined archived field count.",
-      "last_attempt_at": "2026-10-29T00:09:10+00:00",
+      "status": "PASS",
+      "evidence_sha": "812dd0de1633fbf262665fbbf5b21def3c4384e0f37dda74c0524e1a812c786f",
+      "result": "Original 2012 C227i UCC source declares transient ScratchValue333 and persistent PersistValue222 plus config444. Genuine untouched original 2026 C227k compiled engine actual class memory linked CPF_Transient 0x2000 at offset792 and CDO Scratch0; native independent instance changed transient to777 and persistent to888 then original SavePackage wrote genuine 242-byte .u. Source-selected production UE1 tagged reader matches exactly ONE saved INT property PersistValue888 4 data bytes, 7 total tag bytes ending physical offset214, and NO ScratchValue/ConfigValue/LocalMessage tag. Distinct second original compiled native process reloaded ScratchValue0 and PersistValue888, with two original config/localization profiles independently matching the same saved binary. Real source flag and native bytes fully verified. Original compiler/native/current sealed joint 66/66 checks; zero accepted original-native tests rerun.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T16:04:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b08-t062-t063-original-config-transient.php",
+          "sha256": "6a1950d242eab2409ef74b2a05120e9b5c3179af002b4b11eb9da45b0a3b38c4",
+          "bytes": 12604
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227i-original-config-transient.u",
+          "sha256": "3fd8ba1a4b74a15b741d5df597c7b275917a09df80e9dd1e2c520614a51b5c5a",
+          "bytes": 821
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-SavePackage.u",
+          "sha256": "58bb406f532cbf52ebad10be3d5ee77d48dbfdfb2bc101c8bf071d35bab16a44",
+          "bytes": 242
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-SAVE.log",
+          "sha256": "911549e7b0019a7788b1e733cdee286b07f60a797a669abf7b20f64622d7a61d",
+          "bytes": 49164
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-LOAD.log",
+          "sha256": "41deae31ef05381397d80f950bd807863b8fbc12f5e41183c00edda16297c230",
+          "bytes": 23906
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-111.log",
+          "sha256": "79c9c2b58679c02c23746fcbe183ad89d83ef02975cb471fce22939c57d6a54a",
+          "bytes": 24256
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-222.log",
+          "sha256": "184333d09df3c244b56d63c9e15902d883a356569cb8e75de0997007956f8fb2",
+          "bytes": 24254
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T062-T063-original-native-66pass.json",
+          "sha256": "fae774b54c96b7578967edc61ca4208e7e4bc9abad9e4a2f39906193db8abab7",
+          "accepted_original_assertions": 66
+        }
+      ]
     },
     {
       "id": "T064",

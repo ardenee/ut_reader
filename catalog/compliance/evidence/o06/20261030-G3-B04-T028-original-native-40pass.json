@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 40,
+    "failures": [],
+    "original_fixed_T028": "PASS",
+    "UT99_v432_original_native_fatal_Tell": 283,
+    "current_v432_native_error_Tell": 283,
+    "227k_malformed_NUL": "native_LOAD_success_reader_no_error",
+    "227k_oversized_declared_count": "native_LOAD_warning_and_success_reader_no_fatal",
+    "accepted_original_tests_reexecuted": 0,
+    "T029_T030_T031": "BLOCKED_invalid_any_real_linker_oracle_not_substituted",
+    "overall_G3_accepted": false
+}

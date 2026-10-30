@@ -1,0 +1,23 @@
+﻿{
+    "ok": true,
+    "checks": 66,
+    "failures": [],
+    "original_frozen_full_ids": {
+        "T062": "PASS",
+        "T063": "PASS"
+    },
+    "2012_original_compiler_warnings": 0,
+    "original_2026_native_saved_package_bytes": 242,
+    "exact_physical_saved_instance_tags": [
+        [
+            "PersistValue",
+            888
+        ]
+    ],
+    "original_config_and_localized_test_profiles": {
+        "111": "Native Alpha",
+        "222": "Native Beta"
+    },
+    "native_original_accepted_tests_rerun": 0,
+    "G3_full_acceptance": false
+}

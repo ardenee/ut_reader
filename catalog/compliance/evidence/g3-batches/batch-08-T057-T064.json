@@ -4,7 +4,7 @@
     "T057",
     "T064"
   ],
-  "started_at": "2026-10-30T00:10:06+00:00",
+  "started_at": "2026-10-30T16:04:10+00:00",
   "tests": [
     {
       "id": "T057",
@@ -33,13 +33,13 @@
     },
     {
       "id": "T062",
-      "status": "BLOCKED",
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T063",
-      "status": "BLOCKED",
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T064",
@@ -47,11 +47,11 @@
       "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
     }
   ],
-  "finished_at": "2026-10-30T00:10:06+00:00",
+  "finished_at": "2026-10-30T16:04:10+00:00",
   "counts": {
-    "PASS": 5,
+    "PASS": 7,
     "FAIL": 0,
-    "BLOCKED": 3,
+    "BLOCKED": 1,
     "PENDING": 0
   }
 }

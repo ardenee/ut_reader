@@ -1082,6 +1082,67 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
+def eval_t028_original_malformed_fstring(row:dict[str,Any])->dict[str,Any]:
+    """Actual original v432 fatal physical cursor and genuine 227k recoverable malformed FString; full fixed T028."""
+    b="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t028-original-native-fstring-error-parity.php",
+        "6a74b2ff0851c16d1a87ef24e13419f8e6e6e90a96304ad00f29e3193d77b217"),
+      verify_pin(b+"20261030-G3-B04-T028-V432-original-EOF.u",
+        "6ddf59b77ba21e9ede85ac84505fd6c281b6b0225454a5b51f3a9a622c6b0277"),
+      verify_pin(b+"20261030-G3-B04-T028-V432-original-EOF.log",
+        "8bdd114a9bdc48d7a780ff31863dbae25b7826288cdc8cb7ffc742b8fd5589a1"),
+      verify_pin(b+"20261030-G3-B04-T028-C227k-original-BadNul.u",
+        "9f93c7c3e94d1f09b95a27136773ba12bb611c45b5bc6d4aa3220704581e3993"),
+      verify_pin(b+"20261030-G3-B04-T028-C227k-original-BadCount.u",
+        "c30b443cd26315ed6be00750c846e9852f5b41b219d43c2dea59a031b3341c81"),
+      verify_pin(b+"20261030-G3-B04-T028-C227k-original-BadNul.log",
+        "53d92ec894ca8fc8b6aea5bebd6bbd55678566768c44bfd8b7c137dae3dc4c3b"),
+      verify_pin(b+"20261030-G3-B04-T028-C227k-original-BadCount.log",
+        "c539e7dff35c8319731db9694202b1589e8fa53852d30e9b5dc2643686d01144"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+        "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87"),
+      verified_pass_log(b+"20261030-G3-B04-T028-original-native-40pass.json","checks",40)
+    ]
+    j=json.loads((ROOT/b/"20261030-G3-B04-T028-original-native-40pass.json").read_text(encoding="utf-8-sig"))
+    if j.get("original_fixed_T028")!="PASS" or j.get("UT99_v432_original_native_fatal_Tell")!=283 or j.get("current_v432_native_error_Tell")!=283:
+       raise AssertionError("Original compiled source-specific physical FString native error comparison not complete")
+    return {"status":"PASS","result":
+       "One original UT99 v432 compiled direct FString class + genuine original shipped native Core.dll LOAD of one-byte mutated count75 in 283-byte real .u. True native ULinkerLoad::Serialize <- FString<< FArchive attempted 283+1/283, returned null package and native_error1. Current UT99 source-selected reader fails at EXACT original physical Tell283, with no fabricated loaded state. Same original 2026 C227k compiled Core.dll, distinct real source-selected saved v69/licensee227 253-byte package: one-byte invalid terminal and one-byte oversized count each genuinely LOADED fully with no fatal error; oversized count emitted original source-specific property size mismatch got4 expected3 and original native object loaded B. Reader correctly does not invent errors, retains raw opaque malformed payload, consumes exactly to archive end225. Frozen one T028 FULL PASS, 40/40 deterministic original compiler/native/current checks and no accepted native tests rerun.",
+       "evidence":pins}
+
+
+def eval_t062_t063_original_config_transient(row:dict[str,Any])->dict[str,Any]:
+    """One original C227i UCC + C227k original compiled SAVE/LOAD, two isolated config/localization INIs."""
+    b="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-b08-t062-t063-original-config-transient.php",
+        "6a1950d242eab2409ef74b2a05120e9b5c3179af002b4b11eb9da45b0a3b38c4"),
+      verify_pin(b+"20261030-G3-B08-227i-original-config-transient.u",
+        "3fd8ba1a4b74a15b741d5df597c7b275917a09df80e9dd1e2c520614a51b5c5a"),
+      verify_pin(b+"20261030-G3-B08-227k-original-SavePackage.u",
+        "58bb406f532cbf52ebad10be3d5ee77d48dbfdfb2bc101c8bf071d35bab16a44"),
+      verify_pin(b+"20261030-G3-B08-227k-original-native-SAVE.log",
+        "911549e7b0019a7788b1e733cdee286b07f60a797a669abf7b20f64622d7a61d"),
+      verify_pin(b+"20261030-G3-B08-227k-original-native-LOAD.log",
+        "41deae31ef05381397d80f950bd807863b8fbc12f5e41183c00edda16297c230"),
+      verify_pin(b+"20261030-G3-B08-227k-original-LOCALIZED-111.log",
+        "79c9c2b58679c02c23746fcbe183ad89d83ef02975cb471fce22939c57d6a54a"),
+      verify_pin(b+"20261030-G3-B08-227k-original-LOCALIZED-222.log",
+        "184333d09df3c244b56d63c9e15902d883a356569cb8e75de0997007956f8fb2"),
+      verified_pass_log(b+"20261030-G3-B08-T062-T063-original-native-66pass.json","checks",66)
+    ]
+    j=json.loads((ROOT/b/"20261030-G3-B08-T062-T063-original-native-66pass.json").read_text(encoding="utf-8-sig"))
+    if j.get("original_frozen_full_ids",{}).get(row["id"])!="PASS" or j.get("original_2026_native_saved_package_bytes")!=242:
+       raise AssertionError("T062/063 original native config/localized/transient source acceptance incomplete")
+    decisions={
+      "T062":"Genuine original 2012 C227i UCC-compiled source legal class config(User), real CPF_Config and CPF_Localized fields; one untouched 2026 original C227k compiled Core.dll saved 242-byte runtime package independently reloaded in two SEPARATE native processes with isolated User.ini ConfigValue111/222. Both actually loaded intended different values despite same saved archive and default444. Paired original separate live .int localization files Native Alpha/Beta were loaded into genuine original native CDO from same source LocalMessage default Default Message via UObject::LoadLocalized and CLASS_Localized flag, original native CPF_Localized flag00408000. Identical PersistValue888 and transient0 in both profiles. Exact original INI source/content native logs/byte saved package SHA pinned, User.ini and temporary .int restored after runs.",
+      "T063":"Original 2012 C227i UCC source declares transient ScratchValue333 and persistent PersistValue222 plus config444. Genuine untouched original 2026 C227k compiled engine actual class memory linked CPF_Transient 0x2000 at offset792 and CDO Scratch0; native independent instance changed transient to777 and persistent to888 then original SavePackage wrote genuine 242-byte .u. Source-selected production UE1 tagged reader matches exactly ONE saved INT property PersistValue888 4 data bytes, 7 total tag bytes ending physical offset214, and NO ScratchValue/ConfigValue/LocalMessage tag. Distinct second original compiled native process reloaded ScratchValue0 and PersistValue888, with two original config/localization profiles independently matching the same saved binary. Real source flag and native bytes fully verified."
+    }
+    return {"status":"PASS","result":decisions[row["id"]]+
+      " Original compiler/native/current sealed joint 66/66 checks; zero accepted original-native tests rerun.","evidence":pins}
+
+
 def eval_t025_t027_original_string_bulk(row:dict[str,Any])->dict[str,Any]:
     """Original C98 and UT99 fixed string, C227k UTF16 48-check native proof, two full closures."""
     b="catalog/compliance/evidence/o06/"
@@ -1328,7 +1389,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
