@@ -1,0 +1,23 @@
+﻿{
+    "ok": true,
+    "checks": 37,
+    "failures": [],
+    "full_frozen_g3_ids": {
+        "T047": "PASS"
+    },
+    "original_UT99_v432_map_bytes_empty_nonempty": [
+        0,
+        0
+    ],
+    "original_2012_C227i_map_bytes_empty_nonempty": [
+        0,
+        0
+    ],
+    "original_2026_C227k_map_bytes_empty_nonempty": [
+        1,
+        17
+    ],
+    "selected_by_compiled_original_engine_profile_not_archive_header": true,
+    "previously_accepted_native_engine_probes_reexecuted": 0,
+    "G3_complete": false
+}

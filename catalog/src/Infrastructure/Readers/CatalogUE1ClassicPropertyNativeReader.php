@@ -142,6 +142,32 @@ final class CatalogUE1ClassicPropertyNativeReader
                 break;
             case 'arrayproperty':
                 $extra['inner_reference'] = $reference('UArrayProperty.Inner');
+                // NetSerializeItem is NOT a package-file LOAD/SAVE method.
+                // Original 1999 v432 Core.dll: true/no bytes, actual
+                // zero/one/two real native UIntProperty array calls.
+                // Original 2012 v227i Core.dll: mov eax,1;ret0xc, no bytes.
+                // Original 2026 v227k Core.dll: actual UInt-inner 0/1/2
+                // original native network byte spans 2/10/18, plus real
+                // ShouldSerializeItem 16 UInt/object source calls.
+                // Select by compiled runtime, NEVER by package licensee.
+                $network=match($sourceFamily){
+                    CatalogUE1ClassicSourceFamily::UT99_V432,
+                    CatalogUE1ClassicSourceFamily::LEGACY_UT99_V400
+                        =>['net_method'=>'compiled_native_returns_true_no_bytes',
+                            'native_output_bytes_for_0_1_2'=>[0,0,0],
+                            'should_serialize_method'=>'not_required_by_file_archive'],
+                    CatalogUE1ClassicSourceFamily::UNREAL_V227I
+                        =>['net_method'=>'compiled_native_returns_true_no_bytes',
+                            'native_output_bytes_for_0_1_2'=>[0,0,0],
+                            'should_serialize_method'=>'2012_original_public_method_not_proven'],
+                    CatalogUE1ClassicSourceFamily::UNREAL_V227K
+                        =>['net_method'=>'compiled_native_array_network_payload',
+                            'native_output_bytes_for_0_1_2_int_values'=>[2,10,18],
+                            'should_serialize_method'=>'original_native_inner_delegation_verified'],
+                    default=>['net_method'=>'runtime_source_profile_unresolved']
+                };
+                $extra['runtime_array_network_method_gate']=$network;
+                $extra['network_packet_payload_decoding_in_package_file_reader']=false;
                 break;
             case 'fixedarrayproperty':
                 $extra['inner_reference'] = $reference('UFixedArrayProperty.Inner');

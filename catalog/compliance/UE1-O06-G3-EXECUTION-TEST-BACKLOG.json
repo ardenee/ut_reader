@@ -2743,13 +2743,50 @@
       "pass_criterion": "Reader consumes exactly original no-data bytes and never invents entries; nonempty case either proven or source-excluded.",
       "evidence": "Original 227 compiled method disassembly/real archive",
       "reuse": "Existing map no-data script reused.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST 2x8: 2012 compiled UMapProperty::Serialize method present; original map instance and source-based proof for nonempty map exclusion still missing. REQUIRED: Reader consumes exactly original no-data bytes and never invents entries; nonempty case either proven or source-excluded.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "status": "PASS",
+      "evidence_sha": "917d8d950411aa9d88888363fe9a16c7c7df8aac88a749aad2208fa05eeac214",
+      "result": "One 37/37 SHA-pinned three-original-engine native UMapProperty oracle. Original stock UT99 v432 compiled Core.dll real UMapProperty with native Key/Value UIntProperty object descriptors, empty genuine native TMap and nonempty genuine native 2-entry map {12:1200,34:3400}: both UMapProperty::SerializeItem SAVE bytes0, native FBufferReader LOAD Tell0, native TMap data unchanged. Original genuine 2012 C227i Core.dll .edata specifically resolves ?SerializeItem@UMapProperty@@ to code RVA0x1000; original CDB on real loaded original Core.dll resolves shared FNullOutError::Serialize instruction 'ret 8' at Core+0x1000 (the complete entire compiled no-data method), proving neither empty nor nonempty values are archived; real original separate compiled UMapProperty::NetSerializeItem RVA0x49FE0 returns 1 no bytes, not misused as archive method. Original 2026 C227k compiled Core.dll native creates real UMapProperty with valid live UIntProperty Key/Value and genuine TScriptMap<INT,INT>: empty original FBufferArchive wrote 00 one byte, original FBufferReader LOAD count0/Tell1; separate live two-entry original wrote 020C000000B004000022000000480D0000 exactly 17 bytes, original FBufferReader LOAD count2/Tell17. Production source-backed CatalogUE1ClassicStructArrayValueReader now carries resolved UMapProperty Key/Value kinds and source profile and parses 227k integer map exactly 0/2 values and native archive 1/17, while original v432/2012 explicitly consumes zero bytes and never infers nonempty in-memory maps. IMPORTANT source selects exact compiled 'unreal-v227i' vs 'unreal-v227k' and not v69/lic0 or lic227 package metadata: 2012 .u loaded on 2026 still uses new runtime. Unknown key/value serializer or ambiguous runtime source remains explicit unsupported. No accepted native-engine oracles replayed; 2012 CDB method is ONE newly executed native test, original previously preserved v432/227k actual methods reused, not repeated.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T18:29:27+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t047-original-three-map-native.php",
+          "sha256": "debeb71c02f81f87d881d5ec2ab032629c809e2fa464e646fcca11fc25482d85",
+          "bytes": 9266
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructArrayValueReader.php",
+          "sha256": "a55457d788c91a9b9021c5489b9b94d6b913a8049fe54c4abf02ec453bad58d9",
+          "bytes": 27136
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-MAP-original-C227i-native-2012-disasm.log",
+          "sha256": "bd6a8d4e656cf9bd716bd08fc7b307ba5fbb5ae754c287b4b1af22397bb9d1ea",
+          "bytes": 7114
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-MAP-original-C227i-2012-export-RVA.txt",
+          "sha256": "d1c955889a39b41f9a952a78bf966cf6f50083605dc2f5cb3ecb749af1e2eed7",
+          "bytes": 277
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-V432-original-T047-partial-MAP.log",
+          "sha256": "e137d776744395d9581dbe317bc3540deeea600223d9076f5427f4b3b01f40cf",
+          "bytes": 752
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-T047-partial-MAP.log",
+          "sha256": "82911deb40aef6797ff76901e40530f0d174944f89d94aebed6f392e1f585051",
+          "bytes": 26670
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-MAP-T047-original-37pass.json",
+          "sha256": "6a9d30dd5b094278b93a99efc9985d2c7005f9a0f7b4346898cbe57e369a020b",
+          "accepted_original_assertions": 37
+        }
+      ]
     },
     {
       "id": "T048",
@@ -2824,7 +2861,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: New original 2026 227k NetSerializeItem compiled 8 authentic UInt-inner Engine.u array properties x zero/one/two values: 24 native successes and 2,10,18 exact output bytes. Prior 16 genuine C227k ShouldSerialize methods 32 true returns. Original C227i compiled NetSerializeItem native mov eax,1;ret 0xc writes no bytes, BUT source SDK declares ShouldSerializeItem and its actual runtime bool source is still unproven (missing named PE export is not proof of absence). 59/59 scoped partial validator; T049 remains BLOCKED. FULL REQUIRED: Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
+      "blocking_reason": "2026-10-30 NEW ORIGINAL THREE-PROFILE NETWORK BATCH: genuine original stock UT99 v432 compiled Core.dll UArrayProperty::NetSerializeItem on genuine UCC-created G5ArrayProbe.Numbers INT array with counts0,1,2 returned TRUE and wrote EXACT ZERO bytes in all three original live native calls. Original 2012 C227i compiled UArrayProperty NetSerializeItem PE RVA0x49FE0 disassembled mov eax,1; ret 0x0c, no archive bytes. Original 2026 227k compiled UArrayProperty NetSerializeItem actual 8 genuine Engine.u INT-inner arrays x counts0,1,2 returned TRUE, 24 native calls with bytes2,10,18 and exact original payloads; 16 genuine Engine.u object-inner UArrayProperty ShouldSerializeItem original native 32 calls all TRUE. New actual production UProperty native declaration records selected by actual compiled runtime overlay (ut99-v432/unreal-v227i/unreal-v227k, NEVER .u version/licensee), document exact network branch, and explicitly EXCLUDE network packet decoding from UnrealDB package-file archive parser. 28/28 new three-original compiled native/current partial verifier plus prior 59/59 original 2012/2026 focused partial. T049 STILL BLOCKED because original 2012 C227i SDK declares ShouldSerializeItem but original compiled direct ShouldSerializeItem runtime return conditions remain unverified; missing public export is NOT source exclusion. Full test only closes after original actual 2012 ShouldSerializeItem runtime oracle, no rerun accepted methods.",
       "last_attempt_at": "2026-10-29T01:34:39+00:00",
       "attempted_native_execution": true,
       "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY",

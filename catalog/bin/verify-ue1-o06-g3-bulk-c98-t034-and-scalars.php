@@ -25,7 +25,7 @@ $pins=[
  [$system.'Core.dll','9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92'],
  [$source.'Src/UnClass.cpp','ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291'],
  [$source.'Inc/UnType.h','7f3092fe5025f077cd61cdc89598ae135867ad064a40a5fffbfaf9be057e86b8'],
- [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructArrayValueReader.php','bbd84640b561584510f56ae43babbc8e73f2139b1b8bb36061a7b607d42a5f26']
+ [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructArrayValueReader.php','a55457d788c91a9b9021c5489b9b94d6b913a8049fe54c4abf02ec453bad58d9']
 ];
 foreach($pins as [$file,$sha])$ck(is_file($file)&&hash_file('sha256',$file)===$sha,'SHA256 source-original/native '.basename($file));
 $f=$system.'G3C98Bulk.u';$archive=$ev.'20261030-G3-BULK-C98-original-compiler-G3C98Bulk.u';

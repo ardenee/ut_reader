@@ -141,6 +141,7 @@ final class CatalogUE1ClassicStructArrayValueReader
                 $arrayInner=null;
                 $arrayCount=null;
                 $mapFieldsVerified=false;
+                $mapInnerKinds=[];
                 if($kind==='mapproperty'&&!$skip){
                     // UT99 UMapProperty::SerializeItem emits NO values;
                     // Key and Value must nevertheless be valid UProperty
@@ -161,6 +162,7 @@ final class CatalogUE1ClassicStructArrayValueReader
                             !=='native_property_record_complete'){
                             $mapFieldsVerified=false;break;
                         }
+                        $mapInnerKinds[$label]=(string)($childNative['property_kind']??'');
                     }
                     if(!$mapFieldsVerified){
                         return ['status'=>'struct_map_key_value_unresolved'];
@@ -244,6 +246,9 @@ final class CatalogUE1ClassicStructArrayValueReader
                     'array_inner_layout'=>$arrayInner,
                     'fixed_array_count'=>$arrayCount,
                     'map_fields_verified'=>$mapFieldsVerified,
+                    'map_source_family'=>$sourceFamily,
+                    'map_key_kind'=>$mapInnerKinds['key_reference']??null,
+                    'map_value_kind'=>$mapInnerKinds['value_reference']??null,
                 ];
                 $ref=(int)($field['next_field_reference']??0);
             }
@@ -260,6 +265,7 @@ final class CatalogUE1ClassicStructArrayValueReader
             'source_non_property_field_skips'=>$nonPropertySkips,
             'source_definition_package_paths'=>$packageChain,
             'runtime_offsets_verified'=>false,
+            'source_family'=>$sourceFamily,
         ];
     }
 
@@ -267,6 +273,67 @@ final class CatalogUE1ClassicStructArrayValueReader
      * @param array<string,mixed> $layout
      * @return array<string,mixed>
      */
+    /**
+     * Original compiled UMapProperty::SerializeItem family differential.
+     * UT99 v432 native and original 2012 C227i compiled ret8 => no data.
+     * Genuine original C227k 2026 TScriptMap<int,int> has AR_INDEX(n)
+     * and n pairs of 4-byte int key and 4-byte int value.
+     * Unsupported inner types remain explicit instead of guessed.
+     * @return array<string,mixed>
+     */
+    public static function decodeOriginalMapAt(
+        string $bytes,int &$position,string $sourceFamily,int $licensee,
+        string $keyKind,string $valueKind
+    ):array{
+        $start=$position;
+        if($sourceFamily===''){
+            return ['status'=>'map_source_unsupported',
+                'reason'=>'original compiled UE1 engine runtime profile unresolved'];
+        }
+        // A v69/lic0 package compiled in 2012 can be loaded by the
+        // genuine 2026 runtime. Therefore NEVER infer Core.dll ABI
+        // from archive LicenseeVersion (or from numeric Version).
+        // Require the explicit caller-selected compiled-engine profile.
+        $family=CatalogUE1ClassicSourceFamily::select(69,
+            $sourceFamily===''?null:$sourceFamily);
+        if($family===CatalogUE1ClassicSourceFamily::UT99_V432
+            ||$sourceFamily===CatalogUE1ClassicSourceFamily::UNREAL_V227I){
+            return ['status'=>'map_original_source_no_data',
+                'source_map_value_archive_bytes'=>0,
+                'source_map_element_loop_executed'=>false,
+                'source_map_items_archived'=>false,
+                'source_map_memory_count_not_inferable'=>true];
+        }
+        if($sourceFamily!==CatalogUE1ClassicSourceFamily::UNREAL_V227K){
+            return ['status'=>'map_source_unsupported',
+                'reason'=>'no compiled native map serializer for source profile'];
+        }
+        if($keyKind!=='intproperty'||$valueKind!=='intproperty'){
+            return ['status'=>'map_source_unsupported',
+                'reason'=>'native 227k key/value field types not verified'];
+        }
+        $count=CatalogUE1ClassicCompactIndexReader::readAt($bytes,$position);
+        if($count===null||$count<0||$count>intdiv(strlen($bytes)-$position,8)){
+            return ['status'=>'map_source_unsupported',
+                'reason'=>'original 227k map count or pair archive truncated'];
+        }
+        $pairs=[];
+        for($i=0;$i<$count;$i++){
+            $pair=unpack('Vkey/Vvalue',substr($bytes,$position,8));
+            $position+=8;
+            $key=$pair['key'];$value=$pair['value'];
+            if($key>=0x80000000)$key-=0x100000000;
+            if($value>=0x80000000)$value-=0x100000000;
+            $pairs[]=['key'=>$key,'value'=>$value];
+        }
+        return ['status'=>'map_original_227k_int_pairs_decoded',
+            'source_map_value_archive_bytes'=>$position-$start,
+            'source_map_element_loop_executed'=>true,
+            'source_map_items_archived'=>true,
+            'source_map_element_count'=>$count,
+            'source_map_entries'=>$pairs];
+    }
+
     public static function readAt(
         string $bytes,int &$position,array $layout,bool $preview,
         CatalogUE1PackageReader $valuePackage,int $depth=0
@@ -298,14 +365,20 @@ final class CatalogUE1ClassicStructArrayValueReader
                     }
                     $v=$ref;
                 }elseif($kind==='mapproperty'){
-                    // UT99 Core/Src/UnProp.cpp UMapProperty::SerializeItem
-                    // has the entire map-element loop commented out.
-                    // An array of these members occupies zero file bytes.
                     if(!($field['map_fields_verified']??false)){
                         return ['status'=>'nested_struct_map_unverified'];
                     }
-                    $v=['source_map_value_archive_bytes'=>0,
-                        'source_map_element_loop_executed'=>false];
+                    $v=self::decodeOriginalMapAt(
+                        $bytes,$position,
+                        (string)($field['map_source_family']
+                            ??$layout['source_family']??''),
+                        (int)($valuePackage->getHeader()['licensee']??0),
+                        (string)($field['map_key_kind']??''),
+                        (string)($field['map_value_kind']??''));
+                    if(($v['status']??null)==='map_source_unsupported'){
+                        return ['status'=>'nested_struct_map_value_unverified',
+                            'reason'=>$v['reason']??'unsupported'];
+                    }
                 }elseif($kind==='arrayproperty'||$kind==='fixedarrayproperty'){
                     $innerLayout=$field['array_inner_layout']??null;
                     if(!is_array($innerLayout)){

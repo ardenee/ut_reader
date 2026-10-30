@@ -1,0 +1,28 @@
+﻿{
+    "ok": true,
+    "checks": 28,
+    "failures": [],
+    "fixed_test": "T049",
+    "status": "PARTIAL_ONLY_2012_ORIGINAL_SHOULD_SERIALIZE_RUNTIME_MISSING",
+    "new_original_v432_native_successful_NetSerializeItem_cases": 3,
+    "original_2012_NetSerializeItem": {
+        "result": 1,
+        "bytes": 0
+    },
+    "original_2026_NetSerializeItem": {
+        "values": [
+            0,
+            1,
+            2
+        ],
+        "bytes": [
+            2,
+            10,
+            18
+        ]
+    },
+    "original_2026_ShouldSerializeItem_actual_native_calls": 32,
+    "real_file_reader_network_packet_codec": "EXCLUDED_not_package_LOAD_SAVE",
+    "original_2012_ShouldSerializeItem_runtime": "BLOCKED",
+    "original_completed_engine_native_tests_reexecuted": 0
+}

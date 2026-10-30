@@ -1,0 +1,3 @@
+       1089  440 00049FE0 ?NetSerializeItem@UArrayProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z
+       1096  447 00049FE0 ?NetSerializeItem@UMapProperty@@UBEHAAVFArchive@@PAVUPackageMap@@PAX@Z
+       1285  504 00001000 ?SerializeItem@UMapProperty@@UBEXAAVFArchive@@PAX@Z

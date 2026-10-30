@@ -693,7 +693,7 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
          "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
-         "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709"),
+         "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
          "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
     ]:
@@ -735,12 +735,12 @@ def eval_t009(_row: dict[str, Any]) -> dict[str, Any]:
     result_path="catalog/compliance/evidence/o06/20261028-G3-batch-T009-native-error-regression-91pass.json"
     pins=[]
     for path,expected in [
-        (script,"1ade9c0d9a18171908b97d26cb1a58a22fb786694bd0512c9c1953413a651953"),
+        (script,"109a5baaa1760e572bd2aea6ddc11194d95f9a74222f0099423aca98e286728e7"),
         (result_path,"ec6c78721ed173a023e4d6dd58d84be022f80abd8ff5035b7eb7127b4cd22e45"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
          "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
-         "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709"),
+         "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
          "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
         ("catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.log",
@@ -1082,6 +1082,31 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
+def eval_t047_three_compiled_map_branches(row:dict[str,Any])->dict[str,Any]:
+    """Three source-selected real native Core.dll map methods; one full frozen T047."""
+    b="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t047-original-three-map-native.php",
+        "debeb71c02f81f87d881d5ec2ab032629c809e2fa464e646fcca11fc25482d85"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructArrayValueReader.php",
+        "a55457d788c91a9b9021c5489b9b94d6b913a8049fe54c4abf02ec453bad58d9"),
+      verify_pin(b+"20261030-G3-MAP-original-C227i-native-2012-disasm.log",
+        "bd6a8d4e656cf9bd716bd08fc7b307ba5fbb5ae754c287b4b1af22397bb9d1ea"),
+      verify_pin(b+"20261030-G3-MAP-original-C227i-2012-export-RVA.txt",
+        "d1c955889a39b41f9a952a78bf966cf6f50083605dc2f5cb3ecb749af1e2eed7"),
+      verify_pin(b+"20261030-G3-B06-FIXED-V432-original-T047-partial-MAP.log",
+        "e137d776744395d9581dbe317bc3540deeea600223d9076f5427f4b3b01f40cf"),
+      verify_pin(b+"20261030-G3-B06-FIXED-C227k-original-T047-partial-MAP.log",
+        "82911deb40aef6797ff76901e40530f0d174944f89d94aebed6f392e1f585051"),
+      verified_pass_log(b+"20261030-G3-MAP-T047-original-37pass.json","checks",37)
+    ]
+    j=json.loads((ROOT/b/"20261030-G3-MAP-T047-original-37pass.json").read_text(encoding="utf-8-sig"))
+    if j.get("full_frozen_g3_ids",{}).get("T047")!="PASS":
+       raise AssertionError("All three original native compiled engine map paths not closed")
+    return {"status":"PASS","result":
+      "One 37/37 SHA-pinned three-original-engine native UMapProperty oracle. Original stock UT99 v432 compiled Core.dll real UMapProperty with native Key/Value UIntProperty object descriptors, empty genuine native TMap and nonempty genuine native 2-entry map {12:1200,34:3400}: both UMapProperty::SerializeItem SAVE bytes0, native FBufferReader LOAD Tell0, native TMap data unchanged. Original genuine 2012 C227i Core.dll .edata specifically resolves ?SerializeItem@UMapProperty@@ to code RVA0x1000; original CDB on real loaded original Core.dll resolves shared FNullOutError::Serialize instruction 'ret 8' at Core+0x1000 (the complete entire compiled no-data method), proving neither empty nor nonempty values are archived; real original separate compiled UMapProperty::NetSerializeItem RVA0x49FE0 returns 1 no bytes, not misused as archive method. Original 2026 C227k compiled Core.dll native creates real UMapProperty with valid live UIntProperty Key/Value and genuine TScriptMap<INT,INT>: empty original FBufferArchive wrote 00 one byte, original FBufferReader LOAD count0/Tell1; separate live two-entry original wrote 020C000000B004000022000000480D0000 exactly 17 bytes, original FBufferReader LOAD count2/Tell17. Production source-backed CatalogUE1ClassicStructArrayValueReader now carries resolved UMapProperty Key/Value kinds and source profile and parses 227k integer map exactly 0/2 values and native archive 1/17, while original v432/2012 explicitly consumes zero bytes and never infers nonempty in-memory maps. IMPORTANT source selects exact compiled 'unreal-v227i' vs 'unreal-v227k' and not v69/lic0 or lic227 package metadata: 2012 .u loaded on 2026 still uses new runtime. Unknown key/value serializer or ambiguous runtime source remains explicit unsupported. No accepted native-engine oracles replayed; 2012 CDB method is ONE newly executed native test, original previously preserved v432/227k actual methods reused, not repeated.","evidence":pins}
+
+
 def eval_t048_original_both_source_array_failure(row:dict[str,Any])->dict[str,Any]:
     """Frozen T048: actual original v432+227k malformed array source-specific errors, not native UB."""
     b="catalog/compliance/evidence/o06/"
@@ -1366,7 +1391,7 @@ def eval_t034(_row:dict[str,Any])->dict[str,Any]:
     """Original May17 C98 native inherited UStruct SerializeBin in one grouped 9-ID compiled fixture."""
     pins=[
       verify_pin("catalog/bin/verify-ue1-o06-g3-bulk-c98-t034-and-scalars.php",
-                 "2920c05218a2ff862f7559b687acabd5cd2dd05ed70a2c3b54db6d35d4d753a1"),
+                 "e725849998f29a95571a8172b3d49e173913d838910fb86c2a3ec1e0aa97c00c"),
       verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.u",
                  "40fa22b955451b489d13b8b19e478c55965efcfb569b497cf8a312e6c73521a1"),
       verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.uc",
@@ -1507,7 +1532,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T048":eval_t048_original_both_source_array_failure,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

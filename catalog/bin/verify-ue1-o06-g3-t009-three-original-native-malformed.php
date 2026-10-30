@@ -31,7 +31,7 @@ $pins=[
  [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php',
   '2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1'],
  [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php',
-  'f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709'],
+  'afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714'],
  [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php',
   'df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500'],
  [$e.'20261028-G3-T009-C98-Children-original-compiled-Tell.log',
