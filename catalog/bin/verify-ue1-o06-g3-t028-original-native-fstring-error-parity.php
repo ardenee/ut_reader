@@ -22,7 +22,7 @@ $hashes=[
  '20261030-G3-BULK-SCALAR-V432-original-FSTRING.u'=>'e494caf1c9eb86b5fb2fcf4f7af1e0e91c5b5b214066c670ef4917dc7a2cd933'
 ];
 foreach($hashes as $name=>$sha)$ck(is_file($ev.$name)&&hash_file('sha256',$ev.$name)===$sha,'exact original-native SHA '.$name);
-$ck(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php')==='c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61','current actual UE1 tagged reader source pinned');
+$ck(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php')==='90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd','current actual UE1 tagged reader source pinned');
 $root2='C:/Temp/UnrealDB/O06/';
 $stock=$root2.'Native-UCC/System/G5DirectStringPayload.u';
 $bad=$root2.'Native-UCC/System/G5DirectStringPayloadBad.u';

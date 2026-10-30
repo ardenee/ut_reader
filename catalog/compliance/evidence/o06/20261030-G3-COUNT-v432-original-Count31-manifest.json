@@ -1,0 +1,18 @@
+{
+  "source": "compiled_original_UT99_v432_Core_DLL",
+  "original_pkg_sha256": "2436d2545135a8ca02d5f1e71252daf3314be6e5b02c371a7db8ae5450e16ff3",
+  "one_byte_count_mutation": {
+    "offset": 254,
+    "original": 3,
+    "new": 31
+  },
+  "native_stdout_sha256": "5b22df2a609d87803a857c047397a4f9bf6885fddf87cac449c0b63a3889c869",
+  "native_exit": 1,
+  "native_observed_failure": true,
+  "native_selected_lines": [
+    "History: ULinkerLoad::Serialize <- FPropertyTag::SerializeTaggedProperty <- LoadStream <- (Count 0) <- UStruct::SerializeTaggedProperties <- (Numbers[-1]) <- UObject::Serialize <- (G5ArrayProbeActor G5ArrayPayload.G5DynamicActor) <- AActor::Serialize <- LoadObject <- (G5ArrayProbeActor G5ArrayPayload.G5DynamicActor 308==308/308 251 29) <- ULinkerLoad::Preload <- PreLoadObjects <- UObject::EndLoad <- UObject::LoadPackage",
+    "Exiting due to error",
+    "G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=00000000 editor=1 native_error=1"
+  ],
+  "pristine_restored": true
+}

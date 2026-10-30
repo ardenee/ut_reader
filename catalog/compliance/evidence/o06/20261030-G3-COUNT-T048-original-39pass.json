@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 39,
+    "failures": [],
+    "full_frozen_g3_ids": {
+        "T048": "PASS"
+    },
+    "T048": "original v432 count0/-1 true size mismatch archive Tell259, count31 fatal physical EOF308; v227k real count0 tolerated + restored final tag cursor280, original oversized/extra count native rejects exact index6248 at Tell263, negative C++ allocation UB explicitly excluded",
+    "T068": "BLOCKED_PARTIAL_only_v432_227k_array_name_string_proofs_C98_and_2012_source_proven_bounds_missing",
+    "previously_accepted_original_native_probes_rerun": 0,
+    "G3_overall_complete": false
+}

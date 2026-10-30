@@ -1,0 +1,7 @@
+G5_NATIVE_DIRECT_PACKAGE_BEGIN editor=1 client=0 server=0
+ReadFile beyond EOF 308+3/308
+
+History: ULinkerLoad::Serialize <- FPropertyTag::SerializeTaggedProperty <- LoadStream <- (Count 0) <- UStruct::SerializeTaggedProperties <- (Numbers[-1]) <- UObject::Serialize <- (G5ArrayProbeActor G5ArrayPayload.G5DynamicActor) <- AActor::Serialize <- LoadObject <- (G5ArrayProbeActor G5ArrayPayload.G5DynamicActor 308==308/308 251 29) <- ULinkerLoad::Preload <- PreLoadObjects <- UObject::EndLoad <- UObject::LoadPackage
+
+Exiting due to error
+G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=00000000 editor=1 native_error=1

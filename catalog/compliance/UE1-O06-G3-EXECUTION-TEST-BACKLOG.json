@@ -2761,13 +2761,55 @@
       "pass_criterion": "Same method-specific error and failing cursor; bounded decoder must not fabricate elements.",
       "evidence": "Original compiled actual FArchive failure at named branch",
       "reuse": "G3-14 owns crosscutting low-level Count/EOF.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Original compiled UT99 v432 generated genuine array count3 mutations to 0 and -1 both executed: Serial size mismatch Got8 Expected29, actual Tell259, current reader matches tagged stream and no loaded negative FArray fabrication, 38/38 focused original native. Other source family malformed array cases still missing, BLOCKED. REQUIRED: Same method-specific error and failing cursor; bounded decoder must not fabricate elements.",
-      "last_attempt_at": "2026-10-29T01:34:39+00:00",
-      "attempted_native_execution": true,
-      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
+      "status": "PASS",
+      "evidence_sha": "717e74622789eec122f08a54116a3aeb6c38b2ff207928aadadeccba83d3f69e",
+      "result": "Original compiled UT99 v432 UArrayProperty::SerializeItem genuine negative1/zero count native errors both original method-specific size mismatch Got8 Expected29 at original physical FArchive Tell259, and separate positive oversized count31 native physical EOF ReadFile beyond 308+3/308 null package. Source-selected v432 reader matches all without claiming negative-native loaded arrays. Original 2026 compiled C227k original SavePackage genuine 308-byte nested G3Tuple UArrayProperty count2 at offset234: separate new native one-byte positive3 and huge63 mutations both genuine original compiled Core.dll error ULinkerLoad<<FName via UStruct::SerializeBin Bad name index6248/12 at actual physical Tell263; production reader exact same name/index and cursor263. Original 227k count0 source-specific recovery logs warning Got1 Expected19, actual native successfully loaded empty Pairs and subsequent Strings; production source-gated reader reproduces true count0 and original export-end Tell280. C227k count negative1 triggers original native C++ FArray allocator access violation; explicitly excluded from deterministic error cursor acceptance, never treated as a successful load. No source profiles without UArrayProperty are falsely included. One joint independently checked 39/39 native/source/current verifier closes only THIS frozen T048; broader compact name/string bound matrix T068 and malformed tag matrix T064 remain BLOCKED until distinct original source branches available.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T17:54:41+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t048-original-array-errors.php",
+          "sha256": "7dcef92b013daf8e79b2f14421c46580a6a7a72944b3a3010869e18e29ee897f",
+          "bytes": 9747
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd",
+          "bytes": 77780
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountThree.u",
+          "sha256": "6c993b943a76a2729cf525abe58f79f5eaf685d31e764012d965485dc461c94c",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountHuge.u",
+          "sha256": "14cb3bc6f680ed736d84a1ead059b45b6bfccbf3cc45ddcb96c2880a4a47e068",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountThree.log",
+          "sha256": "247281e85e55776564dbd37b7c6d12ef6479407978af868b7b18951f57dc6018",
+          "bytes": 2088
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountHuge.log",
+          "sha256": "16e4a52a9e99fe7b5d6f5d125ebffc654001fa82ee9b439dce1684359be33cf3",
+          "bytes": 2082
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-v432-original-Count31-EOF.log",
+          "sha256": "5b22df2a609d87803a857c047397a4f9bf6885fddf87cac449c0b63a3889c869",
+          "bytes": 613
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-T048-original-39pass.json",
+          "sha256": "4289bd3bb7a2804f1c8eea029d87fc047eaa9b467dcc489dc1aca98e286728e7",
+          "accepted_original_assertions": 39
+        }
+      ]
     },
     {
       "id": "T049",

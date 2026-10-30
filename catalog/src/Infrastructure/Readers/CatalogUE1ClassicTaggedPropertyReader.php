@@ -1130,6 +1130,16 @@ final class CatalogUE1ClassicTaggedPropertyReader
                             'UE1 v432 ULinkerLoad<<FName invalid name index '.$index
                             .' at archive offset '.($offset+$position));
                     }
+                    if($family===CatalogUE1ClassicSourceFamily::UNREAL_V227){
+                        // Original compiled 2026 C227k Core.dll malformed
+                        // real runtime package: invalid array index causes
+                        // later TagName 1497/12 at absolute Tell256; missing
+                        // NAME_None causes invalid TagName63/12 at Tell280.
+                        // Epic checks last AR_INDEX byte BEFORE loading tag.
+                        throw new RuntimeException(
+                            'UE1 v227 ULinkerLoad<<FName invalid name index '.$index
+                            .' at archive offset '.($offset+$position));
+                    }
                     throw new RuntimeException('UE1 property name reference is invalid: '.$index);
                 }
                 $entry=$names[$index];

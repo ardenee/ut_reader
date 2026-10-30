@@ -695,7 +695,7 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
          "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-         "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+         "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
     ]:
         pins.append(verify_pin(p,h))
     result=json.loads((ROOT/output).read_text(encoding="utf-8-sig"))
@@ -1040,13 +1040,13 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     """Authentic original 227k compiled Engine.u property/member links and CDO."""
     b="catalog/compliance/evidence/o06/"
     evidence=[verify_pin(n,h) for n,h in [
-      ("catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php","c124ccf1ed6bae854f4778e9184579fcdfbcb161c5f89de182736065a126e238"),
+      ("catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php","ae4ad924873d10f10aca9965bc2ab60695497f0a72922736dd22a82a8ba51f2b"),
       (b+"20261029-G3-T036-T039-original-C227k-95pass.json","506bb85d67b408283f8018235a1880bd45f8291ef31c018d6a786ec6f66a16db"),
       (b+"20261029-G3-T036-T039-C227k-original-nested-struct-native.log","edce7870d4a3522ed053bfe1a5b115e345ac4fd6ba87ffdbd40fdb5bfb1849da"),
       (b+"20261029-G3-T036-T039-C227k-original-nested-struct-probe.cpp","59dfc53678899142459a1511cb06f332a545ffaa436592cdf16cab8301c87e9e"),
       (b+"20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json","760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66"),
       (b+"20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log","f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d"),
-      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php","c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php","90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
     ]]
     for name,sha in [
       (r"C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll","c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"),
@@ -1082,14 +1082,42 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
+def eval_t048_original_both_source_array_failure(row:dict[str,Any])->dict[str,Any]:
+    """Frozen T048: actual original v432+227k malformed array source-specific errors, not native UB."""
+    b="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t048-original-array-errors.php",
+                 "7dcef92b013daf8e79b2f14421c46580a6a7a72944b3a3010869e18e29ee897f"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+                 "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
+      verify_pin(b+"20261030-G3-COUNT-C227k-original-CountThree.u",
+                 "6c993b943a76a2729cf525abe58f79f5eaf685d31e764012d965485dc461c94c"),
+      verify_pin(b+"20261030-G3-COUNT-C227k-original-CountHuge.u",
+                 "14cb3bc6f680ed736d84a1ead059b45b6bfccbf3cc45ddcb96c2880a4a47e068"),
+      verify_pin(b+"20261030-G3-COUNT-C227k-original-CountThree.log",
+                 "247281e85e55776564dbd37b7c6d12ef6479407978af868b7b18951f57dc6018"),
+      verify_pin(b+"20261030-G3-COUNT-C227k-original-CountHuge.log",
+                 "16e4a52a9e99fe7b5d6f5d125ebffc654001fa82ee9b439dce1684359be33cf3"),
+      verify_pin(b+"20261030-G3-COUNT-v432-original-Count31-EOF.log",
+                 "5b22df2a609d87803a857c047397a4f9bf6885fddf87cac449c0b63a3889c869"),
+      verified_pass_log(b+"20261030-G3-COUNT-T048-original-39pass.json","checks",39)
+    ]
+    j=json.loads((ROOT/b/"20261030-G3-COUNT-T048-original-39pass.json").read_text(encoding="utf-8-sig"))
+    if j.get("full_frozen_g3_ids",{}).get("T048")!="PASS":
+       raise AssertionError("Real original v432 and 227k malformed arrays not fully verified")
+    return {"status":"PASS","result":
+      "Original compiled UT99 v432 UArrayProperty::SerializeItem genuine negative1/zero count native errors both original method-specific size mismatch Got8 Expected29 at original physical FArchive Tell259, and separate positive oversized count31 native physical EOF ReadFile beyond 308+3/308 null package. Source-selected v432 reader matches all without claiming negative-native loaded arrays. Original 2026 compiled C227k original SavePackage genuine 308-byte nested G3Tuple UArrayProperty count2 at offset234: separate new native one-byte positive3 and huge63 mutations both genuine original compiled Core.dll error ULinkerLoad<<FName via UStruct::SerializeBin Bad name index6248/12 at actual physical Tell263; production reader exact same name/index and cursor263. Original 227k count0 source-specific recovery logs warning Got1 Expected19, actual native successfully loaded empty Pairs and subsequent Strings; production source-gated reader reproduces true count0 and original export-end Tell280. C227k count negative1 triggers original native C++ FArray allocator access violation; explicitly excluded from deterministic error cursor acceptance, never treated as a successful load. No source profiles without UArrayProperty are falsely included. One joint independently checked 39/39 native/source/current verifier closes only THIS frozen T048; broader compact name/string bound matrix T068 and malformed tag matrix T064 remain BLOCKED until distinct original source branches available.",
+      "evidence":pins}
+
+
 def eval_t037_t038_t040_original_nested_batch(row:dict[str,Any])->dict[str,Any]:
     """Three distinct frozen B05 method tests; genuine v432 and 227k preexisting native positive/negative evidence plus one new invalid nested name native oracle."""
     b="catalog/compliance/evidence/o06/"
     checks=[
        verify_pin("catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
-          "974b69d77bb41f1b54359a90019eb4a752f5debfdf47a53fe3b5748d36e1ae7d"),
+          "35f2aaa14c780a013bf51fae7e9fa6267f271654d17bbe49bd331dbe51c605ca"),
        verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+          "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
        verify_pin(b+"20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
           "c65dd008e97a431b0b8166f1e80359303a2316f3e0df3b5a1b9b5556ee93c96f"),
        verify_pin(b+"20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
@@ -1148,7 +1176,7 @@ def eval_t043_t044_native_v227_aggregate_pair(row:dict[str,Any])->dict[str,Any]:
     b="catalog/compliance/evidence/o06/"
     pins=[
       verify_pin("catalog/bin/verify-ue1-o06-g3-b06-t043-t044-original-native-struct-strings.php",
-        "dec0d55b202cc728595b386f5044883b9293877754d4adf96cad4837f3c19db0"),
+        "87f700d61adfd4b62e318851fb25dee43532054c1cd7d7e372164ae8c5140048"),
       verify_pin(b+"20261030-G3-B06-AGG-C227i-original-compiler.u",
         "ddea6bb9110b1c061f24efadae4b5ce3d81eb4a8ba7294d170e1e320263287e5"),
       verify_pin(b+"20261030-G3-B06-AGG-C227k-original-SAVE.u",
@@ -1158,7 +1186,7 @@ def eval_t043_t044_native_v227_aggregate_pair(row:dict[str,Any])->dict[str,Any]:
       verify_pin(b+"20261030-G3-B06-AGG-C227k-original-LOAD.log",
         "f48e72ab189703938f8c4b775d55046973569e1a7565163a7cf3aa5958cd6b78"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-        "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+        "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
       verified_pass_log(b+"20261030-G3-B06-AGG-original-85pass.json","checks",85)
     ]
     proof=json.loads((ROOT/b/"20261030-G3-B06-AGG-original-85pass.json").read_text(encoding="utf-8-sig"))
@@ -1177,7 +1205,7 @@ def eval_t028_original_malformed_fstring(row:dict[str,Any])->dict[str,Any]:
     b="catalog/compliance/evidence/o06/"
     pins=[
       verify_pin("catalog/bin/verify-ue1-o06-g3-t028-original-native-fstring-error-parity.php",
-        "bc423bda94d847e3a798f6b3750fa67c29beae0a2f8919564a28d4361f505470"),
+        "0379ac3d9455c3ff65050abc3e9819844da6a201b48ef7c515e5dbee9e0ef607"),
       verify_pin(b+"20261030-G3-B04-T028-V432-original-EOF.u",
         "6ddf59b77ba21e9ede85ac84505fd6c281b6b0225454a5b51f3a9a622c6b0277"),
       verify_pin(b+"20261030-G3-B04-T028-V432-original-EOF.log",
@@ -1191,7 +1219,7 @@ def eval_t028_original_malformed_fstring(row:dict[str,Any])->dict[str,Any]:
       verify_pin(b+"20261030-G3-B04-T028-C227k-original-BadCount.log",
         "c539e7dff35c8319731db9694202b1589e8fa53852d30e9b5dc2643686d01144"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-        "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+        "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
       verified_pass_log(b+"20261030-G3-B04-T028-original-native-40pass.json","checks",40)
     ]
     j=json.loads((ROOT/b/"20261030-G3-B04-T028-original-native-40pass.json").read_text(encoding="utf-8-sig"))
@@ -1269,9 +1297,9 @@ def eval_t022_t023_t026(row:dict[str,Any])->dict[str,Any]:
     base="catalog/compliance/evidence/o06/"
     pins=[
       verify_pin("catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
-                 "2e7813e61f197157d310d4559b807f430a77fa8dd15338e7ce9165659297cdd4"),
+                 "d4e7ac9c8666925acd49d5434325f6fcb1aa3ed15488f79026c8addde07b1f86"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                 "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+                 "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
       verify_pin(base+"20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
                  "086961b8ecb58abf2e0887f1e07636c7fd865882fd683abe54542f1ac8470649"),
       verify_pin(base+"20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
@@ -1303,9 +1331,9 @@ def eval_t021_t024_t041_t042(row:dict[str,Any])->dict[str,Any]:
     """ONE bulk original compiled method oracle, four fully accepted fixed scalar/name/array IDs."""
     pins=[
       verify_pin("catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
-                 "76e72eeba251d26518b2d95198032e5a7bbaca6e02727e6c2a7396efa192878a"),
+                 "3a65495b73461df8d12f0b3d77a98b60b85e8774dc865550b0911130b9ef0bac"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                 "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+                 "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
       verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
                  "e181c4a49aa51ba914baeead9a9f4c95f0a0154534bd92bbfb70c41f32adb50f"),
       verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
@@ -1433,7 +1461,7 @@ def eval_t066(_row:dict[str,Any])->dict[str,Any]:
         verify_pin("catalog/bin/verify-ue1-o06-g3-t066-original-v432-EOF-before-vs-mid-field.php",
                    "96953ee4938d6dc7fc08e4fbbe9421ae12190d8a4e47685e222fbbc7e1d3f436"),
         verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                   "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+                   "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
         verify_pin("catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.u",
                    "d13f25c1167f0a4d807dde51e5602c9d27b2a38a682c179ad9aa57ade800b4b2"),
         verify_pin("catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.log",
@@ -1460,7 +1488,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         verify_pin("catalog/bin/verify-ue1-o06-g3-t070-original-v432-physical-boundary.php",
                    "aeae20006c4b799850acdfe87bc832463a5f96be3ab11962962b6f231a7ff852"),
         verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                   "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61"),
+                   "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd"),
         verify_pin("catalog/compliance/UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json",
                    "3a47f8f88889df8e8cef3cba03c4310877ad78edc1d0d2059f18e8e13c20859b"),
         verify_pin("catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable-one-byte.u",
@@ -1479,7 +1507,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T048":eval_t048_original_both_source_array_failure,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
