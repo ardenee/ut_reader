@@ -1,0 +1,36 @@
+﻿{
+    "ok": true,
+    "checks": 52,
+    "failures": [],
+    "full_frozen_g3_ids": {
+        "T045": "PASS",
+        "T046": "PASS"
+    },
+    "original_C227i_compiler_warnings": 0,
+    "original_C227k_native_fixed_primitive": {
+        "members": [
+            123,
+            -456
+        ],
+        "bytes": 8,
+        "read_cursor": 8
+    },
+    "original_C227k_native_fixed_nested": {
+        "members": [
+            [
+                101,
+                1.25
+            ],
+            [
+                -202,
+                -2.75
+            ]
+        ],
+        "bytes": 16,
+        "read_cursor": 16
+    },
+    "T047_partial_v432_nonempty_original_map_bytes": 0,
+    "T047_partial_227k_nonempty_original_map_bytes": 17,
+    "T047_partial_status": "BLOCKED_2012_native_profile_and_production_family_gate_incomplete",
+    "G3_full_accepted": false
+}

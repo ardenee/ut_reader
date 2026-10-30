@@ -4,7 +4,7 @@
     "T041",
     "T048"
   ],
-  "started_at": "2026-10-30T16:49:00+00:00",
+  "started_at": "2026-10-30T17:12:10+00:00",
   "tests": [
     {
       "id": "T041",
@@ -28,13 +28,13 @@
     },
     {
       "id": "T045",
-      "status": "BLOCKED",
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T046",
-      "status": "BLOCKED",
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T047",
@@ -47,11 +47,11 @@
       "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
     }
   ],
-  "finished_at": "2026-10-30T16:49:00+00:00",
+  "finished_at": "2026-10-30T17:12:10+00:00",
   "counts": {
-    "PASS": 4,
+    "PASS": 6,
     "FAIL": 0,
-    "BLOCKED": 4,
+    "BLOCKED": 2,
     "PENDING": 0
   }
 }

@@ -2497,13 +2497,40 @@
       "pass_criterion": "Exactly two values of source ElementSize decoded; no dynamic count or extra bytes invented.",
       "evidence": "Original C227 native Core method and original declaration",
       "reuse": "Source absence in C98/T99 explicitly N/A.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST 2x8: 2012 C227i original compiled UFixedArrayProperty::Serialize method disassembled, but no original runtime 2-element fixed primitive instance loaded (227k separate). REQUIRED: Exactly two values of source ElementSize decoded; no dynamic count or extra bytes invented.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "status": "PASS",
+      "evidence_sha": "c20c3388cd3b3877b4b6f0264d3821c2d3f41a9555d1abac8ef718254b44a621",
+      "result": "Original 2012 C227i UCC genuinely compiled 0-warning source script original 954-byte real v69 UClass with UIntProperty TwoInts[2] initial 123,-456; actual 2026 original compiled Core.dll loaded UClass, constructed a *REAL UFixedArrayProperty* native object and called original UFixedArrayProperty::AddCppProperty on the resolved real UIntProperty with Count2. Original compiled native SerializeItem FBufferArchive SAVE wrote exactly 8 bytes 7B00000038FEFFFF, original compiled FBufferReader LOAD consumed exactly 8 and independently restored 123,-456. No Count prefix. Production source-backed CatalogUE1ClassicStructArrayValueReader::readAt with genuine native type, Count2 and source real UIntProperty inner consumes 8 bytes, values123,-456, source_archive_count_prefix=false. The script syntax TwoInts[2] itself is NOT claimed to be UFixedArrayProperty: actual native type was separately created with Epic compiled engine. One real original 2012 UCC + 2026 compiled Core.dll 52/52 source/native/reader checks for two frozen IDs in B06. T047 native map C227k actually writes 1/17 bytes vs v432 0/0; 2012 source release and production map gate remain BLOCKED, no invented no-data parity.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T17:12:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b06-t045-t046-original-fixed-native.php",
+          "sha256": "2a72fb7548cd80eeae9abfb7e415e720e71450ee7e9dc6f06bfbf897fcf39294",
+          "bytes": 11464
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227i-original-compiled.u",
+          "sha256": "38252904ed4ec9c805f166feb3b6e408e8095ac93bbd22754a2a85448ff238b4",
+          "bytes": 954
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.cpp",
+          "sha256": "c0573faf2eaa2f1099acdd56e32643c5f34ef3bc77b230be9fa599e721865e4b",
+          "bytes": 5242
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.log",
+          "sha256": "ac4ddf1b9b84c6488db12278434430e96b9580aa4b90e27c109b16f5bb8f4b32",
+          "bytes": 26172
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-T045-T046-original-52pass.json",
+          "sha256": "68690769d0ba8ba79dfe1b7a716c86ceb71aa4a236fe5922908628baf2c989b9",
+          "accepted_original_assertions": 52
+        }
+      ]
     },
     {
       "id": "T046",
@@ -2515,13 +2542,40 @@
       "pass_criterion": "Serialized bytes and native loaded array values equal source-specific fixed semantics.",
       "evidence": "Original C227 compiler fixture with nested inner property",
       "reuse": "Only where class source defines supported inner.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST 2x8: Source-profile selected synthetic 2-element FixedArray UStruct checks pass 69/69; original 2012/2026 compiled fixed nested/Name loaded bytes absent. REQUIRED: Serialized bytes and native loaded array values equal source-specific fixed semantics.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "status": "PASS",
+      "evidence_sha": "c20c3388cd3b3877b4b6f0264d3821c2d3f41a9555d1abac8ef718254b44a621",
+      "result": "Original 2012 C227i UCC genuinely compiled G3PlainPair UStruct with int Number,float Fraction, two CDO PlainPairs from 0-warning real 954-byte source package. Original 2026 compiled Core.dll resolved real class UArrayProperty Inner=UStructProperty and created *REAL UFixedArrayProperty* native UObject with AddCppProperty(Inner,Count2). Original original native SerializeItem SAVE generated 16 bytes 650000000000A03F36FFFFFF000030C0 (two structs, source original real ElementSize8), original FBufferReader LOAD consumed 16 and restored Number/Fraction (101,1.25),(-202,-2.75) exactly. Production fixedarray readAt resolves the real local UStruct source field order int then float, no extra dynamic prefix, exact 16-byte span and values. The separate prior FName-bearing generic FBufferArchive cannot archive native FName without linker and was NOT used to claim this closure; fixed nested/struct is fully verified by genuine source-supported source family. One real original 2012 UCC + 2026 compiled Core.dll 52/52 source/native/reader checks for two frozen IDs in B06. T047 native map C227k actually writes 1/17 bytes vs v432 0/0; 2012 source release and production map gate remain BLOCKED, no invented no-data parity.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T17:12:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b06-t045-t046-original-fixed-native.php",
+          "sha256": "2a72fb7548cd80eeae9abfb7e415e720e71450ee7e9dc6f06bfbf897fcf39294",
+          "bytes": 11464
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227i-original-compiled.u",
+          "sha256": "38252904ed4ec9c805f166feb3b6e408e8095ac93bbd22754a2a85448ff238b4",
+          "bytes": 954
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.cpp",
+          "sha256": "c0573faf2eaa2f1099acdd56e32643c5f34ef3bc77b230be9fa599e721865e4b",
+          "bytes": 5242
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.log",
+          "sha256": "ac4ddf1b9b84c6488db12278434430e96b9580aa4b90e27c109b16f5bb8f4b32",
+          "bytes": 26172
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-T045-T046-original-52pass.json",
+          "sha256": "68690769d0ba8ba79dfe1b7a716c86ceb71aa4a236fe5922908628baf2c989b9",
+          "accepted_original_assertions": 52
+        }
+      ]
     },
     {
       "id": "T047",

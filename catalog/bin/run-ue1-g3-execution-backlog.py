@@ -1082,6 +1082,31 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     return {"status":"PASS","result":explanation+" One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.","evidence":evidence}
 
 
+def eval_t045_t046_original_true_fixed_native(row:dict[str,Any])->dict[str,Any]:
+    """Actual original C227i UCC + C227k Core.dll real UFixedArrayProperty, two fixed IDs."""
+    b="catalog/compliance/evidence/o06/"
+    checks=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-b06-t045-t046-original-fixed-native.php",
+                 "2a72fb7548cd80eeae9abfb7e415e720e71450ee7e9dc6f06bfbf897fcf39294"),
+      verify_pin(b+"20261030-G3-B06-FIXED-C227i-original-compiled.u",
+                 "38252904ed4ec9c805f166feb3b6e408e8095ac93bbd22754a2a85448ff238b4"),
+      verify_pin(b+"20261030-G3-B06-FIXED-C227k-original-SerializeItem.cpp",
+                 "c0573faf2eaa2f1099acdd56e32643c5f34ef3bc77b230be9fa599e721865e4b"),
+      verify_pin(b+"20261030-G3-B06-FIXED-C227k-original-SerializeItem.log",
+                 "ac4ddf1b9b84c6488db12278434430e96b9580aa4b90e27c109b16f5bb8f4b32"),
+      verified_pass_log(b+"20261030-G3-B06-FIXED-T045-T046-original-52pass.json","checks",52)
+    ]
+    proof=json.loads((ROOT/b/"20261030-G3-B06-FIXED-T045-T046-original-52pass.json").read_text(encoding="utf-8-sig"))
+    if proof.get("full_frozen_g3_ids",{}).get(row["id"])!="PASS":
+        raise AssertionError("True original compiled UFixedArrayProperty did not close "+row["id"])
+    outcome={
+      "T045":"Original 2012 C227i UCC genuinely compiled 0-warning source script original 954-byte real v69 UClass with UIntProperty TwoInts[2] initial 123,-456; actual 2026 original compiled Core.dll loaded UClass, constructed a *REAL UFixedArrayProperty* native object and called original UFixedArrayProperty::AddCppProperty on the resolved real UIntProperty with Count2. Original compiled native SerializeItem FBufferArchive SAVE wrote exactly 8 bytes 7B00000038FEFFFF, original compiled FBufferReader LOAD consumed exactly 8 and independently restored 123,-456. No Count prefix. Production source-backed CatalogUE1ClassicStructArrayValueReader::readAt with genuine native type, Count2 and source real UIntProperty inner consumes 8 bytes, values123,-456, source_archive_count_prefix=false. The script syntax TwoInts[2] itself is NOT claimed to be UFixedArrayProperty: actual native type was separately created with Epic compiled engine.",
+      "T046":"Original 2012 C227i UCC genuinely compiled G3PlainPair UStruct with int Number,float Fraction, two CDO PlainPairs from 0-warning real 954-byte source package. Original 2026 compiled Core.dll resolved real class UArrayProperty Inner=UStructProperty and created *REAL UFixedArrayProperty* native UObject with AddCppProperty(Inner,Count2). Original original native SerializeItem SAVE generated 16 bytes 650000000000A03F36FFFFFF000030C0 (two structs, source original real ElementSize8), original FBufferReader LOAD consumed 16 and restored Number/Fraction (101,1.25),(-202,-2.75) exactly. Production fixedarray readAt resolves the real local UStruct source field order int then float, no extra dynamic prefix, exact 16-byte span and values. The separate prior FName-bearing generic FBufferArchive cannot archive native FName without linker and was NOT used to claim this closure; fixed nested/struct is fully verified by genuine source-supported source family."
+    }
+    return {"status":"PASS","result":outcome[row["id"]]+
+       " One real original 2012 UCC + 2026 compiled Core.dll 52/52 source/native/reader checks for two frozen IDs in B06. T047 native map C227k actually writes 1/17 bytes vs v432 0/0; 2012 source release and production map gate remain BLOCKED, no invented no-data parity.","evidence":checks}
+
+
 def eval_t043_t044_native_v227_aggregate_pair(row:dict[str,Any])->dict[str,Any]:
     """One original C227i UCC class, true C227k SavePackage and independent original native struct/string LOAD."""
     b="catalog/compliance/evidence/o06/"
@@ -1418,7 +1443,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T039":eval_t036_t039,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

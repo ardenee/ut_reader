@@ -96,3 +96,6 @@ catalog/compliance/evidence/o06/20261030-G3-B08-* -text
 
 # G3 B06 genuinely compiled C227i/C227k struct/string arrays and negative-count original binaries.
 catalog/compliance/evidence/o06/20261030-G3-B06-AGG-* -text
+
+# G3 original C227i UCC/C227k UFixedArrayProperty native exact methods, UT99-v432 vs C227k real UMapProperty differential.
+catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-* -text
