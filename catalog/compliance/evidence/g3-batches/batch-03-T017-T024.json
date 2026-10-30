@@ -4,7 +4,7 @@
     "T017",
     "T024"
   ],
-  "started_at": "2026-10-30T10:16:58+00:00",
+  "started_at": "2026-10-30T10:36:16+00:00",
   "tests": [
     {
       "id": "T017",
@@ -33,13 +33,13 @@
     },
     {
       "id": "T022",
-      "status": "BLOCKED",
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T023",
-      "status": "BLOCKED",
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T024",
@@ -47,11 +47,11 @@
       "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     }
   ],
-  "finished_at": "2026-10-30T10:16:58+00:00",
+  "finished_at": "2026-10-30T10:36:16+00:00",
   "counts": {
-    "PASS": 3,
+    "PASS": 5,
     "FAIL": 0,
-    "BLOCKED": 5,
+    "BLOCKED": 3,
     "PENDING": 0
   }
 }

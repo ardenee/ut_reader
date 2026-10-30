@@ -125,6 +125,21 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     $loadPolicy='native_227k_resolved_AnyProperty_SerializeItem';
                 }
                 if($sourceDeclarations!==null
+                    &&$family===CatalogUE1ClassicSourceFamily::UNREAL_V227
+                    &&$type===13
+                    &&is_array($declaration)
+                    &&strtolower((string)($declaration['kind']??''))==='strproperty'
+                    &&$arrayIndex>=0
+                    &&$arrayIndex<(int)($declaration['array_dim']??0)
+                    &&(((int)($declaration['property_flags']??0))&0x00003000)===0){
+                    // Genuine original 2012 C227i UCC script class and
+                    // distinct compiled 2026 C227k SavePackage and LOAD:
+                    // positive FString AR_INDEX(count including ANSI NUL).
+                    // The source-linked UStrProperty is verified; zero
+                    // defaults are omitted, not inserted as disk tags.
+                    $loadPolicy='native_source_property_SerializeItem';
+                }
+                if($sourceDeclarations!==null
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
                     $expectedType=strtolower((string)($declaration['kind']??''));
                     $actualType=strtolower($kind);
@@ -715,7 +730,10 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     }
                 }
                 elseif($type===13
-                    &&$family===CatalogUE1ClassicSourceFamily::UT99_V432
+                    &&in_array($family,[
+                        CatalogUE1ClassicSourceFamily::UT99_V432,
+                        CatalogUE1ClassicSourceFamily::UNREAL_V227
+                    ],true)
                     &&$tagSize>=1){
                     // Use the same bounded source codec as nested UT99
                     // UArrayProperty/UStrProperty value serialization.

@@ -1,0 +1,28 @@
+﻿{
+    "ok": true,
+    "checks": 54,
+    "failures": [],
+    "original_fixed_T_IDs": {
+        "T022": "PASS",
+        "T023": "PASS",
+        "T026": "PASS"
+    },
+    "original_C227i_2012_compiled_and_C227k_original_native_2026": true,
+    "native_float_IEEE754_negative_zero_direct_wire_and_reload": "80000000",
+    "native_SavePackage_omits_signed_zero_due_to_source_FloatIdentical": true,
+    "native_packed_bool_word": {
+        "class_default": "00000005",
+        "instance_reload": "00000007",
+        "masks": [
+            "00000001",
+            "00000002",
+            "00000004"
+        ]
+    },
+    "FString_source_profiles": [
+        "UT99-v432",
+        "C227i-2012-compiled",
+        "C227k-2026-native-LOAD+SAVE"
+    ],
+    "original_executable_replayed_during_verifier": 0
+}

@@ -83,3 +83,6 @@ catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-* -text
 catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-* -text
 catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-* -text
 catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json -text
+
+# G3 grouped original C227i compiler / 227k native exact SAVE, LOAD, direct float and UT99 FString.
+catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-* -text

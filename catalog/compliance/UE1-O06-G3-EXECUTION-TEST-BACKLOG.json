@@ -1339,13 +1339,60 @@
       "pass_criterion": "Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization.",
       "evidence": "Native float load/save or original compiled operator + source-independent bit oracle",
       "reuse": "Only distinct original methods, not one extra CDB per number.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: 227k FAny FLOAT native bit words only; genuine generic FloatProperty loaded IEEE754 and four-byte FArchive Tell cross-family missing. Acceptance still requires: Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "a7b3f9cc12a8c2903ea6dad805066a33aeaf034c4d586bd3b9505c367b9e78aa",
+      "result": "Original 2012 C227i UCC compiled positive1.5 negative-1.5 fractional0.375 and zero FloatProperty, genuine 2026 original 227k native loaded IEEE bits 3FC00000 BFC00000 3EC00000 00000000, actual true original UFloatProperty::SerializeItem directly SAVE and FBufferReader LOAD each 4/4 bytes including signed -0.0 IEEE 80000000 unmodified. One original 227k real SavePackage purposely omits native -0 because Epic inherited UFloatProperty::Identical numeric == default0 (source-backed), independent native reload returned +0. The reader mirrors both direct four-byte codec and original default omission, never falsely claims serialized negative zero when absent. ONE jointly compiled original-engine/source/current verifier 54/54 PASS, no native engine executions inside verifier, T025/T027/T028 still blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T10:36:16+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
+          "sha256": "d8e829af92e98f5375f30b15e25783e49c12d4a455cff755bf5da91760b37e0e",
+          "bytes": 12484
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
+          "bytes": 70308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
+          "sha256": "086961b8ecb58abf2e0887f1e07636c7fd865882fd683abe54542f1ac8470649",
+          "bytes": 1112
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
+          "sha256": "3e01d5304c46563ce5d4f06c70cdc34ea462949ab64a5da1057f60007b6a8fa2",
+          "bytes": 253
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.log",
+          "sha256": "ab7938082e5b16e2541572f11907f34edbed85a0d1a0c9b05c3388bd27a5867b",
+          "bytes": 50594
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-LOAD.log",
+          "sha256": "b8fe6e2a10f7f251a4aa524e59a87cb74d253cc7432f95f54767504be5648183",
+          "bytes": 26086
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-direct-FLOAT.log",
+          "sha256": "4e3b8537c9c1941aba5e0067aa36286c5a28e620fad27b971552ccefd834c7ec",
+          "bytes": 26148
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-V432-original-FSTRING.u",
+          "sha256": "e494caf1c9eb86b5fb2fcf4f7af1e0e91c5b5b214066c670ef4917dc7a2cd933",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-T022-T023-T026-original-54pass.json",
+          "sha256": "7ce1ea641facaaba6bbd39c61181694f7e19eb1c23d1cef2c1f0076d874b6dbe",
+          "accepted_original_assertions": 54
+        }
+      ]
     },
     {
       "id": "T023",
@@ -1357,13 +1404,60 @@
       "pass_criterion": "Both true/false and indexed bit selection match native declared field storage, not inferred byte bool.",
       "evidence": "Source selected Bool/Property SerializeItem + loaded field",
       "reuse": "G3-07 base property metadata accepted.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: 227k FAny BOOL is distinct from bit-indexed UBoolProperty field/array storage; original both boolean values and indexed bit native proof missing. Acceptance still requires: Both true/false and indexed bit selection match native declared field storage, not inferred byte bool.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "a7b3f9cc12a8c2903ea6dad805066a33aeaf034c4d586bd3b9505c367b9e78aa",
+      "result": "Actual original 2012 compiled class THREE source-legal packed bool properties same 32-bit slot offset776, original C227k compiled live UBoolProperty masks 00000001/00000002/00000004 native CDO word00000005 with true,false,true, original 227k native object sets middle mask and independent second compiled process reload shows word00000007 all true. FPropertyTag true is encoded in Info flag and has ZERO value bytes, false is omitted, current reader matches all. Real original 2012 script compiler rejected bool arrays ('Bool arrays are not allowed'); impossible indexed bool-array variant source-excluded, not mistaken for stored byte booleans. ONE jointly compiled original-engine/source/current verifier 54/54 PASS, no native engine executions inside verifier, T025/T027/T028 still blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T10:36:16+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
+          "sha256": "d8e829af92e98f5375f30b15e25783e49c12d4a455cff755bf5da91760b37e0e",
+          "bytes": 12484
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
+          "bytes": 70308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
+          "sha256": "086961b8ecb58abf2e0887f1e07636c7fd865882fd683abe54542f1ac8470649",
+          "bytes": 1112
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
+          "sha256": "3e01d5304c46563ce5d4f06c70cdc34ea462949ab64a5da1057f60007b6a8fa2",
+          "bytes": 253
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.log",
+          "sha256": "ab7938082e5b16e2541572f11907f34edbed85a0d1a0c9b05c3388bd27a5867b",
+          "bytes": 50594
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-LOAD.log",
+          "sha256": "b8fe6e2a10f7f251a4aa524e59a87cb74d253cc7432f95f54767504be5648183",
+          "bytes": 26086
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-direct-FLOAT.log",
+          "sha256": "4e3b8537c9c1941aba5e0067aa36286c5a28e620fad27b971552ccefd834c7ec",
+          "bytes": 26148
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-V432-original-FSTRING.u",
+          "sha256": "e494caf1c9eb86b5fb2fcf4f7af1e0e91c5b5b214066c670ef4917dc7a2cd933",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-T022-T023-T026-original-54pass.json",
+          "sha256": "7ce1ea641facaaba6bbd39c61181694f7e19eb1c23d1cef2c1f0076d874b6dbe",
+          "accepted_original_assertions": 54
+        }
+      ]
     },
     {
       "id": "T024",
@@ -1463,13 +1557,60 @@
       "pass_criterion": "Correct count, terminal NUL behavior, exact archive end and no unbounded read.",
       "evidence": "One native method oracle for each genuinely distinct source family",
       "reuse": "Old source string tests reuse first.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: 227k original FAny STRING4 is a different dynamic subtype; original native generic UStr/FString empty, one and nonempty count/terminal/cursor for distinct source families missing. Acceptance still requires: Correct count, terminal NUL behavior, exact archive end and no unbounded read.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "a7b3f9cc12a8c2903ea6dad805066a33aeaf034c4d586bd3b9505c367b9e78aa",
+      "result": "Genuine original UT99 v432 native loaded real compiled direct StrProperty FString 'Alpha-direct-FString' with count21, NUL and exact 22 bytes/exact export end. Original 2012 C227i UCC compiled class default empty omitted, 'A' count2=3 bytes, 'A longer string' count16=17 bytes, all native 2026 C227k compiled LOAD returns exact empty/one/nonempty text. Original 2026 C227k independently SavePackage wrote new EmptyText='B' as signed count2, B,NUL three bytes, second distinct original C227k process LOAD returned B/A/long exact; UnrealDB new source-linked v227 UStrProperty codec decodes same count, NUL, source physical bytes and complete archive end. ONE jointly compiled original-engine/source/current verifier 54/54 PASS, no native engine executions inside verifier, T025/T027/T028 still blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T10:36:16+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
+          "sha256": "d8e829af92e98f5375f30b15e25783e49c12d4a455cff755bf5da91760b37e0e",
+          "bytes": 12484
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
+          "bytes": 70308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
+          "sha256": "086961b8ecb58abf2e0887f1e07636c7fd865882fd683abe54542f1ac8470649",
+          "bytes": 1112
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
+          "sha256": "3e01d5304c46563ce5d4f06c70cdc34ea462949ab64a5da1057f60007b6a8fa2",
+          "bytes": 253
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.log",
+          "sha256": "ab7938082e5b16e2541572f11907f34edbed85a0d1a0c9b05c3388bd27a5867b",
+          "bytes": 50594
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-LOAD.log",
+          "sha256": "b8fe6e2a10f7f251a4aa524e59a87cb74d253cc7432f95f54767504be5648183",
+          "bytes": 26086
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-direct-FLOAT.log",
+          "sha256": "4e3b8537c9c1941aba5e0067aa36286c5a28e620fad27b971552ccefd834c7ec",
+          "bytes": 26148
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-V432-original-FSTRING.u",
+          "sha256": "e494caf1c9eb86b5fb2fcf4f7af1e0e91c5b5b214066c670ef4917dc7a2cd933",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-T022-T023-T026-original-54pass.json",
+          "sha256": "7ce1ea641facaaba6bbd39c61181694f7e19eb1c23d1cef2c1f0076d874b6dbe",
+          "accepted_original_assertions": 54
+        }
+      ]
     },
     {
       "id": "T027",

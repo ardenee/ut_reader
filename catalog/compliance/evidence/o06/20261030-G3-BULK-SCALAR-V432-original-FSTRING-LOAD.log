@@ -1,0 +1,98 @@
+﻿G5_NATIVE_DIRECT_PACKAGE_BEGIN editor=1 client=0 server=0
+G5_NATIVE_DIRECT_PACKAGE_RESULT ptr=00B9C110 editor=1 native_error=0
+G5_NATIVE_OBJECT_BEGIN G5DirectStringProbeActor G5DirectStringPayload.G5DirectStringActor
+G5_NATIVE_TAG_VALUE  Headline="Alpha-direct-FString"
+
+
+G5_NATIVE_TAG_VALUE  Role=ROLE_Authority
+
+
+G5_NATIVE_TAG_VALUE  RemoteRole=ROLE_DumbProxy
+
+
+G5_NATIVE_TAG_VALUE  LODBias=1.000000
+
+
+G5_NATIVE_TAG_VALUE  OddsOfAppearing=1.000000
+
+
+G5_NATIVE_TAG_VALUE  bDifficulty0=True
+
+
+G5_NATIVE_TAG_VALUE  bDifficulty1=True
+
+
+G5_NATIVE_TAG_VALUE  bDifficulty2=True
+
+
+G5_NATIVE_TAG_VALUE  bDifficulty3=True
+
+
+G5_NATIVE_TAG_VALUE  bSinglePlayer=True
+
+
+G5_NATIVE_TAG_VALUE  bNet=True
+
+
+G5_NATIVE_TAG_VALUE  bNetSpecial=True
+
+
+G5_NATIVE_TAG_VALUE  DrawType=DT_Sprite
+
+
+G5_NATIVE_TAG_VALUE  Style=STY_Normal
+
+
+G5_NATIVE_TAG_VALUE  Texture=Texture'Engine.S_Actor'
+
+
+G5_NATIVE_TAG_VALUE  DrawScale=1.000000
+
+
+G5_NATIVE_TAG_VALUE  ScaleGlow=1.000000
+
+
+G5_NATIVE_TAG_VALUE  Fatness=128
+
+
+G5_NATIVE_TAG_VALUE  SpriteProjForward=32.000000
+
+
+G5_NATIVE_TAG_VALUE  bMovable=True
+
+
+G5_NATIVE_TAG_VALUE  SoundRadius=32
+
+
+G5_NATIVE_TAG_VALUE  SoundVolume=128
+
+
+G5_NATIVE_TAG_VALUE  SoundPitch=64
+
+
+G5_NATIVE_TAG_VALUE  TransientSoundVolume=1.000000
+
+
+G5_NATIVE_TAG_VALUE  CollisionRadius=22.000000
+
+
+G5_NATIVE_TAG_VALUE  CollisionHeight=22.000000
+
+
+G5_NATIVE_TAG_VALUE  bJustTeleported=True
+
+
+G5_NATIVE_TAG_VALUE  Mass=100.000000
+
+
+G5_NATIVE_TAG_VALUE  NetPriority=1.000000
+
+
+G5_NATIVE_TAG_VALUE  NetUpdateFrequency=100.000000
+
+
+G5_NATIVE_TAG_VALUE  Name=G5DirectStringActor
+
+
+G5_NATIVE_OBJECT_END G5DirectStringProbeActor G5DirectStringPayload.G5DirectStringActor
+G5_NATIVE_OBJECT_COUNT 1
