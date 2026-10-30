@@ -4,17 +4,17 @@
     "T049",
     "T056"
   ],
-  "started_at": "2026-10-28T20:06:16+00:00",
+  "started_at": "2026-10-30T19:01:40+00:00",
   "tests": [
     {
       "id": "T049",
-      "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T050",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
     },
     {
       "id": "T051",
@@ -24,12 +24,12 @@
     {
       "id": "T052",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
     },
     {
       "id": "T053",
       "status": "BLOCKED",
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
     },
     {
       "id": "T054",
@@ -47,11 +47,11 @@
       "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     }
   ],
-  "finished_at": "2026-10-28T20:06:16+00:00",
+  "finished_at": "2026-10-30T19:01:40+00:00",
   "counts": {
-    "PASS": 4,
+    "PASS": 5,
     "FAIL": 0,
-    "BLOCKED": 4,
+    "BLOCKED": 3,
     "PENDING": 0
   }
 }

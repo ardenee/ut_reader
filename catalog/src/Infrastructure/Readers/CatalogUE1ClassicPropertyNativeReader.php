@@ -159,7 +159,7 @@ final class CatalogUE1ClassicPropertyNativeReader
                     CatalogUE1ClassicSourceFamily::UNREAL_V227I
                         =>['net_method'=>'compiled_native_returns_true_no_bytes',
                             'native_output_bytes_for_0_1_2'=>[0,0,0],
-                            'should_serialize_method'=>'2012_original_public_method_not_proven'],
+                            'should_serialize_method'=>'compiled_2012_vtable_absent_SDK_header_only'],
                     CatalogUE1ClassicSourceFamily::UNREAL_V227K
                         =>['net_method'=>'compiled_native_array_network_payload',
                             'native_output_bytes_for_0_1_2_int_values'=>[2,10,18],

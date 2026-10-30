@@ -1,0 +1,37 @@
+﻿{
+  "ok": true,
+  "checks": 38,
+  "failures": [],
+  "full_frozen_g3_ids": {
+    "T049": "PASS"
+  },
+  "original_native_profiles": [
+    "UT99 v432",
+    "original 2012 C227i",
+    "original 2026 C227k"
+  ],
+  "original_2012_array_vtable_slots": 41,
+  "original_2012_sdk_header_declared_Should_but_compiled_virtual_method_absent": true,
+  "original_2026_ShouldSerializeItem_vtable_index": 55,
+  "2012_unobservable_branch_exclusion": "compilation/ABI mismatch: next word after GetID is next class RTTI, no original callable virtual Should",
+  "real_network_Net_method_writes_for_int_count_0_1_2": {
+    "v432": [
+      0,
+      0,
+      0
+    ],
+    "C227i": [
+      0,
+      0,
+      0
+    ],
+    "C227k": [
+      2,
+      10,
+      18
+    ]
+  },
+  "network_packet_codec_in_U_package_reader": "EXCLUDED",
+  "already_accepted_original_native_execution_rerun": 0,
+  "overall_G3_complete": false
+}

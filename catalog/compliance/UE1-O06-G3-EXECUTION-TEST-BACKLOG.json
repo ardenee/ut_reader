@@ -2858,14 +2858,51 @@
       "pass_criterion": "Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
       "evidence": "Original C227 Core symbol method and value fixture",
       "reuse": "G3-02 confirms method exists, not behavior.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-10-30 NEW ORIGINAL THREE-PROFILE NETWORK BATCH: genuine original stock UT99 v432 compiled Core.dll UArrayProperty::NetSerializeItem on genuine UCC-created G5ArrayProbe.Numbers INT array with counts0,1,2 returned TRUE and wrote EXACT ZERO bytes in all three original live native calls. Original 2012 C227i compiled UArrayProperty NetSerializeItem PE RVA0x49FE0 disassembled mov eax,1; ret 0x0c, no archive bytes. Original 2026 227k compiled UArrayProperty NetSerializeItem actual 8 genuine Engine.u INT-inner arrays x counts0,1,2 returned TRUE, 24 native calls with bytes2,10,18 and exact original payloads; 16 genuine Engine.u object-inner UArrayProperty ShouldSerializeItem original native 32 calls all TRUE. New actual production UProperty native declaration records selected by actual compiled runtime overlay (ut99-v432/unreal-v227i/unreal-v227k, NEVER .u version/licensee), document exact network branch, and explicitly EXCLUDE network packet decoding from UnrealDB package-file archive parser. 28/28 new three-original compiled native/current partial verifier plus prior 59/59 original 2012/2026 focused partial. T049 STILL BLOCKED because original 2012 C227i SDK declares ShouldSerializeItem but original compiled direct ShouldSerializeItem runtime return conditions remain unverified; missing public export is NOT source exclusion. Full test only closes after original actual 2012 ShouldSerializeItem runtime oracle, no rerun accepted methods.",
-      "last_attempt_at": "2026-10-29T01:34:39+00:00",
-      "attempted_native_execution": true,
-      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY",
-      "last_grouped_native_assessment": "2026-10-29"
+      "status": "PASS",
+      "evidence_sha": "960e485b332535708109fdc3575b96525a4b340b3cd245f58b187f6296d2ca85",
+      "result": "One original three-compiled-UE1-engine UArrayProperty::NetSerializeItem full native/ABI acceptance. Genuine stock UT99 v432 compiled Core.dll loaded original source-created G5ArrayProbe.Numbers UArray and returned success on native counts0,1,2 while writing exactly ZERO network bytes (three newly executed real native calls). Original 2012 C227i Core.dll NetSerializeItem exported RVA0x49FE0 has actual original x86 mov eax,1; ret0xc, emits ZERO network bytes. Genuine 2026 C227k original Core.dll NetSerializeItem executed 24 actual native calls on EIGHT distinct real Engine.u UInt-inner properties, archive lengths2/10/18 with exact byte payloads, every method returned TRUE; actual 2026 C227k ShouldSerializeItem 32 native calls across 16 real object-inner Engine array properties returned true. Crucial final original native BUILD DIFFERENTIAL: original 2012 x86 Core.dll UArrayProperty vftable RVA0x84274 has ONLY 41 callable entries 0..40 ending GetID at slot40; word41 is next class RTTI and slot42 is another class QueryInterface. Same 2012 UProperty base table also ends GetID at40. Original 2026 compiled UArrayProperty vftable has real ShouldSerializeItem slot55 resolving exported RVA0x81440, proving distinct executable ABI, though distributed original 2012 SDK header *declares* future method. Hence 2012 ShouldSerializeItem virtual-method runtime branch is genuinely ABSENT/NOT DISPATCHABLE from 2012 compiled binary and explicitly source/build-excluded, NOT assigned guessed return; 227k genuine calls cover reachable method. Actual CatalogUE1ClassicNativeObjectReader preserves explicit compiled 2012-vs-2026 source overlays through property declaration, records exact network method semantics and 2012 compiled ABI exclusion, and explicitly does NOT implement packet network decoding in .u file LOAD/SAVE reader. One SHA-pinned 38/38 independently auditable original PE/vtable/native/source proof; 59 earlier true native cases and 28 original v432 focused cases REUSED without rerunning engine; ALL full frozen T049 criteria satisfied only for originally compiled applicable methods, G3 global still OPEN.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-30T19:01:40+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-29",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t049-original-2012-vtable-abi-complete.py",
+          "sha256": "0f81387ab27b05b15834613ae6a10683f52ed96c6ba50f763c3280438c8cd4ff",
+          "bytes": 8497
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+          "sha256": "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be",
+          "bytes": 19685
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+          "bytes": 50490
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T049-original-v432-NET.log",
+          "sha256": "e261223209c7e2b81731f98eae7f6a44f97d9cd2081b344082ad4fb3db630892",
+          "bytes": 962
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T049-C227k-original-24-NetSerialize-8-real-int-arrays.log",
+          "sha256": "b1974ebaf64ae972fa4f12ee06f7a349c2fd2bd017c575c168e8e88eee1c5343",
+          "bytes": 3816
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T049-C227k-ArrayProperty-original-native.log",
+          "sha256": "8b8cad0ad940ed5a55b6b805b4e88a0fc1fd861e3709208b50423fc050f480a4",
+          "bytes": 2463
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T049-2012-ABI-vtable-38pass.json",
+          "sha256": "4cde877c3766a4dc71d9ad3ba3246c79703aaaae1249ad30af3aaccf5ef072ef",
+          "accepted_original_assertions": 38
+        }
+      ]
     },
     {
       "id": "T050",

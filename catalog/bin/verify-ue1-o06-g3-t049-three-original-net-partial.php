@@ -19,7 +19,7 @@ foreach($sha as $name=>$expected)$ck(is_file($ev.$name)
  &&($expected===''||hash_file('sha256',$ev.$name)===$expected),
  'actual compiled original prior/new source/log SHA '.$name);
 $ck(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php')
- ==='5c1f797d68d3d88cf52b80eac83ada26e1307255c82c3ad68afa62dd2433eb74',
+ ==='5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be',
  'production source-gated property reader current exact SHA');
 $ck(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php')
  ==='afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714',
