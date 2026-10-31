@@ -1,0 +1,44 @@
+{
+  "ok": true,
+  "read_only_source_gate_checks": 35,
+  "errors": [],
+  "original_source_C98_and_T99_exact_guard_sites": 11,
+  "source_guard_anchor_check_results": {
+    "T99_UClass_legacy_record_v<=61": true,
+    "T99_UClass_within_from_v62": true,
+    "T99_UClass_default_within_v<=61": true,
+    "T99_UFunction_old_three_saved_v<=63": true,
+    "T99_UProperty_old_net_flags_v<=61": true,
+    "T99_FNameEntry_null_terminated_v<64": true,
+    "T99_PackageHeritage_v<68": true,
+    "C98_UClass_tail_two_FName_v<57": true,
+    "C98_original_unknown_ObjectProperty_archive_v<36": true
+  },
+  "original_5_current_PHP_reader_SHA256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+    "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+    "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php": "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be",
+    "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+    "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1",
+    "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php": "9ef04ca52dcc11c9a9c5c47841adc029935365e2270a4fb54d246f03f2bceadc"
+  },
+  "original_C98_T99_source_SHA256": {
+    "C98_UnClass.cpp": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+    "T99_v400_UnClass.cpp": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380",
+    "T99_v400_UnProp.cpp": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457",
+    "T99_v400_UnName.cpp": "3d8ab9316fcb2bd88710f4c24762664c4423493db84876e96ef88a0069e302d3",
+    "T99_v432_UnLinker.h": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0"
+  },
+  "unproven_old_C98_version34_branch": {
+    "original_cpp_v34_v35_unknown_object_branch": "Ar.Ver()<36 and Tag.Type==NAME_ObjectProperty on UNKNOWN/INVALID property only; original C98 source",
+    "actual_current_ue1_tagged_reader": "version===35 and type5|8 tagSize4, irrespective of explicit source unknown/invalid property",
+    "finding": "POTENTIAL_SOURCE_PARITY_DEFECT: version34 physical compact archive unknown-property branch not source-mapped, and classproperty type8 assumption beyond C98 condition. Needs real stock C98 source-compatible v34 fixture and archive-cursor native proof before changing byte reader.",
+    "native_original_v34_loader_accepted": false,
+    "native_original_v35_loader_accepted_for_this_branch": false,
+    "original_compiled_stock_v432_v60_64_UFunction_source_gate_ALREADY_PASS_T011": true,
+    "T065_status": "BLOCKED"
+  },
+  "no_original_native_tests_rerun": true,
+  "full_T065_ACCEPTED": false,
+  "other_missing_T065_native_cursors": "C98 v34/v35 ObjectProperty unknown skip, C98 UClass <57 FNames, UT99 UClass/property <=61 before/after, C227i/k distinct build-selected native CDO/method branch cursors"
+}

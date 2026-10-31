@@ -1,0 +1,567 @@
+{
+  "ok": true,
+  "checks": 172,
+  "errors": [],
+  "original_compiled_stock_v432_loaded_cdo_native_skips_verified": 32,
+  "actual_original_1999_UT99_v400_source_literal_31": 31,
+  "later_469f_only_ClipMarker_source_corroboration_not_native_v432_source": 1,
+  "original_native_value_total": 608,
+  "original_native_exact_serialized_matches": 575,
+  "original_native_config_loaded_override": 1,
+  "original_native_declared_skipped_values": 32,
+  "original_original_captured_ini_SHA_unavailable": true,
+  "no_original_native_engine_reexecution": true,
+  "no_T071_T072_T075_T076_full_gate_claim": true,
+  "source_files_pinned": {
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Pawn.uc": {
+      "sha256": "f7b274c54e1489c9854a94c1320c91e35c5262c608d35f86020afcb552b25e25",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\ZoneInfo.uc": {
+      "sha256": "3a31fbf4d285e85f0e2d332e700e518e97a4fa958a7af3a82dc2dc10e747a505",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Inventory.uc": {
+      "sha256": "32ef6f2f7fe7b590a84f7c1a12390b581e4ed40cc286cebf7eb6fa34cd93a944",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Weapon.uc": {
+      "sha256": "3d9da61def7074c4b545db33513cf08b07d245db30718480f3420c0f93c1fdff",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Ammo.uc": {
+      "sha256": "a84e062f547199a122d5fda0c7f94eeaa7555db91996500d2406f4fae15fc089",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Mover.uc": {
+      "sha256": "6c33859cf35fcfa2d6fbc3f4db437d3ac4428971ecb37ff0605f95c91bca7f6a",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Light.uc": {
+      "sha256": "01fa2c0ba02cc68f8ea185fadf6d23725950d4f04798ead2bd92aaceab31045a",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Teleporter.uc": {
+      "sha256": "af366c65ba926eac622e221dfd9a07d6be250d96d5108e01e7aa75613b63a83f",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Spectator.uc": {
+      "sha256": "f898ff657b3239d2fbf61e2383c1e0f0ad19a2efd1180f406292f2abbf326e01",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Trigger.uc": {
+      "sha256": "7daaf6ea43edcc73295a44fcea8099505cfdc2591c49e84d42d6c554a6245563",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Projectile.uc": {
+      "sha256": "c6f6ea020796026160bc85aaafab829960d6ac9bd658a2090f09d10d0363d61c",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Keypoint.uc": {
+      "sha256": "b83ddb2e45d04cd1f5f4c4741768d3544eaac5bee1cd82a94a344c62f843d6ae",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Carcass.uc": {
+      "sha256": "9e920b46298d356937d0ddee4de556719c3c221ed02d77395c22312188b80ec2",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\InterpolationPoint.uc": {
+      "sha256": "5d0394fe1917bed9dda473752539dd60f95ae6c976e7de024c0952962c7e2ad9",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\SpecialEvent.uc": {
+      "sha256": "19404d21d8d75658730caf541e6e3a96738a084e37e33bc1e094710cff2856e5",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Counter.uc": {
+      "sha256": "a143f4e4308ed447468a6ece35c04ef4dd202356c1c572514e067d74f18fb655",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\PlayerStart.uc": {
+      "sha256": "48247450a2e885201585fac8c5a15a214f7da8074dc0ef66b1a6ee6cf91d1b99",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Dispatcher.uc": {
+      "sha256": "dc0b6ba196441d475967462b606338eb61377e26c6b39973e0b5c6acbdef96bb",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\PatrolPoint.uc": {
+      "sha256": "b0864140937bfbd685e6cf9a5733500f6ffa1908ccfce0a001a9983d2faaa871",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\HomeBase.uc": {
+      "sha256": "49e7a475524a3b842e2522b2823db2bd8e9a92229ddf3085e9ecdd4eef8a0a45",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\ScaledSprite.uc": {
+      "sha256": "4ff7935b936e854a38d9afd2a69416dcaf17f7f7d2ed3f2e499e2f12496e9305",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\PathNode.uc": {
+      "sha256": "ce8aac9dd30a710f842aaa935819baa4ad9d3cd0481f99ed0daa1a1160852bcd",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Camera.uc": {
+      "sha256": "495df11dc070936803436145ba83c22d4cf4b6c0f0a6a2758f70a14217c5d009",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\AmbientSound.uc": {
+      "sha256": "49076859a271fd69895c741b629b8a492f584e14e5fc7627e4a5e971c99e1eaa",
+      "profile": "1999-11-30 original UT99 v400 source"
+    },
+    "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Engine\\Classes\\ClipMarker.uc": {
+      "sha256": "c153f82fc69763af1cebe17094cf6808b6e92b9c512e732a27500883ee263548",
+      "profile": "later 469f source corroboration only; DOES NOT prove same v432 source"
+    }
+  },
+  "original_loaded_native_skipped_fields": [
+    {
+      "class": "Pawn",
+      "property": "AnimSequence",
+      "tag_type": "NameProperty",
+      "actual_native_compiled_v432_value": "Fighter",
+      "source_proven_default_literal": [
+        "Fighter"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "f7b274c54e1489c9854a94c1320c91e35c5262c608d35f86020afcb552b25e25",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Pawn.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Pawn",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Pawn",
+      "source_proven_default_literal": [
+        "S_Pawn"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "f7b274c54e1489c9854a94c1320c91e35c5262c608d35f86020afcb552b25e25",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Pawn.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "ZoneInfo",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_ZoneInfo",
+      "source_proven_default_literal": [
+        "S_ZoneInfo"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "3a31fbf4d285e85f0e2d332e700e518e97a4fa958a7af3a82dc2dc10e747a505",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\ZoneInfo.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Inventory",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Inventory",
+      "source_proven_default_literal": [
+        "Texture'Engine.S_Inventory'"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "32ef6f2f7fe7b590a84f7c1a12390b581e4ed40cc286cebf7eb6fa34cd93a944",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Inventory.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Weapon",
+      "property": "PickupMessage",
+      "tag_type": "StrProperty",
+      "actual_native_compiled_v432_value": "You got a weapon",
+      "source_proven_default_literal": [
+        "You got a weapon"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "3d9da61def7074c4b545db33513cf08b07d245db30718480f3420c0f93c1fdff",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Weapon.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Weapon",
+      "property": "ItemName",
+      "tag_type": "StrProperty",
+      "actual_native_compiled_v432_value": "Weapon",
+      "source_proven_default_literal": [
+        "Weapon"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "3d9da61def7074c4b545db33513cf08b07d245db30718480f3420c0f93c1fdff",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Weapon.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Weapon",
+      "property": "Icon",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Weapon",
+      "source_proven_default_literal": [
+        "Texture'Engine.S_Weapon'"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "3d9da61def7074c4b545db33513cf08b07d245db30718480f3420c0f93c1fdff",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Weapon.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Weapon",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Weapon",
+      "source_proven_default_literal": [
+        "Texture'Engine.S_Weapon'"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "3d9da61def7074c4b545db33513cf08b07d245db30718480f3420c0f93c1fdff",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Weapon.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Ammo",
+      "property": "PickupMessage",
+      "tag_type": "StrProperty",
+      "actual_native_compiled_v432_value": "You picked up some ammo.",
+      "source_proven_default_literal": [
+        "You picked up some ammo."
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "a84e062f547199a122d5fda0c7f94eeaa7555db91996500d2406f4fae15fc089",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Ammo.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Ammo",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Ammo",
+      "source_proven_default_literal": [
+        "Engine.S_Ammo"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "a84e062f547199a122d5fda0c7f94eeaa7555db91996500d2406f4fae15fc089",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Ammo.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Mover",
+      "property": "InitialState",
+      "tag_type": "NameProperty",
+      "actual_native_compiled_v432_value": "BumpOpenTimed",
+      "source_proven_default_literal": [
+        "BumpOpenTimed"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "6c33859cf35fcfa2d6fbc3f4db437d3ac4428971ecb37ff0605f95c91bca7f6a",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Mover.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Light",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Light",
+      "source_proven_default_literal": [
+        "S_Light"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "01fa2c0ba02cc68f8ea185fadf6d23725950d4f04798ead2bd92aaceab31045a",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Light.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Teleporter",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Teleport",
+      "source_proven_default_literal": [
+        "S_Teleport"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "af366c65ba926eac622e221dfd9a07d6be250d96d5108e01e7aa75613b63a83f",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Teleporter.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Spectator",
+      "property": "MenuName",
+      "tag_type": "StrProperty",
+      "actual_native_compiled_v432_value": "Spectator",
+      "source_proven_default_literal": [
+        "Spectator"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "f898ff657b3239d2fbf61e2383c1e0f0ad19a2efd1180f406292f2abbf326e01",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Spectator.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Trigger",
+      "property": "InitialState",
+      "tag_type": "NameProperty",
+      "actual_native_compiled_v432_value": "NormalTrigger",
+      "source_proven_default_literal": [
+        "NormalTrigger"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "7daaf6ea43edcc73295a44fcea8099505cfdc2591c49e84d42d6c554a6245563",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Trigger.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Trigger",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Trigger",
+      "source_proven_default_literal": [
+        "S_Trigger"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "7daaf6ea43edcc73295a44fcea8099505cfdc2591c49e84d42d6c554a6245563",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Trigger.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Projectile",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Camera",
+      "source_proven_default_literal": [
+        "S_Camera"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "c6f6ea020796026160bc85aaafab829960d6ac9bd658a2090f09d10d0363d61c",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Projectile.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Keypoint",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Keypoint",
+      "source_proven_default_literal": [
+        "S_Keypoint"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "b83ddb2e45d04cd1f5f4c4741768d3544eaac5bee1cd82a94a344c62f843d6ae",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Keypoint.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Carcass",
+      "property": "AnimSequence",
+      "tag_type": "NameProperty",
+      "actual_native_compiled_v432_value": "Dead",
+      "source_proven_default_literal": [
+        "Dead"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "9e920b46298d356937d0ddee4de556719c3c221ed02d77395c22312188b80ec2",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Carcass.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Carcass",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Corpse",
+      "source_proven_default_literal": [
+        "S_Corpse"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "9e920b46298d356937d0ddee4de556719c3c221ed02d77395c22312188b80ec2",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Carcass.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "InterpolationPoint",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Interp",
+      "source_proven_default_literal": [
+        "S_Interp"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "5d0394fe1917bed9dda473752539dd60f95ae6c976e7de024c0952962c7e2ad9",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\InterpolationPoint.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "SpecialEvent",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_SpecialEvent",
+      "source_proven_default_literal": [
+        "Texture'Engine.S_SpecialEvent'"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "19404d21d8d75658730caf541e6e3a96738a084e37e33bc1e094710cff2856e5",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\SpecialEvent.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Counter",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Counter",
+      "source_proven_default_literal": [
+        "S_Counter"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "a143f4e4308ed447468a6ece35c04ef4dd202356c1c572514e067d74f18fb655",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Counter.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "PlayerStart",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Player",
+      "source_proven_default_literal": [
+        "S_Player"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "48247450a2e885201585fac8c5a15a214f7da8074dc0ef66b1a6ee6cf91d1b99",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\PlayerStart.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Dispatcher",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Dispatcher",
+      "source_proven_default_literal": [
+        "S_Dispatcher"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "dc0b6ba196441d475967462b606338eb61377e26c6b39973e0b5c6acbdef96bb",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Dispatcher.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "PatrolPoint",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Patrol",
+      "source_proven_default_literal": [
+        "S_Patrol"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "b0864140937bfbd685e6cf9a5733500f6ffa1908ccfce0a001a9983d2faaa871",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\PatrolPoint.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "HomeBase",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Flag",
+      "source_proven_default_literal": [
+        "S_Flag"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "49e7a475524a3b842e2522b2823db2bd8e9a92229ddf3085e9ecdd4eef8a0a45",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\HomeBase.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "ScaledSprite",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Pickup",
+      "source_proven_default_literal": [
+        "S_Pickup"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "4ff7935b936e854a38d9afd2a69416dcaf17f7f7d2ed3f2e499e2f12496e9305",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\ScaledSprite.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "PathNode",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Pickup",
+      "source_proven_default_literal": [
+        "S_Pickup"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "ce8aac9dd30a710f842aaa935819baa4ad9d3cd0481f99ed0daa1a1160852bcd",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\PathNode.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "Camera",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Camera",
+      "source_proven_default_literal": [
+        "S_Camera"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "495df11dc070936803436145ba83c22d4cf4b6c0f0a6a2758f70a14217c5d009",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\Camera.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "AmbientSound",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_Ambient",
+      "source_proven_default_literal": [
+        "S_Ambient"
+      ],
+      "source_version_provenance": "1999-11-30 original UT99 v400 source",
+      "source_sha256": "49076859a271fd69895c741b629b8a492f584e14e5fc7627e4a5e971c99e1eaa",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Engine\\Classes\\AmbientSound.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    },
+    {
+      "class": "ClipMarker",
+      "property": "Texture",
+      "tag_type": "ObjectProperty",
+      "actual_native_compiled_v432_value": "S_ClipMarker",
+      "source_proven_default_literal": [
+        "Texture'Engine.S_ClipMarker'"
+      ],
+      "source_version_provenance": "later 469f source corroboration only; DOES NOT prove same v432 source",
+      "source_sha256": "c153f82fc69763af1cebe17094cf6808b6e92b9c512e732a27500883ee263548",
+      "source_file_private_path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Engine\\Classes\\ClipMarker.uc",
+      "runtime_loaded_pointer_or_string_observed_in_compiled_dump": true,
+      "archive_declared_tag_was_skipped_not_decoded": true
+    }
+  ]
+}

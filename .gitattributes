@@ -125,3 +125,8 @@ catalog/compliance/evidence/o06/20261031-G3-B09-T069-* -text
 
 # UE1 T019 source/native four-era verifier SHA must be identical in index and every checkout.
 catalog/bin/verify-ue1-o06-g3-t019-original-three-era-native-loaded-default-matrix.py -text
+
+# Source/native UE1 G3 source-family checker exact original byte SHA retained on Windows.
+catalog/bin/verify-ue1-o06-g3-3owner-original-v432-608-skipped-declarations.php -text
+catalog/bin/verify-ue1-o06-g3-4owner-original-v432-skip32-native-values.py -text
+catalog/bin/verify-ue1-o06-g3-t065-source-family-11-branches-legacy-v34-gap.py -text

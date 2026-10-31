@@ -4,3 +4,8 @@
 20261031-G3-T019-original-C227i-* -text
 20261031-G3-T019-original-four-era-127pass.json -text
 20261031-G3-T019-original-C98-v432-C227i-C227k-controlled-native-matrix.json -text
+
+# Scoped G3 original source-native 608 CDO warning-skips and version-34 source gap.
+20261031-G3-T065-original-11-C98-UT99-source-gates-v34-gap.json -text
+20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json -text
+20261031-G3-T072-T075-T076-original-v432-608-skip32-readonly.json -text

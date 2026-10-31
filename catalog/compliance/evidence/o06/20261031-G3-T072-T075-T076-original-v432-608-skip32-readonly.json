@@ -1,0 +1,352 @@
+﻿{
+    "ok": true,
+    "checks": 1705,
+    "passed": 1705,
+    "failures": [],
+    "original_Engine_classes": 88,
+    "real_UClass_unobserved": 0,
+    "ClassIndex_zero_nonserialized_placeholders": 43,
+    "source_class_default_tags": 608,
+    "native_exact_value_matches": 575,
+    "native_config_ini_overrides": 1,
+    "original_native_warning_skip_tag_count": 32,
+    "original_native_warning_skip_tag_values": [
+        {
+            "class": "Pawn",
+            "property": "AnimSequence",
+            "declared_tag_type": "NameProperty",
+            "original_native_loaded_value": "Fighter",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 76,
+            "native_property_address": 40362008,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Pawn",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Pawn",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "ZoneInfo",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_ZoneInfo",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Inventory",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Inventory",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Weapon",
+            "property": "PickupMessage",
+            "declared_tag_type": "StrProperty",
+            "original_native_loaded_value": "You got a weapon",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 532,
+            "native_property_address": 41113008,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Weapon",
+            "property": "ItemName",
+            "declared_tag_type": "StrProperty",
+            "original_native_loaded_value": "Weapon",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 544,
+            "native_property_address": 40404880,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Weapon",
+            "property": "Icon",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Weapon",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 692,
+            "native_property_address": 41742368,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Weapon",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Weapon",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Ammo",
+            "property": "PickupMessage",
+            "declared_tag_type": "StrProperty",
+            "original_native_loaded_value": "You picked up some ammo.",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 532,
+            "native_property_address": 41113008,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Ammo",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Ammo",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Mover",
+            "property": "InitialState",
+            "declared_tag_type": "NameProperty",
+            "original_native_loaded_value": "BumpOpenTimed",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 56,
+            "native_property_address": 41140648,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Light",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Light",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Teleporter",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Teleport",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Spectator",
+            "property": "MenuName",
+            "declared_tag_type": "StrProperty",
+            "original_native_loaded_value": "Spectator",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 988,
+            "native_property_address": 41195056,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Trigger",
+            "property": "InitialState",
+            "declared_tag_type": "NameProperty",
+            "original_native_loaded_value": "NormalTrigger",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 56,
+            "native_property_address": 41140648,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Trigger",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Trigger",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Projectile",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Camera",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Keypoint",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Keypoint",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Carcass",
+            "property": "AnimSequence",
+            "declared_tag_type": "NameProperty",
+            "original_native_loaded_value": "Dead",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 76,
+            "native_property_address": 40362008,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Carcass",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Corpse",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "InterpolationPoint",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Interp",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "SpecialEvent",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_SpecialEvent",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Counter",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Counter",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "PlayerStart",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Player",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Dispatcher",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Dispatcher",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "PatrolPoint",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Patrol",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "HomeBase",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Flag",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "ScaledSprite",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Pickup",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "PathNode",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Pickup",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "Camera",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Camera",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "AmbientSound",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_Ambient",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        },
+        {
+            "class": "ClipMarker",
+            "property": "Texture",
+            "declared_tag_type": "ObjectProperty",
+            "original_native_loaded_value": "S_ClipMarker",
+            "archive_declared_tag_policy": "native_warning_skip_declared_tag_bytes",
+            "native_property_offset": 300,
+            "native_property_address": 41064768,
+            "source_archive_value_kind": "epic_skipped_declared_tag_bytes"
+        }
+    ],
+    "current_ini_SHA_drift_unchanged": true,
+    "genuine_native_original_engine_reruns_by_checker": 0,
+    "T072_T075_T076_full_aggregate_accepted": false,
+    "typed_default_values": {
+        "StructProperty": 16,
+        "FloatProperty": 146,
+        "ByteProperty": 89,
+        "BoolProperty": 165,
+        "ObjectProperty": 39,
+        "IntProperty": 63,
+        "NameProperty": 6,
+        "StrProperty": 84
+    },
+    "resolved_native_FName_indices": 1409,
+    "compiled_memory_regions": 240,
+    "full_method_accepted": false,
+    "remaining": "All 88 real UClasses covered; inherited loader, malformed error/archive consumption and version branches remain"
+}

@@ -4450,7 +4450,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: Source family: version-specific source gate matrix needs C98 Class/State branches at <36, <57; T99 Class/Property <62, UFunction <=63 and FName <64, Linker summary <68; genuine compiled lowest/highest representatives with after-archive cursors are not owned for EACH serializer. Separately C227i/227k source build changes and correct native gate cursors still unverified. T011 v60..64 Function is PASS but cannot satisfy all methods.",
+      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: NEW SOURCE PARITY GAP: original 1998 C98 UnClass.cpp:435 version<36 UNKNOWN ObjectProperty native read applies to v34 and v35. Production tagged reader implements v35-only compact type5/8 tagSize4 behavior: v34 source branch not proven, type8 applicability not source matched. Must obtain genuine original compiled stock v34 native loader/cursor before code fix. 11 exact original C98/T99 version source anchors, current reader branch scan and previously T011 original v60-64 native are verified; 35/35 new scope checks.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "T011_V60_64_NATIVE_BRANCH_CLOSED_T065_ALL_SOURCE_METHOD_FAMILIES_UNPROVEN",
@@ -4459,6 +4459,11 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T065-multi-source-version-gates-still-blocked.json",
           "sha256": "63d9241075c105ae137f8fb90d4d3f43ce8bbc1b7711c0d7c34e0f61a04deed8",
           "bytes": 5034
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T065-original-11-C98-UT99-source-gates-v34-gap.json",
+          "sha256": "a16110fd7d2bb86a1f1dedab883764f37b5b72b772380d94121ff0900d98a495",
+          "bytes": 3240
         }
       ],
       "last_evidence_review": "2026-10-31",
@@ -4472,7 +4477,8 @@
         "T99 linker header",
         "C227 build-specific native deltas"
       ],
-      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated"
+      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards"
     },
     {
       "id": "T066",
@@ -4809,7 +4815,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: Original source C98 v<36 tagged legacy ObjectProperty, C98 v<57 UState, T99 v<=61 UClass old record/property-flag clearing, v>=62 ClassWithin, v<64 old FName and v<68 package heritage have version-specific accepted/error-or-exclusion coverage NOT exhaustively joined. Must declare owner of each true native malformed/Error/UB branch and dedupe. T019 and T011 no longer blockers.",
+      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: 32 previous alleged original UClass default mismatches all actual native warning+skipped archived tags: 24 object,4 name,4 string; they are NOT original native malformed/invalid references. Native read-only 1705/1705 and original authored source 172/172 focused checks PASS. Other source-specific errors including original C98 v34 unknown object branch and undefined behavior exclusions remain unowned.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4827,7 +4833,20 @@
         "class-default errors",
         "exclusions for original native undefined behavior"
       ],
-      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated"
+      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T072-T075-T076-original-v432-608-skip32-readonly.json",
+          "sha256": "cefe98bd30c59907e9b8633e32fbde94fafa85be9b6693c5ef1a373d9e5496fc",
+          "bytes": 15834
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
+          "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
+          "bytes": 28907
+        }
+      ]
     },
     {
       "id": "T072",
@@ -4842,7 +4861,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: Original C98 compiled 100 Core structs and 96 nonzero scripts are proved earlier, but no closed per-original-direct C98 Class/Struct/Property method inventory with 100% typed loaded-value and explicit runtime-unobservable exclusions; preserve source-typed vs native-pointer distinction. T019 now PASS; do not replay prior CDB.",
+      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: Original stock UT99 v432 original x86 compiled 608 UClass default tags partition into 575 actual exact native values,1 INI loaded value and32 native warn+skip archived tags, with 1705/1705 new independent scoped read-only original memory checks. 31/32 actual native observed values match original 1999 v400 authored source; one ClipMarker matches later 469f source only. T072 C98 direct type exhaustive all-method native values or source exclusion still incomplete. Original capture-time INI SHA is stale and not repinned.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4857,7 +4876,20 @@
         "C98 struct/property direct",
         "C98 typed runtime native pointer exclusions"
       ],
-      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated"
+      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T072-T075-T076-original-v432-608-skip32-readonly.json",
+          "sha256": "cefe98bd30c59907e9b8633e32fbde94fafa85be9b6693c5ef1a373d9e5496fc",
+          "bytes": 15834
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
+          "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
+          "bytes": 28907
+        }
+      ]
     },
     {
       "id": "T073",
@@ -4872,7 +4904,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: Original compiled UT99 v432/469f UFunction/UState/Engine original snapshots existing; full union of actual source-applicable method classes is missing, including explicit 469f-only Pointer class and inherited v432 method identities, native loaded default/variant classifications, source & proof method ownership. One object export repeated across tests is not distinct method. T019 now PASS; T065 version-gates remain incomplete.",
+      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: Original stock v432 ClipMarker class native memory Texture=S_ClipMarker confirmed, but authored ClipMarker default source available only from later 469f; do not assert 469f and v432 native method/source same. Other original UT99 source-specific method/type gaps remain.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4890,7 +4922,15 @@
         "469f Engine",
         "source-only class extensions"
       ],
-      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated"
+      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
+          "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
+          "bytes": 28907
+        }
+      ]
     },
     {
       "id": "T074",
@@ -4936,7 +4976,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: Reader source compile distinguishes serialized indices from actual native pointers, but no complete original native per-build import/export linker index-to-object mapping across all source-applicable types + physical loaded size/member offsets. Existing C98 State.Children and original v432 T011 real pointer graph are accepted reused; method-wide array/struct/field identity ownership remains unverified.",
+      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: 24 actual live UObject references and member offsets,4 FNames and4 FStrings observed in original stock v432 native memory; the 32 corresponding archive tags are intentionally skipped and must NOT be reported as resolved on-disk object pointers. 1705/1705 source-aware native and172/172 actual source checks PASS. Full C98/T99/C227 per-build real linker identity graph and class/struct/property ABI remain unclosed.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4953,7 +4993,20 @@
         "C227i/k linker",
         "native member offsets source build"
       ],
-      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated"
+      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T072-T075-T076-original-v432-608-skip32-readonly.json",
+          "sha256": "cefe98bd30c59907e9b8633e32fbde94fafa85be9b6693c5ef1a373d9e5496fc",
+          "bytes": 15834
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
+          "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
+          "bytes": 28907
+        }
+      ]
     },
     {
       "id": "T076",
@@ -4968,7 +5021,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: Original v60-63 successful stock v432 UState->UFunction import closure has 3 valid imports (now T011 PASS), NOT a duplicate/ambiguous same-class provider sample. Genuine duplicate providers (example UT99 Detail.utx), actual original compiled provider choice/missing import error, current reader source-selected precedence must be compared under original package path/loader provenance. No 235k corpus repeat.",
+      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: 24 previously false apparent missing ObjectProperty providers from original native skipped tags now correctly source-classified and verified original compiled v432 CDO actual pointers; no 24 fictitious lost providers. Must still prove actual duplicate real provider source-selected first-choice and missing import native behavior; no provider test is falsely closed.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4984,7 +5037,20 @@
         "source-selected import resolution",
         "actual runtime provider identities"
       ],
-      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated"
+      "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T072-T075-T076-original-v432-608-skip32-readonly.json",
+          "sha256": "cefe98bd30c59907e9b8633e32fbde94fafa85be9b6693c5ef1a373d9e5496fc",
+          "bytes": 15834
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
+          "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
+          "bytes": 28907
+        }
+      ]
     },
     {
       "id": "T077",
@@ -4999,7 +5065,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: Aggregated method ownership requires full original class/struct/property/error/version/direct type and provider proof for all required source families; the seven owner gates T071..T076 and T065 remain BLOCKED despite T019 PASS. SHA audit alone cannot establish no unexplained runtime mismatch; separate 608-default old diagnostic still has 25 discrepancies, causal attribution pending.",
+      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: Old G5 608 UClass native-value diagnostic remains historical FAIL 1679/1704 (capture-time UnrealTournament.ini original SHA no longer present, do NOT repin). New separate scoped source/native checker PASS 1705/1705 and independent 31 old source +1 later source anchored validator PASS 172/172 classify all 32 intentional skips. Full source method/error/provider, v34 source version and original config provenance remain blocked.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5030,6 +5096,19 @@
         "T074",
         "T075",
         "T076"
+      ],
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T072-T075-T076-original-v432-608-skip32-readonly.json",
+          "sha256": "cefe98bd30c59907e9b8633e32fbde94fafa85be9b6693c5ef1a373d9e5496fc",
+          "bytes": 15834
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
+          "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
+          "bytes": 28907
+        }
       ]
     },
     {
