@@ -1,3 +1,13 @@
+## 2026-10-31 bulk T011 original 4 legacy versions, T019 direct localization and T065 version owners
+
+G3 fixed register: 67 PASS, 1 SOURCE_NA, 12 BLOCKED, 0 FAIL. DEV only, PRD unchanged. Four distinct actual original compiled stock UT99 v432 Core.dll loaded v60/61/62/63 source-correct 318-byte historic archives, derived from an original native SavePackage v69 322-byte package, not shipped game packages. Original C++ source version-gated header HeritageCount vs GUID, old null-terminated FNameEntry vs counted FString, and UFunction saved legacy ParmsSize/NumParms/ReturnValueOffset were each repaired to the correct physical wire layout. All four genuine v432 loaders resolve actual UState.Children -> UFunction and native recompute of saved 4660/66/8738 into 0/0/65535; current PHP reader matches, 80/80 original native/current/source SHA checks PASS. Same-source next-version 64 genuine native load successful, accepted 69 unchanged and not rerun. T011 is PASS, original x86 compiled Core.dll and canonical saved archive restored byte identical.
+
+T019 original v432 stock UCC compiled a new user-authored no-editor commandlet that invokes native Localize: two NEW original x86 runs 333->Native Epsilon, 444->Native Zeta via genuine localization file; ConfigValue 333/444, transient0 and persist888 correct, but UClass CDO text remains original DefaultBulk. Distinct source/native verifier 22/22 PASS for this SPECIFIC DISCREPANCY, not full T019. Earlier v432 config111/222 plus C227k explicit localize111/222 remain previously accepted no native replay. CDO auto-localization application or timing and separate C98/C227i source family remain unproven; T019 stays BLOCKED.
+
+T065 SOURCE VERSION MATRIX remains BLOCKED: real UT99 v60-64 UFunction name/package summary boundary is now source and native proven, but a preliminary original source scan identifies 11 distinct Ar.Ver/GetFileVersion checks over seven C98/UT99 files; this is not the complete source-specific native C98/UT99/C227 serializer method boundary acceptance. T071-T077 seven aggregate owners assessed and kept BLOCKED; T078-80 final release ineligible.
+
+Sealed original native and engine logs for four versions, original source SHA anchors, no original binaries or original raw U archives added to Git. References: catalog/compliance/evidence/o06/20261031-G3-T011-T065-original-stock-v432-60-64-native-success-boundary-manifest.json, 20261031-G3-T011-original-four-loaded-v60-v63-80pass.json, 20261031-G3-T019-original-v432-direct-localize-discrepancy.json, 20261031-G3-T065-multi-source-version-gates-still-blocked.json.
+
 ## 2026-10-31 grouped original native T019/T050 and seven aggregate evidence gates
 
 **G3 fixed 80:** 66 PASS, 1 SOURCE_NA, 13 BLOCKED, 0 FAIL. No PRD deploy.

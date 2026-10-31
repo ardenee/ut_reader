@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "checks": 80,
+    "errors": [],
+    "frozen_T011": "PASS",
+    "source_matched_native_legacy_versions": [
+        60,
+        61,
+        62,
+        63
+    ],
+    "archived_legacy_triplet": [
+        4660,
+        66,
+        8738
+    ],
+    "original_and_reader_recomputed_triplet": [
+        0,
+        0,
+        65535
+    ],
+    "adjacent_original_native_version64_success": true,
+    "original_engine_rerun_by_verifier": 0,
+    "T065_full_aggregate_source_matrix": "BLOCKED",
+    "overall_G3_accepted": false
+}

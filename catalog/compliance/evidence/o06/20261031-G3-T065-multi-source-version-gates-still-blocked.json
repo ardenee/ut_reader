@@ -1,0 +1,100 @@
+{
+  "fixed_id": "T065",
+  "status": "BLOCKED",
+  "UT99_v432_source_specific_60to63_Function_legacy_coverage": "native 4/4 original v60-63 actual loaded 0/0/65535 against intentionally nonzero archive 4660/66/8738, reader agrees; adjacent v64 original compiled original no-legacy native loaded",
+  "C98_source_selected_original_legacy_gates": "source gate inventory only, not complete original engine native two-sided for every gate",
+  "C227_2012_2026_source_selected_overrides": "must compare separate actual 2012/2026 compiled engine gates, cannot substitute numeric package version69 from UT99",
+  "original_native_tests_rerun_by_this_inventory": 0,
+  "source_defined_guard_count": 11,
+  "source_guards": [
+    {
+      "profile": "C98_UnClass.cpp",
+      "owner_context": "guard(UStruct::SerializeTaggedProperties);",
+      "line": 435,
+      "source_gate": "if( Ar.Ver()<36 && Tag.Type==NAME_ObjectProperty )//oldver",
+      "source_path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+    },
+    {
+      "profile": "C98_UnClass.cpp",
+      "owner_context": "UState::Serialize( Ar );",
+      "line": 961,
+      "source_gate": "if( Ar.Ver() < 57 )//oldver",
+      "source_path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+    },
+    {
+      "profile": "T99_v400_UnClass.cpp",
+      "owner_context": "Super::Serialize( Ar );",
+      "line": 920,
+      "source_gate": "if( Ar.Ver() <= 61 )//oldver",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    {
+      "profile": "T99_v400_UnClass.cpp",
+      "owner_context": "Super::Serialize( Ar );",
+      "line": 928,
+      "source_gate": "if( Ar.Ver()>=62 )",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    {
+      "profile": "T99_v400_UnClass.cpp",
+      "owner_context": "Super::Serialize( Ar );",
+      "line": 945,
+      "source_gate": "if( Ar.Ver()<=61 )//oldver",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    {
+      "profile": "T99_v400_UnClass.cpp",
+      "owner_context": "Super::Serialize( Ar );",
+      "line": 1348,
+      "source_gate": "if( Ar.Ver()<=63 )",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    {
+      "profile": "T99_v400_UnClass.cpp",
+      "owner_context": "Super::Serialize( Ar );",
+      "line": 1351,
+      "source_gate": "if( Ar.Ver()<=63 )",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    {
+      "profile": "T99_v400_UnClass.cpp",
+      "owner_context": "Super::Serialize( Ar );",
+      "line": 1354,
+      "source_gate": "if( Ar.Ver()<=63 )",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnClass.cpp",
+      "SHA256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+    },
+    {
+      "profile": "T99_v400_UnProp.cpp",
+      "owner_context": "Super::Serialize( Ar );",
+      "line": 126,
+      "source_gate": "if( Ar.Ver() <= 61 )//oldver: clear old net flags.",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnProp.cpp",
+      "SHA256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+    },
+    {
+      "profile": "T99_v400_UnName.cpp",
+      "owner_context": "CORE_API FArchive& operator<<( FArchive& Ar, FNameEntry& E )",
+      "line": 215,
+      "source_gate": "if( Ar.Ver()<64 )",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnName.cpp",
+      "SHA256": "3d8ab9316fcb2bd88710f4c24762664c4423493db84876e96ef88a0069e302d3"
+    },
+    {
+      "profile": "T99_v432_UnLinker.h",
+      "owner_context": "friend FArchive& operator<<( FArchive& Ar, FPackageFileSummary& Sum )",
+      "line": 148,
+      "source_gate": "if( Sum.GetFileVersion()>=68 ) //LVer added by Legend on 4/12/2000",
+      "source_path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h",
+      "SHA256": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0"
+    }
+  ],
+  "full_T065_pass_eligible": false
+}

@@ -1,0 +1,13 @@
+﻿{
+  "ok": true,
+  "checks": 22,
+  "errors": [],
+  "test": "T019",
+  "status": "BLOCKED",
+  "original_v432_direct_Localize_function_reads_external_int": true,
+  "original_v432_class_default_localization_override_not_observed": true,
+  "native_original_compiled_sessions_repeated": 0,
+  "T019_FULLY_ACCEPTED": false,
+  "source_scope": "Original stock UT99 v432 only, C98 and 2012 C227i not inferred",
+  "original_script_editor_gate": "UObject::LoadLocalized returns in editor; exact invocation phase must be proven before acceptance"
+}

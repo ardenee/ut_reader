@@ -1,0 +1,50 @@
+{
+  "test": "T019",
+  "status": "BLOCKED",
+  "source": "Original stock UT99 v432 C++ Core.dll; compiled UCC original x86",
+  "original_native_engine_binary_sha": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "original_compiled_UCC_localization_probe_build_SHA256": "ac9080ed50b9fccfa3a04373239f32e30b64e9d99f47c6a082fb3a0a5db7de7f",
+  "original_compiled_class_fixture_SHA": "73e99ca3aeed3f87107da80d6abfb9748056247dc19dc08d1e36dd6098f6bfd8",
+  "two_new_original_native_observations": [
+    {
+      "user_ini_value": 333,
+      "direct_original_Localize": "Native Epsilon",
+      "actual_class_CDO_LocalMessage": "DefaultBulk",
+      "transient": 0,
+      "persistent": 888
+    },
+    {
+      "user_ini_value": 444,
+      "direct_original_Localize": "Native Zeta",
+      "actual_class_CDO_LocalMessage": "DefaultBulk",
+      "transient": 0,
+      "persistent": 888
+    }
+  ],
+  "original_input_ini_and_lang_restored": true,
+  "why_still_BLOCKED": "Localize() reads .int resource but native class default remains its serialized DefaultBulk; cannot infer original UClass::Serialize -> LoadLocalized class-default effect, different source family C98 and C227i also still unverified",
+  "original_engine_executions_repeated_by_verifier": 0,
+  "full_T019_pass": false,
+  "source_sha_items": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-v432-direct-localize-UCC-probe.uc",
+      "sha256": "5d78ade378ee6b25fb570d6169390ccf38ea2b7c442febb5a45810dc31ccd719",
+      "bytes": 818
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-v432-direct-localize-UCC-make.log",
+      "sha256": "349211c5ed7b3149c79ebc7a65e4d6a8782f8d316b26a6f8eb3ec6121907bc23",
+      "bytes": 1247
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-v432-direct-localize-333.log",
+      "sha256": "a5660023bd7e87b833be4dcb589fb2ac5b5940706118beee20db5f5136dcf01f",
+      "bytes": 442
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-v432-direct-localize-444.log",
+      "sha256": "c8042cac559ce5e61a6ab119790a5c99825fb3e10ca18c63d9ccabbffd92738e",
+      "bytes": 439
+    }
+  ]
+}

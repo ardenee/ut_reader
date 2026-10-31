@@ -787,14 +787,76 @@
       "pass_criterion": "Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout.",
       "evidence": "One original native loaded-value trace against valid file and source branch; no 69 repeat",
       "reuse": "Excluded C98 bytecode and top-level synthetic attempts cannot count.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-10-31 ORIGINAL STOCK UT99 v432 NATIVE GROUP: READ-ONLY production inventory had 8 UT99 version61 and 2 UT99 version63 .u originals, 9 with real UFunction exports, plus 15 UnrealGold version63 .u. All 25 were copied SHA-checked to isolated DEV and run through original compiled v432 loader ONCE. Exactly ElectricLamp.u native LOAD success but zero UFunctions; 24 failed due legacy unavailable imports, missing provider packages, bad expr 15/03, native script-size/alignment errors. FlakMortar.u v63 Function Fire actually reached UFunction::Serialize but was fatally rejected with Got448 Expected451, no loaded parameter values. Required successful original version60-63 UFunction archive with after-link ParmsSize/NumParms/ReturnValueOffset STILL MISSING, so T011 remains BLOCKED. Original 25 native output SHAs and full immutable logs in catalog/compliance/evidence/o06/20261031-G3-T011-25-old-packages-original-v432-native-candidate-manifest.json SHA 61b358d50caa42c31b26880436f0af9757bd0f4e6aa36a8bc008a8881a0d2480",
-      "last_attempt_at": "2026-10-28T11:54:56+00:00",
+      "status": "PASS",
+      "evidence_sha": "8fec3e8e899f8b32043899c265d74c76430b3f38d5c9f24497383e9a0c64902d",
+      "result": "FULL T011: authentic unmodified stock UT99 v432 Core.dll native original loader successfully loads all four valid source-gated versions 60,61,62,63 of isolated source-correct genuine compiled-native SavePackage fixture. Historical header v<68 HeritageCount/Offset, FNameEntry v<64 null-terminated name/flags, and UFunction::Serialize v<=63 legacy Word/Byte/Word fields all applied. Original native after-link UState.Children pointer IDENTICALLY targets loaded UFunction each time, source file archived nonzero ParmsSize=4660 NumParms=66 ReturnValueOffset=8738; real native loaded after-link recomputes 0/0/65535, UnrealDB reader reconstructs same values/cursors, exact 80/80 source/current/native SHA verifier PASS. Original same-source v64 no-legacy positive verified, original accepted v69 not rerun. This T011 does NOT assert T065 all-family version matrix complete, original engine binaries and retail archive unchanged.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T17:48:05+00:00",
       "attempted_native_execution": false,
-      "assessment": "ORIGINAL_25_NATIVE_CANDIDATES_NO_FUNCTION_LOAD_COMPLETION",
-      "last_grouped_native_assessment": "2026-10-31"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-31",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t011-original-v432-legacy-4-native-compiled.php",
+          "sha256": "848ef233965ca14ad67c851de44f0232f8dd7b91eeb5d4d20bbabb097aa73d66",
+          "bytes": 5616
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-four-loaded-v60-v63-80pass.json",
+          "sha256": "8fb48f582a8e7061f9f94cb8fa0ca225c8dd1eef489508e5213fc00c2097b527",
+          "bytes": 568
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-T065-original-stock-v432-60-64-native-success-boundary-manifest.json",
+          "sha256": "01f412b775b4d99b13b41d91f22cfe8f2852a38247227cc70f634e9c2b6b3aee",
+          "bytes": 5348
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version60-console.log",
+          "sha256": "c7e5001590761b5a500ad361ec75a2bef56dd60a2f775e0a23346c134a35f165",
+          "bytes": 369
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version60-engine.log",
+          "sha256": "a0666b337cdab951407ccb6c107268286dc9e6d3a8ae22ce7db1b55c4d3a520a",
+          "bytes": 1118
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version61-console.log",
+          "sha256": "3c950f10667df5365ace20a3f12a2b92e03192b93e9ec53355b1dd8d51c66721",
+          "bytes": 369
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version61-engine.log",
+          "sha256": "f8c5c312e53e2a3a18af78dfa834378a130670b9ef095a3834c80c33fbff09a6",
+          "bytes": 1118
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version62-console.log",
+          "sha256": "a3108b5e9403ce38c77be6c34735826d7960a83b86f172b6fa8c525727811197",
+          "bytes": 369
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version62-engine.log",
+          "sha256": "1207bac69989fa3a292a428363a15a130311a37dd988337f2cdaa98256e2d24b",
+          "bytes": 1118
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version63-console.log",
+          "sha256": "be850792f30a0e3beebc222176fe4c2c83ee047b22e2b715fcb8f8cfa592a7a9",
+          "bytes": 369
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version63-engine.log",
+          "sha256": "0778a7542c442dafa5f5fc35a88248e1eca097a5657a9af1a3f4f475f3105ea8",
+          "bytes": 1118
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T065-original-stock-v432-version64-nonlegacy-boundary.log",
+          "sha256": "531dd4f67df2f55a7f03aa23157e53ba654f73a684e0eca597bfc59fde88b7b2",
+          "bytes": 369
+        }
+      ]
     },
     {
       "id": "T012",
@@ -1278,10 +1340,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 NEW source-bounded original compiled UT99 v432 C++ UCC.make fixture G3BulkConfigV432.u SHA73e99ca3 and original 2-profile UCC commandlet native original loads: ConfigValue=111 then222; native Transient ScratchValue=0 both, PersistValue=888 both; class LocalMessage remained DefaultBulk despite experimental .int overrides. Two previously accepted original C227k genuine native compiled isolated configuration+localization loads reused: 111->Native Alpha, 222->Native Beta; Transient0, Persist888. Independent exact original SHA verifier 44/44 PASS, but T019 FULL BLOCKED because genuine C98 original isolated Config/Localized/Transient two-profile behavior and true UT99 v432 localization precedence remain missing; original C227i native localization separately unproven. No previous accepted native reruns. Original program binaries and game archive remain private, only user-authored fixture/source and actual original output SHA evidence versioned.",
+      "blocking_reason": "2026-10-31 original UT99 stock v432 native source and compiler new two config profile 333/444 observations: native direct Object.Localize returns correct external G3BulkConfigV432.int localized values Native Epsilon/Native Zeta, but native default object LocalMessage stays serialized DefaultBulk in BOTH profiles. Original config 333/444 and transient0/persist888 loaded accurately. SHA and original source-pinned read-only diagnostic 22/22 confirms external resource correct but does not establish UClass CDO LoadLocalized timing or loading effect. Previous v432 original 111/222 config and compiled C227k original explicit LoadLocalized 111/222 remain accepted distinct native partial tests, not repeated. True native default localization for v432 plus separate C98 and 2012 C227i still unproven. T019 remains BLOCKED.",
       "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "ORIGINAL_UT99_V432_TWO_CONFIG_PROFILES_NEW_AND_C227K_LOCALIZED_REUSED_44PASS_T019_FULL_BLOCKED",
+      "assessment": "T019_NATIVE_V432_LOCALIZATION_FILE_LOADS_BUT_CLASS_DEFAULT_REMAINS_UNPROVEN",
       "partial_verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t019-bulk-v432-c227k-original-native-profiles.py",
@@ -1292,6 +1354,21 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T019-four-original-native-config-window-44pass-BLOCKED.json",
           "sha256": "f308e44845a6889b119bed494a126ca098d80b7c770cc1b0326d4a6ccc8bf7c2",
           "bytes": 1660
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t019-original-v432-localize-discrepancy.py",
+          "sha256": "7391318cae9bb326f50257b339e29db4437d0a56e2d5c3ef7705d5cd5fd205e4",
+          "bytes": 3019
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-v432-original-native-localize-call-discrepancy-22pass.json",
+          "sha256": "67b758416a5a252e2d6dc8759b159460043356dd4013f48ba1cecade765df4ab",
+          "bytes": 550
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-v432-direct-localize-discrepancy.json",
+          "sha256": "225a4df20634d925432efeca4daf3483d59f3c34fd145a0498f3590748f7b6a0",
+          "bytes": 2257
         }
       ],
       "last_grouped_native_assessment": "2026-10-31"
@@ -4251,10 +4328,17 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 T011 legacy-native prerequisite still absent. UT99 v400 original source UFunction::Serialize archives ParmsSize, NumParms, ReturnValueOffset under Ar.Ver()<=63; 25 genuine v61/63 files actually loaded through original stock v432 compiled engine all failed to yield a successfully loaded UFunction (one unrelated no-function native file loaded). FlakMortar v63 reached serializer but fatal Got448 Expected451, not allowed as parameter-triplet evidence. Full source-version lowest/highest archive-field and physical Tell contract still BLOCKED; do not run a duplicate T065 native probe. Reuse catalog/compliance/evidence/o06/20261031-G3-T011-25-old-packages-original-v432-native-candidate-manifest.json SHA 61b358d50caa42c31b26880436f0af9757bd0f4e6aa36a8bc008a8881a0d2480",
+      "blocking_reason": "2026-10-31 T011 genuine original compiled v432 UFunction legacy native barrier now CLOSED 80/80 with 4 successfully fully loaded v60/61/62/63 original stock Core.dll native cases and next original native v64 success. Source-faithful older v<64 FNameEntry null-terminated and v<68 Heritage summary were necessary; genuine archived legacy ParmsSize=4660 NumParms=66 ReturnValueOffset=8738; real original postlink values and PHP match 0/0/65535. However T065 requires ALL source-defined serializer version boundaries for C98/UT99 v432/C227, not one UFunction. Seven original source files give 11 explicit version guards in preliminary C98/T99 source scan but not complete C227 build-selected native multi-method boundary proof. Full T065 stays BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "T011_UNFULFILLED_ORIGINAL_LEGACY_NATIVE_LOAD_PREREQUISITE"
+      "assessment": "T011_V60_64_NATIVE_BRANCH_CLOSED_T065_ALL_SOURCE_METHOD_FAMILIES_UNPROVEN",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T065-multi-source-version-gates-still-blocked.json",
+          "sha256": "63d9241075c105ae137f8fb90d4d3f43ce8bbc1b7711c0d7c34e0f61a04deed8",
+          "bytes": 5034
+        }
+      ]
     },
     {
       "id": "T066",
@@ -4596,12 +4680,12 @@
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
       "upstream_fixed_test_dependencies": [
-        "T011",
         "T019",
         "T065"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
-      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
+      "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure."
     },
     {
       "id": "T072",
@@ -4624,7 +4708,8 @@
         "T019"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
-      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
+      "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure."
     },
     {
       "id": "T073",
@@ -4644,12 +4729,12 @@
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
       "upstream_fixed_test_dependencies": [
-        "T011",
         "T019",
         "T065"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
-      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
+      "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure."
     },
     {
       "id": "T074",
@@ -4672,7 +4757,8 @@
         "T019"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
-      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
+      "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure."
     },
     {
       "id": "T075",
@@ -4692,11 +4778,11 @@
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
       "upstream_fixed_test_dependencies": [
-        "T011",
         "T065"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
-      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
+      "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure."
     },
     {
       "id": "T076",
@@ -4715,11 +4801,11 @@
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
-      "upstream_fixed_test_dependencies": [
-        "T011"
-      ],
+      "upstream_fixed_test_dependencies": [],
       "last_grouped_evidence_audit": "2026-10-31",
-      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
+      "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure.",
+      "distinct_original_remaining_provider_oracle": "Need duplicate or ambiguous provider precedence on actual source family, not one successful 3-import Core/State/Function graph"
     },
     {
       "id": "T077",
@@ -4739,7 +4825,6 @@
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
       "upstream_fixed_test_dependencies": [
-        "T011",
         "T019",
         "T065",
         "T071",
@@ -4750,7 +4835,8 @@
         "T076"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
-      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
+      "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure."
     },
     {
       "id": "T078",

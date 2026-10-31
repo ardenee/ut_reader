@@ -1,0 +1,30 @@
+Log: Log file open, 10/31/26 17:44:05
+Init: Name subsystem initialized
+Init: Detected: Microsoft Windows NT 6.2 (Build: 9200)
+Init: Version: 432
+Init: Compiled: Oct  4 2000 21:31:15
+Init: Command line: 
+Init: Base directory: C:\Temp\UnrealDB\O06\Native-UCC\System\
+Init: Character set: Unicode
+Log: Bound to Core.dll
+Init: Object subsystem initialized
+Log: Cd Path: G:\
+Init: Computer: GAMEAMD
+Init: User: arden
+Init: Memory total: Phys=2097151K Pagef=4194303K Virt=2097024K
+Init: Working set: 32000 / 159000
+Init: CPU Speed=2592.000676 MHz
+Init: CPU Page size=4096, Processors=12
+Init: CPU Detected: PentiumPro-class processor (GenuineIntel)
+Init: CPU Features: CMov FPU RDTSC PAE MMX KNI
+Exit: Preparing to exit.
+Log: Purging garbage
+Log: Unbound to Core.dll
+Log: -0.0ms Unloading: Package G304V432FunctionStateFixture
+Log: -0.0ms Unloading: Package Core
+Log: Garbage: objects: 57->0; refs: 0
+Exit: Object subsystem successfully closed.
+Exit: Exiting.
+Uninitialized: Name subsystem shut down
+Uninitialized: Allocation checking disabled
+Uninitialized: Log file closed, 10/31/26 17:44:05
