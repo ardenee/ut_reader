@@ -1,7 +1,7 @@
 {
   "contract": "g3-controlled-80-fixed-tests",
-  "stage": "G3-64PASS-16BLOCKED-B09-T068-THREE-ORIGINAL-NATIVE-COUNTS-CLOSED",
-  "last_action": "T068 fully CLOSED 49/49 original compiled May1998 C98 v61 TArray FDependency and PackageImports counts native physical Tell388/363 plus existing original stock UT99 v432 signed counts Tell259 and original 2026 C227k count3/63 Tell263/signed UTF16. Fixed product premature positive TArray count prechecks and original C98 Bad FName diagnostics; one new original-native batch only; pristine .u restored; 64 PASS 16 BLOCKED 0 FAIL. T065 still blocked by T011 real legacy UFunction native loading.",
-  "next_step": "Source-first T011 genuine UT99 v60-v63 loadable UFunction archive (v400 source checkout lacks compiled UCC); then T065 complete source-version matrix. In separate owned group T018 original 2012 loaded CDO, T019 external config, T033 actual ScriptedAI UButton Caption, T050 mixed C98 Core.u relocation. Keep T071-T080 blocked until upstream evidence; no replay or PRD until final acceptance.",
-  "updated_at_utc": "2026-10-31T04:00:04+00:00"
+  "stage": "G3-64PASS-16BLOCKED-T011-25-HISTORIC-NATIVE-CANDIDATES-BLOCKED",
+  "last_action": "T068 fully closed 49/49 and GitHub commit d400d8f9 pushed. T011 and T065 NEW grouped original native candidates: read-only PRD discovery 10 UT99 v61/v63 .u with 9 actual UFunction-bearing plus 15 UnrealGold v63; original v432 stock Core.dll tested 25 genuine SHA copies once, 24 native load failed, only ElectricLamp succeeded with ZERO UFunctions. Original FlakMortar v63 UFunction reached then fatal Got448 Expected451. All original outputs SHA sealed; no passing legacy function/triplet, do not promote T011/T065. 64 PASS/16 BLOCKED, PRD unchanged.",
+  "next_step": "Obtain build-compatible historical import-provider closure and one successfully loaded UFunction v60-v63 under original stock v432 or 469f native loader, compare archived and after-link triplet for T011 then source version matrix T065. Parallel upstream T018 T019 T033 T050; final gates blocked. No repeated prior accepted engine tests.",
+  "updated_at_utc": "2026-10-31T04:07:24+00:00"
 }

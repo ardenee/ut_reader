@@ -790,11 +790,11 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: 79 stock original UT99 v61/v63 packages found among 165 valid genuine source packages, all 79 texture .utx and zero .u/.unr scripts; no native loadable 60-63 UFunction legacy saved triplet. Do not use rejected original C98 v61 incompatible bad opcode 0x15. FULL REQUIRED: Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout.",
+      "blocking_reason": "2026-10-31 ORIGINAL STOCK UT99 v432 NATIVE GROUP: READ-ONLY production inventory had 8 UT99 version61 and 2 UT99 version63 .u originals, 9 with real UFunction exports, plus 15 UnrealGold version63 .u. All 25 were copied SHA-checked to isolated DEV and run through original compiled v432 loader ONCE. Exactly ElectricLamp.u native LOAD success but zero UFunctions; 24 failed due legacy unavailable imports, missing provider packages, bad expr 15/03, native script-size/alignment errors. FlakMortar.u v63 Function Fire actually reached UFunction::Serialize but was fatally rejected with Got448 Expected451, no loaded parameter values. Required successful original version60-63 UFunction archive with after-link ParmsSize/NumParms/ReturnValueOffset STILL MISSING, so T011 remains BLOCKED. Original 25 native output SHAs and full immutable logs in catalog/compliance/evidence/o06/20261031-G3-T011-25-old-packages-original-v432-native-candidate-manifest.json SHA 61b358d50caa42c31b26880436f0af9757bd0f4e6aa36a8bc008a8881a0d2480",
       "last_attempt_at": "2026-10-28T11:54:56+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
-      "last_grouped_native_assessment": "2026-10-29"
+      "assessment": "ORIGINAL_25_NATIVE_CANDIDATES_NO_FUNCTION_LOAD_COMPLETION",
+      "last_grouped_native_assessment": "2026-10-31"
     },
     {
       "id": "T012",
@@ -4136,10 +4136,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Enumerate original source-gated ranges and test lowest/highest applicable version with same source family. PASS ONLY WHEN: Exact branch-selected archive fields and cursor; same numeric v69 from different families must not substitute source. ORACLE: Source-version manifest + original compiled representative evidence. Reuse before any new execution: Reuse G3-04 single pending <=63 native test, not clone it.",
+      "blocking_reason": "2026-10-31 T011 legacy-native prerequisite still absent. UT99 v400 original source UFunction::Serialize archives ParmsSize, NumParms, ReturnValueOffset under Ar.Ver()<=63; 25 genuine v61/63 files actually loaded through original stock v432 compiled engine all failed to yield a successfully loaded UFunction (one unrelated no-function native file loaded). FlakMortar v63 reached serializer but fatal Got448 Expected451, not allowed as parameter-triplet evidence. Full source-version lowest/highest archive-field and physical Tell contract still BLOCKED; do not run a duplicate T065 native probe. Reuse catalog/compliance/evidence/o06/20261031-G3-T011-25-old-packages-original-v432-native-candidate-manifest.json SHA 61b358d50caa42c31b26880436f0af9757bd0f4e6aa36a8bc008a8881a0d2480",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "T011_UNFULFILLED_ORIGINAL_LEGACY_NATIVE_LOAD_PREREQUISITE"
     },
     {
       "id": "T066",
