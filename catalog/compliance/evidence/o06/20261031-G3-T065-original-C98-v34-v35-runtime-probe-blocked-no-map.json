@@ -1,0 +1,41 @@
+{
+  "T065_frozen_status": "BLOCKED",
+  "original_C98_1998_v35_real_DProj_utx_and_v34_header_derivative_attempts": [
+    {
+      "profile": 35,
+      "source_package_sha": "30a4984bddd73d054a8edbd0d52bb2f93a6e591110d9f08eda3e7139f4ae8cb7",
+      "actual_input_sha": "30a4984bddd73d054a8edbd0d52bb2f93a6e591110d9f08eda3e7139f4ae8cb7",
+      "source_native_C98_Core_SHA": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "original_Unreal_exe_SHA": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30",
+      "exit": 124,
+      "engine_executed_native_DProj_lines": [
+        "Critical: appError called:",
+        "Critical: Failed to enter Unreal.unr: Can't find file 'Unreal.unr'",
+        "Critical: UGameEngine::Init",
+        "Critical: InitEngine"
+      ],
+      "original_engine_log_sha": "90d50d29696e5bf841b992403adb0719c991c6c1bc850795b0f6bc9586c68612"
+    },
+    {
+      "profile": 34,
+      "source_package_sha": "30a4984bddd73d054a8edbd0d52bb2f93a6e591110d9f08eda3e7139f4ae8cb7",
+      "actual_input_sha": "718d3a2042569f8b9df8a1c3cfd14e529646d99a0f4779702cf95d234498bff4",
+      "source_native_C98_Core_SHA": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "original_Unreal_exe_SHA": "d631c8af81d2bba50131254e9770aceb0e59ebd3df97f4cb8560c9c6835e7c30",
+      "exit": 124,
+      "engine_executed_native_DProj_lines": [
+        "Critical: appError called:",
+        "Critical: Failed to enter Unreal.unr: Can't find file 'Unreal.unr'",
+        "Critical: UGameEngine::Init",
+        "Critical: InitEngine"
+      ],
+      "original_engine_log_sha": "90d50d29696e5bf841b992403adb0719c991c6c1bc850795b0f6bc9586c68612"
+    }
+  ],
+  "source_fixture_original_v35_authenticated_SHA": "30a4984bddd73d054a8edbd0d52bb2f93a6e591110d9f08eda3e7139f4ae8cb7",
+  "source_v34_input_type": "header-version-mutated original v35 package; not an original v34 shipped package",
+  "source_C98_original_native_executable_loaded_DProj": false,
+  "real_blocker": "Both original 1998 Unreal.exe -make sessions attempted game startup and timed out after native critical missing Unreal.unr; no DProj archive method read, no skipped unknown-object branch, no physical FArchive Tell evidence. C98 source v34 vs v35 remains unproven. Do not promote.",
+  "original_files_restored": true,
+  "no_corrupt_current_reader_fix_applied": true
+}

@@ -1,0 +1,277 @@
+{
+  "T076_frozen_status": "BLOCKED",
+  "fixed_test_completed": false,
+  "new_authentic_original_stock_native_executions": 8,
+  "original_stock_UCC_compiled_archive_variants_count": 2,
+  "original_stock_UCC_real_consumer_has_true_imported_UClass_superfield": true,
+  "original_v432_native_direct_package_choice": [
+    {
+      "case": "system_A_texture_B",
+      "placements": {
+        "system": "A",
+        "texture": "B"
+      },
+      "return_code": 0,
+      "binary_SHA256": "7f235d4b34d70c33aea1a1e2febf4dbb21d6a4ae78ca610dea28966e6e4196fd",
+      "original_Core_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "stdout_SHA256": "c88016913b54e54cc12a7eaa829eccdda3aaa45f6f1b58c739eae033ef5a70c2",
+      "stdout_markers": [
+        "G3_T076_ORIGINAL_COMPILED_LOAD package=00A55B58 class=00B0DA28 cdo=00A99920",
+        "G3_T076_ORIGINAL_COMPILED_PROVIDER_SELECTION sentinel=111 offset=524 class=00B0DA28 obj=00A99920 package=00A55B58\\nT019_V432_ORIGINAL_CPP_RESULT=111"
+      ],
+      "actual_Sentinel_output_present": true
+    },
+    {
+      "case": "system_B_texture_A",
+      "placements": {
+        "system": "B",
+        "texture": "A"
+      },
+      "return_code": 0,
+      "binary_SHA256": "7f235d4b34d70c33aea1a1e2febf4dbb21d6a4ae78ca610dea28966e6e4196fd",
+      "original_Core_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "stdout_SHA256": "075b28d4b48012579f89373736f4fc58f7191f0dc01d78985d1513b39ee5de30",
+      "stdout_markers": [
+        "G3_T076_ORIGINAL_COMPILED_LOAD package=0125E310 class=012EDBB8 cdo=0131CD40",
+        "G3_T076_ORIGINAL_COMPILED_PROVIDER_SELECTION sentinel=222 offset=524 class=012EDBB8 obj=0131CD40 package=0125E310\\nT019_V432_ORIGINAL_CPP_RESULT=222"
+      ],
+      "actual_Sentinel_output_present": true
+    },
+    {
+      "case": "textures_only_A",
+      "placements": {
+        "texture": "A"
+      },
+      "return_code": 0,
+      "binary_SHA256": "7f235d4b34d70c33aea1a1e2febf4dbb21d6a4ae78ca610dea28966e6e4196fd",
+      "original_Core_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "stdout_SHA256": "b74676f96286f3ff206f256894a9966a87a10035537427ed1163755f18b0e276",
+      "stdout_markers": [
+        "G3_T076_ORIGINAL_COMPILED_LOAD package=00B1A650 class=00BAD340 cdo=00B64C48",
+        "G3_T076_ORIGINAL_COMPILED_PROVIDER_SELECTION sentinel=111 offset=524 class=00BAD340 obj=00B64C48 package=00B1A650\\nT019_V432_ORIGINAL_CPP_RESULT=111"
+      ],
+      "actual_Sentinel_output_present": true
+    },
+    {
+      "case": "missing_both",
+      "placements": {},
+      "return_code": 7,
+      "binary_SHA256": "7f235d4b34d70c33aea1a1e2febf4dbb21d6a4ae78ca610dea28966e6e4196fd",
+      "original_Core_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "stdout_SHA256": "81830eba71b3059f1875301afa3c57f7d41835ab1e37d9e4791548295671105d",
+      "stdout_markers": [
+        "G3_T076_ORIGINAL_COMPILED_EXCEPTION"
+      ],
+      "actual_Sentinel_output_present": false
+    }
+  ],
+  "original_v432_native_true_linker_superclass_import_choice": [
+    {
+      "case": "System_A_Textures_B",
+      "source_placements": {
+        "system": "A",
+        "texture": "B"
+      },
+      "original_v432_Core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_standalone_native_observer_SHA": "8e1075c84ffc539f588e2e70babc8ca898aeb69fc29508114fe261a47f30209a",
+      "original_compiler_generated_consumer_SHA": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "actual_original_native_exit": 0,
+      "original_native_stdout_SHA": "8486ba197f585c6235f87d217c449a9788adcad7c28f9662fc664a14d14ef9b0",
+      "real_native_load_markers": [
+        "G3_T076_NATIVE_CONSUMER_LOAD package=00D15590 class=00DCC518 cdo=00D61720",
+        "G3_T076_NATIVE_CONSUMER_SUPER class=00DCC518 super=00DCCA18\\nG3_T076_NATIVE_TRUE_IMPORTED_PROVIDER superclass=00DCCA18 cdo=00DA0F30 sentinel=111 offset=524\\nG3_T076_NATIVE_SUPERCLASS_RESULT=111"
+      ],
+      "real_imported_reference_resolved": true
+    },
+    {
+      "case": "System_B_Textures_A",
+      "source_placements": {
+        "system": "B",
+        "texture": "A"
+      },
+      "original_v432_Core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_standalone_native_observer_SHA": "8e1075c84ffc539f588e2e70babc8ca898aeb69fc29508114fe261a47f30209a",
+      "original_compiler_generated_consumer_SHA": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "actual_original_native_exit": 0,
+      "original_native_stdout_SHA": "758ef7ef1165e9911d2941c245bd5484916b16bea5b77ed90027b68bbd345dbe",
+      "real_native_load_markers": [
+        "G3_T076_NATIVE_CONSUMER_LOAD package=011CA028 class=012035A8 cdo=01217350",
+        "G3_T076_NATIVE_CONSUMER_SUPER class=012035A8 super=0125FE40\\nG3_T076_NATIVE_TRUE_IMPORTED_PROVIDER superclass=0125FE40 cdo=0121EDD8 sentinel=222 offset=524\\nG3_T076_NATIVE_SUPERCLASS_RESULT=222"
+      ],
+      "real_imported_reference_resolved": true
+    },
+    {
+      "case": "Textures_only_B",
+      "source_placements": {
+        "texture": "B"
+      },
+      "original_v432_Core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_standalone_native_observer_SHA": "8e1075c84ffc539f588e2e70babc8ca898aeb69fc29508114fe261a47f30209a",
+      "original_compiler_generated_consumer_SHA": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "actual_original_native_exit": 0,
+      "original_native_stdout_SHA": "ea9ef39f0fe9671cc1d45b80095e632e93d41f3a5ef73213f223bcc271b39632",
+      "real_native_load_markers": [
+        "G3_T076_NATIVE_CONSUMER_LOAD package=00B6A5F0 class=00C20A60 cdo=00BB7800",
+        "G3_T076_NATIVE_CONSUMER_SUPER class=00C20A60 super=00BFDC58\\nG3_T076_NATIVE_TRUE_IMPORTED_PROVIDER superclass=00BFDC58 cdo=00BF6C88 sentinel=222 offset=524\\nG3_T076_NATIVE_SUPERCLASS_RESULT=222"
+      ],
+      "real_imported_reference_resolved": true
+    },
+    {
+      "case": "Missing_both",
+      "source_placements": {},
+      "original_v432_Core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_standalone_native_observer_SHA": "8e1075c84ffc539f588e2e70babc8ca898aeb69fc29508114fe261a47f30209a",
+      "original_compiler_generated_consumer_SHA": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "actual_original_native_exit": 7,
+      "original_native_stdout_SHA": "b6310b3d0a056c14d000909a5ff2e84d3eeec78d609ef6aaec69cf350f1c349d",
+      "real_native_load_markers": [
+        "G3_T076_NATIVE_CONSUMER_EXCEPTION",
+        "G3_T076_NATIVE_SUPERCLASS_RESULT=0"
+      ],
+      "real_imported_reference_resolved": false
+    }
+  ],
+  "original_stock_cpp_imported_class_resolved_default_sentinel_cases": {
+    "System_A_Textures_B": 111,
+    "System_B_Textures_A": 222,
+    "Textures_only_B": 222,
+    "Missing_both": null
+  },
+  "original_stock_cpp_direct_provider_results": {
+    "system_A_texture_B": 111,
+    "system_B_texture_A": 222,
+    "textures_only_A": 111,
+    "missing_both": null
+  },
+  "no_native_engine_duplicate_games_other_than_UT99_v432_claimed": true,
+  "no_original_shipped_same-name_provider_fixture_verified": true,
+  "source_UT99_mount_search_path": "Paths=../System/*.u before Paths=../Textures/*.utx",
+  "UE_DB_current_source_limit": "Catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php selectClassic reports ambiguous when multiple candidates and unknown runtime search order. No runtime path provenance supplied; do not falsely claim backend selected same native package.",
+  "separate_prior_invalid_consumer_fixture_excluded": "Original stock UCC compiled ClassProperty default fixture had no G3T076Dupe import or default tag. Its native CDO null was a test fixture failure, not original linker failure. Replaced with original-compiled inheritance importing G3T076DupeActor; actual UClass::SuperField is -3.",
+  "original_canonical_stock_dll_ini_and_new_package_locations_restored": true,
+  "source_immutable_binary_and_fixtures_only_on_DEV_scratch": {
+    "original_stock_v432_Core_DLL": {
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll"
+    },
+    "original_stock_v432_UCC_EXE": {
+      "sha256": "90cf7eb27bf1dd56767720b01deb29d3169d9e749f4fda87933e715db390742f",
+      "bytes": 110592,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\UCC.exe"
+    },
+    "original_stock_v432_engine_INI": {
+      "sha256": "07196cb40dd306fb707fdba663145bbb9801a4f637ed6c016d04093a3e8b5a2d",
+      "bytes": 11660,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\UnrealTournament.ini"
+    },
+    "original_compiler_generated_provider_A": {
+      "sha256": "150f708e4b7e0815166c061a0429a90ce4768be49ecde340e5be707f67d01fcc",
+      "bytes": 536,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-stock-v432-two-provider-variants\\G3T076Dupe-original-compiled-A-sentinel-111.u"
+    },
+    "original_compiler_generated_provider_B": {
+      "sha256": "8afa982acf837c0ffc350d9b04cb9f12c561f07ec206030d9ba5a6205ad934dc",
+      "bytes": 536,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-stock-v432-two-provider-variants\\G3T076Dupe-original-compiled-B-sentinel-222.u"
+    },
+    "original_compiler_generated_real_imported_superclass_consumer": {
+      "sha256": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "bytes": 585,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-stock-v432-two-provider-variants\\G3T076Consumer-original-v432-imported-superclass.u"
+    },
+    "stock_original_v432_compiled_cpp_direct_observer": {
+      "sha256": "7f235d4b34d70c33aea1a1e2febf4dbb21d6a4ae78ca610dea28966e6e4196fd",
+      "bytes": 77312,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G3-T076-Original-provider-selection.exe"
+    },
+    "stock_original_v432_compiled_cpp_true_import_observer": {
+      "sha256": "8e1075c84ffc539f588e2e70babc8ca898aeb69fc29508114fe261a47f30209a",
+      "bytes": 77312,
+      "DEV_private_path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G3-T076-Original-superclass-import.exe"
+    }
+  },
+  "retained_original_compiled_native_stdout_and_user_authored_source_SHA": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-direct-system_A_texture_B.log",
+      "sha256": "c88016913b54e54cc12a7eaa829eccdda3aaa45f6f1b58c739eae033ef5a70c2",
+      "bytes": 227,
+      "native_scope": "original compiled v432 direct physical provider",
+      "case": "system_A_texture_B"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-direct-system_B_texture_A.log",
+      "sha256": "075b28d4b48012579f89373736f4fc58f7191f0dc01d78985d1513b39ee5de30",
+      "bytes": 227,
+      "native_scope": "original compiled v432 direct physical provider",
+      "case": "system_B_texture_A"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-direct-textures_only_A.log",
+      "sha256": "b74676f96286f3ff206f256894a9966a87a10035537427ed1163755f18b0e276",
+      "bytes": 227,
+      "native_scope": "original compiled v432 direct physical provider",
+      "case": "textures_only_A"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-direct-missing_both.log",
+      "sha256": "81830eba71b3059f1875301afa3c57f7d41835ab1e37d9e4791548295671105d",
+      "bytes": 70,
+      "native_scope": "original compiled v432 direct physical provider",
+      "case": "missing_both"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-imported-superclass-System_A_Textures_B.log",
+      "sha256": "8486ba197f585c6235f87d217c449a9788adcad7c28f9662fc664a14d14ef9b0",
+      "bytes": 270,
+      "native_scope": "original compiled v432 real class importer plus CDO",
+      "case": "System_A_Textures_B"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-imported-superclass-System_B_Textures_A.log",
+      "sha256": "758ef7ef1165e9911d2941c245bd5484916b16bea5b77ed90027b68bbd345dbe",
+      "bytes": 270,
+      "native_scope": "original compiled v432 real class importer plus CDO",
+      "case": "System_B_Textures_A"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-imported-superclass-Textures_only_B.log",
+      "sha256": "ea9ef39f0fe9671cc1d45b80095e632e93d41f3a5ef73213f223bcc271b39632",
+      "bytes": 270,
+      "native_scope": "original compiled v432 real class importer plus CDO",
+      "case": "Textures_only_B"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-imported-superclass-Missing_both.log",
+      "sha256": "b6310b3d0a056c14d000909a5ff2e84d3eeec78d609ef6aaec69cf350f1c349d",
+      "bytes": 71,
+      "native_scope": "original compiled v432 real class importer plus CDO",
+      "case": "Missing_both"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-source_direct_CPP.cpp",
+      "sha256": "4830a3595891a416b4581f0d27dd27f0f42797fa6c8d8785e70eb32bbb3abe46",
+      "bytes": 1840,
+      "native_scope": "source_direct_CPP"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-source_true_import_CPP.cpp",
+      "sha256": "6fb3c80ea48c60adcfce26dfd8a9eee753d2ea55ed28d6f4229603b86e5ed00e",
+      "bytes": 2035,
+      "native_scope": "source_true_import_CPP"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-real_import_UnrealScript_source.uc",
+      "sha256": "1c7bd52d7349a733608c9d202b1b745817b471a9fe1b0cd1a25ef286609698df",
+      "bytes": 127,
+      "native_scope": "real_import_UnrealScript_source"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock_UCC_true_import_compiler_log.log",
+      "sha256": "4323b9930b614b75f5f49532aa8bf1b58b4ac028bc048dce555f0d228038ab86",
+      "bytes": 1222,
+      "native_scope": "stock_UCC_true_import_compiler_log"
+    }
+  ],
+  "historical_prd_shipped_duplicate_Detail_utx_not_replayed": true
+}

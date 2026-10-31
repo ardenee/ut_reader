@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "checks": 79,
+  "errors": [],
+  "stock_v432_direct_original_native_sessions": 4,
+  "stock_v432_true_imported_UClass_native_sessions": 4,
+  "genuine_original_stock_UCC_compiled_packages": 3,
+  "current_UE1_reader_archived_tag_and_import_reference_checks": 7,
+  "original_native_engine_executions_by_this_verifier": 0,
+  "T076_status": "BLOCKED: shipped duplicate provenance and indexed provider search order missing",
+  "T065_status": "BLOCKED: original 1998 v34/v35 real archive method not reached; missing startup Unreal.unr",
+  "no_accepted_original_native_retests": true
+}

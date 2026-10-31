@@ -130,3 +130,7 @@ catalog/bin/verify-ue1-o06-g3-t019-original-three-era-native-loaded-default-matr
 catalog/bin/verify-ue1-o06-g3-3owner-original-v432-608-skipped-declarations.php -text
 catalog/bin/verify-ue1-o06-g3-4owner-original-v432-skip32-native-values.py -text
 catalog/bin/verify-ue1-o06-g3-t065-source-family-11-branches-legacy-v34-gap.py -text
+
+# T076 original stock v432 compiler/current reader source acceptance verifier raw byte identities.
+catalog/bin/verify-ue1-o06-g3-t076-original-v432-real-imported-duplicate-archive.php -text
+catalog/bin/verify-ue1-o06-g3-t076-real-stock-v432-8-native-duplicate-imports.py -text
