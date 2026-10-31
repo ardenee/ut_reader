@@ -121,9 +121,16 @@ final class CatalogUE1ClassicClassMetadataReader
                 return $id;
             };
             $names=$pkg->getNames();
-            $name=static function(string $label)use($compact,$names):array{
+            $name=static function(string $label)use($compact,$names,$family,&$position):array{
                 $id=$compact();
                 if($id<0||!isset($names[$id])){
+                    // Authentic 1998 compiled Core.dll C98 UClass PackageImports
+                    // count3->63: Bad name index34/16 at physical Tell363.
+                    if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
+                        throw new RuntimeException(sprintf(
+                            'UE1 Bad name index %d/%d at archive cursor %d',
+                            $id,count($names),$position));
+                    }
                     throw new RuntimeException('Invalid UClass '.$label.' name index');
                 }
                 return ['index'=>$id,'text'=>(string)$names[$id]['name']];
@@ -227,7 +234,12 @@ final class CatalogUE1ClassicClassMetadataReader
             // TArray<FDependency>, FDependency::operator<<:
             // UObject* Class, UBOOL Deep, DWORD ScriptTextCRC.
             $depCount=$compact();
-            if($depCount<0||$depCount>intdiv($physicalSize-$position,9)){
+            // A positive TArray count is not validated against remaining
+            // FDependency bytes before the original ULinkerLoad reads each
+            // element. A corrupt count can hit IndexToObject at the true
+            // physical cursor before EOF (original C98 Core.dll Tell388).
+            // Each element's reads are already bounded by physical FArchive.
+            if($depCount<0){
                 throw new RuntimeException('Invalid UClass dependency count');
             }
             $deps=[];
@@ -237,7 +249,10 @@ final class CatalogUE1ClassicClassMetadataReader
             }
             $record['dependencies']=$deps;
             $importCount=$compact();
-            if($importCount<0||$importCount>$physicalSize-$position){
+            // Same physical-archive TArray semantics: a corrupt positive
+            // PackageImports count may fail while resolving the next FName
+            // before the source linker reaches its declared export boundary.
+            if($importCount<0){
                 throw new RuntimeException('Invalid UClass PackageImports count');
             }
             $imports=[];

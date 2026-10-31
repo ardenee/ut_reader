@@ -4,7 +4,7 @@
     "T065",
     "T072"
   ],
-  "started_at": "2026-10-31T02:51:00+00:00",
+  "started_at": "2026-10-31T03:56:19+00:00",
   "tests": [
     {
       "id": "T065",
@@ -23,8 +23,8 @@
     },
     {
       "id": "T068",
-      "status": "BLOCKED",
-      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T069",
@@ -47,11 +47,11 @@
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     }
   ],
-  "finished_at": "2026-10-31T02:51:00+00:00",
+  "finished_at": "2026-10-31T03:56:19+00:00",
   "counts": {
-    "PASS": 4,
+    "PASS": 5,
     "FAIL": 0,
-    "BLOCKED": 4,
+    "BLOCKED": 3,
     "PENDING": 0
   }
 }

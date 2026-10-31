@@ -35,8 +35,8 @@ foreach($pins as $name=>$sha){
  'original native x86 C98, stock v432 and 227k source-only immutable SHA '.$name);
 }
 foreach([
- 'CatalogUE1ClassicClassMetadataReader.php'=>'df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a',
- 'CatalogUE1ClassicTaggedPropertyReader.php'=>'a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4',
+ 'CatalogUE1ClassicClassMetadataReader.php'=>'888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4',
+ 'CatalogUE1ClassicTaggedPropertyReader.php'=>'e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c',
  'CatalogUE1ClassicStructNativeReader.php'=>'2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1',
 ] as $name=>$sha)$ck(hash_file('sha256',$repo.'/catalog/src/Infrastructure/Readers/'.$name)===$sha,
   'production source-selected current genuine original C98/C227/v432 method exact SHA '.$name);

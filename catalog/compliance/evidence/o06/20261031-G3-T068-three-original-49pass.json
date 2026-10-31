@@ -1,0 +1,12 @@
+﻿{
+    "ok": true,
+    "checks": 49,
+    "errors": [],
+    "frozen_T068": "PASS",
+    "C98": "May1998 original compiled TArray dependency, name TArray PackageImports; native true Tell388/363",
+    "UT99_v432": "previous sealed original compiled 38/38 signed negative and zero true Tell259 plus original count31 physical EOF",
+    "Unreal_227k": "prior original compiled one-byte count3/63 false FName6248 at Tell263, signed UTF16 native values and original 227k negative allocator UB excluded",
+    "negative_cpp_allocator_UB": "excluded; reject safely without inventing native FArchive Tell",
+    "original_native_executions_by_this_verifier": 0,
+    "global_G3_accepted": false
+}

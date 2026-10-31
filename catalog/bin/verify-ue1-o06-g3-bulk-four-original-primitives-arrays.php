@@ -34,7 +34,7 @@ foreach($pins as [$name,$sha])$add(is_file($ev.$name)&&hash_file('sha256',$ev.$n
 foreach([
  'C:/Temp/UnrealDB/O06/Native-227k/System/Core.dll'=>'c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194',
  'C:/Temp/UnrealDB/O06/Native-C227i-G304/System/Core.dll'=>'287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897',
- $root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php'=>'a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4'
+ $root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php'=>'e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c'
 ] as $f=>$sha)$add(is_file($f)&&hash_file('sha256',$f)===$sha,'original Core + production source hash '.basename($f));
 $base='C:/Temp/UnrealDB/O06/';
 $ci=$base.'Native-C227i-G304/System/G3Bulk227.u';

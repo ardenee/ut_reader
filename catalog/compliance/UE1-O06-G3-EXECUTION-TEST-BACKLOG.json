@@ -4253,13 +4253,75 @@
       "pass_criterion": "Same source-valid negative handling and same source-invalid error; no arbitrary extra policy.",
       "evidence": "Existing original negative test references + uncovered native operator branch only",
       "reuse": "G3-08 and G3-11 own leaf decoders.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "ORIGINAL COMPILED NATIVE GROUP 2026-10-29: Original UT99 v432 signed array count negative/zero genuine loader failure Got8 Expected29 at Tell259 matches corrected current reader signed AR_INDEX behavior, 38/38 checks. Different original C98 and C227 name/string/huge count operators not yet native-verified; BLOCKED. REQUIRED: Same source-valid negative handling and same source-invalid error; no arbitrary extra policy.",
-      "last_attempt_at": "2026-10-29T01:34:39+00:00",
-      "attempted_native_execution": true,
-      "assessment": "GROUPED_NATIVE_ORACLE_PARTIAL_METHOD_BRANCH_ONLY"
+      "status": "PASS",
+      "evidence_sha": "1b4d844ec6d8db1265875a2487b1fc9a994fac636650944ee4332a2dd4406c10",
+      "result": "FULL T068 source-selected three original compiled native TArray/AR_INDEX count operator families, original C98 May1998 (TArray of class refs & FName PackageImports), stock v432, and original C227k. Three new single-byte-mutated original C98 UCC-produced v61 class archives: dependencies count2->3 loads without fatal; count2->63 original compiled Bad import index1048574/7 at real Tell388; PackageImports count3->63 original compiled Bad name34/16 at true Tell363; original native files restored byte-perfect. Production reader had incorrectly prevalidated count before native FArchive and emitted generic errors; now matches actual underlying linker bad reference and physical Tell. Reused previously pinned stock v432 original compiled signed count0/-1 real Got8 Expected29 Tell259 and oversize count31 true EOF; original C227k real byte-count3/63 structs -> Bad name6248/12 Tell263, plus original signed FString UTF16 native loaded nonBMP/Omega. Native C++ negative TArray allocation with undefined behavior explicitly excluded, not reported as a fabricated native error. 49/49 SHA-pinned source/native/current acceptance, no previous original native process rerun, and G3 whole remains blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T03:56:19+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t068-original-three-source-counts.php",
+          "sha256": "bdcfc05aa3603e3460bd56b586ae30660d1cdda7f08ed0c455684b1881890590",
+          "bytes": 9553
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-three-original-49pass.json",
+          "sha256": "610ee5508077debe8a974b86264719d81af3268d60acb4b370d5321e6fad49dc",
+          "bytes": 696
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-3.u",
+          "sha256": "3daeeaa46959085b419352f2a9412e671bf6131121b17b33c33955268b1e4814",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-3-Editor.log",
+          "sha256": "9eefbcd566aaf3e1b622472a0505a0b301e1d8600f99e6fd1212e5205aa7faa5",
+          "bytes": 1642
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-63.u",
+          "sha256": "e2e2b9fa2f5342ab32c2ee030d79bdbc64d2fdb03a28f8ba7582d548aad2e3e9",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-63-Editor.log",
+          "sha256": "cde455de6a89aa168dff379291118de54487ab27b9514b18463ebd4e17d9754b",
+          "bytes": 1708
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-packageimports-count-63.u",
+          "sha256": "68b54b1a39f9b9e3a3c7c7f03e8b2d7a8cba4bbe1308bf12e915f935ec4dbd80",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-packageimports-count-63-Editor.log",
+          "sha256": "a17a8fcab51cdba3eb454457e4116dcb0cc76ae9d448faec8c730763b5b459fa",
+          "bytes": 1675
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T048-T068-original-v432-native-count38pass.json",
+          "sha256": "f205e5f1e13c1a424c8c504769a676b6ed2d9a750ee7bb0cc7daa5c7ca4373ae",
+          "bytes": 1302
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountHuge.log",
+          "sha256": "16e4a52a9e99fe7b5d6f5d125ebffc654001fa82ee9b439dce1684359be33cf3",
+          "bytes": 2082
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountThree.log",
+          "sha256": "247281e85e55776564dbd37b7c6d12ef6479407978af868b7b18951f57dc6018",
+          "bytes": 2088
+        }
+      ]
     },
     {
       "id": "T069",

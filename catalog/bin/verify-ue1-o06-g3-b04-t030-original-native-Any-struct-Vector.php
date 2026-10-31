@@ -31,7 +31,7 @@ $check(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1C
  ==='3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59',
  'Original source-specific UAnyProperty production reader exact audited SHA');
 $check(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php')
- ==='a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4',
+ ==='e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c',
  'Source-linked real Actor object declaration tag decoder exact pinned SHA');
 $check(hash_file('sha256',$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php')
  ==='392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925',

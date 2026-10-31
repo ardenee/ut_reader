@@ -28,7 +28,7 @@ foreach([
  [$ev.'20261029-G3-T017-T059-original-v432-469f-actor-source.json','936faa24264f8adba488eb28fc877b52e0eab9846feb027b12e8573e0b7cc67f'],
  [$ev.'20261029-G3-T014-original-469f-UClass-856pass.json','0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f'],
  [$repo.'/catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json','772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e'],
- [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a']
+ [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4']
 ] as [$path,$expected])$ck(is_file($path)&&hash_file('sha256',$path)===$expected,'original actual source/native identity '.$path);
 $old=json_decode((string)file_get_contents($repo.'/catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json'),true,512,JSON_THROW_ON_ERROR);
 $ck($old['decision']==='FULL'&&$old['all_real_original_UClass_native_loaded']===88

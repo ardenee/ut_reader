@@ -26,7 +26,7 @@ for path,expected in [
  (ev/'20261029-G3-T049-C227k-ArrayProperty-original-native.log','8b8cad0ad940ed5a55b6b805b4e88a0fc1fd861e3709208b50423fc050f480a4'),
  (ev/'20261029-G3-T015-C227k-archive-class-source.json','3f72c2faa4c86a1b70d6d6fb1c105007168d96b7888c880c173319031a4d216e'),
  (ev/'20261029-G3-T015-C227k-archive-postload-original-native.log','4fd7711f9ad6d04171e028176d869de974ef1acd0781f969ee3a749be38e33ab'),
- (repo/'catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a'),
+ (repo/'catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4'),
 ]:
  check(pathlib.Path(path).is_file() and sha(path)==expected,'original compiled engine/native evidence pinned '+str(path))
 # Source-dependent archive values read from independent source-selected PHP class reader.

@@ -7,7 +7,7 @@ import hashlib,json,pathlib,re,struct,sys
 R=pathlib.Path(__file__).resolve().parents[2]
 E=R/'catalog/compliance/evidence/o06'
 P={
-'catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php':'df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a',
+'catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php':'888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4',
 'catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json':'772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e',
 'catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json':'c3447d0dc1092df8b4eaa92453846feeeeef7db2794d32264fddd722c81573fc',
 'catalog/compliance/evidence/o06/20261028-G3-T013-v432-Core-seven-source-archive.json':'6593137474989fd6fa03cd6fb7882a3327cdb8080e10553e1b48717a0c833c7a',

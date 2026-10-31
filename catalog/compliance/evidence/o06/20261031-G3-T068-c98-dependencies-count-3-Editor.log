@@ -1,0 +1,46 @@
+Log: Log file open, 10/31/26 03:51:35
+Init: Compiled: May 17 1998 00:49:05
+Init: Command line: -make 
+Init: Base directory: C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\
+Init: Computer: GAMEAMD
+Init: Name subsystem initialized
+Log: Bound to Engine.dll
+Log: Bound to Core.dll
+Init: Object subsystem initialized
+Init: Heap granularity changed from 16 to 65536
+Init: Memory total: Phys=2097151K Pagef=4194303K Virt=2097024K
+Init: Working set: 32000 / 159000
+Init: Detected: Microsoft Windows NT 6.2 (Build: 9200)
+Init: CPU Speed=2591.997850 MHz
+Init: CPU Page size=4096, Processors=12
+Init: CPU Detected: PentiumPro-class processor (GenuineIntel)
+Init: CPU Features: MMX CMov FPU TimeStamp 
+Init: Keyboard layout: 00001809
+Log: Bound to Editor.dll
+Init: Unreal engine initialized
+Init: Transaction tracking system initialized
+Log: Loading: Package Core
+Log: Loading: Package Engine
+Log: Loading: Package Editor
+Log: Loading: Package G304C98Save
+Log: Loading: Package G3C98Defaults
+Log: Loading: Package G3C98Bulk
+Log: Purging garbage
+Log: Unbound to Engine.dll
+Log: Unbound to Core.dll
+Log: Unbound to Editor.dll
+Exit: Transaction tracking system closed
+Exit: Editor closed
+Exit: Engine shut down
+Log: Unloading: Package Core
+Log: Unloading: Package Engine
+Log: Unloading: Package Editor
+Log: Unloading: Package G304C98Save
+Log: Unloading: Package G3C98Defaults
+Log: Unloading: Package G3C98Bulk
+Exit: Name subsystem shut down
+Exit: Object subsystem successfully closed.
+Exit: Allocation checking disabled
+Exit: appExit
+Exit: Allocation checking disabled
+Log: Log file closed, 10/31/26 03:51:36

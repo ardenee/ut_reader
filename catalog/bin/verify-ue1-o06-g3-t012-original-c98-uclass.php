@@ -24,7 +24,7 @@ foreach([
  [$log,'dff15ea260e1846c51af819c6d54be89bb5ada00ee91a695902bca8616b20d85'],
  [$cmd,'319a4230a8091bc7cd82fbcedecd5054af9310d012afea9a3f4a09c78d5e6b82'],
  ['L:/Source/Games/Unreal/Unreal [v1.200] [1998-05-19]/Core/Src/UnClass.cpp','ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291'],
- [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','f15b25ae2e8a9d56a8d67e7ca7a27dcba2d87b1cdf352ce4edfaa21434f5ecbf']
+ [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4']
 ] as [$path,$sha])$ck(is_file($path)&&hash_file('sha256',$path)===$sha,'original source/native SHA '.$path);
 $p=new P($core.'Core.u');
 $exports=$p->getExports();

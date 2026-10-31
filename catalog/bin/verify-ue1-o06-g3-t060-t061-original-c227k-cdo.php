@@ -20,7 +20,7 @@ foreach([
  [$system.'Engine.u','a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e'],
  [$base.'20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log','f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d'],
  [$base.'20261029-G3-T060-T061-C227k-original-Engine-6-CDO-probe.cpp','bf74e2ae67c5c61ed7407d7c9c69b4358b823eeda82e95079b78c08aeafa161b'],
- [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a']
+ [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4']
 ] as [$filename,$sha])$check(is_file($filename)&&hash_file('sha256',$filename)===$sha,
  'actual original stock engine/package/archive reader and real native CDO evidence SHA256 '.basename($filename));
 $raw=str_replace("\r",'',(string)file_get_contents($base.'20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log'));

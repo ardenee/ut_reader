@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-63PASS-17BLOCKED-B03-T020-ORIGINAL-CLASS-REF-CLOSED
-- **Last completed action:** Frozen T064 CLOSED three original native x86 sources 40/40 and B08 8/8; frozen T020 CLOSED original 1998 C98 SuperField + original stock v432 UClass ClassWithin + original 2026 227k loading 2012 UCC class invalid Within, actual errors and physical Tell276/451/510, source-only 32/32, B03 T020 PASS. No accepted native replay. 63 PASS 17 BLOCKED 0 FAIL, PRD unchanged
-- **Resume at:** Focus on frozen remaining G3 T065 source version branch boundary and T068 genuine negative/huge count operators in parallel, and independent T011 <=63 UT99 UFunction original compiled fixture; no PASS replays, no PRD deployment until 80PASS
-- **Active changed at:** 2026-10-31T03:27:34+00:00
+- **Stage:** G3-64PASS-16BLOCKED-B09-T068-THREE-ORIGINAL-NATIVE-COUNTS-CLOSED
+- **Last completed action:** T068 fully CLOSED 49/49 original compiled May1998 C98 v61 TArray FDependency and PackageImports counts native physical Tell388/363 plus existing original stock UT99 v432 signed counts Tell259 and original 2026 C227k count3/63 Tell263/signed UTF16. Fixed product premature positive TArray count prechecks and original C98 Bad FName diagnostics; one new original-native batch only; pristine .u restored; 64 PASS 16 BLOCKED 0 FAIL. T065 still blocked by T011 real legacy UFunction native loading.
+- **Resume at:** Source-first T011 genuine UT99 v60-v63 loadable UFunction archive (v400 source checkout lacks compiled UCC); then T065 complete source-version matrix. In separate owned group T018 original 2012 loaded CDO, T019 external config, T033 actual ScriptedAI UButton Caption, T050 mixed C98 Core.u relocation. Keep T071-T080 blocked until upstream evidence; no replay or PRD until final acceptance.
+- **Active changed at:** 2026-10-31T04:00:04+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

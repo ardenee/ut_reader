@@ -28,8 +28,8 @@ foreach($sealed as $name=>$sha)$ck(is_file($ev.$name)&&hash_file('sha256',$ev.$n
 foreach([
 'CatalogUE1ClassicAnyPropertyValueReader.php'=>'3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59',
 'CatalogUE1ClassicClassDefaultSchemaReader.php'=>'392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925',
-'CatalogUE1ClassicClassMetadataReader.php'=>'df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a',
-'CatalogUE1ClassicTaggedPropertyReader.php'=>'a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4',
+'CatalogUE1ClassicClassMetadataReader.php'=>'888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4',
+'CatalogUE1ClassicTaggedPropertyReader.php'=>'e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c',
 ] as $name=>$sha)$ck(hash_file('sha256',$repo.'/catalog/src/Infrastructure/Readers/'.$name)===$sha,'production source strict byte pin '.$name);
 $ucc='C:/Temp/UnrealDB/O06/Native-227k/System/UCC.exe';
 $ck(is_file($ucc)&&hash_file('sha256',$ucc)==='8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a','actual 2026 shipped UCC.exe unmodified source compiler');
