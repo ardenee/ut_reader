@@ -95,7 +95,7 @@
   "C227k_Pointer_and_Button_NetSerializeItem_true_return_value": 1,
   "C227k_AnyProperty_SerializeItem_dynamic_FAnyProperty_native_value": "original compiled dynamically creates/releases FAnyProperty and invokes Serialize; native value codec and malformed branches remain unsupported in PHP.",
   "newly_updated_Reader": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
-  "newly_updated_reader_SHA256": "9f1f0b6cb770f0801610e57f32db30c99d2da4bd14b39ede4b1c834b0564e2b6",
+  "newly_updated_reader_SHA256": "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be",
   "existing_original_227k_two_Caption_Serialize_OLD_manifest_SHA256": "3284b2fa98be71cce3815ad4f7df5c74bd14cd3954193548c8fa37fdb49c59bc",
   "existing_native_Button_2_caption_original_loaded_values_not_rerun": true,
   "no_native_in_memory_Button_Caption_claimed": true,

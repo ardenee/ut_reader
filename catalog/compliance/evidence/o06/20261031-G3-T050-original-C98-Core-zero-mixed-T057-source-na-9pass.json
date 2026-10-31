@@ -1,0 +1,17 @@
+﻿{
+    "ok": true,
+    "checks": 9,
+    "errors": [],
+    "T050": "SOURCE_NA",
+    "source_NA_exact_fixed_fixture": "original retail C98 Core.u 0 mixed-relocation scripts across 109, so requested specimen does not exist",
+    "retail_original_Core_u_export_count": 458,
+    "original_Core_u_script_archive_count": 109,
+    "mixed_name_and_object_scripts": 0,
+    "fname_only_scripts": 0,
+    "object_only_scripts": 107,
+    "no_typed_relocation_scripts": 2,
+    "original_compiled_C98_Core_live_script_count": 96,
+    "live_mixed_relocation_behavior_in_original_C98_Engine_u_owned_by": "T057",
+    "previously_ACCEPTED_original_native_sessions_replayed": 0,
+    "overall_G3_acceptance": false
+}

@@ -1,3 +1,19 @@
+## 2026-10-31 grouped original native T019/T050 and seven aggregate evidence gates
+
+**G3 fixed 80:** 66 PASS, 1 SOURCE_NA, 13 BLOCKED, 0 FAIL. No PRD deploy.
+
+**T050** source-justified N/A (9/9 source/native evidence), not a fictitious PASS: genuine original retail May1998 C98 Core.u has 458 exports and 109 scripts, 107 UObject-only relocations and 2 without typed relocations; NONE with a FName+UObject pair in one script. Compiled C98 Core loaded 96 real nonempty scripts, previously sealed. Genuine mixed C98 Engine.u script was independently accepted under T057 112/112, so applicable engine method coverage exists but exact frozen Core.u specimen cannot exist. No native replay.
+
+**T019** remains BLOCKED even after 44/44 new grouped source/native checks: stock original UT99 v432 UCC compiled one disposable source fixture; 2 fresh original original-engine compiled commandlet runs demonstrated independently ConfigValue=111/222, transient ScratchValue=0, PersistValue=888. Localized text remained DefaultBulk, so local override NOT proved. The 2 previously accepted 2026 original C227k compiled isolated config/localization native observations (no replay) showed 111 -> Native Alpha and 222 -> Native Beta after explicit original LoadLocalized, transient0 and persist888. Original C98 and UT99 v432 controlled localized precedence and 2012 C227i independent behavior remain outstanding. Original game package binaries stay private DEV, not committed.
+
+**T071-T077 GROUP AUDIT:** 41 previous PASS IDs had 180 old SHA/size references after mutable source/checker changes. A grouped run of 29 independently passing current-source PHP/Python verifiers allowed 93 mutable source/checker proof entries across 41 IDs to be re-sealed, plus 5 further new mutable source/manifest references after the subsequent genuine source fix. Original native binaries, original traces and prior native sessions were NOT changed or rerun. Rechecked final frozen 80 register: 345 unique SHA-pinned proof paths, zero SHA/size mismatches, zero missing SHA. All seven aggregate owners T071-T077 remain BLOCKED by the actual original source-family test requirements, especially T011/T019/T065. Evidence integrity never equals compiled-engine method acceptance.
+
+**Real defect discovered:** Source-class schema parser incorrectly treated original UT99 native-warning-skipped NameProperty as an actual loaded FName and threw for genuine Engine.Pawn/Carcass.AnimSequence. Changed source schema reader to honor earlier verified native warning+skip tag disposition; the original 88-class real Engine.u class schema is now structurally traversable. However the separate full 608-tag CDO current diagnostic is STILL FAILING (1679 of 1704 assertions pass; 25 unresolved including stale original UnrealTournament.ini SHA and 24 remaining default runtime-effect differences). No full G5 parity is asserted, do NOT repin original INI log. The frozen imported struct T035 independently remains PASS, 33/33. This separate 608 native-value diagnostic needs its own source/INI causal reconciliation.
+
+Current upstream BLOCKED T011, T019, T065; aggregated T071-T077 cannot close yet; T078-T080 remain release-blocked. No new fixed IDs were added, no accepted original engine tests repeated.
+
+Proof: catalog/compliance/evidence/o06/20261031-G3-T019-*; 20261031-G3-T050-*; 20261031-G3-T077-grouped-41-native-owner-source-pin-reconciliation.json; 20261031-G3-T071-T077-seven-owner-bulk-SHA-native-prerequisite-matrix.json.
+
 ## 2026-10-31 G3 T018 and T033 original compiled native CDO/caption closure
 
 **CURRENT FIXED BACKLOG 66 PASS / 14 BLOCKED / 0 FAIL / 0 PENDING.** Batch 03 T018 now PASS (7/8, T019 blocked); Batch 05 T033 now PASS (8/8); full G3 release remains NOT ELIGIBLE. The four remaining upstream tests are T011, T019, T050 and T065; remaining T071..T080 are owned aggregate/release gates. No previously accepted compiled tests were rerun.

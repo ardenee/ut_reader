@@ -1,0 +1,99 @@
+{
+  "date": "2026-10-31",
+  "scope": "grouped fixed native original G3 source, true file SHA and aggregate ownership; no originally accepted native replay",
+  "status_counts": {
+    "PASS": 66,
+    "BLOCKED": 13,
+    "SOURCE_NA": 1
+  },
+  "full_G3_accepted": false,
+  "unique_verified_proof_file_paths": 345,
+  "sha_size_errors": 0,
+  "missing_sha": 0,
+  "prior_mutable_source_checker_pin_reconciliations": 93,
+  "subsequent_reader_manifest_pin_reconciliations": 5,
+  "changed_original_native_binary_or_logs": 0,
+  "accepted_source_only_checker_count": 29,
+  "G5_608_independent_runtime_diagnostic_checks": 1704,
+  "G5_608_runtime_diagnostic_checks_passed": 1679,
+  "G5_608_runtime_diagnostic_open_failures": 25,
+  "T050_source_NA_C98_Core_scripts_examined": 109,
+  "T050_C98_Core_mixed_FName_Object_script_count": 0,
+  "T050_source_applicable_mixed_C98_Engine_expression_owned_by_T057": true,
+  "T019_focused_new_and_reused_actual_original_compiled_profiles": 4,
+  "T019_native_current_checks": 44,
+  "T019_frozen_status": "BLOCKED",
+  "T011_T065_status": "BLOCKED",
+  "seven_aggregate_gates": {
+    "T071": {
+      "status": "BLOCKED",
+      "upstream_dependencies": [
+        "T011",
+        "T019",
+        "T065"
+      ],
+      "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
+    },
+    "T072": {
+      "status": "BLOCKED",
+      "upstream_dependencies": [
+        "T011",
+        "T065"
+      ],
+      "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
+    },
+    "T073": {
+      "status": "BLOCKED",
+      "upstream_dependencies": [
+        "T011",
+        "T019",
+        "T065"
+      ],
+      "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
+    },
+    "T074": {
+      "status": "BLOCKED",
+      "upstream_dependencies": [
+        "T019"
+      ],
+      "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
+    },
+    "T075": {
+      "status": "BLOCKED",
+      "upstream_dependencies": [
+        "T011",
+        "T065"
+      ],
+      "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
+    },
+    "T076": {
+      "status": "BLOCKED",
+      "upstream_dependencies": [
+        "T011",
+        "T019"
+      ],
+      "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
+    },
+    "T077": {
+      "status": "BLOCKED",
+      "upstream_dependencies": [
+        "T011",
+        "T019",
+        "T065",
+        "T071",
+        "T072",
+        "T073",
+        "T074",
+        "T075",
+        "T076"
+      ],
+      "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
+    }
+  },
+  "release_gates_unmet": [
+    "T078",
+    "T079",
+    "T080"
+  ],
+  "PRD_deployed": false
+}

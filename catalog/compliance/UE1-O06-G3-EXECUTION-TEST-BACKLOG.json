@@ -423,7 +423,7 @@
       "evidence": "Original version-specific error call and FArchive Tell for ONE named branch per actual distinct implementation",
       "reuse": "G3-14 owns generic EOF/error matrix, G3-12 owns opcode token bodies.",
       "status": "PASS",
-      "evidence_sha": "e989d273994e971776aa647e99df144f5f8462fdea1ce91292d3d32cdefb2993",
+      "evidence_sha": "4247c83da03bb71481323da78da101f444fda8500ac3318363926bc45c9f5b33",
       "result": "Six genuinely compiled original native UStruct malformed branches: C98 retail EndState Children import index62/16 Tell24224 and ScriptSize9/5 Tell24243; stock v432 Children62/16 Tell43307 and ScriptSize7/3 Tell43324; original 2026 Unreal 227k localized ImportIndex Tell67623 and named ScriptSize7/3 Tell67640. Six independent one-byte real Core.u mutants, original loaded method/reader physical Tell disassembly, SHA-pinned native x86 logs and original binaries. Production source-selected 91/91 exact errors/cursors/rejected loaded state PASS; no native or prior accepted test rerun. Only T009 closed; G3-03 group remains OPEN.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T22:48:37+00:00",
@@ -432,8 +432,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t009-three-original-native-malformed.php",
-          "sha256": "be236dc234074196998b751ac7b6de8c783256b62768a513b447c688a8d6ec83",
-          "bytes": 10908
+          "sha256": "ed329f3a20e421430e44d7bd0b73d92ff57207f8328156cf62f05e5c03f40b24",
+          "bytes": 11071
         },
         {
           "path": "catalog/compliance/evidence/o06/20261028-G3-T009-three-original-native-six-negative-91pass.json",
@@ -442,18 +442,18 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-          "sha256": "8776bb8f770ffb6df5ed6cab49fad4017a21f3d70eb1cc15b6185223c5e63782",
-          "bytes": 9678
+          "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1",
+          "bytes": 10388
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
-          "sha256": "f7551d2c8bc8b114e76ee6041d1bb962b761bca43c1eabc3f4632e593b40c709",
-          "bytes": 50317
+          "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+          "bytes": 50490
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
-          "bytes": 20905
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
         },
         {
           "path": "catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.log",
@@ -513,7 +513,7 @@
       "evidence": "Reuse C98 96 and C227i 223 scripts; obtain only missing distinct v432/227k evidence",
       "reuse": "Avoid repeating native script-byte proofs already accepted.",
       "status": "PASS",
-      "evidence_sha": "c625e9fc1b274cb551cbef2bb85bfa0e1ca35ce8778a208a0d7924f574415cc8",
+      "evidence_sha": "63caa0516fec77ddfe9d53656d971b3fda78317e3dbfb65d32da62477742933b",
       "result": "C98 original 96 nonzero/4 zero native Script.Num, 94 compact-widened, 175 exact known script bytes (668 native FName/UObject relocations intentionally masked); stock v432 original 0/0, 10/6 and 2/2 native/archive bytes, 2 typed object refs; 2012 original 227i 223 nonzero scripts, 213 compact-widened and 646 native bytes; original 2026 227k direct zero scripts plus source UFunction 11/7 native/archive bytes. All saved SHA-pinned actual compiled CDB logs, original shipped binaries, source-reader hashes, previously successful independent PHP comparisons and v432/227k native source-selected checks verified WITHOUT native/PHP test replay. This is T010 length/physical-archive criterion only; T009 and G3-12 stay OPEN.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T13:17:29+00:00",
@@ -527,33 +527,33 @@
         },
         {
           "path": "catalog/compliance/evidence/o06/20261028-G3-T010-current-reader-original-script-sizes.json",
-          "sha256": "580cb8bb7753c180552033f52cfb14211420ab8ea28a2c1a788eb3dfa1d12cd6",
-          "bytes": 4562
+          "sha256": "140a0f7280ecd8d34d9f4ebb5a29fa428df200c827d1666986bd4251a4b3452b",
+          "bytes": 2227
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-          "sha256": "863eac4bf29c109a8b8f32fdbd83bc140d1dacec88710c1e50dcc6efa4ffe21e",
-          "bytes": 6259
+          "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1",
+          "bytes": 10388
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-          "sha256": "57e3d52253b1fe1d37e2e450f171b83f263939257518a83a6a5b4f8a0e85e2ad",
-          "bytes": 20297
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
-          "sha256": "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6",
-          "bytes": 50236
+          "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+          "bytes": 50490
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
-          "bytes": 59741
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "path": "catalog/compliance/UE1-O06-G3-03-C98-MAY1998-100-ORIGINAL-NATIVE-96-SCRIPTS.json",
@@ -591,8 +591,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-          "sha256": "863eac4bf29c109a8b8f32fdbd83bc140d1dacec88710c1e50dcc6efa4ffe21e",
-          "bytes": 6259
+          "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1",
+          "bytes": 10388
         },
         {
           "historical_source_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
@@ -608,13 +608,13 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
-          "bytes": 59741
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\C98-USA-Retail-CD\\retail-source\\System\\Core.dll",
@@ -676,8 +676,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-          "sha256": "863eac4bf29c109a8b8f32fdbd83bc140d1dacec88710c1e50dcc6efa4ffe21e",
-          "bytes": 6259
+          "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1",
+          "bytes": 10388
         },
         {
           "historical_source_path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
@@ -693,13 +693,13 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
-          "bytes": 59741
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original_binary": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
@@ -807,7 +807,7 @@
       "evidence": "Original compiled retail Core.dll, Class Object evidence reuse first",
       "reuse": "G3-02 declaration inventory already accepted.",
       "status": "PASS",
-      "evidence_sha": "4b690e034d8282f82c4d10b056a9816f6a4fb934122dff2bddfdcc6efee887fe",
+      "evidence_sha": "f51790ca9c725ca17c21523b31429ecefcea31fb993b3f43ef236f7d92f9e3d4",
       "result": "Original retail May 1998 C98 Core.dll UClass::Serialize actual runtime for both and only genuine serialized Core.u UClass exports: Object and Subsystem (v61). Real compiled loaded ClassFlags=19, GUID, FDependency class pointer identity for 3 native references, deep flags and script CRC, PackageImports array counts, complete archived bytes matched by source reader; source-absent ClassWithin correctly excluded. Field and Struct are actual original compiled C++ intrinsic StaticClass registrations, NOT serialized UClass entries in genuine Core.u: tested source exclusion rather than inventing package exports. Original source SHA and raw debugger commands/log pinned, 54/54 FULL, no accepted native suite rerun.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T02:06:02+00:00",
@@ -816,8 +816,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t012-original-c98-uclass.php",
-          "sha256": "d29b33ead982294239583d7aedb5eba42e72d3fdee0a412d321b27cde0be0b43",
-          "bytes": 7762
+          "sha256": "2d69fedeacd3092aaeceb8fb4e7ea1a683ed7553362f1186bb9832759ab4e6eb",
+          "bytes": 7884
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T012-C98-original-Core-UClass-54pass.json",
@@ -836,8 +836,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.dll",
@@ -864,7 +864,7 @@
       "evidence": "Stock v432 Core.dll + existing G5 native UClass evidence",
       "reuse": "Only uncovered fields; do not rerun v432 G5.",
       "status": "PASS",
-      "evidence_sha": "fb68f04bc64367f68a52a129f0ef09576af4269beef544239e3435c056d6b2f2",
+      "evidence_sha": "f6d55c6a5ca95e8bf5881912f60684aed20ef7dba361690d6310e5d61e875eb3",
       "result": "Original shipped compiled UT99 v432 Core.dll UClass::Serialize loaded all 7 genuine Core.u classes; all archived ClassFlags, real ClassWithin/UField ref identities, global FName config, script/state scalars, GUIDs, 13 fully initialized FDependency elements (native same-process UObject.Index, deep, CRC), PackageImports and original archive consumption verified. Genuine v432 native ClassFlags loaded 274 with FArchive Tell 5458->5462. Reuses previously fully accepted original 88 genuine Engine.u classes with 7/7 source gates and 608 defaults. Current source/native 207/207 focused verifier, no prior native compiled suite replay. T013 only, 469f/227i/227k and C98 distinct builds remain OPEN.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T23:37:09+00:00",
@@ -873,8 +873,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t013-original-v432-core-engine.py",
-          "sha256": "b8431fc2021c0e416ff003025b47b53909bc948a56bafd1e80c5c3c7795ed8fb",
-          "bytes": 13418
+          "sha256": "03139a0fad724f0428e762337e89eb5f4d99be8255ae435c9c5193d1b82186e8",
+          "bytes": 13644
         },
         {
           "path": "catalog/compliance/evidence/o06/20261028-G3-T013-original-v432-Core7-Engine88-207pass.json",
@@ -888,8 +888,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-v432-original-Core-all-class-flags-within.log",
@@ -939,7 +939,7 @@
       "evidence": "Reuse 469f 88 UClass-inherited UState events; original UClass method disassembly for direct delta",
       "reuse": "Do not infer version69 means v432 equals 469f.",
       "status": "PASS",
-      "evidence_sha": "5b367523d103ab9fd1b4df8af934ca4b88165c3bfe80c7aea6137e98d7a76987",
+      "evidence_sha": "cd9e4cc9b6cbeba42b14d9802dcd1cf80cf8b47fb7b1aef6b109e651b3ea41b4",
       "result": "Original compiled 469f Core.dll and Engine.dll plus correct SDK-built x86 class probe loaded genuine Engine.u successfully: 132 real runtime registered UClasses, 88 genuine serialized UClass exports individually compared 6 direct native live fields and complete file consumption; 45 real v432-v469f archived field differences identified, 856/856 FULL focused parity, prior v432 original 88-class gate reused, zero original reruns by verifier. T014 only.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T00:43:50+00:00",
@@ -948,8 +948,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t014-original-469f-uclass-live.php",
-          "sha256": "b1a5394c4ed2007da7c9c9172b4db87eff24b2c6d913b70460a7893add6d1d1e",
-          "bytes": 7017
+          "sha256": "67fe8125dbab3ccb61fec9fccc0acea56a68a91420063ce2020c9d0ac0b19cc3",
+          "bytes": 7135
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-Engine-UClass-loaded-values.log",
@@ -968,8 +968,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
@@ -1001,7 +1001,7 @@
       "evidence": "Original shipped Core.dll + own Core.u, focused class field oracle",
       "reuse": "Do not reuse 227k as proof for different 2012 ABI.",
       "status": "PASS",
-      "evidence_sha": "2f87c98afd78d5398e628c4da2032ff8ba0b5122e1c63a6208159c9d19601c48",
+      "evidence_sha": "30123a6d5215f3ffbd2ca7c229635c93662189efac4f2481289641476dce387f",
       "result": "Original 2012 Unreal 227i Core.u 6 genuine UClass loaded fields compared to source archive; original 2026 Unreal 227k Core.u 8/8 and Engine.u 187/187 genuine serialized class metadata matches native loaded fields, real 227i-to-227k Commandlet and Subsystem ClassFlags differences are archive/source-gated. Original compiled 227k same Core.Object pointer native UClass::Serialize post-operator Dependencies.Num=3 and UClass::PostLoad entry=2 independently establishes source/linked phase change, not reader error. Shared original compiled 2012/2026 scoped 1633/1633 PASS; original native suites not rerun by verifier. T015 fully CLOSED.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T01:52:22+00:00",
@@ -1010,8 +1010,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-native-shared-c227-class-array.py",
-          "sha256": "5528df2271f2c846d01017ae7e03c28f48c31f615541ccb5bb9a0bcd39ef11b3",
-          "bytes": 9676
+          "sha256": "5c13c681ef5e81db12fd0925ccfd3c0f6df1f65bcbf9676a996bc0fd4c92f234",
+          "bytes": 9810
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T015-original-227i227k-C227-class-phase-1633pass.json",
@@ -1050,8 +1050,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original": "C:\\Temp\\UE1-G3-NativeOracle\\original227i\\System\\Core.dll",
@@ -1082,7 +1082,7 @@
       "evidence": "May17 genuine Unreal Core/Engine original compiled class-default observation",
       "reuse": "Tagged serialization mechanics delegated G3-13.",
       "status": "PASS",
-      "evidence_sha": "240b4adb117c6b0f015a4cb3568a6bab83b419a8e2ab4ee133243aa80b173fd1",
+      "evidence_sha": "8c1d0336c312e342ef74d08dfcb21b91c3ece4f6972e2ccd7c168d2724e61fd0",
       "result": "Real original retail May17 1998 x86 Unreal.exe -make compiled v61 G3C98Defaults.u parent/child classes; original May17 Core.dll UClass::Serialize post-tag compiled CDB memory of both genuine class defaults proved parent INT G3Magic=123 and FLOAT G3Scale=1.25, child explicitly overrides INT=456 and INHERITS unchanged FLOAT1.25 despite absent child tag. Original native default array 452 bytes, actual member offsets 444/448, stock memory float bits 0x3fa00000. Actual original generated parent two tags/child only override bytes vs source selected UnrealDB class reader match; 33/33 independent native/source/archive checks PASS. No original compiled replay by verifier; this is only C98 T016, not C227 T018, and is not generic G3 full acceptance.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T23:36:45+00:00",
@@ -1092,8 +1092,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t016-original-c98-native-default-inheritance.php",
-          "sha256": "c84ff41ab0d586804e86d3705bdb64ae916d5637b36e4513dfb6d115477a7020",
-          "bytes": 6833
+          "sha256": "e11da6266f1eee931242b0a5c0fbe8cf26174a4b1ba4ac56a231d028686457a0",
+          "bytes": 6935
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
@@ -1143,7 +1143,7 @@
       "evidence": "G5 v432 default values reused; 469f original native delta only if needed",
       "reuse": "No repeat of accepted v432 full UClass.",
       "status": "PASS",
-      "evidence_sha": "84c0e972710f666db8075927656d898611dc7178df3b1af8b49afbd4e29b8a98",
+      "evidence_sha": "d6af326eeb994d3595e1a8a6b2482404fefde58e3ef58d5288869bb03925bd4c",
       "result": "Original 469f actual compiled Engine.u actor CDO: Pawn inherits Actor.bHidden=False, HUD overrides bHidden=True; original v432 actor/HUD archived fields and preaccepted real compiled 88 UClass/608 native default values reused. SuperField identities, original source tags, physical archive and real loaded outcomes verified. Shared original compiled frozen 902/902 checks PASS; no original engine reruns.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T02:50:26+00:00",
@@ -1152,8 +1152,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php",
-          "sha256": "2604e72c9a840bbe04f6b44dd4f82b28a42aa3e17d3733d397c1749873e90081",
-          "bytes": 9904
+          "sha256": "0df562d494d6313d7aa226c0a7c71cb9ea5a893ac37f6e888a4e2fd4bc7e7843",
+          "bytes": 10056
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json",
@@ -1187,8 +1187,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
@@ -1278,10 +1278,23 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "SHORT BATCH: isolated INI and localized native class-default precedence still absent in C98, v432, C227. Acceptance still requires: Correct native loaded value, exclusion/precedence and source version for each behavior; absent source feature marked supported N/A.",
+      "blocking_reason": "2026-10-31 NEW source-bounded original compiled UT99 v432 C++ UCC.make fixture G3BulkConfigV432.u SHA73e99ca3 and original 2-profile UCC commandlet native original loads: ConfigValue=111 then222; native Transient ScratchValue=0 both, PersistValue=888 both; class LocalMessage remained DefaultBulk despite experimental .int overrides. Two previously accepted original C227k genuine native compiled isolated configuration+localization loads reused: 111->Native Alpha, 222->Native Beta; Transient0, Persist888. Independent exact original SHA verifier 44/44 PASS, but T019 FULL BLOCKED because genuine C98 original isolated Config/Localized/Transient two-profile behavior and true UT99 v432 localization precedence remain missing; original C227i native localization separately unproven. No previous accepted native reruns. Original program binaries and game archive remain private, only user-authored fixture/source and actual original output SHA evidence versioned.",
       "last_attempt_at": "2026-10-28T23:43:31+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "ORIGINAL_UT99_V432_TWO_CONFIG_PROFILES_NEW_AND_C227K_LOCALIZED_REUSED_44PASS_T019_FULL_BLOCKED",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t019-bulk-v432-c227k-original-native-profiles.py",
+          "sha256": "3ff8d7d408525674d5de99d9e36d94bb58c8cd7a614631c625805cbb8ae38b22",
+          "bytes": 5341
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-four-original-native-config-window-44pass-BLOCKED.json",
+          "sha256": "f308e44845a6889b119bed494a126ca098d80b7c770cc1b0326d4a6ccc8bf7c2",
+          "bytes": 1660
+        }
+      ],
+      "last_grouped_native_assessment": "2026-10-31"
     },
     {
       "id": "T020",
@@ -1294,7 +1307,7 @@
       "evidence": "One genuine native error path per actual different compiled branch",
       "reuse": "General FArchive mismatch details only in G3-14.",
       "status": "PASS",
-      "evidence_sha": "380432a2ca13b56c5d62d2590222855104a94aeee5c350ed3677d9939b87798f",
+      "evidence_sha": "a396b4affc406c79b78196238aaefbf51ae3ef2042f0f55d4b3e06bd11d6ff66",
       "result": "Full frozen T020 three original compiled native-source UClass invalid-reference closure: original genuine C98 1998 UCC parent bad SuperField import/export -63/+63 -> native Bad import 62/7 or Bad export 62/6 at true FArchive Tell276, both previously sealed and never rerun; NEW original stock UT99 v432 Core.dll genuine compiled class ClassWithin -7->-63 yields native Bad import62/7 Tell451 and null package; NEW original 2026 Unreal227k compiled Core.dll LOAD of 2012-compiled UClass ClassWithin -9->-63 yields native Bad import62/9 and source serial Got510 at original physical Tell510, failure and not a loaded class (native host terminates after reporting error). All four original one-byte-mutant archive and native reports SHA pinned and original fixtures restored; production source-selected UClass reader now matches exact error/cursor, emits no fictitious default object; previously frozen T064 original malformed class defaults reused without rerun. 32/32 static original/source/current checks, no accepted native cases replayed, no PRD release.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-31T03:27:25+00:00",
@@ -1308,8 +1321,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "f15b25ae2e8a9d56a8d67e7ca7a27dcba2d87b1cdf352ce4edfaa21434f5ecbf",
-          "bytes": 19589
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "path": "catalog/compliance/evidence/o06/20261031-G3-T020-original-three-32pass.json",
@@ -1359,7 +1372,7 @@
       "evidence": "Original compiled SerializeItem + genuine values or source-equivalent fixture",
       "reuse": "Existing primitive/null tests reused.",
       "status": "PASS",
-      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
       "result": "Original C98 May1998 retail UClass compiled int/byte values; UT99 v432 genuine native SAVE+LOAD signed INT11/42/-7, and original 2012 C227i compiler + genuine 2026 C227k LOAD of 1-byte MaxByte255 and 4-byte signed BigNeg=-2147483647, C98 negative and INT_MAX, source-selected actual physical byte counts and absent zero tags. One SHA sealed joint 81/81 verifier. Distinct source families explicitly selected, no v227k AnyProperty substitution. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T10:16:58+00:00",
@@ -1368,13 +1381,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
-          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
-          "bytes": 11386
+          "sha256": "d9215d089b9b3e43931fdb64266ac8aa2be02a17daf48f9b570e5d86756376aa",
+          "bytes": 11540
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
-          "bytes": 69230
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
@@ -1429,7 +1442,7 @@
       "evidence": "Native float load/save or original compiled operator + source-independent bit oracle",
       "reuse": "Only distinct original methods, not one extra CDB per number.",
       "status": "PASS",
-      "evidence_sha": "a7b3f9cc12a8c2903ea6dad805066a33aeaf034c4d586bd3b9505c367b9e78aa",
+      "evidence_sha": "ba45b64c707bf0d9d0d8cacb622f48f1d4cc1ba4a0add2e749a830cf9d9c470c",
       "result": "Original 2012 C227i UCC compiled positive1.5 negative-1.5 fractional0.375 and zero FloatProperty, genuine 2026 original 227k native loaded IEEE bits 3FC00000 BFC00000 3EC00000 00000000, actual true original UFloatProperty::SerializeItem directly SAVE and FBufferReader LOAD each 4/4 bytes including signed -0.0 IEEE 80000000 unmodified. One original 227k real SavePackage purposely omits native -0 because Epic inherited UFloatProperty::Identical numeric == default0 (source-backed), independent native reload returned +0. The reader mirrors both direct four-byte codec and original default omission, never falsely claims serialized negative zero when absent. ONE jointly compiled original-engine/source/current verifier 54/54 PASS, no native engine executions inside verifier, T025/T027/T028 still blocked.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T10:36:16+00:00",
@@ -1438,13 +1451,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
-          "sha256": "d8e829af92e98f5375f30b15e25783e49c12d4a455cff755bf5da91760b37e0e",
-          "bytes": 12484
+          "sha256": "d0e076856be2f0384e84d3265e1672683bd8b13223ab02c905e2bfe5d7ed9d03",
+          "bytes": 12645
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
-          "bytes": 70308
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
@@ -1494,7 +1507,7 @@
       "evidence": "Source selected Bool/Property SerializeItem + loaded field",
       "reuse": "G3-07 base property metadata accepted.",
       "status": "PASS",
-      "evidence_sha": "a7b3f9cc12a8c2903ea6dad805066a33aeaf034c4d586bd3b9505c367b9e78aa",
+      "evidence_sha": "ba45b64c707bf0d9d0d8cacb622f48f1d4cc1ba4a0add2e749a830cf9d9c470c",
       "result": "Actual original 2012 compiled class THREE source-legal packed bool properties same 32-bit slot offset776, original C227k compiled live UBoolProperty masks 00000001/00000002/00000004 native CDO word00000005 with true,false,true, original 227k native object sets middle mask and independent second compiled process reload shows word00000007 all true. FPropertyTag true is encoded in Info flag and has ZERO value bytes, false is omitted, current reader matches all. Real original 2012 script compiler rejected bool arrays ('Bool arrays are not allowed'); impossible indexed bool-array variant source-excluded, not mistaken for stored byte booleans. ONE jointly compiled original-engine/source/current verifier 54/54 PASS, no native engine executions inside verifier, T025/T027/T028 still blocked.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T10:36:16+00:00",
@@ -1503,13 +1516,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
-          "sha256": "d8e829af92e98f5375f30b15e25783e49c12d4a455cff755bf5da91760b37e0e",
-          "bytes": 12484
+          "sha256": "d0e076856be2f0384e84d3265e1672683bd8b13223ab02c905e2bfe5d7ed9d03",
+          "bytes": 12645
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
-          "bytes": 70308
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
@@ -1559,7 +1572,7 @@
       "evidence": "Original compiled global FName lookup + UnrealDB name table",
       "reuse": "G3-06 enum FNames already sealed but scalar value different.",
       "status": "PASS",
-      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
       "result": "Original C98 retail compiled genuine FName G3BulkName archived FName15 maps real global name-index0xE34 native CDO, following explicit None member is native global index0. Reuses already accepted original UT99 v432 GameInfo DefaultPlayerState/PlayerWalking FName, and 2012 original C227i UCC compiled NonZeroName=Alpha vs NoneName omitted, original 227k compiled native shows Alpha and genuine None; actual mapped name/index correctness, including original linked 227k FName[Alpha,Gamma] array names. Source-resolved 81/81 multi-ID proof. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T10:16:58+00:00",
@@ -1568,13 +1581,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
-          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
-          "bytes": 11386
+          "sha256": "d9215d089b9b3e43931fdb64266ac8aa2be02a17daf48f9b570e5d86756376aa",
+          "bytes": 11540
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
-          "bytes": 69230
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
@@ -1689,7 +1702,7 @@
       "evidence": "One native method oracle for each genuinely distinct source family",
       "reuse": "Old source string tests reuse first.",
       "status": "PASS",
-      "evidence_sha": "a7b3f9cc12a8c2903ea6dad805066a33aeaf034c4d586bd3b9505c367b9e78aa",
+      "evidence_sha": "ba45b64c707bf0d9d0d8cacb622f48f1d4cc1ba4a0add2e749a830cf9d9c470c",
       "result": "Genuine original UT99 v432 native loaded real compiled direct StrProperty FString 'Alpha-direct-FString' with count21, NUL and exact 22 bytes/exact export end. Original 2012 C227i UCC compiled class default empty omitted, 'A' count2=3 bytes, 'A longer string' count16=17 bytes, all native 2026 C227k compiled LOAD returns exact empty/one/nonempty text. Original 2026 C227k independently SavePackage wrote new EmptyText='B' as signed count2, B,NUL three bytes, second distinct original C227k process LOAD returned B/A/long exact; UnrealDB new source-linked v227 UStrProperty codec decodes same count, NUL, source physical bytes and complete archive end. ONE jointly compiled original-engine/source/current verifier 54/54 PASS, no native engine executions inside verifier, T025/T027/T028 still blocked.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T10:36:16+00:00",
@@ -1698,13 +1711,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
-          "sha256": "d8e829af92e98f5375f30b15e25783e49c12d4a455cff755bf5da91760b37e0e",
-          "bytes": 12484
+          "sha256": "d0e076856be2f0384e84d3265e1672683bd8b13223ab02c905e2bfe5d7ed9d03",
+          "bytes": 12645
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
-          "bytes": 70308
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
@@ -1814,7 +1827,7 @@
       "evidence": "Existing sealed invalid terminal/count probes reused; new native only if distinct branch missing",
       "reuse": "Shared generic EOF error G3-14.",
       "status": "PASS",
-      "evidence_sha": "d1ad6e60988c62673105cbf190b0e2b1ec866ffeadb4a06f2299df49e4d69cd1",
+      "evidence_sha": "fef9a31088133456b16d7cb1e8a08512fe14879caa160be060abf5108a8c76a2",
       "result": "One original UT99 v432 compiled direct FString class + genuine original shipped native Core.dll LOAD of one-byte mutated count75 in 283-byte real .u. True native ULinkerLoad::Serialize <- FString<< FArchive attempted 283+1/283, returned null package and native_error1. Current UT99 source-selected reader fails at EXACT original physical Tell283, with no fabricated loaded state. Same original 2026 C227k compiled Core.dll, distinct real source-selected saved v69/licensee227 253-byte package: one-byte invalid terminal and one-byte oversized count each genuinely LOADED fully with no fatal error; oversized count emitted original source-specific property size mismatch got4 expected3 and original native object loaded B. Reader correctly does not invent errors, retains raw opaque malformed payload, consumes exactly to archive end225. Frozen one T028 FULL PASS, 40/40 deterministic original compiler/native/current checks and no accepted native tests rerun.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T16:04:10+00:00",
@@ -1823,8 +1836,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t028-original-native-fstring-error-parity.php",
-          "sha256": "6a74b2ff0851c16d1a87ef24e13419f8e6e6e90a96304ad00f29e3193d77b217",
-          "bytes": 9180
+          "sha256": "ae619ba06b1df0fc0f43833dd84ffeb18ddaf47192fb57ff122d98bcd71deedf",
+          "bytes": 9293
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-V432-original-EOF.u",
@@ -1858,8 +1871,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "121a706fc546cb484d11eb76e6ef99e3c76a5aa21cacc237de9c44b957a13e87",
-          "bytes": 70308
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-original-native-40pass.json",
@@ -1879,7 +1892,7 @@
       "evidence": "2026 Core.dll direct native archive + original FName table",
       "reuse": "Previous type5 zero already sealed.",
       "status": "PASS",
-      "evidence_sha": "90d89ed7f7cef81e86e902e2f2656d6750d5aae4e47ae3c62e1f93d117df4d66",
+      "evidence_sha": "9788ce3a9e5df24bf3de5abbe037104d63fffdc175fa56241db7b441d3a13552",
       "result": "Actual shipped original 2026 Unreal 227k UCC.exe, after isolated original SystemLocalized int registration, successfully compiled bona fide source class var any NameValue with default NameValue='G3NameAlpha' to genuine 670-byte lic227 UClass .u without warnings. Independent ORIGINAL 2026 compiled Core.dll UObject::LoadPackage and reflected GetDefaultObject UAnyProperty field NameValue offset776 actually loaded runtime dynamic type5, real FName text G3NameAlpha (not mock FArchive or zero NAME_None). Source-linked original FPropertyTag GetID reports VectorProperty11 alias, but exact Children/Next UAnyProperty declaration validates it; actual serial tag 2 bytes hex0508: subtype5 + compact FName index8, real ULinker NameMap[8] text G3NameAlpha. Current production shared UClass defaults reader decodes exact native type5 and signed linker index + text, schema accepts source-only 11->Any alias and consumes full original UClass export (no opaque false type mismatch). Correct SaveVerified wire0508, invalid FName linker index fails closed; original source/native/current parity and 57/57 grouped acceptance fully PASS. G3 mandatory other Any6 remains BLOCKED, no added test IDs, production PRD untouched.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T19:31:25+00:00",
@@ -1888,28 +1901,28 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php",
-          "sha256": "0e3d274adec3d1e54fc634008fc899602ed96986e03647b9a0cbe4effacfb271",
-          "bytes": 12539
+          "sha256": "548c5748a6d82afa7cd67b60bbead7dabcd08040a9b244d2c9ba9b626ea78766",
+          "bytes": 12716
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
-          "sha256": "a5b8ee67a2b8a25c1112d489359bc520ab403c478febacfd87057c9f653263ef",
-          "bytes": 14510
+          "sha256": "3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59",
+          "bytes": 17902
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php",
-          "sha256": "392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925",
-          "bytes": 34369
+          "sha256": "bfcd5e1be6a03059da60755d910c36a9df476e6ed6bac00953b3519f0bf1e4a2",
+          "bytes": 35288
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386",
-          "bytes": 17242
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1",
-          "bytes": 78200
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5.u",
@@ -1954,7 +1967,7 @@
       "evidence": "Original fully initialized SDK object/Core.dll, no unsupported mock",
       "reuse": "Previous null STRUCT6 failed due incomplete mock, not accepted.",
       "status": "PASS",
-      "evidence_sha": "311bad64385afd369f9726b1c405bcad0b66e73595316f2f2420eac52be0427b",
+      "evidence_sha": "19f58d92362a164753141dd2b2d0e53d079cf199e90fc7493161c6eae70d3d73",
       "result": "Frozen T030 FULL acceptance on genuine original shipped 2026 C227k Core.dll (SHA c391cade). Actual original UCC-compiled 652-byte lic227 class G3Any227KActor declares UAnyProperty StructValue; original 2026 x86 C++ loads real class, creates distinct UObject instance, allocates genuine FAnyProperty, sets full FVector(3.25,-4.5,5.75) through ORIGINAL exported FAnyProperty::SetStruct((BYTE*)&FVector, native Core.Object.Vector UStruct*) resulting ACTUAL dynamic subtype6, real UStruct field layout12 and instance offset784. Original Core.dll UObject::SavePackage returned SUCCESS1 and generated unmodified original valid v69 lic227 312-byte G3Any227KRuntime.u with one 22-byte export at physical241. ORIGINAL independent separately compiled second x86 executable and separately initialized original 2026 Core.dll LOADs that native-produced .u together with original UCC class, independently recovers exact class G3Any227KActor object AnyStructInstance, dynamic ANYTYPE_STRUCT6, UStruct Core.Object.Vector, real member vectorX3.25/vectorY-4.5/vectorZ5.75, true native bit patterns 40500000/C0900000/40B80000, and PASS1. Real archived original FPropertyTag NAME_StructValue type11 alias VectorProperty, declared size18; actual value bytes 06 83 0c000000 00005040 000090c0 0000b840: subtype6, signed compact ORIGINAL ImportMap[-3] UStruct Vector outer Class Object outer Package Core, native DWORD serialized UStruct size12 and exact 12 actual X/Y/Z little-endian floats. Final archive NAME_None byte1, original 22-byte export fully consumed. UnrealDB exact actual source-linked UAnyProperty parser now decodes precisely same 18 physical bytes and genuine UStruct identity, exact floats and raw bits; SAVE reproduces same bytes within SAME original linker map, other UStruct layouts fail explicitly closed. Original UCC textual default struct ImportText failed and was correctly EXCLUDED; native API real SavePackage/independent LOAD replaces that BLOCKER with conclusive original compiled positive oracle, never fake source. One original 39/39 independent source/native/current fixed T030 proof; previous T029/T031 native accepted 57/57 unchanged, no accepted original engine reruns. B04 ALL eight original frozen tests closed; no PRD deployment, G3 other groups remain open.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-31T00:32:12+00:00",
@@ -1963,7 +1976,7 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b04-t030-original-native-Any-struct-Vector.php",
-          "sha256": "5c534d62f153556d5371122b56b9c659a5508a95045fe612d7ace19ab94fc054",
+          "sha256": "aa2a6e5c8fd8a42e2bd45f5499b9d3a3e81d561d23e1056350f461de6f0cc22a",
           "bytes": 13488
         },
         {
@@ -1973,8 +1986,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1",
-          "bytes": 78200
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-2026-REAL-AnyStruct-SavePackage.u",
@@ -2024,7 +2037,7 @@
       "evidence": "Genuine Core.dll linker and object-backed archive",
       "reuse": "Previous null OBJECT7 sealed.",
       "status": "PASS",
-      "evidence_sha": "90d89ed7f7cef81e86e902e2f2656d6750d5aae4e47ae3c62e1f93d117df4d66",
+      "evidence_sha": "9788ce3a9e5df24bf3de5abbe037104d63fffdc175fa56241db7b441d3a13552",
       "result": "Actual shipped original 2026 Unreal 227k UCC.exe successfully compiled bona fide source class var any ObjectValue with default ObjectValue=class'Engine.Actor' to genuine 653-byte lic227 UClass .u without warnings. Independent ORIGINAL 2026 compiled Core.dll UObject::LoadPackage and reflected GetDefaultObject real UAnyProperty ObjectValue offset780 actually loaded dynamic Any type7 and exact real UObject full name Class Engine.Actor. Actual original UClass default VectorProperty11 aliases source-linked UAnyProperty field via Children/Next; raw original field bytes hex0782 = dynamic subtype7 plus signed compact object ImportMap ref -2, original ImportMap[-2] Class Actor whose actual outer -3 is Package Engine. Production native source-linked class default parses those TWO precise archive bytes, resolves source ImportMap true identity and real runtime class, no fake process pointer and no fabricated null/12-byte vector; source GetID alias corrected, validates all THREE class declarations, original class archive Tell exact. Original genuine Any6 STRUCT initializer separately FAILED original UCC ImportText and remains BLOCKED T030. One grouped 57/57 original independent compiled LOAD/Save source/current verifier; no accepted native engine reexecution. G3 mandatory other Any6 remains BLOCKED, no added test IDs, production PRD untouched.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T19:31:25+00:00",
@@ -2033,28 +2046,28 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php",
-          "sha256": "0e3d274adec3d1e54fc634008fc899602ed96986e03647b9a0cbe4effacfb271",
-          "bytes": 12539
+          "sha256": "548c5748a6d82afa7cd67b60bbead7dabcd08040a9b244d2c9ba9b626ea78766",
+          "bytes": 12716
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
-          "sha256": "a5b8ee67a2b8a25c1112d489359bc520ab403c478febacfd87057c9f653263ef",
-          "bytes": 14510
+          "sha256": "3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59",
+          "bytes": 17902
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php",
-          "sha256": "392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925",
-          "bytes": 34369
+          "sha256": "bfcd5e1be6a03059da60755d910c36a9df476e6ed6bac00953b3519f0bf1e4a2",
+          "bytes": 35288
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386",
-          "bytes": 17242
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1",
-          "bytes": 78200
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5.u",
@@ -2099,7 +2112,7 @@
       "evidence": "Reuse sealed 469f vs 227k method disassembly, new oracle only if value behavior differs",
       "reuse": "Source absence explicitly supported N/A.",
       "status": "PASS",
-      "evidence_sha": "4c7d4e436f2a02cfa26996f74adc36275af8f56b17cec426e2bd7c2525c62c3c",
+      "evidence_sha": "42c28833df6eaa1e1e2bc31e991ca0b125669d8999b0abdf1507a45a18e6c95b",
       "result": "Real compiled original 469f UPointerProperty::SerializeItem and NetSerializeItem serialize exactly 4 bytes (Net returns 1); original 227k UPointer/UButton items serialize 0 bytes and Net returns 1 without payload; separate UAnyProperty dispatch is dynamic and its instance codec remains OPEN under T025–T031. Exact original DLL PE bytes, CDB traces, current production source SHA and already sealed 46/46 source-selected byte-method checks verified, no native rerun.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T13:23:42+00:00",
@@ -2108,7 +2121,8 @@
       "verified_evidence": [
         {
           "path": "catalog/compliance/UE1-O06-G3-08-469F-VS-227K-POINTER-BUTTON-ANY-RUNTIME-SEMANTICS.json",
-          "sha256": "0bea37a92e4cdeb2349088759e113c1dc4329237b387d4c5726d37bb7ce1f9dc"
+          "sha256": "2c0b699a34cbba34af9b29c81092fd12ec1cd8099a4f2da12e606c64b57985a0",
+          "bytes": 6232
         },
         {
           "original_compiled_DLL": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
@@ -2140,8 +2154,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
-          "sha256": "9f1f0b6cb770f0801610e57f32db30c99d2da4bd14b39ede4b1c834b0564e2b6",
-          "bytes": 17754
+          "sha256": "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be",
+          "bytes": 19685
         },
         {
           "path": "catalog/bin/verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php",
@@ -2221,7 +2235,7 @@
       "evidence": "Original native loaded struct + declared source member graph",
       "reuse": "G3-03 struct declarations not value storage.",
       "status": "PASS",
-      "evidence_sha": "93d75438756d914940747636b142559495a4f508b5d934975f513d7ac7163b84",
+      "evidence_sha": "bd2882e1d27bfa186d426be2deb6f62091d74a39a4a9c264387cb0858fc7a750",
       "result": "One new originally compiled May17 1998 x86 retail Unreal.exe -make genuine v61 G3C98Bulk.u with local struct G3Child expands G3Base, BX INT789, BY FLOAT2.5, CZ BYTE17. One original compiled Core.dll UClass::Serialize CDB postload trace of actual class export5 and 540-byte native CDO: G3Struct member memory begins at CDO+488; parent BX789 offset0, BY2.5 IEEE0x40200000 offset4, child CZ17 offset8, all observed genuine process memory. Original compiler archive physical 9-byte struct payload at 1220 is CHILD-FIRST CZ=17, BX=789, BY=2.5, per true original UStruct::SerializeBin TFieldIterator<UProperty> inheritance traversal, despite parent-first native memory layout. UnrealDB existing source-selected struct resolver follows exact actual UStruct.Children/Next/SuperField graphs, decodes inherited members CZ,BX,BY exactly and consumes 9/9 bytes. SHA-pinned source/original compiler/native loaded memory 25/25 PASS. Same grouped 9-ID fixture also exercised C98 int/byte/float/bool/name/config/transient/static array but those IDs stay BLOCKED for genuinely missing cross-family/both-profile/specific SAVE oracles. No original accepted native test rerun, no unverified runtime pointer fabricated.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T09:33:51+00:00",
@@ -2230,7 +2244,7 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-c98-t034-and-scalars.php",
-          "sha256": "2920c05218a2ff862f7559b687acabd5cd2dd05ed70a2c3b54db6d35d4d753a1",
+          "sha256": "e725849998f29a95571a8172b3d49e173913d838910fb86c2a3ec1e0aa97c00c",
           "bytes": 8808
         },
         {
@@ -2276,7 +2290,7 @@
       "evidence": "Original compiled Engine.u+Core.u import chain with genuine class object",
       "reuse": "No inferred struct size from name alone.",
       "status": "PASS",
-      "evidence_sha": "ba193049f3187f6ef861314f5362f205df2b4a64aa9d783fa58fa6ee2994a935",
+      "evidence_sha": "6176c9d16f61f6be074e22078c0daa56c7ec8276908e37dc2f0baf1f649b00f0",
       "result": "Genuine stock UT99 v432 and 469f Engine.u HUD.WhiteColor StructProperty import Core.Struct Color resolved by exact original ImportMap identity; original source archive saved FColor 4 bytes 00 80 FF 00 with physical offsets 79888 and 75673, both complete source archives. Actual original compiled 469f HUD CDO loaded R0 G128 B255 A0; previously accepted original compiled v432 native 607 exact loaded properties including all 16 real StructProperty values (only config String override). Shared 33/33 original source/native imported struct PASS, no original native retest.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T03:01:17+00:00",
@@ -2285,8 +2299,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t035-original-v432-469f-imported-color.php",
-          "sha256": "f061a4b4e079e29778c09c7a823e860673d4824d51d87168e47b4e3718d86d1f",
-          "bytes": 6874
+          "sha256": "a9be973c3a6f84a2c348e4f19861b1fd168b6d2c2c4cc90ea91acc3aa0d05679",
+          "bytes": 6970
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T035-original-v432-469f-Core-Color-33pass.json",
@@ -2310,8 +2324,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.u",
@@ -2342,7 +2356,7 @@
       "evidence": "2012/2026 native class/type plus genuine archive",
       "reuse": "227i and 227k method deltas separately handled.",
       "status": "PASS",
-      "evidence_sha": "b25d003ff5d970d0c48b2ce500bdcc3ce3cac4e3f4f9f7bd8deb5e8476094218",
+      "evidence_sha": "a5678c946b31f694bf69aaff8314c305f7946df3fc7fd8d964024d0229b39f64",
       "result": "Original 2026 227k compiled Engine.u Pawn native UStructProperty RotationRate owner offset620, array dimension1, element size12; imported Core.Struct Rotator actual member Pitch/Yaw/Roll offsets0/4/8, loaded values 4096,50000,3072. Reader source-selected genuine Pawn FPropertyTag physical 12 bytes 0010000050c30000000c0000 exactly, original native CDO independently matches, inherited PlayerPawn values match. One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T03:53:54+00:00",
@@ -2352,8 +2366,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php",
-          "sha256": "b4224496d7a938e30a37825b27fa02b58ae074fc91a25ac52a87c850567bce68",
-          "bytes": 10441
+          "sha256": "a59d75aa24f3648fc161f4f47e405fb7a9b82968ad648a3d0b84eef21091fb7b",
+          "bytes": 10585
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-original-C227k-95pass.json",
@@ -2382,8 +2396,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "d8f4aaea7bda3cf3272151b19e195ebe04d21486041046a20709c25b01e5c82b",
-          "bytes": 61784
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
@@ -2414,7 +2428,7 @@
       "evidence": "G5 sealed original v432 nested source-legal success if applicable; new only missing variants",
       "reuse": "Known uninitialized allocator crash excluded, never counted pass.",
       "status": "PASS",
-      "evidence_sha": "20c64fef2704ff99e88525db48561458f82cddaa605da7ca9ee569cd12d74e09",
+      "evidence_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e",
       "result": "Original UT99 v432 compiled Core.dll loaded actual source-legal direct nested G5CaptionRecord (FString Label, INT Marker) with nonempty Label=Direct-Record and Marker71. Original native SavePackage archived OneRecord struct exactly 19 bytes (signed FString count14, 13 ANSI chars plus zero, 4 INT marker), and later ORIGINAL stock Core.dll loaded native live CDO/instance Label=Direct-Record, Marker71. Source-linked production UStruct::SerializeBin reader resolves native field order (FString then INT), exact 19-byte value span, label length/count/terminator, no false stock v432 allocator-uninitialized nested string array claim; latter remains explicitly excluded. Joint SHA-pinned original v432 and original C227k source/native/reader 55/55 acceptance checks, 3 NEW frozen B05 closures in one batch. No previously accepted native engine execution repeated.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T17:35:10+00:00",
@@ -2423,13 +2437,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
-          "sha256": "974b69d77bb41f1b54359a90019eb4a752f5debfdf47a53fe3b5748d36e1ae7d",
+          "sha256": "93d01b6bf0e32e9bd3ad3b9a3e619ca6b2bee4dc731c239daa76a02f7030c394",
           "bytes": 13424
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61",
-          "bytes": 77076
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
@@ -2484,7 +2498,7 @@
       "evidence": "Original compiler fixture with initialized nested elements",
       "reuse": "G3-11 owns outer array count, here owns struct member codec.",
       "status": "PASS",
-      "evidence_sha": "20c64fef2704ff99e88525db48561458f82cddaa605da7ca9ee569cd12d74e09",
+      "evidence_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e",
       "result": "Original 2012 C227i UCC compiled source-defined G3Tuple struct with Number INT, Fraction FLOAT, Label FName, v227k genuine Core.dll compiled native saved 308-byte .u with two distinct struct values (101,1.25,Alpha) and (-202,-2.75,Gamma). A separate original Core.dll native process independently reloaded both and confirmed exact six values, stride12, 19 serialized bytes. Second native original v227k zero-count single-byte mutation of exactly count2->0 at offset234 produced original warning size mismatch Got1 Expected19, *successfully* loaded one object with Pairs count0, and continued to two genuine FString fields. Production source-linked exact Count0 decoder now performs original v227-specific 18-byte tag-end resync and reads subsequent tag fields without inventing struct members; both native SavePackage and two actual original process load outcomes match. Joint SHA-pinned original v432 and original C227k source/native/reader 55/55 acceptance checks, 3 NEW frozen B05 closures in one batch. No previously accepted native engine execution repeated.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T17:35:10+00:00",
@@ -2493,13 +2507,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
-          "sha256": "974b69d77bb41f1b54359a90019eb4a752f5debfdf47a53fe3b5748d36e1ae7d",
+          "sha256": "93d01b6bf0e32e9bd3ad3b9a3e619ca6b2bee4dc731c239daa76a02f7030c394",
           "bytes": 13424
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61",
-          "bytes": 77076
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
@@ -2554,7 +2568,7 @@
       "evidence": "Original linked ancestry + native SerializeBin for one member",
       "reuse": "G3-03 Children targets reused.",
       "status": "PASS",
-      "evidence_sha": "b25d003ff5d970d0c48b2ce500bdcc3ce3cac4e3f4f9f7bd8deb5e8476094218",
+      "evidence_sha": "a5678c946b31f694bf69aaff8314c305f7946df3fc7fd8d964024d0229b39f64",
       "result": "Original compiled 227k Engine.u Actor.SimAnim UStructProperty offset644, 1x16, native Struct Core.Object.Plane has actual nonnull SuperStruct FVector; original compiled member PropertyLink order W, X, Y, Z with physical offsets12,0,4,8. Original 2012 and 2026 Epic UnMath.h FPlane::operator<< archives inherited FVector XYZ then local W. Original 227k Engine.u saved sixteen zero float bytes, compiled CDO reports W/X/Y/Z zero; reader now decodes Plane as inherited ordered x,y,z,w rather than opaque/falsely flat. Separate original native Rotator demonstrates flat 12-byte struct. One grouped original native property-link run and frozen 95/95 checks; no accepted original native suites repeated.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T03:53:54+00:00",
@@ -2563,8 +2577,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php",
-          "sha256": "b4224496d7a938e30a37825b27fa02b58ae074fc91a25ac52a87c850567bce68",
-          "bytes": 10441
+          "sha256": "a59d75aa24f3648fc161f4f47e405fb7a9b82968ad648a3d0b84eef21091fb7b",
+          "bytes": 10585
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-original-C227k-95pass.json",
@@ -2593,8 +2607,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "d8f4aaea7bda3cf3272151b19e195ebe04d21486041046a20709c25b01e5c82b",
-          "bytes": 61784
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
@@ -2625,7 +2639,7 @@
       "evidence": "Original compiled malformed input + current decoder",
       "reuse": "G3-14 crosscutting EOF template owns shared cursor implementation.",
       "status": "PASS",
-      "evidence_sha": "20c64fef2704ff99e88525db48561458f82cddaa605da7ca9ee569cd12d74e09",
+      "evidence_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e",
       "result": "TWO distinct source-defined original nested failures, not duplicated outer generic corruption. First original true UT99 v432 compiled stock Core.dll on one-byte mutated legal G5CaptionRecord Label FString emitted native ReadFile beyond EOF 309+1/309 with actual FArchive stack ULinkerLoad::Serialize <- FString<< <- UStruct::SerializeBin <- FPropertyTag::SerializeTaggedProperty, returned NULL package/native_error1; production same physical offset309 and method. Second original 2026 C227k saved array<UStruct G3Tuple> with a single nested *member* FName compact linker index changed original 4 to invalid63 at archive offset243. Original stock compiled Core.dll emitted Bad name index63/12 with ULinkerLoad<<FName <- UStruct::SerializeBin trace, actual physical Tell244, null runtime bad1. Production source-selected native linked name reader rejects same nonzero invalid nested reference at exact offset244. Both actual changed source files remain 308/309 bytes with exactly one modified byte; no invented loaded field. Joint SHA-pinned original v432 and original C227k source/native/reader 55/55 acceptance checks, 3 NEW frozen B05 closures in one batch. No previously accepted native engine execution repeated.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T17:35:10+00:00",
@@ -2634,13 +2648,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
-          "sha256": "974b69d77bb41f1b54359a90019eb4a752f5debfdf47a53fe3b5748d36e1ae7d",
+          "sha256": "93d01b6bf0e32e9bd3ad3b9a3e619ca6b2bee4dc731c239daa76a02f7030c394",
           "bytes": 13424
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "c9480a8614354eb0d38034c41b3ce3bb4d9dbf0d3762019f26dddc87ed8ecc61",
-          "bytes": 77076
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
@@ -2695,7 +2709,7 @@
       "evidence": "Original genuine file or source-shaped array fixture and compiled native operator",
       "reuse": "Existing 2012 four array-inner oracle reused if suitable.",
       "status": "PASS",
-      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
       "result": "C98 original v1.200 has no UArrayProperty (source-excluded). Genuine UT99 v432 original SavePackage + independently compiled LOAD of array<int> (11,42,-7), count3 and 13 archived bytes matched preaccepted source-selected reader. Genuine original 2012 C227i UCC compiler class file loaded by 2026 original 227k Core.dll; new 227k original native SavePackage real array (11,42,-7), independent second ORIGINAL compiled process LOAD of same 302-byte .u, identical 3 values and exact 13-byte count+3-int archive, runtime source-linked production 227k codec now implemented; 81/81 joint oracle PASS. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T10:16:58+00:00",
@@ -2705,13 +2719,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
-          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
-          "bytes": 11386
+          "sha256": "d9215d089b9b3e43931fdb64266ac8aa2be02a17daf48f9b570e5d86756376aa",
+          "bytes": 11540
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
-          "bytes": 69230
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
@@ -2766,7 +2780,7 @@
       "evidence": "Original native linker fixture and source-selected inner type",
       "reuse": "G3-09 declaration refs already closed; this is array values.",
       "status": "PASS",
-      "evidence_sha": "b9c004afbbfa35ad98efdd7c60e303cfb67fb81561741ae17399215b91276ad5",
+      "evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
       "result": "C98 original v1.200 dynamic UArrayProperty source-absent. Genuine original UT99 v432 SavePackage plus independent native LOAD: array<Name> Alpha/Beta and array<UObject*> self/None, source-derived 3/3 serialized bytes each. New original 2012 compiled C227i class + genuine original 2026 C227k SavePackage and distinct native process LOAD: NAME Alpha/Gamma, UObject export ref1 points to ArrayObject itself and zero ref remains None; original linker FName map resolves both names, exact 3/3 physical value bytes and current production 227k source-resolved typed array decoder. Joint original/native/source 81/81 checks PASS. The one shared multi-era compiled oracle closed four fixed IDs at once, no accepted compiled native probes replayed by verifier. T022,T023,T043,T044 remain BLOCKED.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T10:16:58+00:00",
@@ -2775,13 +2789,13 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
-          "sha256": "a70b1f55924e35f43e8b0a667ba7c9954538415ec2ca91e06a231a784c098c3c",
-          "bytes": 11386
+          "sha256": "d9215d089b9b3e43931fdb64266ac8aa2be02a17daf48f9b570e5d86756376aa",
+          "bytes": 11540
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "639e45e455e4d28779362c0878db384c24795abcde4d670b6c662e1dca2e0680",
-          "bytes": 69230
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
@@ -2836,7 +2850,7 @@
       "evidence": "Original compiled native array/struct fixture",
       "reuse": "G3-10 owns per-member content; this checks iteration/count.",
       "status": "PASS",
-      "evidence_sha": "d886b58ec900ba0623c0bd546c0711591758db10929a1112c1eebe6d513fb4b9",
+      "evidence_sha": "437cca8cb45c24b823c9ec07a0fb22f1de36e660a71f5c50e51b19de8fd084c9",
       "result": "Genuine original 2012 C227i UCC compiled a source-legal class with two struct G3Tuple elements; original class default count2 native property footprint19. Actual 2026 original compiled C227k Core.dll SavePackage produced a genuine 308-byte .u, with exactly count2 and two int/float/FName source-gated UStruct::SerializeBin values consuming 19 physical bytes. Actual original native saved (101,1.25,Alpha) and (-202,-2.75,Gamma), with real FName map index4 Alpha and index3 Gamma; SECOND separate original C227k native process LOAD returned both complete struct elements with inner stride12 and six exact fields. Production v227 source-linked native decoder invokes real local struct layout ordered Number/Fraction/Label and consumes EXACT 19 bytes; existing original v432 source branch retained, original C98 dynamic UArrayProperty absent. Distinguishes runtime memory 12 bytes per struct from archive 9 bytes per element. ONE SHA-pinned 2012 original compiler + 2026 true native SAVE+independent LOAD joint 85/85 verifier closed exactly two frozen IDs; T045/T046 are genuine UFixedArrayProperty not UnrealScript ArrayDim2 and stay BLOCKED; T048 negative native crash has no reliable FArchive Tell so remains BLOCKED.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T16:49:00+00:00",
@@ -2845,8 +2859,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b06-t043-t044-original-native-struct-strings.php",
-          "sha256": "19cec609f4a765649c003736110b3fd98cf438a91e8363f621e009db7da7e812",
-          "bytes": 15690
+          "sha256": "26b598b6d473988bf9015ee47e5fcfa13074e64d91d6befa1bef0cdacb43f951",
+          "bytes": 15870
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227i-original-compiler.u",
@@ -2870,8 +2884,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "855ef589b455d6ed7430710c02a8db0b4750992ea22b9665402d3de6126fe8cc",
-          "bytes": 76068
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-original-85pass.json",
@@ -2891,7 +2905,7 @@
       "evidence": "Original compiled initialized string array fixture",
       "reuse": "Reuse G5 stable nested string proof.",
       "status": "PASS",
-      "evidence_sha": "d886b58ec900ba0623c0bd546c0711591758db10929a1112c1eebe6d513fb4b9",
+      "evidence_sha": "437cca8cb45c24b823c9ec07a0fb22f1de36e660a71f5c50e51b19de8fd084c9",
       "result": "Genuine original 2012 C227i UCC compiled real array<string> with empty first and nonempty Hello-227 second default. Original 2026 compiled native Core.dll class LOAD confirms exactly two real class-default FString elements: empty length0, Hello-227 length9. Same source-legal object instance saved two modified genuine strings Alpha-227 and Gamma-227, both actual native memory and original 227k SavePackage 23 archive bytes: count2, first positive10+ASCII nine+NUL, second positive10+ASCII nine+NUL. A SECOND original C227k native independent LOAD process restores both texts length9, class CDO empty/nonempty unchanged. Production source-gated v227 inner UStrProperty SerializeItem reads exactly both signed counts, original raw bytes, per-item NUL and complete tag boundary, not fabricated default entries. v1.200 C98 UArrayProperty source absent and UT99 v432 string-array allocator UB distinct, not claimed as completed native fallback. ONE SHA-pinned 2012 original compiler + 2026 true native SAVE+independent LOAD joint 85/85 verifier closed exactly two frozen IDs; T045/T046 are genuine UFixedArrayProperty not UnrealScript ArrayDim2 and stay BLOCKED; T048 negative native crash has no reliable FArchive Tell so remains BLOCKED.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T16:49:00+00:00",
@@ -2900,8 +2914,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-b06-t043-t044-original-native-struct-strings.php",
-          "sha256": "19cec609f4a765649c003736110b3fd98cf438a91e8363f621e009db7da7e812",
-          "bytes": 15690
+          "sha256": "26b598b6d473988bf9015ee47e5fcfa13074e64d91d6befa1bef0cdacb43f951",
+          "bytes": 15870
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227i-original-compiler.u",
@@ -2925,8 +2939,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "855ef589b455d6ed7430710c02a8db0b4750992ea22b9665402d3de6126fe8cc",
-          "bytes": 76068
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-original-85pass.json",
@@ -3091,7 +3105,7 @@
       "evidence": "Original compiled actual FArchive failure at named branch",
       "reuse": "G3-14 owns crosscutting low-level Count/EOF.",
       "status": "PASS",
-      "evidence_sha": "717e74622789eec122f08a54116a3aeb6c38b2ff207928aadadeccba83d3f69e",
+      "evidence_sha": "d594badabf487fe6456a0f740b479ba30bbc269197790d2ab9a37cf47602d6c5",
       "result": "Original compiled UT99 v432 UArrayProperty::SerializeItem genuine negative1/zero count native errors both original method-specific size mismatch Got8 Expected29 at original physical FArchive Tell259, and separate positive oversized count31 native physical EOF ReadFile beyond 308+3/308 null package. Source-selected v432 reader matches all without claiming negative-native loaded arrays. Original 2026 compiled C227k original SavePackage genuine 308-byte nested G3Tuple UArrayProperty count2 at offset234: separate new native one-byte positive3 and huge63 mutations both genuine original compiled Core.dll error ULinkerLoad<<FName via UStruct::SerializeBin Bad name index6248/12 at actual physical Tell263; production reader exact same name/index and cursor263. Original 227k count0 source-specific recovery logs warning Got1 Expected19, actual native successfully loaded empty Pairs and subsequent Strings; production source-gated reader reproduces true count0 and original export-end Tell280. C227k count negative1 triggers original native C++ FArray allocator access violation; explicitly excluded from deterministic error cursor acceptance, never treated as a successful load. No source profiles without UArrayProperty are falsely included. One joint independently checked 39/39 native/source/current verifier closes only THIS frozen T048; broader compact name/string bound matrix T068 and malformed tag matrix T064 remain BLOCKED until distinct original source branches available.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-30T17:54:41+00:00",
@@ -3105,8 +3119,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "90f161b06b08900e8171ca0ba597f4123f09097d1c0c4e127cc7291dbc57f4dd",
-          "bytes": 77780
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountThree.u",
@@ -3206,13 +3220,35 @@
       "pass_criterion": "Known byte positions match; relocatable Name/Object words compare by resolved target not literal ASLR address.",
       "evidence": "Reuse 96 true original C98 script memory buffers; cover only untested token types",
       "reuse": "No blanket rerun of 100 scripts.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST 2x8: Authentic 1998 C98 Core.u has no SAME script with both nonzero FName and UObject relocations; Engine.u cross-type native success T057 cannot replace Core.u fixture. REQUIRED: Known byte positions match; relocatable Name/Object words compare by resolved target not literal ASLR address.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "status": "SOURCE_NA",
+      "evidence_sha": "b1f1a490cb8ef5b3067849544b45dd79b6becd332f3a808de9696fe149018e80",
+      "result": "SOURCE-JUSTIFIED N/A FOR EXACT FIXED CORE.U INPUT ONLY, not a fabricated native successful Core.u mixed script. GENUINE retail May17 1998 C98 Core.u SHA-pinned original has 458 exports, 109 actually decoded UFunction/UState/UClass script archives, 107 Object-only and 2 with no typed refs, ZERO mixed FName+UObject in one Script archive, no unused candidates; original compiled C98 loaded 96 real nonzero Core.u scripts verified from already accepted x86 CDB 100 structs. Consequently requirement to compare BOTH relocation types in a SINGLE GENUINE original Core.u script has NO possible input. The same source-applicable C98 SerializeExpr typed Object+FName memory behavior is genuinely tested in real C98 Engine.u Grab 1 UObject+2 FName in T057 original native 112/112. This fixed original-C98-Core-only specimen is SOURCE_NA while C98 mixed expression method remains covered by T057 PASS. No native reruns, G3 original compiled whole still NOT accepted.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T12:50:10+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t050-original-c98-core-source-na.php",
+          "sha256": "c71cca86e129f106a85bc2d25f50d4c67110f46de89f9aaa0a44ce5b0f397a00",
+          "bytes": 4049
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T050-original-C98-Core-zero-mixed-T057-source-na-9pass.json",
+          "sha256": "f0b1723bdc6d1414696b515a1e90aceefe88f1dfc32fc67074b4bd67b4b2aae9",
+          "bytes": 714
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-UStruct-96-SCRIPTS-NATIVE-VALUES.json",
+          "sha256": "238734b9afd79132bbc27a4935eeea1e77064eea3ec54d71329a4f151c7a12c5",
+          "bytes": 52559
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-original-native-three-families-112pass.json",
+          "sha256": "917cb4ea822786112dacf5def7e3976fe2694befc32d90e063f2b92d0aa9bc97",
+          "bytes": 4483
+        }
+      ]
     },
     {
       "id": "T051",
@@ -3225,7 +3261,7 @@
       "evidence": "G5 original v432 script evidence and source opcode declaration",
       "reuse": "v432 accepted G5 not entire G3.",
       "status": "PASS",
-      "evidence_sha": "c00bd7184a2a5cd90d1b3cc0f9f7806adc7787850ea583a6d01a309ac81e28e8",
+      "evidence_sha": "3dc1993bb6a94e8f377995ba6561fedc6560d3a4eb5d04ebdf0ae0de1456bda5",
       "result": "Stock original compiled UT99 v432 Core.u UStruct NotEqual_FloatFloat 10 native/6 archived bytes with two real object pointers; stock v432 Engine.u Inventory UClass script 33 original native memory bytes vs 25 archived, 17 expression nodes including source EX_Skip(0x18) control flow with nested 0x2d and 0x82 native call -> 0x9a -> 0x3a conversion -> 0x01 Role field. 21/21 deterministic native bytes exact and 12 native pointer bytes explicitly masked, actual pointer targets mapped. Prior 31/31 Core.u and new 25/25 Inventory direct native/current comparisons pinned; zero original compiled reruns. Only T051 script branch, not other G3-12 full closure.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T13:41:06+00:00",
@@ -3259,8 +3295,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
-          "bytes": 20905
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
         },
         {
           "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
@@ -3432,7 +3468,7 @@
       "evidence": "Original script-bearing package and compiled loader",
       "reuse": "G3-03 checks prefix fields; G3-12 owns opcode expansion.",
       "status": "PASS",
-      "evidence_sha": "e619c9bd364f9a32e3a2d89f2b9faa16a2d3f153ede7eafad012d09215796bf8",
+      "evidence_sha": "d2b85af94a69b5e877930e7784603d1d17515470bb4d7e4fa67c9cb148dda96e",
       "result": "Original v432 compiled Core.u Vector zero Script.Num and zero archived bytes; original v432 Engine.u Pawn 314-byte real compiled native script (longer than one compact index byte), exactly 246 physical archived bytes, 28 UObject relocations (112 native bytes masked), 202/202 known actual native bytes equal, 68-byte compact widening. Source-selected original C98 and C227i zero script records independently sealed. Current production decoder 16/16; no native or previous verifier replay; no assertion that short C98/C227i samples also exceed 128.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T20:05:19+00:00",
@@ -3466,8 +3502,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
-          "bytes": 20905
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
         },
         {
           "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
@@ -3542,7 +3578,7 @@
       "evidence": "Recorded original 469f Bad expr token15 trace, no rerun",
       "reuse": "G3-04 old param-field branch remains distinct.",
       "status": "PASS",
-      "evidence_sha": "4f1fd340f0affb86dfdd4a0bf285f6a2c6430bba136b374386f3f082571be7f2",
+      "evidence_sha": "2a0b3ac66fc86d6900744bfdb3d8cef5a6f5efc82835d4e62374a60494442ff9",
       "result": "Fixed T056 cross-era compatibility: genuine 1998 FObjectManager-saved v61 UFunctions contain original EX_EndCode 0x15 (physical offsets797,854), legal C98 source; actual unmodified original 469f Core.dll loader FAILED with Bad expr token 15 (NOT a successful legacy UFunction load). UT99 original source omits that case; current UnrealDB now raises identical bad expression error instead of silently returning partial, with source-local cursors798/855 in focused 18/18 PHP parity. v227 separate opcode remains unverified; T011 and G3-04 stay BLOCKED. All original engine and CDB proof reused; zero replay.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T13:33:31+00:00",
@@ -3571,8 +3607,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
-          "bytes": 20905
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
         },
         {
           "original": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System\\Core.dll",
@@ -3603,7 +3639,7 @@
       "evidence": "Source opcode table plus original compiled memory values",
       "reuse": "Only original source-legal cases.",
       "status": "PASS",
-      "evidence_sha": "37332cedab95788e9d788804858b0636f6ad9014372b24d1947ce7800968b86c",
+      "evidence_sha": "922d36bfb334b972e82defc1ebeb8d36cb7794f64bd6f1554524a6bdc62f6dc5",
       "result": "Three actual original compiled source-family nested EX_* scripts, no native reruns: C98 May17 retail Core.dll real Engine.u Grab export1613 13 expressions/7 top-level/30 in-memory vs23 archive, 18/18 deterministic compiled native bytes match; 1 UObject+2 FName typed slots (12 bytes intentionally masked). UT99 v432 sealed compiled Engine.Inventory 17 recursive expressions including EX_Skip/native conversion, 21/21 literal bytes/12 reloc bytes. Original Unreal 2012 C227i Core.RandRange 14 recursive expressions/2 top-level 26 memory/18 archive, 14/14 literal bytes/12 typed object bytes. 112/112 focused source/current/original verification PASS; total 53 native known bytes and 36 relocation bytes masked; no unknown process pointer addresses fabricated. T057 only, G3-12 overall still OPEN.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-28T22:14:34+00:00",
@@ -3612,8 +3648,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t057-original-native-recursive.php",
-          "sha256": "e3d9cc2fad6b4e250667484c1ac2f2ac2ccb983fda4bdddd57d441c5af1b547b",
-          "bytes": 11946
+          "sha256": "d25d5e02cff4c34af07fd7c5d83e43726cd3dde245894f4053117788b1acb36c",
+          "bytes": 12146
         },
         {
           "path": "catalog/compliance/evidence/o06/20261028-G3-T057-original-native-three-families-112pass.json",
@@ -3652,23 +3688,23 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
-          "bytes": 20905
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
-          "sha256": "23c7b307fd88af83851a005b0aca0f0be83560aafe122886be314ac2de445f5f",
-          "bytes": 7937
+          "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1",
+          "bytes": 10388
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
-          "sha256": "b13ce85ff3226c6ba8621014508d32824d9c978c882da93a23f892cbf2cccac6",
-          "bytes": 50236
+          "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+          "bytes": 50490
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "0cfba36bbe3b36a80de885d5d6c3e22f37ab8a5b14079dab65285a86c2752128",
-          "bytes": 59741
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t051-v432-native-script-flow.php",
@@ -3697,8 +3733,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-          "sha256": "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500",
-          "bytes": 20905
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
         },
         {
           "original": "C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
@@ -3780,7 +3816,7 @@
       "evidence": "G5 v432 original default corpus reused; 469f delta via Core/Engine",
       "reuse": "G3-05 owns construction and superclass overlay.",
       "status": "PASS",
-      "evidence_sha": "84c0e972710f666db8075927656d898611dc7178df3b1af8b49afbd4e29b8a98",
+      "evidence_sha": "d6af326eeb994d3595e1a8a6b2482404fefde58e3ef58d5288869bb03925bd4c",
       "result": "Original compiled 469f GameInfo CDO native Bool bPauseable=True, Int MaxPlayers=16 and Name DefaultPlayerState=PlayerWalking; real original 469f and v432 archive tag type/order, name index=63 and fully consumed UClass physical archive match. Reused sealed original v432 native defaults. Shared original compiled frozen 902/902 checks PASS; no original engine reruns.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T02:50:38+00:00",
@@ -3789,8 +3825,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php",
-          "sha256": "2604e72c9a840bbe04f6b44dd4f82b28a42aa3e17d3733d397c1749873e90081",
-          "bytes": 9904
+          "sha256": "0df562d494d6313d7aa226c0a7c71cb9ea5a893ac37f6e888a4e2fd4bc7e7843",
+          "bytes": 10056
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json",
@@ -3824,8 +3860,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
@@ -3852,7 +3888,7 @@
       "evidence": "2012/2026 original Core/Engine native defaults",
       "reuse": "G3-08 handles leaf numeric/string codecs.",
       "status": "PASS",
-      "evidence_sha": "edc11156458cf3c4cc4e68fb60c83fcf9778ce6fdfc5796bef9424addabeb7d1",
+      "evidence_sha": "b962a65ea1881e748c829c2eaba8fba88bb8eef519188929fb94f2309c0fb918",
       "result": "Genuine 2026 C227k original compiled Core.dll loaded true Engine.u six CDOs; actual mixed GameInfo tagged Bool bPauseable=True, Int MaxPlayers=16, FName DefaultPlayerState=PlayerWalking, real archive FName index59 not UT99 index63. Native loaded values, source-specific real archive field types/offset order and complete serialized class consumption verified. Actual Pawn Health=100, AirControl=0.05, PlayerPawn.bCanJump=True further source-valid nonzero values. Shared source-selected original compiled native six CDO 902/902 acceptance checks, no original engine reruns in verifier.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T03:33:07+00:00",
@@ -3861,8 +3897,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php",
-          "sha256": "e6e24608c01c6bedc070709e13b3252e68c9ed6f79e1f1c70ed45baee0ee0f4a",
-          "bytes": 8539
+          "sha256": "bbc1a8f70090fc3de4a706a792eb332b5313aac720eb1e3a09bb709d4620f6fb",
+          "bytes": 8675
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
@@ -3881,8 +3917,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
@@ -3905,7 +3941,7 @@
       "evidence": "Actual native loaded class and empty/partial tag stream",
       "reuse": "G3-05 owns class default initialization; here owns missing tag effect.",
       "status": "PASS",
-      "evidence_sha": "edc11156458cf3c4cc4e68fb60c83fcf9778ce6fdfc5796bef9424addabeb7d1",
+      "evidence_sha": "b962a65ea1881e748c829c2eaba8fba88bb8eef519188929fb94f2309c0fb918",
       "result": "Actual original C227k source serialized PlayerPawn has NO Health/AirControl/bHidden tags. Genuine Pawn archive contains Health=100 and AirControl=0.05, Actor original bHidden=False; compiled original PlayerPawn CDO physically loads inherited Health=100/AirControl=0.05/bHidden=False, while explicit PlayerPawn bCanJump=True overrides original Pawn.bCanJump=False. Archive reader correctly reports absence rather than inventing zero; loaded-values oracle independently proves source-defined inheritance. Shared source-selected original compiled native six CDO 902/902 acceptance checks, no original engine reruns in verifier.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T03:33:07+00:00",
@@ -3914,8 +3950,8 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php",
-          "sha256": "e6e24608c01c6bedc070709e13b3252e68c9ed6f79e1f1c70ed45baee0ee0f4a",
-          "bytes": 8539
+          "sha256": "bbc1a8f70090fc3de4a706a792eb332b5313aac720eb1e3a09bb709d4620f6fb",
+          "bytes": 8675
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
@@ -3934,8 +3970,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "842cfbbd1a9df0ac5b97ab82a5ec3df0dd5e145e80c5ddcd21df4f384b4c5468",
-          "bytes": 16212
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "original": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
@@ -4231,7 +4267,7 @@
       "evidence": "Original compiled FArchive native diagnostic trace or sealed equivalent",
       "reuse": "No one test per object or per package file.",
       "status": "PASS",
-      "evidence_sha": "09e07ae79b9013a6175f208ee2d568948fbd8da72ad3c39724fb6bc601c3ebd8",
+      "evidence_sha": "42fca618c92f5578d1bdfb0f585685d8299a8a2bfb5c7d9df8b9f6dcc53466d4",
       "result": "Original compiled stock UT99 v432 Core.dll, exact native-produced 283-byte package, one-byte legal FString count21->50: FArchiveFileReader next FPropertyTag FName FCompactIndex<< tries at physical EOF 283+1/283 after field; original Tell283, source-selected UnrealDB now reports matching physical EOF at next TagName and no loaded value. Previous sealed mid-field FString<< EOF 283+1/283 reused, different actual native stack, same operator. Source-specific previously mismatching generic missing NAME_None diagnostic corrected; 19/19 original native/current source checks PASS. Earlier physically truncated file failed during import-map Seek and explicitly excluded, not native-field proof. No claim of all source builds or full G3 release.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T10:00:31+00:00",
@@ -4245,8 +4281,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "1c0fc76e5199e36044242898479b554c8e4bcc7b7388411cf2b9a19a91ce4b55",
-          "bytes": 62562
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.u",
@@ -4413,7 +4449,7 @@
       "evidence": "Original native lookup branch + real source package indexed maps",
       "reuse": "G3-03 NAME_None assertion sealed for 469f.",
       "status": "PASS",
-      "evidence_sha": "7d50faad8b4f58b1fd4be9389f7256a448a1c976319885c84e427034cc7a6729",
+      "evidence_sha": "8c3628f5ee2a383276f47020a6059483c1bfd2298ce9e4b0b47b243e56bc7920",
       "result": "One frozen T069 three distinct source families original compiled native ULinkerLoad bad name and bad object import/export index full positive 51/51 source/native/current acceptance. Unmodified actual May17-1998 shipped C98 Core.dll plus genuine unchanged original C98 native Unreal.exe -make on a REAL UCC-compiled 761-byte v61/0 G3C98Defaults.u UClass parent (16 names/7 imports/6 exports), with three carefully controlled independent one-byte corruption variants, each EXACT original source package except that SINGLE offset: original class-default terminal FName byte373 00->3f yields ORIGINAL 1998 runtime Bad name index 63/16 actual ULinkerLoad FArchive Tell374; original parent UClass SuperField byte275 -2->-63 yields original runtime Bad import index 62/7 Tell276; SuperField byte275 -2->+63 yields original runtime Bad export index 62/6 Tell276. Each genuine original C98 Editor.log contains real compiled engine identity, ULinkerLoad failure and exact physical cursor; unchanged original .u restored SHA766e4654 after each native run. UnrealDB production C98 source-linked class UField and tagged-default decoder NOW reproducibly raises EXACT same original engine diagnostic, numeric index/source map count and archive Tell for all 3, rejects without fabricated resolved object/name. Original independently sealed true STOCK UT99 v432 Core.u negative FName -63/326 Tell43308 and original 2026 C227k Core.u -63/566 Tell67624 both source/native/current 18/18 preserved, as well as previously accepted C98+v432+227k invalid import original Core.u T009 91/91 verified source-only via immutable native CDB traces, NOT original engine rerun. Genuine source-specific C98 import/export works only on EPIC_UE1 and real package linker; v432 and 227k source behavior unchanged and explicitly validated by own compiled genuine oracle. All original compiled x86 binaries and original .u, native logs and source scripts SHA-sealed; 51/51 current verifier, original native accepted prior sessions not repeated. T064 distinct malformed property-tag error families not falsely closed, G3 global still not accepted, PRD unchanged.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-31T02:51:00+00:00",
@@ -4422,18 +4458,18 @@
       "verified_evidence": [
         {
           "path": "catalog/bin/verify-ue1-o06-g3-t069-three-original-native-linker-errors.php",
-          "sha256": "67727d401a9edfc2c3626c004feba7e14080408ff6ecbb80ce7c3c373af48baa",
+          "sha256": "d1d9fe7be745c0e0ebd474efffbfc0fd5664a57c4530a4dc7d5b4c664acdccd9",
           "bytes": 10056
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-          "sha256": "df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a",
-          "bytes": 18683
+          "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+          "bytes": 20596
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4",
-          "bytes": 79099
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-G3C98Defaults-761.u",
@@ -4503,7 +4539,7 @@
       "evidence": "Source-defined original Preload/linker trace and reader archive cursor",
       "reuse": "Use only actual distinct implementation, not duplicate native per profile.",
       "status": "PASS",
-      "evidence_sha": "0be4a936f2ba13bb30105950e08f3efa4734fbff0368296adf88c7c71e2ea72b",
+      "evidence_sha": "10ad5a1bc924a6be80bcc3857dce5835d50b93d36877ef1acb1e37cb56dad83e",
       "result": "Original compiled stock UT99 v432 Core.dll on genuine native-produced 283-byte direct FString package: one-byte count21->22 reads beyond nominal export into physically readable file; ORIGINAL fails Bad name index -5242879/9, FArchive Tell262, reader same name and Tell262 with resolved source imports. Prior sealed original true physical EOF 283+1/283 also matches reader physical EOF283. Source/native/current reader 19/19 focused PASS; one new original native execution, previous accepted native EOF reused. Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
       "blocking_reason": null,
       "last_attempt_at": "2026-10-29T09:55:27+00:00",
@@ -4517,8 +4553,8 @@
         },
         {
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "sha256": "d8f4aaea7bda3cf3272151b19e195ebe04d21486041046a20709c25b01e5c82b",
-          "bytes": 61784
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
         },
         {
           "path": "catalog/compliance/UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json",
@@ -4558,7 +4594,14 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Cross-reference every G3-03..13 source-defined error and version gate to one concrete test ID/evidence SHA. PASS ONLY WHEN: No unowned mandatory error branch; explicit excluded native undefined behavior and no duplicate test case. ORACLE: Read-only source/matrix reconciliation plus one native trace per still-unproven distinct branch. Reuse before any new execution: The register itself is the fixed input list; newly discovered beyond scope go appendix.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_fixed_test_dependencies": [
+        "T011",
+        "T019",
+        "T065"
+      ],
+      "last_grouped_evidence_audit": "2026-10-31",
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
     },
     {
       "id": "T072",
@@ -4576,7 +4619,13 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Enumerate methods actually reached by original compiled loader and match type-correct loaded values to reader. PASS ONLY WHEN: 100% of required observable fields matched or each unobservable direct type has an explicit documented exclusion. ORACLE: Reuse C98 direct loaded native registers and G3-03..13 closure proofs; compare only missing types. Reuse before any new execution: Not a new full CDB replay.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_fixed_test_dependencies": [
+        "T011",
+        "T065"
+      ],
+      "last_grouped_evidence_audit": "2026-10-31",
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
     },
     {
       "id": "T073",
@@ -4594,7 +4643,14 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Union existing 650 v432 function/state and 469f 1422 Engine plus other class proofs, identify genuine missing method classes. PASS ONLY WHEN: Zero unexplained source-applicable method/type gaps and no false 469f-v432 equivalence. ORACLE: Aggregate existing sealed original native snapshots and owner gate evidence. Reuse before any new execution: Avoid proof-count inflation per export.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_fixed_test_dependencies": [
+        "T011",
+        "T019",
+        "T065"
+      ],
+      "last_grouped_evidence_audit": "2026-10-31",
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
     },
     {
       "id": "T074",
@@ -4612,7 +4668,12 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Reconcile all required C227 types, own actual native loaded references and script flags. PASS ONLY WHEN: Zero missing mandatory C227 method oracle; 227i and 227k build deltas explicitly separated. ORACLE: Reuse original 237 native and 227k saved fixture; only uncovered fields target native. Reuse before any new execution: Do not equate distinct compiled versions.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_fixed_test_dependencies": [
+        "T019"
+      ],
+      "last_grouped_evidence_audit": "2026-10-31",
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
     },
     {
       "id": "T075",
@@ -4630,7 +4691,13 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare actual compiled layout outputs for imported struct, property chains and runtime materialized refs. PASS ONLY WHEN: No value presented as actual runtime pointer unless native observed; exact source-backed sizes and identities. ORACLE: Original per-build native linker reference index mapping. Reuse before any new execution: G3-03 child refs and G3-04 param chain feed this.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_fixed_test_dependencies": [
+        "T011",
+        "T065"
+      ],
+      "last_grouped_evidence_audit": "2026-10-31",
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
     },
     {
       "id": "T076",
@@ -4648,7 +4715,13 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Compare one distinct provider-resolution/import case per documented game/build and verify reconstructed package names. PASS ONLY WHEN: Reader source-selected provider precedence and references equal original native loaded values; missing provider reported accurately. ORACLE: Actual shipped Core/Engine and documented dependency cases; owner gates sealed. Reuse before any new execution: Do not rescan 235k files without a named gap.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_fixed_test_dependencies": [
+        "T011",
+        "T019"
+      ],
+      "last_grouped_evidence_audit": "2026-10-31",
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
     },
     {
       "id": "T077",
@@ -4666,7 +4739,20 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Assign one SHA-verified native acceptance record or explicit exclusion to every source-required behavior. PASS ONLY WHEN: Every original method gate has verified owner/oracle and zero unexplained parity mismatches. ORACLE: Read-only evidence join from G3-01..14, not a new test suite. Reuse before any new execution: Any failure gives concrete owner gate and stops final G3-16.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_fixed_test_dependencies": [
+        "T011",
+        "T019",
+        "T065",
+        "T071",
+        "T072",
+        "T073",
+        "T074",
+        "T075",
+        "T076"
+      ],
+      "last_grouped_evidence_audit": "2026-10-31",
+      "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
     },
     {
       "id": "T078",

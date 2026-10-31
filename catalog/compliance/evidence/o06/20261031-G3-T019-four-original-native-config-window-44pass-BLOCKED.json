@@ -1,0 +1,54 @@
+﻿{
+  "ok": true,
+  "checks": 44,
+  "failures": [],
+  "fixed_T019": "BLOCKED",
+  "genuine_original_compiled_source_profiles": [
+    "UT99-v432",
+    "Unreal-C227k"
+  ],
+  "original_compiled_native_runs_bounded_new": 2,
+  "original_compiled_native_runs_reused_earlier": 2,
+  "original_native_executions_by_this_verifier": 0,
+  "verified_v432_config_transient_profile_count": 2,
+  "verified_C227k_localized_config_transient_profile_count": 2,
+  "unresolved_C98_native_controlled_two_profile": true,
+  "unresolved_UT99_v432_localized_override_explicit_observation": true,
+  "unresolved_C227i_separate_original_native_localization_precedence": true,
+  "original_UE1_C98_profile_not_falsely_inferred_from_C227": true,
+  "G3_full_acceptance": false,
+  "cases": [
+    {
+      "original_compiled_build": "UT99-v432",
+      "profile": 111,
+      "config_value": 111,
+      "localized_runtime": "DefaultBulk",
+      "transient_runtime": 0,
+      "persist_runtime": 888
+    },
+    {
+      "original_compiled_build": "UT99-v432",
+      "profile": 222,
+      "config_value": 222,
+      "localized_runtime": "DefaultBulk",
+      "transient_runtime": 0,
+      "persist_runtime": 888
+    },
+    {
+      "original_compiled_build": "Unreal-C227k",
+      "profile": 111,
+      "config_value": 111,
+      "localized_runtime": "Native Alpha",
+      "transient_runtime": 0,
+      "persist_runtime": 888
+    },
+    {
+      "original_compiled_build": "Unreal-C227k",
+      "profile": 222,
+      "config_value": 222,
+      "localized_runtime": "Native Beta",
+      "transient_runtime": 0,
+      "persist_runtime": 888
+    }
+  ]
+}

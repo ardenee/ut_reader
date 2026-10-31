@@ -198,6 +198,22 @@ final class CatalogUE1ClassicClassDefaultSchemaReader
                 }
                 continue;
             }
+            // The original tagged-property reader already source-classified
+            // this known declaration as native warning+skip. Its bytes are
+            // present on disk, but Epic does NOT deserialize a Name/Object
+            // value. A null skipped value must not be rejected as a bad
+            // linker index (real stock v432 Engine.Pawn.AnimSequence).
+            if(($tag['value_kind']??'')==='epic_skipped_declared_tag_bytes'){
+                $mismatchCount++;
+                if(count($mismatches)<16){
+                    $mismatches[]=['name'=>$tag['name'],
+                        'reason'=>'native_warning_skip_declared_tag_bytes',
+                        'actual_type'=>$tag['type'],
+                        'declared_kind'=>$decl['kind'],
+                        'property_flags'=>$decl['property_flags']??null];
+                }
+                continue;
+            }
             $tagKind=strtolower((string)($tag['type']??''));
             $declKind=(string)$decl['kind'];
             // Epic UClassProperty derives from UObjectProperty; older

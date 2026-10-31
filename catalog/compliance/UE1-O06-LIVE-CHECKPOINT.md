@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-66PASS-14BLOCKED-B03-T018-B05-T033-CLOSED
-- **Last completed action:** Original compiled 2012 C227i and original 2026 C227k UCC class-default native loads plus original real stock Engine two original 2012 default exports and six original 2026 native loaded CDOs close T018 90/90. Genuine original 2026 227k Core.dll UButtonProperty::Serialize actual live Caption field CDB after archive operator recovered Move point to viewport and Go to point and source reader matches exactly, T033 31/31. B03 7/8, B05 8/8; 66 PASS 14 BLOCKED 0 FAIL; no accepted native test replay, PRD unchanged.
-- **Resume at:** T019 original compiled isolated two-profile INI/localized precedence for applicable C98, stock v432, C227. T011 and T065 valid native v60-v63 UFunction and version matrix, T050 genuine C98 Core.u mixed typed script relocation. T071-T080 aggregate final only after original upstream closes. No PRD release until full 80.
-- **Active changed at:** 2026-10-31T09:41:17+00:00
+- **Stage:** G3-66PASS-1SOURCE_NA-13BLOCKED-BULK-T019-T050-T071-T077
+- **Last completed action:** One grouped DEV pass: fixed T050 SOURCE_NA 9/9 (all 109 actual C98 Core.u script archives no mixed FName+Object, true mixed C98 Engine.u already T057 PASS); T019 44/44 source/native partial on 2 NEW unchanged stock v432 compiled controlled configuration profiles and 2 retained C227k native config+localized (full T019 still BLOCKED). Original v432 UClass schema skip bug corrected and true native-warning skip preserved. T071-T077 41 previous PASS fixed IDs source-only integrity reconciled via 29 independently passing verifier consumers, total 345 proof file SHA paths 0 drift. 608-tag G5 diagnostic still FAIL 1679/1704 with 25 scoped unresolved. 66 PASS 1 SOURCE_NA 13 BLOCKED 0 FAIL. No original accepted engine replay. DEV only; PRD unchanged.
+- **Resume at:** Grouped next: T019 original C98/v432 true localized precedence and 2012 C227i source family. T011 authentic v60-v63 successfully loaded UFunction with valid imports and afterlink triplet; T065 same source version boundary. Resolve separate G5 608 25 loaded-value/INI provenance issues without repinning original runtime evidence. T071-T077 compiled method/owner verification and T078-T080 release ONLY after prerequisites, no repeat original already accepted.
+- **Active changed at:** 2026-10-31T13:15:43+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

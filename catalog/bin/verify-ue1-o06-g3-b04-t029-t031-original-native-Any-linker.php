@@ -27,7 +27,7 @@ $sealed=[
 foreach($sealed as $name=>$sha)$ck(is_file($ev.$name)&&hash_file('sha256',$ev.$name)===$sha,'exact genuine original UCC/native SHA '.$name);
 foreach([
 'CatalogUE1ClassicAnyPropertyValueReader.php'=>'3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59',
-'CatalogUE1ClassicClassDefaultSchemaReader.php'=>'392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925',
+'CatalogUE1ClassicClassDefaultSchemaReader.php'=>'bfcd5e1be6a03059da60755d910c36a9df476e6ed6bac00953b3519f0bf1e4a2',
 'CatalogUE1ClassicClassMetadataReader.php'=>'888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4',
 'CatalogUE1ClassicTaggedPropertyReader.php'=>'e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c',
 ] as $name=>$sha)$ck(hash_file('sha256',$repo.'/catalog/src/Infrastructure/Readers/'.$name)===$sha,'production source strict byte pin '.$name);
