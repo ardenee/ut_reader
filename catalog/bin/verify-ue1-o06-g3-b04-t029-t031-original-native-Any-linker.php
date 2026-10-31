@@ -26,7 +26,7 @@ $sealed=[
 ];
 foreach($sealed as $name=>$sha)$ck(is_file($ev.$name)&&hash_file('sha256',$ev.$name)===$sha,'exact genuine original UCC/native SHA '.$name);
 foreach([
-'CatalogUE1ClassicAnyPropertyValueReader.php'=>'a5b8ee67a2b8a25c1112d489359bc520ab403c478febacfd87057c9f653263ef',
+'CatalogUE1ClassicAnyPropertyValueReader.php'=>'3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59',
 'CatalogUE1ClassicClassDefaultSchemaReader.php'=>'392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925',
 'CatalogUE1ClassicClassMetadataReader.php'=>'08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386',
 'CatalogUE1ClassicTaggedPropertyReader.php'=>'38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1',
@@ -148,8 +148,8 @@ foreach([
 }
 $pos=0;$raw="\x06\x01";$read=static function(int $n)use($raw,&$pos):string{$b=substr($raw,$pos,$n);$pos+=strlen($b);return $b;};
 $error='';try{A::readFromArchive($read,$pos,S::UNREAL_V227,$np);}catch(Throwable $e){$error=$e->getMessage();}
-$ck(str_contains($error,'STRUCT native UStruct instance serializer unsupported'),
- 'unproven T030 Any6 struct remains explicitly unsupported, NOT accepted using failed compiler source');
+$ck(str_contains($error,'positive UObject class identity not verified'),
+ 'invalid Any6 positive-export UStruct reference remains fail-closed; genuine native Vector6 now separately verified as T030');
 $ok=$fail===[];
 echo json_encode([
  'ok'=>$ok,'checks'=>$count,'failures'=>$fail,

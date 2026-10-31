@@ -11,8 +11,11 @@
  * with a test FArchive-ABI shim. STRING was additionally proved via
  * genuine original native FString->FArchive compact-index SAVE/LOAD
  * round-trip under correct source ArIsSaving=2 and CountBytes vtable.
- * Only original native-proven small ASCII FString wire records are
- * decoded; extended Unicode and NAME/STRUCT/OBJECT (5..7) fail closed.
+ * Only native-proven small ASCII FString wire records are decoded.
+ * Genuine 2026 original compiled C227k engine SavePackage and independent
+ * original native LOAD additionally prove source-linker FName (5),
+ * FVector Struct Core.Object.Vector (6) and UObject (7).
+ * Unproven UStructs, linker remappings and Unicode fail closed.
  */
 declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Readers;
@@ -131,8 +134,49 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                 $valueKind='native_any_null_object';
             }
         }elseif($type===6){
-            throw new RuntimeException(
-                'Unreal v227 Any STRUCT native UStruct instance serializer unsupported');
+            if($linkerPkg===null){
+                throw new RuntimeException(
+                    'Unreal v227 Any STRUCT needs a genuine source linker UStruct reference');
+            }
+            // Real independently compiled original 2026 C227k Core.dll:
+            // UAnyProperty SetStruct(FVector, Core.Object.Vector),
+            // SavePackage => 06 83 0c000000 00005040 000090c0
+            //                0000b840; original fresh Core.dll reload
+            // recovers exact Struct Core.Object.Vector and XYZ.
+            // The original 2012 compiler cannot assign this Any struct;
+            // no simulated object is accepted as the oracle.
+            [$structRef,$refBytes]=self::readLinkerCompact($read);
+            $full=self::resolveLinkerObject($linkerPkg,$structRef);
+            if($structRef>=0||$full!=='Struct Core.Object.Vector'){
+                // Other UStructs require their own native SerializeBin
+                // source field-chain and compiled original oracle.
+                throw new RuntimeException(
+                    'Unreal v227 Any STRUCT UStruct source layout not verified: '
+                    .($full??'NULL').' ref '.$structRef);
+            }
+            $sizeBytes=$read(4);
+            if(strlen($sizeBytes)!==4){
+                throw new RuntimeException('Unreal v227 Any STRUCT size truncated');
+            }
+            $size=(int)unpack('V',$sizeBytes)[1];
+            if($size!==12){
+                throw new RuntimeException(
+                    'Unreal v227 Any STRUCT Vector serialized size not original-verified: '.$size);
+            }
+            $valueBytes=$read($size);
+            if(strlen($valueBytes)!==$size){
+                throw new RuntimeException('Unreal v227 Any STRUCT FVector truncated');
+            }
+            $xyz=array_values(unpack('g3',$valueBytes));
+            $value=[
+                'struct_reference'=>$structRef,
+                'resolved_struct'=>$full,
+                'struct_property_bytes'=>12,
+                'x'=>$xyz[0],'y'=>$xyz[1],'z'=>$xyz[2],
+                'serialized_float32_xyz_hex'=>bin2hex($valueBytes)
+            ];
+            $valueKind='native_any_linker_fvector_xyz';
+            $payload=$refBytes.$sizeBytes.$valueBytes;
         }else{
             $size=match($type){0=>0,1=>4,2=>4,3=>1};
             $payload=$size>0?$read($size):'';
@@ -195,6 +239,27 @@ final class CatalogUE1ClassicAnyPropertyValueReader
                     'Unreal v227 Any STRING SAVE unsupported compact, Unicode or malformed payload');
             }
             return chr($type).$rawValue;
+        }
+        if($type===6&&$linkerPkg!==null){
+            // This is a source-index-stable reserialization of the exact
+            // genuine ULinker archive wire into the SAME package map.
+            // Do not attempt a fresh package's new import-index mapping.
+            $input=chr(6).$rawValue;
+            $position=0;
+            $read=static function(int $n)use($input,&$position):string{
+                $bytes=substr($input,$position,$n);
+                $position+=strlen($bytes);
+                return $bytes;
+            };
+            $decoded=self::readFromArchive(
+                $read,$position,$sourceFamily,$linkerPkg);
+            if($position!==strlen($input)
+                ||($decoded['original_any_type_id']??null)!==6
+                ||($decoded['value_kind']??null)!=='native_any_linker_fvector_xyz'){
+                throw new RuntimeException(
+                    'Unreal v227 Any STRUCT SAVE source-linked wire mismatch');
+            }
+            return $input;
         }
         if($type===5&&$linkerPkg!==null){
             $offset=0;

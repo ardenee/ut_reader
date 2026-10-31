@@ -1,0 +1,34 @@
+﻿{
+    "ok": true,
+    "checks": 39,
+    "failures": [],
+    "full_frozen_g3_ids": {
+        "T030": "PASS"
+    },
+    "original_compiled_source": "shipped original 2026 Core.dll x86 + genuine 2026 shipped original UCC .u class",
+    "original_native_save": {
+        "SetStruct": "Struct Core.Object.Vector",
+        "x": 3.25,
+        "y": -4.5,
+        "z": 5.75,
+        "SavePackage": 1
+    },
+    "original_independent_native_reload": {
+        "actual_type": 6,
+        "value": "FVector(3.25,-4.5,5.75)",
+        "size": 12,
+        "binary_float_hex": "00005040000090c00000b840",
+        "PASS": 1
+    },
+    "original_actual_package": {
+        "size": 312,
+        "export_offset": 241,
+        "export_size": 22,
+        "tag": "015b12",
+        "serialized_any": "06830c00000000005040000090c00000b840",
+        "NAME_None": "00"
+    },
+    "other_UStruct_layouts": "EXPLICIT_UNSUPPORTED",
+    "previously_accepted_original_native_executions_repeated": 0,
+    "overall_G3_complete": false
+}

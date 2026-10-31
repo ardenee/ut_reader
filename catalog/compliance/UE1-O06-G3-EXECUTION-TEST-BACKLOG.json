@@ -1864,13 +1864,65 @@
       "pass_criterion": "Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success.",
       "evidence": "Original fully initialized SDK object/Core.dll, no unsupported mock",
       "reuse": "Previous null STRUCT6 failed due incomplete mock, not accepted.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: original 227k Any STRUCT6 positive fully initialized UStruct value missing; incomplete SDK mock allocator failure expressly excluded. Acceptance still requires: Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "311bad64385afd369f9726b1c405bcad0b66e73595316f2f2420eac52be0427b",
+      "result": "Frozen T030 FULL acceptance on genuine original shipped 2026 C227k Core.dll (SHA c391cade). Actual original UCC-compiled 652-byte lic227 class G3Any227KActor declares UAnyProperty StructValue; original 2026 x86 C++ loads real class, creates distinct UObject instance, allocates genuine FAnyProperty, sets full FVector(3.25,-4.5,5.75) through ORIGINAL exported FAnyProperty::SetStruct((BYTE*)&FVector, native Core.Object.Vector UStruct*) resulting ACTUAL dynamic subtype6, real UStruct field layout12 and instance offset784. Original Core.dll UObject::SavePackage returned SUCCESS1 and generated unmodified original valid v69 lic227 312-byte G3Any227KRuntime.u with one 22-byte export at physical241. ORIGINAL independent separately compiled second x86 executable and separately initialized original 2026 Core.dll LOADs that native-produced .u together with original UCC class, independently recovers exact class G3Any227KActor object AnyStructInstance, dynamic ANYTYPE_STRUCT6, UStruct Core.Object.Vector, real member vectorX3.25/vectorY-4.5/vectorZ5.75, true native bit patterns 40500000/C0900000/40B80000, and PASS1. Real archived original FPropertyTag NAME_StructValue type11 alias VectorProperty, declared size18; actual value bytes 06 83 0c000000 00005040 000090c0 0000b840: subtype6, signed compact ORIGINAL ImportMap[-3] UStruct Vector outer Class Object outer Package Core, native DWORD serialized UStruct size12 and exact 12 actual X/Y/Z little-endian floats. Final archive NAME_None byte1, original 22-byte export fully consumed. UnrealDB exact actual source-linked UAnyProperty parser now decodes precisely same 18 physical bytes and genuine UStruct identity, exact floats and raw bits; SAVE reproduces same bytes within SAME original linker map, other UStruct layouts fail explicitly closed. Original UCC textual default struct ImportText failed and was correctly EXCLUDED; native API real SavePackage/independent LOAD replaces that BLOCKER with conclusive original compiled positive oracle, never fake source. One original 39/39 independent source/native/current fixed T030 proof; previous T029/T031 native accepted 57/57 unchanged, no accepted original engine reruns. B04 ALL eight original frozen tests closed; no PRD deployment, G3 other groups remain open.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T00:32:12+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b04-t030-original-native-Any-struct-Vector.php",
+          "sha256": "5c534d62f153556d5371122b56b9c659a5508a95045fe612d7ace19ab94fc054",
+          "bytes": 13488
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+          "sha256": "3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59",
+          "bytes": 17902
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1",
+          "bytes": 78200
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-2026-REAL-AnyStruct-SavePackage.u",
+          "sha256": "0dc24167815a4eb01458b2baf3cf0253374e5944e72d588b009c48852e7c1849",
+          "bytes": 312
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-2026-UCC-original-Any-declarations.u",
+          "sha256": "0c79ea57295375a467d6ade733d822ff7e7f1909bce70514c4bc45e1121cb18a",
+          "bytes": 652
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-SetStruct-SAVE.cpp",
+          "sha256": "5db03515b46ea7538d8acbcf156232aa803e7ddef8f1735ce0ebd28ea962f430",
+          "bytes": 3459
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-independent-RELOAD.cpp",
+          "sha256": "aba2add1d19df399596a55ef3566923f38af649bedb26df6e6f78e9f22d99d03",
+          "bytes": 3160
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-SetStruct-SAVE.log",
+          "sha256": "a3a827ef68a8f495ee7c128104f3a17ce916676a019c7fc4be5604b46d38a5cc",
+          "bytes": 984
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-independent-RELOAD.log",
+          "sha256": "0b9bc706359c048deabecbcae9aa3eae537b02c1283b17ba109a34eabc61d38e",
+          "bytes": 1198
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-2026-39pass.json",
+          "sha256": "5b60858c410a2ec39da111cc0c281aed75484638b618a3e4e8b67b5a3e18cc50",
+          "accepted_original_assertions": 39
+        }
+      ]
     },
     {
       "id": "T031",
