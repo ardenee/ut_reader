@@ -4,7 +4,7 @@
     "T065",
     "T072"
   ],
-  "started_at": "2026-10-29T10:01:46+00:00",
+  "started_at": "2026-10-31T02:51:00+00:00",
   "tests": [
     {
       "id": "T065",
@@ -28,8 +28,8 @@
     },
     {
       "id": "T069",
-      "status": "BLOCKED",
-      "assessment": "ORIGINAL_V432_AND_227K_NAME_ERRORS_MATCH_C98_UNPROVEN_PARTIAL"
+      "status": "PASS",
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED"
     },
     {
       "id": "T070",
@@ -47,11 +47,11 @@
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
     }
   ],
-  "finished_at": "2026-10-29T10:01:46+00:00",
+  "finished_at": "2026-10-31T02:51:00+00:00",
   "counts": {
-    "PASS": 3,
+    "PASS": 4,
     "FAIL": 0,
-    "BLOCKED": 5,
+    "BLOCKED": 4,
     "PENDING": 0
   }
 }

@@ -1,0 +1,24 @@
+{
+    "ok": true,
+    "checks": 51,
+    "errors": [],
+    "full_frozen_g3_ids": {
+        "T069": "PASS"
+    },
+    "original_engine_profiles_proven": [
+        "1998-C98",
+        "stock-UT99-v432",
+        "2026-C227k"
+    ],
+    "C98_original_native_linker_failures": [
+        "Bad name index 63/16 at archive cursor 374",
+        "Bad import index 62/7 at archive cursor 276",
+        "Bad export index 62/6 at archive cursor 276"
+    ],
+    "v432_original_native_bad_FName": "-63/326 Tell43308",
+    "227k_original_native_bad_FName": "-63/566 Tell67624",
+    "prior_original_three_engines_T009_invalid_import_accepted": 91,
+    "old_previously_accepted_native_engines_rerun": 0,
+    "original_C98_original_1998_class_file_restored": true,
+    "full_G3_accepted": false
+}

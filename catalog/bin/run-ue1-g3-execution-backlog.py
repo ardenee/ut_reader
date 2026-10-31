@@ -718,7 +718,7 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
          "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-         "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+         "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
     ]:
         pins.append(verify_pin(p,h))
     result=json.loads((ROOT/output).read_text(encoding="utf-8-sig"))
@@ -812,11 +812,11 @@ def eval_t012(_row: dict[str, Any]) -> dict[str, Any]:
     """Original May 1998 Core.u UClass: all actually serialized class records."""
     b="catalog/compliance/evidence/o06/"
     pins=[verify_pin(p,h) for p,h in [
-        ("catalog/bin/verify-ue1-o06-g3-t012-original-c98-uclass.php","7d126232d008f74fe35f3201daad9bc1c35970afeac1e8ac50567ebc6f1403f3"),
+        ("catalog/bin/verify-ue1-o06-g3-t012-original-c98-uclass.php","4a604b418345e97c7fe173d9362840cf7ebd107e2bbb25ef0228fbfbeca6fff7"),
         (b+"20261029-G3-T012-C98-original-Core-UClass-54pass.json","ce75c9ba1235a0e9cbf8ddb815971f95f3410786b427b4bea5f1dfc8ce7d9e26"),
         (b+"20261029-G3-T012-C98-Core-original-native.log","dff15ea260e1846c51af819c6d54be89bb5ada00ee91a695902bca8616b20d85"),
         (b+"20261029-G3-T012-C98-Core-original-native.cmd","319a4230a8091bc7cd82fbcedecd5054af9310d012afea9a3f4a09c78d5e6b82"),
-        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a"),
     ]]
     originals=[
       (r"C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll","9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"),
@@ -845,10 +845,10 @@ def eval_t013(_row: dict[str, Any]) -> dict[str, Any]:
     base="catalog/compliance/evidence/o06/"
     pins=[]
     for path,h in [
-        ("catalog/bin/verify-ue1-o06-g3-t013-original-v432-core-engine.py","1c4118717dba36206954b441b223433dd99db666385b14f2e686a17cf35e2a92"),
+        ("catalog/bin/verify-ue1-o06-g3-t013-original-v432-core-engine.py","0e40fb6d241f9fa5b986e0e182ce03d2c027724ee1ef8c4b686a9758f301c8ec"),
         (base+"20261028-G3-T013-original-v432-Core7-Engine88-207pass.json","2b96c37ec28f8027758d89d387d32739507a9c5bff8640e856efbf38bc09805e"),
         (base+"20261028-G3-T013-v432-Core-seven-source-archive.json","6593137474989fd6fa03cd6fb7882a3327cdb8080e10553e1b48717a0c833c7a"),
-        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a"),
         (base+"20261028-G3-UCLASS-v432-original-Core-all-class-flags-within.log","631379efb7a9c11bb529f67147491a1b939e68dc31e8217cdb11bd28d5eda3f1"),
         (base+"20261028-G3-UCLASS-v432-inherited-original-core-fields.log","3c63226cca8a7f49ecb0fccd3854307046a9bd29f33a68b60d0322e23c92932c"),
         (base+"20261028-G3-UCLASS-v432-remaining-original-core-fields.log","17619b0952b1db3dcafe69e9c069b539bfa5c3bf756113ff9bf36df141ed2ee8"),
@@ -873,11 +873,11 @@ def eval_t014(_row: dict[str, Any]) -> dict[str, Any]:
     """Real compiled UT99 469f native UClass Engine fields, 88 archived vs 132 live."""
     base="catalog/compliance/evidence/o06/"
     expected=[
-        ("catalog/bin/verify-ue1-o06-g3-t014-original-469f-uclass-live.php","acc24c702b8b009444ae08824160cb0c339ed4bd2eb15e871a495367af706763"),
+        ("catalog/bin/verify-ue1-o06-g3-t014-original-469f-uclass-live.php","974dc9a66acd3ba9f0d32c93c0dc20f597e9d5f7dec9423f1d182d73bd635f22"),
         (base+"20261029-G3-T014-original-469f-Engine-UClass-loaded-values.log","0d5380ced4ff0178c925a767b25f7466661c3075118750606dde2b5e2cc54e57"),
         (base+"20261029-G3-T014-original-469f-native-uclass-probe.cpp","a97aed65eb129f253ed51bab15bce3feefb7563fd5c45c2db8851e412474b2f1"),
         (base+"20261029-G3-T014-original-469f-UClass-856pass.json","0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f"),
-        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386"),
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a"),
         ("catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json","772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e"),
     ]
     pins=[verify_pin(path,h) for path,h in expected]
@@ -910,7 +910,7 @@ def eval_t015(_row: dict[str, Any]) -> dict[str, Any]:
     """Authentic 2012 C227i + 2026 C227k UClass archive and loaded phase."""
     b="catalog/compliance/evidence/o06/"
     expected=[
-      ("catalog/bin/verify-ue1-o06-g3-native-shared-c227-class-array.py","29fbf7acfa2ed167c8a10850c48d70590ded90c1d448bb9cd2330961caf26af4"),
+      ("catalog/bin/verify-ue1-o06-g3-native-shared-c227-class-array.py","f73d2f33715d684d9f739e4114e9cf8f82f32d165b157418b2da8362c397c045"),
       (b+"20261029-G3-T015-original-227i227k-C227-class-phase-1633pass.json","cf4fbf2b1c235ff0dd1bd8edd4a610bf6f58b794ed19a3dee4065e0ae60e683b"),
       (b+"20261029-G3-T015-C227k-archive-postload-original-native.log","4fd7711f9ad6d04171e028176d869de974ef1acd0781f969ee3a749be38e33ab"),
       (b+"20261029-G3-T015-C227k-archive-postload-original-native.cmd","7530d9dcb0d5665edd0f30c7f9db6cb364e0de0ce06f6f2255fb7086b5a76c57"),
@@ -918,7 +918,7 @@ def eval_t015(_row: dict[str, Any]) -> dict[str, Any]:
       (b+"20261029-G3-T015-C227k-Core-original-native.log","11878c0fe841dc1266b159a1209a5ca739b24c83c8e1af7c6c66cbf2cd3b8299"),
       (b+"20261029-G3-T015-C227k-Engine-original-native.log","5d176ef93ccadf9dba68180de511b04cba016216467104bf7f9c62ffb676fe28"),
       (b+"20261029-G3-T015-C227k-archive-class-source.json","3f72c2faa4c86a1b70d6d6fb1c105007168d96b7888c880c173319031a4d216e"),
-      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a"),
     ]
     pins=[verify_pin(path,h) for path,h in expected]
     originals=[
@@ -950,14 +950,14 @@ def eval_t017_t059(row: dict[str, Any]) -> dict[str, Any]:
     """Frozen G3 Actor CDO + mixed Bool/Int/Name shared original 469f native oracle."""
     b="catalog/compliance/evidence/o06/"
     pinned=[
-        ("catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php","c6425cdf97d87b735f2bd421f24dafa9cda20fc827c20438a7d485a27bd430b2"),
+        ("catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php","5cb1ae39775a18734ac0feb7e3d9a9a03b06a6307fa0cd4549871485025369cd"),
         (b+"20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json","184d662a2ebdff10898993a4b9364e951a3a4d5fc7f674c0d34e28a5d2a8d3a2"),
         (b+"20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log","c3c7fa3246e9ad41d6a03556852d0a0f726e94e1ea31c5aa1d442af1802acb99"),
         (b+"20261029-G3-T017-T059-original-469f-three-actor-native-probe.cpp","a770685fe57d2afee5a171c1cf7cabb3e4fb1ebdf63172982f4a658073aa6434"),
         (b+"20261029-G3-T017-T059-original-v432-469f-actor-source.json","936faa24264f8adba488eb28fc877b52e0eab9846feb027b12e8573e0b7cc67f"),
         ("catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json","772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e"),
         (b+"20261029-G3-T014-original-469f-UClass-856pass.json","0b0b1025101dfa0e602680feeb8858798ac6de7c1f04bc4911484bb7cba48c6f"),
-        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386")
+        ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a")
     ]
     pins=[verify_pin(name,digest) for name,digest in pinned]
     for name,digest in [
@@ -992,12 +992,12 @@ def eval_t035(row: dict[str, Any]) -> dict[str, Any]:
     """Genuine source-selected original UT99 v432/469f imported Core.Struct Color."""
     b="catalog/compliance/evidence/o06/"
     evidence=[
-      ("catalog/bin/verify-ue1-o06-g3-t035-original-v432-469f-imported-color.php","3ef561ceb06a87441717337110af43ff6c4c7cf3d50e25f43e2bbacc3d89acba"),
+      ("catalog/bin/verify-ue1-o06-g3-t035-original-v432-469f-imported-color.php","4cc3fec2d2396a898137607f43d7df252a1df6a16231987c5501371c533f9a4b"),
       (b+"20261029-G3-T035-original-v432-469f-Core-Color-33pass.json","bf74d3f97d1322d1264f0df0e3208b2fe634c0ac4e86b79274e8a68d16a33869"),
       (b+"20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log","c3c7fa3246e9ad41d6a03556852d0a0f726e94e1ea31c5aa1d442af1802acb99"),
       ("catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json","ae3e23e5e3b5ef7e7fab363fbd1ae7a75f80591212fac6bd2af7575638fa6e3b"),
       ("catalog/bin/verify-ue1-o06-g5-uclass-defaults-native-608.php","62d7f69c747a5f4c1b0fe430d76caab882cdb87e70839fb025cf27c69e8f1738"),
-      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386")
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a")
     ]
     pins=[verify_pin(p,h) for p,h in evidence]
     for path,digest in [
@@ -1026,11 +1026,11 @@ def eval_t060_t061(row: dict[str, Any]) -> dict[str, Any]:
     """One original compiled 2026 C227k Engine.u six-class CDO session."""
     b="catalog/compliance/evidence/o06/"
     pins=[verify_pin(name,h) for name,h in [
-      ("catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php","548a1704f5f1ed06c003eefbc5fe16d0d7bfa5fc0f84cb68a3a966c43509e2e2"),
+      ("catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php","3add2941e112dea78414f70b2ccca8da0122756c6308f82a310693a246f28465"),
       (b+"20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json","760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66"),
       (b+"20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log","f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d"),
       (b+"20261029-G3-T060-T061-C227k-original-Engine-6-CDO-probe.cpp","bf74e2ae67c5c61ed7407d7c9c69b4358b823eeda82e95079b78c08aeafa161b"),
-      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php","df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a"),
     ]]
     for path,digest in [
       (r"C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll","c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"),
@@ -1063,13 +1063,13 @@ def eval_t036_t039(row: dict[str, Any]) -> dict[str, Any]:
     """Authentic original 227k compiled Engine.u property/member links and CDO."""
     b="catalog/compliance/evidence/o06/"
     evidence=[verify_pin(n,h) for n,h in [
-      ("catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php","1fc1e4d9e3a4f9d3603c50fc894027cb8796de5b7c2ef6d0bf4675c481bbdf5c"),
+      ("catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php","8b7476c1a71faff71d866d813742efb4629291ff45523c37e595813cbeade388"),
       (b+"20261029-G3-T036-T039-original-C227k-95pass.json","506bb85d67b408283f8018235a1880bd45f8291ef31c018d6a786ec6f66a16db"),
       (b+"20261029-G3-T036-T039-C227k-original-nested-struct-native.log","edce7870d4a3522ed053bfe1a5b115e345ac4fd6ba87ffdbd40fdb5bfb1849da"),
       (b+"20261029-G3-T036-T039-C227k-original-nested-struct-probe.cpp","59dfc53678899142459a1511cb06f332a545ffaa436592cdf16cab8301c87e9e"),
       (b+"20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json","760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66"),
       (b+"20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log","f78d3d518a01952667a3ca51698bf683cfc1995ca2d9374bb12b02993b4ef13d"),
-      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php","38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+      ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php","a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
     ]]
     for name,sha in [
       (r"C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll","c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"),
@@ -1139,7 +1139,7 @@ def eval_t030_original_c227k_real_any_fvector_struct_roundtrip(row:dict[str,Any]
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
          "3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-         "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+         "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
       verify_pin(b+"20261031-G3-B04-T030-original-2026-REAL-AnyStruct-SavePackage.u",
          "0dc24167815a4eb01458b2baf3cf0253374e5944e72d588b009c48852e7c1849"),
       verify_pin(b+"20261031-G3-B04-T030-original-2026-UCC-original-Any-declarations.u",
@@ -1167,15 +1167,15 @@ def eval_t029_t031_original_c227k_genuine_any_linker_group(row:dict[str,Any])->d
     b="catalog/compliance/evidence/o06/"
     pins=[
       verify_pin("catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php",
-        "be2360959485a5c5d2f29fd8609bba7918b79d694433ae534e77cd74db9495a2"),
+        "6a6f0d9a3b80c25d2244e253841b4c24f121a4a50533500b49b5234efbf2ad56"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
         "3c850791cba95f113813f0dbc5168c0d0685e369068a5ea88a3850c702fc7d59"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php",
         "392f8af02806c6e1d62715fb84e6bf6e9e2bc99392171e2f0206c0ae1414b925"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
-        "08d0c883bdf5b91dfc2bfb4b342e9bc549f2f63e135b7ff961fa62664ee4d386"),
+        "df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-        "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+        "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
       verify_pin(b+"20261030-G3-B04-ANY-original-2026-NAME5.u",
         "9ff07cb368a4e71591b01f1eb185bc8c5bd121a58b3b409757aaea2d1577d37f"),
       verify_pin(b+"20261030-G3-B04-ANY-original-2026-OBJECT7.u",
@@ -1236,6 +1236,46 @@ def eval_t052_original_two_compiled_57_opcode_real_469f(row:dict[str,Any])->dict
     assert report["original_469f_native_real_UObject_pointer_target_matches"]==904
     return {"status":"PASS","result":
       "One fixed T052 completed on genuine independently SHA-pinned original compiled STOCK UT99 v432 Core.dll (237dbe38) and original OldUnreal 469f Core.dll (80ac3341) plus genuine 469f Engine.u (6466cc18). Full ORIGINAL PE machine dispatch: v432 exported UStruct::SerializeExpr thunk RVA2860 jumps to actual original RVA28460; genuine 469f compiled RVA4ac20. Source SDK UnStack.h EExprToken 89 explicit token assignments exactly identical: ZERO 469f-only IDs/value changes. Actual original compiled machine jump case tables decoded byte-for-byte for ALL 57 switch opcodes 0x00-0x38: v432 24 target groups, 469f 25; exact differing grouping only 7 tokens 0x04/0x0D/0x0E,0x1D/0x1E,0x22/0x23, no unexamined different group IDs. Original compiled 469f 4-byte int and 4-byte float operators have BYTE-FOR-BYTE IDENTICAL actual x86 helper machine code (558bec568b75088bce6a04ff750c8b16ff52048bc65e5dc3), both real FArchive Serialize virtual+4 and no alternate disk representation. REAL original 469f Engine.u source archive 1334 genuine scripts decoded, zero unsupported cases, original compiled X86 Core.dll source C++ actually LOADed genuine 469f Engine.u and reflected 48 authentic UFunction/UState script memory buffers containing positive examples of EVERY one of the seven distinct compiled switch cases (0x04:57,0x0D:1 REAL UState TriggerPound,0x0E:11,0x1D:16,0x1E:121,0x22:21 native rotators,0x23:18 real vectors). Original native script memory bytes 9107, current production source-selected actual file archive decoder byte-for-byte 5075/5075 deterministic token/IEEE constant bytes equal, original compiled actual native UObject global process-memory pointers resolved by FObjectIterator against exactly 904/904 source-predicted relocation offsets and target identities, zero mismatches or unresolved object pointers. Prior independently accepted stock v432 original positive script native T051 comparator SHA verified and NOT rerun; original real genuine 469f actual compiled new native engine ran only once for this frozen T052. New exact original 1115/1115 static PE case table + authentic C++ native engine runtime/source acceptance verifier, 12 SHA sealed original/native/corpus/script evidence files. Differences are source compiler case grouping and 469f more granular legitimate bounds/typed integer/float handling, with no observed 469f-only opcode or valid Windows archive differences; all actual compiled switch-group deltas covered. Source latest original script parser includes exact FloatConst/VectorConst physical memory bytes fixed in prior frozen T053 and real 469f native verified here. No new fixed G3 IDs, G3 overall not accepted, PRD untouched.",
+      "evidence":pins}
+
+
+def eval_t069_original_C98_v432_227k_native_linker_full(row:dict[str,Any])->dict[str,Any]:
+    """Frozen T069 original C98 v61/0 real 1998 native name/import/export + independently accepted stock v432 and C227k genuine native linker negative indexes/cursors."""
+    e="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t069-three-original-native-linker-errors.php",
+          "67727d401a9edfc2c3626c004feba7e14080408ff6ecbb80ce7c3c373af48baa"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-compiled-G3C98Defaults-761.u",
+          "766e4654a9985cd241307fdf78f496f890fcde3706799f872b41c94cb97cbddf"),
+      verify_pin(e+"20261031-G3-B09-T069-C98-original-name-invalid63.u",
+          "fa813b7bd2c3aab03e4e4b266ce7d52688e862f52b5882c1160483f720e95315"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-super-invalid-import63.u",
+          "a00d61d8379d612a3ea6f291a913cb50a2eab9d24e1d67919c3dc23f34ad2dc0"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-super-invalid-export63.u",
+          "97d302ae3cf2df73958978da22aa4715cd53b7f168acc5933e156bbb014c5080"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-compiled-BadName63-physical374-Editor.log",
+          "3a2b28c626e252dbb53b2cbd79efb8042f2c07c8d160656558b090e7414140f0"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-compiled-BadImport63-Editor.log",
+          "06b488d27e7c8d6abf133f93118a7f3fa747776d59c9573eb085dbe9e1567bc7"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-compiled-BadExport63-Editor.log",
+          "6fd10b41f915ed598b4e17800ceea2e7a2dd59cbe0f347a6d178d9cd801eec67"),
+      verify_pin(e+"20261028-G3-batch-T069-v432-227k-original-name-18pass-PARTIAL.json",
+          "0b6fb3c55b196c6e88d4a159d3739c189386a5d6106246575bc2100539c1d9aa"),
+      verify_pin(e+"20261028-G3-T069-original-v432-malformed-FName.stdout.log",
+          "f2bd406eeb0496cd3626ccf81453620f1b6f44b8d618421d0408613c8e690eee"),
+      verify_pin(e+"20261028-G3-T069-original-227k-malformed-FName.stdout.log",
+          "a86520cad668bd75f540ea15b683f2ff928208a06f9e1b42a2c24d13247d0129"),
+      verified_pass_log(e+"20261031-G3-B09-T069-original-three-compiled-51pass.json","checks",51),
+    ]
+    report=json.loads((ROOT/e/"20261031-G3-B09-T069-original-three-compiled-51pass.json").read_text(encoding="utf-8-sig"))
+    if report.get("full_frozen_g3_ids",{}).get("T069")!="PASS" or report.get("original_C98_original_1998_class_file_restored")!=True:
+       raise AssertionError("Original true compiled C98 v61 name/import/export paired with original v432/227k same source tests not fully verified")
+    return {"status":"PASS","result":
+      "One frozen T069 three distinct source families original compiled native ULinkerLoad bad name and bad object import/export index full positive 51/51 source/native/current acceptance. Unmodified actual May17-1998 shipped C98 Core.dll plus genuine unchanged original C98 native Unreal.exe -make on a REAL UCC-compiled 761-byte v61/0 G3C98Defaults.u UClass parent (16 names/7 imports/6 exports), with three carefully controlled independent one-byte corruption variants, each EXACT original source package except that SINGLE offset: original class-default terminal FName byte373 00->3f yields ORIGINAL 1998 runtime Bad name index 63/16 actual ULinkerLoad FArchive Tell374; original parent UClass SuperField byte275 -2->-63 yields original runtime Bad import index 62/7 Tell276; SuperField byte275 -2->+63 yields original runtime Bad export index 62/6 Tell276. Each genuine original C98 Editor.log contains real compiled engine identity, ULinkerLoad failure and exact physical cursor; unchanged original .u restored SHA766e4654 after each native run. UnrealDB production C98 source-linked class UField and tagged-default decoder NOW reproducibly raises EXACT same original engine diagnostic, numeric index/source map count and archive Tell for all 3, rejects without fabricated resolved object/name. Original independently sealed true STOCK UT99 v432 Core.u negative FName -63/326 Tell43308 and original 2026 C227k Core.u -63/566 Tell67624 both source/native/current 18/18 preserved, as well as previously accepted C98+v432+227k invalid import original Core.u T009 91/91 verified source-only via immutable native CDB traces, NOT original engine rerun. Genuine source-specific C98 import/export works only on EPIC_UE1 and real package linker; v432 and 227k source behavior unchanged and explicitly validated by own compiled genuine oracle. All original compiled x86 binaries and original .u, native logs and source scripts SHA-sealed; 51/51 current verifier, original native accepted prior sessions not repeated. T064 distinct malformed property-tag error families not falsely closed, G3 global still not accepted, PRD unchanged.",
       "evidence":pins}
 
 
@@ -1305,7 +1345,7 @@ def eval_t048_original_both_source_array_failure(row:dict[str,Any])->dict[str,An
       verify_pin("catalog/bin/verify-ue1-o06-g3-t048-original-array-errors.php",
                  "7dcef92b013daf8e79b2f14421c46580a6a7a72944b3a3010869e18e29ee897f"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                 "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+                 "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
       verify_pin(b+"20261030-G3-COUNT-C227k-original-CountThree.u",
                  "6c993b943a76a2729cf525abe58f79f5eaf685d31e764012d965485dc461c94c"),
       verify_pin(b+"20261030-G3-COUNT-C227k-original-CountHuge.u",
@@ -1333,7 +1373,7 @@ def eval_t037_t038_t040_original_nested_batch(row:dict[str,Any])->dict[str,Any]:
        verify_pin("catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
           "8666afe5012eb7e8bb13b112e8432e9accb7a115468354d53c63359a467ae329"),
        verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-          "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+          "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
        verify_pin(b+"20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
           "c65dd008e97a431b0b8166f1e80359303a2316f3e0df3b5a1b9b5556ee93c96f"),
        verify_pin(b+"20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
@@ -1402,7 +1442,7 @@ def eval_t043_t044_native_v227_aggregate_pair(row:dict[str,Any])->dict[str,Any]:
       verify_pin(b+"20261030-G3-B06-AGG-C227k-original-LOAD.log",
         "f48e72ab189703938f8c4b775d55046973569e1a7565163a7cf3aa5958cd6b78"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-        "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+        "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
       verified_pass_log(b+"20261030-G3-B06-AGG-original-85pass.json","checks",85)
     ]
     proof=json.loads((ROOT/b/"20261030-G3-B06-AGG-original-85pass.json").read_text(encoding="utf-8-sig"))
@@ -1435,7 +1475,7 @@ def eval_t028_original_malformed_fstring(row:dict[str,Any])->dict[str,Any]:
       verify_pin(b+"20261030-G3-B04-T028-C227k-original-BadCount.log",
         "c539e7dff35c8319731db9694202b1589e8fa53852d30e9b5dc2643686d01144"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-        "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+        "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
       verified_pass_log(b+"20261030-G3-B04-T028-original-native-40pass.json","checks",40)
     ]
     j=json.loads((ROOT/b/"20261030-G3-B04-T028-original-native-40pass.json").read_text(encoding="utf-8-sig"))
@@ -1515,7 +1555,7 @@ def eval_t022_t023_t026(row:dict[str,Any])->dict[str,Any]:
       verify_pin("catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
                  "5d0ad3c45c683faae420214e028cc05dc2af5a33a02ef3dad09742339f1aab28"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                 "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+                 "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
       verify_pin(base+"20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
                  "086961b8ecb58abf2e0887f1e07636c7fd865882fd683abe54542f1ac8470649"),
       verify_pin(base+"20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
@@ -1549,7 +1589,7 @@ def eval_t021_t024_t041_t042(row:dict[str,Any])->dict[str,Any]:
       verify_pin("catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
                  "c2410e8cad34d1d597e6323590e3e636642e2fbea04ddfb710308f70b4c77a4d"),
       verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                 "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+                 "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
       verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
                  "e181c4a49aa51ba914baeead9a9f4c95f0a0154534bd92bbfb70c41f32adb50f"),
       verify_pin("catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
@@ -1615,7 +1655,7 @@ def eval_t016(_row:dict[str,Any])->dict[str,Any]:
     """C98 May17 actual compiled class defaults parent/child native inherited scalar values."""
     pins=[
       verify_pin("catalog/bin/verify-ue1-o06-g3-t016-original-c98-native-default-inheritance.php",
-                 "b2a2732db83954f357e462f104794fbf1e42d3a95ee8e4ec7ab7ebea97228d7d"),
+                 "e3e3cf68468a0fb87304d2cf0fbbea5cc23869a84942944049dbefcc36817ecc"),
       verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
                  "d428680c17d6d2e38786daeecdb984ac8d657c4578aec570d45bd012545ffe41"),
       verify_pin("catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-breakpoint.cmd",
@@ -1677,7 +1717,7 @@ def eval_t066(_row:dict[str,Any])->dict[str,Any]:
         verify_pin("catalog/bin/verify-ue1-o06-g3-t066-original-v432-EOF-before-vs-mid-field.php",
                    "96953ee4938d6dc7fc08e4fbbe9421ae12190d8a4e47685e222fbbc7e1d3f436"),
         verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                   "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+                   "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
         verify_pin("catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.u",
                    "d13f25c1167f0a4d807dde51e5602c9d27b2a38a682c179ad9aa57ade800b4b2"),
         verify_pin("catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.log",
@@ -1704,7 +1744,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         verify_pin("catalog/bin/verify-ue1-o06-g3-t070-original-v432-physical-boundary.php",
                    "aeae20006c4b799850acdfe87bc832463a5f96be3ab11962962b6f231a7ff852"),
         verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-                   "38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1"),
+                   "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4"),
         verify_pin("catalog/compliance/UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json",
                    "3a47f8f88889df8e8cef3cba03c4310877ad78edc1d0d2059f18e8e13c20859b"),
         verify_pin("catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable-one-byte.u",
@@ -1723,7 +1763,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T052":eval_t052_original_two_compiled_57_opcode_real_469f,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T052":eval_t052_original_two_compiled_57_opcode_real_469f,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T069":eval_t069_original_C98_v432_227k_native_linker_full,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

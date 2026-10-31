@@ -74,10 +74,34 @@ final class CatalogUE1ClassicClassMetadataReader
                 }
                 return $minus?-$n:$n;
             };
-            $reference=static function(string $label)use($compact,$pkg):int{
+            $reference=static function(string $label)use(
+                $compact,$pkg,$family,&$position
+            ):int{
                 $id=$compact();
                 if(($id<0&&-$id>count($pkg->getImports()))
                     ||($id>0&&$id>count($pkg->getExports()))){
+                    // Actual original compiled retail 17-May-1998 C98
+                    // Core.dll on genuine original UCC-produced class:
+                    // SuperField ref -2 -> -63 at absolute file275
+                    // reports Bad import index 62/7 in
+                    // ULinkerLoad::IndexToObject, FArchive::Tell=276.
+                    // Do not invent a different v432/227k diagnostic.
+                    if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
+                        if($id<0){
+                            throw new RuntimeException(sprintf(
+                                'UE1 Bad import index %d/%d at archive cursor %d',
+                                -$id-1,count($pkg->getImports()),$position));
+                        }
+                        // Same ORIGINAL 1998 licensed C98 compiled 761B
+                        // class package, mutated SuperField 0x82 -> 0x3F
+                        // at original file275. ORIGINAL compiled Core.dll
+                        // reports Bad export index 62/6 at Tell276.
+                        if($id>0){
+                            throw new RuntimeException(sprintf(
+                                'UE1 Bad export index %d/%d at archive cursor %d',
+                                $id-1,count($pkg->getExports()),$position));
+                        }
+                    }
                     throw new RuntimeException('Invalid UClass '.$label.' reference');
                 }
                 return $id;

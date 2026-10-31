@@ -26,7 +26,7 @@ $expected=[
 ];
 foreach($expected as $name=>$sha)$ck(is_file($ev.$name)&&hash_file('sha256',$ev.$name)===$sha,'original native/compiler SHA pinned '.$name);
 $reader=$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php';
-$ck(hash_file('sha256',$reader)==='38133f6a8fb0330dc6eb8eff20fdc16c6776af5943dc2ae4453c77486f3bc9a1',
+$ck(hash_file('sha256',$reader)==='a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4',
  'current actual source-linked reader byte identity after native 227k zero-count recovery');
 $log=static function(string $name)use($ev):string{
  $s=(string)file_get_contents($ev.$name);

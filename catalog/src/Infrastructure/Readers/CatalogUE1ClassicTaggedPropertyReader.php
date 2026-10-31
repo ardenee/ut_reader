@@ -1038,9 +1038,22 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 return ($first&128)!==0?-$v:$v;
             };
             $names=$package->getNames();
-            $name=static function()use($compact,$names):array{
+            $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+            $name=static function()use($compact,$names,$family,$start,&$position):array{
                 $id=$compact();
                 if($id<0||!isset($names[$id])){
+                    // Original compiled retail May-1998 C98 Core.dll
+                    // ULinkerLoad<<FName :: UClass tagged defaults:
+                    // exact real 61/0 G3C98Defaults.u one-byte name
+                    // 0->63 at physical373 reports Bad name index
+                    // 63/16 and genuine FArchive Tell374. Preserve
+                    // the *physical position after the compact token*,
+                    // not an invented logical class-default offset.
+                    if($family===CatalogUE1ClassicSourceFamily::EPIC_UE1){
+                        throw new RuntimeException(
+                            'UE1 Bad name index '.$id.'/'.count($names)
+                            .' at archive cursor '.($start+$position));
+                    }
                     throw new RuntimeException('Invalid UE1 class default property name');
                 }
                 return ['index'=>$id,'text'=>(string)$names[$id]['name']];

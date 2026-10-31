@@ -4107,13 +4107,85 @@
       "pass_criterion": "Same null/throw rule and failing archive cursor; no misleading resolved name.",
       "evidence": "Original native lookup branch + real source package indexed maps",
       "reuse": "G3-03 NAME_None assertion sealed for 469f.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "BATCH ORIGINAL COMPILED NATIVE PARTIAL (2026-10-28): One-byte authentic unmodified-original Core.u EndState FriendlyName compact-index mutations, not synthetic name packages: UT99 v432 file-offset43307 0x21->0xBF gave original UCC native Bad name index -63/326 at physical ULinkerLoad Tell43308 (original stdout SHA f2bd406eeb0496cd3626ccf81453620f1b6f44b8d618421d0408613c8e690eee); 2026 shipped Unreal 227k offset67623 0x21->0xBF gave original UCC Bad name index -63/566 at Tell67624 (stdout SHA a86520cad668bd75f540ea15b683f2ff928208a06f9e1b42a2c24d13247d0129). Reader source-selected corrected to exact two original diagnostics, 18/18 focused native/current/source byte acceptance in catalog/compliance/evidence/o06/20261028-G3-batch-T069-v432-227k-original-name-18pass-PARTIAL.json. T009 original v432/227k invalid import branch separately sealed, do not repeat. Original retail May17 C98 engine attempted genuine invalid FriendlyName in isolated Core.u but hit a CDB first-chance access violation before an attributable original native invalid-name error or Tell; NO C98 native name outcome established, no crash presumed intended semantic. Distinct C98 and C227i and any otherwise required original imported/exported name/reference branches remain open; T069 BLOCKED, not a PASS, no additional test ID.",
-      "last_attempt_at": "2026-10-28T23:07:26+00:00",
-      "attempted_native_execution": true,
-      "assessment": "ORIGINAL_V432_AND_227K_NAME_ERRORS_MATCH_C98_UNPROVEN_PARTIAL"
+      "status": "PASS",
+      "evidence_sha": "7d50faad8b4f58b1fd4be9389f7256a448a1c976319885c84e427034cc7a6729",
+      "result": "One frozen T069 three distinct source families original compiled native ULinkerLoad bad name and bad object import/export index full positive 51/51 source/native/current acceptance. Unmodified actual May17-1998 shipped C98 Core.dll plus genuine unchanged original C98 native Unreal.exe -make on a REAL UCC-compiled 761-byte v61/0 G3C98Defaults.u UClass parent (16 names/7 imports/6 exports), with three carefully controlled independent one-byte corruption variants, each EXACT original source package except that SINGLE offset: original class-default terminal FName byte373 00->3f yields ORIGINAL 1998 runtime Bad name index 63/16 actual ULinkerLoad FArchive Tell374; original parent UClass SuperField byte275 -2->-63 yields original runtime Bad import index 62/7 Tell276; SuperField byte275 -2->+63 yields original runtime Bad export index 62/6 Tell276. Each genuine original C98 Editor.log contains real compiled engine identity, ULinkerLoad failure and exact physical cursor; unchanged original .u restored SHA766e4654 after each native run. UnrealDB production C98 source-linked class UField and tagged-default decoder NOW reproducibly raises EXACT same original engine diagnostic, numeric index/source map count and archive Tell for all 3, rejects without fabricated resolved object/name. Original independently sealed true STOCK UT99 v432 Core.u negative FName -63/326 Tell43308 and original 2026 C227k Core.u -63/566 Tell67624 both source/native/current 18/18 preserved, as well as previously accepted C98+v432+227k invalid import original Core.u T009 91/91 verified source-only via immutable native CDB traces, NOT original engine rerun. Genuine source-specific C98 import/export works only on EPIC_UE1 and real package linker; v432 and 227k source behavior unchanged and explicitly validated by own compiled genuine oracle. All original compiled x86 binaries and original .u, native logs and source scripts SHA-sealed; 51/51 current verifier, original native accepted prior sessions not repeated. T064 distinct malformed property-tag error families not falsely closed, G3 global still not accepted, PRD unchanged.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T02:51:00+00:00",
+      "attempted_native_execution": false,
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t069-three-original-native-linker-errors.php",
+          "sha256": "67727d401a9edfc2c3626c004feba7e14080408ff6ecbb80ce7c3c373af48baa",
+          "bytes": 10056
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a",
+          "bytes": 18683
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "a29b5d9fb7a3ee8b697e1549a7e9935353e5227024b734ce4fd2e119432ba8d4",
+          "bytes": 79099
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-G3C98Defaults-761.u",
+          "sha256": "766e4654a9985cd241307fdf78f496f890fcde3706799f872b41c94cb97cbddf",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B09-T069-C98-original-name-invalid63.u",
+          "sha256": "fa813b7bd2c3aab03e4e4b266ce7d52688e862f52b5882c1160483f720e95315",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-import63.u",
+          "sha256": "a00d61d8379d612a3ea6f291a913cb50a2eab9d24e1d67919c3dc23f34ad2dc0",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-export63.u",
+          "sha256": "97d302ae3cf2df73958978da22aa4715cd53b7f168acc5933e156bbb014c5080",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-BadName63-physical374-Editor.log",
+          "sha256": "3a2b28c626e252dbb53b2cbd79efb8042f2c07c8d160656558b090e7414140f0",
+          "bytes": 1840
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-BadImport63-Editor.log",
+          "sha256": "06b488d27e7c8d6abf133f93118a7f3fa747776d59c9573eb085dbe9e1567bc7",
+          "bytes": 1861
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-BadExport63-Editor.log",
+          "sha256": "6fd10b41f915ed598b4e17800ceea2e7a2dd59cbe0f347a6d178d9cd801eec67",
+          "bytes": 1861
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-batch-T069-v432-227k-original-name-18pass-PARTIAL.json",
+          "sha256": "0b6fb3c55b196c6e88d4a159d3739c189386a5d6106246575bc2100539c1d9aa",
+          "bytes": 1389
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T069-original-v432-malformed-FName.stdout.log",
+          "sha256": "f2bd406eeb0496cd3626ccf81453620f1b6f44b8d618421d0408613c8e690eee",
+          "bytes": 694
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T069-original-227k-malformed-FName.stdout.log",
+          "sha256": "a86520cad668bd75f540ea15b683f2ff928208a06f9e1b42a2c24d13247d0129",
+          "bytes": 1054
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B09-T069-original-three-compiled-51pass.json",
+          "sha256": "b43188809b79788df35a6a973d2be5cbeef84ae08fffd9fde5ea31281e2f1e7a",
+          "accepted_original_assertions": 51
+        }
+      ]
     },
     {
       "id": "T070",
