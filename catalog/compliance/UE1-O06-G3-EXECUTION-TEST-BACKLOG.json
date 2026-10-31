@@ -4450,7 +4450,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 ORIGINAL C98 v34/v35 SOURCE-GATE NATIVE ATTEMPTS: original 1998 Unreal.exe and Core.dll were run separately with genuine old DProj.utx archive v35 and a tagged, version-34 header derivative in isolated texture import path, original ini temporarily selecting DProj then fully restored. Both native sessions timed out after critical startup missing Unreal.unr BEFORE loading the DProj asset. Neither physical archive cursor nor source original <36 unknown ObjectProperty branch was observed. This is NOT positive native version34 or version35 proof and does NOT justify production reader modification. Exact source gap remains original C98 UnClass.cpp Ar.Ver()<36 (v34,v35) versus reader v35-only compact type5/8 tagSize4 compatibility; original C98 class method native negative and reader match still unproven. Other T065 source build method boundary native requirements remain.",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Original stock v432 and separate 469f source-selected FPackageFileSummary v61 heritage and v68/v69 post-heritage header gates are now actually loaded in true original x86 stock Core.dll, and each physical linker version/NameCount/ExportCount/GUID/FileSize matches current reader (20 real shipped cases, 173/173 all source/private SHA assertions). However original C98 <=35 unknown ObjectProperty v34/v35 archive physical cursor is STILL unverified because original C98 game startup needed Unreal.unr; C227i/k and all distinct serializer version branches still unverified. T065 BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "T011_V60_64_NATIVE_BRANCH_CLOSED_T065_ALL_SOURCE_METHOD_FAMILIES_UNPROVEN",
@@ -4469,6 +4469,16 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T065-original-C98-v34-v35-runtime-probe-blocked-no-map.json",
           "sha256": "46956399872cf839bd4ecd2ba5d136b1c87efe865278234d14ff9a0cd2ee917e",
           "bytes": 2418
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
         }
       ],
       "last_evidence_review": "2026-10-31",
@@ -4483,7 +4493,8 @@
         "C227 build-specific native deltas"
       ],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
-      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards"
+      "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
     },
     {
       "id": "T066",
@@ -4820,7 +4831,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: 32 previous alleged original UClass default mismatches all actual native warning+skipped archived tags: 24 object,4 name,4 string; they are NOT original native malformed/invalid references. Native read-only 1705/1705 and original authored source 172/172 focused checks PASS. Other source-specific errors including original C98 v34 unknown object branch and undefined behavior exclusions remain unowned.",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Two original stock engine builds v432/469f both observed native missing shipped Detail provider failure (one case/build), plus 18 valid genuine shuffled/direct physical original provider choices and true compiled native linker metadata. Missing-package actual error class details and other original method malformed branches remain unowned; T071 BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4850,10 +4861,21 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
           "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
           "bytes": 28907
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
-      "latest_grouped_native_observation": "Original C98 <36 unknown object tag error and precise source FArchive Tell still missing: two C98 original sessions stopped before target archive because no Unreal.unr. New original v432 missing real import provider native exception does not cover each source profile; do not misassign error branch."
+      "latest_grouped_native_observation": "Original C98 <36 unknown object tag error and precise source FArchive Tell still missing: two C98 original sessions stopped before target archive because no Unreal.unr. New original v432 missing real import provider native exception does not cover each source profile; do not misassign error branch.",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
     },
     {
       "id": "T072",
@@ -4868,7 +4890,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: Original stock UT99 v432 original x86 compiled 608 UClass default tags partition into 575 actual exact native values,1 INI loaded value and32 native warn+skip archived tags, with 1705/1705 new independent scoped read-only original memory checks. 31/32 actual native observed values match original 1999 v400 authored source; one ClipMarker matches later 469f source only. T072 C98 direct type exhaustive all-method native values or source exclusion still incomplete. Original capture-time INI SHA is stale and not repinned.",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: No NEW 1998 C98 direct UClass/UStruct/UProperty native field comparison. Genuine original v432/469f package-loaded old texture values under other source profiles are not a C98 direct-type substitute. T072 BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4895,10 +4917,21 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
           "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
           "bytes": 28907
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
-      "latest_grouped_native_observation": "Original C98 direct Class/Struct/Property whole source-method native loaded value matrix unproven; isolated C98 v34 startup never reached method, current v432 imported class controls cannot satisfy C98."
+      "latest_grouped_native_observation": "Original C98 direct Class/Struct/Property whole source-method native loaded value matrix unproven; isolated C98 v34 startup never reached method, current v432 imported class controls cannot satisfy C98.",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
     },
     {
       "id": "T073",
@@ -4913,7 +4946,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: Original stock v432 ClipMarker class native memory Texture=S_ClipMarker confirmed, but authored ClipMarker default source available only from later 469f; do not assert 469f and v432 native method/source same. Other original UT99 source-specific method/type gaps remain.",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Original stock UT99 v432 and separately compiled OldUnreal 469f real source x86 Core.dll loaded five actual PRD originals named Detail.utx (v61/68/69); all 20 genuine original native cases match active linker FPackageFileSummary (v61 heritage vs v68/69 modern, exact NameCount/ExportCount/GUID/physical byte size) and current reader (44/44), independent 173/173 checker. 469f-specific other method/record types and old source overlays not all exhausted. T073 BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4938,10 +4971,21 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
           "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
           "bytes": 28907
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
-      "latest_grouped_native_observation": "True v432 original UClass::SuperField external reference and loaded imported-provider CDO pointer are now evidenced under T076; 469f-specific source method/type union and genuine 469f compiled native provenance still incomplete."
+      "latest_grouped_native_observation": "True v432 original UClass::SuperField external reference and loaded imported-provider CDO pointer are now evidenced under T076; 469f-specific source method/type union and genuine 469f compiled native provenance still incomplete.",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
     },
     {
       "id": "T074",
@@ -4956,7 +5000,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BATCH 8 SOURCE-TRUTH OWNER DECISION: 2012 C227i original native UClass::Serialize+0x21a -> LoadLocalized editor-mode GIsEditor=1 observed; original 2026 C227k native noneditor LoadLocalized observed, distinct UObject layout offset 0x28c vs 0x308. But original 2012/2026 compiled noneditor method delta is NOT proven equivalent and full native UClass/Property/UStruct class-method inventory not complete; source inheritance does not excuse missing actual original compiled method proof. T019 scoped native Config/Localized/Transient now PASS.",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: No NEW distinct 2012 C227i versus 2026 C227k original native method/ABI checks in this grouped shipped UT99 run; equal numeric v69 from UT99 must not substitute Unreal 227. T074 BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4974,7 +5018,20 @@
       ],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
-      "latest_grouped_native_observation": "No NEW original 2012 C227i or 2026 C227k method tests performed. Preserve previous distinct original native source build values; v432 same numeric package v69 must not substitute."
+      "latest_grouped_native_observation": "No NEW original 2012 C227i or 2026 C227k method tests performed. Preserve previous distinct original native source build values; v432 same numeric package v69 must not substitute.",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "partial_verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
+        }
+      ]
     },
     {
       "id": "T075",
@@ -4989,7 +5046,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: 24 actual live UObject references and member offsets,4 FNames and4 FStrings observed in original stock v432 native memory; the 32 corresponding archive tags are intentionally skipped and must NOT be reported as resolved on-disk object pointers. 1705/1705 source-aware native and172/172 actual source checks PASS. Full C98/T99/C227 per-build real linker identity graph and class/struct/property ABI remain unclosed.",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Actual original v432 and original 469f compiled Core.dll source UClass/UObject loaded live textures and ULinkerLoad pointer (stones, and paint1/rough where present), followed GetLinker/GetPackageLinker, with actual runtime FArchive::TotalSize, Summary version/export/name counts and source GUID 4 DWORDs; independently agrees with current source reader for five authentic PRD files, 20 new engine executions and 173/173 checks. This is real pointer identity not archive-inferred; C98 and 227 full per-method native pointer/type map still missing. T075 BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5018,10 +5075,21 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
           "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
           "bytes": 28907
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
-      "latest_grouped_native_observation": "New actual stock v432 original C++ loaded UClass SuperField pointer, provider CDO pointer and ProviderSentinel value from authentic original UCC imported superclass under two distinct same-name candidate sources. 79/79 scoped verifier and full archive imported superIndex -3 current reader check. Full C98/469f/227 real UClass/ref linker pointer mappings still missing."
+      "latest_grouped_native_observation": "New actual stock v432 original C++ loaded UClass SuperField pointer, provider CDO pointer and ProviderSentinel value from authentic original UCC imported superclass under two distinct same-name candidate sources. 79/79 scoped verifier and full archive imported superIndex -3 current reader check. Full C98/469f/227 real UClass/ref linker pointer mappings still missing.",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
     },
     {
       "id": "T076",
@@ -5036,7 +5104,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 ORIGINAL COMPILED STOCK UT99 v432 TWO REAL 4-PROFILE NATIVE GROUPS: stock original UCC made two DIFFERENT same-name G3T076Dupe.u packages (ProviderSentinel 111 / 222), and a genuine compiled third consumer script package which imports G3T076Dupe.G3T076DupeActor as its native UClass superclass. Original stock v432 Core.dll compiled x86 four DIRECT LoadPackage tests: System A/Textures B -> 111, System B/Textures A -> 222, Textures A only -> 111, missing both -> native failure. Four NEW real imported-superclass pointer/true native CDO tests: System A -> 111, System B -> 222, Textures B only ->222, missing both -> native failure. Independent actual original-stock-native-source-current reader 79/79 PASS; current UnrealDB UE1 reader sees archived provider 111/222 and consumer real import index -3 in 7/7, with actual original DLL and stock INI SHA unchanged and all scratch package search paths restored. HOWEVER these are disposable original UCC-generated CONTROL packages, not documented shipped same-name duplicates across C98/UT99/469f/C227, and PdoUedb5PhysicalProviderSelector deliberately reports unknown runtime searchPath/mount priority as ambiguous with >1 candidate. Native runtime authoritative physical search context not yet represented by indexed DB, so full T076 remains BLOCKED (no unsupported provider guess).",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: PRD read-only authoritative current source key has exactly FIVE physically different verified same-name UT99 Detail.utx candidates IDs 113274(v61),148267(v69),1256343(v68),1258823(v68),1276716(v69), all copied to DEV scratch with SHA256/sha1/MD5 exact and original file immutable. Two distinct real compiled original engine builds v432 and 469f each exercised 10 NEW genuine shipped combinations (20 total): system before textures, textures-only, missing; 10 new ULinkerLoad Summary metadata cases actually verified real UClass/UObject pointers, physical byte lengths, GUID/name/export/version and 10 direct paint1/rough package identities. Source/current verifier 173/173 PASS and 44/44 actual five archive metadata. Crucially v61 ID113274 and v69 ID148267 have same GUID but distinct physical bytes; do not select by GUID. UEDB5 selector currently returns ambiguous for same-package candidates without original runtime SearchPaths source/physical mount location, and full other C98/C227 original source build provider parity not established. T076 BLOCKED, no unsafe automatic selection.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5144,9 +5212,20 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T076-stock_UCC_true_import_compiler_log.log",
           "sha256": "4323b9930b614b75f5f49532aa8bf1b58b4ac028bc048dce555f0d228038ab86",
           "bytes": 1222
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
         }
       ],
-      "last_original_compiled_native_result": "8 distinct original v432 x86 source-class / loader executions, 3 original UCC packages, 79/79 read-only checks; scoped PASS, T076 overall BLOCKED"
+      "last_original_compiled_native_result": "8 distinct original v432 x86 source-class / loader executions, 3 original UCC packages, 79/79 read-only checks; scoped PASS, T076 overall BLOCKED",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
     },
     {
       "id": "T077",
@@ -5161,7 +5240,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 GROUPED 5+ ORIGINAL SOURCE-NATIVE OWNERS: Old G5 608 UClass native-value diagnostic remains historical FAIL 1679/1704 (capture-time UnrealTournament.ini original SHA no longer present, do NOT repin). New separate scoped source/native checker PASS 1705/1705 and independent 31 old source +1 later source anchored validator PASS 172/172 classify all 32 intentional skips. Full source method/error/provider, v34 source version and original config provenance remain blocked.",
+      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: 20 new original shipped native engine loads 10xv432 plus 10x469f, current source reader five source-true packages 44/44, joint 173/173 SHA+runtime metadata and native DLL integrity verifier; 5 indexed real physical candidates; 2 originals retain identical GUID despite different bytes. Other frozen T065/T071-T076 full method source-branch/error/provider union remains unverified. No full release T077 PASS.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5204,10 +5283,21 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T071-T072-T075-T076-32-original-v432-source-native-skips-verified.json",
           "sha256": "f9537803c4ad88dae7ac0198ab44a11208d8c6f9d51b0fcb121ef2ec62a83b8d",
           "bytes": 28907
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-20-real-UT99-shipped-native-and-5-indexed-ownership.json",
+          "sha256": "2d56707239f619debef2106c6d92d9ccae45a914b9fa266657c84bb1235687e3",
+          "bytes": 39837
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
-      "latest_grouped_native_observation": "Updated seven parent method/error/provider owner blockers. T076 genuine source-compiled v432 external import provider success adds original live CDO evidence; T065 real 1998 startup failure is not source branch loaded. No aggregate closure until all source families and 8 fixed owner criteria PASS."
+      "latest_grouped_native_observation": "Updated seven parent method/error/provider owner blockers. T076 genuine source-compiled v432 external import provider success adds original live CDO evidence; T065 real 1998 startup failure is not source branch loaded. No aggregate closure until all source families and 8 fixed owner criteria PASS.",
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
     },
     {
       "id": "T078",

@@ -1,0 +1,77 @@
+[
+  {
+    "case": "system_v68_textures_v69",
+    "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "system_shipped_version": 68,
+    "textures_shipped_version": 69,
+    "actual_469f_original_compiled_exit": 0,
+    "actual_469f_native_selected_version": 68,
+    "expected_original_build_mount_source_version": 68,
+    "native_stdout_SHA256": "06cf41ffb0382b1808bcdd0696f9ceb7590cdb6a3ab0828b57f15a8d6bb7ed45",
+    "stdout_markers": [
+      "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=02DB1D40",
+      "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=02FA0590 paint1=02FA0750 rough=00000000",
+      "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=68"
+    ]
+  },
+  {
+    "case": "system_v69_textures_v68",
+    "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "system_shipped_version": 69,
+    "textures_shipped_version": 68,
+    "actual_469f_original_compiled_exit": 0,
+    "actual_469f_native_selected_version": 69,
+    "expected_original_build_mount_source_version": 69,
+    "native_stdout_SHA256": "fe7252a1a2345311583e694500c72e0ed81f1afab1eb63cc3be7e08979389a64",
+    "stdout_markers": [
+      "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=02FE1D40",
+      "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=031D1E10 paint1=00000000 rough=031D0C90",
+      "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=69"
+    ]
+  },
+  {
+    "case": "textures_v68_only",
+    "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "system_shipped_version": null,
+    "textures_shipped_version": 68,
+    "actual_469f_original_compiled_exit": 0,
+    "actual_469f_native_selected_version": 68,
+    "expected_original_build_mount_source_version": 68,
+    "native_stdout_SHA256": "b12a8b31c84e2f4b4d7006f9e37b14e7864f5901d1a382fc4237345ef75302cb",
+    "stdout_markers": [
+      "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=02721D40",
+      "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=02910590 paint1=02910750 rough=00000000",
+      "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=68"
+    ]
+  },
+  {
+    "case": "textures_v69_only",
+    "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "system_shipped_version": null,
+    "textures_shipped_version": 69,
+    "actual_469f_original_compiled_exit": 0,
+    "actual_469f_native_selected_version": 69,
+    "expected_original_build_mount_source_version": 69,
+    "native_stdout_SHA256": "8b2bfdfb9157464637303be34f87498c98ca96d4c647c5453611acc44efa00dc",
+    "stdout_markers": [
+      "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=026F1D40",
+      "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=028E1E10 paint1=00000000 rough=028E0C90",
+      "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=69"
+    ]
+  },
+  {
+    "case": "missing_both",
+    "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "system_shipped_version": null,
+    "textures_shipped_version": null,
+    "actual_469f_original_compiled_exit": 7,
+    "actual_469f_native_selected_version": 0,
+    "expected_original_build_mount_source_version": null,
+    "native_stdout_SHA256": "7e52c7954843c172ad19573ca258d153cd423289e7528c2db6950157facdbc62",
+    "stdout_markers": [
+      "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=00000000",
+      "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=00000000 paint1=00000000 rough=00000000",
+      "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=0"
+    ]
+  }
+]

@@ -1,0 +1,64 @@
+{
+    "read_only": true,
+    "source_game": "ut99",
+    "catalog_key_kind": 3,
+    "package_key_hex": "951DA6B7179A4F697CC89D36ACF74E52",
+    "bounded_actual_indexed_candidate_rows": [
+        {
+            "file_id": 113274,
+            "source_kind": 1,
+            "package_key_kind": 3,
+            "original_name": "Detail.utx",
+            "package_version": 61,
+            "file_size": 1729964,
+            "md5": "69f3a6fdfe51ac4fd6d3548afda41d92",
+            "sha1": "b9e2e9123c154d3a92b8e39abd6ff77637e0b85e",
+            "scan_status": "verified"
+        },
+        {
+            "file_id": 148267,
+            "source_kind": 1,
+            "package_key_kind": 3,
+            "original_name": "Detail.utx",
+            "package_version": 69,
+            "file_size": 22575,
+            "md5": "6e6e2dd2977bfc541eba97a7020605d2",
+            "sha1": "550cfa3762abefe1ce39a82f3b7ff55e93046cd2",
+            "scan_status": "verified"
+        },
+        {
+            "file_id": 1256343,
+            "source_kind": 1,
+            "package_key_kind": 3,
+            "original_name": "Detail.utx",
+            "package_version": 68,
+            "file_size": 155197,
+            "md5": "a481500f3188ed8ff24110a0267cb67a",
+            "sha1": "940af1a15f1e3d232f4f0dbf6990428ab1a2a30c",
+            "scan_status": "verified"
+        },
+        {
+            "file_id": 1258823,
+            "source_kind": 1,
+            "package_key_kind": 3,
+            "original_name": "Detail.utx",
+            "package_version": 68,
+            "file_size": 89644,
+            "md5": "ab5257af772f56c89026ac778442df8a",
+            "sha1": "2ff0a9192e44212fb7ee12474d053100e3da77a1",
+            "scan_status": "verified"
+        },
+        {
+            "file_id": 1276716,
+            "source_kind": 1,
+            "package_key_kind": 3,
+            "original_name": "Detail.utx",
+            "package_version": 69,
+            "file_size": 443953,
+            "md5": "8a4267ba396e0feeb8f9dda445f95ea1",
+            "sha1": "baff97e74d503bb982365008efb53c7fe64908de",
+            "scan_status": "verified"
+        }
+    ],
+    "returned_candidate_rows": 5
+}

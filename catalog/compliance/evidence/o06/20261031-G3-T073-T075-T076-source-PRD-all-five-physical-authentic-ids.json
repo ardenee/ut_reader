@@ -1,0 +1,52 @@
+[
+  {
+    "file_id": 113274,
+    "original_name": "Detail.utx",
+    "original_PRD_sha256": "42c79438778910108f46a40db91f0d1cb177555075da516031d2e46f00a7d837",
+    "md5": "69f3a6fdfe51ac4fd6d3548afda41d92",
+    "sha1": "b9e2e9123c154d3a92b8e39abd6ff77637e0b85e",
+    "bytes": 1729964,
+    "version": 61,
+    "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID113274-v61.utx"
+  },
+  {
+    "file_id": 148267,
+    "original_name": "Detail.utx",
+    "original_PRD_sha256": "e4c20597c2494cc33963750ad67b9b82faa3297028f34a614f586b8128df0357",
+    "md5": "6e6e2dd2977bfc541eba97a7020605d2",
+    "sha1": "550cfa3762abefe1ce39a82f3b7ff55e93046cd2",
+    "bytes": 22575,
+    "version": 69,
+    "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID148267-v69.utx"
+  },
+  {
+    "file_id": 1256343,
+    "original_name": "Detail.utx",
+    "original_PRD_sha256": "74dcd113089ccd8e179155eb2844ee8f51e527c11bda7798179a3191d884f781",
+    "md5": "a481500f3188ed8ff24110a0267cb67a",
+    "sha1": "940af1a15f1e3d232f4f0dbf6990428ab1a2a30c",
+    "bytes": 155197,
+    "version": 68,
+    "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID1256343-v68.utx"
+  },
+  {
+    "file_id": 1258823,
+    "original_name": "Detail.utx",
+    "original_PRD_sha256": "82ef6dd40544f297776edc63a9058129976f4af6aa11f6b04a9bedf0b59ec67c",
+    "md5": "ab5257af772f56c89026ac778442df8a",
+    "sha1": "2ff0a9192e44212fb7ee12474d053100e3da77a1",
+    "bytes": 89644,
+    "version": 68,
+    "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID1258823-v68.utx"
+  },
+  {
+    "file_id": 1276716,
+    "original_name": "Detail.utx",
+    "original_PRD_sha256": "d68a818b8c947629d76f667c50dcc69896e9938df58a991137f2c88d9b5129c3",
+    "md5": "8a4267ba396e0feeb8f9dda445f95ea1",
+    "sha1": "baff97e74d503bb982365008efb53c7fe64908de",
+    "bytes": 443953,
+    "version": 69,
+    "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID1276716-v69.utx"
+  }
+]

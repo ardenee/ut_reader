@@ -1,0 +1,242 @@
+[
+  {
+    "profile": "v432",
+    "case": "only_original_shipped_id113274",
+    "source_system_id": null,
+    "source_textures_id": 113274,
+    "source_selected_id_under_original_source_SearchPaths": 113274,
+    "expected_immutable_original_file_bytes": 1729964,
+    "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 61,
+      "file_bytes": 1729964,
+      "exports": 51,
+      "names": 90,
+      "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+    },
+    "native_output_SHA256": "ba52e8d9d2ce31c221a2ead8fd84aaa113bf8a1b74b65877a17d962d68887eaa",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=00D73108 stones=02C84AA8 linker=00D88CA8",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "v432",
+    "case": "only_original_shipped_id148267",
+    "source_system_id": 148267,
+    "source_textures_id": null,
+    "source_selected_id_under_original_source_SearchPaths": 148267,
+    "expected_immutable_original_file_bytes": 22575,
+    "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 69,
+      "file_bytes": 22575,
+      "exports": 51,
+      "names": 91,
+      "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+    },
+    "native_output_SHA256": "c281f5cc18861978e848cee443e9e974e337eba6c452098e72b369f936b6a5ef",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=0059C3D8 stones=00678990 linker=005AEFA8",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=69 file_size=22575 exports=51 names=91 guid=1E90ACA8-11D1ED66-45442797-00005453",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "v432",
+    "case": "only_original_shipped_id1258823",
+    "source_system_id": null,
+    "source_textures_id": 1258823,
+    "source_selected_id_under_original_source_SearchPaths": 1258823,
+    "expected_immutable_original_file_bytes": 89644,
+    "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 68,
+      "file_bytes": 89644,
+      "exports": 5,
+      "names": 24,
+      "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+    },
+    "native_output_SHA256": "88f0ce06975ed359ba6430a14b745c1ab94a561fa4626a209870e01ab54537d2",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=00F7C518 stones=00FB9748 linker=00F8DA38",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "v432",
+    "case": "mix_system_113274_textures_148267",
+    "source_system_id": 113274,
+    "source_textures_id": 148267,
+    "source_selected_id_under_original_source_SearchPaths": 113274,
+    "expected_immutable_original_file_bytes": 1729964,
+    "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 61,
+      "file_bytes": 1729964,
+      "exports": 51,
+      "names": 90,
+      "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+    },
+    "native_output_SHA256": "8b508b7b9ff2c44a6c3797e6fbb005a352c6c4fc20855f9fa3d37dc145e16018",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=009FA5C0 stones=00AD1538 linker=00A0C608",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "v432",
+    "case": "mix_system_1258823_textures_1276716",
+    "source_system_id": 1258823,
+    "source_textures_id": 1276716,
+    "source_selected_id_under_original_source_SearchPaths": 1258823,
+    "expected_immutable_original_file_bytes": 89644,
+    "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 68,
+      "file_bytes": 89644,
+      "exports": 5,
+      "names": 24,
+      "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+    },
+    "native_output_SHA256": "eef96198d3bae93417f92868bf5c2059ce1662e9fee6119e8e3d26f3d5412421",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=0102A900 stones=010AAFA8 linker=0103ECD8",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "469f",
+    "case": "only_original_shipped_id113274",
+    "source_system_id": null,
+    "source_textures_id": 113274,
+    "source_selected_id_under_original_source_SearchPaths": 113274,
+    "expected_immutable_original_file_bytes": 1729964,
+    "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 61,
+      "file_bytes": 1729964,
+      "exports": 51,
+      "names": 90,
+      "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+    },
+    "native_output_SHA256": "3da2a15951e4aae9dde5d69c630b61a2582d927a3aa1cfc208ee345c841eeba1",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=03611D40 stones=037FA0B0 linker=03709250",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "469f",
+    "case": "only_original_shipped_id148267",
+    "source_system_id": 148267,
+    "source_textures_id": null,
+    "source_selected_id_under_original_source_SearchPaths": 148267,
+    "expected_immutable_original_file_bytes": 22575,
+    "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 69,
+      "file_bytes": 22575,
+      "exports": 51,
+      "names": 91,
+      "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+    },
+    "native_output_SHA256": "a0bf9343d8dd503d36444534653fedeaa0e0d0cefe43d0378ef992826b156205",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=030A1D40 stones=0328A0B0 linker=03199250",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=69 file_size=22575 exports=51 names=91 guid=1E90ACA8-11D1ED66-45442797-00005453",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "469f",
+    "case": "only_original_shipped_id1258823",
+    "source_system_id": null,
+    "source_textures_id": 1258823,
+    "source_selected_id_under_original_source_SearchPaths": 1258823,
+    "expected_immutable_original_file_bytes": 89644,
+    "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 68,
+      "file_bytes": 89644,
+      "exports": 5,
+      "names": 24,
+      "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+    },
+    "native_output_SHA256": "bc4aae3fda377872392792bd0c655e27db2785a78fe02d58aca76b01e3f929e5",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=033F1D40 stones=035D8750 linker=034E9250",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "469f",
+    "case": "mix_system_113274_textures_148267",
+    "source_system_id": 113274,
+    "source_textures_id": 148267,
+    "source_selected_id_under_original_source_SearchPaths": 113274,
+    "expected_immutable_original_file_bytes": 1729964,
+    "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 61,
+      "file_bytes": 1729964,
+      "exports": 51,
+      "names": 90,
+      "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+    },
+    "native_output_SHA256": "abd3926d461c7842de6e5fe41611d4fdad872a34e696e83e7186bcce89d0d872",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=02711D40 stones=028FA0B0 linker=02809250",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  },
+  {
+    "profile": "469f",
+    "case": "mix_system_1258823_textures_1276716",
+    "source_system_id": 1258823,
+    "source_textures_id": 1276716,
+    "source_selected_id_under_original_source_SearchPaths": 1258823,
+    "expected_immutable_original_file_bytes": 89644,
+    "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+    "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+    "native_execution_rc": 0,
+    "native_loaded_linker_summary": {
+      "version": 68,
+      "file_bytes": 89644,
+      "exports": 5,
+      "names": 24,
+      "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+    },
+    "native_output_SHA256": "e96b7698d0c4e4349f1c98a8d890aea4da3d6a5c74dfa18d73fc8f70cf21aff3",
+    "native_markers": [
+      "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=02B31D40 stones=02D18750 linker=02C29250",
+      "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+      "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+    ]
+  }
+]

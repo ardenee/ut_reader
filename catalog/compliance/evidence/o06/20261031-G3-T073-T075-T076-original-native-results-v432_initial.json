@@ -1,0 +1,85 @@
+[
+  {
+    "case": "system_v68_textures_v69",
+    "actual_stock_compiled_native_rc": 0,
+    "shipped_system_catalog_provider_version": 68,
+    "shipped_textures_catalog_provider_version": 69,
+    "native_reported_version": 68,
+    "expected_selected_version_from_original_stock_configured_paths": 68,
+    "stdout_markers": [
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=01525ED8",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=01565970 dirty=01565A38 paint1=015F4E90 rough=00000000",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=015F4E90 rough=00000000",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=68"
+    ],
+    "native_stdout_SHA256": "753161fe630fe2a58d119698c382c7337e0fd586b2a85f94bff290f14967a7e5",
+    "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+  },
+  {
+    "case": "system_v69_textures_v68",
+    "actual_stock_compiled_native_rc": 0,
+    "shipped_system_catalog_provider_version": 69,
+    "shipped_textures_catalog_provider_version": 68,
+    "native_reported_version": 69,
+    "expected_selected_version_from_original_stock_configured_paths": 69,
+    "stdout_markers": [
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=00D0A3A0",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=00DC3580 dirty=00DC3328 paint1=00000000 rough=00DC34B8",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=00000000 rough=00DC34B8",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=69"
+    ],
+    "native_stdout_SHA256": "c3aff3496093bc4fdb674497249101acf24e35c742f33b377915a71cc4787fea",
+    "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+  },
+  {
+    "case": "textures_v68_only",
+    "actual_stock_compiled_native_rc": 0,
+    "shipped_system_catalog_provider_version": null,
+    "shipped_textures_catalog_provider_version": 68,
+    "native_reported_version": 68,
+    "expected_selected_version_from_original_stock_configured_paths": 68,
+    "stdout_markers": [
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=0162A0B0",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=01669920 dirty=016699E8 paint1=01656C00 rough=00000000",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=01656C00 rough=00000000",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=68"
+    ],
+    "native_stdout_SHA256": "a3fcc865d8bd412a3e398bc65a80d69818b379d23a293e0aca278d7e76a3d538",
+    "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+  },
+  {
+    "case": "textures_v69_only",
+    "actual_stock_compiled_native_rc": 0,
+    "shipped_system_catalog_provider_version": null,
+    "shipped_textures_catalog_provider_version": 69,
+    "native_reported_version": 69,
+    "expected_selected_version_from_original_stock_configured_paths": 69,
+    "stdout_markers": [
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=007BA3F0",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=00873720 dirty=008734C8 paint1=00000000 rough=00873658",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=00000000 rough=00873658",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=69"
+    ],
+    "native_stdout_SHA256": "c201c466eabe7fac9f48e60d5ed8db2eaf6dc29fff97fb644e5322b53272d660",
+    "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+  },
+  {
+    "case": "missing_both",
+    "actual_stock_compiled_native_rc": 7,
+    "shipped_system_catalog_provider_version": null,
+    "shipped_textures_catalog_provider_version": null,
+    "native_reported_version": 0,
+    "expected_selected_version_from_original_stock_configured_paths": null,
+    "stdout_markers": [
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE_MISSING_OR_CORRUPT",
+      "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=0"
+    ],
+    "native_stdout_SHA256": "e191f7083e063ff2d120a0da15cecee25590bdfb7b5e5cd38a7707a61fc4faef",
+    "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+  }
+]

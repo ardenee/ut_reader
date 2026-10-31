@@ -134,3 +134,7 @@ catalog/bin/verify-ue1-o06-g3-t065-source-family-11-branches-legacy-v34-gap.py -
 # T076 original stock v432 compiler/current reader source acceptance verifier raw byte identities.
 catalog/bin/verify-ue1-o06-g3-t076-original-v432-real-imported-duplicate-archive.php -text
 catalog/bin/verify-ue1-o06-g3-t076-real-stock-v432-8-native-duplicate-imports.py -text
+
+# Original PRD five real shipped UT99 v61/v68/v69 source-backed native metadata verifier.
+catalog/bin/verify-ue1-o06-g3-t073-t075-t076-five-genuine-shipped-archive-ids.php -text
+catalog/bin/verify-ue1-o06-g3-t073-t075-t076-five-shipped-20-native.py -text

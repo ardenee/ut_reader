@@ -13,3 +13,6 @@
 # T076 original compiled native stdout, user-owned C++/UnrealScript and proof SHA byte preservation.
 20261031-G3-T076-* -text
 20261031-G3-T065-original-C98-v34-v35-runtime-probe-blocked-no-map.json -text
+
+# Five genuine shipped source packages / 20 compiled native logs: retain raw SHA in Windows Git index.
+20261031-G3-T073-T075-T076-* -text

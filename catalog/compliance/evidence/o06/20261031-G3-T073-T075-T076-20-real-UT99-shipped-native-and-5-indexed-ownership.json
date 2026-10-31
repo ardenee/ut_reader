@@ -1,0 +1,825 @@
+{
+  "fixed_test_owner_ids": [
+    "T065",
+    "T071",
+    "T072",
+    "T073",
+    "T074",
+    "T075",
+    "T076",
+    "T077"
+  ],
+  "original_compiled_new_real_shipped_native_loads": 20,
+  "original_compiled_engine_profiles": [
+    "v432",
+    "469f"
+  ],
+  "actual_original_indexed_shipped_candidates": 5,
+  "original_PRD_only_readonly_source": true,
+  "PRD_altered": false,
+  "source_genuine_real_UCC_generated_corpus_reexecuted": false,
+  "T076_fixed_test_complete": false,
+  "T073_T075_fixed_tests_complete": false,
+  "new_original_cpp_native_profiles": [],
+  "original_native_cases": [
+    {
+      "profile": "v432",
+      "case": "v432_initial-system_v68_textures_v69",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-system_v68_textures_v69.log",
+        "sha256": "753161fe630fe2a58d119698c382c7337e0fd586b2a85f94bff290f14967a7e5",
+        "bytes": 275
+      },
+      "native_outcome": {
+        "case": "system_v68_textures_v69",
+        "actual_stock_compiled_native_rc": 0,
+        "shipped_system_catalog_provider_version": 68,
+        "shipped_textures_catalog_provider_version": 69,
+        "native_reported_version": 68,
+        "expected_selected_version_from_original_stock_configured_paths": 68,
+        "stdout_markers": [
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=01525ED8",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=01565970 dirty=01565A38 paint1=015F4E90 rough=00000000",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=015F4E90 rough=00000000",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=68"
+        ],
+        "native_stdout_SHA256": "753161fe630fe2a58d119698c382c7337e0fd586b2a85f94bff290f14967a7e5",
+        "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432_initial-system_v69_textures_v68",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-system_v69_textures_v68.log",
+        "sha256": "c3aff3496093bc4fdb674497249101acf24e35c742f33b377915a71cc4787fea",
+        "bytes": 275
+      },
+      "native_outcome": {
+        "case": "system_v69_textures_v68",
+        "actual_stock_compiled_native_rc": 0,
+        "shipped_system_catalog_provider_version": 69,
+        "shipped_textures_catalog_provider_version": 68,
+        "native_reported_version": 69,
+        "expected_selected_version_from_original_stock_configured_paths": 69,
+        "stdout_markers": [
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=00D0A3A0",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=00DC3580 dirty=00DC3328 paint1=00000000 rough=00DC34B8",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=00000000 rough=00DC34B8",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=69"
+        ],
+        "native_stdout_SHA256": "c3aff3496093bc4fdb674497249101acf24e35c742f33b377915a71cc4787fea",
+        "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432_initial-textures_v68_only",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-textures_v68_only.log",
+        "sha256": "a3fcc865d8bd412a3e398bc65a80d69818b379d23a293e0aca278d7e76a3d538",
+        "bytes": 275
+      },
+      "native_outcome": {
+        "case": "textures_v68_only",
+        "actual_stock_compiled_native_rc": 0,
+        "shipped_system_catalog_provider_version": null,
+        "shipped_textures_catalog_provider_version": 68,
+        "native_reported_version": 68,
+        "expected_selected_version_from_original_stock_configured_paths": 68,
+        "stdout_markers": [
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=0162A0B0",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=01669920 dirty=016699E8 paint1=01656C00 rough=00000000",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=01656C00 rough=00000000",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=68"
+        ],
+        "native_stdout_SHA256": "a3fcc865d8bd412a3e398bc65a80d69818b379d23a293e0aca278d7e76a3d538",
+        "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432_initial-textures_v69_only",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-textures_v69_only.log",
+        "sha256": "c201c466eabe7fac9f48e60d5ed8db2eaf6dc29fff97fb644e5322b53272d660",
+        "bytes": 275
+      },
+      "native_outcome": {
+        "case": "textures_v69_only",
+        "actual_stock_compiled_native_rc": 0,
+        "shipped_system_catalog_provider_version": null,
+        "shipped_textures_catalog_provider_version": 69,
+        "native_reported_version": 69,
+        "expected_selected_version_from_original_stock_configured_paths": 69,
+        "stdout_markers": [
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE=007BA3F0",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_FOUND stones=00873720 dirty=008734C8 paint1=00000000 rough=00873658",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_ACTUAL paint1=00000000 rough=00873658",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=69"
+        ],
+        "native_stdout_SHA256": "c201c466eabe7fac9f48e60d5ed8db2eaf6dc29fff97fb644e5322b53272d660",
+        "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432_initial-missing_both",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-missing_both.log",
+        "sha256": "e191f7083e063ff2d120a0da15cecee25590bdfb7b5e5cd38a7707a61fc4faef",
+        "bytes": 112
+      },
+      "native_outcome": {
+        "case": "missing_both",
+        "actual_stock_compiled_native_rc": 7,
+        "shipped_system_catalog_provider_version": null,
+        "shipped_textures_catalog_provider_version": null,
+        "native_reported_version": 0,
+        "expected_selected_version_from_original_stock_configured_paths": null,
+        "stdout_markers": [
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_PACKAGE_MISSING_OR_CORRUPT",
+          "G3_T076_SHIPPED_ORIGINAL_NATIVE_SELECTED_VERSION=0"
+        ],
+        "native_stdout_SHA256": "e191f7083e063ff2d120a0da15cecee25590bdfb7b5e5cd38a7707a61fc4faef",
+        "native_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_stock_CPP_SHA256": "7dcf0d55e395875f0cd1da04dbda568792ab8f033ed064e095e33b7356fc827f"
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f_initial-system_v68_textures_v69",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-system_v68_textures_v69.log",
+        "sha256": "06cf41ffb0382b1808bcdd0696f9ceb7590cdb6a3ab0828b57f15a8d6bb7ed45",
+        "bytes": 178
+      },
+      "native_outcome": {
+        "case": "system_v68_textures_v69",
+        "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "system_shipped_version": 68,
+        "textures_shipped_version": 69,
+        "actual_469f_original_compiled_exit": 0,
+        "actual_469f_native_selected_version": 68,
+        "expected_original_build_mount_source_version": 68,
+        "native_stdout_SHA256": "06cf41ffb0382b1808bcdd0696f9ceb7590cdb6a3ab0828b57f15a8d6bb7ed45",
+        "stdout_markers": [
+          "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=02DB1D40",
+          "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=02FA0590 paint1=02FA0750 rough=00000000",
+          "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=68"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f_initial-system_v69_textures_v68",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-system_v69_textures_v68.log",
+        "sha256": "fe7252a1a2345311583e694500c72e0ed81f1afab1eb63cc3be7e08979389a64",
+        "bytes": 178
+      },
+      "native_outcome": {
+        "case": "system_v69_textures_v68",
+        "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "system_shipped_version": 69,
+        "textures_shipped_version": 68,
+        "actual_469f_original_compiled_exit": 0,
+        "actual_469f_native_selected_version": 69,
+        "expected_original_build_mount_source_version": 69,
+        "native_stdout_SHA256": "fe7252a1a2345311583e694500c72e0ed81f1afab1eb63cc3be7e08979389a64",
+        "stdout_markers": [
+          "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=02FE1D40",
+          "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=031D1E10 paint1=00000000 rough=031D0C90",
+          "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=69"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f_initial-textures_v68_only",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-textures_v68_only.log",
+        "sha256": "b12a8b31c84e2f4b4d7006f9e37b14e7864f5901d1a382fc4237345ef75302cb",
+        "bytes": 178
+      },
+      "native_outcome": {
+        "case": "textures_v68_only",
+        "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "system_shipped_version": null,
+        "textures_shipped_version": 68,
+        "actual_469f_original_compiled_exit": 0,
+        "actual_469f_native_selected_version": 68,
+        "expected_original_build_mount_source_version": 68,
+        "native_stdout_SHA256": "b12a8b31c84e2f4b4d7006f9e37b14e7864f5901d1a382fc4237345ef75302cb",
+        "stdout_markers": [
+          "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=02721D40",
+          "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=02910590 paint1=02910750 rough=00000000",
+          "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=68"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f_initial-textures_v69_only",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-textures_v69_only.log",
+        "sha256": "8b2bfdfb9157464637303be34f87498c98ca96d4c647c5453611acc44efa00dc",
+        "bytes": 178
+      },
+      "native_outcome": {
+        "case": "textures_v69_only",
+        "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "system_shipped_version": null,
+        "textures_shipped_version": 69,
+        "actual_469f_original_compiled_exit": 0,
+        "actual_469f_native_selected_version": 69,
+        "expected_original_build_mount_source_version": 69,
+        "native_stdout_SHA256": "8b2bfdfb9157464637303be34f87498c98ca96d4c647c5453611acc44efa00dc",
+        "stdout_markers": [
+          "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=026F1D40",
+          "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=028E1E10 paint1=00000000 rough=028E0C90",
+          "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=69"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f_initial-missing_both",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-missing_both.log",
+        "sha256": "7e52c7954843c172ad19573ca258d153cd423289e7528c2db6950157facdbc62",
+        "bytes": 233
+      },
+      "native_outcome": {
+        "case": "missing_both",
+        "original_stock_469f_Core_SHA": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "system_shipped_version": null,
+        "textures_shipped_version": null,
+        "actual_469f_original_compiled_exit": 7,
+        "actual_469f_native_selected_version": 0,
+        "expected_original_build_mount_source_version": null,
+        "native_stdout_SHA256": "7e52c7954843c172ad19573ca258d153cd423289e7528c2db6950157facdbc62",
+        "stdout_markers": [
+          "G3_T076_469F_SHIPPED_NATIVE_PACKAGE=00000000",
+          "G3_T076_469F_SHIPPED_NATIVE_ACTUAL stones=00000000 paint1=00000000 rough=00000000",
+          "G3_T076_469F_SHIPPED_NATIVE_SELECTED_VERSION=0"
+        ]
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432-only_original_shipped_id113274",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-only_original_shipped_id113274.log",
+        "sha256": "ba52e8d9d2ce31c221a2ead8fd84aaa113bf8a1b74b65877a17d962d68887eaa",
+        "bytes": 248
+      },
+      "native_outcome": {
+        "profile": "v432",
+        "case": "only_original_shipped_id113274",
+        "source_system_id": null,
+        "source_textures_id": 113274,
+        "source_selected_id_under_original_source_SearchPaths": 113274,
+        "expected_immutable_original_file_bytes": 1729964,
+        "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 61,
+          "file_bytes": 1729964,
+          "exports": 51,
+          "names": 90,
+          "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+        },
+        "native_output_SHA256": "ba52e8d9d2ce31c221a2ead8fd84aaa113bf8a1b74b65877a17d962d68887eaa",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=00D73108 stones=02C84AA8 linker=00D88CA8",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432-only_original_shipped_id148267",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-only_original_shipped_id148267.log",
+        "sha256": "c281f5cc18861978e848cee443e9e974e337eba6c452098e72b369f936b6a5ef",
+        "bytes": 246
+      },
+      "native_outcome": {
+        "profile": "v432",
+        "case": "only_original_shipped_id148267",
+        "source_system_id": 148267,
+        "source_textures_id": null,
+        "source_selected_id_under_original_source_SearchPaths": 148267,
+        "expected_immutable_original_file_bytes": 22575,
+        "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 69,
+          "file_bytes": 22575,
+          "exports": 51,
+          "names": 91,
+          "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+        },
+        "native_output_SHA256": "c281f5cc18861978e848cee443e9e974e337eba6c452098e72b369f936b6a5ef",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=0059C3D8 stones=00678990 linker=005AEFA8",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=69 file_size=22575 exports=51 names=91 guid=1E90ACA8-11D1ED66-45442797-00005453",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432-only_original_shipped_id1258823",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-only_original_shipped_id1258823.log",
+        "sha256": "88f0ce06975ed359ba6430a14b745c1ab94a561fa4626a209870e01ab54537d2",
+        "bytes": 245
+      },
+      "native_outcome": {
+        "profile": "v432",
+        "case": "only_original_shipped_id1258823",
+        "source_system_id": null,
+        "source_textures_id": 1258823,
+        "source_selected_id_under_original_source_SearchPaths": 1258823,
+        "expected_immutable_original_file_bytes": 89644,
+        "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 68,
+          "file_bytes": 89644,
+          "exports": 5,
+          "names": 24,
+          "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+        },
+        "native_output_SHA256": "88f0ce06975ed359ba6430a14b745c1ab94a561fa4626a209870e01ab54537d2",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=00F7C518 stones=00FB9748 linker=00F8DA38",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432-mix_system_113274_textures_148267",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-mix_system_113274_textures_148267.log",
+        "sha256": "8b508b7b9ff2c44a6c3797e6fbb005a352c6c4fc20855f9fa3d37dc145e16018",
+        "bytes": 248
+      },
+      "native_outcome": {
+        "profile": "v432",
+        "case": "mix_system_113274_textures_148267",
+        "source_system_id": 113274,
+        "source_textures_id": 148267,
+        "source_selected_id_under_original_source_SearchPaths": 113274,
+        "expected_immutable_original_file_bytes": 1729964,
+        "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 61,
+          "file_bytes": 1729964,
+          "exports": 51,
+          "names": 90,
+          "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+        },
+        "native_output_SHA256": "8b508b7b9ff2c44a6c3797e6fbb005a352c6c4fc20855f9fa3d37dc145e16018",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=009FA5C0 stones=00AD1538 linker=00A0C608",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "v432",
+      "case": "v432-mix_system_1258823_textures_1276716",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-mix_system_1258823_textures_1276716.log",
+        "sha256": "eef96198d3bae93417f92868bf5c2059ce1662e9fee6119e8e3d26f3d5412421",
+        "bytes": 245
+      },
+      "native_outcome": {
+        "profile": "v432",
+        "case": "mix_system_1258823_textures_1276716",
+        "source_system_id": 1258823,
+        "source_textures_id": 1276716,
+        "source_selected_id_under_original_source_SearchPaths": 1258823,
+        "expected_immutable_original_file_bytes": 89644,
+        "original_core_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+        "original_exe_SHA256": "e53b632df8ea5098a52634a4c55841cabf15be31acfcbce8fe81f7a8286405a3",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 68,
+          "file_bytes": 89644,
+          "exports": 5,
+          "names": 24,
+          "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+        },
+        "native_output_SHA256": "eef96198d3bae93417f92868bf5c2059ce1662e9fee6119e8e3d26f3d5412421",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=0102A900 stones=010AAFA8 linker=0103ECD8",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f-only_original_shipped_id113274",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-only_original_shipped_id113274.log",
+        "sha256": "3da2a15951e4aae9dde5d69c630b61a2582d927a3aa1cfc208ee345c841eeba1",
+        "bytes": 323
+      },
+      "native_outcome": {
+        "profile": "469f",
+        "case": "only_original_shipped_id113274",
+        "source_system_id": null,
+        "source_textures_id": 113274,
+        "source_selected_id_under_original_source_SearchPaths": 113274,
+        "expected_immutable_original_file_bytes": 1729964,
+        "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 61,
+          "file_bytes": 1729964,
+          "exports": 51,
+          "names": 90,
+          "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+        },
+        "native_output_SHA256": "3da2a15951e4aae9dde5d69c630b61a2582d927a3aa1cfc208ee345c841eeba1",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=03611D40 stones=037FA0B0 linker=03709250",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f-only_original_shipped_id148267",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-only_original_shipped_id148267.log",
+        "sha256": "a0bf9343d8dd503d36444534653fedeaa0e0d0cefe43d0378ef992826b156205",
+        "bytes": 321
+      },
+      "native_outcome": {
+        "profile": "469f",
+        "case": "only_original_shipped_id148267",
+        "source_system_id": 148267,
+        "source_textures_id": null,
+        "source_selected_id_under_original_source_SearchPaths": 148267,
+        "expected_immutable_original_file_bytes": 22575,
+        "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 69,
+          "file_bytes": 22575,
+          "exports": 51,
+          "names": 91,
+          "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+        },
+        "native_output_SHA256": "a0bf9343d8dd503d36444534653fedeaa0e0d0cefe43d0378ef992826b156205",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=030A1D40 stones=0328A0B0 linker=03199250",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=69 file_size=22575 exports=51 names=91 guid=1E90ACA8-11D1ED66-45442797-00005453",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f-only_original_shipped_id1258823",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-only_original_shipped_id1258823.log",
+        "sha256": "bc4aae3fda377872392792bd0c655e27db2785a78fe02d58aca76b01e3f929e5",
+        "bytes": 245
+      },
+      "native_outcome": {
+        "profile": "469f",
+        "case": "only_original_shipped_id1258823",
+        "source_system_id": null,
+        "source_textures_id": 1258823,
+        "source_selected_id_under_original_source_SearchPaths": 1258823,
+        "expected_immutable_original_file_bytes": 89644,
+        "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 68,
+          "file_bytes": 89644,
+          "exports": 5,
+          "names": 24,
+          "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+        },
+        "native_output_SHA256": "bc4aae3fda377872392792bd0c655e27db2785a78fe02d58aca76b01e3f929e5",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=033F1D40 stones=035D8750 linker=034E9250",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f-mix_system_113274_textures_148267",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-mix_system_113274_textures_148267.log",
+        "sha256": "abd3926d461c7842de6e5fe41611d4fdad872a34e696e83e7186bcce89d0d872",
+        "bytes": 323
+      },
+      "native_outcome": {
+        "profile": "469f",
+        "case": "mix_system_113274_textures_148267",
+        "source_system_id": 113274,
+        "source_textures_id": 148267,
+        "source_selected_id_under_original_source_SearchPaths": 113274,
+        "expected_immutable_original_file_bytes": 1729964,
+        "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 61,
+          "file_bytes": 1729964,
+          "exports": 51,
+          "names": 90,
+          "guid": "1E90ACA8-11D1ED66-45442797-00005453"
+        },
+        "native_output_SHA256": "abd3926d461c7842de6e5fe41611d4fdad872a34e696e83e7186bcce89d0d872",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=02711D40 stones=028FA0B0 linker=02809250",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=61 file_size=1729964 exports=51 names=90 guid=1E90ACA8-11D1ED66-45442797-00005453",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    },
+    {
+      "profile": "469f",
+      "case": "469f-mix_system_1258823_textures_1276716",
+      "native_log": {
+        "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-mix_system_1258823_textures_1276716.log",
+        "sha256": "e96b7698d0c4e4349f1c98a8d890aea4da3d6a5c74dfa18d73fc8f70cf21aff3",
+        "bytes": 245
+      },
+      "native_outcome": {
+        "profile": "469f",
+        "case": "mix_system_1258823_textures_1276716",
+        "source_system_id": 1258823,
+        "source_textures_id": 1276716,
+        "source_selected_id_under_original_source_SearchPaths": 1258823,
+        "expected_immutable_original_file_bytes": 89644,
+        "original_core_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+        "original_exe_SHA256": "3ff7eb3254884d14464f5dce76187161b630bb911da91fd5305bff60b043561b",
+        "native_execution_rc": 0,
+        "native_loaded_linker_summary": {
+          "version": 68,
+          "file_bytes": 89644,
+          "exports": 5,
+          "names": 24,
+          "guid": "BB2E2562-11D3F0CA-F6D91099-E3B10753"
+        },
+        "native_output_SHA256": "e96b7698d0c4e4349f1c98a8d890aea4da3d6a5c74dfa18d73fc8f70cf21aff3",
+        "native_markers": [
+          "G3_T076_FIVE_SHIPPED_LOADER_POINTERS package=02B31D40 stones=02D18750 linker=02C29250",
+          "G3_T076_FIVE_SHIPPED_REAL_SUMMARY version=68 file_size=89644 exports=5 names=24 guid=BB2E2562-11D3F0CA-F6D91099-E3B10753",
+          "G3_T076_FIVE_SHIPPED_REAL_LOADED=1"
+        ]
+      }
+    }
+  ],
+  "archived_original_evidence_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-original-native-results-v432_initial.json",
+      "sha256": "bc0f1182fee2a3a5fe6cb95dee942c252a3689cc55e007d6a6264c929766d8d7",
+      "bytes": 4540
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-system_v68_textures_v69.log",
+      "sha256": "753161fe630fe2a58d119698c382c7337e0fd586b2a85f94bff290f14967a7e5",
+      "bytes": 275
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-system_v69_textures_v68.log",
+      "sha256": "c3aff3496093bc4fdb674497249101acf24e35c742f33b377915a71cc4787fea",
+      "bytes": 275
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-textures_v68_only.log",
+      "sha256": "a3fcc865d8bd412a3e398bc65a80d69818b379d23a293e0aca278d7e76a3d538",
+      "bytes": 275
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-textures_v69_only.log",
+      "sha256": "c201c466eabe7fac9f48e60d5ed8db2eaf6dc29fff97fb644e5322b53272d660",
+      "bytes": 275
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432_initial-missing_both.log",
+      "sha256": "e191f7083e063ff2d120a0da15cecee25590bdfb7b5e5cd38a7707a61fc4faef",
+      "bytes": 112
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-original-native-results-469f_initial.json",
+      "sha256": "1936072b974ba36529aedd6d4b45d1ef251ebb369dbbccb21741a3a6395790f5",
+      "bytes": 3550
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-system_v68_textures_v69.log",
+      "sha256": "06cf41ffb0382b1808bcdd0696f9ceb7590cdb6a3ab0828b57f15a8d6bb7ed45",
+      "bytes": 178
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-system_v69_textures_v68.log",
+      "sha256": "fe7252a1a2345311583e694500c72e0ed81f1afab1eb63cc3be7e08979389a64",
+      "bytes": 178
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-textures_v68_only.log",
+      "sha256": "b12a8b31c84e2f4b4d7006f9e37b14e7864f5901d1a382fc4237345ef75302cb",
+      "bytes": 178
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-textures_v69_only.log",
+      "sha256": "8b2bfdfb9157464637303be34f87498c98ca96d4c647c5453611acc44efa00dc",
+      "bytes": 178
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f_initial-missing_both.log",
+      "sha256": "7e52c7954843c172ad19573ca258d153cd423289e7528c2db6950157facdbc62",
+      "bytes": 233
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-original-native-results-v432_469f_extra.json",
+      "sha256": "8662369397c8c828f05e8e1f67c39100cebec08bbb3ae8d5be4e28d90253a065",
+      "bytes": 10937
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-only_original_shipped_id113274.log",
+      "sha256": "ba52e8d9d2ce31c221a2ead8fd84aaa113bf8a1b74b65877a17d962d68887eaa",
+      "bytes": 248
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-only_original_shipped_id148267.log",
+      "sha256": "c281f5cc18861978e848cee443e9e974e337eba6c452098e72b369f936b6a5ef",
+      "bytes": 246
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-only_original_shipped_id1258823.log",
+      "sha256": "88f0ce06975ed359ba6430a14b745c1ab94a561fa4626a209870e01ab54537d2",
+      "bytes": 245
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-mix_system_113274_textures_148267.log",
+      "sha256": "8b508b7b9ff2c44a6c3797e6fbb005a352c6c4fc20855f9fa3d37dc145e16018",
+      "bytes": 248
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-v432-mix_system_1258823_textures_1276716.log",
+      "sha256": "eef96198d3bae93417f92868bf5c2059ce1662e9fee6119e8e3d26f3d5412421",
+      "bytes": 245
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-only_original_shipped_id113274.log",
+      "sha256": "3da2a15951e4aae9dde5d69c630b61a2582d927a3aa1cfc208ee345c841eeba1",
+      "bytes": 323
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-only_original_shipped_id148267.log",
+      "sha256": "a0bf9343d8dd503d36444534653fedeaa0e0d0cefe43d0378ef992826b156205",
+      "bytes": 321
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-only_original_shipped_id1258823.log",
+      "sha256": "bc4aae3fda377872392792bd0c655e27db2785a78fe02d58aca76b01e3f929e5",
+      "bytes": 245
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-mix_system_113274_textures_148267.log",
+      "sha256": "abd3926d461c7842de6e5fe41611d4fdad872a34e696e83e7186bcce89d0d872",
+      "bytes": 323
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-real-shipped-original-469f-mix_system_1258823_textures_1276716.log",
+      "sha256": "e96b7698d0c4e4349f1c98a8d890aea4da3d6a5c74dfa18d73fc8f70cf21aff3",
+      "bytes": 245
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-PRD-all-five-physical-authentic-ids.json",
+      "sha256": "05204bce6d907da67576bf0dff74f59df5288ddef13613165e48a3ea12b2e644",
+      "bytes": 2155
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-PRD-five-indexed-candidate-rows.json",
+      "sha256": "ae4f7ce0291cab47d5b1f5219fe2e540abf6fb1851b57e43d8b52a8863fc1c74",
+      "bytes": 2153
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-v432-direct-observer.cpp",
+      "sha256": "4e69054df0b4eaf906619a219ffcd1929f74ac46b0b932270c49103e7e21c661",
+      "bytes": 2469
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-469f-direct-observer.cpp",
+      "sha256": "ab5583358be9356707140d89e4cf82814c2c6de270e85d983d3df325b9de0cec",
+      "bytes": 1866
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-v432-linker-summary-observer.cpp",
+      "sha256": "01b5766a01e18c5d2a41a287aac7b1e639161cc5ea61faa07b492ceb378d61cb",
+      "bytes": 1910
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-469f-linker-summary-observer.cpp",
+      "sha256": "7c0240d44f55150f0fa478db0a8d0d5b489f789bcdb985fd562180e4a517932b",
+      "bytes": 1896
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-v432-direct-compiler.log",
+      "sha256": "8881827feff84e46d4006cbe0def07887e5b69f3a022a3dcdbb2e5320b355250",
+      "bytes": 1681
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-469f-direct-compiler.log",
+      "sha256": "bdb74395b73b774063bd8784bc95f130970371c6c3fe3192ec77b5de7f95133e",
+      "bytes": 250
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-v432-linker-summary-compiler.log",
+      "sha256": "4eae3817f58306b2b78fa327b353628a26186ca9efacaf19ecce2c0f6dad2c1e",
+      "bytes": 1698
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-source-native-469f-linker-summary-compiler.log",
+      "sha256": "9b7c4a7bf587c290f910285a1179df07e35edef5c06872e8a7a92f19e4f58ba0",
+      "bytes": 277
+    }
+  ],
+  "native_config_and_original_binaries_untouched": true,
+  "original_UE1_shipped_file_metadata": [
+    {
+      "file_id": 113274,
+      "original_name": "Detail.utx",
+      "original_PRD_sha256": "42c79438778910108f46a40db91f0d1cb177555075da516031d2e46f00a7d837",
+      "md5": "69f3a6fdfe51ac4fd6d3548afda41d92",
+      "sha1": "b9e2e9123c154d3a92b8e39abd6ff77637e0b85e",
+      "bytes": 1729964,
+      "version": 61,
+      "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID113274-v61.utx"
+    },
+    {
+      "file_id": 148267,
+      "original_name": "Detail.utx",
+      "original_PRD_sha256": "e4c20597c2494cc33963750ad67b9b82faa3297028f34a614f586b8128df0357",
+      "md5": "6e6e2dd2977bfc541eba97a7020605d2",
+      "sha1": "550cfa3762abefe1ce39a82f3b7ff55e93046cd2",
+      "bytes": 22575,
+      "version": 69,
+      "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID148267-v69.utx"
+    },
+    {
+      "file_id": 1256343,
+      "original_name": "Detail.utx",
+      "original_PRD_sha256": "74dcd113089ccd8e179155eb2844ee8f51e527c11bda7798179a3191d884f781",
+      "md5": "a481500f3188ed8ff24110a0267cb67a",
+      "sha1": "940af1a15f1e3d232f4f0dbf6990428ab1a2a30c",
+      "bytes": 155197,
+      "version": 68,
+      "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID1256343-v68.utx"
+    },
+    {
+      "file_id": 1258823,
+      "original_name": "Detail.utx",
+      "original_PRD_sha256": "82ef6dd40544f297776edc63a9058129976f4af6aa11f6b04a9bedf0b59ec67c",
+      "md5": "ab5257af772f56c89026ac778442df8a",
+      "sha1": "2ff0a9192e44212fb7ee12474d053100e3da77a1",
+      "bytes": 89644,
+      "version": 68,
+      "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID1258823-v68.utx"
+    },
+    {
+      "file_id": 1276716,
+      "original_name": "Detail.utx",
+      "original_PRD_sha256": "d68a818b8c947629d76f667c50dcc69896e9938df58a991137f2c88d9b5129c3",
+      "md5": "8a4267ba396e0feeb8f9dda445f95ea1",
+      "sha1": "baff97e74d503bb982365008efb53c7fe64908de",
+      "bytes": 443953,
+      "version": 69,
+      "scratch_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T076-original-shipped-Detail-PRD\\shipped-ID1276716-v69.utx"
+    }
+  ],
+  "no_original_game_binary_committed": true
+}
