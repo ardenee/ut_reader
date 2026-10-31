@@ -1,0 +1,233 @@
+{
+  "date": "2026-10-31",
+  "fixed_ids_actually_assessed": [
+    "T065",
+    "T071",
+    "T072",
+    "T073",
+    "T074",
+    "T075",
+    "T076",
+    "T077"
+  ],
+  "fixed_count": 8,
+  "genuine_original_compiled_accepted_T011_native_versions": [
+    60,
+    61,
+    62,
+    63,
+    64
+  ],
+  "genuine_original_compiled_accepted_T019_source_builds": [
+    "C98 1998",
+    "UT99 v432 2000",
+    "Unreal C227i 2012 editor CDO mode",
+    "Unreal C227k 2026 noneditor CDO mode"
+  ],
+  "original_1998_source_localized_flag": "C98 UObject::LoadConfig(NAME_Localized) native source return",
+  "original_2012_native_editor_CDO": "GIsEditor=1 in Core!UObject::LoadLocalized called by UClass::Serialize+0x21a; actual matching CDO ConfigValue1003 LocalMessage Default Message",
+  "original_2012_localized_gameplay_mode_not_substituted_from_2026": true,
+  "original_executions_repeated_by_this_8_test_owner_audit": 0,
+  "G3_fixed_counts": {
+    "PASS": 68,
+    "SOURCE_NA": 1,
+    "BLOCKED": 11
+  },
+  "original_C98_T99_source_branch_inventory_only": {
+    "C98_UnClass.cpp": [
+      {
+        "line": 435,
+        "source_gate": "if( Ar.Ver()<36 && Tag.Type==NAME_ObjectProperty )//oldver",
+        "owner_context": "guard(UStruct::SerializeTaggedProperties);",
+        "source_sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+      },
+      {
+        "line": 961,
+        "source_gate": "if( Ar.Ver() < 57 )//oldver",
+        "owner_context": "UState::Serialize( Ar );",
+        "source_sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+      }
+    ],
+    "T99_v400_UnClass.cpp": [
+      {
+        "line": 920,
+        "source_gate": "if( Ar.Ver() <= 61 )//oldver",
+        "owner_context": "Super::Serialize( Ar );",
+        "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+      },
+      {
+        "line": 928,
+        "source_gate": "if( Ar.Ver()>=62 )",
+        "owner_context": "Super::Serialize( Ar );",
+        "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+      },
+      {
+        "line": 945,
+        "source_gate": "if( Ar.Ver()<=61 )//oldver",
+        "owner_context": "Super::Serialize( Ar );",
+        "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+      },
+      {
+        "line": 1348,
+        "source_gate": "if( Ar.Ver()<=63 )",
+        "owner_context": "Super::Serialize( Ar );",
+        "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+      },
+      {
+        "line": 1351,
+        "source_gate": "if( Ar.Ver()<=63 )",
+        "owner_context": "Super::Serialize( Ar );",
+        "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+      },
+      {
+        "line": 1354,
+        "source_gate": "if( Ar.Ver()<=63 )",
+        "owner_context": "Super::Serialize( Ar );",
+        "source_sha256": "6563392fa15fb73d05b52267a00da5034651c47644f310857cc86f7b045f6380"
+      }
+    ],
+    "T99_v400_UnProp.cpp": [
+      {
+        "line": 126,
+        "source_gate": "if( Ar.Ver() <= 61 )//oldver: clear old net flags.",
+        "owner_context": "Super::Serialize( Ar );",
+        "source_sha256": "693194ef489989f1c2ffee8542cf4c2d8950d07ed0b041eff154531c5b097457"
+      }
+    ],
+    "T99_v400_UnName.cpp": [
+      {
+        "line": 215,
+        "source_gate": "if( Ar.Ver()<64 )",
+        "owner_context": "CORE_API FArchive& operator<<( FArchive& Ar, FNameEntry& E )",
+        "source_sha256": "3d8ab9316fcb2bd88710f4c24762664c4423493db84876e96ef88a0069e302d3"
+      }
+    ],
+    "T99_v432_UnLinker.h": [
+      {
+        "line": 148,
+        "source_gate": "if( Sum.GetFileVersion()>=68 ) //LVer added by Legend on 4/12/2000",
+        "owner_context": "friend FArchive& operator<<( FArchive& Ar, FPackageFileSummary& Sum )",
+        "source_sha256": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0"
+      }
+    ]
+  },
+  "owners": {
+    "T065": {
+      "status": "BLOCKED",
+      "criterion": "Exact branch-selected archive fields and cursor; same numeric v69 from different families must not substitute source.",
+      "specific_unresolved_acceptance": "Source family: version-specific source gate matrix needs C98 Class/State branches at <36, <57; T99 Class/Property <62, UFunction <=63 and FName <64, Linker summary <68; genuine compiled lowest/highest representatives with after-archive cursors are not owned for EACH serializer. Separately C227i/227k source build changes and correct native gate cursors still unverified. T011 v60..64 Function is PASS but cannot satisfy all methods.",
+      "source_components": [
+        "C98 old ObjectProperty",
+        "C98 old UState",
+        "T99 old UClass within/config",
+        "T99 old UProperty flags",
+        "T99 old UFunction",
+        "T99 FName",
+        "T99 linker header",
+        "C227 build-specific native deltas"
+      ],
+      "other_owner_dependencies": []
+    },
+    "T071": {
+      "status": "BLOCKED",
+      "criterion": "No unowned mandatory error branch; explicit excluded native undefined behavior and no duplicate test case.",
+      "specific_unresolved_acceptance": "Original source C98 v<36 tagged legacy ObjectProperty, C98 v<57 UState, T99 v<=61 UClass old record/property-flag clearing, v>=62 ClassWithin, v<64 old FName and v<68 package heritage have version-specific accepted/error-or-exclusion coverage NOT exhaustively joined. Must declare owner of each true native malformed/Error/UB branch and dedupe. T019 and T011 no longer blockers.",
+      "source_components": [
+        "C98 bad property/archive",
+        "C98 nonzero script",
+        "UT99 source-errors",
+        "class-default errors",
+        "exclusions for original native undefined behavior"
+      ],
+      "other_owner_dependencies": [
+        "T065"
+      ]
+    },
+    "T072": {
+      "status": "BLOCKED",
+      "criterion": "100% of required observable fields matched or each unobservable direct type has an explicit documented exclusion.",
+      "specific_unresolved_acceptance": "Original C98 compiled 100 Core structs and 96 nonzero scripts are proved earlier, but no closed per-original-direct C98 Class/Struct/Property method inventory with 100% typed loaded-value and explicit runtime-unobservable exclusions; preserve source-typed vs native-pointer distinction. T019 now PASS; do not replay prior CDB.",
+      "source_components": [
+        "C98 Core direct class",
+        "C98 Engine direct class",
+        "C98 struct/property direct",
+        "C98 typed runtime native pointer exclusions"
+      ],
+      "other_owner_dependencies": []
+    },
+    "T073": {
+      "status": "BLOCKED",
+      "criterion": "Zero unexplained source-applicable method/type gaps and no false 469f-v432 equivalence.",
+      "specific_unresolved_acceptance": "Original compiled UT99 v432/469f UFunction/UState/Engine original snapshots existing; full union of actual source-applicable method classes is missing, including explicit 469f-only Pointer class and inherited v432 method identities, native loaded default/variant classifications, source & proof method ownership. One object export repeated across tests is not distinct method. T019 now PASS; T065 version-gates remain incomplete.",
+      "source_components": [
+        "v432 Core",
+        "v432 Engine",
+        "469f Core",
+        "469f Engine",
+        "source-only class extensions"
+      ],
+      "other_owner_dependencies": [
+        "T065"
+      ]
+    },
+    "T074": {
+      "status": "BLOCKED",
+      "criterion": "Zero missing mandatory C227 method oracle; 227i and 227k build deltas explicitly separated.",
+      "specific_unresolved_acceptance": "2012 C227i original native UClass::Serialize+0x21a -> LoadLocalized editor-mode GIsEditor=1 observed; original 2026 C227k native noneditor LoadLocalized observed, distinct UObject layout offset 0x28c vs 0x308. But original 2012/2026 compiled noneditor method delta is NOT proven equivalent and full native UClass/Property/UStruct class-method inventory not complete; source inheritance does not excuse missing actual original compiled method proof. T019 scoped native Config/Localized/Transient now PASS.",
+      "source_components": [
+        "C227i Core",
+        "C227i Engine",
+        "C227k Core",
+        "C227k Engine",
+        "compiled source methods and member offset deltas"
+      ],
+      "other_owner_dependencies": []
+    },
+    "T075": {
+      "status": "BLOCKED",
+      "criterion": "No value presented as actual runtime pointer unless native observed; exact source-backed sizes and identities.",
+      "specific_unresolved_acceptance": "Reader source compile distinguishes serialized indices from actual native pointers, but no complete original native per-build import/export linker index-to-object mapping across all source-applicable types + physical loaded size/member offsets. Existing C98 State.Children and original v432 T011 real pointer graph are accepted reused; method-wide array/struct/field identity ownership remains unverified.",
+      "source_components": [
+        "C98 Core linker",
+        "T99 Core/Engine linker",
+        "C227i/k linker",
+        "native member offsets source build"
+      ],
+      "other_owner_dependencies": [
+        "T065"
+      ]
+    },
+    "T076": {
+      "status": "BLOCKED",
+      "criterion": "Reader source-selected provider precedence and references equal original native loaded values; missing provider reported accurately.",
+      "specific_unresolved_acceptance": "Original v60-63 successful stock v432 UState->UFunction import closure has 3 valid imports (now T011 PASS), NOT a duplicate/ambiguous same-class provider sample. Genuine duplicate providers (example UT99 Detail.utx), actual original compiled provider choice/missing import error, current reader source-selected precedence must be compared under original package path/loader provenance. No 235k corpus repeat.",
+      "source_components": [
+        "missing provider",
+        "duplicate same-name provider",
+        "source-selected import resolution",
+        "actual runtime provider identities"
+      ],
+      "other_owner_dependencies": []
+    },
+    "T077": {
+      "status": "BLOCKED",
+      "criterion": "Every original method gate has verified owner/oracle and zero unexplained parity mismatches.",
+      "specific_unresolved_acceptance": "Aggregated method ownership requires full original class/struct/property/error/version/direct type and provider proof for all required source families; the seven owner gates T071..T076 and T065 remain BLOCKED despite T019 PASS. SHA audit alone cannot establish no unexplained runtime mismatch; separate 608-default old diagnostic still has 25 discrepancies, causal attribution pending.",
+      "source_components": [
+        "T065 and seven-source owner gate union",
+        "all original source branch ownership",
+        "no unexplained runtime mismatch"
+      ],
+      "other_owner_dependencies": [
+        "T065",
+        "T071",
+        "T072",
+        "T073",
+        "T074",
+        "T075",
+        "T076"
+      ]
+    }
+  },
+  "T078_T079_T080_release_ineligible": true
+}

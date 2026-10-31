@@ -1,0 +1,31 @@
+﻿{
+  "ok": true,
+  "checks": 127,
+  "errors": [],
+  "T019_fixed_status": "PASS",
+  "true_original_native_C98_1998_controlled_profiles": [
+    905,
+    906
+  ],
+  "true_original_native_UT99_v432_actual_cpp_CDO_Localized_profiles": [
+    555,
+    666
+  ],
+  "true_original_native_C227i_2012_editor_profiles": [
+    777,
+    888
+  ],
+  "true_original_native_C227i_2012_compiled_LoadLocalized_entry_observations": [
+    999,
+    1000
+  ],
+  "true_original_native_C227k_2026_explicit_CDO_loaded_localized_profiles_REUSED": [
+    111,
+    222
+  ],
+  "complete_source_specific_2012_C227i_editor_mode_localized_exclusion_proven": true,
+  "different_2012_C227i_noneditor_gameplay_localization_method_claimed": false,
+  "source_selected_2012_C227i_original_CDO_native_observation": "Original compiled Core!UClass::Serialize calls Core!UObject::LoadLocalized for exact target CDO ConfigValue1003, LocalMessage Default Message, GIsEditor=1 triggers editor-mode skip; matching UCC exported default. Separate 2026 compiled noneditor actual localized values reused. Do not equate build families.",
+  "original_native_engine_executions_by_verifier": 0,
+  "G3_full_acceptance": false
+}

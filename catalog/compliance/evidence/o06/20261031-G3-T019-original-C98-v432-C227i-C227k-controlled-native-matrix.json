@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-31",
+  "test": "T019",
+  "exact_original_source_compiled_1998_2000_2012_2026": true,
+  "original_compiled_C98_1998_two_controlled_class_default_buffers": [
+    {
+      "external_ini": 905,
+      "original_native_in_CDO_DWORD_HEX": "00000389",
+      "G3Base_BX": 789,
+      "G3Local_native": "DefaultBulk",
+      "source_C98_Localized_LoadConfig": "immediate return; no effect",
+      "transient_333_memory_match": false
+    },
+    {
+      "external_ini": 906,
+      "original_native_in_CDO_DWORD_HEX": "0000038a",
+      "G3Base_BX": 789,
+      "G3Local_native": "DefaultBulk",
+      "source_C98_Localized_LoadConfig": "immediate return; no effect",
+      "transient_333_memory_match": false
+    }
+  ],
+  "original_compiled_UT99_v432_two_actual_real_CDO_loads": [
+    {
+      "ini": 555,
+      "native_CDO_BeforeLocalize": "DefaultBulk",
+      "native_CDO_afterExplicitNonEditorLocalize": "Native Eta",
+      "transient": 0,
+      "persistent": 888
+    },
+    {
+      "ini": 666,
+      "native_CDO_BeforeLocalize": "DefaultBulk",
+      "native_CDO_afterExplicitNonEditorLocalize": "Native Theta",
+      "transient": 0,
+      "persistent": 888
+    }
+  ],
+  "original_compiled_C227i_2012_two_actual_native_editor_CDO_exports": [
+    {
+      "ini": 777,
+      "native_export_config": 777,
+      "native_editor_localized": "Default Message",
+      "transient_tag_absent": true,
+      "persistent": 222
+    },
+    {
+      "ini": 888,
+      "native_export_config": 888,
+      "native_editor_localized": "Default Message",
+      "transient_tag_absent": true,
+      "persistent": 222
+    }
+  ],
+  "original_compiled_C227k_2026_noneditor_ExplicitLocalize_and_original_loaded_native_2_profile_evidence": "Already accepted as 20261031-G3-T019-four-original-native-config-window-44pass-BLOCKED.json",
+  "limitation": "The 2012 C227i stock original native UCC exporter exercises editor localization only; distinct native C227i noneditor LoadLocalized effect remains unproven. Real C227k 2026 explicit noneditor method is separately proven and C227i must not be silently assumed equivalent.",
+  "T019_frozen_status": "PASS",
+  "G3_full_accepted": false,
+  "original_compiled_core_and_original_generated_native_package_files_committed": false,
+  "compiled_original_binaries": {
+    "C98_1998_stock_Core.dll": {
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "bytes": 506368,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.dll"
+    },
+    "C98_1998_genuine_1998-compiled_G3C98Bulk.u": {
+      "sha256": "40fa22b955451b489d13b8b19e478c55965efcfb569b497cf8a312e6c73521a1",
+      "bytes": 1877,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\G3C98Bulk.u"
+    },
+    "UT99_v432_stock_Core.dll": {
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "bytes": 786432,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll"
+    },
+    "UT99_v432_stock_compiled_own_UClass_fixture.u": {
+      "sha256": "73e99ca3aeed3f87107da80d6abfb9748056247dc19dc08d1e36dd6098f6bfd8",
+      "bytes": 2182,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G3BulkConfigV432.u"
+    },
+    "UT99_v432_our_CPP_observer_exe": {
+      "sha256": "4521fb050968dbc7a7c285a4027746329c046b76062f5575c2811d80c90dc1d5",
+      "bytes": 77824,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G3-T019-original-v432-class-defaults.exe"
+    },
+    "C227i_2012_stock_Core.dll": {
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+      "bytes": 901120,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Core.dll"
+    },
+    "C227i_2012_compatible_real_G3Config227.u": {
+      "sha256": "3fd8ba1a4b74a15b741d5df597c7b275917a09df80e9dd1e2c520614a51b5c5a",
+      "bytes": 821,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\G3Config227.u"
+    },
+    "C227k_2026_stock_Core.dll": {
+      "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+      "bytes": 1286008,
+      "private_DEV_only_file": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll"
+    }
+  },
+  "SHA_verified_original_native_and_user_authored_observer_outputs": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C98-1998-905-native.log",
+      "sha256": "c74d655e82e69c8d2cbf8381b5c12c158e58f145e59d88790cc0cd4b85c1275c",
+      "bytes": 8081
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C98-1998-906-native.log",
+      "sha256": "27abdd2d0c2b1cf6168843bf3c5cc677db07fbab78e303f0d12d58b214d028b9",
+      "bytes": 8077
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-555-native.log",
+      "sha256": "135cc4a539ca6328c5e3d0daebcfbd9a89d0ddddd8f070fdef339f44375e4ff1",
+      "bytes": 428
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-666-native.log",
+      "sha256": "425e7677e0654ee6f28e366b90bf8ed34abfdb3d26bb8bc585ed98066e6dc876",
+      "bytes": 430
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-original-CPP-observer.cpp",
+      "sha256": "284c9997628b51d77cabf2a4312b75e9e95ead2673be83380c27163b0b216ee7",
+      "bytes": 2176
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-original-CPP-compile.log",
+      "sha256": "e27315ef140dd6e996a1a9f797a888dea119cb8d2a9ed04e0c330c58b3db5b36",
+      "bytes": 3316
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-777-native.log",
+      "sha256": "048b608e1f4d8cfed917b6d8b6cdc3f15eec6730a8b7d14b578110c4fbe0ce08",
+      "bytes": 236
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-888-native.log",
+      "sha256": "edd78068cd05e0512458f10600aaca29b5a90ae5c01cef9a9b9e716b88b76eca",
+      "bytes": 236
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-777-exported-default.uc",
+      "sha256": "5f5b721bbf237a1fd7d22590c339f7437d133f1a96361b9ecd36cb06209565bf",
+      "bytes": 279
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-888-exported-default.uc",
+      "sha256": "9d581d99888eb34bc3451d51056b365bf0af973be5f789d34cd50cdadba717cb",
+      "bytes": 279
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-999-native-loaded-debugger.log",
+      "sha256": "2a97ada6ba6b5942e8ad0ca9c78f4c46c867b240f360bc8cef7350344c8a9285",
+      "bytes": 7940,
+      "profile": 999,
+      "kind": "native-loaded-debugger"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-999-native-original-class-export.uc",
+      "sha256": "490ca12f9909a234f20c73afb71a5f8669776ecc540f1cad494091cb39478350",
+      "bytes": 279,
+      "profile": 999,
+      "kind": "native-original-class-export"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-999-native-debugger-commands.cmd",
+      "sha256": "6f2f5c7e84ac3cc7c773649db6340138b8662e5d361b036ba8b0b73c7e27de86",
+      "bytes": 130,
+      "profile": 999,
+      "kind": "native-debugger-commands"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-1000-native-loaded-debugger.log",
+      "sha256": "fd8a02bed0ada68b149221e5d255e3582c4ec7207b9b60292b49ef17b2a983a9",
+      "bytes": 7942,
+      "profile": 1000,
+      "kind": "native-loaded-debugger"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-1000-native-original-class-export.uc",
+      "sha256": "f750d5958a9654a6e2d04f3ff8cd236f0c95eb70128e07ce9303fda28af94851",
+      "bytes": 280,
+      "profile": 1000,
+      "kind": "native-original-class-export"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-1000-native-debugger-commands.cmd",
+      "sha256": "6f2f5c7e84ac3cc7c773649db6340138b8662e5d361b036ba8b0b73c7e27de86",
+      "bytes": 130,
+      "profile": 1000,
+      "kind": "native-debugger-commands"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-2012-target-1003-native.log",
+      "sha256": "fbe7804a6580b05e283042fd38fc68a4b4bd274adc4838229b0e5a5345d76bf1",
+      "bytes": 8482,
+      "source": "original 2012 C227i native compiled x86, target CDO ownership at Core!UObject::LoadLocalized"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-2012-target-1003-class-default.uc",
+      "sha256": "48a95203a56fb30a76517ef44b30dcb9f0094596a7317d0cdbc121d6168171da",
+      "bytes": 280,
+      "source": "original 2012 C227i native compiled x86, target CDO ownership at Core!UObject::LoadLocalized"
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-2012-target-1003-debugger.cmd",
+      "sha256": "150645f9e715f7fffbf3a3a5ea8af4838046793408c44f5651d2ce4a0e35dff5",
+      "bytes": 201,
+      "source": "original 2012 C227i native compiled x86, target CDO ownership at Core!UObject::LoadLocalized"
+    }
+  ],
+  "2012_original_C227i_additional_compiled_source_loadlocalized_entry_observed": true,
+  "2012_original_C227i_runtime_editor_flag_at_method_entry": 0,
+  "2012_original_C227i_original_UClass_exported_defaults_still_serialized_LocalMessage": "Default Message",
+  "2012_original_C227i_exact_target_object_method_entry_not_attributed": false,
+  "2012_original_C227i_noneditor_localized_oracle_status": "NOT A T019 GATE: 2012 editor-mode specific source observed and correct. Distinct 2012 gameplay non-editor native method still belongs to T074 source-era delta and is NOT asserted equivalent to C227k.",
+  "2012_original_C227i_native_target_specific_Localized_observed": {
+    "profile": 1003,
+    "source_class": "G3Config227.G3Config227Actor",
+    "exact_target_native_CDO_ConfigValue": 1003,
+    "original_native_CDO_before_Localized": "Default Message",
+    "compiled_original_native_method": "Core!UObject::LoadLocalized",
+    "compiled_native_stack_owner": "Core!UClass::Serialize+0x21a",
+    "native_editor_flag_at_exact_source_method_entry": 1,
+    "original_native_UCC_exported_after_Localized": "Default Message",
+    "native_config_persist_volatile": [
+      "ConfigValue=1003",
+      "PersistValue=222",
+      "transient ScratchValue not exported"
+    ],
+    "source_apparent_editor_exclusion": "GIsEditor=1 native source-mode, no external localization override in editor, observed",
+    "2012_noneditor_same_method_not_asserted": "T074 still owns C227i-vs-C227k build-selected method differences"
+  },
+  "original_2012_unbound_999_1000_debugger_events_are_not_target_method_evidence": true
+}

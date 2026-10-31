@@ -1,0 +1,6 @@
+# Original compiled native logs and source-memory evidence are SHA-pinned byte-for-byte.
+# Windows core.autocrlf must never rewrite these source-era oracle captures.
+20261031-G3-T019-original-native-* -text
+20261031-G3-T019-original-C227i-* -text
+20261031-G3-T019-original-four-era-127pass.json -text
+20261031-G3-T019-original-C98-v432-C227i-C227k-controlled-native-matrix.json -text

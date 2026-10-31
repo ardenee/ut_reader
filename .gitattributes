@@ -122,3 +122,6 @@ catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-* -text
 catalog/compliance/evidence/o06/20261031-G3-B07-T052-* -text
 catalog/compliance/evidence/o06/20261031-G3-B08-T069-* -text
 catalog/compliance/evidence/o06/20261031-G3-B09-T069-* -text
+
+# UE1 T019 source/native four-era verifier SHA must be identical in index and every checkout.
+catalog/bin/verify-ue1-o06-g3-t019-original-three-era-native-loaded-default-matrix.py -text
