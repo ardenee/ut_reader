@@ -4621,8 +4621,7 @@
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
       "upstream_fixed_test_dependencies": [
-        "T011",
-        "T065"
+        "T019"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"
@@ -4717,8 +4716,7 @@
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
       "upstream_fixed_test_dependencies": [
-        "T011",
-        "T019"
+        "T011"
       ],
       "last_grouped_evidence_audit": "2026-10-31",
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE"

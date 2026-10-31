@@ -37,8 +37,7 @@
     "T072": {
       "status": "BLOCKED",
       "upstream_dependencies": [
-        "T011",
-        "T065"
+        "T019"
       ],
       "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
     },
@@ -69,8 +68,7 @@
     "T076": {
       "status": "BLOCKED",
       "upstream_dependencies": [
-        "T011",
-        "T019"
+        "T011"
       ],
       "acceptance": "PENDING original compiled native loaded-value and source-specific method/version evidence; no full aggregate closure"
     },
