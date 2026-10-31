@@ -1251,13 +1251,60 @@
       "pass_criterion": "Correct original rejection or source-permitted null, accurate method cursor and no invented defaults.",
       "evidence": "One genuine native error path per actual different compiled branch",
       "reuse": "General FArchive mismatch details only in G3-14.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "SHORT BATCH: genuine invalid UClass flag/Within native failure and physical Tell required per distinct compiled build. Acceptance still requires: Correct original rejection or source-permitted null, accurate method cursor and no invented defaults.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "380432a2ca13b56c5d62d2590222855104a94aeee5c350ed3677d9939b87798f",
+      "result": "Full frozen T020 three original compiled native-source UClass invalid-reference closure: original genuine C98 1998 UCC parent bad SuperField import/export -63/+63 -> native Bad import 62/7 or Bad export 62/6 at true FArchive Tell276, both previously sealed and never rerun; NEW original stock UT99 v432 Core.dll genuine compiled class ClassWithin -7->-63 yields native Bad import62/7 Tell451 and null package; NEW original 2026 Unreal227k compiled Core.dll LOAD of 2012-compiled UClass ClassWithin -9->-63 yields native Bad import62/9 and source serial Got510 at original physical Tell510, failure and not a loaded class (native host terminates after reporting error). All four original one-byte-mutant archive and native reports SHA pinned and original fixtures restored; production source-selected UClass reader now matches exact error/cursor, emits no fictitious default object; previously frozen T064 original malformed class defaults reused without rerun. 32/32 static original/source/current checks, no accepted native cases replayed, no PRD release.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T03:27:25+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t020-original-three-class-errors.php",
+          "sha256": "8e0b4f5acf106cfb1987ee47c9d1db52baa5c56144bd917eaa300b2fc10f0bc9",
+          "bytes": 6288
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "sha256": "f15b25ae2e8a9d56a8d67e7ca7a27dcba2d87b1cdf352ce4edfaa21434f5ecbf",
+          "bytes": 19589
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-original-three-32pass.json",
+          "sha256": "5e2c4af48c2466742fe69ae71da2548c7d25f16af59af6855940086634d4e1d3",
+          "bytes": 570
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-v432-bad-within.u",
+          "sha256": "9b59f71e20c1eee1f393340a8649380b1a7106f2d562ab2c3724e0a7dde1d942",
+          "bytes": 546
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-v432-bad-within-native.log",
+          "sha256": "96fe72e6505ff01158b33c7b80cfd0389cd5fbac9ae23adfe5b1d2d692eb063f",
+          "bytes": 1280
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-c227k-bad-within.u",
+          "sha256": "d855b9d63457a2ecd9fe8e8eb7fae60bfa7e079550423154596cac674d22b378",
+          "bytes": 1112
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-c227k-bad-within-native.log",
+          "sha256": "ad6049e5a2db326a8d9a849dc877a7950d6f8ec6b261eb7c6b7a04bad81a2381",
+          "bytes": 448
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-import63.u",
+          "sha256": "a00d61d8379d612a3ea6f291a913cb50a2eab9d24e1d67919c3dc23f34ad2dc0",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-export63.u",
+          "sha256": "97d302ae3cf2df73958978da22aa4715cd53b7f168acc5933e156bbb014c5080",
+          "bytes": 761
+        }
+      ]
     },
     {
       "id": "T021",
@@ -3951,13 +3998,130 @@
       "pass_criterion": "Original native failure/recovery and exact failing archive offset match; no fabricated defaults.",
       "evidence": "Original compiled tagged-property error + UnrealDB",
       "reuse": "Shared FArchive physical EOF G3-14 separately.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST B08: Original compiled C98/C227 malformed type/index/missing terminal real failing Tell missing. REQUIRED: Original native failure/recovery and exact failing archive offset match; no fabricated defaults.",
-      "last_attempt_at": "2026-10-29T00:09:10+00:00",
+      "status": "PASS",
+      "evidence_sha": "1c4e3b4e4ea7b0cdfe0f583594df5063f06963f957d2587561b1ac375d53189b",
+      "result": "FULL frozen T064 original compiled x86 negative property-tag acceptance in three separate authentic source-selected Epic families: May17-1998 C98 v61/0, stock UT99 v432 v69/0, and original 2026 Unreal227k v69/licensee227. Nine truly compiled original native variants from independently SHA-sealed one-byte genuine UCC/SavePackage archives: per-engine wrong type (warn/recover without invented loaded default), invalid array index (C98 Bad name36/16 physical Tell369; v432 -5242879/9 Tell262; C227k 1497/12 Tell256) and missing NAME_None terminator (C98 -8191/16 Tell382; v432 -671088638/9 Tell262; C227k 63/12 Tell280). Genuine 1998 C98 original 24/24, grouped three-source original compiled SHA-checked 40/40, no original native engine replay by verifier. Production source-family scoped FArchive physically reads beyond export until native error or serial-size gate, no fabricated metadata. T064 only; G3 whole remains blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T03:23:21+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH08_ORIGINAL_COMPILED_ORACLE_MISSING"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t064-original-c98-tag-failures.php",
+          "sha256": "18a569e5a8f2d454e604692a9f826fd1b1bea63aea60621c0a11815f1a917221",
+          "bytes": 5552
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t064-three-original-native-tags.php",
+          "sha256": "1b7c42af9e905ba987848415549665eef80dab0dfc59bfc24b3c430fb26be08d",
+          "bytes": 8284
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+          "sha256": "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c",
+          "bytes": 81039
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-three-original-native-40pass.json",
+          "sha256": "a49c17012bec9c36abda674692704a73e4d6ef6fac719bec9b17bc5ecb29ce25",
+          "bytes": 608
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-type15-unknown.u",
+          "sha256": "be024d5bb7213537375ceb9360cc9a6db2309b26b213adf203750c282ed94db5",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-type15-unknown-Editor.log",
+          "sha256": "4bf99d5e9baad978a983f2c9541674b43021621a61525d15f2d40a1dc9621e2e",
+          "bytes": 1709
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-array123-bounds.u",
+          "sha256": "275a3e56e82bc0c4399b09a287219447c57bc68348b85effa50ed129ce964e46",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-array123-bounds-Editor.log",
+          "sha256": "4dbf92173d03cc1834245414b1cbc41aec0e3127bc7fb7e9d36feed08fee0741",
+          "bytes": 1896
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-missing-terminator-knownname.u",
+          "sha256": "5ed61dc690bcfdc0de869990102aa9883d62742eeca8130150f025c124512aab",
+          "bytes": 761
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-missing-terminator-knownname-Editor.log",
+          "sha256": "eb97581abfc9e8e50bfef1cc78fb01982e2cdd42ed67381e29bd359577eb03dd",
+          "bytes": 1959
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-type15.u",
+          "sha256": "36dcd6a445cdb61ea04280a8d805192dd18ba4d6c5cf9733457988169022b667",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-type15-native.log",
+          "sha256": "1784c75c5fa9cb480d56c792baa65fe6bd0f8e7d90530fee7ffce01769aa03e7",
+          "bytes": 312
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-type15-same-package-native.log",
+          "sha256": "54c3ee2ed9d225740b4422384e698485f26fb68286e0bc095ef8e9e2be37f5bb",
+          "bytes": 3444
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-array21.u",
+          "sha256": "8d397d8daf5d9c78cdbc523ce1fabfce50e3dda2d0e328f4d3a809caf28de424",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-array21-native.log",
+          "sha256": "36dfd8d14b67691aa3144471d03c549f336051db7033c09f95a3e3ed88ba7719",
+          "bytes": 1344
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-missing-terminator-knownname.u",
+          "sha256": "c2988d60391274fc0752c6cd6ab744a672467b6cbb212a1571717e4bcf013620",
+          "bytes": 283
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-missing-terminator-knownname-native.log",
+          "sha256": "37a864b839d4618451540106f90e2676fa0105c338f2369fde381dfae57f985c",
+          "bytes": 1448
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-TagType.u",
+          "sha256": "6b309e21be79f61f024498b620f7aa9564bf693e0f4bf1ce1c7c43c6899e962d",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-TagType.log",
+          "sha256": "0047902c15710b3ad273c51e0b8cc60dd771c3e563de989bfeb4797dd178bd2c",
+          "bytes": 26254
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-ArrayIndex.u",
+          "sha256": "e2ab5f944fad9a0f2f18abeabd52b137855722e56c2c69ec9c4a032ae5f6aab3",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-ArrayIndex.log",
+          "sha256": "11e25e721a70c42ce97dec9b7cd6d8a9a59893fe19b2b93fc3a1e7300e156cb0",
+          "bytes": 1954
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-Terminator.u",
+          "sha256": "5b80a0c9ccc52c760067ea92b6f65a7cce01271d9c6f29c6e4bc7113632b71e9",
+          "bytes": 308
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-Terminator.log",
+          "sha256": "89781b1955a8d081bf43064e8805f5c80d5841a96e7f6872bfa3bd8d6b465e55",
+          "bytes": 1894
+        }
+      ]
     },
     {
       "id": "T065",

@@ -82,10 +82,14 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 $info=$u8();$type=$info&15;$kind=self::TYPE_NAMES[$type]??'UnknownProperty';
                 // Epic reads arbitrary FPropertyTag.Type values and only
                 // later checks against the resolved actual UProperty ID.
-                // Invalid type zero is a nonfatal skip+warning, not an
-                // archive corruption exception, in the compiled v432 engine.
+                // The compiled original C98 and v432 engines both accept
+                // raw type zero as a nonfatal warning/skip. The C98 case
+                // is observable while traversing a missing class terminator.
                 if($type===0
-                    &&$family!==CatalogUE1ClassicSourceFamily::UT99_V432){
+                    &&!in_array($family,[
+                        CatalogUE1ClassicSourceFamily::EPIC_UE1,
+                        CatalogUE1ClassicSourceFamily::UT99_V432
+                    ],true)){
                     throw new RuntimeException('UE1 property tag has invalid type zero');
                 }
                 $struct=$type===10?$name():null;
@@ -1011,7 +1015,15 @@ final class CatalogUE1ClassicTaggedPropertyReader
         if($fp===false){throw new RuntimeException('Unable to open UE1 class default records');}
         try{
             if(fseek($fp,$start)!==0){throw new RuntimeException('Unable to seek UE1 defaults');}
-            $size=$end-$start;$position=0;
+            // Original May-1998 UClass::SerializeTaggedProperties reads through
+            // FArchive's physical package stream, not an export-sized substream.
+            // A missing NAME_None can therefore reach the following export and
+            // trigger an original Bad name index before serial-size validation.
+            // Scope this behavior to the actual compiled C98 source family.
+            $family=CatalogUE1ClassicSourceFamily::select($version,$sourceFamily);
+            $size=$family===CatalogUE1ClassicSourceFamily::EPIC_UE1
+                ?$length-$start:$end-$start;
+            $position=0;
             $read=static function(int $n)use($fp,$size,&$position):string{
                 if($n<0||$n>$size-$position){
                     throw new RuntimeException('UE1 class default tag exceeds export SerialSize');
@@ -1067,6 +1079,12 @@ final class CatalogUE1ClassicTaggedPropertyReader
                       'imports'=>count($package->getImports())]
                     :null,
                 $sourceDeclarations!==null?$package:null);
+            // The original linker checks declared export consumption after
+            // the archive methods return. Never expose a malformed class as
+            // successfully decoded if its terminator was beyond SerialSize.
+            if($start+$position>$end){
+                throw new RuntimeException('UE1 UClass default tags overrun export SerialSize');
+            }
             return ['tags'=>$tags,'tag_end_offset'=>$start+$position,
                 'schema_verified'=>false,'source_archive_mode'=>'UClass-defaults'];
         }finally{fclose($fp);}
@@ -1118,7 +1136,12 @@ final class CatalogUE1ClassicTaggedPropertyReader
         $position=0;
         try {
             if (fseek($fp,$offset)!==0) {throw new RuntimeException('Cannot seek UE1 payload');}
-            $streamState=['allow_overread'=>false,
+            // Actual stock v432 ULinkerLoad FArchive remains file-backed while
+            // parsing tagged properties; a malformed array index or missing
+            // NAME_None continues into physically readable bytes of the next
+            // export before the native loader checks final SerialSize.
+            $streamState=['allow_overread'=>
+                $family===CatalogUE1ClassicSourceFamily::UT99_V432,
                 'physical_limit'=>$len-$offset,
                 'file_path'=>$path];
             $read=static function(int $n)use($fp,$size,&$position,&$streamState):string{
@@ -1213,6 +1236,13 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         'imports'=>count($package->getImports())]
                     :null,
                 $schema!==null?$package:null,$streamState);
+            // The original Preload serial-size gate follows the native
+            // serializer. Never turn a physically cross-export NAME_None
+            // into a successfully loaded object.
+            if($position>$size){
+                throw new RuntimeException('UE1 export Serial size mismatch: Got '
+                    .$position.', Expected '.$size);
+            }
             // The original v432 Engine native AActor::Serialize calls
             // Super::Serialize and archives NO trailing actor data.
             // This includes every fully resolved Engine.Actor subclass

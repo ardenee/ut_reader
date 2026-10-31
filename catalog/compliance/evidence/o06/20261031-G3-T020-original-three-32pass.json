@@ -1,0 +1,13 @@
+﻿{
+    "ok": true,
+    "checks": 32,
+    "errors": [],
+    "full_fixed_T020": "PASS",
+    "original_compiled_native_superfield_C98": "invalid -63 import and +63 export physical Tell276",
+    "original_compiled_native_classwithin_v432": "invalid -63 import physical Tell451",
+    "original_compiled_native_classwithin_227k": "invalid -63 import physical Tell510",
+    "original_native_engine_reruns_in_verifier": 0,
+    "actual_original_engine_227k_error_path_exited_after_log": true,
+    "correct_runtime_absence": true,
+    "global_G3_accepted": false
+}

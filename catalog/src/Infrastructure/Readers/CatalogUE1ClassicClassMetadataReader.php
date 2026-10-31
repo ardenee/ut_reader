@@ -102,6 +102,20 @@ final class CatalogUE1ClassicClassMetadataReader
                                 $id-1,count($pkg->getExports()),$position));
                         }
                     }
+                    // Real original stock UT99 v432 compiled Core.dll:
+                    // ClassWithin -7 -> -63 reports Bad import index 62/7 at
+                    // physical FArchive Tell451. The genuine 2012 C227i
+                    // compiled class loaded through original 2026 227k
+                    // Core.dll reports Bad import 62/9 at physical Tell510.
+                    // Keep the method-specific source lineage distinct.
+                    if($id<0&&in_array($family,[
+                        CatalogUE1ClassicSourceFamily::UT99_V432,
+                        CatalogUE1ClassicSourceFamily::UNREAL_V227
+                    ],true)){
+                        throw new RuntimeException(sprintf(
+                            'UE1 Bad import index %d/%d at archive cursor %d',
+                            -$id-1,count($pkg->getImports()),$position));
+                    }
                     throw new RuntimeException('Invalid UClass '.$label.' reference');
                 }
                 return $id;

@@ -1763,7 +1763,97 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T052":eval_t052_original_two_compiled_57_opcode_real_469f,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T069":eval_t069_original_C98_v432_227k_native_linker_full,"T070":eval_t070}
+def eval_t020_original_three_compiled_class_reference_errors(row:dict[str,Any])->dict[str,Any]:
+    """Reuse the actual C98/v432/227k compiled UClass bad Super/Within native logs,
+    SHA pinned mutant class packages and source-selected production reader verdict.
+    """
+    e="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t020-original-three-class-errors.php",
+        "8e0b4f5acf106cfb1987ee47c9d1db52baa5c56144bd917eaa300b2fc10f0bc9"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+        "f15b25ae2e8a9d56a8d67e7ca7a27dcba2d87b1cdf352ce4edfaa21434f5ecbf"),
+      verify_pin(e+"20261031-G3-T020-original-three-32pass.json",
+        "5e2c4af48c2466742fe69ae71da2548c7d25f16af59af6855940086634d4e1d3"),
+      verify_pin(e+"20261031-G3-T020-v432-bad-within.u",
+        "9b59f71e20c1eee1f393340a8649380b1a7106f2d562ab2c3724e0a7dde1d942"),
+      verify_pin(e+"20261031-G3-T020-v432-bad-within-native.log",
+        "96fe72e6505ff01158b33c7b80cfd0389cd5fbac9ae23adfe5b1d2d692eb063f"),
+      verify_pin(e+"20261031-G3-T020-c227k-bad-within.u",
+        "d855b9d63457a2ecd9fe8e8eb7fae60bfa7e079550423154596cac674d22b378"),
+      verify_pin(e+"20261031-G3-T020-c227k-bad-within-native.log",
+        "ad6049e5a2db326a8d9a849dc877a7950d6f8ec6b261eb7c6b7a04bad81a2381"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-super-invalid-import63.u",
+        "a00d61d8379d612a3ea6f291a913cb50a2eab9d24e1d67919c3dc23f34ad2dc0"),
+      verify_pin(e+"20261031-G3-B08-T069-C98-original-super-invalid-export63.u",
+        "97d302ae3cf2df73958978da22aa4715cd53b7f168acc5933e156bbb014c5080")
+    ]
+    o=json.loads((ROOT/e/"20261031-G3-T020-original-three-32pass.json").read_text(encoding="utf-8-sig"))
+    if not(o.get("ok") is True and o.get("checks")==32
+      and o.get("errors")==[] and o.get("full_fixed_T020")=="PASS"
+      and o.get("original_native_engine_reruns_in_verifier")==0
+      and o.get("correct_runtime_absence") is True
+      and o.get("original_compiled_native_classwithin_v432")=="invalid -63 import physical Tell451"
+      and o.get("original_compiled_native_classwithin_227k")=="invalid -63 import physical Tell510"):
+        raise AssertionError("T020 frozen three-source compiled negative UClass acceptance not complete")
+    return {"status":"PASS","result":
+      "Full frozen T020 three original compiled native-source UClass invalid-reference closure: original genuine C98 1998 UCC parent bad SuperField import/export -63/+63 -> native Bad import 62/7 or Bad export 62/6 at true FArchive Tell276, both previously sealed and never rerun; NEW original stock UT99 v432 Core.dll genuine compiled class ClassWithin -7->-63 yields native Bad import62/7 Tell451 and null package; NEW original 2026 Unreal227k compiled Core.dll LOAD of 2012-compiled UClass ClassWithin -9->-63 yields native Bad import62/9 and source serial Got510 at original physical Tell510, failure and not a loaded class (native host terminates after reporting error). All four original one-byte-mutant archive and native reports SHA pinned and original fixtures restored; production source-selected UClass reader now matches exact error/cursor, emits no fictitious default object; previously frozen T064 original malformed class defaults reused without rerun. 32/32 static original/source/current checks, no accepted native cases replayed, no PRD release.",
+      "evidence":pins}
+
+def eval_t064_original_three_source_native_tag_errors(row:dict[str,Any])->dict[str,Any]:
+    """One frozen T064 acceptance: three original compiled C98/v432/227k tag negatives each.
+    This verifies the completed source-only comparison and immutable input/output
+    SHAs without reexecuting original native engines or previously PASS T IDs.
+    """
+    e="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t064-original-c98-tag-failures.php",
+        "18a569e5a8f2d454e604692a9f826fd1b1bea63aea60621c0a11815f1a917221"),
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t064-three-original-native-tags.php",
+        "1b7c42af9e905ba987848415549665eef80dab0dfc59bfc24b3c430fb26be08d"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+        "e377ad408d51db35288cbf8d5617238453b8f82bbd8beda3aed79dda1447268c"),
+      verify_pin(e+"20261031-G3-T064-three-original-native-40pass.json",
+        "a49c17012bec9c36abda674692704a73e4d6ef6fac719bec9b17bc5ecb29ce25")
+    ]
+    proof=json.loads((ROOT/e/"20261031-G3-T064-three-original-native-40pass.json").read_text(encoding="utf-8-sig"))
+    if not(proof.get("ok") is True and proof.get("checks")==40
+        and proof.get("errors")==[]
+        and proof.get("full_fixed_T064")=="PASS"
+        and proof.get("C98_preaccepted_checks")==24
+        and proof.get("original_native_engine_reexecutions_by_verifier")==0
+        and proof.get("original_compiled_source_families")==[
+          "C98-1998-version61-licensee0",
+          "UT99-stock-v432-version69-licensee0",
+          "Unreal-original-227k-version69-licensee227"]):
+        raise AssertionError("T064 original three-engine frozen complete decision invalid")
+    files=[
+      ("20261031-G3-T064-C98-original-type15-unknown.u","be024d5bb7213537375ceb9360cc9a6db2309b26b213adf203750c282ed94db5"),
+      ("20261031-G3-T064-C98-original-type15-unknown-Editor.log","4bf99d5e9baad978a983f2c9541674b43021621a61525d15f2d40a1dc9621e2e"),
+      ("20261031-G3-T064-C98-original-array123-bounds.u","275a3e56e82bc0c4399b09a287219447c57bc68348b85effa50ed129ce964e46"),
+      ("20261031-G3-T064-C98-original-array123-bounds-Editor.log","4dbf92173d03cc1834245414b1cbc41aec0e3127bc7fb7e9d36feed08fee0741"),
+      ("20261031-G3-T064-C98-original-missing-terminator-knownname.u","5ed61dc690bcfdc0de869990102aa9883d62742eeca8130150f025c124512aab"),
+      ("20261031-G3-T064-C98-original-missing-terminator-knownname-Editor.log","eb97581abfc9e8e50bfef1cc78fb01982e2cdd42ed67381e29bd359577eb03dd"),
+      ("20261031-G3-T064-v432-type15.u","36dcd6a445cdb61ea04280a8d805192dd18ba4d6c5cf9733457988169022b667"),
+      ("20261031-G3-T064-v432-type15-native.log","1784c75c5fa9cb480d56c792baa65fe6bd0f8e7d90530fee7ffce01769aa03e7"),
+      ("20261031-G3-T064-v432-type15-same-package-native.log","54c3ee2ed9d225740b4422384e698485f26fb68286e0bc095ef8e9e2be37f5bb"),
+      ("20261031-G3-T064-v432-array21.u","8d397d8daF5d9c78cdbc523ce1fabfce50e3dda2d0e328f4d3a809caf28de424".lower()),
+      ("20261031-G3-T064-v432-array21-native.log","36dfd8d14b67691aa3144471d03c549f336051db7033c09f95a3e3ed88ba7719"),
+      ("20261031-G3-T064-v432-missing-terminator-knownname.u","c2988d60391274fc0752c6cd6ab744a672467b6cbb212a1571717e4bcf013620"),
+      ("20261031-G3-T064-v432-missing-terminator-knownname-native.log","37a864b839d4618451540106f90e2676fa0105c338f2369fde381dfae57f985c"),
+      ("20261030-G3-B08-T064-original-C227k-TagType.u","6b309e21be79f61f024498b620f7aa9564bf693e0f4bf1ce1c7c43c6899e962d"),
+      ("20261030-G3-B08-T064-original-C227k-TagType.log","0047902c15710b3ad273c51e0b8cc60dd771c3e563de989bfeb4797dd178bd2c"),
+      ("20261030-G3-B08-T064-original-C227k-ArrayIndex.u","e2ab5f944fad9a0f2f18abeabd52b137855722e56c2c69ec9c4a032ae5f6aab3"),
+      ("20261030-G3-B08-T064-original-C227k-ArrayIndex.log","11e25e721a70c42ce97dec9b7cd6d8a9a59893fe19b2b93fc3a1e7300e156cb0"),
+      ("20261030-G3-B08-T064-original-C227k-Terminator.u","5b80a0c9ccc52c760067ea92b6f65a7cce01271d9c6f29c6e4bc7113632b71e9"),
+      ("20261030-G3-B08-T064-original-C227k-Terminator.log","89781b1955a8d081bf43064e8805f5c80d5841a96e7f6872bfa3bd8d6b465e55"),
+    ]
+    for f,s in files:pins.append(verify_pin(e+f,s))
+    return {"status":"PASS","result":
+      "FULL frozen T064 original compiled x86 negative property-tag acceptance in three separate authentic source-selected Epic families: May17-1998 C98 v61/0, stock UT99 v432 v69/0, and original 2026 Unreal227k v69/licensee227. Nine truly compiled original native variants from independently SHA-sealed one-byte genuine UCC/SavePackage archives: per-engine wrong type (warn/recover without invented loaded default), invalid array index (C98 Bad name36/16 physical Tell369; v432 -5242879/9 Tell262; C227k 1497/12 Tell256) and missing NAME_None terminator (C98 -8191/16 Tell382; v432 -671088638/9 Tell262; C227k 63/12 Tell280). Genuine 1998 C98 original 24/24, grouped three-source original compiled SHA-checked 40/40, no original native engine replay by verifier. Production source-family scoped FArchive physically reads beyond export until native error or serial-size gate, no fabricated metadata. T064 only; G3 whole remains blocked.",
+      "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T020":eval_t020_original_three_compiled_class_reference_errors,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T052":eval_t052_original_two_compiled_57_opcode_real_469f,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T064":eval_t064_original_three_source_native_tag_errors,"T066":eval_t066,"T067":eval_t067,"T069":eval_t069_original_C98_v432_227k_native_linker_full,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

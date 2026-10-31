@@ -27,7 +27,7 @@ foreach([
  [$log,'0d5380ced4ff0178c925a767b25f7466661c3075118750606dde2b5e2cc54e57'],
  ['L:/Source/Games/UT99/OldUnreal-UTPatch469f-SDK-Windows/Core/Inc/UnClass.h','4258b41de0b688afd6e0b72c593f90cb0298a90c1eedefe6b4a4b47bcb91024f'],
  [$stock.'Engine.u','d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695'],
- [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','df4a525783fa7667ac14f405194e6ea8f2db8a5a22615b228ebbb6f59c33b35a'],
+ [$repo.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php','f15b25ae2e8a9d56a8d67e7ca7a27dcba2d87b1cdf352ce4edfaa21434f5ecbf'],
  [$repo.'/catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json','772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e']
 ] as [$file,$sha])$ck(is_file($file)&&hash_file('sha256',$file)===$sha,'Original stock native/source pin: '.basename($file));
 $native=(string)file_get_contents($log);

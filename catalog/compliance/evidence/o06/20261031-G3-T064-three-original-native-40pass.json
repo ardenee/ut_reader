@@ -1,0 +1,18 @@
+﻿{
+    "ok": true,
+    "checks": 40,
+    "errors": [],
+    "full_fixed_T064": "PASS",
+    "original_compiled_source_families": [
+        "C98-1998-version61-licensee0",
+        "UT99-stock-v432-version69-licensee0",
+        "Unreal-original-227k-version69-licensee227"
+    ],
+    "C98_preaccepted_checks": 24,
+    "new_v432_compiled_native_cases": 3,
+    "previous_C227k_compiled_native_cases_reused": 3,
+    "original_native_engine_reexecutions_by_verifier": 0,
+    "no_fabricated_default_values": true,
+    "original_binary_fixtures_sha_pinned": true,
+    "global_G3_complete": false
+}
