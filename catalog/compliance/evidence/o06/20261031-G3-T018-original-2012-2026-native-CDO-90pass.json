@@ -1,0 +1,14 @@
+﻿{
+    "ok": true,
+    "checks": 90,
+    "errors": [],
+    "frozen_T018": "PASS",
+    "original_2012_stock_real_Engine_Classes_exported_successfully_before_exporter_crash": 2,
+    "original_2012_native_custom_actor_loaded_nonzero_defaults": 9,
+    "original_2026_native_custom_actor_loaded_nonzero_defaults": 9,
+    "original_2026_stock_Engine_CDOs_reused": 6,
+    "source_family_overlap_v69_not_equated": true,
+    "native_CDO_exporter_omitted_vs_explicit_zero_values_not_conflated_with_runtime_memory": true,
+    "original_compiled_native_engine_rerun_during_verifier": 0,
+    "G3_full_acceptance": false
+}

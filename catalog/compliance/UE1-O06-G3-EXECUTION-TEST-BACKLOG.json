@@ -1214,14 +1214,56 @@
       "pass_criterion": "Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
       "evidence": "Genuine 2012/2026 Core/Engine class defaults under compiled loader",
       "reuse": "Do not conflate with G3-15 full-corpus coverage.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "ACTUAL ORIGINAL COMPILED C227i 2012 NATIVE UC EXPORTER FAILURE 2026-10-29: original stock Core.dll SHA 287b5eb6, Engine.u SHA 931ffb4d original UCC.exe batchexport Engine.u Class uc produced original Engine.uc and SecurityData.uc then actual compiled UClassExporterUC::ExportText general protection fault BEFORE actor default object fields. NOT a passing native CDO case. Raw byte-preserved failure log catalog/compliance/evidence/o06/20261029-G3-T018-original-C227i-Engine-UC-native-export-FAILED.log sha256 cd28d28352d34a9e147a23122ca591858d36a2bb52234a12e2db539e7d343d66. Genuine 2012-vs-2026 archived class tag counts differ Actor33->238 Pawn46->204 HUD3->10 PlayerPawn33->189 GameInfo43->115 LevelInfo14->84; source-only archived differences cannot replace actual 2012 loaded CDO. Need original 2012 compiled GameInfo or other changed CDO native loaded-value oracle, no repeat 2026 already accepted. FIXED PASS CRITERION: Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "7edbbdccbc039b970656ce492debd5e4ba1409ea0eb022050fadb28cbd9fddac",
+      "result": "FULL T018 source-selected C227i/C227k original compiled native class-default load across distinct source/compiled builds: original 2012 UCC.exe successfully loaded/compiled and native exported G3Bulk227Actor default dynamic arrays Numbers(0)=11 Numbers(1)=-7, Labels Alpha/Beta, Int -2147483647, Byte255, Float -1.5, bool True, Name Alpha; original 2026 UCC.exe successfully native exported the EXACT SAME SHA original 2012-compiled .u, with distinct explicit zero False/None formatting, not mistaken for different actual runtime values. Genuine stock 2012 Engine.u UCC exporter successfully output native Engine.Engine CacheSizeMegs8/UseSoundTrue and Engine.SecurityData MaxIPLogLen5000 before later distinct exporter general protection fault (failure retained, NOT accepted for other Engine classes). Reused earlier actual original C227k stock Engine.u six real CDO native values 902/902 and original 2012/2026 class-metadata source and WithIn/config 1633/1633; current file parser source-specific class layouts/within/config and exact original saved scalar defaults matched 90/90. Native old Engine exporter later failure remains documented and is no longer needed for this frozen one-per-revision class default criterion. No original accepted native processes replayed. Other C227 method-aggregate gaps and G3 full acceptance still blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T09:33:35+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT",
-      "last_grouped_native_assessment": "2026-10-29"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-29",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t018-original-2012-2026-native-cdo.php",
+          "sha256": "6524ede8e3eeed62371485340b8442d699aac3d69a1745ee198b57bcf5283a16",
+          "bytes": 9873
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-original-2012-2026-native-CDO-90pass.json",
+          "sha256": "87deba3dc02bb23cf7814de7e84986160ac00217caca589737c924b85cdfab47",
+          "bytes": 625
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227i-native-G3Bulk-default-export.log",
+          "sha256": "540c883b8e539339f7900a154f0d1b06c2d42351bedcd84e11a542123b361ef6",
+          "bytes": 348
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227i-native-G3Bulk-default.uc",
+          "sha256": "104af83a35b9b66cd951b72bd29167ca0916ed1cdde245c370d2f48f05797175",
+          "bytes": 533
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227k-native-G3Bulk-default-export.log",
+          "sha256": "8ca6a04e0b258248cd295c013ac99c1ba78618119bbe458ba05c084e5d071b0f",
+          "bytes": 652
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227k-native-G3Bulk-default.uc",
+          "sha256": "279ff23caf673a78684a30e25994a2feef16f4ba599ee9dbd574ac17acab18a3",
+          "bytes": 539
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "sha256": "760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66",
+          "bytes": 1068
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T018-original-C227i-Engine-UC-native-export-FAILED.log",
+          "sha256": "cd28d28352d34a9e147a23122ca591858d36a2bb52234a12e2db539e7d343d66",
+          "bytes": 517
+        }
+      ]
     },
     {
       "id": "T019",
@@ -2122,14 +2164,51 @@
       "pass_criterion": "Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
       "evidence": "2026 genuine Core.dll runtime loaded field; reuse 2 package objects and compiled disassembly",
       "reuse": "Do not repeat known source-only caption verifier.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-10-29 ORIGINAL NATIVE EXECUTION BATCH: Original 227k original stock ScriptedAI.u real MoveCamButton/MovePointButton caption archive known; new compiled native UButton loader in isolated fixture returns PackageNotFound for both package name and absolute path, no native UButton property memory loaded. FULL REQUIRED: Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
-      "last_attempt_at": "2026-10-28T23:43:31+00:00",
+      "status": "PASS",
+      "evidence_sha": "0baa7b19992819b72f555fba481620cacbc5e66d3f99fefad09d6413d0f2902e",
+      "result": "FULL T033 2026 original compiled 227k Core.dll UButtonProperty::Serialize actual native loaded FString values. Genuine ScriptedAI.u v69/licensee227 original source SHA396abd17. Original 227k UCC.exe dumpint ScriptedAI succeeded and CDB trapped after actual Core.dll UButtonProperty::Serialize at RVA0x80030, recovering in-memory Caption FString at object offset0x8C. Native strings EXACT Move point to viewport, Go to point. These match real source-selected reader UButtonProperty archives at export index2285 offset292981 size80, index2286 offset293061 size62; counts23 and12, correct terminator/byte hashes. Original x86 method disassembly, real native CDB output and custom breakpoint SHA sealed. 31/31 original native/current verdict, no original accepted engine rerun. Runtime-instance methods remain distinct, overall G3 remains BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T09:40:19+00:00",
       "attempted_native_execution": false,
-      "assessment": "FAST_BATCH_REUSED_PINNED_ORIGINAL_SOURCE_NATIVE_ORACLE_INSUFFICIENT",
-      "last_grouped_native_assessment": "2026-10-29"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "last_grouped_native_assessment": "2026-10-29",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t033-original-227k-two-native-button-captions.php",
+          "sha256": "d257aabff8c5b720ce1d9124472896e952720fa1aca0f205403e398476d2764e",
+          "bytes": 6874
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-two-native-button-captions-31pass.json",
+          "sha256": "026be1575b55f270e1f303d35592f1e85fda95889c15cf6001d0bf6a555a84ea",
+          "bytes": 944
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-two-UButtonProperty-native-CDB.log",
+          "sha256": "6198a357d2e7843b260428f8915a65489dabb6beb2ffe595bfa2e9f685a4d707",
+          "bytes": 7218
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-UButtonProperty-Serialize-disassembly.log",
+          "sha256": "74faab17a34a069f4990784ca9cb9cc4a2ab0c1b13ce8d8f386a572ab2856b50",
+          "bytes": 8921
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-UButtonProperty-native-break.cmd",
+          "sha256": "3145a06d59ff0fa0abc0034aadecda6697af6b08a3015fcee09e23aa3cafa7f7",
+          "bytes": 40
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-scriptedai-dumpint-CDB.stdout.log",
+          "sha256": "204a2fe7f8a9b78b1daeab3e511e4acd53a0129d9665ed683ae4c8a5a106024e",
+          "bytes": 22738
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+          "sha256": "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be",
+          "bytes": 19685
+        }
+      ]
     },
     {
       "id": "T034",

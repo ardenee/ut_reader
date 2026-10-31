@@ -1,0 +1,26 @@
+﻿{
+    "ok": true,
+    "checks": 31,
+    "errors": [],
+    "frozen_T033": "PASS",
+    "original_actual_native_227k_UButton_Serialize_CDB_loaded_count": 2,
+    "original_compiled_binary_field_displacement_hex": "0x8C",
+    "original_native_compiled_engine_reruns_by_verifier": 0,
+    "genuine_original_game_package_sha256": "396abd174a6ec86631de7d7c442f9187c7658af4baf2eaa6a58a93eff9327d36",
+    "original_game_binary_published": false,
+    "cases": {
+        "MoveCamButton": {
+            "original_native_loaded_caption": "Move point to viewport",
+            "actual_serial_offset": 292981,
+            "serial_size": 80,
+            "caption_count": 23
+        },
+        "MovePointButton": {
+            "original_native_loaded_caption": "Go to point",
+            "actual_serial_offset": 293061,
+            "serial_size": 62,
+            "caption_count": 12
+        }
+    },
+    "G3_full_acceptance": false
+}

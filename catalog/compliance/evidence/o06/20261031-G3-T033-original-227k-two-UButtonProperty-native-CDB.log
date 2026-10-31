@@ -1,0 +1,114 @@
+Opened log file 'C:\Temp\UnrealDB\O06\G3-T033-227k-ButtonCaption-CDB2.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.031 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe dumpint ScriptedAI
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00de0000 00e1e000   UCC.exe 
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 5f830000 5ff6f000   C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 6e6d0000 6e6f6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+ModLoad: 74ec0000 74ef3000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 05110000 05220000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76900000 76985000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 764b0000 76535000   C:\WINDOWS\SysWOW64\sechost.dll
+(3ef4.5650): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=35910000 edx=00000000 esi=021e5d68 edi=0115f000
+eip=775ad248 esp=0214f29c ebp=0214f2c8 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+775ad248 cc              int     3
+0:000> bp Core+0x80030 "du poi(@esi+0x8c);g"
+0:000> g
+ModLoad: 76350000 76375000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f270000 6f29c000   C:\WINDOWS\SysWOW64\SspiCli.dll
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 607e0000 60a1b000   C:\Temp\UnrealDB\O06\Native-227k\System\Editor.DLL
+ModLoad: 66f10000 66fa0000   C:\Temp\UnrealDB\O06\Native-227k\System\Window.dll
+ModLoad: 5f2b0000 5f821000   C:\Temp\UnrealDB\O06\Native-227k\System\Engine.dll
+ModLoad: 75d40000 75dfa000   C:\WINDOWS\SysWOW64\COMDLG32.dll
+ModLoad: 6c190000 6c221000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 773a0000 77474000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 75c20000 75c8a000   C:\WINDOWS\SysWOW64\WS2_32.dll
+ModLoad: 76ee0000 76f33000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+ModLoad: 66ea0000 66f06000   C:\Temp\UnrealDB\O06\Native-227k\System\Fire.DLL
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+(3ef4.5650): C++ EH exception - code e06d7363 (first chance)
+070c619c  "Move point to viewport"
+070c60a4  "Go to point"
+ModLoad: 74e60000 74e75000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+eax=00000000 ebx=775cc260 ecx=00000000 edx=00000000 esi=00000000 edi=00000000
+eip=7750861c esp=0214f63c ebp=0214f710 iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+ntdll!NtTerminateProcess+0xc:
+7750861c c20800          ret     8

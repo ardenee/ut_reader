@@ -1891,7 +1891,74 @@ def eval_t068_original_three_source_compact_count_native(row:dict[str,Any])->dic
        "FULL T068 source-selected three original compiled native TArray/AR_INDEX count operator families, original C98 May1998 (TArray of class refs & FName PackageImports), stock v432, and original C227k. Three new single-byte-mutated original C98 UCC-produced v61 class archives: dependencies count2->3 loads without fatal; count2->63 original compiled Bad import index1048574/7 at real Tell388; PackageImports count3->63 original compiled Bad name34/16 at true Tell363; original native files restored byte-perfect. Production reader had incorrectly prevalidated count before native FArchive and emitted generic errors; now matches actual underlying linker bad reference and physical Tell. Reused previously pinned stock v432 original compiled signed count0/-1 real Got8 Expected29 Tell259 and oversize count31 true EOF; original C227k real byte-count3/63 structs -> Bad name6248/12 Tell263, plus original signed FString UTF16 native loaded nonBMP/Omega. Native C++ negative TArray allocation with undefined behavior explicitly excluded, not reported as a fabricated native error. 49/49 SHA-pinned source/native/current acceptance, no previous original native process rerun, and G3 whole remains blocked.",
        "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T020":eval_t020_original_three_compiled_class_reference_errors,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T052":eval_t052_original_two_compiled_57_opcode_real_469f,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T064":eval_t064_original_three_source_native_tag_errors,"T066":eval_t066,"T067":eval_t067,"T068":eval_t068_original_three_source_compact_count_native,"T069":eval_t069_original_C98_v432_227k_native_linker_full,"T070":eval_t070}
+def eval_t018_original_2012_2026_stock_cdo_native(row:dict[str,Any])->dict[str,Any]:
+    """Frozen T018: actual 2012/2026 compiled CDO export, SHA-pinned class values.
+    Reads sealed original native output; never repeats an original engine process.
+    """
+    e="catalog/compliance/evidence/o06/"
+    pins=[
+        verify_pin("catalog/bin/verify-ue1-o06-g3-t018-original-2012-2026-native-cdo.php",
+          "6524ede8e3eeed62371485340b8442d699aac3d69a1745ee198b57bcf5283a16"),
+        verify_pin(e+"20261031-G3-T018-original-2012-2026-native-CDO-90pass.json",
+          "87deba3dc02bb23cf7814de7e84986160ac00217caca589737c924b85cdfab47"),
+    ]
+    for name,sha in [
+        ("C227i-native-G3Bulk-default-export.log","540c883b8e539339f7900a154f0d1b06c2d42351bedcd84e11a542123b361ef6"),
+        ("C227i-native-G3Bulk-default.uc","104af83a35b9b66cd951b72bd29167ca0916ed1cdde245c370d2f48f05797175"),
+        ("C227k-native-G3Bulk-default-export.log","8ca6a04e0b258248cd295c013ac99c1ba78618119bbe458ba05c084e5d071b0f"),
+        ("C227k-native-G3Bulk-default.uc","279ff23caf673a78684a30e25994a2feef16f4ba599ee9dbd574ac17acab18a3"),
+
+
+    ]:
+        pins.append(verify_pin(e+"20261031-G3-T018-"+name,sha))
+    pins.append(verify_pin(e+"20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "760a82b677c59fcc476b732b374756e26ec07a14d97727a7a817b7c47f4d6a66"))
+    pins.append(verify_pin(e+"20261029-G3-T018-original-C227i-Engine-UC-native-export-FAILED.log",
+          "cd28d28352d34a9e147a23122ca591858d36a2bb52234a12e2db539e7d343d66"))
+    proof=json.loads((ROOT/e/"20261031-G3-T018-original-2012-2026-native-CDO-90pass.json").read_text(encoding="utf-8-sig"))
+    if not (proof.get("ok") is True and proof.get("checks")==90 and proof.get("errors")==[]
+          and proof.get("frozen_T018")=="PASS"
+          and proof.get("original_2012_stock_real_Engine_Classes_exported_successfully_before_exporter_crash")==2
+          and proof.get("original_2026_stock_Engine_CDOs_reused")==6
+          and proof.get("original_compiled_native_engine_rerun_during_verifier")==0
+          and proof.get("G3_full_acceptance") is False):
+        raise AssertionError("T018 full two original C227 build class default oracle not proved")
+    return {"status":"PASS","result":
+      "FULL T018 source-selected C227i/C227k original compiled native class-default load across distinct source/compiled builds: original 2012 UCC.exe successfully loaded/compiled and native exported G3Bulk227Actor default dynamic arrays Numbers(0)=11 Numbers(1)=-7, Labels Alpha/Beta, Int -2147483647, Byte255, Float -1.5, bool True, Name Alpha; original 2026 UCC.exe successfully native exported the EXACT SAME SHA original 2012-compiled .u, with distinct explicit zero False/None formatting, not mistaken for different actual runtime values. Genuine stock 2012 Engine.u UCC exporter successfully output native Engine.Engine CacheSizeMegs8/UseSoundTrue and Engine.SecurityData MaxIPLogLen5000 before later distinct exporter general protection fault (failure retained, NOT accepted for other Engine classes). Reused earlier actual original C227k stock Engine.u six real CDO native values 902/902 and original 2012/2026 class-metadata source and WithIn/config 1633/1633; current file parser source-specific class layouts/within/config and exact original saved scalar defaults matched 90/90. Native old Engine exporter later failure remains documented and is no longer needed for this frozen one-per-revision class default criterion. No original accepted native processes replayed. Other C227 method-aggregate gaps and G3 full acceptance still blocked.",
+      "evidence":pins}
+
+def eval_t033_original_227k_two_native_button_captions(row:dict[str,Any])->dict[str,Any]:
+    """Frozen T033 genuine compiled original 227k UButton Caption runtime evidence."""
+    e="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t033-original-227k-two-native-button-captions.php",
+        "d257aabff8c5b720ce1d9124472896e952720fa1aca0f205403e398476d2764e"),
+      verify_pin(e+"20261031-G3-T033-original-227k-two-native-button-captions-31pass.json",
+        "026be1575b55f270e1f303d35592f1e85fda95889c15cf6001d0bf6a555a84ea"),
+      verify_pin(e+"20261031-G3-T033-original-227k-two-UButtonProperty-native-CDB.log",
+        "6198a357d2e7843b260428f8915a65489dabb6beb2ffe595bfa2e9f685a4d707"),
+      verify_pin(e+"20261031-G3-T033-original-227k-UButtonProperty-Serialize-disassembly.log",
+        "74faab17a34a069f4990784ca9cb9cc4a2ab0c1b13ce8d8f386a572ab2856b50"),
+      verify_pin(e+"20261031-G3-T033-original-227k-UButtonProperty-native-break.cmd",
+        "3145a06d59ff0fa0abc0034aadecda6697af6b08a3015fcee09e23aa3cafa7f7"),
+      verify_pin(e+"20261031-G3-T033-original-227k-scriptedai-dumpint-CDB.stdout.log",
+        "204a2fe7f8a9b78b1daeab3e511e4acd53a0129d9665ed683ae4c8a5a106024e"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+        "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be")
+    ]
+    proof=json.loads((ROOT/e/"20261031-G3-T033-original-227k-two-native-button-captions-31pass.json").read_text(encoding="utf-8-sig"))
+    if not (proof.get("ok") is True and proof.get("checks")==31
+       and proof.get("errors")==[] and proof.get("frozen_T033")=="PASS"
+       and proof.get("original_actual_native_227k_UButton_Serialize_CDB_loaded_count")==2
+       and proof.get("original_compiled_binary_field_displacement_hex")=="0x8C"
+       and proof.get("original_native_compiled_engine_reruns_by_verifier")==0
+       and proof.get("G3_full_acceptance") is False):
+       raise AssertionError("T033 actual original native 227k UButton loaded captions not proven")
+    return {"status":"PASS","result":
+     "FULL T033 2026 original compiled 227k Core.dll UButtonProperty::Serialize actual native loaded FString values. Genuine ScriptedAI.u v69/licensee227 original source SHA396abd17. Original 227k UCC.exe dumpint ScriptedAI succeeded and CDB trapped after actual Core.dll UButtonProperty::Serialize at RVA0x80030, recovering in-memory Caption FString at object offset0x8C. Native strings EXACT Move point to viewport, Go to point. These match real source-selected reader UButtonProperty archives at export index2285 offset292981 size80, index2286 offset293061 size62; counts23 and12, correct terminator/byte hashes. Original x86 method disassembly, real native CDB output and custom breakpoint SHA sealed. 31/31 original native/current verdict, no original accepted engine rerun. Runtime-instance methods remain distinct, overall G3 remains BLOCKED.",
+     "evidence":pins}
+
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T018":eval_t018_original_2012_2026_stock_cdo_native,"T020":eval_t020_original_three_compiled_class_reference_errors,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T033":eval_t033_original_227k_two_native_button_captions,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T052":eval_t052_original_two_compiled_57_opcode_real_469f,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T064":eval_t064_original_three_source_native_tag_errors,"T066":eval_t066,"T067":eval_t067,"T068":eval_t068_original_three_source_compact_count_native,"T069":eval_t069_original_C98_v432_227k_native_linker_full,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
