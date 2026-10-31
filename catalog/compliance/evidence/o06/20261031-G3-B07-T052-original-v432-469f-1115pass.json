@@ -1,0 +1,39 @@
+{
+  "ok": true,
+  "checks": 1115,
+  "errors": [],
+  "full_frozen_g3_ids": {
+    "T052": "PASS"
+  },
+  "original_engines": {
+    "stock_v432": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "OldUnreal_469f": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+  },
+  "original_compiled_57_real_token_handlers": 57,
+  "original_89_token_assignments_identical": 89,
+  "original_compiled_dispatch_group_differences": [
+    "04",
+    "0D",
+    "0E",
+    "1D",
+    "1E",
+    "22",
+    "23"
+  ],
+  "new_original_469f_compiled_UFunction_and_UState_loaded_native": 48,
+  "original_469f_total_native_script_bytes": 9107,
+  "original_native_loaded_literal_byte_matches": 5075,
+  "original_469f_native_real_UObject_pointer_target_matches": 904,
+  "new_original_x86_compiled_delta_opcode_native_coverage": {
+    "04": 57,
+    "0D": 1,
+    "0E": 11,
+    "1D": 16,
+    "1E": 121,
+    "22": 21,
+    "23": 18
+  },
+  "original_469f_genuine_corpus_decoded_scripts": 1334,
+  "previous_accepted_original_native_executions_rerun": 0,
+  "G3_overall_complete": false
+}

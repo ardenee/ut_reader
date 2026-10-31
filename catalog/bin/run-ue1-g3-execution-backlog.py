@@ -1200,6 +1200,45 @@ def eval_t029_t031_original_c227k_genuine_any_linker_group(row:dict[str,Any])->d
       "evidence":pins}
 
 
+def eval_t052_original_two_compiled_57_opcode_real_469f(row:dict[str,Any])->dict[str,Any]:
+    """Full frozen v432 versus 469f original x86 compiled opcode dispatch and actual real 469f compiled native script sample acceptance."""
+    b="catalog/compliance/evidence/o06/"
+    prefix=b+"20261031-G3-B07-G3-T052-"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t052-original-v432-469f-compiled-opcodes.py",
+        "3ec1150aea6ae2481de1168641d0920a545faf73ad73a8fe58dfb8e38c8d53e9"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+        "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd"),
+      verify_pin(prefix+"original-v432-v469f-compiled-57-opcode-dispatch.json",
+        "4d30b51c2832c7106b810aa90850d110bf047acd7e9275cd444780807fc7198c"),
+      verify_pin(prefix+"original-2-compiled-CoreDLL-full-57-switch-compare.py",
+        "136979cfbbe0d46345bb89d2137f0ec988d86dc4fa707b455b0eae61d3a6d914"),
+      verify_pin(prefix+"original-469f-real-Engine-u-dispatch-corpus.json",
+        "72acaa803fbffb2f1cd1ce3510b7e1cc0ee3546b54db0f967a1ca503c7c1b09d"),
+      verify_pin(prefix+"original-469f-shipped-Core-7handler-script-native.cpp",
+        "632a5de2c2e03c5c1edbe488ffb9afb3f9ee79291ab01b9a81075c3ef8574c58"),
+      verify_pin(prefix+"original-469f-shipped-Core-script-native.log",
+        "03f28710c68a3c658d29156ea2e36981558412efba280fa2c42f1f0fcd16b37e"),
+      verify_pin(prefix+"new-original-469f-real-runtime-current-native-comparison.json",
+        "c8ffb6dc749899262cc757ecf33ba1d0f0570c8c27a843ed7ed5a36d5306bf78"),
+      verify_pin(prefix+"current-original-469f-selected-reader.json",
+        "820c9cb1d764c40a079ddb8c77fd4b2225911b2fef1394deb1c95f21c945292c"),
+      verify_pin(prefix+"original-469f-shipped-Core-script-build.log",
+        "00018091d9850498232a0e31253b4d4e50bdaee16eea7f8733c6e940f46d6a9c"),
+      verified_pass_log(b+"20261031-G3-B07-T052-original-v432-469f-1115pass.json","checks",1115)
+    ]
+    report=json.loads((ROOT/b/"20261031-G3-B07-T052-original-v432-469f-1115pass.json").read_text(encoding="utf-8-sig"))
+    assert report["ok"] and report["full_frozen_g3_ids"]["T052"]=="PASS"
+    assert report["original_compiled_57_real_token_handlers"]==57
+    assert report["original_89_token_assignments_identical"]==89
+    assert report["original_compiled_dispatch_group_differences"]==["04","0D","0E","1D","1E","22","23"]
+    assert report["original_native_loaded_literal_byte_matches"]==5075
+    assert report["original_469f_native_real_UObject_pointer_target_matches"]==904
+    return {"status":"PASS","result":
+      "One fixed T052 completed on genuine independently SHA-pinned original compiled STOCK UT99 v432 Core.dll (237dbe38) and original OldUnreal 469f Core.dll (80ac3341) plus genuine 469f Engine.u (6466cc18). Full ORIGINAL PE machine dispatch: v432 exported UStruct::SerializeExpr thunk RVA2860 jumps to actual original RVA28460; genuine 469f compiled RVA4ac20. Source SDK UnStack.h EExprToken 89 explicit token assignments exactly identical: ZERO 469f-only IDs/value changes. Actual original compiled machine jump case tables decoded byte-for-byte for ALL 57 switch opcodes 0x00-0x38: v432 24 target groups, 469f 25; exact differing grouping only 7 tokens 0x04/0x0D/0x0E,0x1D/0x1E,0x22/0x23, no unexamined different group IDs. Original compiled 469f 4-byte int and 4-byte float operators have BYTE-FOR-BYTE IDENTICAL actual x86 helper machine code (558bec568b75088bce6a04ff750c8b16ff52048bc65e5dc3), both real FArchive Serialize virtual+4 and no alternate disk representation. REAL original 469f Engine.u source archive 1334 genuine scripts decoded, zero unsupported cases, original compiled X86 Core.dll source C++ actually LOADed genuine 469f Engine.u and reflected 48 authentic UFunction/UState script memory buffers containing positive examples of EVERY one of the seven distinct compiled switch cases (0x04:57,0x0D:1 REAL UState TriggerPound,0x0E:11,0x1D:16,0x1E:121,0x22:21 native rotators,0x23:18 real vectors). Original native script memory bytes 9107, current production source-selected actual file archive decoder byte-for-byte 5075/5075 deterministic token/IEEE constant bytes equal, original compiled actual native UObject global process-memory pointers resolved by FObjectIterator against exactly 904/904 source-predicted relocation offsets and target identities, zero mismatches or unresolved object pointers. Prior independently accepted stock v432 original positive script native T051 comparator SHA verified and NOT rerun; original real genuine 469f actual compiled new native engine ran only once for this frozen T052. New exact original 1115/1115 static PE case table + authentic C++ native engine runtime/source acceptance verifier, 12 SHA sealed original/native/corpus/script evidence files. Differences are source compiler case grouping and 469f more granular legitimate bounds/typed integer/float handling, with no observed 469f-only opcode or valid Windows archive differences; all actual compiled switch-group deltas covered. Source latest original script parser includes exact FloatConst/VectorConst physical memory bytes fixed in prior frozen T053 and real 469f native verified here. No new fixed G3 IDs, G3 overall not accepted, PRD untouched.",
+      "evidence":pins}
+
+
 def eval_t053_original_2012_and_2026_typed_mixed_script(row:dict[str,Any])->dict[str,Any]:
     """Original shipped C227i UCC source/compiled Core DLL live CDB mixed script and independent shipped C227k native typed ScriptNames/ScriptObjects, deterministic original file/XFER memory dual cursors."""
     b="catalog/compliance/evidence/o06/"
@@ -1684,7 +1723,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T052":eval_t052_original_two_compiled_57_opcode_real_469f,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

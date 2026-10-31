@@ -3,10 +3,10 @@
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
 - **Contract:** `g3-controlled-80-fixed-tests`
-- **Stage:** G3-59PASS-21BLOCKED-B07-T053-ORIGINAL-2012-2026-SCRIPT-CLOSED
-- **Last completed action:** B07 T053 original 2012 C227i UCC compiled genuine 1942-byte script package with three funcs, 2012 original x86 Core.dll CDB physical actual 89 loaded script with real relocations; original 2026 C227k Core.dll separate native loader physically recovered 89+8+8=105 script bytes, 13 typed FName/UObject original native identities including Class Engine.Actor and Vector.X; UnrealDB reconstructed 53 known bytes exact, 0 mismatches, original 2012 45 known bytes exact. Fixed float/vector token byte reconstruction, 62/62 original SHA-pinned verifier; prior T009 91/91 and T057 112/112 PHP source-only unchanged original native engines not rerun. Frozen 80: 59PASS 21BLOCKED 0FAIL, B07 6PASS/2BLOCKED T050 and T052. G3 not accepted, PRD not touched.
-- **Resume at:** Continue ONLY 21 original fixed still BLOCKED tests; B07 T050 actual original 1998 Core.u mixed Name/Object script original source and typed targets, B07 T052 original v432 vs469f compiled SerializeExpr opcode-table full behavioral differential (not RVA), then other B09 malformed/gates and B10 cumulative 10 mandatory release items. No new fixed tests and NO repeat original accepted native methods.
-- **Active changed at:** 2026-10-31T01:20:46+00:00
+- **Stage:** G3-60PASS-20BLOCKED-B07-T052-ORIGINAL-57-NATIVE-CLOSED
+- **Last completed action:** T052 full original v432 and original 469f compiled Core DLL 57 machine opcode switch case tables, 89 token numeric assignments identical, only 7 differing dispatcher compiler grouping case IDs 04 0D 0E 1D 1E 22 23, original integer float compiled helper bytes identical read/write 4. Genuine 469f Engine.u 1334 source scripts decoded zero errors, new genuine original 469f Core.dll actual native loaded 48 functions/states with seven real case examples, 9107 actual script bytes, 5075 source-known bytes zero mismatches, 904 typed process UObject pointers exact identity/offset; full 1115/1115 source native current acceptance PASS; previous accepted v432 native not rerun. G3 frozen 60PASS 20BLOCKED, B07 7PASS 1BLOCKED T050, no new fixed IDs, PRD unchanged.
+- **Resume at:** Continue new native acceptance on original 20 blocked fixed G3 IDs; original C98 malformed tag errors T064, T069 and source-version matrix T065 as grouped targets; avoid replay all 60 existing passing native engine cases. T050 authentic C98 stock Core.u has no same-script mixed name and UObject, do not fake success. G3 release T080 only when 80PASS.
+- **Active changed at:** 2026-10-31T02:39:38+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 
