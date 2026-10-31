@@ -42,7 +42,7 @@ foreach([
  [$e.'20261028-G3-T051-v432-original-scriptall-source.json',
   'e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67'],
  [$root.'/catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php',
-  'df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500'],
+  'b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd'],
 ] as [$f,$sha]){
  $good=is_file($f)&&hash_file('sha256',$f)===$sha;
  $ck($good,'SHA original '.basename($f));

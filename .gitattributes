@@ -115,3 +115,5 @@ catalog/compliance/evidence/o06/20261030-G3-T049-2012-ABI-vtable-38pass.json -te
 catalog/compliance/evidence/o06/20261030-G3-B04-ANY-* -text
 # Original 2026 C227k UAny type6 genuine native SetStruct/SavePackage/independent original Core.dll reload unchanged bytes.
 catalog/compliance/evidence/o06/20261031-G3-B04-T030-* -text
+# Original compiled 2012 C227i UCC, 2012 Core.dll CDB, 2026 Core.dll independent native bytecode byte-exact evidence.
+catalog/compliance/evidence/o06/20261031-G3-B07-T053-* -text

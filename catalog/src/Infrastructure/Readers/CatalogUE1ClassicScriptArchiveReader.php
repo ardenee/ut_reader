@@ -132,7 +132,7 @@ final class CatalogUE1ClassicScriptArchiveReader
         $expression = static function(int $depth) use (
             &$expression, &$iCode, &$count, &$unsupported, $scriptSize,
             &$position, $modern, $v227, $byte, $word, $dword, $ref, $fname, $read, $mem,
-            &$lastToken, &$lastTokenArchiveOffset
+            &$lastToken, &$lastTokenArchiveOffset, $remember
         ): ?array {
             if ($unsupported !== null) { return null; }
             if ($depth > 128 || ++$count > $scriptSize) {
@@ -300,7 +300,9 @@ final class CatalogUE1ClassicScriptArchiveReader
                         $node['value'] = $v >= 0x80000000 ? $v - 0x100000000 : $v;
                         break;
                     case 0x1e:
-                        $node['value'] = (float)unpack('g', $read(4))[1]; $mem(4);
+                        $floatBytes=$read(4);
+                        $node['value'] = (float)unpack('g',$floatBytes)[1];
+                        $mem(4);$remember($floatBytes);
                         break;
                     case 0x1f: // ANSI constant, zero terminated.
                         $text = '';
@@ -321,7 +323,9 @@ final class CatalogUE1ClassicScriptArchiveReader
                         $node['value'] = [$dword(), $dword(), $dword()];
                         break;
                     case 0x23:
-                        $node['value'] = array_values(unpack('g3', $read(12))); $mem(12);
+                        $vectorBytes=$read(12);
+                        $node['value']=array_values(unpack('g3',$vectorBytes));
+                        $mem(12);$remember($vectorBytes);
                         break;
                     case 0x24: case 0x2c:
                         $node['value'] = $byte();

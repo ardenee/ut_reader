@@ -1,0 +1,184 @@
+{
+  "ok": true,
+  "original_2012_C227i_compiler_genuine_UCC_zero_warnings": true,
+  "original_2012_Core_DLL_native_loaded_mixed_script_89": true,
+  "original_2026_Core_DLL_native_loaded_mixed_script": true,
+  "original_2012_native_89_byte_script_matching_cdb_records": 1,
+  "real_source_script_functions": 3,
+  "original_2026_vs_reader_known_bytes_zero_mismatch": 53,
+  "real_compiled_2026_typed_relocations": 13,
+  "real_loaded_script_memory_bytes": 105,
+  "same_mixed_script_original_2012_vs_source_known_mismatches": 0,
+  "reports": [
+    {
+      "name": "ProbeMixedObjectNameVector",
+      "script_memory_bytes": 89,
+      "original_2026_loaded_memory_hex": "0f000000000021150400000f000100000020020000000f00030000002300005040000090c00000b84007550082fe0000000000211504000016180d00720001000000200200000016160444360400000000030000000425040b",
+      "reader_known_bytes": 45,
+      "reader_masked_native_pointer_or_name_bytes": 44,
+      "reader_known_byte_mismatches": 0,
+      "source_archive_physical_bytes": 56,
+      "original_compiled_runtime_typed_relocations": [
+        {
+          "offset": 2,
+          "kind": "object",
+          "native_pointer_slot": 0,
+          "target": "NameProperty G3Script227.G3Script227Actor.ProbeMixedObjectNameVector.N"
+        },
+        {
+          "offset": 7,
+          "kind": "fname",
+          "native_global_fName_id": 1045,
+          "resolved": "G3ActualName"
+        },
+        {
+          "offset": 13,
+          "kind": "object",
+          "native_pointer_slot": 1,
+          "target": "ClassProperty G3Script227.G3Script227Actor.ProbeMixedObjectNameVector.TargetClass"
+        },
+        {
+          "offset": 18,
+          "kind": "object",
+          "native_pointer_slot": 2,
+          "target": "Class Engine.Actor"
+        },
+        {
+          "offset": 24,
+          "kind": "object",
+          "native_pointer_slot": 3,
+          "target": "StructProperty G3Script227.G3Script227Actor.ProbeMixedObjectNameVector.Point"
+        },
+        {
+          "offset": 47,
+          "kind": "object",
+          "native_pointer_slot": 0,
+          "target": "NameProperty G3Script227.G3Script227Actor.ProbeMixedObjectNameVector.N"
+        },
+        {
+          "offset": 52,
+          "kind": "fname",
+          "native_global_fName_id": 1045,
+          "resolved": "G3ActualName"
+        },
+        {
+          "offset": 62,
+          "kind": "object",
+          "native_pointer_slot": 1,
+          "target": "ClassProperty G3Script227.G3Script227Actor.ProbeMixedObjectNameVector.TargetClass"
+        },
+        {
+          "offset": 67,
+          "kind": "object",
+          "native_pointer_slot": 2,
+          "target": "Class Engine.Actor"
+        },
+        {
+          "offset": 76,
+          "kind": "object",
+          "native_pointer_slot": 4,
+          "target": "FloatProperty Core.Object.Vector.X"
+        },
+        {
+          "offset": 81,
+          "kind": "object",
+          "native_pointer_slot": 3,
+          "target": "StructProperty G3Script227.G3Script227Actor.ProbeMixedObjectNameVector.Point"
+        }
+      ],
+      "original_2012_native_core_script_matches_known_bytes": true,
+      "original_2012_native_actual_memory_hex": "0f0010f16902219b1500000f0090f169022028d7a6020f0088f069022300005040000090c00000b84007550082fe0010f16902219b15000016180d00720090f169022028d7a6021616044436581975020088f069020425040b",
+      "original_2012_native_relocated_words": [
+        {
+          "offset": 2,
+          "kind": "object",
+          "original_2012_memory_word": "0269f110"
+        },
+        {
+          "offset": 7,
+          "kind": "fname",
+          "original_2012_memory_word": "0000159b"
+        },
+        {
+          "offset": 13,
+          "kind": "object",
+          "original_2012_memory_word": "0269f190"
+        },
+        {
+          "offset": 18,
+          "kind": "object",
+          "original_2012_memory_word": "02a6d728"
+        },
+        {
+          "offset": 24,
+          "kind": "object",
+          "original_2012_memory_word": "0269f088"
+        },
+        {
+          "offset": 47,
+          "kind": "object",
+          "original_2012_memory_word": "0269f110"
+        },
+        {
+          "offset": 52,
+          "kind": "fname",
+          "original_2012_memory_word": "0000159b"
+        },
+        {
+          "offset": 62,
+          "kind": "object",
+          "original_2012_memory_word": "0269f190"
+        },
+        {
+          "offset": 67,
+          "kind": "object",
+          "original_2012_memory_word": "02a6d728"
+        },
+        {
+          "offset": 76,
+          "kind": "object",
+          "original_2012_memory_word": "02751958"
+        },
+        {
+          "offset": 81,
+          "kind": "object",
+          "original_2012_memory_word": "0269f088"
+        }
+      ]
+    },
+    {
+      "name": "ProbeNameReturn",
+      "script_memory_bytes": 8,
+      "original_2026_loaded_memory_hex": "042115040000040b",
+      "reader_known_bytes": 4,
+      "reader_masked_native_pointer_or_name_bytes": 4,
+      "reader_known_byte_mismatches": 0,
+      "source_archive_physical_bytes": 5,
+      "original_compiled_runtime_typed_relocations": [
+        {
+          "offset": 2,
+          "kind": "fname",
+          "native_global_fName_id": 1045,
+          "resolved": "G3ActualName"
+        }
+      ]
+    },
+    {
+      "name": "ProbeClassReturn",
+      "script_memory_bytes": 8,
+      "original_2026_loaded_memory_hex": "042000000000040b",
+      "reader_known_bytes": 4,
+      "reader_masked_native_pointer_or_name_bytes": 4,
+      "reader_known_byte_mismatches": 0,
+      "source_archive_physical_bytes": 5,
+      "original_compiled_runtime_typed_relocations": [
+        {
+          "offset": 2,
+          "kind": "object",
+          "native_pointer_slot": 0,
+          "target": "Class Engine.Actor"
+        }
+      ]
+    }
+  ]
+}

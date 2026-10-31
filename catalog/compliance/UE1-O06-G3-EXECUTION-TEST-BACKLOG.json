@@ -3183,13 +3183,60 @@
       "pass_criterion": "Typed relocation targets and actual compiled in-memory bytes match current reader; size/offset match source.",
       "evidence": "C227i sealed 223 buffer proof reused, 227k native delta only",
       "reuse": "Unrelocated known bytes not double-tested.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "FAST 2x8: 2012/2026 genuine compiled typed UObject+FName relocations and struct/default nested memory in one source script still incomplete; prior C227i RandRange success T057 insufficient. REQUIRED: Typed relocation targets and actual compiled in-memory bytes match current reader; size/offset match source.",
-      "last_attempt_at": "2026-10-29T00:05:32+00:00",
+      "status": "PASS",
+      "evidence_sha": "3ede7c6d6fb7824fd3457707b8d0c042f7857d8041111fd36ac0e18c1c3b4a67",
+      "result": "One originally frozen T053 real 62/62 source/native typed bytecode acceptance. Unmodified original genuine 2012 C227i UCC.exe compiled NEW source G3Script227Actor.uc with three real UFunctions plus nested struct G3ScriptTuple and original source class default; 1942-byte .u version69 lic0, 16 exports, ZERO warnings. Actual ORIGINAL 2012 compiled Core.dll under actual live CDB UStruct::Serialize breakpoint loaded the mixed 89-byte script, authentic process-local UObject pointer relocations and global FName IDs; actual original 2012 memory 89 bytes and 45 source-known bytes identical, zero mismatches, every opaque native pointer masked (never compared ASLR literal). Separate original 2026 C227k Core.dll independently loads exact unmodified original 2012 package and reads three genuine loaded UFunction::Script buffers: mixed function 89 bytes, return Name8 bytes, return Class8 bytes, total 105. Mixed compiled original native function has two nonzero global FName relocations resolved to G3ActualName, nine original UObject/property typed references with actual native ScriptObjects table indices, including Class Engine.Actor, real native local NameProperty N, ClassProperty TargetClass, StructProperty Point, and native Core.Object.Vector.X. Across THREE native functions 13/13 actual source-target-typed FName/object identities and exact memory offsets match the original 2012 .u ULinker reader references, 53/53 source-known literal/token/struct IEEE Float32 bytes match original C227k memory and zero mismatches, and 2012 memory same 45 known byte span. Critical REAL reader defect fixed: source EX_FloatConst0x1e and EX_VectorConst0x23 formerly advanced memory iCode4/12 without appending genuine loaded byte-memory source previews; now preserves original physical bytes, producing full89-byte mixed script instead of 77 and accurate T053 actual floats3.25/-4.5/5.75. All file archive physical cursors, memory 89/8/8, original typed 11+1+1 relocation positions and original native paths verified; actual C227i-to-C227k ABI semantic differences treated as masked typed native slots, never invented addresses. SHA sealed all original compiler .u/.uc, original genuine 2012 native CDB command/log, genuine 2026 x86 source/runtime/load logs, 62/62 source-current verifier. Prior T009 91/91 and T057 112/112 source-only verifiers remain PASS without repeating accepted native sessions; historical source reversed exactly 3 changes and previous T056 UT99 source delta. B07 T050/T052 remain blocked, global G3 not accepted, no PRD.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-10-31T01:19:51+00:00",
       "attempted_native_execution": false,
-      "assessment": "T041_T056_TWO_BATCHES_NATIVE_PROVENANCE_SCOPED"
+      "assessment": "COMPLETE_SEALED_ORIGINAL_NATIVE_PARITY_EVIDENCE_REUSED",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t053-original-2012-2026-two-native-mixed-script.php",
+          "sha256": "aec99e4362eca1da2a2a6cbde8c5c3815a67db65c0cc40f44bab821609b9c0e6",
+          "bytes": 10706
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "sha256": "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd",
+          "bytes": 21516
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-UCC-G3Script227.u",
+          "sha256": "6073b5e9303123f51dce92b910437fb8215ce6357d634bbf5bad1d0e60fff97e",
+          "bytes": 1942
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-UCC-mixed-three-functions.uc",
+          "sha256": "df99363783665e3f8be64a9667e3ae7ddcb5b34dd5aba70fb8e119b981061e9d",
+          "bytes": 709
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-UCC-compile.log",
+          "sha256": "572954b75f9266db949e2b83cfc812e3b627604786ad2d4eb662cef883949198",
+          "bytes": 1288
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2026-loaded-three-functions-native.log",
+          "sha256": "5316409c7f2f97f55798c651df843a082b838b9b1c5b6bafddd03cd7ac581792",
+          "bytes": 3708
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-native-cdb-loaded.log",
+          "sha256": "abc3eb2761ad7d0bf58d4fa3cebc0e0ffe5d9c7d150afb621ddcc3a73cfb971b",
+          "bytes": 9492
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-real-native-three-way-parity.json",
+          "sha256": "9e1328cd47e5e59a5cf1bf161fd94a3b2816efe1f33b55b62de5fccb17e9b38e",
+          "bytes": 6029
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-two-compiled-engines-62pass.json",
+          "sha256": "3e843c3bf3c53c4c32df536ca2c896e585bcfdbe9c20661be738e20887c173af",
+          "accepted_original_assertions": 62
+        }
+      ]
     },
     {
       "id": "T054",

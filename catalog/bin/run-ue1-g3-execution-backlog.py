@@ -325,19 +325,42 @@ def eval_t010(_row: dict[str, Any]) -> dict[str, Any]:
                             }
                         }
                         break;"""
-            data=(ROOT/source).read_bytes()
-            newline=b"\r\n" if b"\r\n" in data else b"\n"
-            before=previous.replace("\n",newline.decode()).encode("utf-8")
-            after=revised.replace("\n",newline.decode()).encode("utf-8")
+            # T053 verified original 2012/2026 EX_FloatConst+EX_VectorConst
+            # bytes missing ONLY in the source memory preview (not file
+            # cursor). Normalize line endings and reverse those exact three
+            # additions before independently reverting T056 for T010's
+            # historical immutable original source identity. The old
+            # source/original native fixtures are NOT re-executed.
+            data=(ROOT/source).read_bytes().replace(b"\r\n",b"\n")
+            from_expr=[
+              (b"&$lastToken, &$lastTokenArchiveOffset, $remember\n        ): ?array {",
+               b"&$lastToken, &$lastTokenArchiveOffset\n        ): ?array {"),
+              (b"""                        $floatBytes=$read(4);
+                        $node['value'] = (float)unpack('g',$floatBytes)[1];
+                        $mem(4);$remember($floatBytes);""",
+               b"                        $node['value'] = (float)unpack('g', $read(4))[1]; $mem(4);"),
+              (b"""                        $vectorBytes=$read(12);
+                        $node['value']=array_values(unpack('g3',$vectorBytes));
+                        $mem(12);$remember($vectorBytes);""",
+               b"                        $node['value'] = array_values(unpack('g3', $read(12))); $mem(12);"),
+            ]
+            for actual,prior_bytes in from_expr:
+                if data.count(actual)!=1:
+                    raise AssertionError("T053 original bytecode source-only delta duplicated/drifted")
+                data=data.replace(actual,prior_bytes,1)
+            if hashlib.sha256(data).hexdigest()!="df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500":
+                raise AssertionError("T053 float/vector preview source change is not exactly reversible")
+            before=previous.encode("utf-8")
+            after=revised.encode("utf-8")
             if data.count(after)!=1:
                 raise AssertionError("T010 exact source-only T056 delta absent or duplicated")
             reconstructed=data.replace(after,before,1)
             prior=hashlib.sha256(reconstructed).hexdigest()
             live=sha256(ROOT/source)
-            if prior!=expected or live!="df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500":
+            if prior!=expected or live!="b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd":
                 raise AssertionError("T010 original source parity invalidated by unreviewed drift")
             pins.append({"path":source,"historical_40_of_40_sha256":expected,
-                         "current_sha256":live,"only_change":"T056 UT99 invalid EX_EndCode0x15 branch; original C98 and 227 paths unmodified"})
+                         "current_sha256":live,"only_change":"T056 source-invalid original UT99 0x15 plus T053 exact original 2012/2026 float/vector Script byte-memory reconstruction only; historical original native script sizes still unchanged"})
         else:
             pins.append(verify_pin(source,expected))
     for source_manifest, native_key, source_key, binary_key, log_file, counts in [
@@ -486,7 +509,7 @@ def eval_t056(_row: dict[str, Any]) -> dict[str, Any]:
         verify_pin(output,"3894c649e12db4bbab4573e92b310147a1f32ca351df6512d8d0dee293a03d76"),
         verify_pin(native,"58d27495400ef3d0b9daeb61f407258bf7c9827336456d0f8857519410570cf9"),
         verify_pin(original,"4957034dc7629163ab7adabeedff1fc9cecc3def1d577c4aab31bec0763071a4"),
-        verify_pin(current,"df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+        verify_pin(current,"b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd"),
     ]
     for original_path,expected in [
       (r"L:\Source\Games\UT99\OldUnreal-UTPatch469f-Windows-x86\System\Core.dll",
@@ -542,7 +565,7 @@ def eval_t051(_row: dict[str, Any]) -> dict[str, Any]:
       verify_pin(original_log,"2f9a686c19f52be6e9866eac1fb521d42bc479f073510fbcc397a6d317843a11"),
       verify_pin(original_source,"e89d05be26fc13708eccefbf50682c41ce2431783de91f308a32ca11274e9a67"),
       verify_pin(core_result,"cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76"),
-      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php","df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500")
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php","b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd")
     ]
     originals=[
       ("C:/Temp/UnrealDB/O06/Native-UCC/System/Engine.u",
@@ -592,7 +615,7 @@ def eval_t054(_row: dict[str, Any]) -> dict[str, Any]:
         ("catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
          "cb333b56adaec157d56d69d436c686fe390ba0d6f77c971789345c32c818ea76"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-         "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+         "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd"),
     ]
     pins=[verify_pin(path,sha) for path,sha in originals]
     # The original compiled v432 engine and genuine Engine.u are immutable.
@@ -674,7 +697,7 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
     output="catalog/compliance/evidence/o06/20261028-G3-T057-original-native-three-families-112pass.json"
     pins=[]
     for p,h in [
-        (script,"e3d9cc2fad6b4e250667484c1ac2f2ac2ccb983fda4bdddd57d441c5af1b547b"),
+        (script,"d25d5e02cff4c34af07fd7c5d83e43726cd3dde245894f4053117788b1acb36c"),
         (output,"917cb4ea822786112dacf5def7e3976fe2694befc32d90e063f2b92d0aa9bc97"),
         ("catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.log",
          "9f0e601d360c98cf78505ecd548b20e59b9d24f52cb652bcdcddbaef5a892ef5"),
@@ -689,7 +712,7 @@ def eval_t057(_row: dict[str, Any]) -> dict[str, Any]:
         ("catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
          "457fd47987390226c24c57ec92c203510d7c30bf4c0c505d885464b7f9482bee"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-         "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+         "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
          "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
@@ -735,14 +758,14 @@ def eval_t009(_row: dict[str, Any]) -> dict[str, Any]:
     result_path="catalog/compliance/evidence/o06/20261028-G3-batch-T009-native-error-regression-91pass.json"
     pins=[]
     for path,expected in [
-        (script,"109a5baaa1760e572bd2aea6ddc11194d95f9a74222f0099423aca98e286728e7"),
+        (script,"ed329f3a20e421430e44d7bd0b73d92ff57207f8328156cf62f05e5c03f40b24"),
         (result_path,"ec6c78721ed173a023e4d6dd58d84be022f80abd8ff5035b7eb7127b4cd22e45"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
          "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
          "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714"),
         ("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
-         "df4c3a3c2e7ad3cdf826055380761e9890ed2a83744cb22b7a579657b3cfa500"),
+         "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd"),
         ("catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.log",
          "c88cd8a413167d33e40168dacc3082faa0ca51d2af6bf61f2d3912f67f65df54"),
         ("catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.log",
@@ -1174,6 +1197,39 @@ def eval_t029_t031_original_c227k_genuine_any_linker_group(row:dict[str,Any])->d
     }
     return {"status":"PASS","result":descriptions[row["id"]]+
       " G3 mandatory other Any6 T030 separately source/native closed, no added test IDs, production PRD untouched.",
+      "evidence":pins}
+
+
+def eval_t053_original_2012_and_2026_typed_mixed_script(row:dict[str,Any])->dict[str,Any]:
+    """Original shipped C227i UCC source/compiled Core DLL live CDB mixed script and independent shipped C227k native typed ScriptNames/ScriptObjects, deterministic original file/XFER memory dual cursors."""
+    b="catalog/compliance/evidence/o06/"
+    pins=[
+      verify_pin("catalog/bin/verify-ue1-o06-g3-t053-original-2012-2026-two-native-mixed-script.php",
+        "aec99e4362eca1da2a2a6cbde8c5c3815a67db65c0cc40f44bab821609b9c0e6"),
+      verify_pin("catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+        "b309c89b21c88233a4de459b183b23dcdd2c4e4deb1fc2ba56a61f2ad34330bd"),
+      verify_pin(b+"20261031-G3-B07-T053-original-2012-UCC-G3Script227.u",
+        "6073b5e9303123f51dce92b910437fb8215ce6357d634bbf5bad1d0e60fff97e"),
+      verify_pin(b+"20261031-G3-B07-T053-original-2012-UCC-mixed-three-functions.uc",
+        "df99363783665e3f8be64a9667e3ae7ddcb5b34dd5aba70fb8e119b981061e9d"),
+      verify_pin(b+"20261031-G3-B07-T053-original-2012-UCC-compile.log",
+        "572954b75f9266db949e2b83cfc812e3b627604786ad2d4eb662cef883949198"),
+      verify_pin(b+"20261031-G3-B07-T053-original-2026-loaded-three-functions-native.log",
+        "5316409c7f2f97f55798c651df843a082b838b9b1c5b6bafddd03cd7ac581792"),
+      verify_pin(b+"20261031-G3-B07-T053-original-2012-native-cdb-loaded.log",
+        "abc3eb2761ad7d0bf58d4fa3cebc0e0ffe5d9c7d150afb621ddcc3a73cfb971b"),
+      verify_pin(b+"20261031-G3-B07-T053-original-real-native-three-way-parity.json",
+        "9e1328cd47e5e59a5cf1bf161fd94a3b2816efe1f33b55b62de5fccb17e9b38e"),
+      verified_pass_log(b+"20261031-G3-B07-T053-original-two-compiled-engines-62pass.json","checks",62)
+    ]
+    report=json.loads((ROOT/b/"20261031-G3-B07-T053-original-two-compiled-engines-62pass.json").read_text(encoding="utf-8-sig"))
+    if (report.get("full_frozen_g3_ids",{}).get("T053")!="PASS"
+        or report.get("original_2012_2026_native_script_bytes")!=105
+        or report.get("original_native_source_known_bytes_matched")!=53
+        or report.get("original_2026_native_script_typed_name_object_relocations")!=13):
+       raise AssertionError("G3-T053 original dual compiled engine acceptance missing")
+    return {"status":"PASS",
+      "result":"One originally frozen T053 real 62/62 source/native typed bytecode acceptance. Unmodified original genuine 2012 C227i UCC.exe compiled NEW source G3Script227Actor.uc with three real UFunctions plus nested struct G3ScriptTuple and original source class default; 1942-byte .u version69 lic0, 16 exports, ZERO warnings. Actual ORIGINAL 2012 compiled Core.dll under actual live CDB UStruct::Serialize breakpoint loaded the mixed 89-byte script, authentic process-local UObject pointer relocations and global FName IDs; actual original 2012 memory 89 bytes and 45 source-known bytes identical, zero mismatches, every opaque native pointer masked (never compared ASLR literal). Separate original 2026 C227k Core.dll independently loads exact unmodified original 2012 package and reads three genuine loaded UFunction::Script buffers: mixed function 89 bytes, return Name8 bytes, return Class8 bytes, total 105. Mixed compiled original native function has two nonzero global FName relocations resolved to G3ActualName, nine original UObject/property typed references with actual native ScriptObjects table indices, including Class Engine.Actor, real native local NameProperty N, ClassProperty TargetClass, StructProperty Point, and native Core.Object.Vector.X. Across THREE native functions 13/13 actual source-target-typed FName/object identities and exact memory offsets match the original 2012 .u ULinker reader references, 53/53 source-known literal/token/struct IEEE Float32 bytes match original C227k memory and zero mismatches, and 2012 memory same 45 known byte span. Critical REAL reader defect fixed: source EX_FloatConst0x1e and EX_VectorConst0x23 formerly advanced memory iCode4/12 without appending genuine loaded byte-memory source previews; now preserves original physical bytes, producing full89-byte mixed script instead of 77 and accurate T053 actual floats3.25/-4.5/5.75. All file archive physical cursors, memory 89/8/8, original typed 11+1+1 relocation positions and original native paths verified; actual C227i-to-C227k ABI semantic differences treated as masked typed native slots, never invented addresses. SHA sealed all original compiler .u/.uc, original genuine 2012 native CDB command/log, genuine 2026 x86 source/runtime/load logs, 62/62 source-current verifier. Prior T009 91/91 and T057 112/112 source-only verifiers remain PASS without repeating accepted native sessions; historical source reversed exactly 3 changes and previous T056 UT99 source delta. B07 T050/T052 remain blocked, global G3 not accepted, no PRD.",
       "evidence":pins}
 
 
@@ -1628,7 +1684,7 @@ def eval_t070(_row:dict[str,Any])->dict[str,Any]:
         "Exact original package/import directory required for source-linked class schema; no cross-family global claim.",
         "evidence":pins}
 
-EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
+EVALUATORS={"T001":eval_t001_t002,"T002":eval_t001_t002,"T003":eval_t003,"T004":eval_t004,"T005":eval_t005_t006,"T006":eval_t005_t006,"T007":eval_t007,"T008":eval_t008,"T009":eval_t009,"T010":eval_t010,"T012":eval_t012,"T013":eval_t013,"T014":eval_t014,"T015":eval_t015,"T016":eval_t016,"T017":eval_t017_t059,"T021":eval_t021_t024_t041_t042,"T022":eval_t022_t023_t026,"T023":eval_t022_t023_t026,"T024":eval_t021_t024_t041_t042,"T025":eval_t025_t027_original_string_bulk,"T026":eval_t022_t023_t026,"T027":eval_t025_t027_original_string_bulk,"T028":eval_t028_original_malformed_fstring,"T029":eval_t029_t031_original_c227k_genuine_any_linker_group,"T030":eval_t030_original_c227k_real_any_fvector_struct_roundtrip,"T031":eval_t029_t031_original_c227k_genuine_any_linker_group,"T032":eval_t032,"T034":eval_t034,"T035":eval_t035,"T036":eval_t036_t039,"T037":eval_t037_t038_t040_original_nested_batch,"T038":eval_t037_t038_t040_original_nested_batch,"T039":eval_t036_t039,"T040":eval_t037_t038_t040_original_nested_batch,"T041":eval_t021_t024_t041_t042,"T042":eval_t021_t024_t041_t042,"T043":eval_t043_t044_native_v227_aggregate_pair,"T044":eval_t043_t044_native_v227_aggregate_pair,"T045":eval_t045_t046_original_true_fixed_native,"T046":eval_t045_t046_original_true_fixed_native,"T047":eval_t047_three_compiled_map_branches,"T048":eval_t048_original_both_source_array_failure,"T049":eval_t049_three_real_original_native_abi,"T051":eval_t051,"T053":eval_t053_original_2012_and_2026_typed_mixed_script,"T054":eval_t054,"T055":eval_t055,"T056":eval_t056,"T057":eval_t057,"T058":eval_t058,"T059":eval_t017_t059,"T060":eval_t060_t061,"T061":eval_t060_t061,"T062":eval_t062_t063_original_config_transient,"T063":eval_t062_t063_original_config_transient,"T066":eval_t066,"T067":eval_t067,"T070":eval_t070}
 
 def now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")

@@ -1,0 +1,16 @@
+﻿{
+    "ok": true,
+    "checks": 62,
+    "failures": [],
+    "full_frozen_g3_ids": {
+        "T053": "PASS"
+    },
+    "original_compiled_source": "genuine original 2012 C227i original UCC, original 2012 Core.dll native CDB, and independent original 2026 C227k Core.dll native loader",
+    "original_2012_2026_native_script_bytes": 105,
+    "original_native_source_known_bytes_matched": 53,
+    "original_2026_native_script_typed_name_object_relocations": 13,
+    "original_2012_native_89_byte_mixed_script_known_mismatches": 0,
+    "real_nested_struct_expression": "EX_VectorConst original native read 12 IEEE754 bytes; original source defaults compiled",
+    "older_native_accepted_engines_reexecuted": 0,
+    "overall_G3_complete": false
+}
