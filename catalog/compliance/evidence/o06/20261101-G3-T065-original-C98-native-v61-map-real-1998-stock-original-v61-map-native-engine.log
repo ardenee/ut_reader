@@ -1,0 +1,18 @@
+Log: Log file open, 11/01/26 08:46:22
+Init: Compiled: May 17 1998 00:49:05
+Init: Command line: -server
+Init: Base directory: C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\
+Init: Computer: GAMEAMD
+Init: Name subsystem initialized
+Log: Bound to Engine.dll
+Log: Bound to Core.dll
+Init: Object subsystem initialized
+Init: Heap granularity changed from 16 to 65536
+Init: Memory total: Phys=2097151K Pagef=4194303K Virt=2097024K
+Init: Working set: 32000 / 159000
+Init: Detected: Microsoft Windows NT 6.2 (Build: 9200)
+Init: CPU Speed=2591.996724 MHz
+Init: CPU Page size=4096, Processors=12
+Init: CPU Detected: PentiumPro-class processor (GenuineIntel)
+Init: CPU Features: MMX CMov FPU TimeStamp 
+Init: Keyboard layout: 00001809

@@ -4450,7 +4450,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Original stock v432 and separate 469f source-selected FPackageFileSummary v61 heritage and v68/v69 post-heritage header gates are now actually loaded in true original x86 stock Core.dll, and each physical linker version/NameCount/ExportCount/GUID/FileSize matches current reader (20 real shipped cases, 173/173 all source/private SHA assertions). However original C98 <=35 unknown ObjectProperty v34/v35 archive physical cursor is STILL unverified because original C98 game startup needed Unreal.unr; C227i/k and all distinct serializer version branches still unverified. T065 BLOCKED.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: Source version v61 authentic shipped Detail loading/export observed in original 2012 C227i + 2026 C227k UCC, v68/69 likewise; true 1998 C98 stock executable bootstrap attempted with genuine original Unreal Gold v61 Unreal.unr (#111093) but timed out and produced no physical archive method cursor. The specific original C98 v34/v35 unknown ObjectProperty under 36 native archive Tell remains unverified; no reader modification. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "T011_V60_64_NATIVE_BRANCH_CLOSED_T065_ALL_SOURCE_METHOD_FAMILIES_UNPROVEN",
@@ -4479,6 +4479,21 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
       ],
       "last_evidence_review": "2026-10-31",
@@ -4494,7 +4509,8 @@
       ],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
-      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T066",
@@ -4831,7 +4847,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Two original stock engine builds v432/469f both observed native missing shipped Detail provider failure (one case/build), plus 18 valid genuine shuffled/direct physical original provider choices and true compiled native linker metadata. Missing-package actual error class details and other original method malformed branches remain unowned; T071 BLOCKED.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: Ten new original source C227i/C227k separate native Texture export operations: 8 valid source packages exported, 2 real native generalized protection faults in UTextureExporterBMP::ExportBinary on genuine shipped 148267 v69. Original 2026 compiled UCC listobjects success confirms failed case archive can load/enumerate; original 2012 checksumpackage exit0 silent is NOT proof of object load. Other source-selected malformed-property method error cursor branches unverified. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4871,11 +4887,27 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
       "latest_grouped_native_observation": "Original C98 <36 unknown object tag error and precise source FArchive Tell still missing: two C98 original sessions stopped before target archive because no Unreal.unr. New original v432 missing real import provider native exception does not cover each source profile; do not misassign error branch.",
-      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T072",
@@ -4890,7 +4922,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: No NEW 1998 C98 direct UClass/UStruct/UProperty native field comparison. Genuine original v432/469f package-loaded old texture values under other source profiles are not a C98 direct-type substitute. T072 BLOCKED.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: No new 1998 genuine C98 direct UClass/UStruct/UProperty fully loaded all-method comparison: original Unreal.unr v61 bootstrap timed out and original v34/v35 archive cursor remains missing. Genuine modern C227 outputs not substitute for C98. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4927,11 +4959,27 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
       "latest_grouped_native_observation": "Original C98 direct Class/Struct/Property whole source-method native loaded value matrix unproven; isolated C98 v34 startup never reached method, current v432 imported class controls cannot satisfy C98.",
-      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T073",
@@ -4946,7 +4994,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Original stock UT99 v432 and separately compiled OldUnreal 469f real source x86 Core.dll loaded five actual PRD originals named Detail.utx (v61/68/69); all 20 genuine original native cases match active linker FPackageFileSummary (v61 heritage vs v68/69 modern, exact NameCount/ExportCount/GUID/physical byte size) and current reader (44/44), independent 173/173 checker. 469f-specific other method/record types and old source overlays not all exhausted. T073 BLOCKED.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: Prior 20 genuine original stock UT99 v432/469f installed five same-name physical providers sealed 173/173, still distinct original source/469f method full property type union incomplete; new C227 source difference does not resolve UT99 C++ overlay. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -4981,11 +5029,27 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
       "latest_grouped_native_observation": "True v432 original UClass::SuperField external reference and loaded imported-provider CDO pointer are now evidenced under T076; 469f-specific source method/type union and genuine 469f compiled native provenance still incomplete.",
-      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T074",
@@ -5000,7 +5064,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: No NEW distinct 2012 C227i versus 2026 C227k original native method/ABI checks in this grouped shipped UT99 run; equal numeric v69 from UT99 must not substitute Unreal 227. T074 BLOCKED.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: NEW 2012 C227i versus independent 2026 C227k original stock native binaries actually executed 5 distinct genuine shipped UT99 source archive versions 61/68/69 each (10 original UCC batchexport calls). Both succeeded on same 4 physical packages and failed identically with UTextureExporterBMP::ExportBinary GPF on ID148267 v69. All 56 successful texture BMP pairs generated by two separate actual original engines byte-for-byte identical, each preserved original SHA256. 2026 listobjects on ID148267 enumerated actual Texture/WaveTexture objects without error (separate original native command), 2012 checksumpackage silent success not claimed as archive load. Separate game-selected C227i/227k full method class/property/flags/native branch matrix remains unverified. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5030,8 +5094,24 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
-      ]
+      ],
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T075",
@@ -5046,7 +5126,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: Actual original v432 and original 469f compiled Core.dll source UClass/UObject loaded live textures and ULinkerLoad pointer (stones, and paint1/rough where present), followed GetLinker/GetPackageLinker, with actual runtime FArchive::TotalSize, Summary version/export/name counts and source GUID 4 DWORDs; independently agrees with current source reader for five authentic PRD files, 20 new engine executions and 173/173 checks. This is real pointer identity not archive-inferred; C98 and 227 full per-method native pointer/type map still missing. T075 BLOCKED.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: New original compiled C227i 2012 and 2026 C227k real UTexture/UWaveTexture loaded positive values via stock native export on 4 genuine shipped file versions each, but no external live UClass pointer/physical linker method identity in C227i/k observed here. Earlier source-original v432/469f real ULinkerLoad pointer 20 cases accepted. Full per-build native ownership matrix still missing. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5085,11 +5165,27 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
       "latest_grouped_native_observation": "New actual stock v432 original C++ loaded UClass SuperField pointer, provider CDO pointer and ProviderSentinel value from authentic original UCC imported superclass under two distinct same-name candidate sources. 79/79 scoped verifier and full archive imported superIndex -3 current reader check. Full C98/469f/227 real UClass/ref linker pointer mappings still missing.",
-      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T076",
@@ -5104,7 +5200,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: PRD read-only authoritative current source key has exactly FIVE physically different verified same-name UT99 Detail.utx candidates IDs 113274(v61),148267(v69),1256343(v68),1258823(v68),1276716(v69), all copied to DEV scratch with SHA256/sha1/MD5 exact and original file immutable. Two distinct real compiled original engine builds v432 and 469f each exercised 10 NEW genuine shipped combinations (20 total): system before textures, textures-only, missing; 10 new ULinkerLoad Summary metadata cases actually verified real UClass/UObject pointers, physical byte lengths, GUID/name/export/version and 10 direct paint1/rough package identities. Source/current verifier 173/173 PASS and 44/44 actual five archive metadata. Crucially v61 ID113274 and v69 ID148267 have same GUID but distinct physical bytes; do not select by GUID. UEDB5 selector currently returns ambiguous for same-package candidates without original runtime SearchPaths source/physical mount location, and full other C98/C227 original source build provider parity not established. T076 BLOCKED, no unsafe automatic selection.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: New original C227i and C227k original stock UCC actually loaded four of same real indexed UT99 Detail provider files under isolated Textures only, successful native export 56 original decoded pixel BMP values from each build. One genuine v69 candidate (ID148267) caused stock BMP exporter native crash in both builds, although 2026 native listobjects enumerates its object names: index presence cannot establish an asset is safely exportable. Previous genuine v432/469f physical source priority proof stands, indexed production DB lacks runtime physical mount provenance; other original source contexts still unverified. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5222,10 +5318,26 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
       ],
       "last_original_compiled_native_result": "8 distinct original v432 x86 source-class / loader executions, 3 original UCC packages, 79/79 read-only checks; scoped PASS, T076 overall BLOCKED",
-      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T077",
@@ -5240,7 +5352,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-10-31 BULK 20 NEW ORIGINAL SHIPPED LOADS ACROSS v432/469f: 20 new original shipped native engine loads 10xv432 plus 10x469f, current source reader five source-true packages 44/44, joint 173/173 SHA+runtime metadata and native DLL integrity verifier; 5 indexed real physical candidates; 2 originals retain identical GUID despite different bytes. Other frozen T065/T071-T076 full method source-branch/error/provider union remains unverified. No full release T077 PASS.",
+      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: Grouped original four-source-build positive native coverage extended: 10 distinct new original 2012/2026 C227i/k native export attempts, 2 alternate binary commandlet error-isolation runs, independent 56 byte-identical real BMP comparisons, 177/177 SHA/native acceptance; also one genuine original 1998 C98 v61 map bootstrap produced no v34 native property FArchive cursor. Remaining version-gated/alias/method-provider/error union not accepted. BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5293,11 +5405,27 @@
           "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
           "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
           "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-12-original-227i-k-shipped-native-export-cases.json",
+          "sha256": "1fb111bccaad64faeb1e21682ece0255f26c2818b45802bd64cc7f4f58996088",
+          "bytes": 47882
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-C227i-C227k-56-identical-native-BMP-acceptance.json",
+          "sha256": "b768a4710f370dcf2c5158b983a6c3d4f54be6990c95b3ceabf3af58f35f9cd6",
+          "bytes": 585
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-shipped-map-bootstrap-native-unverified.json",
+          "sha256": "9a95e15dd5d9f0611a6be069462e57f80b5e5cecb51d33e13cd3844c954df719",
+          "bytes": 1208
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
       "latest_grouped_native_observation": "Updated seven parent method/error/provider owner blockers. T076 genuine source-compiled v432 external import provider success adds original live CDO evidence; T065 real 1998 startup failure is not source branch loaded. No aggregate closure until all source families and 8 fixed owner criteria PASS.",
-      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged"
+      "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
+      "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor"
     },
     {
       "id": "T078",

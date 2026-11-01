@@ -1,0 +1,6 @@
+Loading package Detail.utx...
+General protection fault!
+
+History: UTextureExporterBMP::ExportBinary <- UExporter::ExportToArchive <- UExporter::ExportToFile <- UBatchExportCommandlet::Main
+
+Exiting due to error

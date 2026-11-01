@@ -16,3 +16,7 @@
 
 # Five genuine shipped source packages / 20 compiled native logs: retain raw SHA in Windows Git index.
 20261031-G3-T073-T075-T076-* -text
+
+# Original C227i/C227k stock UCC binary log outcomes plus C98 old UnrealGold map bootstrap.
+20261101-G3-T065-T071-T074-* -text
+20261101-G3-T065-original-C98-* -text

@@ -1,0 +1,679 @@
+{
+  "fixed_ids": [
+    "T065",
+    "T071",
+    "T072",
+    "T073",
+    "T074",
+    "T075",
+    "T076",
+    "T077"
+  ],
+  "FROZEN_TESTS_PROMOTED": 0,
+  "native_orig_2012_2026_true_new_build_sessions": 10,
+  "source_orig_2012_new_sessions": 5,
+  "source_orig_2026_new_sessions": 5,
+  "current_original_native_2012_2026_BMP_positive_sessions": 8,
+  "original_native_2012_2026_BMP_failure_sessions": 2,
+  "both_original_native_BMP_export_failure_original_ID148267": true,
+  "native_original_error_history": "UTextureExporterBMP::ExportBinary in BOTH original compiled versions",
+  "source_original_2026_listobjects_succeeded_on_148267": true,
+  "source_original_2012_checksumpackage_returned_zero_without_stdout": true,
+  "2012_checksumpackage_empty_stdout_not_proof_of_native_loaded_object": true,
+  "source_original_archive_version_not_equal_game_source_profile": true,
+  "true_original_2012_vs_2026_exact_BMP_output_sha_equal_pairs": 56,
+  "original_compiled_source_native_UCC_and_Core_dll_preserved": true,
+  "readonly_original_PRD_corpus": true,
+  "original_engine_binary_assets_not_tracked": true,
+  "new_original_compiled_UCC_cases": [
+    {
+      "build": "2012-C227i",
+      "catalog_id": 113274,
+      "original_archive_sha256": "42c79438778910108f46a40db91f0d1cb177555075da516031d2e46f00a7d837",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2012-C227i-genuine-ID113274.log",
+        "sha256": "030969aff5490e0aa26f72b147c7026876bd6a2a5d82cc74f1e85251e48fa213",
+        "bytes": 6614
+      },
+      "BMP_written_original": 37
+    },
+    {
+      "build": "2012-C227i",
+      "catalog_id": 1256343,
+      "original_archive_sha256": "74dcd113089ccd8e179155eb2844ee8f51e527c11bda7798179a3191d884f781",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2012-C227i-genuine-ID1256343.log",
+        "sha256": "a8d829c0be388a3089f66fe52c988536178529ef2c95c8da0183111594b12bb1",
+        "bytes": 753
+      },
+      "BMP_written_original": 4
+    },
+    {
+      "build": "2012-C227i",
+      "catalog_id": 1258823,
+      "original_archive_sha256": "82ef6dd40544f297776edc63a9058129976f4af6aa11f6b04a9bedf0b59ec67c",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2012-C227i-genuine-ID1258823.log",
+        "sha256": "f76b1ec06cad682834183d1a539c76f099618089c221cb367b28b18f18611376",
+        "bytes": 753
+      },
+      "BMP_written_original": 4
+    },
+    {
+      "build": "2012-C227i",
+      "catalog_id": 1276716,
+      "original_archive_sha256": "d68a818b8c947629d76f667c50dcc69896e9938df58a991137f2c88d9b5129c3",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2012-C227i-genuine-ID1276716.log",
+        "sha256": "37c32506d38f78d1987e01ccea1e07671f16c9bc6c559eb4ef397da3ebbbfd50",
+        "bytes": 2005
+      },
+      "BMP_written_original": 11
+    },
+    {
+      "build": "2012-C227i",
+      "catalog_id": 148267,
+      "original_archive_sha256": "e4c20597c2494cc33963750ad67b9b82faa3297028f34a614f586b8128df0357",
+      "original_native_exit": 1,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2012-C227i-genuine-ID148267.log",
+        "sha256": "236e4f6764db5db0875b23b4b66e5f30f7f760fdc1881b9e6dabe03a64eaa720",
+        "bytes": 219
+      },
+      "BMP_written_original": 0
+    },
+    {
+      "build": "2026-C227k",
+      "catalog_id": 113274,
+      "original_archive_sha256": "42c79438778910108f46a40db91f0d1cb177555075da516031d2e46f00a7d837",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2026-C227k-genuine-ID113274.log",
+        "sha256": "54268771d7a3aee4332b3ad74a68ab7857423933133dabe7639724fb967e186c",
+        "bytes": 6766
+      },
+      "BMP_written_original": 37
+    },
+    {
+      "build": "2026-C227k",
+      "catalog_id": 1256343,
+      "original_archive_sha256": "74dcd113089ccd8e179155eb2844ee8f51e527c11bda7798179a3191d884f781",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2026-C227k-genuine-ID1256343.log",
+        "sha256": "566f8fa794fd18940932612407e2f9d5ee284558f19464532dd1ea4dee661e79",
+        "bytes": 905
+      },
+      "BMP_written_original": 4
+    },
+    {
+      "build": "2026-C227k",
+      "catalog_id": 1258823,
+      "original_archive_sha256": "82ef6dd40544f297776edc63a9058129976f4af6aa11f6b04a9bedf0b59ec67c",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2026-C227k-genuine-ID1258823.log",
+        "sha256": "cb4ef29a421b75b1fbd3aeeb0e1eb666b64b7aa0059d3aff0c787c550c21e78b",
+        "bytes": 905
+      },
+      "BMP_written_original": 4
+    },
+    {
+      "build": "2026-C227k",
+      "catalog_id": 1276716,
+      "original_archive_sha256": "d68a818b8c947629d76f667c50dcc69896e9938df58a991137f2c88d9b5129c3",
+      "original_native_exit": 0,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2026-C227k-genuine-ID1276716.log",
+        "sha256": "bdc39852ed402010bb3ceb078d6008b816de2dc174eae73336ed8481ff7575a4",
+        "bytes": 2157
+      },
+      "BMP_written_original": 11
+    },
+    {
+      "build": "2026-C227k",
+      "catalog_id": 148267,
+      "original_archive_sha256": "e4c20597c2494cc33963750ad67b9b82faa3297028f34a614f586b8128df0357",
+      "original_native_exit": 1,
+      "native_output": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2026-C227k-genuine-ID148267.log",
+        "sha256": "43c1879e2b63e118b49f725c34df100386fea0d8109d49b6dbfc31dffa7edbb4",
+        "bytes": 380
+      },
+      "BMP_written_original": 0
+    }
+  ],
+  "additional_native_export_error_diagnostic_cases": [
+    {
+      "build": "2012-C227i",
+      "native_method": "checksumpackage",
+      "native_exit": 0,
+      "log": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2012-C227i-genuine-ID148267-checksumpackage.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0
+      }
+    },
+    {
+      "build": "2026-C227k",
+      "native_method": "listobjects",
+      "native_exit": 0,
+      "log": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T074-T075-T076-actual-original-2026-C227k-genuine-ID148267-listobjects.log",
+        "sha256": "df8d1beff4b9e42f314f190370c8a5eadb2eed66323e2ccc5164cc765fc43916",
+        "bytes": 1185
+      }
+    }
+  ],
+  "original_2012_2026_native_BMP_bytewise_matched_SHA_pairs": [
+    {
+      "catalog_id": 113274,
+      "name": "bubbles.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "a3f79703c4a10e6958f44b642f2a81c4e1021fa394ef296afe466faa1a0e43f8",
+      "original_2026_native_BMP_SHA256": "a3f79703c4a10e6958f44b642f2a81c4e1021fa394ef296afe466faa1a0e43f8",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\bubbles.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\bubbles.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "caustics.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "56f2fa87bcadf5dd1b17ec6447a03a6c2f086fff5f3b5ed49c72089af8df4616",
+      "original_2026_native_BMP_SHA256": "56f2fa87bcadf5dd1b17ec6447a03a6c2f086fff5f3b5ed49c72089af8df4616",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\caustics.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\caustics.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "chatch.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "080f527341cb5942156333b2cde2d5cf7f7d93d0c344b9800d4fae371517c871",
+      "original_2026_native_BMP_SHA256": "080f527341cb5942156333b2cde2d5cf7f7d93d0c344b9800d4fae371517c871",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\chatch.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\chatch.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "darkgrn.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "7118936ee91cefc71ccf7c58a4f0cd108786ddfadf2adde7d9551b7c0d00a3b6",
+      "original_2026_native_BMP_SHA256": "7118936ee91cefc71ccf7c58a4f0cd108786ddfadf2adde7d9551b7c0d00a3b6",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\darkgrn.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\darkgrn.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "decloth.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "e9391fd71e7606a32461a9bf5b12c87aeb87c2ca93267f73c62096ef0052f568",
+      "original_2026_native_BMP_SHA256": "e9391fd71e7606a32461a9bf5b12c87aeb87c2ca93267f73c62096ef0052f568",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\decloth.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\decloth.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "dirty.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2026_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\dirty.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\dirty.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "dirty2.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "92cb0fa1328e3b34b59ed07af0115159f5f7de7423af1831bac6b1cd5d39779f",
+      "original_2026_native_BMP_SHA256": "92cb0fa1328e3b34b59ed07af0115159f5f7de7423af1831bac6b1cd5d39779f",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\dirty2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\dirty2.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "dmetal.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "98b6cdabba3e6afc943a1bb79e62df6459d5d4b3689bf9da152946622578d622",
+      "original_2026_native_BMP_SHA256": "98b6cdabba3e6afc943a1bb79e62df6459d5d4b3689bf9da152946622578d622",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\dmetal.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\dmetal.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "dripple.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "d09cae9c80a145749812e2be1dbfeed970d54c95717c6fa917160bc1393f5abd",
+      "original_2026_native_BMP_SHA256": "d09cae9c80a145749812e2be1dbfeed970d54c95717c6fa917160bc1393f5abd",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\dripple.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\dripple.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "fuzzy.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "b6bdb91f50694d1fe24fe802b4fd6673034bde9e33d516065ebc18b09b3fc86d",
+      "original_2026_native_BMP_SHA256": "b6bdb91f50694d1fe24fe802b4fd6673034bde9e33d516065ebc18b09b3fc86d",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\fuzzy.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\fuzzy.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "glasgrid.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "c58160656f86d85312c414bc322679e03c98d56b5ef70ea74f9d91e48bfcf35f",
+      "original_2026_native_BMP_SHA256": "c58160656f86d85312c414bc322679e03c98d56b5ef70ea74f9d91e48bfcf35f",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\glasgrid.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\glasgrid.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "hatch.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "080f527341cb5942156333b2cde2d5cf7f7d93d0c344b9800d4fae371517c871",
+      "original_2026_native_BMP_SHA256": "080f527341cb5942156333b2cde2d5cf7f7d93d0c344b9800d4fae371517c871",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\hatch.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\hatch.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "lines.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "b465b6463f08e19766881cc360d8c9445a39de1279ac83390d57f166ec6fdfc8",
+      "original_2026_native_BMP_SHA256": "b465b6463f08e19766881cc360d8c9445a39de1279ac83390d57f166ec6fdfc8",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\lines.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\Lines.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "marble.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "65452052bf9f96236b5ffb71b4db4fdc6f2a961a97466dfaba7e8bf4a2ad5281",
+      "original_2026_native_BMP_SHA256": "65452052bf9f96236b5ffb71b4db4fdc6f2a961a97466dfaba7e8bf4a2ad5281",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\Marble.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\Marble.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "metal.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "98b6cdabba3e6afc943a1bb79e62df6459d5d4b3689bf9da152946622578d622",
+      "original_2026_native_BMP_SHA256": "98b6cdabba3e6afc943a1bb79e62df6459d5d4b3689bf9da152946622578d622",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\metal.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\metal.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "metalf2.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "ccee81d681476b379a3a93848b955fd432763c4c7d237f654153c8dc8b0d9bd8",
+      "original_2026_native_BMP_SHA256": "ccee81d681476b379a3a93848b955fd432763c4c7d237f654153c8dc8b0d9bd8",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\metalf2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\metalf2.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "metalf3.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "8680ec86f0772962d70e1011edcaf061af105bdd985e96e1ffa9698d9ff8851e",
+      "original_2026_native_BMP_SHA256": "8680ec86f0772962d70e1011edcaf061af105bdd985e96e1ffa9698d9ff8851e",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\metalf3.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\metalf3.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "metalfine.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "98b6cdabba3e6afc943a1bb79e62df6459d5d4b3689bf9da152946622578d622",
+      "original_2026_native_BMP_SHA256": "98b6cdabba3e6afc943a1bb79e62df6459d5d4b3689bf9da152946622578d622",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\metalfine.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\metalfine.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "muddy1.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "23968575d59a3c791dc823421c3d04ae832bf03086c4dc344211bae2ee3db345",
+      "original_2026_native_BMP_SHA256": "23968575d59a3c791dc823421c3d04ae832bf03086c4dc344211bae2ee3db345",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\muddy1.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\muddy1.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "paint1.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "688411a86f25af72b9e6e61b55077a6537aff6d26f4fb1bc69238f355e35f090",
+      "original_2026_native_BMP_SHA256": "688411a86f25af72b9e6e61b55077a6537aff6d26f4fb1bc69238f355e35f090",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\paint1.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\paint1.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "paint2.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "9632eaa477d76b0d93d3cf22af2d1ad71334280528c24a4a55cc9bd7adaa2581",
+      "original_2026_native_BMP_SHA256": "9632eaa477d76b0d93d3cf22af2d1ad71334280528c24a4a55cc9bd7adaa2581",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\paint2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\paint2.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "pebble.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "8052ea58c674971589a3698ee8b91662109d76fcec6982361e874818a43f66a6",
+      "original_2026_native_BMP_SHA256": "8052ea58c674971589a3698ee8b91662109d76fcec6982361e874818a43f66a6",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\pebble.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\pebble.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "pock.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "be861368634dd6cb949b7204203c7a68c1a6c3ee92a75a51f88f3e168c6afc17",
+      "original_2026_native_BMP_SHA256": "be861368634dd6cb949b7204203c7a68c1a6c3ee92a75a51f88f3e168c6afc17",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\pock.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\pock.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "queende.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "adbc80a5de306b442ff727eb285c6483fc07eba8b5cd79394dd5698418444b92",
+      "original_2026_native_BMP_SHA256": "adbc80a5de306b442ff727eb285c6483fc07eba8b5cd79394dd5698418444b92",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\queende.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\queende.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "rock1.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "9ab7d0fb557e7b0f66824181562fd717814382a0b4976935384e69b6aa24f274",
+      "original_2026_native_BMP_SHA256": "9ab7d0fb557e7b0f66824181562fd717814382a0b4976935384e69b6aa24f274",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\rock1.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\rock1.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "rockde2.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "5ae73c4525046ed3385bd7107a7c44a83871a3202ffa17a9091edc51e06a6c51",
+      "original_2026_native_BMP_SHA256": "5ae73c4525046ed3385bd7107a7c44a83871a3202ffa17a9091edc51e06a6c51",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\rockde2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\rockde2.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "rough.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "307697b18f7e3be4e608952ef2755073516c06a9c4143c7be146453f24c29233",
+      "original_2026_native_BMP_SHA256": "307697b18f7e3be4e608952ef2755073516c06a9c4143c7be146453f24c29233",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\Rough.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\Rough.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "sandy.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "8e63d1bb6a7d7df76e5270e3c11bb33637cc6dd820a290207cc2aa36e46089a6",
+      "original_2026_native_BMP_SHA256": "8e63d1bb6a7d7df76e5270e3c11bb33637cc6dd820a290207cc2aa36e46089a6",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\sandy.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\sandy.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "scanline.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "e545e470ef3b3279af894feb0088906a7e8259bccbca1b9feb6a81d483e9518f",
+      "original_2026_native_BMP_SHA256": "e545e470ef3b3279af894feb0088906a7e8259bccbca1b9feb6a81d483e9518f",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\scanline.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\scanline.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "stones.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2026_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\stones.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\stones.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "waterde.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "9ca2294ebb34e5caf6caab852caa16ca9993cb8369aa22c9a426648b54c3efad",
+      "original_2026_native_BMP_SHA256": "9ca2294ebb34e5caf6caab852caa16ca9993cb8369aa22c9a426648b54c3efad",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\waterde.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\waterde.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "waterde2.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "e66ad76a84ef011fcaf16293765751628c5abf15ab3880b3f57dfb22c9293bf5",
+      "original_2026_native_BMP_SHA256": "e66ad76a84ef011fcaf16293765751628c5abf15ab3880b3f57dfb22c9293bf5",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\WaterDE2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\WaterDE2.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "wood1.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "62f0bfdf082387db21d0d5f042b6b06944a85d9a2c12bb86da2f45c30795aa44",
+      "original_2026_native_BMP_SHA256": "62f0bfdf082387db21d0d5f042b6b06944a85d9a2c12bb86da2f45c30795aa44",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\wood1.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\wood1.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "wood1h.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "62f0bfdf082387db21d0d5f042b6b06944a85d9a2c12bb86da2f45c30795aa44",
+      "original_2026_native_BMP_SHA256": "62f0bfdf082387db21d0d5f042b6b06944a85d9a2c12bb86da2f45c30795aa44",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\wood1h.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\wood1h.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "wood1v.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "dc1f551f589dd5db3b9f6c0b53829923c55fe57df37663b5cf88608c1176b6b2",
+      "original_2026_native_BMP_SHA256": "dc1f551f589dd5db3b9f6c0b53829923c55fe57df37663b5cf88608c1176b6b2",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\wood1v.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\wood1v.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "wood2.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "338a2ff983d122466f23a0eb588d1ba8b439c8ecf95c374de943e0b29f76d304",
+      "original_2026_native_BMP_SHA256": "338a2ff983d122466f23a0eb588d1ba8b439c8ecf95c374de943e0b29f76d304",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\wood2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\wood2.bmp"
+    },
+    {
+      "catalog_id": 113274,
+      "name": "wood2h.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "338a2ff983d122466f23a0eb588d1ba8b439c8ecf95c374de943e0b29f76d304",
+      "original_2026_native_BMP_SHA256": "338a2ff983d122466f23a0eb588d1ba8b439c8ecf95c374de943e0b29f76d304",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID113274\\wood2h.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID113274\\wood2h.bmp"
+    },
+    {
+      "catalog_id": 1256343,
+      "name": "dirty.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2026_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1256343\\dirty.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1256343\\dirty.bmp"
+    },
+    {
+      "catalog_id": 1256343,
+      "name": "paint1.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "688411a86f25af72b9e6e61b55077a6537aff6d26f4fb1bc69238f355e35f090",
+      "original_2026_native_BMP_SHA256": "688411a86f25af72b9e6e61b55077a6537aff6d26f4fb1bc69238f355e35f090",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1256343\\paint1.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1256343\\paint1.bmp"
+    },
+    {
+      "catalog_id": 1256343,
+      "name": "stones.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2026_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1256343\\stones.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1256343\\stones.bmp"
+    },
+    {
+      "catalog_id": 1256343,
+      "name": "wood1.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "62f0bfdf082387db21d0d5f042b6b06944a85d9a2c12bb86da2f45c30795aa44",
+      "original_2026_native_BMP_SHA256": "62f0bfdf082387db21d0d5f042b6b06944a85d9a2c12bb86da2f45c30795aa44",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1256343\\wood1.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1256343\\wood1.bmp"
+    },
+    {
+      "catalog_id": 1258823,
+      "name": "dirty.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2026_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1258823\\dirty.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1258823\\dirty.bmp"
+    },
+    {
+      "catalog_id": 1258823,
+      "name": "dirty2.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "92cb0fa1328e3b34b59ed07af0115159f5f7de7423af1831bac6b1cd5d39779f",
+      "original_2026_native_BMP_SHA256": "92cb0fa1328e3b34b59ed07af0115159f5f7de7423af1831bac6b1cd5d39779f",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1258823\\dirty2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1258823\\dirty2.bmp"
+    },
+    {
+      "catalog_id": 1258823,
+      "name": "lines.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "b465b6463f08e19766881cc360d8c9445a39de1279ac83390d57f166ec6fdfc8",
+      "original_2026_native_BMP_SHA256": "b465b6463f08e19766881cc360d8c9445a39de1279ac83390d57f166ec6fdfc8",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1258823\\Lines.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1258823\\Lines.bmp"
+    },
+    {
+      "catalog_id": 1258823,
+      "name": "stones.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2026_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1258823\\stones.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1258823\\stones.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "bubbles.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "a3f79703c4a10e6958f44b642f2a81c4e1021fa394ef296afe466faa1a0e43f8",
+      "original_2026_native_BMP_SHA256": "a3f79703c4a10e6958f44b642f2a81c4e1021fa394ef296afe466faa1a0e43f8",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\bubbles.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\bubbles.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "caustics.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "56f2fa87bcadf5dd1b17ec6447a03a6c2f086fff5f3b5ed49c72089af8df4616",
+      "original_2026_native_BMP_SHA256": "56f2fa87bcadf5dd1b17ec6447a03a6c2f086fff5f3b5ed49c72089af8df4616",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\caustics.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\caustics.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "decloth.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "e9391fd71e7606a32461a9bf5b12c87aeb87c2ca93267f73c62096ef0052f568",
+      "original_2026_native_BMP_SHA256": "e9391fd71e7606a32461a9bf5b12c87aeb87c2ca93267f73c62096ef0052f568",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\decloth.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\decloth.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "dirty.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2026_native_BMP_SHA256": "af38395e81a590a14ec3e366add522ba643fd9dd616ca093682dea3525c0e5f4",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\dirty.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\dirty.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "dirty2.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "92cb0fa1328e3b34b59ed07af0115159f5f7de7423af1831bac6b1cd5d39779f",
+      "original_2026_native_BMP_SHA256": "92cb0fa1328e3b34b59ed07af0115159f5f7de7423af1831bac6b1cd5d39779f",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\dirty2.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\dirty2.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "marble.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "65452052bf9f96236b5ffb71b4db4fdc6f2a961a97466dfaba7e8bf4a2ad5281",
+      "original_2026_native_BMP_SHA256": "65452052bf9f96236b5ffb71b4db4fdc6f2a961a97466dfaba7e8bf4a2ad5281",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\Marble.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\Marble.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "pebble.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "8052ea58c674971589a3698ee8b91662109d76fcec6982361e874818a43f66a6",
+      "original_2026_native_BMP_SHA256": "8052ea58c674971589a3698ee8b91662109d76fcec6982361e874818a43f66a6",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\pebble.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\pebble.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "rough.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "307697b18f7e3be4e608952ef2755073516c06a9c4143c7be146453f24c29233",
+      "original_2026_native_BMP_SHA256": "307697b18f7e3be4e608952ef2755073516c06a9c4143c7be146453f24c29233",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\Rough.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\Rough.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "sandy.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "8e63d1bb6a7d7df76e5270e3c11bb33637cc6dd820a290207cc2aa36e46089a6",
+      "original_2026_native_BMP_SHA256": "8e63d1bb6a7d7df76e5270e3c11bb33637cc6dd820a290207cc2aa36e46089a6",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\sandy.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\sandy.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "stones.bmp",
+      "bytes": 17462,
+      "original_2012_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2026_native_BMP_SHA256": "782fc848be8d20891624b36267752118f88542effeffb1d144853e055e2bf919",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\stones.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\stones.bmp"
+    },
+    {
+      "catalog_id": 1276716,
+      "name": "wood1v.bmp",
+      "bytes": 66614,
+      "original_2012_native_BMP_SHA256": "dc1f551f589dd5db3b9f6c0b53829923c55fe57df37663b5cf88608c1176b6b2",
+      "original_2026_native_BMP_SHA256": "dc1f551f589dd5db3b9f6c0b53829923c55fe57df37663b5cf88608c1176b6b2",
+      "original_2012_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2012-C227i-genuine-Detail-ID1276716\\wood1v.bmp",
+      "original_2026_native_output_private_path": "C:\\Temp\\UnrealDB\\O06\\G3-BULK-T065-T071-T074-T075-T076-2012-vs-2026-original-native-shipped-5\\G3-2026-C227k-genuine-Detail-ID1276716\\wood1v.bmp"
+    }
+  ],
+  "original_native_full_source_family_Acceptance_remaining": "C98 ver34 unknown ref cursor, full per-method C227 source semantics, canonical native mount path physical identity"
+}

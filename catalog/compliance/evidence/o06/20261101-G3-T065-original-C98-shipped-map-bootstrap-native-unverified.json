@@ -1,0 +1,23 @@
+{
+  "G3_T065_original_1998_genuine_UnrealGold_C98_compatible_map_candidate_id": 111093,
+  "shipped_map_version": 61,
+  "actual_original_shipped_MAP_SHA256": "a38aa510821fa7e6e17fc5f7dab882dba2452141770ef3f7c9a2c83e9d3ad4f4",
+  "native_real_original_C98_Core_SHA256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+  "native_1998_real_engine_exit": 124,
+  "original_1998_map_unusable_for_valid_v34_native_verification": true,
+  "no_authentic_source_native_unknown_ObjectProperty_cursor_established": true,
+  "original_native_execution_count": 1,
+  "original_binary_and_ini_source_UNCHANGED": true,
+  "native_1998_execution_log_SHA_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-native-v61-map-real-1998-stock-original-v61-map-native-stdout.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-native-v61-map-real-1998-stock-original-v61-map-native-engine.log",
+      "sha256": "f87dbf86adece7235ee7f8b9c1b3997eadb01a273c716fe7c04c418a779b2f5a",
+      "bytes": 743
+    }
+  ]
+}

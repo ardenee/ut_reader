@@ -1,0 +1,14 @@
+=======================================
+UCC: UnrealOS execution environment
+Copyright 1999 Epic Games Inc
+=======================================
+
+Loading package Detail.utx...
+General protection fault!
+
+History: UTextureExporterBMP::ExportBinary <- UExporter::ExportToArchive
+ <- UExporter::ExportToFile
+ <- UBatchExportCommandlet::Main
+
+
+Exiting due to error

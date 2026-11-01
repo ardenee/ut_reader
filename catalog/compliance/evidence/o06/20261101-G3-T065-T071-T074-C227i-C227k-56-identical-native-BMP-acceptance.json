@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "checks": 177,
+  "errors": [],
+  "original_native_executions_by_verifier": 0,
+  "true_new_original_2012_2026_UCC_batchexport_sessions": 10,
+  "original_2012_2026_alternate_source_built_in_commandlet_sessions": 2,
+  "original_positive_archive_BMP_sessions": 8,
+  "original_unmodified_executable_BMP_crashes": 2,
+  "actual_2012_vs_2026_real_generated_BMP_pair_matches": 56,
+  "source_loaded_unverified_C98_v34_still_blocked": true,
+  "full_frozen_T074_status": "BLOCKED: other original 2012/2026 method/type branch distinct source-native parity remains"
+}
