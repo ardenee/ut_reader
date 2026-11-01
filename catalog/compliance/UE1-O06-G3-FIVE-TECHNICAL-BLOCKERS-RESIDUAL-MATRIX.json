@@ -41,8 +41,7 @@
       "unproven": [
         "Original 2012 C227i complete method/field and subclass parity union vs distinct 2026 C227k",
         "Original 2026 class ConfigName global FName identity not verified",
-        "Other mandatory method/source versions not yet accepted",
-        "2012 UStruct Line and TextPos actual in-memory offsets cannot be reused from 2026; explicitly unaccepted"
+        "Other mandatory method/source versions not yet accepted"
       ],
       "next_focused_original_oracle": "Next: method-deduplicated 2012/2026 remaining source-compiled method oracle only",
       "verified_new_original_2012_Engine": [
@@ -55,6 +54,14 @@
         "struct_refs": 1559,
         "native_ptr_targets": 1280,
         "assertions": 13219
+      },
+      "new_verified_2012_compiled_members": {
+        "Line": "+0x58",
+        "TextPos": "+0x54",
+        "Script.Num": "+0x4c",
+        "objects": 1795,
+        "values": 5385,
+        "assertions": 7183
       }
     },
     {
@@ -75,6 +82,18 @@
         "struct_refs": 1559,
         "native_ptr_targets": 1280,
         "assertions": 13219
+      },
+      "new_verified_real_2012_compiled_UStruct_ABI": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-1795-UStruct-Line-TextPos-native-manifest.json",
+          "sha256": "e7d1db720b82e74d8ea02d799e5f00d37a7c76eb63f228817af257253a55b1e3",
+          "bytes": 4554
+        },
+        "members": [
+          "Line +0x58",
+          "TextPos +0x54",
+          "Script.Num +0x4c"
+        ]
       }
     }
   ],
@@ -109,5 +128,10 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-2012-C227i-Engine-4268-1559-manifest.json",
     "sha256": "fde02b89b0a8a1b53da9481e9f9e95ded55ff6ceb57657e0c2170520f6362872",
     "bytes": 5509
+  },
+  "new_2026_11_01_correct_C227i_UStruct_ABI": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-1795-UStruct-Line-TextPos-native-manifest.json",
+    "sha256": "e7d1db720b82e74d8ea02d799e5f00d37a7c76eb63f228817af257253a55b1e3",
+    "bytes": 4554
   }
 }

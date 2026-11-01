@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-FIVE-TECHNICAL-C227I-ENGINE-NATIVE-BATCH`
-- **Stage:** G3-70PASS-1NA-9BLOCKED-2012_C227I_ENGINE
-- **Last completed action:** Additional NEW 2012 original stock C227i Engine.u v69 lic0 6140 exports, 4268 true native UProperty saved values and 1559 UStruct saved linked reference identities, 1162 native Children and 118 ScriptText target exports exact; 13219/13219 SHA original source assertions PASS. Separate actual original C227i and 2026 C227k; no incorrect 2012 UStruct Line/TextPos acceptance. Five owners still blocked.
-- **Resume at:** Required outstanding source-specific C98 pre36 physical compiled class, 469f conditional ArrayProperty method, remaining method union and 2012 Line/TextPos original native ABI offset. Do not promote frozen PASS or deploy PRD.
-- **Active changed at:** 2026-11-01T17:14:27+00:00
+- **Contract:** `G3-T074-2012-C227i-UStruct-Line-TextPos-exact-ABI`
+- **Stage:** G3-70PASS-1NA-9BLOCKED
+- **Last completed action:** Original compiled 2012 UStruct::Serialize x86 disassembly shows Line native +0x58 and TextPos native +0x54. Prior old exploratory +0x70/+0x6c were wrong; generate only new real 2012 Engine source line/textpos oracle, do not rerun accepted 4268 property/1559 ref assertions.
+- **Resume at:** Run new targeted actual stock C227i Engine.u UStruct postload CDB Line/TextPos and only deduplicated unknown fields, compare exact saved parser records; preserve SHA and update owner T074/T075 only upon verified evidence.
+- **Active changed at:** 2026-11-01T18:25:48+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

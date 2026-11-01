@@ -1,0 +1,107 @@
+{
+  "schema": "UE1-G3-T074-Original-C227i-Core-Engine-UStruct-2012-ABI-Line-TextPos-ScriptNum-v1",
+  "date": "2026-11-01",
+  "frozen_owner": "T074",
+  "frozen_owner_complete": false,
+  "source_original_compiled_2012_offsets": {
+    "UStruct.this_esi": true,
+    "Linker_ptr": "+0x10",
+    "LinkerIndex": "+0x14",
+    "UStruct.TextPos": "+0x54",
+    "UStruct.Line": "+0x58",
+    "UStruct.Script.Num": "+0x4c"
+  },
+  "original_C227i_genuine_package_2012_UStruct_objects": {
+    "Core.u": 236,
+    "Engine.u": 1559
+  },
+  "new_original_native_UStruct_events": 1795,
+  "independent_exact_source_selected_loaded_value_comparisons": 5385,
+  "new_only_focus_assertions": 7183,
+  "epic_source_abi_2012_not_equated_to_2026": true,
+  "old_2012_wrong_0x70_0x6c_memory_offsets_superseded": true,
+  "real_loaded_nonzero_compiler_lines": {
+    "Core.u": 222,
+    "Engine.u": 1441
+  },
+  "unverified_remaining": [
+    "Other original C227i-vs-C227k source-applicable methods and class metadata",
+    "2012 vs 2026 native platform SourceFamily source-method union"
+  ],
+  "pins": {
+    "correct_original_2012_native_line_textpos_log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-correct-original-g3-t074-2012-Engine-only-original-Line-TextPos-correct-ABI.log",
+      "bytes": 175820,
+      "sha256": "bb9da6b56d033d73474707db260c1944faab80daf79c12e9c804c7d5534699c7"
+    },
+    "correct_original_2012_native_line_textpos_cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-correct-original-g3-t074-2012-Engine-only-original-Line-TextPos-correct-ABI.cmd",
+      "bytes": 250,
+      "sha256": "41c93ca27481f46e3cf921e2722dd8f54bc505c1dc348f0b3906ce600a92e857"
+    },
+    "original_2012_compiled_UStruct_x86_disassembly": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-correct-original-g3-t074-2012-Engine-original-property-struct-method-disasm.log",
+      "bytes": 28818,
+      "sha256": "379199235107611b17f182eb0130306bf522a3b47d6cabe6cb57501a8c4d7094"
+    },
+    "original_2012_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Core.u",
+      "bytes": 81184,
+      "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"
+    },
+    "original_2012_Engine_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Engine.u",
+      "bytes": 1317310,
+      "sha256": "931ffb4ddf3b9b608cbfd49bc6d5f86ddbcbe9e9148ac8c7769d6ac3b13d4ac7"
+    },
+    "original_2012_Core_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Core.dll",
+      "bytes": 901120,
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+    },
+    "original_2012_Engine_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Engine.dll",
+      "bytes": 1658880,
+      "sha256": "96c53e7a109fefb2166955e3f83f92a0ad87250a191758782199f84f56d0b929"
+    },
+    "original_2012_UCC_exe": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\UCC.exe",
+      "bytes": 135680,
+      "sha256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672"
+    },
+    "original_2012_UStruct_header": {
+      "location": "absolute",
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnClass.h",
+      "bytes": 16488,
+      "sha256": "a0931de4f49d29a1bc5f4e7c5821ac1b6e3be3414bad5a99497fa35faa71f86d"
+    },
+    "source_property_and_struct_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+      "bytes": 10388,
+      "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"
+    },
+    "source_class_metadata_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+      "bytes": 20596,
+      "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+      "canonical_git_blob_sha256": "f5a107d2278f58e9d12ea64260329dddd16a52fcc990dbded3b7b0a42062dba1",
+      "canonical_git_blob_bytes": 20235
+    },
+    "focus_new_verifier": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t074-2012-original-1795-struct-line-textpos.php",
+      "bytes": 4600,
+      "sha256": "7d50b0a72f111378fc0f2ec515d9c418f8fdc8d83d367f49480d1e1117d50465"
+    }
+  }
+}

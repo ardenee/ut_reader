@@ -170,3 +170,5 @@ catalog/bin/verify-ue1-o06-g3-t075-2026-227k-Engine-2408-pointer-class.php -text
 
 # 2012 original C227i stock Engine loaded property/struct pointer native acceptance verifier
 catalog/bin/verify-ue1-o06-g3-t074-t075-2012-C227i-Engine-4268-1559-native.php -text
+
+catalog/bin/verify-ue1-o06-g3-t074-2012-original-1795-struct-line-textpos.php -text
