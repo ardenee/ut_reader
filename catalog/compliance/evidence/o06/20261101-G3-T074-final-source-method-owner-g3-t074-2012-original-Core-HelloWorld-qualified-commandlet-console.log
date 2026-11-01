@@ -1,0 +1,136 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-C227i-G304\System\UCC.exe Core.HelloWorldCommandlet strparm=test intparm=7
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00400000 00427000   UCC.exe 
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 10100000 104f0000   C:\Temp\UnrealDB\O06\Native-C227i-G304\System\Core.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 74ec0000 74ef3000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76900000 76985000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 764b0000 76535000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 6e6d0000 6e6f6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+(84b4.835c): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=5a0f0000 edx=00000000 esi=00555e70 edi=0036f000
+eip=775ad248 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+775ad248 cc              int     3
+0:000> bp Core!UStruct::Serialize+0x116 ".if (poi(@esi+0x14)==0x148) { .echo T074_C227I_PRECISE_UStruct_ID_328; dd @esi+0x10 L4; dd @esi+0x34 L2; dd @esi+0x44 L6; dd @esi+0x54 L2; } ; .if (poi(@esi+0x14)==0x14d) { .echo T074_C227I_PRECISE_UStruct_ID_333; dd @esi+0x10 L4; dd @esi+0x34 L2; dd @esi+0x44 L6; dd @esi+0x54 L2; } ; .if (poi(@esi+0x14)==0x275) { .echo T074_C227I_PRECISE_UStruct_ID_629; dd @esi+0x10 L4; dd @esi+0x34 L2; dd @esi+0x44 L6; dd @esi+0x54 L2; } ; .if (poi(@esi+0x14)==0x28c) { .echo T074_C227I_PRECISE_UStruct_ID_652; dd @esi+0x10 L4; dd @esi+0x34 L2; dd @esi+0x44 L6; dd @esi+0x54 L2; } ; .if (poi(@esi+0x14)==0x28d) { .echo T074_C227I_PRECISE_UStruct_ID_653; dd @esi+0x10 L4; dd @esi+0x34 L2; dd @esi+0x44 L6; dd @esi+0x54 L2; } ; gc"
+0:000> bp Core!UProperty::Serialize ".if (poi(@ecx+0x14)==0x3) { .echo T074_C227I_PRECISE_UProperty_ID_3; dd @ecx+0x10 L24; } ; .if (poi(@ecx+0x14)==0x4) { .echo T074_C227I_PRECISE_UProperty_ID_4; dd @ecx+0x10 L24; } ; .if (poi(@ecx+0x14)==0x6) { .echo T074_C227I_PRECISE_UProperty_ID_6; dd @ecx+0x10 L24; } ; .if (poi(@ecx+0x14)==0x27a) { .echo T074_C227I_PRECISE_UProperty_ID_634; dd @ecx+0x10 L24; } ; .if (poi(@ecx+0x14)==0x28f) { .echo T074_C227I_PRECISE_UProperty_ID_655; dd @ecx+0x10 L24; } ; gc"
+0:000> g
+ModLoad: 76350000 76375000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f270000 6f29c000   C:\WINDOWS\SysWOW64\SspiCli.dll
+T074_C227I_PRECISE_UProperty_ID_6
+02677830  023aa0d0 00000006 02677700 01078004
+02677840  000004c4 104db270 00000000 00000000
+02677850  00000000 00000001 00000000 00000000
+02677860  00000000 00000000 00000000 00000000
+02677870  00000000 00000000 00000000 00000000
+02677880  abababee abababab feeefeab feeefeee
+02677890  00000000 00000000 881ab4ac 1e068fa0
+026778a0  65481fe7 2c6f6c6c 726f7720 0021646c
+026778b0  00400716 7820007b 001f0267 1f70e716
+T074_C227I_PRECISE_UProperty_ID_655
+02677a48  023aa0d0 0000028f 02677700 01078004
+02677a58  00000450 104d9eb0 00000000 00000000
+02677a68  00000000 00000001 00000000 00000000
+02677a78  00000000 00000000 00000000 00000000
+02677a88  00000000 00000000 00000000 00000000
+02677a98  abababee abababab feeefeab feeefeee
+02677aa8  00000000 00000000 0e19b429 00068fa0
+02677ab8  024a00c0 02653dd0 feeefeee feeefeee
+02677ac8  feeefeee feeefeee feeefeee feeefeee
+T074_C227I_PRECISE_UStruct_ID_653
+02677710  023aa0d0 0000028d 02652300 41078004
+02677734  00000000 02677820
+02677744  00000340 026778a0 0000009e 000000f9
+02677754  00000188 0000000f
+02677754  00000188 0000000f
+T074_C227I_PRECISE_UProperty_ID_4
+026777b0  023aa0d0 00000004 02652300 01078004
+026777c0  000004c5 104d9eb0 00000000 00000000
+026777d0  00000000 00000001 00000000 00000000
+026777e0  00000000 00000000 00000000 00000000
+026777f0  00000000 00000000 00000000 00000000
+02677800  abababee abababab feeefeab feeefeee
+02677810  00000000 00000000 bb1ab49f 1f068fa0
+02677820  10184124 000003cd 00000000 00000000
+02677830  023aa0d0 00000006 02677700 41070004
+T074_C227I_PRECISE_UProperty_ID_3
+026779c8  023aa0d0 00000003 02652300 01078004
+026779d8  000004c6 104db270 00000000 00000000
+026779e8  00000000 00000001 00000000 00000000
+026779f8  00000000 00000000 00000000 00000000
+02677a08  00000000 00000000 00000000 00000000
+02677a18  abababee abababab feeefeab feeefeee
+02677a28  00000000 00000000 bb1ab49f 1f068fa0
+02677a38  10183d34 000003cf 02671b98 00000000
+02677a48  023aa0d0 0000028f 02677700 41070004
+T074_C227I_PRECISE_UStruct_ID_652
+02652310  023aa0d0 0000028c 023a63c8 410f8004
+02652334  026776a0 02677700
+02652344  000003cc 00000000 00000000 00000000
+02652354  ffffffff ffffffff
+02652354  ffffffff ffffffff
+=======================================
+ucc.exe: UnrealOS execution environment
+Copyright 1999 Epic Games Inc
+=======================================
+
+Executing Class Core.HelloWorldCommandlet
+Hello, world!
+Command line parameters=strparm=test intparm=7
+You specified intparm=7
+You specified strparm=test
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

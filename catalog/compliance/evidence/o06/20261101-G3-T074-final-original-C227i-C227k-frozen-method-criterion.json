@@ -1,0 +1,166 @@
+{
+  "schema": "UE1-O06-G3-T074-original-2012-and-2026-final-frozen-method-parity-v1",
+  "date": "2026-11-01",
+  "owner": "T074",
+  "full_original_frozen_method_criterion_PASS": true,
+  "frozen_required_original_2012_Core_UStruct_objects": 237,
+  "original_2012_Core_Engine_compiled_struct_source_values": {
+    "Core": 236,
+    "Engine": 1559,
+    "new_native_assertions": 7183
+  },
+  "original_2012_Engine_compiled_property_and_struct_counts": {
+    "property": 4268,
+    "struct": 1559,
+    "original_native_source_checks": 13219
+  },
+  "original_2026_Engine_compiled_property_and_struct_counts": {
+    "property": 6316,
+    "struct": 2408,
+    "class": 187
+  },
+  "original_2026_Core_compiled_ALL_nonempty_source_archives": {
+    "nonempty_exports": 1116,
+    "struct": 289,
+    "property": 791,
+    "source_native_checks": 4688
+  },
+  "distinct_original_compiled_Core_methods": {
+    "2012": 33,
+    "2026": 37,
+    "2026_only": [
+      "FAnyProperty",
+      "UButtonProperty",
+      "ULinkerLoad",
+      "ULogHandler"
+    ]
+  },
+  "original_method_source_owners_all_prerequisite_frozen_tests_PASS": true,
+  "scope_constraint": "This closes the frozen 237-original-Core-struct + C227 source-method type/variant representative criterion, NOT all possible runtime state of every physical Core.u export.",
+  "original_C227i_excluded_ten_individual_objects_are_not_extra_serializer_methods": {
+    "unobserved_Class_export_indices": [
+      328,
+      333,
+      629,
+      652
+    ],
+    "unobserved_Function_export_index": [
+      653
+    ],
+    "unobserved_original_Property_export_indices": [
+      3,
+      4,
+      6,
+      634,
+      655
+    ],
+    "actual_original_source_method_types": [
+      "UClass",
+      "UFunction",
+      "UProperty",
+      "UStrProperty"
+    ],
+    "covered_by_source_native_representatives_in_237_Core_and_1559_4268_Engine": true,
+    "not_fabricated_as_individually_native_loaded": true,
+    "not_source_NA_for_their_physical_bytes": true,
+    "2012_original_UCC_HelloWorld_executes_successfully": true,
+    "2012_original_script_DynamicLoadObject_reaches_inherited_object_resolution": true,
+    "limited_exclusion": "These ten are outside the frozen representative fixture; no claim of proving their direct native loaded values or of global intrinsic unobservability."
+  },
+  "historical_pre36_T065_not_inherited": true,
+  "T077_and_final_G3_G5_release_not_automatically_accepted": true,
+  "pins": {
+    "accepted_2012_original_Core_237_struct_parity": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\g3-03-C227i-genuine-237-native-loaded-struct-preflight.json",
+      "bytes": 1030,
+      "sha256": "148c22eab093b3ffca2c2eacb7c3f13c4ddad5215251a35c23267e35adde7a06"
+    },
+    "accepted_2012_original_Core_237_native_records": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\g3-03-C227i-real-original-UStruct-237-script223-records.json",
+      "bytes": 143091,
+      "sha256": "36923b929fa6bf05389f93be97203caa6ce08495b838bd53e877b6e31ae96b5c"
+    },
+    "accepted_2012_original_Core_and_Engine_line_byte_parity": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-1795-UStruct-Line-TextPos-native-manifest.json",
+      "bytes": 4700,
+      "sha256": "e7d1db720b82e74d8ea02d799e5f00d37a7c76eb63f228817af257253a55b1e3"
+    },
+    "accepted_2012_original_Engine_1559_4268": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-2012-C227i-Engine-4268-1559-manifest.json",
+      "bytes": 5509,
+      "sha256": "fde02b89b0a8a1b53da9481e9f9e95ded55ff6ceb57657e0c2170520f6362872"
+    },
+    "accepted_2026_original_Engine_2408_6316": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-227k-Engine-8724-fields-2408-pointer-187-class-manifest.json",
+      "bytes": 6763,
+      "sha256": "2233ba66d11f49793ce61dbd2352e9f52e7bacaf3ea1c21e57e658d29c255e05"
+    },
+    "accepted_2026_original_Core_289_791": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json",
+      "bytes": 7869,
+      "sha256": "2200c2a76e163d0c9815852a016814d43766acff0ddea33551a24095df048303"
+    },
+    "source_method_union_original_compiled_2012_2026": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\g3-t074-original-2012-2026-exact-compiled-Core-method-union.json",
+      "bytes": 11393,
+      "sha256": "155b9d4c4eaf01f4c5f7327a5bda911e21c2db8f953b2d8d84d6080ef5938a7d"
+    },
+    "original_C227i_Core_DLL": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Core.dll",
+      "bytes": 901120,
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897"
+    },
+    "original_C227i_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Core.u",
+      "bytes": 81184,
+      "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b"
+    },
+    "original_C227k_Core_DLL": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+      "bytes": 1286008,
+      "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+    },
+    "original_C227k_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.u",
+      "bytes": 103686,
+      "sha256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+    },
+    "source_current_C227_method_register": {
+      "location": "repo",
+      "path": "catalog/compliance/UE1-O06-G3-CUMULATIVE-CORE-SERIALIZER-METHOD-REGISTER.json",
+      "bytes": 176338,
+      "sha256": "1422de5431bc3538e9f199b8163513d50fd18bd6ef4bb40bed02b97509af57d7",
+      "canonical_git_blob_sha256": "bb5e8ec016ff5aca75b5688047f03bbfe098c131861b96ba67997f3834ec245a",
+      "canonical_git_blob_bytes": 172756
+    },
+    "2012_original_real_Core_HelloWorldCommandlet_stdout": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-source-method-owner-g3-t074-2012-original-Core-HelloWorld-qualified-commandlet-console.log",
+      "bytes": 8192,
+      "sha256": "4d9af35bf0d814edfc4c7d8392d3180f69691b11b1e20bd4c386ccb68c2d100e"
+    },
+    "2012_original_real_UCC_DynamicLoadObject_native_stdout": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-source-method-owner-g3-t074-2012-targeted-real-Core-DynamicLoadObject-console.log",
+      "bytes": 9850,
+      "sha256": "4e33e0aca4b4621e7aecc86e0c631ea6973327a2e828b1c96de594b83168281f"
+    },
+    "2012_original_compiled_source_fixture": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-source-method-owner-G3T074LoaderCommandlet.uc",
+      "bytes": 1561,
+      "sha256": "42cb88b748ea46524978d9022570af50fec895d22ed5cd773f8245495ba954db"
+    }
+  }
+}

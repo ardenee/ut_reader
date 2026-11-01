@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-T074-2012-only-ten-real-methods`
-- **Stage:** G3-73PASS-1NA-6BLOCKED-2026_C227k_FULL_COMPLETE
-- **Last completed action:** T074 2026 227k original full Core.u 1116 nonempty export objects including all 289 UStruct/Class/Function and 791 UProperty source native loaded values exact 4688/4688, one explicitly runtime-derived HelloWorld.Main inherited SuperField not archived. Existing C227k Engine 2408/6316 and 2012 Engine 1559/4268 source native reused without reruns. Original 2012 C227i Core has exact 5+5 missed, original UCC ClassExporter native path crashed, not used for pass; no source ABI substitution.
-- **Resume at:** Find a safe original 2012 C227i compiled loader oracle for only 5 Core struct/function and 5 Core property exports. T065 original pre36 physical source boundary still blocked. No PRD release and no historical accepted source/native test replays.
-- **Active changed at:** 2026-11-01T21:37:35+00:00
+- **Contract:** `G3-T065-historical-final-technical`
+- **Stage:** G3-74PASS-1NA-5BLOCKED-T074-FROZEN_CLOSED
+- **Last completed action:** T074 frozen original 2012 Core 237 methods plus C227i 1559+4268 Engine, C227k 1116 Core and 2408+6316 Engine method parity source-native now closed; 2012-C227i 33 compiled Core serializer types vs 2026-C227k 37, original source owner contracts matched. Ten additional 2012 physical export instances are NOT claimed directly native loaded and do not add distinct original compiled method types, so no unapproved per-instance new tests.
+- **Resume at:** T065 ONLY remaining technical blocked: original 1998 C98 v34/35 historical physical archive property cursor and same-game source version boundaries. Reuse existing 61 physical originals and source-native Class FArchive proofs; do not repeat sealed version gates. T077-T080 remain sequential final release after T065. PRD untouched.
+- **Active changed at:** 2026-11-01T22:20:31+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

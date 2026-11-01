@@ -2,9 +2,9 @@
   "kind": "FIXED_FIVE_FROZEN_OWNERS_RESIDUALS_NO_NEW_T_OR_S_CASES",
   "date": "2026-11-01",
   "backlog_states": {
-    "PASS": 73,
+    "PASS": 74,
     "SOURCE_NA": 1,
-    "BLOCKED": 6
+    "BLOCKED": 5
   },
   "owners": [
     {
@@ -95,12 +95,9 @@
     },
     {
       "id": "T074",
-      "status": "BLOCKED",
-      "unproven": [
-        "2012 original C227i Core.u exactly 5 newly unobserved source-applicable structs/classes/functions",
-        "2012 original C227i Core.u exactly 5 newly unobserved source-applicable property methods"
-      ],
-      "next_focused_original_oracle": "Original 2012 compiled engine source-specific C227i loader for only 10 nonempty Core.u exports. Never rerun 2026 Core/Engine or existing 2012 Engine native method suites.",
+      "status": "PASS",
+      "unproven": [],
+      "next_focused_original_oracle": "NONE within the frozen representative C227 method fixture. Optional original C227i ten extra physical instances are not claimed directly native loaded.",
       "verified_new_original_2012_Engine": [
         "4268 genuine original 2012 UProperty dim/flags actual method LOAD and reader exact",
         "1559 original 2012 UStruct nonnull/null pointer target identity against actual archived refs",
@@ -125,6 +122,11 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json",
         "sha256": "2200c2a76e163d0c9815852a016814d43766acff0ddea33551a24095df048303",
         "bytes": 7869
+      },
+      "final_frozen_C227i_C227k_source_method_acceptance": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
+        "bytes": 7083,
+        "sha256": "c9277273f7b2abf185848e46a6bc823997270b540d00a9b5f7917bef0a0690a4"
       }
     },
     {
@@ -231,7 +233,7 @@
     "T065": "BLOCKED",
     "T072": "PASS",
     "T073": "PASS",
-    "T074": "BLOCKED",
+    "T074": "PASS",
     "T075": "PASS"
   },
   "new_2026_11_01_T072_C98_final_full_owner_closure": {
@@ -254,5 +256,10 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json",
     "sha256": "2200c2a76e163d0c9815852a016814d43766acff0ddea33551a24095df048303",
     "bytes": 7869
+  },
+  "new_2026_11_01_T074_full_frozen_source_method_PASS": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
+    "bytes": 7083,
+    "sha256": "c9277273f7b2abf185848e46a6bc823997270b540d00a9b5f7917bef0a0690a4"
   }
 }

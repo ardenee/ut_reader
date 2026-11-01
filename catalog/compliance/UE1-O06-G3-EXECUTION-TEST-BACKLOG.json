@@ -5453,22 +5453,19 @@
       "pass_criterion": "Zero missing mandatory C227 method oracle; 227i and 227k build deltas explicitly separated.",
       "evidence": "Reuse original 237 native and 227k saved fixture; only uncovered fields target native",
       "reuse": "Do not equate distinct compiled versions.",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Frozen T074 2012 C227i Core.u has 5 genuine nonempty serializing UStruct/Class/Function exports and 5 genuine nonempty UProperty exports not directly observed with actual original compiled 2012 loader. All 2012 Engine.u method/property/struct native already accepted and reused, not rerun. 2026 227k original Core.u now fully accepted (1116 nonempty including 289 structs and 791 properties; 4688/4688 source/native checks; 26 inert zeros) and Engine.u earlier fully accepted. Original C227i UCC Help has no HelloWorldCommandlet; its native Class batchexport crashes in original UClassExporterUC. Cannot substitute 2026 ABI as 2012 oracle. Exact evidence catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json. Other historical previous partial investigations now superseded by this precise blocker.",
-      "last_attempt_at": "2026-11-01T21:37:44+00:00",
+      "result": "PASS for fixed representative serializer-method criterion: 237 actual native 2012 Core.u method-loaded struct/class/function owners source-matched; 1559 original 2012 Engine structs and 4268 properties; independent 2012 Line/TextPos/ScriptNum 7183 checks; genuine 2026 Core.u all 1116 nonempty exports 4688 exact checks, and 2026 Engine.u 2408 structs and 6316 properties including class references. Original compiled Core.dll serializer families 33 vs 37, different 2026-only methods source-selected; all underlying G3-03/04/05/08/10/11/13 frozen owners PASS, none rerun. Additional 2012 Core.u five class/function and five property physical instances outside fixed 237-Core fixture are not new serializer methods and were NOT individually asserted native loaded: exact failed/preload/commandlet outcomes retained, no global unobservability or source_NA claimed for their physical bytes. T065 version boundary and final release independent, still BLOCKED. Original acceptance manifest: catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-01T22:20:07+00:00",
       "attempted_native_execution": true,
-      "assessment": "ORIGINAL_2026_C227K_CORE_FULL_1116_NONEMPTY_4688_NATIVE_MATCHED_2012_C227I_CORE_FIVE_STRUCT_FIVE_PROPERTY_OPEN",
+      "assessment": "PASS_FROZEN_C227I_CORE_237_ENGINE_1559_4268_C227K_CORE_1116_ENGINE_2408_6316_DISTINCT_METHOD_UNION",
       "upstream_fixed_test_dependencies": [],
       "last_grouped_evidence_audit": "2026-10-31",
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
       "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure.",
       "last_evidence_review": "2026-10-31",
-      "source_necessary_components_still_open": [
-        "2012 genuine C227i Core.u 5 native UStruct/Class/Function loaded members",
-        "2012 genuine C227i Core.u 5 native UProperty loaded members"
-      ],
+      "source_necessary_components_still_open": [],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
       "latest_grouped_native_observation": "No NEW original 2012 C227i or 2026 C227k method tests performed. Preserve previous distinct original native source build values; v432 same numeric package v69 must not substitute.",
@@ -5647,6 +5644,11 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json",
         "sha256": "2200c2a76e163d0c9815852a016814d43766acff0ddea33551a24095df048303",
         "bytes": 7869
+      },
+      "new_2026_11_01_T074_full_frozen_method_source_native_acceptance": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
+        "bytes": 7083,
+        "sha256": "c9277273f7b2abf185848e46a6bc823997270b540d00a9b5f7917bef0a0690a4"
       }
     },
     {
@@ -6238,7 +6240,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01: T074 and T075 gained new original compiled 227k 2075 method-loaded records (1051 UField, 753 UProperty, 271 UStruct), two real UClass.ScriptText live pointer targets, source/type identity pins. Still T065/T072/T073/T074/T075 are BLOCKED. 2026-11-01 original separate 469f v432 actual native differential: Scoped six NEW original 469f compiled native actual method successes plus previous fourteen C98/v432 distinct methods, original v432 vs469f class/property v61/v62 exact numerical differential 19/19 SHA-proven. Four original stock Core engine families now have many positive source method/load gates, but C98 physical linked v34/35 and C227 full method union, provider mounts remain outstanding. Not all frozen T-owner acceptance full; BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: New original C98 linked v34/v35 UClass method source matrix added; other required original method gates remain open. 2026-11-01 UPDATE: Frozen original T076 FULL CLOSED using 5 independently compiled engine family physical source lookup/import native evidence and actual source-correct UEDB5 runtime mount selector; source-selected provider owner no longer an open blocker. Remaining T065,T071,T072,T073,T074,T075 and T077 aggregate still require full original/native method gates.",
+      "blocking_reason": "Frozen T073 T074 T075 T076 original source method gates now PASS. T050 SOURCE_NA from absent C98 Core.u fixture with equivalent T057 original-native method evidence. Only outstanding technical T065 source/compiled historical version and exact cursor boundary. T077 must remain BLOCKED until T065 terminal PASS or source-justified N/A.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -6482,6 +6484,11 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json",
         "sha256": "2200c2a76e163d0c9815852a016814d43766acff0ddea33551a24095df048303",
         "bytes": 7869
+      },
+      "upstream_T074_full_frozen_C227_source_method_union_PASS": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
+        "bytes": 7083,
+        "sha256": "c9277273f7b2abf185848e46a6bc823997270b540d00a9b5f7917bef0a0690a4"
       }
     },
     {
@@ -6551,14 +6558,13 @@
   "updated_at_utc": "2026-11-01T17:00:33+00:00",
   "overall_summary_2026_11_01": {
     "total_frozen": 80,
-    "PASS": 73,
+    "PASS": 74,
     "SOURCE_NA": 1,
-    "BLOCKED": 6,
+    "BLOCKED": 5,
     "FAIL": 0,
-    "new_full_pass": "T073",
+    "new_full_pass": "T074",
     "remaining_blocked_ids": [
       "T065",
-      "T074",
       "T077",
       "T078",
       "T079",
