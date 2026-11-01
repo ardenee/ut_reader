@@ -1,0 +1,646 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-t074-2026-UStruct-native-only.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe help
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+OK                                             C:\Temp\UnrealDB\O06\Native-227k\System
+Symbol search path is: C:\Temp\UnrealDB\O06\Native-227k\System
+Executable search path is: 
+ModLoad: 00de0000 00e1e000   UCC.exe 
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 5ffe0000 6071f000   C:\Temp\UnrealDB\O06\Native-227k\System\Core.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 74ec0000 74ef3000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 6e6d0000 6e6f6000   C:\WINDOWS\SysWOW64\IPHLPAPI.DLL
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 007f0000 00900000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76900000 76985000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 764b0000 76535000   C:\WINDOWS\SysWOW64\sechost.dll
+(3e40.8114): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=f80c0000 edx=00000000 esi=00515d68 edi=002a4000
+eip=775ad248 esp=01d6f59c ebp=01d6f5c8 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrInitShimEngineDynamic+0x6a8:
+775ad248 cc              int     3
+0:000> bp Core!UStruct::Serialize+0x24c ".if (poi(@edi+0xc) != 0) { .printf \"G3T074_STRUCT idx=%d linker=%p scriptnum=%d line=%d textpos=%d scripttext=%p children=%p\\n\",poi(@edi+0x14),poi(@edi+0xc),poi(@edi+0x58),poi(@edi+0x78),poi(@edi+0x7c),poi(@edi+0x3c),poi(@edi+0x40); .if (poi(@edi+0x40) != 0) {.printf \"G3T074_CHILD idx=%d linker=%p\\n\",poi(poi(@edi+0x40)+0x14),poi(poi(@edi+0x40)+0xc);}; };gc"
+0:000> g
+ModLoad: 76350000 76375000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 6f270000 6f29c000   C:\WINDOWS\SysWOW64\SspiCli.dll
+G3T074_STRUCT idx=1061 linker=005e41dc scriptnum=37 line=34160 textpos=691 scripttext=00000000 children=0055328c
+G3T074_CHILD idx=1062 linker=005e41dc
+G3T074_STRUCT idx=1058 linker=005e41dc scriptnum=2 line=33885 textpos=685 scripttext=00000000 children=00607924
+G3T074_CHILD idx=1059 linker=005e41dc
+G3T074_STRUCT idx=1055 linker=005e41dc scriptnum=2 line=33717 textpos=682 scripttext=00000000 children=00607b84
+G3T074_CHILD idx=1056 linker=005e41dc
+G3T074_STRUCT idx=1054 linker=005e41dc scriptnum=2 line=33344 textpos=676 scripttext=00000000 children=00000000
+G3T074_STRUCT idx=1053 linker=005e41dc scriptnum=2 line=33222 textpos=671 scripttext=00000000 children=00000000
+G3T074_STRUCT idx=633 linker=005e41dc scriptnum=2 line=33129 textpos=666 scripttext=00000000 children=00000000
+G3T074_STRUCT idx=632 linker=005e41dc scriptnum=2 line=32972 textpos=660 scripttext=00000000 children=00000000
+G3T074_STRUCT idx=1119 linker=005e41dc scriptnum=1 line=32711 textpos=651 scripttext=00000000 children=006081ec
+G3T074_CHILD idx=1118 linker=005e41dc
+G3T074_STRUCT idx=960 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=006086dc
+G3T074_CHILD idx=1040 linker=005e41dc
+G3T074_STRUCT idx=1050 linker=005e41dc scriptnum=6 line=32618 textpos=648 scripttext=00000000 children=0060839c
+G3T074_CHILD idx=955 linker=005e41dc
+G3T074_STRUCT idx=1046 linker=005e41dc scriptnum=11 line=32420 textpos=644 scripttext=00000000 children=0060893c
+G3T074_CHILD idx=957 linker=005e41dc
+G3T074_STRUCT idx=1044 linker=005e41dc scriptnum=1 line=32289 textpos=641 scripttext=00000000 children=00608d2c
+G3T074_CHILD idx=1045 linker=005e41dc
+G3T074_STRUCT idx=932 linker=005e41dc scriptnum=1 line=32190 textpos=638 scripttext=00000000 children=00608edc
+G3T074_CHILD idx=933 linker=005e41dc
+G3T074_STRUCT idx=661 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=0060962c
+G3T074_CHILD idx=927 linker=005e41dc
+G3T074_STRUCT idx=926 linker=005e41dc scriptnum=16 line=31988 textpos=635 scripttext=00000000 children=006091e4
+G3T074_CHILD idx=662 linker=005e41dc
+G3T074_STRUCT idx=920 linker=005e41dc scriptnum=16 line=31748 textpos=631 scripttext=00000000 children=0060988c
+G3T074_CHILD idx=667 linker=005e41dc
+G3T074_STRUCT idx=915 linker=005e41dc scriptnum=11 line=31452 textpos=627 scripttext=00000000 children=00609dac
+G3T074_CHILD idx=669 linker=005e41dc
+G3T074_STRUCT idx=908 linker=005e41dc scriptnum=26 line=31195 textpos=623 scripttext=00000000 children=0060a21c
+G3T074_CHILD idx=676 linker=005e41dc
+G3T074_STRUCT idx=902 linker=005e41dc scriptnum=21 line=30638 textpos=610 scripttext=00000000 children=0060a7e4
+G3T074_CHILD idx=684 linker=005e41dc
+G3T074_STRUCT idx=899 linker=005e41dc scriptnum=6 line=30393 textpos=606 scripttext=00000000 children=006075d4
+G3T074_CHILD idx=687 linker=005e41dc
+G3T074_STRUCT idx=891 linker=005e41dc scriptnum=36 line=30105 textpos=602 scripttext=00000000 children=00607764
+G3T074_CHILD idx=703 linker=005e41dc
+G3T074_STRUCT idx=1115 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=0060be2c
+G3T074_CHILD idx=1122 linker=005e41dc
+G3T074_STRUCT idx=1112 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=0060bcc4
+G3T074_CHILD idx=1120 linker=005e41dc
+G3T074_STRUCT idx=1116 linker=005e41dc scriptnum=11 line=29493 textpos=591 scripttext=00000000 children=00608f8c
+G3T074_CHILD idx=1114 linker=005e41dc
+G3T074_STRUCT idx=1 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=0060c68c
+G3T074_CHILD idx=576 linker=005e41dc
+G3T074_STRUCT idx=1039 linker=005e41dc scriptnum=16 line=29322 textpos=588 scripttext=00000000 children=0060c13c
+G3T074_CHILD idx=961 linker=005e41dc
+G3T074_STRUCT idx=1034 linker=005e41dc scriptnum=16 line=29180 textpos=587 scripttext=00000000 children=0060ca54
+G3T074_CHILD idx=964 linker=005e41dc
+G3T074_STRUCT idx=0 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=0060d2b4
+G3T074_CHILD idx=583 linker=005e41dc
+G3T074_STRUCT idx=1029 linker=005e41dc scriptnum=16 line=29052 textpos=586 scripttext=00000000 children=0060ced4
+G3T074_CHILD idx=970 linker=005e41dc
+G3T074_STRUCT idx=888 linker=005e41dc scriptnum=6 line=28961 textpos=584 scripttext=00000000 children=0060d67c
+G3T074_CHILD idx=705 linker=005e41dc
+G3T074_STRUCT idx=660 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=0060dccc
+G3T074_CHILD idx=923 linker=005e41dc
+G3T074_STRUCT idx=884 linker=005e41dc scriptnum=11 line=28896 textpos=582 scripttext=00000000 children=0060d904
+G3T074_CHILD idx=709 linker=005e41dc
+G3T074_STRUCT idx=880 linker=005e41dc scriptnum=11 line=28760 textpos=580 scripttext=00000000 children=0060e144
+G3T074_CHILD idx=714 linker=005e41dc
+G3T074_STRUCT idx=876 linker=005e41dc scriptnum=11 line=28627 textpos=578 scripttext=00000000 children=0060e50c
+G3T074_CHILD idx=718 linker=005e41dc
+G3T074_STRUCT idx=871 linker=005e41dc scriptnum=21 line=28398 textpos=575 scripttext=00000000 children=0060e8d4
+G3T074_CHILD idx=723 linker=005e41dc
+G3T074_STRUCT idx=867 linker=005e41dc scriptnum=11 line=28117 textpos=572 scripttext=00000000 children=0060b86c
+G3T074_CHILD idx=727 linker=005e41dc
+G3T074_STRUCT idx=863 linker=005e41dc scriptnum=11 line=28015 textpos=570 scripttext=00000000 children=0060ef1c
+G3T074_CHILD idx=731 linker=005e41dc
+G3T074_STRUCT idx=860 linker=005e41dc scriptnum=6 line=27930 textpos=568 scripttext=00000000 children=00c7080c
+G3T074_CHILD idx=734 linker=005e41dc
+G3T074_STRUCT idx=857 linker=005e41dc scriptnum=6 line=27837 textpos=566 scripttext=00000000 children=0060acfc
+G3T074_CHILD idx=735 linker=005e41dc
+G3T074_STRUCT idx=854 linker=005e41dc scriptnum=6 line=27738 textpos=564 scripttext=00000000 children=0060af8c
+G3T074_CHILD idx=736 linker=005e41dc
+G3T074_STRUCT idx=851 linker=005e41dc scriptnum=6 line=27665 textpos=562 scripttext=00000000 children=00c711fc
+G3T074_CHILD idx=737 linker=005e41dc
+G3T074_STRUCT idx=848 linker=005e41dc scriptnum=6 line=27582 textpos=560 scripttext=00000000 children=00c7148c
+G3T074_CHILD idx=740 linker=005e41dc
+G3T074_STRUCT idx=845 linker=005e41dc scriptnum=6 line=27495 textpos=558 scripttext=00000000 children=00c7171c
+G3T074_CHILD idx=743 linker=005e41dc
+G3T074_STRUCT idx=841 linker=005e41dc scriptnum=11 line=27407 textpos=556 scripttext=00000000 children=00c719b4
+G3T074_CHILD idx=748 linker=005e41dc
+G3T074_STRUCT idx=830 linker=005e41dc scriptnum=6 line=27244 textpos=554 scripttext=00000000 children=00c71d7c
+G3T074_CHILD idx=759 linker=005e41dc
+G3T074_STRUCT idx=826 linker=005e41dc scriptnum=11 line=27144 textpos=552 scripttext=00000000 children=00c72014
+G3T074_CHILD idx=762 linker=005e41dc
+G3T074_STRUCT idx=822 linker=005e41dc scriptnum=11 line=27052 textpos=550 scripttext=00000000 children=00c723dc
+G3T074_CHILD idx=769 linker=005e41dc
+G3T074_STRUCT idx=818 linker=005e41dc scriptnum=11 line=26962 textpos=548 scripttext=00000000 children=00c727a4
+G3T074_CHILD idx=773 linker=005e41dc
+G3T074_STRUCT idx=814 linker=005e41dc scriptnum=11 line=26867 textpos=546 scripttext=00000000 children=00c72b74
+G3T074_CHILD idx=776 linker=005e41dc
+G3T074_STRUCT idx=810 linker=005e41dc scriptnum=11 line=26780 textpos=544 scripttext=00000000 children=00c72f44
+G3T074_CHILD idx=782 linker=005e41dc
+G3T074_STRUCT idx=806 linker=005e41dc scriptnum=11 line=26695 textpos=542 scripttext=00000000 children=00c73314
+G3T074_CHILD idx=786 linker=005e41dc
+G3T074_STRUCT idx=802 linker=005e41dc scriptnum=11 line=26616 textpos=540 scripttext=00000000 children=00c736e4
+G3T074_CHILD idx=790 linker=005e41dc
+G3T074_STRUCT idx=798 linker=005e41dc scriptnum=11 line=26500 textpos=538 scripttext=00000000 children=00c73ab4
+G3T074_CHILD idx=794 linker=005e41dc
+G3T074_STRUCT idx=799 linker=005e41dc scriptnum=11 line=26395 textpos=536 scripttext=00000000 children=00c73e7c
+G3T074_CHILD idx=664 linker=005e41dc
+G3T074_STRUCT idx=803 linker=005e41dc scriptnum=11 line=26304 textpos=534 scripttext=00000000 children=00c74244
+G3T074_CHILD idx=791 linker=005e41dc
+G3T074_STRUCT idx=807 linker=005e41dc scriptnum=11 line=26199 textpos=532 scripttext=00000000 children=00c74614
+G3T074_CHILD idx=787 linker=005e41dc
+G3T074_STRUCT idx=811 linker=005e41dc scriptnum=11 line=26108 textpos=530 scripttext=00000000 children=00c749e4
+G3T074_CHILD idx=783 linker=005e41dc
+G3T074_STRUCT idx=1110 linker=005e41dc scriptnum=21 line=25961 textpos=528 scripttext=00000000 children=00c74db4
+G3T074_CHILD idx=946 linker=005e41dc
+G3T074_STRUCT idx=819 linker=005e41dc scriptnum=6 line=25875 textpos=527 scripttext=00000000 children=00c702b4
+G3T074_CHILD idx=774 linker=005e41dc
+G3T074_STRUCT idx=823 linker=005e41dc scriptnum=6 line=25806 textpos=526 scripttext=00000000 children=00c757c4
+G3T074_CHILD idx=770 linker=005e41dc
+G3T074_STRUCT idx=571 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00c75edc
+G3T074_CHILD idx=568 linker=005e41dc
+G3T074_STRUCT idx=1018 linker=005e41dc scriptnum=11 line=25737 textpos=525 scripttext=00000000 children=00c75a5c
+G3T074_CHILD idx=981 linker=005e41dc
+G3T074_STRUCT idx=1015 linker=005e41dc scriptnum=6 line=25647 textpos=524 scripttext=00000000 children=00c762ec
+G3T074_CHILD idx=984 linker=005e41dc
+G3T074_STRUCT idx=1011 linker=005e41dc scriptnum=11 line=25319 textpos=519 scripttext=00000000 children=00c76584
+G3T074_CHILD idx=991 linker=005e41dc
+G3T074_STRUCT idx=628 linker=005e41dc scriptnum=11 line=25251 textpos=518 scripttext=00000000 children=00c7693c
+G3T074_CHILD idx=5 linker=005e41dc
+G3T074_STRUCT idx=1008 linker=005e41dc scriptnum=6 line=25127 textpos=515 scripttext=00000000 children=00c76cf4
+G3T074_CHILD idx=993 linker=005e41dc
+G3T074_STRUCT idx=824 linker=005e41dc scriptnum=16 line=24972 textpos=511 scripttext=00000000 children=00c76f7c
+G3T074_CHILD idx=766 linker=005e41dc
+G3T074_STRUCT idx=827 linker=005e41dc scriptnum=16 line=24718 textpos=507 scripttext=00000000 children=00c77334
+G3T074_CHILD idx=763 linker=005e41dc
+G3T074_STRUCT idx=831 linker=005e41dc scriptnum=6 line=24323 textpos=501 scripttext=00000000 children=00c776f4
+G3T074_CHILD idx=760 linker=005e41dc
+G3T074_STRUCT idx=835 linker=005e41dc scriptnum=11 line=24144 textpos=497 scripttext=00000000 children=00c70aa4
+G3T074_CHILD idx=756 linker=005e41dc
+G3T074_STRUCT idx=547 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00c7854c
+G3T074_CHILD idx=546 linker=005e41dc
+G3T074_STRUCT idx=839 linker=005e41dc scriptnum=21 line=23895 textpos=492 scripttext=00000000 children=00c70e64
+G3T074_CHILD idx=750 linker=005e41dc
+G3T074_STRUCT idx=1002 linker=005e41dc scriptnum=16 line=23772 textpos=489 scripttext=00000000 children=00c7890c
+G3T074_CHILD idx=1001 linker=005e41dc
+G3T074_STRUCT idx=626 linker=005e41dc scriptnum=1 line=23608 textpos=488 scripttext=00000000 children=00000000
+G3T074_STRUCT idx=627 linker=005e41dc scriptnum=1 line=23558 textpos=487 scripttext=00000000 children=00000000
+G3T074_STRUCT idx=1003 linker=005e41dc scriptnum=6 line=23508 textpos=486 scripttext=00000000 children=00c79024
+G3T074_CHILD idx=1000 linker=005e41dc
+G3T074_STRUCT idx=625 linker=005e41dc scriptnum=6 line=23410 textpos=485 scripttext=00000000 children=00c791fc
+G3T074_CHILD idx=998 linker=005e41dc
+G3T074_STRUCT idx=621 linker=005e41dc scriptnum=16 line=23226 textpos=482 scripttext=00000000 children=00c793d4
+G3T074_CHILD idx=13 linker=005e41dc
+G3T074_STRUCT idx=617 linker=005e41dc scriptnum=11 line=23107 textpos=481 scripttext=00000000 children=00c79844
+G3T074_CHILD idx=16 linker=005e41dc
+G3T074_STRUCT idx=1004 linker=005e41dc scriptnum=6 line=22964 textpos=480 scripttext=00000000 children=00c79bfc
+G3T074_CHILD idx=997 linker=005e41dc
+G3T074_STRUCT idx=1009 linker=005e41dc scriptnum=6 line=22646 textpos=478 scripttext=00000000 children=00c79dd4
+G3T074_CHILD idx=994 linker=005e41dc
+G3T074_STRUCT idx=614 linker=005e41dc scriptnum=11 line=22493 textpos=477 scripttext=00000000 children=00c7a05c
+G3T074_CHILD idx=253 linker=005e41dc
+G3T074_STRUCT idx=611 linker=005e41dc scriptnum=6 line=22356 textpos=476 scripttext=00000000 children=00c7a364
+G3T074_CHILD idx=272 linker=005e41dc
+G3T074_STRUCT idx=609 linker=005e41dc scriptnum=6 line=22272 textpos=473 scripttext=00000000 children=00c7a5ec
+G3T074_CHILD idx=20 linker=005e41dc
+G3T074_STRUCT idx=607 linker=005e41dc scriptnum=6 line=22217 textpos=472 scripttext=00000000 children=00c7a7c4
+G3T074_CHILD idx=19 linker=005e41dc
+G3T074_STRUCT idx=604 linker=005e41dc scriptnum=6 line=22141 textpos=469 scripttext=00000000 children=00c7a99c
+G3T074_CHILD idx=276 linker=005e41dc
+G3T074_STRUCT idx=600 linker=005e41dc scriptnum=11 line=22085 textpos=468 scripttext=00000000 children=00c7ac24
+G3T074_CHILD idx=22 linker=005e41dc
+G3T074_STRUCT idx=598 linker=005e41dc scriptnum=1 line=21976 textpos=465 scripttext=00000000 children=00c7afec
+G3T074_CHILD idx=599 linker=005e41dc
+G3T074_STRUCT idx=595 linker=005e41dc scriptnum=6 line=21927 textpos=464 scripttext=00000000 children=00c7b19c
+G3T074_CHILD idx=25 linker=005e41dc
+G3T074_STRUCT idx=592 linker=005e41dc scriptnum=11 line=21865 textpos=463 scripttext=00000000 children=00c7b424
+G3T074_CHILD idx=24 linker=005e41dc
+G3T074_STRUCT idx=587 linker=005e41dc scriptnum=21 line=21751 textpos=460 scripttext=00000000 children=00c7b72c
+G3T074_CHILD idx=659 linker=005e41dc
+G3T074_STRUCT idx=585 linker=005e41dc scriptnum=6 line=21512 textpos=458 scripttext=00000000 children=00c7506c
+G3T074_CHILD idx=29 linker=005e41dc
+G3T074_STRUCT idx=582 linker=005e41dc scriptnum=11 line=21452 textpos=457 scripttext=00000000 children=00c75244
+G3T074_CHILD idx=35 linker=005e41dc
+G3T074_STRUCT idx=846 linker=005e41dc scriptnum=16 line=21253 textpos=451 scripttext=00000000 children=00c7c444
+G3T074_CHILD idx=744 linker=005e41dc
+G3T074_STRUCT idx=578 linker=005e41dc scriptnum=11 line=20901 textpos=445 scripttext=00000000 children=00c7c964
+G3T074_CHILD idx=34 linker=005e41dc
+G3T074_STRUCT idx=574 linker=005e41dc scriptnum=11 line=20834 textpos=444 scripttext=00000000 children=00c7cd1c
+G3T074_CHILD idx=38 linker=005e41dc
+G3T074_STRUCT idx=570 linker=005e41dc scriptnum=11 line=20745 textpos=441 scripttext=00000000 children=00c7d0d4
+G3T074_CHILD idx=273 linker=005e41dc
+G3T074_STRUCT idx=566 linker=005e41dc scriptnum=11 line=20674 textpos=440 scripttext=00000000 children=00c7d48c
+G3T074_CHILD idx=40 linker=005e41dc
+G3T074_STRUCT idx=849 linker=005e41dc scriptnum=11 line=20579 textpos=437 scripttext=00000000 children=00c7d844
+G3T074_CHILD idx=741 linker=005e41dc
+G3T074_STRUCT idx=852 linker=005e41dc scriptnum=11 line=20422 textpos=434 scripttext=00000000 children=00c7db5c
+G3T074_CHILD idx=738 linker=005e41dc
+G3T074_STRUCT idx=858 linker=005e41dc scriptnum=1 line=20167 textpos=431 scripttext=00000000 children=00c7de74
+G3T074_CHILD idx=855 linker=005e41dc
+G3T074_STRUCT idx=864 linker=005e41dc scriptnum=11 line=20081 textpos=430 scripttext=00000000 children=00c7e02c
+G3T074_CHILD idx=732 linker=005e41dc
+G3T074_STRUCT idx=868 linker=005e41dc scriptnum=11 line=19967 textpos=429 scripttext=00000000 children=00c7e3fc
+G3T074_CHILD idx=728 linker=005e41dc
+G3T074_STRUCT idx=872 linker=005e41dc scriptnum=11 line=19861 textpos=428 scripttext=00000000 children=00c7e7cc
+G3T074_CHILD idx=724 linker=005e41dc
+G3T074_STRUCT idx=874 linker=005e41dc scriptnum=11 line=19783 textpos=427 scripttext=00000000 children=00c7eb9c
+G3T074_CHILD idx=720 linker=005e41dc
+G3T074_STRUCT idx=878 linker=005e41dc scriptnum=11 line=19682 textpos=426 scripttext=00000000 children=00c7ef6c
+G3T074_CHILD idx=716 linker=005e41dc
+G3T074_STRUCT idx=882 linker=005e41dc scriptnum=16 line=19582 textpos=422 scripttext=00000000 children=00c7f33c
+G3T074_CHILD idx=711 linker=005e41dc
+G3T074_STRUCT idx=886 linker=005e41dc scriptnum=11 line=19305 textpos=418 scripttext=00000000 children=00c7f7a4
+G3T074_CHILD idx=707 linker=005e41dc
+G3T074_STRUCT idx=1013 linker=005e41dc scriptnum=16 line=18771 textpos=408 scripttext=00000000 children=00c7fb5c
+G3T074_CHILD idx=988 linker=005e41dc
+G3T074_STRUCT idx=892 linker=005e41dc scriptnum=11 line=18578 textpos=405 scripttext=00000000 children=00c7ffc4
+G3T074_CHILD idx=704 linker=005e41dc
+G3T074_STRUCT idx=894 linker=005e41dc scriptnum=16 line=18350 textpos=401 scripttext=00000000 children=00c8037c
+G3T074_CHILD idx=699 linker=005e41dc
+G3T074_STRUCT idx=896 linker=005e41dc scriptnum=21 line=18018 textpos=395 scripttext=00000000 children=00c807e4
+G3T074_CHILD idx=693 linker=005e41dc
+G3T074_STRUCT idx=898 linker=005e41dc scriptnum=6 line=17842 textpos=393 scripttext=00000000 children=00c80cfc
+G3T074_CHILD idx=985 linker=005e41dc
+G3T074_STRUCT idx=1019 linker=005e41dc scriptnum=11 line=17745 textpos=390 scripttext=00000000 children=00c80f84
+G3T074_CHILD idx=982 linker=005e41dc
+G3T074_STRUCT idx=563 linker=005e41dc scriptnum=11 line=17381 textpos=385 scripttext=00000000 children=00c81eb4
+G3T074_CHILD idx=43 linker=005e41dc
+G3T074_STRUCT idx=560 linker=005e41dc scriptnum=6 line=17300 textpos=384 scripttext=00000000 children=00c77c94
+G3T074_CHILD idx=42 linker=005e41dc
+G3T074_STRUCT idx=557 linker=005e41dc scriptnum=6 line=17240 textpos=383 scripttext=00000000 children=00c77f1c
+G3T074_CHILD idx=269 linker=005e41dc
+G3T074_STRUCT idx=553 linker=005e41dc scriptnum=11 line=17170 textpos=382 scripttext=00000000 children=00c780a4
+G3T074_CHILD idx=45 linker=005e41dc
+G3T074_STRUCT idx=549 linker=005e41dc scriptnum=11 line=17093 textpos=381 scripttext=00000000 children=00c8236c
+G3T074_CHILD idx=49 linker=005e41dc
+G3T074_STRUCT idx=544 linker=005e41dc scriptnum=16 line=17016 textpos=380 scripttext=00000000 children=00c82724
+G3T074_CHILD idx=52 linker=005e41dc
+G3T074_STRUCT idx=540 linker=005e41dc scriptnum=16 line=16923 textpos=379 scripttext=00000000 children=00c82b8c
+G3T074_CHILD idx=281 linker=005e41dc
+G3T074_STRUCT idx=537 linker=005e41dc scriptnum=6 line=16589 textpos=375 scripttext=00000000 children=00c82ff4
+G3T074_CHILD idx=277 linker=005e41dc
+G3T074_STRUCT idx=903 linker=005e41dc scriptnum=11 line=16484 textpos=371 scripttext=00000000 children=00c8327c
+G3T074_CHILD idx=685 linker=005e41dc
+G3T074_STRUCT idx=905 linker=005e41dc scriptnum=11 line=16397 textpos=370 scripttext=00000000 children=00c83634
+G3T074_CHILD idx=681 linker=005e41dc
+G3T074_STRUCT idx=909 linker=005e41dc scriptnum=11 line=16310 textpos=369 scripttext=00000000 children=00c839ec
+G3T074_CHILD idx=677 linker=005e41dc
+G3T074_STRUCT idx=533 linker=005e41dc scriptnum=11 line=16214 textpos=367 scripttext=00000000 children=00c83da4
+G3T074_CHILD idx=280 linker=005e41dc
+G3T074_STRUCT idx=529 linker=005e41dc scriptnum=11 line=16141 textpos=366 scripttext=00000000 children=00c8415c
+G3T074_CHILD idx=57 linker=005e41dc
+G3T074_STRUCT idx=525 linker=005e41dc scriptnum=11 line=16068 textpos=365 scripttext=00000000 children=00c84514
+G3T074_CHILD idx=61 linker=005e41dc
+G3T074_STRUCT idx=521 linker=005e41dc scriptnum=11 line=15995 textpos=364 scripttext=00000000 children=00c848cc
+G3T074_CHILD idx=71 linker=005e41dc
+G3T074_STRUCT idx=517 linker=005e41dc scriptnum=11 line=15922 textpos=363 scripttext=00000000 children=00c84c84
+G3T074_CHILD idx=67 linker=005e41dc
+G3T074_STRUCT idx=513 linker=005e41dc scriptnum=11 line=15849 textpos=362 scripttext=00000000 children=00c8503c
+G3T074_CHILD idx=79 linker=005e41dc
+G3T074_STRUCT idx=509 linker=005e41dc scriptnum=11 line=15776 textpos=361 scripttext=00000000 children=00c853f4
+G3T074_CHILD idx=75 linker=005e41dc
+G3T074_STRUCT idx=505 linker=005e41dc scriptnum=11 line=15703 textpos=360 scripttext=00000000 children=00c7bd44
+G3T074_CHILD idx=87 linker=005e41dc
+G3T074_STRUCT idx=501 linker=005e41dc scriptnum=11 line=15616 textpos=359 scripttext=00000000 children=00c7c0fc
+G3T074_CHILD idx=83 linker=005e41dc
+G3T074_STRUCT idx=498 linker=005e41dc scriptnum=6 line=15505 textpos=356 scripttext=00000000 children=00c86324
+G3T074_CHILD idx=84 linker=005e41dc
+G3T074_STRUCT idx=493 linker=005e41dc scriptnum=16 line=15436 textpos=355 scripttext=00000000 children=00c865bc
+G3T074_CHILD idx=92 linker=005e41dc
+G3T074_STRUCT idx=490 linker=005e41dc scriptnum=6 line=15346 textpos=354 scripttext=00000000 children=00c86a44
+G3T074_CHILD idx=95 linker=005e41dc
+G3T074_STRUCT idx=485 linker=005e41dc scriptnum=21 line=15270 textpos=353 scripttext=00000000 children=00c86cd4
+G3T074_CHILD idx=100 linker=005e41dc
+G3T074_STRUCT idx=480 linker=005e41dc scriptnum=21 line=15162 textpos=352 scripttext=00000000 children=00c8715c
+G3T074_CHILD idx=106 linker=005e41dc
+G3T074_STRUCT idx=476 linker=005e41dc scriptnum=11 line=15054 textpos=351 scripttext=00000000 children=00c875e4
+G3T074_CHILD idx=111 linker=005e41dc
+G3T074_STRUCT idx=472 linker=005e41dc scriptnum=11 line=14973 textpos=350 scripttext=00000000 children=00c879b4
+G3T074_CHILD idx=114 linker=005e41dc
+G3T074_STRUCT idx=468 linker=005e41dc scriptnum=11 line=14892 textpos=349 scripttext=00000000 children=00c87d84
+G3T074_CHILD idx=118 linker=005e41dc
+G3T074_STRUCT idx=464 linker=005e41dc scriptnum=11 line=14815 textpos=348 scripttext=00000000 children=00c88154
+G3T074_CHILD idx=125 linker=005e41dc
+G3T074_STRUCT idx=460 linker=005e41dc scriptnum=11 line=14738 textpos=347 scripttext=00000000 children=00c88524
+G3T074_CHILD idx=122 linker=005e41dc
+G3T074_STRUCT idx=456 linker=005e41dc scriptnum=11 line=14658 textpos=346 scripttext=00000000 children=00c888ec
+G3T074_CHILD idx=129 linker=005e41dc
+G3T074_STRUCT idx=452 linker=005e41dc scriptnum=11 line=14578 textpos=345 scripttext=00000000 children=00c88cb4
+G3T074_CHILD idx=137 linker=005e41dc
+G3T074_STRUCT idx=448 linker=005e41dc scriptnum=11 line=14500 textpos=344 scripttext=00000000 children=00c8907c
+G3T074_CHILD idx=134 linker=005e41dc
+G3T074_STRUCT idx=444 linker=005e41dc scriptnum=11 line=14422 textpos=343 scripttext=00000000 children=00c89444
+G3T074_CHILD idx=141 linker=005e41dc
+G3T074_STRUCT idx=440 linker=005e41dc scriptnum=11 line=14344 textpos=342 scripttext=00000000 children=00c8980c
+G3T074_CHILD idx=149 linker=005e41dc
+G3T074_STRUCT idx=436 linker=005e41dc scriptnum=11 line=14267 textpos=341 scripttext=00000000 children=00c89bd4
+G3T074_CHILD idx=146 linker=005e41dc
+G3T074_STRUCT idx=911 linker=005e41dc scriptnum=6 line=14084 textpos=338 scripttext=00000000 children=00c89f9c
+G3T074_CHILD idx=674 linker=005e41dc
+G3T074_STRUCT idx=432 linker=005e41dc scriptnum=11 line=14013 textpos=337 scripttext=00000000 children=00c8a22c
+G3T074_CHILD idx=154 linker=005e41dc
+G3T074_STRUCT idx=430 linker=005e41dc scriptnum=1 line=13919 textpos=336 scripttext=00000000 children=00c8a5fc
+G3T074_CHILD idx=431 linker=005e41dc
+G3T074_STRUCT idx=426 linker=005e41dc scriptnum=16 line=13865 textpos=335 scripttext=00000000 children=00c8a7b4
+G3T074_CHILD idx=283 linker=005e41dc
+G3T074_STRUCT idx=1022 linker=005e41dc scriptnum=6 line=13717 textpos=334 scripttext=00000000 children=00c8ab84
+G3T074_CHILD idx=978 linker=005e41dc
+G3T074_STRUCT idx=423 linker=005e41dc scriptnum=6 line=13653 textpos=333 scripttext=00000000 children=00c8ae1c
+G3T074_CHILD idx=161 linker=005e41dc
+G3T074_STRUCT idx=1025 linker=005e41dc scriptnum=6 line=13536 textpos=332 scripttext=00000000 children=00c8b0b4
+G3T074_CHILD idx=975 linker=005e41dc
+G3T074_STRUCT idx=1028 linker=005e41dc scriptnum=6 line=13419 textpos=331 scripttext=00000000 children=00c8b344
+G3T074_CHILD idx=972 linker=005e41dc
+G3T074_STRUCT idx=1031 linker=005e41dc scriptnum=6 line=13298 textpos=330 scripttext=00000000 children=00c8b5d4
+G3T074_CHILD idx=969 linker=005e41dc
+G3T074_STRUCT idx=420 linker=005e41dc scriptnum=6 line=13235 textpos=329 scripttext=00000000 children=00c8b864
+G3T074_CHILD idx=162 linker=005e41dc
+G3T074_STRUCT idx=1035 linker=005e41dc scriptnum=11 line=13148 textpos=326 scripttext=00000000 children=00c8baf4
+G3T074_CHILD idx=965 linker=005e41dc
+G3T074_STRUCT idx=416 linker=005e41dc scriptnum=11 line=13072 textpos=325 scripttext=00000000 children=00c8bebc
+G3T074_CHILD idx=165 linker=005e41dc
+G3T074_STRUCT idx=412 linker=005e41dc scriptnum=11 line=12992 textpos=324 scripttext=00000000 children=00c8c2c4
+G3T074_CHILD idx=173 linker=005e41dc
+G3T074_STRUCT idx=408 linker=005e41dc scriptnum=11 line=12912 textpos=323 scripttext=00000000 children=00c8c694
+G3T074_CHILD idx=174 linker=005e41dc
+G3T074_STRUCT idx=404 linker=005e41dc scriptnum=11 line=12833 textpos=322 scripttext=00000000 children=00c8ca5c
+G3T074_CHILD idx=177 linker=005e41dc
+G3T074_STRUCT idx=400 linker=005e41dc scriptnum=11 line=12753 textpos=321 scripttext=00000000 children=00c8ce2c
+G3T074_CHILD idx=185 linker=005e41dc
+G3T074_STRUCT idx=396 linker=005e41dc scriptnum=11 line=12674 textpos=320 scripttext=00000000 children=00c8d1f4
+G3T074_CHILD idx=186 linker=005e41dc
+G3T074_STRUCT idx=392 linker=005e41dc scriptnum=11 line=12598 textpos=319 scripttext=00000000 children=00c8d5c4
+G3T074_CHILD idx=189 linker=005e41dc
+G3T074_STRUCT idx=388 linker=005e41dc scriptnum=11 line=12522 textpos=318 scripttext=00000000 children=00c8d98c
+G3T074_CHILD idx=197 linker=005e41dc
+G3T074_STRUCT idx=384 linker=005e41dc scriptnum=11 line=12446 textpos=317 scripttext=00000000 children=00c8dd54
+G3T074_CHILD idx=198 linker=005e41dc
+G3T074_STRUCT idx=380 linker=005e41dc scriptnum=11 line=12370 textpos=316 scripttext=00000000 children=00c8e11c
+G3T074_CHILD idx=201 linker=005e41dc
+G3T074_STRUCT idx=376 linker=005e41dc scriptnum=11 line=12293 textpos=315 scripttext=00000000 children=00c81034
+G3T074_CHILD idx=207 linker=005e41dc
+G3T074_STRUCT idx=372 linker=005e41dc scriptnum=11 line=12216 textpos=314 scripttext=00000000 children=00c81404
+G3T074_CHILD idx=204 linker=005e41dc
+G3T074_STRUCT idx=368 linker=005e41dc scriptnum=11 line=12140 textpos=313 scripttext=00000000 children=00c817d4
+G3T074_CHILD idx=210 linker=005e41dc
+G3T074_STRUCT idx=364 linker=005e41dc scriptnum=11 line=12064 textpos=312 scripttext=00000000 children=00c8f524
+G3T074_CHILD idx=220 linker=005e41dc
+G3T074_STRUCT idx=360 linker=005e41dc scriptnum=11 line=11989 textpos=311 scripttext=00000000 children=00c8f8ec
+G3T074_CHILD idx=221 linker=005e41dc
+G3T074_STRUCT idx=356 linker=005e41dc scriptnum=11 line=11913 textpos=310 scripttext=00000000 children=00c8fcbc
+G3T074_CHILD idx=228 linker=005e41dc
+G3T074_STRUCT idx=352 linker=005e41dc scriptnum=11 line=11838 textpos=309 scripttext=00000000 children=00c90084
+G3T074_CHILD idx=226 linker=005e41dc
+G3T074_STRUCT idx=349 linker=005e41dc scriptnum=6 line=11763 textpos=308 scripttext=00000000 children=00c9044c
+G3T074_CHILD idx=232 linker=005e41dc
+G3T074_STRUCT idx=344 linker=005e41dc scriptnum=16 line=11673 textpos=305 scripttext=00000000 children=00c906e4
+G3T074_CHILD idx=236 linker=005e41dc
+G3T074_STRUCT idx=339 linker=005e41dc scriptnum=16 line=11587 textpos=304 scripttext=00000000 children=00c90b4c
+G3T074_CHILD idx=240 linker=005e41dc
+G3T074_STRUCT idx=334 linker=005e41dc scriptnum=16 line=11501 textpos=303 scripttext=00000000 children=00c90fb4
+G3T074_CHILD idx=282 linker=005e41dc
+G3T074_STRUCT idx=630 linker=005e41dc scriptnum=11 line=11419 textpos=302 scripttext=00000000 children=00c9141c
+G3T074_CHILD idx=248 linker=005e41dc
+G3T074_STRUCT idx=326 linker=005e41dc scriptnum=11 line=11346 textpos=301 scripttext=00000000 children=00c917d4
+G3T074_CHILD idx=252 linker=005e41dc
+G3T074_STRUCT idx=324 linker=005e41dc scriptnum=1 line=11273 textpos=300 scripttext=00000000 children=00c91b8c
+G3T074_CHILD idx=325 linker=005e41dc
+G3T074_STRUCT idx=623 linker=005e41dc scriptnum=6 line=11218 textpos=299 scripttext=00000000 children=00c91d3c
+G3T074_CHILD idx=249 linker=005e41dc
+G3T074_STRUCT idx=619 linker=005e41dc scriptnum=6 line=11154 textpos=298 scripttext=00000000 children=00c91fc4
+G3T074_CHILD idx=257 linker=005e41dc
+G3T074_STRUCT idx=610 linker=005e41dc scriptnum=6 line=11090 textpos=297 scripttext=00000000 children=00c9224c
+G3T074_CHILD idx=14 linker=005e41dc
+G3T074_STRUCT idx=596 linker=005e41dc scriptnum=6 line=11026 textpos=296 scripttext=00000000 children=00c924d4
+G3T074_CHILD idx=18 linker=005e41dc
+G3T074_STRUCT idx=594 linker=005e41dc scriptnum=6 line=10962 textpos=295 scripttext=00000000 children=00c9275c
+G3T074_CHILD idx=264 linker=005e41dc
+G3T074_STRUCT idx=579 linker=005e41dc scriptnum=6 line=10898 textpos=294 scripttext=00000000 children=00c929e4
+G3T074_CHILD idx=26 linker=005e41dc
+G3T074_STRUCT idx=913 linker=005e41dc scriptnum=6 line=10834 textpos=293 scripttext=00000000 children=00c857ac
+G3T074_CHILD idx=671 linker=005e41dc
+G3T074_STRUCT idx=567 linker=005e41dc scriptnum=6 line=10770 textpos=292 scripttext=00000000 children=00c85a34
+G3T074_CHILD idx=36 linker=005e41dc
+G3T074_STRUCT idx=551 linker=005e41dc scriptnum=6 line=10706 textpos=291 scripttext=00000000 children=00c85cbc
+G3T074_CHILD idx=41 linker=005e41dc
+G3T074_STRUCT idx=538 linker=005e41dc scriptnum=6 line=10642 textpos=290 scripttext=00000000 children=00c85f44
+G3T074_CHILD idx=47 linker=005e41dc
+G3T074_STRUCT idx=530 linker=005e41dc scriptnum=11 line=10555 textpos=287 scripttext=00000000 children=00c93ba4
+G3T074_CHILD idx=54 linker=005e41dc
+G3T074_STRUCT idx=428 linker=005e41dc scriptnum=11 line=10481 textpos=286 scripttext=00000000 children=00c93f5c
+G3T074_CHILD idx=115 linker=005e41dc
+G3T074_STRUCT idx=321 linker=005e41dc scriptnum=11 line=10407 textpos=285 scripttext=00000000 children=00c94314
+G3T074_CHILD idx=245 linker=005e41dc
+G3T074_STRUCT idx=297 linker=005e41dc scriptnum=11 line=10333 textpos=284 scripttext=00000000 children=00c946cc
+G3T074_CHILD idx=268 linker=005e41dc
+G3T074_STRUCT idx=292 linker=005e41dc scriptnum=11 line=10259 textpos=283 scripttext=00000000 children=00c94a84
+G3T074_CHILD idx=278 linker=005e41dc
+G3T074_STRUCT idx=285 linker=005e41dc scriptnum=11 line=10189 textpos=282 scripttext=00000000 children=00c94e3c
+G3T074_CHILD idx=274 linker=005e41dc
+G3T074_STRUCT idx=289 linker=005e41dc scriptnum=11 line=10119 textpos=281 scripttext=00000000 children=00c951f4
+G3T074_CHILD idx=270 linker=005e41dc
+G3T074_STRUCT idx=301 linker=005e41dc scriptnum=11 line=10049 textpos=280 scripttext=00000000 children=00c955ac
+G3T074_CHILD idx=266 linker=005e41dc
+G3T074_STRUCT idx=298 linker=005e41dc scriptnum=11 line=9979 textpos=279 scripttext=00000000 children=00c95964
+G3T074_CHILD idx=262 linker=005e41dc
+G3T074_STRUCT idx=310 linker=005e41dc scriptnum=11 line=9909 textpos=278 scripttext=00000000 children=00c95d1c
+G3T074_CHILD idx=258 linker=005e41dc
+G3T074_STRUCT idx=313 linker=005e41dc scriptnum=11 line=9839 textpos=277 scripttext=00000000 children=00c960d4
+G3T074_CHILD idx=254 linker=005e41dc
+G3T074_STRUCT idx=287 linker=005e41dc scriptnum=11 line=9769 textpos=276 scripttext=00000000 children=00c9648c
+G3T074_CHILD idx=250 linker=005e41dc
+G3T074_STRUCT idx=322 linker=005e41dc scriptnum=11 line=9699 textpos=275 scripttext=00000000 children=00c96844
+G3T074_CHILD idx=246 linker=005e41dc
+G3T074_STRUCT idx=331 linker=005e41dc scriptnum=11 line=9629 textpos=274 scripttext=00000000 children=00c96bfc
+G3T074_CHILD idx=242 linker=005e41dc
+G3T074_STRUCT idx=340 linker=005e41dc scriptnum=11 line=9559 textpos=273 scripttext=00000000 children=00c96fb4
+G3T074_CHILD idx=238 linker=005e41dc
+G3T074_STRUCT idx=342 linker=005e41dc scriptnum=11 line=9489 textpos=272 scripttext=00000000 children=00c9736c
+G3T074_CHILD idx=234 linker=005e41dc
+G3T074_STRUCT idx=337 linker=005e41dc scriptnum=11 line=9419 textpos=271 scripttext=00000000 children=00c97724
+G3T074_CHILD idx=230 linker=005e41dc
+G3T074_STRUCT idx=347 linker=005e41dc scriptnum=6 line=9349 textpos=270 scripttext=00000000 children=00c97adc
+G3T074_CHILD idx=227 linker=005e41dc
+G3T074_STRUCT idx=353 linker=005e41dc scriptnum=16 line=9265 textpos=267 scripttext=00000000 children=00c97d64
+G3T074_CHILD idx=222 linker=005e41dc
+G3T074_STRUCT idx=358 linker=005e41dc scriptnum=11 line=9190 textpos=266 scripttext=00000000 children=00c981cc
+G3T074_CHILD idx=218 linker=005e41dc
+G3T074_STRUCT idx=357 linker=005e41dc scriptnum=11 line=9122 textpos=265 scripttext=00000000 children=00c98584
+G3T074_CHILD idx=214 linker=005e41dc
+G3T074_STRUCT idx=365 linker=005e41dc scriptnum=6 line=9018 textpos=264 scripttext=00000000 children=00c9893c
+G3T074_CHILD idx=211 linker=005e41dc
+G3T074_STRUCT idx=366 linker=005e41dc scriptnum=6 line=8930 textpos=261 scripttext=00000000 children=00c98bc4
+G3T074_CHILD idx=208 linker=005e41dc
+G3T074_STRUCT idx=362 linker=005e41dc scriptnum=6 line=8868 textpos=260 scripttext=00000000 children=00c98e4c
+G3T074_CHILD idx=205 linker=005e41dc
+G3T074_STRUCT idx=370 linker=005e41dc scriptnum=6 line=8806 textpos=259 scripttext=00000000 children=00c990d4
+G3T074_CHILD idx=202 linker=005e41dc
+G3T074_STRUCT idx=378 linker=005e41dc scriptnum=6 line=8744 textpos=258 scripttext=00000000 children=00c9935c
+G3T074_CHILD idx=199 linker=005e41dc
+G3T074_STRUCT idx=381 linker=005e41dc scriptnum=11 line=8682 textpos=257 scripttext=00000000 children=00c995e4
+G3T074_CHILD idx=195 linker=005e41dc
+G3T074_STRUCT idx=385 linker=005e41dc scriptnum=11 line=8613 textpos=256 scripttext=00000000 children=00c9999c
+G3T074_CHILD idx=191 linker=005e41dc
+G3T074_STRUCT idx=390 linker=005e41dc scriptnum=11 line=8544 textpos=255 scripttext=00000000 children=00c99d54
+G3T074_CHILD idx=187 linker=005e41dc
+G3T074_STRUCT idx=393 linker=005e41dc scriptnum=11 line=8473 textpos=254 scripttext=00000000 children=00c9a10c
+G3T074_CHILD idx=183 linker=005e41dc
+G3T074_STRUCT idx=397 linker=005e41dc scriptnum=11 line=8402 textpos=253 scripttext=00000000 children=00c9a4c4
+G3T074_CHILD idx=179 linker=005e41dc
+G3T074_STRUCT idx=402 linker=005e41dc scriptnum=11 line=8337 textpos=252 scripttext=00000000 children=00c9a87c
+G3T074_CHILD idx=175 linker=005e41dc
+G3T074_STRUCT idx=405 linker=005e41dc scriptnum=11 line=8272 textpos=251 scripttext=00000000 children=00c9ac34
+G3T074_CHILD idx=171 linker=005e41dc
+G3T074_STRUCT idx=409 linker=005e41dc scriptnum=11 line=8207 textpos=250 scripttext=00000000 children=00c9afec
+G3T074_CHILD idx=167 linker=005e41dc
+G3T074_STRUCT idx=414 linker=005e41dc scriptnum=11 line=8142 textpos=249 scripttext=00000000 children=00c9b3a4
+G3T074_CHILD idx=163 linker=005e41dc
+G3T074_STRUCT idx=293 linker=005e41dc scriptnum=11 line=8077 textpos=248 scripttext=00000000 children=00c9b75c
+G3T074_CHILD idx=159 linker=005e41dc
+G3T074_STRUCT idx=421 linker=005e41dc scriptnum=11 line=8012 textpos=247 scripttext=00000000 children=00c9bb14
+G3T074_CHILD idx=155 linker=005e41dc
+G3T074_STRUCT idx=427 linker=005e41dc scriptnum=11 line=7947 textpos=246 scripttext=00000000 children=00c9becc
+G3T074_CHILD idx=151 linker=005e41dc
+G3T074_STRUCT idx=429 linker=005e41dc scriptnum=11 line=7882 textpos=245 scripttext=00000000 children=00c9c284
+G3T074_CHILD idx=147 linker=005e41dc
+G3T074_STRUCT idx=433 linker=005e41dc scriptnum=11 line=7817 textpos=244 scripttext=00000000 children=00c9c63c
+G3T074_CHILD idx=143 linker=005e41dc
+G3T074_STRUCT idx=441 linker=005e41dc scriptnum=11 line=7752 textpos=243 scripttext=00000000 children=00c9c9f4
+G3T074_CHILD idx=139 linker=005e41dc
+G3T074_STRUCT idx=442 linker=005e41dc scriptnum=11 line=7687 textpos=242 scripttext=00000000 children=00c9cdac
+G3T074_CHILD idx=135 linker=005e41dc
+G3T074_STRUCT idx=445 linker=005e41dc scriptnum=11 line=7622 textpos=241 scripttext=00000000 children=00c9d164
+G3T074_CHILD idx=131 linker=005e41dc
+G3T074_STRUCT idx=453 linker=005e41dc scriptnum=11 line=7557 textpos=240 scripttext=00000000 children=00c9d51c
+G3T074_CHILD idx=127 linker=005e41dc
+G3T074_STRUCT idx=454 linker=005e41dc scriptnum=11 line=7492 textpos=239 scripttext=00000000 children=00c9d8d4
+G3T074_CHILD idx=123 linker=005e41dc
+G3T074_STRUCT idx=457 linker=005e41dc scriptnum=11 line=7427 textpos=238 scripttext=00000000 children=00c9dc8c
+G3T074_CHILD idx=119 linker=005e41dc
+G3T074_STRUCT idx=466 linker=005e41dc scriptnum=6 line=7362 textpos=237 scripttext=00000000 children=00c9e044
+G3T074_CHILD idx=116 linker=005e41dc
+G3T074_STRUCT idx=465 linker=005e41dc scriptnum=6 line=7304 textpos=236 scripttext=00000000 children=00c9e2cc
+G3T074_CHILD idx=113 linker=005e41dc
+G3T074_STRUCT idx=473 linker=005e41dc scriptnum=6 line=7221 textpos=233 scripttext=00000000 children=00c9e554
+G3T074_CHILD idx=110 linker=005e41dc
+G3T074_STRUCT idx=477 linker=005e41dc scriptnum=6 line=7158 textpos=232 scripttext=00000000 children=00c9e7dc
+G3T074_CHILD idx=107 linker=005e41dc
+G3T074_STRUCT idx=482 linker=005e41dc scriptnum=6 line=7095 textpos=231 scripttext=00000000 children=00c9ea64
+G3T074_CHILD idx=104 linker=005e41dc
+G3T074_STRUCT idx=481 linker=005e41dc scriptnum=6 line=7032 textpos=230 scripttext=00000000 children=00c9ecec
+G3T074_CHILD idx=101 linker=005e41dc
+G3T074_STRUCT idx=484 linker=005e41dc scriptnum=11 line=6969 textpos=229 scripttext=00000000 children=00c9ef74
+G3T074_CHILD idx=97 linker=005e41dc
+G3T074_STRUCT idx=489 linker=005e41dc scriptnum=11 line=6898 textpos=228 scripttext=00000000 children=00c9f32c
+G3T074_CHILD idx=93 linker=005e41dc
+G3T074_STRUCT idx=491 linker=005e41dc scriptnum=11 line=6827 textpos=227 scripttext=00000000 children=00c9f6e4
+G3T074_CHILD idx=89 linker=005e41dc
+G3T074_STRUCT idx=494 linker=005e41dc scriptnum=11 line=6756 textpos=226 scripttext=00000000 children=00c9fa9c
+G3T074_CHILD idx=85 linker=005e41dc
+G3T074_STRUCT idx=503 linker=005e41dc scriptnum=11 line=6663 textpos=223 scripttext=00000000 children=00c9fe54
+G3T074_CHILD idx=81 linker=005e41dc
+G3T074_STRUCT idx=502 linker=005e41dc scriptnum=11 line=6576 textpos=222 scripttext=00000000 children=00ca020c
+G3T074_CHILD idx=77 linker=005e41dc
+G3T074_STRUCT idx=511 linker=005e41dc scriptnum=11 line=6494 textpos=221 scripttext=00000000 children=00c8e69c
+G3T074_CHILD idx=73 linker=005e41dc
+G3T074_STRUCT idx=510 linker=005e41dc scriptnum=11 line=6407 textpos=220 scripttext=00000000 children=00c8ea54
+G3T074_CHILD idx=69 linker=005e41dc
+G3T074_STRUCT idx=519 linker=005e41dc scriptnum=11 line=6325 textpos=219 scripttext=00000000 children=00c8ee0c
+G3T074_CHILD idx=65 linker=005e41dc
+G3T074_STRUCT idx=515 linker=005e41dc scriptnum=6 line=6243 textpos=218 scripttext=00000000 children=00c8f0c4
+G3T074_CHILD idx=62 linker=005e41dc
+G3T074_STRUCT idx=1125 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00c8f3fc
+G3T074_CHILD idx=1127 linker=005e41dc
+G3T074_STRUCT idx=1126 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca1b8c
+G3T074_CHILD idx=1129 linker=005e41dc
+G3T074_STRUCT idx=53 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca1cec
+G3T074_CHILD idx=299 linker=005e41dc
+G3T074_STRUCT idx=32 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca209c
+G3T074_CHILD idx=308 linker=005e41dc
+G3T074_STRUCT idx=526 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca1f0c
+G3T074_CHILD idx=527 linker=005e41dc
+G3T074_STRUCT idx=558 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00c9b47c
+G3T074_CHILD idx=46 linker=005e41dc
+G3T074_STRUCT idx=934 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca25ac
+G3T074_CHILD idx=1096 linker=005e41dc
+G3T074_STRUCT idx=1048 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca243c
+G3T074_CHILD idx=1047 linker=005e41dc
+G3T074_STRUCT idx=1073 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca289c
+G3T074_CHILD idx=1070 linker=005e41dc
+G3T074_STRUCT idx=1083 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca2aac
+G3T074_CHILD idx=1082 linker=005e41dc
+G3T074_STRUCT idx=312 linker=005e41dc scriptnum=0 line=0 textpos=0 scripttext=00000000 children=00ca2c0c
+G3T074_CHILD idx=589 linker=005e41dc
+G3T074_STRUCT idx=2 linker=005e41dc scriptnum=0 line=-1 textpos=-1 scripttext=005e5894 children=006071c4
+G3T074_CHILD idx=1061 linker=005e41dc
+G3T074_STRUCT idx=11 linker=005e41dc scriptnum=6 line=2666 textpos=80 scripttext=00000000 children=00c92f7c
+G3T074_CHILD idx=954 linker=005e41dc
+G3T074_STRUCT idx=7 linker=005e41dc scriptnum=0 line=-1 textpos=-1 scripttext=00c7ca3c children=00c92dcc
+G3T074_CHILD idx=11 linker=005e41dc
+ModLoad: 5fa60000 5ffd1000   C:\Temp\UnrealDB\O06\Native-227k\System\Engine.DLL
+ModLoad: 75c20000 75c8a000   C:\WINDOWS\SysWOW64\WS2_32.dll
+ModLoad: 607e0000 60a1b000   C:\Temp\UnrealDB\O06\Native-227k\System\Editor.DLL
+ModLoad: 66f10000 66fa0000   C:\Temp\UnrealDB\O06\Native-227k\System\Window.dll
+ModLoad: 75d40000 75dfa000   C:\WINDOWS\SysWOW64\COMDLG32.dll
+ModLoad: 6c190000 6c221000   C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.26100.8521_none_cf9e08b68ea73d80\COMCTL32.dll
+ModLoad: 773a0000 77474000   C:\WINDOWS\SysWOW64\shcore.dll
+ModLoad: 76ee0000 76f33000   C:\WINDOWS\SysWOW64\SHLWAPI.dll
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+(3e40.8114): C++ EH exception - code e06d7363 (first chance)
+ModLoad: 74e60000 74e75000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+eax=00000000 ebx=775cc260 ecx=00000000 edx=00000000 esi=00000000 edi=00000000
+eip=7750861c esp=01d6f93c ebp=01d6fa10 iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+ntdll!NtTerminateProcess+0xc:
+7750861c c20800          ret     8
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

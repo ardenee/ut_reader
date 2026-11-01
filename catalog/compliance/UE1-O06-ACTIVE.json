@@ -1,7 +1,7 @@
 {
-  "contract": "g3-controlled-80-fixed-tests",
-  "stage": "G3-70PASS-1SOURCE_NA-9BLOCKED-T071_DONE_T076_SOURCE_ALREADY_LINKED_FIX",
-  "last_action": "T071 full source error/version ownership frozen PASS 330/330 over 64 accepted T001-T064 source-native evidence owners, no tests rerun. Separately corrected already accepted T076 Epic original GetPackageLinker GObj.Loaders existing-linker-first precedence over physical GSys.Paths, proven by TWO NEW real unmodified original stock v432 Core.dll x86 native sessions: after load genuine shipped v68 or v69 Detail, swapped runtime Paths and second actual UObject::LoadPackage returned SAME UPackage and SAME materialized texture pointers. Production PdoUedb5PhysicalProviderSelector reads evidenced loaded_linkers inside same authoritative game/consumer classic runtime context before physical mount order, validates indexed same-game identity, rejects invalid identity; no fake inferred historical loaded state. 28/28 independent SHA/source/native PASS, PHP physical provider selector all cases PASS, original prior PHP/source frozen closure acceptance SHAs preserved as literal historical snapshots, 446 pinned frozen paths zero drift. DEV GitHub only, PRD unchanged, 70 PASS/1SOURCE_NA/9BLOCKED.",
-  "next_step": "Focus remaining substantive owner G3 T065 original C98 genuine v34 physical ULinkerLoad cursor and other source method branches, T072 C98 actual loaded Core/Engine/property, T073 469f/v432 source method union, T074 C227i/k distinct compiled method union, T075 full source type native pointers and member offsets. T077-T080 release ineligible. Do not rerun existing T071 owner proofs or T076 2 native existing linker tests, previous 20 shipped, six original C227 mount cases, and 5 C98 native source search cases.",
-  "updated_at_utc": "2026-11-01T15:12:42+00:00"
+  "contract": "G3-T074",
+  "stage": "G3-70PASS-1NA-9BLOCKED",
+  "last_action": "Original compiled C227k 1051 Field, 753 Property, 271 Struct saved-versus-loaded results accepted as new T074/T075 evidence, two real ScriptText linked pointer identities observed, original 2012 evidence not rerun, no frozen owner promoted.",
+  "next_step": "Continue original source-specific pending T065 T072 T073 T074 T075; final T077-T080 remain blocked. No PRD deployment.",
+  "updated_at_utc": "2026-11-01T15:47:14+00:00"
 }

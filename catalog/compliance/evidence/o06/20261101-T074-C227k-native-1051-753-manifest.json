@@ -1,0 +1,126 @@
+{
+  "schema": "UE1-G3-T074-2026-original-native-direct-field-property-v1",
+  "date": "2026-11-01",
+  "frozen_owner": "T074",
+  "related_owner": "T075",
+  "source_profile": "unreal-v227k",
+  "decision": "NEW_ORIGINAL_COMPILED_ENGINE_RUNTIME_DATA_VERIFIED_G3_T074_REMAINS_BLOCKED",
+  "complete_T074": false,
+  "complete_T075": false,
+  "native_method_loads": {
+    "UField": 1051,
+    "UProperty": 753,
+    "all_actual_loader_callbacks_linked_to_one_genuine_Core_u": true,
+    "original_archive_version": 69,
+    "original_licensee_version": 227,
+    "package_exports": 1142,
+    "nonnull_SuperField": 3,
+    "nonnull_Next": 777,
+    "new_php_comparison_assertions": 11936,
+    "mismatches": 0
+  },
+  "native_source_method_disassembly": {
+    "UField::Serialize": "actual 227k disassembly UField+0x83 after reference load; member refs this+0x30,+0x34",
+    "UProperty::Serialize": "actual 227k disassembly UProperty+0x97; dimension this+0x3c and flags this+0x44",
+    "object_linker_fields": "original 2026 SDK UObject _Linker this+0x0c and _LinkerIndex this+0x14; not the 2012 ABI"
+  },
+  "scope_warning": "Observed 1051 field and 753 property original Core.u instances with 227k compiled Core.dll, not every 227k serialized class/method or C227i equivalence. Actual 2012 native evidence NOT reexecuted. Do not promote frozen T074/T075.",
+  "authentic_runtime": {
+    "Core.dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+      "location": "absolute",
+      "bytes": 1286008,
+      "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+    },
+    "Core.u": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.u",
+      "location": "absolute",
+      "bytes": 103686,
+      "sha256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+    },
+    "UCC.exe": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\UCC.exe",
+      "location": "absolute",
+      "bytes": 240504,
+      "sha256": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a"
+    }
+  },
+  "source_headers": {
+    "UnObjBas.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnObjBas.h",
+      "location": "absolute",
+      "bytes": 59461,
+      "sha256": "f933b807aa9dbffc14a08c409b89446839121ac20310bb8926dbbff6fbbd0f13"
+    },
+    "UnClass.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnClass.h",
+      "location": "absolute",
+      "bytes": 16809,
+      "sha256": "5d55442733113af569e97540f60bdc3e5d35e480baeca0e29aedf0696dc304ae"
+    }
+  },
+  "current_reader": {
+    "CatalogUE1ClassicNativeObjectReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+      "location": "repo",
+      "bytes": 50490,
+      "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714"
+    },
+    "CatalogUE1ClassicStructNativeReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+      "location": "repo",
+      "bytes": 10388,
+      "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"
+    },
+    "CatalogUE1ClassicClassMetadataReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+      "location": "repo",
+      "bytes": 20596,
+      "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4"
+    },
+    "CatalogUE1ClassicTaggedPropertyReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+      "location": "repo",
+      "bytes": 83187,
+      "sha256": "7fefdfc3b82d08c0daea8203f615992782daa1574ac587d85f0468c1ac57f7b8"
+    },
+    "CatalogUE1ClassicSourceFamily.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicSourceFamily.php",
+      "location": "repo",
+      "bytes": 13317,
+      "sha256": "dd52b3c9cdf5e18d83ebe7341b74780e5c96e0fc8ccdf728882da2b05f0c911e"
+    }
+  },
+  "evidence": {
+    "native_debugger_script": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-original-compiled-native-fields.cmd",
+      "location": "repo",
+      "bytes": 790,
+      "sha256": "66057c49f1e038f775bc619e6b21f38f90eae5887880d78453314acfa1354c55"
+    },
+    "native_compiled_load_trace": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-original-compiled-native-fields.log",
+      "location": "repo",
+      "bytes": 204585,
+      "sha256": "b3a1e468191cd875bfb3a23579fd64a7a44211df2ec47c62fc9e098ff3d1b413"
+    },
+    "original_method_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-original-compiled-method-disassembly.txt",
+      "location": "repo",
+      "bytes": 12884,
+      "sha256": "bb849c46f01f6a4df83800a52c563d2d308448c02b086b0c15d79fa215603e4f"
+    },
+    "DEV_11936_pass_json": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-native-11936-PASS.json",
+      "location": "repo",
+      "bytes": 882,
+      "sha256": "77e9566ab0a0160f068b2776d8ce01ade2bee6b37d5ab3a09f96b2c5488b18a8"
+    }
+  },
+  "focused_verifier": {
+    "path": "catalog/bin/verify-ue1-o06-g3-t074-2026-c227k-native-field-property.php",
+    "location": "repo",
+    "bytes": 7501,
+    "sha256": "6176e353f212356dbaea6957f65937e78b571852c4014eacf44ef37367f46a1d"
+  }
+}

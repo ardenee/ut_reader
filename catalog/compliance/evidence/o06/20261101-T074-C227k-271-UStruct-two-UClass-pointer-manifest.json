@@ -1,0 +1,142 @@
+{
+  "schema": "UE1-G3-T074-2026-original-native-UStruct-and-two-linked-UClass-scripttext-v1",
+  "date": "2026-11-01",
+  "frozen_owner": "T074",
+  "related_owner": "T075",
+  "source_profile": "unreal-v227k",
+  "decision": "271_NEW_ORIGINAL_COMPILED_NATIVE_UStruct_REFS_PARITY_VERIFIED_G3_T074_T075_REMAIN_BLOCKED",
+  "complete_T074": false,
+  "complete_T075": false,
+  "native_method_loads": {
+    "UStruct": 271,
+    "non_null_Children": 265,
+    "runtime_linked_UClass_ScriptText": 2,
+    "source_scripttext_archive_reference_ids": [
+      587,
+      655
+    ],
+    "actual_native_target_export_indices": [
+      586,
+      654
+    ],
+    "original_archive_version": 69,
+    "original_licensee_version": 227,
+    "package_exports": 1142,
+    "mismatches": 0
+  },
+  "native_source_method_disassembly": {
+    "UStruct::Serialize": "Original 227k UStruct+0x24c after archive; C227k memory layout ScriptText this+0x3c, Children this+0x40, decoded Script.Num this+0x58, TextPos this+0x78 and Line this+0x7c; no local FName=global FName equivalence",
+    "two_pointer_oracles": "Separate fresh native CDB session actual original UClass export2 and7 deref ScriptText at this+0x3c. Both same original Core.u linker, saved compact positive export index +1 exact 587,655. Pointers are process-local, never persisted as archive values."
+  },
+  "scope_warning": "271 original 2026 compiled 227k UStruct loads are distinct from 2012 already accepted compiled 227i 237 records. The original CDB sessions for nonnull ScriptText target capture add only previously unproved pointer target identities. Entire 227k method family and C227i-k delta remain unverified; no frozen T074/T075 promotion.",
+  "authentic_runtime": {
+    "Core.dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+      "location": "absolute",
+      "bytes": 1286008,
+      "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+    },
+    "Core.u": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.u",
+      "location": "absolute",
+      "bytes": 103686,
+      "sha256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+    },
+    "UCC.exe": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\UCC.exe",
+      "location": "absolute",
+      "bytes": 240504,
+      "sha256": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a"
+    }
+  },
+  "source_headers": {
+    "UnObjBas.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnObjBas.h",
+      "location": "absolute",
+      "bytes": 59461,
+      "sha256": "f933b807aa9dbffc14a08c409b89446839121ac20310bb8926dbbff6fbbd0f13"
+    },
+    "UnClass.h": {
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnClass.h",
+      "location": "absolute",
+      "bytes": 16809,
+      "sha256": "5d55442733113af569e97540f60bdc3e5d35e480baeca0e29aedf0696dc304ae"
+    }
+  },
+  "current_reader": {
+    "CatalogUE1ClassicNativeObjectReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+      "location": "repo",
+      "bytes": 50490,
+      "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714"
+    },
+    "CatalogUE1ClassicStructNativeReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+      "location": "repo",
+      "bytes": 10388,
+      "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"
+    },
+    "CatalogUE1ClassicClassMetadataReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+      "location": "repo",
+      "bytes": 20596,
+      "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4"
+    },
+    "CatalogUE1ClassicTaggedPropertyReader.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+      "location": "repo",
+      "bytes": 83187,
+      "sha256": "7fefdfc3b82d08c0daea8203f615992782daa1574ac587d85f0468c1ac57f7b8"
+    },
+    "CatalogUE1ClassicSourceFamily.php": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicSourceFamily.php",
+      "location": "repo",
+      "bytes": 13317,
+      "sha256": "dd52b3c9cdf5e18d83ebe7341b74780e5c96e0fc8ccdf728882da2b05f0c911e"
+    }
+  },
+  "evidence": {
+    "struct_native_debugger_script": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-original-UStruct-native.cmd",
+      "location": "repo",
+      "bytes": 407,
+      "sha256": "232faee24c00601947e2e07201ac00462c3d95eed59321c363f2064ee8f54d13"
+    },
+    "struct_native_load_trace": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-original-UStruct-native.log",
+      "location": "repo",
+      "bytes": 48329,
+      "sha256": "31380d2fb9447640d109730960d5c818bab93bdc9bc6ff02a95085bdbed732b1"
+    },
+    "two_loaded_scripttext_target_debugger_script": {
+      "path": "catalog/compliance/evidence/o06/20261101-T075-C227k-two-linked-UClass-ScriptText.cmd",
+      "location": "repo",
+      "bytes": 314,
+      "sha256": "2643c4728eaffec289634f9200f4f475e70c1e94b60af4cf47fc165d3d7b7ee6"
+    },
+    "two_loaded_scripttext_target_trace": {
+      "path": "catalog/compliance/evidence/o06/20261101-T075-C227k-two-linked-UClass-ScriptText.log",
+      "location": "repo",
+      "bytes": 8085,
+      "sha256": "db63e7fb549a8af87156934fd423665ccd0ac95757d7fdd218d7ac27e05cdc0f"
+    },
+    "compiled_UStruct_method_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-original-UStruct-disassembly.txt",
+      "location": "repo",
+      "bytes": 39066,
+      "sha256": "7bb761b4c5232dc2591c6f78558be935938ad0b011b818032433a6a4defaf512"
+    },
+    "DEV_struct_271_PASS_json": {
+      "path": "catalog/compliance/evidence/o06/20261101-T074-C227k-native-271-UStruct-PASS.json",
+      "location": "repo",
+      "bytes": 502,
+      "sha256": "fa13587967112b8b70c698015602db6cd5f5afd75d52dd57f76ba91e2b152564"
+    }
+  },
+  "focused_verifier": {
+    "path": "catalog/bin/verify-ue1-o06-g3-t074-2026-c227k-native-271-structs.php",
+    "location": "repo",
+    "bytes": 5981,
+    "sha256": "fc997dd7b039b1db2b56b488af1b1fd31dade912b52801e7463ed2bead320d85"
+  }
+}
