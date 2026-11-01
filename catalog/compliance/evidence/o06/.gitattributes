@@ -20,3 +20,6 @@
 # Original C227i/C227k stock UCC binary log outcomes plus C98 old UnrealGold map bootstrap.
 20261101-G3-T065-T071-T074-* -text
 20261101-G3-T065-original-C98-* -text
+
+# T065 preserve historical C98 reader CRLF source, four original 1998 method logs/source exactly.
+20261101-G3-T065-* -text

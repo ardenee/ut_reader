@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """T065 original C98/UT99 11 source version gate ownership, no native rerun.
-Explicit 1998 v34 unknown object tag vs PHP v35-only compatibility
-mismatch remains UNPROVEN as original runtime; do not silently pass.
+Four compiled original 1998 C98 direct UStruct method dispatches verified and
+current v34/v35 unknown object source reader corrected. Genuine original v34
+package physical FArchive cursor still unverified; do not silently pass.
 """
 from pathlib import Path
 import json,hashlib,collections,re,sys
@@ -46,19 +47,19 @@ checks={
  'T99_PackageHeritage_v<68':"if ($version < 68)" in pkg,
  'C98_UClass_tail_two_FName_v<57':"if($version<57 && $family===CatalogUE1ClassicSourceFamily::EPIC_UE1)" in cm,
  'C98_original_unknown_ObjectProperty_archive_v<36':
-   'elseif($version===35 && ($type===5||$type===8) && $tagSize===4)' in t
+   '&&$version<36&&$type===5' in t and 'native_C98_lt36_unknown_object_reference_skip' in t
 }
 for key,present in checks.items():ck(present,'current reader source audit anchor '+key)
 original=Path(r'L:\Source\Games\Unreal\Unreal [v1.200] [1998-05-19]\Core\Src\UnClass.cpp').read_text(encoding='latin1')
 ck('if( Ar.Ver()<36 && Tag.Type==NAME_ObjectProperty )' in original,'original C98 source <36 unknown object branch applies to v34 and v35')
-ck('elseif($version===35 && ($type===5||$type===8) && $tagSize===4)' in t,
-   'CURRENT reader v35-only historical compatibility is NOT a complete original <36 source gate')
-ck('elseif($version<36 &&' not in t,'DO NOT misreport v34 original unknown object branch as handled by current reader')
+ck('&&$version<36&&$type===5' in t and 'native_C98_lt36_unknown_object_reference_skip' in t,
+   'current source-selected original C98 v34/v35 unknown ObjectProperty branch now gated by known rejected declarations')
+ck('&&$sourceDeclarations!==null' in t and '&&$version===35&&$type===5&&$tagSize===4' in t,'C98 reader separates original native unknown-object skip with declarations from archive-only version35 compatibility')
 boundary={
  'original_cpp_v34_v35_unknown_object_branch':'Ar.Ver()<36 and Tag.Type==NAME_ObjectProperty on UNKNOWN/INVALID property only; original C98 source',
- 'actual_current_ue1_tagged_reader':'version===35 and type5|8 tagSize4, irrespective of explicit source unknown/invalid property',
- 'finding':'POTENTIAL_SOURCE_PARITY_DEFECT: version34 physical compact archive unknown-property branch not source-mapped, and classproperty type8 assumption beyond C98 condition. Needs real stock C98 source-compatible v34 fixture and archive-cursor native proof before changing byte reader.',
- 'native_original_v34_loader_accepted':False,'native_original_v35_loader_accepted_for_this_branch':False,
+ 'actual_current_ue1_tagged_reader':'source-family C98 version<36, ObjectProperty only, available invalid/unmatched declaration; native compiled branch verified separately; old v35 preview without schema remains archive-only',
+ 'finding':'SCOPED SOURCE BUG FIXED: actual unmodified original 1998 compiled UStruct::SerializeTaggedProperties dispatch v34/v35 ObjectProperty ref read, v35 ClassProperty/v36 ObjectProperty raw skip; 47/47 source+archive reader checks PASS. Genuine retail v34 package physical loader cursor not proven; T065 still blocked for other method source gates.',
+ 'native_original_v34_loader_accepted':False,'native_original_v35_loader_accepted_for_this_branch':False,'original_1998_compiled_direct_method_dispatch_4_gates_verified':True,
  'original_compiled_stock_v432_v60_64_UFunction_source_gate_ALREADY_PASS_T011':True,
  'T065_status':'BLOCKED'
 }
@@ -72,8 +73,8 @@ out={'ok':not fail,'read_only_source_gate_checks':checked,'errors':fail,
  'unproven_old_C98_version34_branch':boundary,
  'no_original_native_tests_rerun':True,
  'full_T065_ACCEPTED':False,
- 'other_missing_T065_native_cursors':'C98 v34/v35 ObjectProperty unknown skip, C98 UClass <57 FNames, UT99 UClass/property <=61 before/after, C227i/k distinct build-selected native CDO/method branch cursors'}
-dest=base/'20261031-G3-T065-original-11-C98-UT99-source-gates-v34-gap.json'
+ 'other_missing_T065_native_cursors':'genuine v34 package physical ULinkerLoad cursor; C98 UClass <57 FNames, UT99 UClass/property <=61 before/after, C227i/k distinct build-selected native CDO/method branch cursors'}
+dest=base/'20261101-G3-T065-original-11-C98-UT99-source-gates-after-v34-native-fix.json'
 dest.write_text(json.dumps(out,indent=2)+'\n',encoding='utf-8')
 print(json.dumps({k:v for k,v in out.items() if k not in ('original_5_current_PHP_reader_SHA256','original_C98_T99_source_SHA256','source_guard_anchor_check_results')},indent=2))
 sys.exit(0 if not fail else 1)

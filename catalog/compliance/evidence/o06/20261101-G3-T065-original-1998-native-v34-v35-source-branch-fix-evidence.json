@@ -1,0 +1,66 @@
+{
+  "fixed_owner": "T065",
+  "status": "BLOCKED: full original C98/v432/227 method branch union not complete",
+  "source_old_SHA256": "b8061976bd194b1278b778b1fea6eaa2232ea3e528fa4b6134248e8c0c7b7d03",
+  "source_new_SHA256": "7fefdfc3b82d08c0daea8203f615992782daa1574ac587d85f0468c1ac57f7b8",
+  "original_1998_C98_Cpp_UnClass_cpp_SHA256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291",
+  "original_1998_compiled_Core_DLL_SHA256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+  "original_Core_DLL_unchanged": true,
+  "source_1998_native_CPP_1998_method_observer_executable_SHA256": "d953f6c7835619c9edd84a61e1f4a759005f9e4bdb2f133fc78c9ea38483a9c7",
+  "1998_compiler_old_header_compatibility_only": "copied 1998 Core/Inc headers into DEV C:/Temp, adapted old MSVC typedef, overload and for-loop scopes for VS18. No canonical Epic source/DLL modified.",
+  "native_compiled_executable_process_exit": 3221226505,
+  "compiled_original_four_archive_method_calls_returned_before_process_exit": true,
+  "controlled_archive_original_native_observed_cases": [
+    {
+      "version": 34,
+      "tag_type": "ObjectProperty",
+      "native_ref_virtual_calls": 1,
+      "native_serialized_raw_bytes": 1,
+      "native_archive_cursor": 4
+    },
+    {
+      "version": 35,
+      "tag_type": "ObjectProperty",
+      "native_ref_virtual_calls": 1,
+      "native_serialized_raw_bytes": 1,
+      "native_archive_cursor": 4
+    },
+    {
+      "version": 35,
+      "tag_type": "ClassProperty",
+      "native_ref_virtual_calls": 0,
+      "native_serialized_raw_bytes": 5,
+      "native_archive_cursor": 7
+    },
+    {
+      "version": 36,
+      "tag_type": "ObjectProperty",
+      "native_ref_virtual_calls": 0,
+      "native_serialized_raw_bytes": 5,
+      "native_archive_cursor": 7
+    }
+  ],
+  "original_method_vs_generated_current_reader_assertions": 47,
+  "original_11_source_gate_readonly_source_assertions": 35,
+  "prior_full_original_C98_v34_package_load_native_cursor_still_missing": true,
+  "physical_Archive_cursor_source": "controlled FArchive test double, NOT original retail package FArchiveFileReader",
+  "real_original_v35_and_v34_header_derivative_DProj_whole_package_attempts_result": "original load path reached but crashed with access violation 0xC0000005; not accepted native loaded values",
+  "previous_68_PASS_original_compiled_native_tests_not_reexecuted": true,
+  "read_only_source_cpp_observer_original_log_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-1998-C98-four-UStruct-source-native-methods.log",
+      "sha256": "46f5502faa1f392c95254b1154a742ee3d0a16239304bcae423e70795ddc1d37",
+      "bytes": 418
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-source-1998-C98-four-UStruct-native-method-observer.cpp",
+      "sha256": "3636df18ca5c170fa6ac8b186d06c8e2a63719a50f4c0fb96c7f4438db1ace19",
+      "bytes": 2120
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-source-1998-C98-four-UStruct-native-method-compiler.log",
+      "sha256": "ca20aeffef23cc5ba0e6f4c599746b4731aa7ebb8d834313a897cf7a70c9a7aa",
+      "bytes": 19814
+    }
+  ]
+}

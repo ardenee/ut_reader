@@ -188,7 +188,7 @@ final class CatalogUE1ClassicTaggedPropertyReader
                     &&$family===CatalogUE1ClassicSourceFamily::UT99_V432){
                     $loadPolicy='native_warning_skip_invalid_tag_type';
                 }
-                $legacyRef=null;$arrayDecoded=null;
+                $legacyRef=null;$nativeC98UnknownObjectSkipped=false;$arrayDecoded=null;
                 $anyDecoded=null;
                 $legacyFixedStringRisk=null;
                 // Genuine UE1 v35 package evidence (DProj*, Palette tag):
@@ -427,7 +427,34 @@ final class CatalogUE1ClassicTaggedPropertyReader
                         $legacyFixedStringRisk=
                             'v432 native fixed StringProperty Temp[255] out-of-bounds write';
                     }
-                }elseif($version===35 && ($type===5||$type===8) && $tagSize===4){
+                }elseif($family===CatalogUE1ClassicSourceFamily::EPIC_UE1
+                    &&$version<36&&$type===5
+                    &&$sourceDeclarations!==null
+                    &&(!is_array($declaration)
+                        ||strtolower((string)($declaration['kind']??''))
+                            !=='objectproperty'
+                        ||$arrayIndex<0
+                        ||$arrayIndex>=(int)($declaration['array_dim']??0)
+                        ||(((int)($declaration['property_flags']??0))
+                            &0x00003000)!==0)){
+                    // Genuine compiled original May-1998 Core.dll:
+                    // UStruct::SerializeTaggedProperties only enters this
+                    // branch for an unknown/invalid ObjectProperty tag when
+                    // Ar.Ver()<36. Native C98 method observed v34/v35 object
+                    // ref read, versus v35 ClassProperty/v36 ObjectProperty
+                    // four-byte raw skips. Tag.Size is NOT the reference
+                    // read width. An unavailable property schema cannot
+                    // establish that a tag was rejected by the engine.
+                    [$legacyRef,$raw]=$readLinkerIndex();
+                    $validateLinkerIndex($legacyRef,'object');
+                    $nativeC98UnknownObjectSkipped=true;
+                    $loadPolicy='native_C98_lt36_unknown_object_reference_skip';
+                }elseif($family===CatalogUE1ClassicSourceFamily::EPIC_UE1
+                    &&$version===35&&$type===5&&$tagSize===4
+                    &&$sourceDeclarations===null){
+                    // Archive-only legacy v35 package compatibility. Without
+                    // a property declaration this is a compact index preview
+                    // only; never claim the original engine took a skip path.
                     $legacyRef=$compact();
                     $raw='';
                 }elseif($loadPolicy==='native_source_property_SerializeItem'
@@ -800,6 +827,11 @@ final class CatalogUE1ClassicTaggedPropertyReader
                 if(str_starts_with($loadPolicy,'native_warning_skip')){
                     // Keep the raw archived tag and its SHA, but never
                     // present skipped bytes as a native loaded value.
+                }elseif($nativeC98UnknownObjectSkipped){
+                    // The original engine discards the reference; it does NOT
+                    // assign the decoded object to a native property value.
+                    $valueKind='epic_skipped_unknown_object_reference';
+                    $value=null;
                 }elseif($anyDecoded!==null){
                     $value=$anyDecoded['value'];
                     $valueKind=$anyDecoded['value_kind'];

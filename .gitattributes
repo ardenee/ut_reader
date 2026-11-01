@@ -141,3 +141,7 @@ catalog/bin/verify-ue1-o06-g3-t073-t075-t076-five-shipped-20-native.py -text
 
 # C227i/C227k original 2012 versus 2026 source-real 56 generated BMP byte parity verifier.
 catalog/bin/verify-ue1-o06-g3-t074-12-native-227i-227k-56-bmp.py -text
+
+# C98 real May1998 original compiled native method source parity correction verifier bytes.
+catalog/bin/verify-ue1-o06-g3-t065-source-family-11-branches-legacy-v34-gap.py -text
+catalog/bin/verify-ue1-o06-g3-t065-original-C98-v34-v35-source-method.php -text
