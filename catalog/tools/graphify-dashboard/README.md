@@ -73,12 +73,3 @@ The DEV temporary-port smoke validation tests JSON status, source counts,
 original graph routes, Host rejection, no POST command endpoint and rebuilt UI.
 Use the project's O06 evidence, AGENTS.md and custom Epic-parity skill for
 authoritative development/acceptance decisions.
-## Per-project GitDiagram on DEV
-
-The versioned `Build-Dashboard.py` discovers the local `project.json` source folder for every card, asks `GitHub-Remote.py` for the actual Git `remote.origin.url`, and links a supported `github.com/owner/repo` remote to the **local** GitDiagram instance at `http://127.0.0.1:3001/owner/repo`. The **GitDiagram** link appears immediately after **Refresh command**. Non-GitHub remotes, sources without Git metadata, and unrelated/untracked directories below another repository root show a disabled GitDiagram button; no URL is fabricated. A nested tracked folder legitimately belonging to its parent Git repository links to that parent. HTTPS and SSH GitHub origins and `.git` worktree files are supported.
-
-This link navigates to the self-hosted GitDiagram interface; it does not upload local files, convert the local folder into a GitHub repository, or configure GitDiagram's AI/storage credentials. GitDiagram analyzes the GitHub copy of the linked repository. The global companion link/menu and card buttons survive `Build-Dashboard.py` regeneration. Use the existing installer `-ReplaceHostScripts` switch to restore the versioned builder; `GitHub-Remote.py` is installed without replacing host scripts.
-
-### GitDiagram local generation prerequisite
-
-The local GitDiagram page can open even when diagram generation is unavailable. The local readiness endpoint http://127.0.0.1:3001/api/healthz returned HTTP 503: configuration=false, provider=false, both storage checks=false, redis=false. This is a missing external-service configuration, not a Graphify Git remote or URL error. Configure GitDiagram/.env.local from its .env.example with AI provider credentials, Cloudflare R2 public/private storage and Upstash Redis, then restart GitDiagram. Never commit populated .env.local or API credentials. The local GitDiagram app reads the corresponding GitHub repository, not uncommitted local source changes.

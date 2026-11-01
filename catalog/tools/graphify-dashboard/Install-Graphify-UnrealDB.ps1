@@ -16,8 +16,7 @@ $root = (Resolve-Path -LiteralPath $GraphifyRoot).Path
 $source = $PSScriptRoot
 $backups = Join-Path 'C:\Temp\Graphify-backups' (Get-Date -Format 'yyyyMMdd-HHmmss')
 $extensions = @('UnrealDB-Status.py','UnrealDB-Dashboard.html',
-                'UnrealDB-Dashboard.css','UnrealDB-Dashboard.js','GitHub-Remote.py',
-                'Start-GitDiagram.ps1','Test-GitHub-Remote.py')
+                'UnrealDB-Dashboard.css','UnrealDB-Dashboard.js')
 $hosts = @('Build-Dashboard.py','Local-Dashboard-Server.py')
 $allFiles = @($extensions)
 if($ReplaceHostScripts){$allFiles += $hosts}

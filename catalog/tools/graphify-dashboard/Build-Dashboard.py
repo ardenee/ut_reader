@@ -12,9 +12,6 @@ ROOT = Path(__file__).resolve().parent
 MASTER_SPEC=importlib.util.spec_from_file_location('graphify_masters',ROOT/'Project-Masters.py')
 MASTER_LIB=importlib.util.module_from_spec(MASTER_SPEC)
 MASTER_SPEC.loader.exec_module(MASTER_LIB)
-GITHUB_SPEC=importlib.util.spec_from_file_location("graphify_github_remote",ROOT/"GitHub-Remote.py")
-GITHUB_LIB=importlib.util.module_from_spec(GITHUB_SPEC)
-GITHUB_SPEC.loader.exec_module(GITHUB_LIB)
 OUTPUT = ROOT / "index.html"
 STATUS_HTML = (ROOT / "UnrealDB-Dashboard.html").read_text(encoding="utf-8")
 STATUS_CSS = (ROOT / "UnrealDB-Dashboard.css").read_text(encoding="utf-8")
@@ -41,7 +38,6 @@ def entries():
                 "master":str(meta.get("master") or "unrealdb"),
                 "version":str(meta.get("version") or ""),
                 "source":str(meta.get("source") or ""),
-                "gitdiagram_repo":GITHUB_LIB.github_repository_for_source(str(meta.get("source") or "")),
                 "detail":str(meta.get("detail") or ""),
                 "nodes":nodes, "edges":edges, "communities":communities,
                 "size":stat.st_size,
@@ -76,11 +72,6 @@ input{flex:1;min-width:220px}select{min-width:150px}
 .actions a,.actions button,.copy{border:1px solid #376d76;background:#183d46;color:#c5fff4;padding:9px 13px;border-radius:8px;text-decoration:none;cursor:pointer;font-weight:650;font:inherit;font-size:12px}
 .actions a:hover,.actions button:hover,.copy:hover{background:#235961}
 .actions .outline{background:transparent;color:var(--dim);border-color:var(--line)}
-.actions button:disabled{opacity:.45;cursor:not-allowed}
-.diagram-nav{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:20px 0 26px;padding:15px 18px;border:1px solid #30566c;background:#11283c;border-radius:12px}
-.diagram-nav strong{display:block;font-size:16px}.diagram-nav span{display:block;font-size:12px;color:var(--dim);max-width:720px}
-.diagram-links{display:flex;gap:9px;flex-wrap:wrap}.diagram-links a{background:#19424c;color:#c8fff5;text-decoration:none;padding:9px 13px;border:1px solid #397a83;border-radius:9px;font-weight:650;font-size:12px}
-.diagram-links a:hover{background:#245762}
 footer{margin-top:36px;color:var(--dim);font-size:12px;line-height:1.6}
 code{background:#1a2a3d;border-radius:4px;padding:1px 4px}#none{display:none;color:var(--dim);padding:28px;border:1px dashed var(--line);border-radius:12px}
 #drawer{display:none;margin-top:20px;background:#14263c;border:1px solid #376d76;padding:20px;border-radius:12px}
@@ -94,14 +85,6 @@ HTML=r"""<!DOCTYPE html>
 <body><main><header class="top"><div><div class="brand">Graphify · Local Intelligence</div><h1>Source Graph Library</h1>
 <p class="lead">Explore local code relationships by engine and project. Code-only indexes run on DEV; no cloud service or account required. New indexes automatically appear here when built using the index script.</p></div>
 <div class="stamp">Updated __STAMP__</div></header>
-<section class="diagram-nav" id="gitdiagram-nav" aria-label="Architecture diagram tools">
- <div><strong>Architecture diagrams</strong><span>Local GitDiagram links require an AI provider, Cloudflare R2 and Upstash Redis before diagrams can be generated.</span></div>
- <div class="diagram-links">
-  <a href="http://127.0.0.1:3001/" target="_blank" rel="noopener noreferrer">GitDiagram on DEV</a>
-  <a href="https://gitdiagram.com/ardenee/ut_reader" target="_blank" rel="noopener noreferrer">UnrealDB on GitDiagram</a>
-  <a href="https://github.com/ahmedkhaleel2004/gitdiagram" target="_blank" rel="noopener noreferrer">GitDiagram source</a>
- </div>
-</section>
 <section class="master-panel"><div><label for="master-project">Master project</label><select id="master-project" aria-label="Select master project"></select></div><form id="new-master"><input id="new-master-name" placeholder="New master project name" required maxlength="80" aria-label="New master project name"><button type="submit">Create master</button></form><p id="master-message" role="status"></p></section>
 <section class="viewer-panel" aria-label="HTML viewer node limit"><h2>HTML viewer node limit</h2>
 <div class="viewer-row"><label for="viewer-limit">Nodes displayed before community condensation</label><input type="range" id="viewer-limit" min="2000" max="10000" step="500" value="10000" aria-label="HTML viewer maximum nodes"><output id="viewer-value" for="viewer-limit">10,000</output><button id="apply-viewer" type="button">Apply to HTML viewers</button></div>
@@ -261,20 +244,7 @@ function draw(){
   link.href=encodeURIComponent(p.id)+'/graphify-out/graph.html';
   if(!p.visual){link.removeAttribute('href');link.className='outline'}
   let cli=el('button','outline','Refresh command');cli.onclick=()=>showCommand(p);
-  // Source repository is read from the actual local .git metadata during dashboard build.
-  // GitDiagram's local app accepts GitHub owner/repo via the pathname, not file:// paths.
-  let diagram;
-  if(p.gitdiagram_repo){
-   diagram=el('a',null,'GitDiagram');
-   diagram.href='http://127.0.0.1:3001/'+p.gitdiagram_repo.split('/').map(encodeURIComponent).join('/');
-   diagram.target='_blank';diagram.rel='noopener noreferrer';
-   diagram.title='Local GitDiagram: github.com/'+p.gitdiagram_repo;
-  }else{
-   diagram=el('button','outline','GitDiagram');
-   diagram.type='button';diagram.disabled=true;
-   diagram.title='No GitHub origin found in this project source Git repository';
-  }
-  acts.append(link,cli,diagram);card.append(acts);$('cards').append(card);
+  acts.append(link,cli);card.append(acts);$('cards').append(card);
  }
 }
 ['filter','family','order'].forEach(k=>$(k).addEventListener(k==='filter'?'input':'change',draw));draw();
