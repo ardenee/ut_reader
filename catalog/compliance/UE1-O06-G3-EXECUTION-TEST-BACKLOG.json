@@ -5571,7 +5571,7 @@
       "reuse": "Do not rescan 235k files without a named gap.",
       "status": "PASS",
       "evidence_sha": "424d9474c05a11ad1a0a63483b7dad917cd8453761dc26ae65de7da0fbb25341",
-      "result": "T076 completed on exact frozen original provider/physical selection requirement. Original 1998 C98 compiled appFindPackageFile five path/missing cases; stock UT99 v432/469f original Core.dll twenty actual genuine shipped v61/68/69 loads including live ULinkerLoad/texture pointers, original compiled v432 four genuine imported superclass references with original UCC-built consumer, separate original C227i2012/C227k2026 six reversed duplicate/missing source package loads and original texture identities. Current UEDB5 runtime-context source selector matches all source-authoritative physical mount paths and direct original compiled data; missing explicit even when UCC process rc0; unknown installation mount order stays ambiguous, never fabricated. 79+173+118+60 SHA/native/current source acceptance assertions passed. Original C98 method call exits abnormally after result and is not represented as fully imported class; remaining full method/pointer/version gates owned by T065,T072,T075. PRD untouched.",
+      "result": "T076 completed on exact frozen original provider/physical selection requirement. Original 1998 C98 compiled appFindPackageFile five path/missing cases; stock UT99 v432/469f original Core.dll twenty actual genuine shipped v61/68/69 loads including live ULinkerLoad/texture pointers, original compiled v432 four genuine imported superclass references with original UCC-built consumer, separate original C227i2012/C227k2026 six reversed duplicate/missing source package loads and original texture identities. Current UEDB5 runtime-context source selector matches all source-authoritative physical mount paths and direct original compiled data; missing explicit even when UCC process rc0; unknown installation mount order stays ambiguous, never fabricated. 79+173+118+60 SHA/native/current source acceptance assertions passed. Original C98 method call exits abnormally after result and is not represented as fully imported class; remaining full method/pointer/version gates owned by T065,T072,T075. PRD untouched. Follow-up original source parity fix on already-loaded linker precedence: two genuine unmodified original stock v432 Core.dll native sessions with real shipped v68/v69 Detail packages show same UPackage and texture pointers after swapping GSys.Paths. Current code now source-selects a verified already-loaded linker before physical path order; previous T076 original accepted source SHA remains historized, 28/28 new current/source/actual-native independent checks, no old original sessions repeated.",
       "blocking_reason": null,
       "last_attempt_at": "2026-11-01T14:10:00+00:00",
       "attempted_native_execution": false,
@@ -5778,19 +5778,61 @@
           "bytes": 8755
         },
         {
-          "path": "catalog/bin/verify-uedb5-physical-provider-selector.php",
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-provider-regression-pre-linked-source.php",
           "sha256": "dfae3eb3a391467b6cb044deaad9fcead30a0d72be346ad5eed5d9f7bfee4831",
-          "bytes": 28525
+          "bytes": 28525,
+          "historical_pre_existing_linker_native_fix_php_regression": true
         },
         {
-          "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-pre-cached-linker-fix-source-snapshot.php",
           "sha256": "7e42b56593426f1adae6059094a1a792419a6a37bd03cf271543e897098ca959",
-          "bytes": 18632
+          "bytes": 18632,
+          "historical_pre_cached_linker_source_only": true
         },
         {
           "path": "catalog/compliance/evidence/o06/20261101-G3-T076-FULL-original-five-engine-provider-selection-acceptance.json",
           "sha256": "424d9474c05a11ad1a0a63483b7dad917cd8453761dc26ae65de7da0fbb25341",
           "bytes": 4723
+        },
+        {
+          "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "sha256": "2fd17fec384914d0cac3dce0244f445c46f428d7125f32ca9f228be2fc0832b9",
+          "bytes": 22335
+        },
+        {
+          "path": "catalog/bin/verify-uedb5-physical-provider-selector.php",
+          "sha256": "9c811118d6d2f617948639fa4c053ee4451c45c61e5d1dc26addb5b426d3ed62",
+          "bytes": 31531
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t076-original-v432-two-loaded-linker-shadow-native.py",
+          "sha256": "610bf2b7c7867749e38c8c79197845e775924050ca7fc1ec8e0cfa8f58328210",
+          "bytes": 5230
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-v432-two-real-loaded-linker-overrides-path-source-proof.json",
+          "sha256": "b333218f325d05361c33aa1c3eedc7d1ebbbd3fcca5979f831bbe55b701b7a4a",
+          "bytes": 4434
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-v432-actual-ULinkerLoad-precedence-after-source-path-swap.cpp",
+          "sha256": "bec36035f3632dee47cde7cda37b3c35d5c3aa5fbdd435b728640a882366e825",
+          "bytes": 3320
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-already-linked-priority-native-compiler.log",
+          "sha256": "85f35c0c6532bb66a506e8d2056533fe9f8f98955132ad185d29798c13eb4dd4",
+          "bytes": 1766
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-existing-linker-system_first.log",
+          "sha256": "6b25d76f20fc4993227bb06faba0ac2b9c1005377539f1264c88fc6dbc8d6cd7",
+          "bytes": 341
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-existing-linker-texture_first.log",
+          "sha256": "b676e8e5b3570348f0f742a11fc72e5a548896f22f3b57488a7d4cf73ada5da8",
+          "bytes": 341
         }
       ],
       "final_original_native_source_contract_notes": [
@@ -5805,7 +5847,11 @@
         "UT99 469f": "Distinct original compiled Core.dll genuine five shipped Detail providers, live native linker/texture pointers ten native.",
         "2012 C227i": "Separate genuine original UCC + Core.dll physically selected reversed priority v68/v69 original Detail and missing loader, three original native sessions.",
         "2026 C227k": "Separate genuine original UCC + Core.dll physically selected reversed priority v68/v69 original Detail and missing loader, three original native sessions."
-      }
+      },
+      "source_already_linked_override_completion": "Original Epic 1998 GetPackageLinker checks GObj.Loaders LinkerRoot before physical appFindPackageFile. New genuine stock UT99 v432 x86 Core.dll 2 separate original-staged native cases tested runtime GSys Paths reversal after initial Detail v68/v69 load; original package AND materialized texture pointers remained identical on second request. Current UEDB5 Classic metadata selector preserves source-evidenced loaded linker from same game/consumer before indexed physical mount order. Proven source auth: 28/28 independent tests, existing PHP provider selector original existing-linker regressions PASS, original Core DLL/INI untouched and original native logs SHA pinned. This does NOT automatically know runtime linker state without an authenticated caller-provided GObj.Loaders snapshot and cannot infer it from original file corpus.",
+      "native_new_original_live_existing_linker_source_cases": 2,
+      "source_original_existing_linker_reuse_SHA256": "b333218f325d05361c33aa1c3eedc7d1ebbbd3fcca5979f831bbe55b701b7a4a",
+      "runtime_loaded_linker_provenance_limit": "The catalog cannot recover an original running process GObj.Loaders from uploaded archives. loaded_linkers supplied in authoritative classic_runtime_context is a caller assertion, not independently verified; never construct it from version, GUID, upload time or guessed file preference."
     },
     {
       "id": "T077",

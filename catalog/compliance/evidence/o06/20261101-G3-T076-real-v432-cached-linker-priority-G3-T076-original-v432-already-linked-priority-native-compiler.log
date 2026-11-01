@@ -1,0 +1,10 @@
+G3-T076-v432-actual-ULinkerLoad-precedence-after-source-path-swap.cpp
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\UnObjBas.h(522): warning C4297: 'UObject::operator delete': function assumed not to throw an exception but does
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\UnObjBas.h(522): note: destructor or deallocator has a (possibly implicit) non-throwing exception specification
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\FFileManagerWindows.h(36): warning C4297: 'FArchiveFileReader::~FArchiveFileReader': function assumed not to throw an exception but does
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\FFileManagerWindows.h(36): note: destructor or deallocator has a (possibly implicit) non-throwing exception specification
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\FFileManagerWindows.h(149): warning C4297: 'FArchiveFileWriter::~FArchiveFileWriter': function assumed not to throw an exception but does
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\FFileManagerWindows.h(149): note: destructor or deallocator has a (possibly implicit) non-throwing exception specification
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\FConfigCacheIni.h(103): warning C4297: 'FConfigCacheIni::~FConfigCacheIni': function assumed not to throw an exception but does
+L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc\FConfigCacheIni.h(103): note: destructor or deallocator has a (possibly implicit) non-throwing exception specification
+   Creating library C:\Temp\UnrealDB\O06\G3-T076-original-v432-existing-linker-precedence\G3-T076-Original-v432-already-linked-priority.lib and object C:\Temp\UnrealDB\O06\G3-T076-original-v432-existing-linker-precedence\G3-T076-Original-v432-already-linked-priority.exp

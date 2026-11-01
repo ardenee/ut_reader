@@ -1,0 +1,510 @@
+#!/usr/bin/env php
+<?php
+declare(strict_types=1);
+$root=realpath(dirname(__DIR__))?:dirname(__DIR__);
+require_once $root.'/bootstrap.php';
+
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5PhysicalProviderSelector;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataSnapshotWriter;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ut4SnapshotBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Unreal2SnapshotBuilder;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenPackageReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ZenEffectivePackageStoreContextBuilder;
+
+$checks=[];$failures=[];
+$check=static function(string $name,bool $ok)use(&$checks,&$failures):void{
+    $checks[$name]=$ok;if(!$ok)$failures[]=$name;
+};
+$tmp=sys_get_temp_dir().DIRECTORY_SEPARATOR.'uedb5-provider-selector-'.bin2hex(random_bytes(6));
+mkdir($tmp,0777,true);
+$writer=new Uedb5MetadataSnapshotWriter($tmp);
+$db=new PDO('sqlite::memory:');
+$db->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);
+$db->exec('CREATE TABLE ue_files(id INTEGER PRIMARY KEY,game_id INTEGER,scan_status TEXT,uploaded_at TEXT,file_size INTEGER,md5 TEXT,sha1 TEXT)');
+$db->exec('CREATE TABLE ue_invalid_file_identities(file_size INTEGER,md5 TEXT,sha1 TEXT)');
+$db->exec('CREATE TABLE ue_uedb5_files(file_id INTEGER PRIMARY KEY,game_id INTEGER,package_name TEXT)');
+$db->exec('CREATE TABLE ue_uedb5_provider_keys(source_kind INTEGER,source_id INTEGER,game_id INTEGER,package_key_kind INTEGER,package_key BLOB,file_id INTEGER)');
+
+$fname=static fn(string $text):array=>['text'=>$text];
+$snapshot=static function(
+    int $fileId,string $packageName,array $imports,array $exports,
+    string $sourcePolicy='test-ue1-provider-selection',int $packageVersion=69,
+    int $gameId=3,string $schemaPrefix='ue1.ut99'
+)use($fname):array{
+    foreach($imports as &$row){
+        foreach(['class_package','class_name','object_name'] as $field){
+            if(isset($row[$field])&&!is_array($row[$field]))$row[$field]=$fname((string)$row[$field]);
+        }
+    } unset($row);
+    foreach($exports as &$row){
+        if(isset($row['object_name'])&&!is_array($row['object_name']))$row['object_name']=$fname((string)$row['object_name']);
+    } unset($row);
+    return [
+        'file'=>['id'=>$fileId,'game_id'=>$gameId,'package_name'=>$packageName,'original_name'=>$packageName.'.u'],
+        'package_family'=>'classic-linkerload','source_policy'=>$sourcePolicy,
+        'section_schemas'=>[
+            'summary'=>$schemaPrefix.'.package-summary.v1','names'=>$schemaPrefix.'.name-entry.v1',
+            'imports'=>$schemaPrefix.'.object-import.v1','exports'=>$schemaPrefix.'.object-export.v1',
+        ],
+        'sections'=>[
+            'summary'=>[['package_version'=>$packageVersion]],'names'=>[],
+            'imports'=>array_values($imports),'exports'=>array_values($exports),
+        ],
+    ];
+};
+$consumerImports=[
+    ['index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Pkg','outer_index'=>0],
+    ['index'=>1,'class_package'=>'Core','class_name'=>'Class','object_name'=>'A','outer_index'=>-1],
+    ['index'=>2,'class_package'=>'Core','class_name'=>'Class','object_name'=>'B','outer_index'=>-1],
+    ['index'=>3,'class_package'=>'Core','class_name'=>'Class','object_name'=>'None','outer_index'=>-1],
+];
+$public=0x00000004;
+$export=static fn(int $index,string $name):array=>[
+    'index'=>$index,'class_index'=>0,'super_index'=>0,'outer_index'=>0,
+    'object_name'=>$name,'object_flags'=>$public,
+];
+$writer->write($snapshot(10,'Consumer',$consumerImports,[]));
+$writer->write($snapshot(20,'Pkg',[],[$export(0,'A')]));
+$writer->write($snapshot(21,'Pkg',[],[$export(0,'B'),$export(1,'None')]));
+$writer->write($snapshot(22,'PkgVariant',[],[$export(0,'A'),$export(1,'B')]));
+foreach([
+    [10,'Consumer','2026-10-01 10:00:00'],[20,'Pkg','2026-10-02 12:00:00'],
+    [21,'Pkg','2026-10-01 12:00:00'],[22,'PkgVariant','2026-09-30 12:00:00'],
+] as [$id,$name,$uploaded]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,3,'verified',$uploaded,$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,3,$name]);
+}
+$classic=Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME;
+$pkgKey=md5('pkg',true);
+foreach([
+    [1,20,20],[1,21,21],[2,500,22],
+] as [$sourceKind,$sourceId,$fileId]){
+    $db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+        ->execute([$sourceKind,$sourceId,3,$classic,$pkgKey,$fileId]);
+}
+$selector=new PdoUedb5PhysicalProviderSelector($db,$tmp);
+$selected=$selector->select(3,10);
+$check('classic_duplicate_provider_environment_is_ambiguous',
+    count($selected)===1
+    && ($selected[0]['selection_status']??'')==='ambiguous'
+    && ($selected[0]['file_id']??null)===null
+    && ($selected[0]['package_name']??'')==='Pkg'
+    && (array)($selected[0]['candidate_file_ids']??[])===[20,21,22]);
+$check('later_complete_alias_is_not_content_scored_into_selection',
+    !in_array((int)($selected[0]['file_id']??0),[20,21,22],true));
+
+$db->exec('DELETE FROM ue_uedb5_provider_keys WHERE file_id=22');
+$selected=$selector->select(3,10);
+$check('two_physical_candidates_remain_ambiguous',
+    count($selected)===1
+    && ($selected[0]['selection_status']??'')==='ambiguous'
+    && (array)($selected[0]['candidate_file_ids']??[])===[20,21]);
+$db->exec('DELETE FROM ue_uedb5_provider_keys WHERE file_id=21');
+$selected=$selector->select(3,10);
+$check('single_physical_provider_is_selected',
+    count($selected)===1
+    && ($selected[0]['selection_status']??'')==='selected'
+    && (int)$selected[0]['file_id']===20);
+
+$soloImports=[
+    ['index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'Solo','outer_index'=>0],
+    ['index'=>1,'class_package'=>'Core','class_name'=>'Class','object_name'=>'OnlyObject','outer_index'=>-1],
+];
+$writer->write($snapshot(11,'SoloConsumer',$soloImports,[]));
+foreach([[11,'SoloConsumer'],[23,'Solo']] as [$id,$name]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,3,'verified','2026-10-02 13:30:00',$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,3,$name]);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,23,3,$classic,md5('solo',true),23]);
+$soloSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,11);
+$check('single_provider_is_selected_without_expensive_scoring',
+    count($soloSelected)===1 && (int)$soloSelected[0]['file_id']===23);
+
+$ut99Retail='ue1-ut99-retail-v1400-1999-11-30';
+$unrealIFallbackImports=[
+    ['index'=>0,'class_package'=>'Core','class_name'=>'Package','object_name'=>'UnrealI','outer_index'=>0],
+    ['index'=>1,'class_package'=>'UnrealI','class_name'=>'Texture','object_name'=>'LegacyTex','outer_index'=>-1],
+];
+$writer->write($snapshot(24,'FallbackConsumer',$unrealIFallbackImports,[],$ut99Retail,68));
+$writer->write($snapshot(25,'UnrealShare',[],[$export(0,'LegacyTex')],$ut99Retail,68));
+foreach([[24,'FallbackConsumer'],[25,'UnrealShare']] as [$id,$name]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,3,'verified','2026-10-02 13:45:00',$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,3,$name]);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,25,3,$classic,md5('unrealshare',true),25]);
+$ut99Fallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,24);
+$check('ut99_v1400_unreali_package_load_retries_unrealshare',
+    count($ut99Fallback)===1
+    && ($ut99Fallback[0]['selection_status']??'')==='selected'
+    && (int)($ut99Fallback[0]['file_id']??0)===25
+    && ($ut99Fallback[0]['package_name']??'')==='UnrealI'
+    && ($ut99Fallback[0]['source_fallback_package_name']??'')==='UnrealShare');
+
+$writer->write($snapshot(26,'UnverifiedFallbackConsumer',$unrealIFallbackImports,[],'ue1-ut99-v430-public-source-partial',69));
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([26,3,'verified','2026-10-02 13:46:00',26,md5('26'),sha1('26')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([26,3,'UnverifiedFallbackConsumer']);
+$unverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,26);
+$check('ut99_unverified_later_source_does_not_inherit_v1400_package_fallback',$unverifiedFallback===[]);
+
+$writer->write($snapshot(27,'Unreal2FallbackConsumer',$unrealIFallbackImports,[],Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000,69,2,'ue2.unreal2'));
+$writer->write($snapshot(28,'UnrealShare',[],[$export(0,'LegacyTex')],Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000,69,2,'ue2.unreal2'));
+foreach([[27,'Unreal2FallbackConsumer'],[28,'UnrealShare']] as [$id,$name]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,2,'verified','2026-10-02 13:47:00',$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,2,$name]);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,28,2,$classic,md5('unrealshare',true),28]);
+$unreal2Fallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(2,27);
+$check('unreal2_v69_unreali_package_load_retries_unrealshare',
+    count($unreal2Fallback)===1
+    &&($unreal2Fallback[0]['selection_status']??'')==='selected'
+    &&(int)($unreal2Fallback[0]['file_id']??0)===28
+    &&($unreal2Fallback[0]['source_fallback_package_name']??'')==='UnrealShare');
+
+$writer->write($snapshot(29,'Unreal2V126Consumer',$unrealIFallbackImports,[],Uedb5Unreal2SnapshotBuilder::POLICY_V126_GENERIC,126,2,'ue2.unreal2'));
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([29,2,'verified','2026-10-02 13:48:00',29,md5('29'),sha1('29')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([29,2,'Unreal2V126Consumer']);
+$unreal2UnverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(2,29);
+$check('unreal2_v126_does_not_inherit_v69_package_fallback',$unreal2UnverifiedFallback===[]);
+
+// Original classic-loader runtime mount context: authoritative physical path
+// priority, never content/GUID/upload-time scoring or a guessed file ID.
+// Restore the original second verified candidate after the earlier
+// intentional single-provider regression has completed.
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,21,3,$classic,$pkgKey,21]);
+$mount=static fn(array $ids,int $consumer=10,int $game=3):array=>[
+ 'classic_runtime_context'=>[
+  'mount_order_authoritative'=>true,'game_id'=>$game,
+  'consumer_file_id'=>$consumer,'mounted_file_ids_search_order'=>$ids,
+ ],
+];
+$sourceSelected=$selector->select(3,10,$mount([21,20]));
+$check('classic_authoritative_runtime_mount_order_can_pick_later_indexed_file',
+    count($sourceSelected)===1
+    && ($sourceSelected[0]['file_id']??null)===21
+    && ($sourceSelected[0]['selection_source']??null)==='evidenced_original_classic_mount_order');
+$sourceSelected=$selector->select(3,10,$mount([20,21]));
+$check('classic_authoritative_runtime_mount_order_reversed_changes_actual_selected_file',
+    count($sourceSelected)===1 && ($sourceSelected[0]['file_id']??null)===20);
+$sourceMissing=$selector->select(3,10,$mount([]));
+$check('classic_authoritative_runtime_missing_provider_does_not_reveal_unmounted_catalog_candidate',
+    count($sourceMissing)===1&&$sourceMissing[0]['selection_status']==='missing'
+    && array_key_exists('file_id',$sourceMissing[0])&&$sourceMissing[0]['file_id']===null);
+$sourceMissing=$selector->select(3,10,$mount([999999]));
+$check('classic_authoritative_context_cannot_inject_unknown_physical_file',
+    count($sourceMissing)===1&&$sourceMissing[0]['selection_status']==='missing');
+$sourcePartial=$selector->select(3,10,['classic_runtime_context'=>[
+    'mount_order_authoritative'=>false,'game_id'=>3,
+    'consumer_file_id'=>10,'mounted_file_ids_search_order'=>[21],
+]]);
+$check('classic_unverified_runtime_hint_leaves_original_physical_candidates_ambiguous',
+    count($sourcePartial)===1&&$sourcePartial[0]['selection_status']==='ambiguous');
+$malformed=[
+ ['mismatched_game',$mount([20],10,4)],
+ ['mismatched_consumer',$mount([20],11)],
+ ['negative_id',$mount([-1])],['zero_id',$mount([0])],
+ ['string_id',$mount(['20'])],['duplicate',$mount([20,20])],
+ ['not_a_list',['classic_runtime_context'=>['mount_order_authoritative'=>true,
+   'game_id'=>3,'consumer_file_id'=>10,'mounted_file_ids_search_order'=>[7=>20]]]],
+ ['wrong_type',['classic_runtime_context'=>'unknown']],
+];
+foreach($malformed as [$label,$badContext]){
+    $rejected=false;try{$selector->select(3,10,$badContext);}catch(RuntimeException){$rejected=true;}
+    $check('classic_malformed_runtime_mount_context_fails_closed_'.$label,$rejected);
+}
+// The original retail UT99 source retries UnrealI as UnrealShare ONLY after
+// the original physical UnrealI package cannot load from the actual mount.
+// The catalog might index an unmounted UnrealI and must not suppress retry.
+$writer->write($snapshot(31,'UnrealI',[],[$export(0,'LegacyTex')],$ut99Retail,68));
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([
+ 31,3,'verified','2026-10-02 14:10:00',31,md5('31'),sha1('31')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([31,3,'UnrealI']);
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,31,3,$classic,md5('unreali',true),31]);
+$runtimeFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,24,$mount([25],24));
+$check('ut99_original_source_unmounted_primary_retries_mounted_unrealshare',
+    count($runtimeFallback)===1&&$runtimeFallback[0]['selection_status']==='selected'
+    &&$runtimeFallback[0]['file_id']===25
+    &&$runtimeFallback[0]['source_fallback_package_name']==='UnrealShare');
+$runtimePrimary=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,24,$mount([31,25],24));
+$check('ut99_original_source_mounted_primary_prevents_fallback',
+    count($runtimePrimary)===1&&$runtimePrimary[0]['selection_status']==='selected'
+    &&$runtimePrimary[0]['file_id']===31
+    &&$runtimePrimary[0]['source_fallback_package_name']===null);
+$ut4=[
+    'file'=>['id'=>30,'game_id'=>7,'package_name'=>'/Game/Empty','original_name'=>'Empty.uasset'],
+    'package_family'=>Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY,
+    'source_policy'=>Uedb5Ut4SnapshotBuilder::SOURCE_POLICY,
+    'section_schemas'=>[
+        'summary'=>'ue4.ut4.package-summary.v1','names'=>'ue4.ut4.name-entry.v1',
+        'imports'=>'ue4.ut4.object-import.v1','exports'=>'ue4.ut4.object-export.v1',
+    ],
+    'sections'=>['summary'=>[['package_version'=>511]],'names'=>[],'imports'=>[],'exports'=>[]],
+];
+$writer->write($ut4);
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([30,7,'verified','2026-10-02 14:00:00',30,md5('30'),sha1('30')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([30,7,'/Game/Empty']);
+$check('ue4_classic_package_family_is_admitted',
+    (new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(7,30)===[]);
+
+$zen=static function(int $fileId,string $packageId,array $imports,array $exports,array $redirects=[]):array{
+    return [
+        'file'=>['id'=>$fileId,'game_id'=>8,'package_name'=>'/Game/Test','original_name'=>'Test'],
+        'package_family'=>Uedb5ZenPackageReader::PACKAGE_FAMILY,
+        'source_policy'=>Uedb5ZenPackageReader::SOURCE_POLICY,
+        'section_schemas'=>[],
+        'sections'=>[
+            'package_summary'=>[['package_id'=>$packageId]],
+            'imports'=>array_values($imports),'exports'=>array_values($exports),
+            'cell_imports'=>[],'cell_exports'=>[],'soft_package_references'=>[],
+            'dependency_bundle_entries'=>[],
+            'package_redirects'=>array_values($redirects),'localized_packages'=>[],
+        ],
+    ];
+};
+$zenPackageId='0011223344556677';
+$zenHashA='1111111111111111';$zenHashB='2222222222222222';
+$zenImports=[
+    ['type'=>'PackageImport','provider_package_id'=>$zenPackageId,'provider_public_export_hash'=>$zenHashA,'dependency_class'=>'hard'],
+    ['type'=>'PackageImport','provider_package_id'=>$zenPackageId,'provider_public_export_hash'=>$zenHashB,'dependency_class'=>'hard'],
+];
+$zenExport=static fn(string $hash,string $name):array=>['public_export_hash'=>$hash,'filter_flags'=>0,'object_name'=>$name];
+$writer->write($zen(40,'8899AABBCCDDEEFF',$zenImports,[]));
+$writer->write($zen(41,$zenPackageId,[],[$zenExport($zenHashA,'A')]));
+$writer->write($zen(42,$zenPackageId,[],[$zenExport($zenHashB,'B')]));
+$writer->write($zen(43,$zenPackageId,[],[$zenExport($zenHashA,'A'),$zenExport($zenHashB,'B')]));
+foreach([[40,'2026-10-02 13:00:00'],[41,'2026-10-02 12:00:00'],[42,'2026-10-01 12:00:00'],[43,'2026-09-30 12:00:00']] as [$id,$uploaded]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,8,'verified',$uploaded,$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,8,'/Game/Test']);
+}
+$zenKind=Uedb5SqlProjectionContract::PACKAGE_KEY_ZEN_PACKAGE_ID;
+$zenKey=hex2bin($zenPackageId);
+foreach([[1,41,41],[1,42,42],[2,700,43]] as [$sourceKind,$sourceId,$fileId]){
+    $db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')->execute([$sourceKind,$sourceId,8,$zenKind,$zenKey,$fileId]);
+}
+$zenSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40);
+$check('zen_duplicate_package_id_environment_is_ambiguous',
+    count($zenSelected)===1
+    && ($zenSelected[0]['selection_status']??'')==='ambiguous'
+    && ($zenSelected[0]['file_id']??null)===null
+    && ($zenSelected[0]['package_id']??'')===$zenPackageId
+    && (array)($zenSelected[0]['candidate_file_ids']??[])===[41,42,43]);
+$backendSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+ ],
+ 'zen_package_store_backend_results'=>[
+  ['backend_id'=>'file','priority'=>1,
+   'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+ ],
+]);
+$check('zen_evidenced_backend_disambiguates_exact_physical_package',
+ count($backendSelected)===1 && (int)($backendSelected[0]['file_id']??0)===42);
+// B005: authoritative evidence may enter via zen_runtime_context, the same
+// structure the dependency rebuilder/resolver consume. Physical selection
+// must never ignore it and silently use unordered V5 catalogue candidates.
+$nestedOk=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+  'package_store_backend_results'=>[
+   ['backend_id'=>'runtime','priority'=>10,
+    'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+  ],
+ ],
+]);
+$check('b005_nested_backend_ok_picks_exact_evidenced_provider',
+ count($nestedOk)===1 && (int)($nestedOk[0]['file_id']??0)===42
+ && ($nestedOk[0]['selection_source']??'')==='evidenced_package_store_backend');
+$nestedPending=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+  'package_store_backend_results'=>[
+   ['backend_id'=>'runtime','priority'=>10,
+    'entries'=>[$zenPackageId=>['status'=>'Pending','file_id'=>42]],'redirects'=>[]],
+  ],
+ ],
+]);
+$check('b005_nested_backend_pending_never_guesses_catalogue_file',
+ $nestedPending===[]);
+$conflictingEvidenceRejected=false;
+try {
+ (new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+  'zen_runtime_context'=>[
+   'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+   'package_store_context_authoritative'=>true,
+   'package_redirects'=>[],'localized_packages'=>[],
+   'package_store_backend_results'=>[
+    ['backend_id'=>'runtime','priority'=>10,
+     'entries'=>[$zenPackageId=>['status'=>'Pending']],'redirects'=>[]],
+   ],
+  ],
+  'zen_package_store_backend_results'=>[
+   ['backend_id'=>'runtime','priority'=>10,
+    'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+  ],
+ ]);
+} catch(RuntimeException) {$conflictingEvidenceRejected=true;}
+$check('b005_conflicting_backend_evidence_must_not_select_a_file',
+ $conflictingEvidenceRejected);
+
+// Exercise the real builder -> prioritized backend -> PDO selector chain.
+// The observed mount entries are explicit; this synthetic fixture separately
+// asserts runtime completeness, rather than deriving authority from a UTOC.
+$mountedEvidence=Uedb5ZenEffectivePackageStoreContextBuilder::build([
+ ['container_id'=>'base','order'=>1,'sequence'=>0,'package_redirects'=>[],
+  'localized_packages'=>[],
+  'package_entries'=>[['package_id'=>$zenPackageId,'file_id'=>41]]],
+ ['container_id'=>'patch','order'=>2,'sequence'=>1,'package_redirects'=>[],
+  'localized_packages'=>[],
+  'package_entries'=>[['package_id'=>strtolower($zenPackageId),'file_id'=>42]]],
+],[
+ ['backend_id'=>'runtime','priority'=>10,
+  'entries'=>[$zenPackageId=>['status'=>'Missing']],'redirects'=>[]],
+],1);
+$mountedSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>$mountedEvidence['package_redirects'],
+  'localized_packages'=>$mountedEvidence['localized_packages'],
+ ],
+ 'zen_package_store_backend_results'=>$mountedEvidence['package_store_backend_results'],
+]);
+$check('zen_mounted_file_backend_actual_selector_respects_mount_order',
+ count($mountedSelected)===1
+ &&(int)($mountedSelected[0]['file_id']??0)===42
+ &&($mountedSelected[0]['selected_backend_id']??'')==='file');
+$mountedWithoutAuthority=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>$mountedEvidence,
+ 'zen_package_store_backend_results'=>$mountedEvidence['package_store_backend_results'],
+]);
+$check('zen_mounted_file_entries_without_authority_stay_ambiguous',
+ ($mountedWithoutAuthority[0]['selection_status']??'')==='ambiguous'
+ &&($mountedWithoutAuthority[0]['file_id']??null)===null);
+$mountedPending=$mountedEvidence['package_store_backend_results'];
+foreach($mountedPending as &$backend){
+ if($backend['backend_id']==='runtime'){
+  $backend['entries'][$zenPackageId]=['status'=>'Pending'];
+ }
+}
+unset($backend);
+$pendingSelection=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+ ],
+ 'zen_package_store_backend_results'=>$mountedPending,
+]);
+$check('zen_mounted_file_backend_does_not_override_higher_pending_backend',
+ $pendingSelection===[]);
+$backendUnknown=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>['package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+  'package_store_context_authoritative'=>false,'package_redirects'=>[],'localized_packages'=>[]],
+ 'zen_package_store_backend_results'=>[
+  ['backend_id'=>'file','priority'=>1,
+   'entries'=>[$zenPackageId=>['status'=>'Ok','file_id'=>42]],'redirects'=>[]],
+ ],
+]);
+$backendMissing=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,40,[
+ 'zen_runtime_context'=>[
+  'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+  'package_store_context_authoritative'=>true,
+  'package_redirects'=>[],'localized_packages'=>[],
+ ],
+ 'zen_package_store_backend_results'=>[
+  ['backend_id'=>'file','priority'=>1,
+   'entries'=>[$zenPackageId=>['status'=>'Missing']],'redirects'=>[]],
+ ],
+]);
+$check('zen_authoritative_missing_does_not_guess_catalogue_candidate',
+ $backendMissing===[]);
+$check('zen_unproven_backend_does_not_select_physical_package',
+ ($backendUnknown[0]['selection_status']??'')==='ambiguous');
+$check('zen_public_export_coverage_does_not_select_a_duplicate_package_file',
+    (int)($zenSelected[0]['file_id']??0)===0);
+
+$redirectSourceId='ABCDEF0011223344';
+$redirectTargetId='1020304050607080';
+$redirectHash='3333333333333333';
+$redirectImport=[[
+    'type'=>'PackageImport','provider_package_id'=>$redirectSourceId,
+    'provider_public_export_hash'=>$redirectHash,'dependency_class'=>'hard',
+]];
+$redirectRows=[[
+    'container_index'=>0,'source_package_id'=>$redirectSourceId,
+    'target_package_id'=>$redirectTargetId,
+    'source_package_name'=>['text'=>'/Game/RedirectSource'],
+]];
+$writer->write($zen(44,'9988776655443322',$redirectImport,[],$redirectRows));
+$writer->write($zen(45,$redirectTargetId,[],[$zenExport($redirectHash,'RedirectedObject')]));
+foreach([[44,'2026-10-02 14:00:00'],[45,'2026-10-02 14:01:00']] as [$id,$uploaded]){
+    $db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([$id,8,'verified',$uploaded,$id,md5((string)$id),sha1((string)$id)]);
+    $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([$id,8,'/Game/RedirectTest']);
+}
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')->execute([
+    1,45,8,$zenKind,hex2bin($redirectTargetId),45,
+]);
+$redirectSelected=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(8,44);
+$check('zen_selector_does_not_guess_single_container_redirect_target',
+    $redirectSelected===[]);
+
+$redirectContext=[
+    'package_identity_context_authoritative'=>true,
+        'package_identity_rewrites'=>[],
+    'package_store_context_authoritative'=>true,
+    'package_redirects'=>$redirectRows,
+    'localized_packages'=>[],
+    'with_editor'=>false,
+    'is_editor'=>false,
+];
+$redirectWithContext=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(
+    8,44,['zen_runtime_context'=>$redirectContext]
+);
+$check('zen_selector_uses_same_authoritative_redirect_as_dependency_resolver',
+    count($redirectWithContext)===1
+    &&(int)($redirectWithContext[0]['file_id']??0)===45
+    &&($redirectWithContext[0]['package_id']??'')===$redirectTargetId);
+$source=(string)file_get_contents($root.'/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php');
+$check('selector_uses_v5_provider_keys',str_contains($source,'ue_uedb5_provider_keys'));
+$check('selector_reads_v5_snapshots',str_contains($source,'Uedb5MetadataReader'));
+$check('selector_excludes_known_invalid_identities',str_contains($source,'ue_invalid_file_identities'));
+$check('selector_never_reads_v4_provider_projection',!str_contains($source,'ue_package_providers'));
+$check('selector_never_reads_uedb4_container',!str_contains($source,'BlockedCompressedMetadata'));
+$check('selector_never_reads_v4_metadata_registration',!str_contains($source,'ue_file_metadata'));
+$check('selector_has_no_content_scoring',
+    !str_contains($source,'bestClassicCandidate')
+    && !str_contains($source,'bestZenCandidate')
+    && !str_contains($source,'matchCount')
+    && !str_contains($source,'redirectorCount'));
+$it=new RecursiveIteratorIterator(
+    new RecursiveDirectoryIterator($tmp,FilesystemIterator::SKIP_DOTS),
+    RecursiveIteratorIterator::CHILD_FIRST
+);
+foreach($it as $path){$path->isDir()?@rmdir($path->getPathname()):@unlink($path->getPathname());}
+@rmdir($tmp);
+
+echo json_encode([
+    'ok'=>$failures===[],
+    'checks'=>$checks,
+    'failures'=>$failures,
+],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES),PHP_EOL;
+exit($failures===[]?0:1);

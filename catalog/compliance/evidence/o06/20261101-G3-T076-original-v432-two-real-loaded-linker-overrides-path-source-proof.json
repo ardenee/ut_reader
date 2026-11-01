@@ -1,0 +1,70 @@
+{
+  "original_compiled_v432_new_linker_reuse_native_cases": 2,
+  "original_UCLASS_and_live_texture_objects_retained_after_paths_swapped": true,
+  "verified_original_stock_Core_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "original_1998_C98_get_package_linker_source_SHA256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+  "new_original_native_case_rows": [
+    {
+      "case": "system_first",
+      "original_native_stock_Core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_compiled_observer_sha256": "194bb9c10312f74628fb8a9d9ddc0b4a3bad6dafe628275ade668c8a4eb9eb9a",
+      "original_real_shipped_system_1256343_v68_sha256": "74dcd113089ccd8e179155eb2844ee8f51e527c11bda7798179a3191d884f781",
+      "original_real_shipped_textures_1276716_v69_sha256": "d68a818b8c947629d76f667c50dcc69896e9938df58a991137f2c88d9b5129c3",
+      "actual_native_exit": 0,
+      "actual_native_markers": [
+        "G3_T076_ORIGINAL_LOADED_LINKER_INITIAL first=System second=Textures",
+        "G3_T076_ORIGINAL_LINKER_CACHED_FIRST PACKAGE=014E4FD0 paint1=01509B40 Rough=00000000 selected=v68",
+        "G3_T076_ORIGINAL_LINKER_CACHED_AFTER_ORDER_SWAP PACKAGE=014E4FD0 paint1=01509B40 Rough=00000000 samePackage=1 sameSelectedObject=1",
+        "G3_T076_ORIGINAL_LINKER_CACHED_RESULT=1"
+      ],
+      "actual_native_stdout_sha256": "6b25d76f20fc4993227bb06faba0ac2b9c1005377539f1264c88fc6dbc8d6cd7"
+    },
+    {
+      "case": "texture_first",
+      "original_native_stock_Core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_compiled_observer_sha256": "194bb9c10312f74628fb8a9d9ddc0b4a3bad6dafe628275ade668c8a4eb9eb9a",
+      "original_real_shipped_system_1256343_v68_sha256": "74dcd113089ccd8e179155eb2844ee8f51e527c11bda7798179a3191d884f781",
+      "original_real_shipped_textures_1276716_v69_sha256": "d68a818b8c947629d76f667c50dcc69896e9938df58a991137f2c88d9b5129c3",
+      "actual_native_exit": 0,
+      "actual_native_markers": [
+        "G3_T076_ORIGINAL_LOADED_LINKER_INITIAL first=Textures second=System",
+        "G3_T076_ORIGINAL_LINKER_CACHED_FIRST PACKAGE=0088A500 paint1=00000000 Rough=008C9ED8 selected=v69",
+        "G3_T076_ORIGINAL_LINKER_CACHED_AFTER_ORDER_SWAP PACKAGE=0088A500 paint1=00000000 Rough=008C9ED8 samePackage=1 sameSelectedObject=1",
+        "G3_T076_ORIGINAL_LINKER_CACHED_RESULT=1"
+      ],
+      "actual_native_stdout_sha256": "b676e8e5b3570348f0f742a11fc72e5a548896f22f3b57488a7d4cf73ada5da8"
+    }
+  ],
+  "source_before_fix_historic_git_SHA_retained": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T076-pre-cached-linker-fix-source-snapshot.php",
+    "sha256": "7e42b56593426f1adae6059094a1a792419a6a37bd03cf271543e897098ca959",
+    "bytes": 18632
+  },
+  "new_original_cpp_compiler_stdout_raw_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-v432-actual-ULinkerLoad-precedence-after-source-path-swap.cpp",
+      "sha256": "bec36035f3632dee47cde7cda37b3c35d5c3aa5fbdd435b728640a882366e825",
+      "bytes": 3320
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-already-linked-priority-native-compiler.log",
+      "sha256": "85f35c0c6532bb66a506e8d2056533fe9f8f98955132ad185d29798c13eb4dd4",
+      "bytes": 1766
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-existing-linker-system_first.log",
+      "sha256": "6b25d76f20fc4993227bb06faba0ac2b9c1005377539f1264c88fc6dbc8d6cd7",
+      "bytes": 341
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-existing-linker-texture_first.log",
+      "sha256": "b676e8e5b3570348f0f742a11fc72e5a548896f22f3b57488a7d4cf73ada5da8",
+      "bytes": 341
+    }
+  ],
+  "source_after_fix_SHA256": "2fd17fec384914d0cac3dce0244f445c46f428d7125f32ca9f228be2fc0832b9",
+  "source_precedence": "existing GObj.Loaders linker root prior to physical appFindPackageFile",
+  "original_two_shipped_UT99_Detail_v68_v69_unmodified": true,
+  "other_existing_frozen_original_test_accepted_native_binaries_not_replayed": true,
+  "PRD_untouched": true
+}

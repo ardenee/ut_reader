@@ -159,3 +159,6 @@ catalog/bin/verify-ue1-o06-g3-t076-five-original-source-builds-native-mount.py -
 
 # T071 original G3-03..13 exact source branch SHA owner reconciliation.
 catalog/bin/verify-ue1-o06-g3-t071-original-64-source-error-version-owner.py -text
+
+# UE1 T076 original x86 loaded-linker runtime precedence/source-shadow verifier.
+catalog/bin/verify-ue1-o06-g3-t076-original-v432-two-loaded-linker-shadow-native.py -text

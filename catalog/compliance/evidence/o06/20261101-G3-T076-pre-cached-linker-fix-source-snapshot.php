@@ -1,0 +1,388 @@
+<?php
+/** Selects one physical staged UEDB5 provider per required package identity. */
+declare(strict_types=1);
+
+namespace UnrealDb\Catalog\Infrastructure\Metadata;
+
+use PDO;
+use RuntimeException;
+
+final class PdoUedb5PhysicalProviderSelector
+{
+    private Uedb5MetadataReader $reader;
+
+    public function __construct(
+        private readonly PDO $db,
+        string $storageRoot
+    ) {
+        $this->reader = new Uedb5MetadataReader($storageRoot);
+    }
+
+    /**
+     * @param array{common_packages?:list<string>,classic_runtime_context?:array{mount_order_authoritative:bool,game_id:int,consumer_file_id:int,mounted_file_ids_search_order:list<int>}} $options
+     * @return list<array<string,mixed>>
+     */
+    public function select(int $gameId, int $fileId, array $options = []): array
+    {
+        if ($gameId < 1 || $fileId < 1) {
+            throw new RuntimeException('UEDB5 provider selection requires positive game/file identity.');
+        }
+        $consumer = $this->reader->snapshot($gameId, $fileId);
+        $family = (string)($consumer['package_family'] ?? '');
+        if ($family === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
+            return $this->selectZen($gameId, $fileId, $consumer, $options);
+        }
+        if (!in_array($family, [
+            Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY,
+            Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY,
+        ], true)) {
+            throw new RuntimeException('No V5 provider selector is registered for package_family ' . $family . '.');
+        }
+        return $this->selectClassic($gameId, $fileId, $consumer, $options);
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function selectClassic(
+        int $gameId,
+        int $consumerFileId,
+        array $consumer,
+        array $options
+    ): array {
+        $resolver = $this->classicResolver($consumer);
+        $baseline = $resolver($consumer, [], $options);
+        $packageKeyKind = Uedb5SqlProjectionContract::classicPackageKeyKindForImportSchema(
+            (string)($consumer['section_schemas']['imports'] ?? '')
+        );
+        $requirements = [];
+        foreach ($baseline as $result) {
+            $result = (array)$result;
+            if (str_starts_with((string)($result['reason'] ?? ''), 'source_irrelevant_name_none')) {
+                continue;
+            }
+            $packageName = (string)($result['provider_package'] ?? '');
+            if ($packageName === '' || (string)($result['status'] ?? '') === 'common') {
+                continue;
+            }
+            $requirementKey = $packageKeyKind === Uedb5SqlProjectionContract::PACKAGE_KEY_CLASSIC_FNAME
+                ? CatalogUnrealIdentityHash::fnameKey($packageName)
+                : CatalogUnrealIdentityHash::nameKey($packageName);
+            $requirements[$requirementKey] ??= $packageName;
+        }
+
+        // A classic FPackageName has no global physical file ID. Real original
+        // engines use the configured, ordered physical package search path
+        // (and already mounted linkers), not the DB upload order or a GUID.
+        // An explicit, scope-bound original runtime mount snapshot is the only
+        // acceptable way to break candidate ties; otherwise fail closed.
+        $orderedMounts = self::classicAuthoritativeMountOrder(
+            $options['classic_runtime_context'] ?? null,
+            $gameId,
+            $consumerFileId
+        );
+        $selected = [];
+        foreach ($requirements as $packageName) {
+            $packageKey = Uedb5SqlProjectionContract::classicPackageKeyBinary((string)$packageName, $packageKeyKind);
+            $candidates = $this->candidateRows(
+                $gameId,
+                $consumerFileId,
+                $packageKeyKind,
+                $packageKey
+            );
+            $sourceFallback = null;
+            $primaryPhysicallyMounted = $orderedMounts === null;
+            if ($orderedMounts !== null) {
+                $primaryIds = array_fill_keys($orderedMounts, true);
+                foreach ($candidates as $candidate) {
+                    if (isset($primaryIds[(int)$candidate['file_id']])) {
+                        $primaryPhysicallyMounted = true;
+                        break;
+                    }
+                }
+            }
+            if (($candidates === [] || !$primaryPhysicallyMounted)
+                && self::usesUnrealIToUnrealSharePackageFallback($consumer)
+                && self::sameFname((string)$packageName, 'UnrealI')) {
+                // The exact audited source profile catches a failed UnrealI package load and
+                // retries as UnrealShare. This is source-specific package loading,
+                // not content scoring and not a generic classic-package alias.
+                $fallbackName = 'UnrealShare';
+                $fallbackKey = Uedb5SqlProjectionContract::classicPackageKeyBinary($fallbackName, $packageKeyKind);
+                $candidates = $this->candidateRows(
+                    $gameId,
+                    $consumerFileId,
+                    $packageKeyKind,
+                    $fallbackKey
+                );
+                if ($candidates !== []) {
+                    $sourceFallback = $fallbackName;
+                }
+            }
+            if ($orderedMounts !== null) {
+                // Epic resolves a name using physical mount priority. Require
+                // an actual V5 verified candidate in this same game, never a
+                // synthetic provider supplied only by caller options.
+                $indexed = [];
+                foreach ($candidates as $candidate) {
+                    $indexed[(int)$candidate['file_id']] = true;
+                }
+                $winner = null;
+                foreach ($orderedMounts as $fileId) {
+                    if (isset($indexed[$fileId])) {
+                        $winner = $fileId;
+                        break;
+                    }
+                }
+                if ($winner !== null) {
+                    $selected[] = [
+                        'game_id' => $gameId,
+                        'file_id' => $winner,
+                        'package_name' => (string)$packageName,
+                        'selection_status' => 'selected',
+                        'selection_source' => 'evidenced_original_classic_mount_order',
+                        'source_fallback_package_name' => $sourceFallback,
+                    ];
+                } else {
+                    // Even indexed files are unavailable to this runtime if
+                    // no matching file occurs in its authoritative mount set.
+                    $selected[] = [
+                        'game_id' => $gameId,
+                        'file_id' => null,
+                        'package_name' => (string)$packageName,
+                        'selection_status' => 'missing',
+                        'selection_source' => 'evidenced_original_classic_mount_order',
+                        'source_fallback_package_name' => $sourceFallback,
+                    ];
+                }
+                continue;
+            }
+            // Epic selects one package/linker before VerifyImport inspects exports.
+            // candidateRows() discovers the known physical candidate set only.
+            // If more than one candidate remains, the missing runtime search/mount
+            // order is represented as ambiguity rather than guessed from DB order
+            // or candidate contents.
+            if (count($candidates) > 1) {
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => null,
+                    'package_name' => (string)$packageName,
+                    'selection_status' => 'ambiguous',
+                    'candidate_file_ids' => array_values(array_map(
+                        static fn(array $candidate): int => (int)$candidate['file_id'],
+                        $candidates
+                    )),
+                    'source_fallback_package_name' => $sourceFallback,
+                ];
+                continue;
+            }
+            $provider = $candidates[0] ?? null;
+            if (is_array($provider)) {
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => (int)$provider['file_id'],
+                    'package_name' => (string)$packageName,
+                    'selection_status' => 'selected',
+                    'source_fallback_package_name' => $sourceFallback,
+                ];
+            }
+        }
+        return $selected;
+    }
+
+    /**
+     * Exact original classic-loader physical mount order.
+     *
+     * @param mixed $context
+     * @return list<int>|null Null means no authoritative mount evidence.
+     */
+    private static function classicAuthoritativeMountOrder(
+        mixed $context, int $gameId, int $consumerFileId
+    ): ?array {
+        if ($context === null) {
+            return null;
+        }
+        if (!is_array($context)) {
+            throw new RuntimeException('Classic runtime context must be an array.');
+        }
+        $authoritative = $context['mount_order_authoritative'] ?? false;
+        if ($authoritative === false) {
+            // Prevent an allegedly partial context from affecting the normal
+            // ambiguous result, but reject claims of malformed authority.
+            return null;
+        }
+        if ($authoritative !== true
+            || ($context['game_id'] ?? null) !== $gameId
+            || ($context['consumer_file_id'] ?? null) !== $consumerFileId
+            || !isset($context['mounted_file_ids_search_order'])
+            || !is_array($context['mounted_file_ids_search_order'])
+            || !array_is_list($context['mounted_file_ids_search_order'])) {
+            throw new RuntimeException('Authoritative classic mount evidence requires exact scoped game, consumer and ordered file IDs.');
+        }
+        $ids = $context['mounted_file_ids_search_order'];
+        $seen = [];
+        foreach ($ids as $fileId) {
+            if (!is_int($fileId) || $fileId < 1 || isset($seen[$fileId])) {
+                throw new RuntimeException('Original classic mount order requires distinct positive integer file IDs.');
+            }
+            $seen[$fileId] = true;
+        }
+        return $ids;
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function selectZen(int $gameId, int $consumerFileId, array $consumer, array $options): array
+    {
+        $runtimeContext = $options['zen_runtime_context'] ?? [];
+        if (!is_array($runtimeContext)) {
+            throw new RuntimeException('Zen runtime context must be an array.');
+        }
+        // B005: the V5 dependency resolver accepts evidenced backends
+        // inside zen_runtime_context, while the game pass may also supply
+        // the same evidence as a top-level selector option. Both represent
+        // ONE Epic FPackageStore mount state: never silently disregard the
+        // context evidence or select from inconsistent backend snapshots.
+        $backendResults = Uedb5ZenPackageStoreBackendArbitrator::evidencedBackends(
+            $runtimeContext, $options
+        );
+        $baseline = Uedb5Ue5ZenDependencyResolver::resolve($consumer, [], $runtimeContext);
+        $requirements = [];
+        foreach ($baseline as $row) {
+            $row = (array)$row;
+            $packageId = strtoupper(trim((string)($row['provider_lookup_package_id'] ?? $row['required_package_id'] ?? '')));
+            if ($packageId !== '') {
+                // Never use raw FPackageId text as a PHP array key: an all-decimal
+                // 16-hex ID is coerced to int and loses its string identity.
+                $requirements['package:' . $packageId] = $packageId;
+            }
+        }
+        $selected = [];
+        foreach ($requirements as $packageId) {
+            if (preg_match('/^[0-9A-F]{16}$/', $packageId) !== 1) {
+                throw new RuntimeException('Zen dependency provider FPackageId is invalid.');
+            }
+            $packageKey = hex2bin($packageId);
+            if (!is_string($packageKey) || strlen($packageKey) !== 8) {
+                throw new RuntimeException('Could not encode Zen dependency provider key.');
+            }
+            $candidates = $this->candidateRows(
+                $gameId,
+                $consumerFileId,
+                Uedb5SqlProjectionContract::PACKAGE_KEY_ZEN_PACKAGE_ID,
+                $packageKey
+            );
+            // Runtime FPackageStore may identify a particular mounted physical file.
+            // Accept only an explicitly evidenced backend Ok result with a file_id
+            // present in the same game's V5 candidates. Pending must not fall through.
+            if ($backendResults !== null
+                && !empty($runtimeContext['package_store_context_authoritative'])) {
+                $entry = Uedb5ZenPackageStoreBackendArbitrator::entry($backendResults, $packageId);
+                if ($entry['status'] !== 'Ok') {
+                    // Runtime package store has not selected a physical file.
+                    // Pending and Missing must not fall back to catalogue order.
+                    continue;
+                }
+                if ($entry['status'] === 'Ok') {
+                    $resolvedId = (int)($entry['entry']['file_id'] ?? 0);
+                    $matches = array_values(array_filter($candidates,
+                        static fn(array $candidate):bool=>(int)$candidate['file_id']===$resolvedId));
+                    if ($resolvedId < 1 || count($matches) !== 1) {
+                        // Even an authoritative backend response is not permission to
+                        // select a file absent from the game's verified V5 candidates.
+                        continue;
+                    }
+                    $selected[] = [
+                        'game_id'=>$gameId,
+                        'file_id'=>$resolvedId,
+                        'package_id'=>$packageId,
+                        'selection_status'=>'selected',
+                        'selection_source'=>'evidenced_package_store_backend',
+                        'selected_backend_id'=>$entry['backend_id'],
+                    ];
+                    continue;
+                }
+            }
+            // Epic's global import store is keyed by exact FPackageId and keeps
+            // a 1:1 PackageId->package relationship. Public-export hashes resolve
+            // inside that selected package; they must not select a different file.
+            if (count($candidates) > 1) {
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => null,
+                    'package_id' => $packageId,
+                    'selection_status' => 'ambiguous',
+                    'candidate_file_ids' => array_values(array_map(
+                        static fn(array $candidate): int => (int)$candidate['file_id'],
+                        $candidates
+                    )),
+                ];
+                continue;
+            }
+            $provider = $candidates[0] ?? null;
+            if (is_array($provider)) {
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => (int)$provider['file_id'],
+                    'package_id' => $packageId,
+                    'selection_status' => 'selected',
+                ];
+            }
+        }
+        return $selected;
+    }
+    /** @return callable(array,array,array):array */
+    private function classicResolver(array $consumer): callable
+    {
+        $schema = strtolower(trim((string)($consumer['section_schemas']['imports'] ?? '')));
+        if (str_starts_with($schema, 'ue5.')) {
+            return static fn(array $snapshot, array $providers, array $options): array =>
+                Uedb5Ue5ClassicVerifyImportResolver::resolve($snapshot, $providers);
+        }
+        return static fn(array $snapshot, array $providers, array $options): array =>
+            Uedb5ClassicDependencyResolver::resolve($snapshot, $providers, $options);
+    }
+
+    private static function usesUnrealIToUnrealSharePackageFallback(array $snapshot): bool
+    {
+        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
+        return (str_starts_with($schema, 'ue1.ut99.')
+                && $policy === strtolower(Uedb5Ut99SnapshotBuilder::POLICY_RETAIL))
+            || (str_starts_with($schema, 'ue2.unreal2.')
+                && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000));
+    }
+
+    private static function sameFname(string $a, string $b): bool
+    {
+        return CatalogUnrealIdentityHash::fnameKey($a) === CatalogUnrealIdentityHash::fnameKey($b);
+    }
+
+    /** @return list<array<string,mixed>> */
+    private function candidateRows(
+        int $gameId,
+        int $consumerFileId,
+        int $packageKeyKind,
+        string $packageKey
+    ): array {
+        $statement = $this->db->prepare(
+            'SELECT p.file_id,p.source_kind,p.source_id,v.package_name,f.uploaded_at '
+            . 'FROM ue_uedb5_provider_keys p '
+            . 'JOIN ue_uedb5_files v ON v.file_id=p.file_id AND v.game_id=p.game_id '
+            . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '
+            . 'WHERE p.game_id=? AND p.package_key_kind=? AND p.package_key=? '
+            . 'AND f.scan_status="verified" '
+            . 'AND NOT EXISTS (SELECT 1 FROM ue_invalid_file_identities bad '
+            . 'WHERE bad.file_size=f.file_size AND bad.md5=LOWER(f.md5) AND bad.sha1=LOWER(f.sha1)) '
+            . 'ORDER BY (p.source_kind=1) DESC,(p.file_id=?) DESC,'
+            . 'f.uploaded_at DESC,p.source_id ASC,p.file_id ASC'
+        );
+        $statement->execute([$gameId, $packageKeyKind, $packageKey, $consumerFileId]);
+        $rows = [];
+        $seen = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $providerFileId = (int)($row['file_id'] ?? 0);
+            if ($providerFileId < 1 || isset($seen[$providerFileId])) { continue; }
+            $seen[$providerFileId] = true;
+            $rows[] = $row;
+        }
+        return $rows;
+    }
+}

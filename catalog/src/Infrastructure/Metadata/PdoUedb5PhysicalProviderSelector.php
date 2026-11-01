@@ -19,7 +19,7 @@ final class PdoUedb5PhysicalProviderSelector
     }
 
     /**
-     * @param array{common_packages?:list<string>,classic_runtime_context?:array{mount_order_authoritative:bool,game_id:int,consumer_file_id:int,mounted_file_ids_search_order:list<int>}} $options
+     * @param array{common_packages?:list<string>,classic_runtime_context?:array{mount_order_authoritative:bool,game_id:int,consumer_file_id:int,mounted_file_ids_search_order:list<int>,loaded_linkers?:list<array{package_name:string,file_id:int}>}} $options
      * @return list<array<string,mixed>>
      */
     public function select(int $gameId, int $fileId, array $options = []): array
@@ -79,6 +79,10 @@ final class PdoUedb5PhysicalProviderSelector
             $gameId,
             $consumerFileId
         );
+        // GetPackageLinker checks GObj.Loaders before looking up physical paths.
+        // A source-authoritative already-linked package remains selected even
+        // after runtime path changes; never silently replace its actual linker.
+        $loadedLinkers = self::classicSourceLoadedLinkers($options['classic_runtime_context'] ?? null, $orderedMounts);
         $selected = [];
         foreach ($requirements as $packageName) {
             $packageKey = Uedb5SqlProjectionContract::classicPackageKeyBinary((string)$packageName, $packageKeyKind);
@@ -89,7 +93,9 @@ final class PdoUedb5PhysicalProviderSelector
                 $packageKey
             );
             $sourceFallback = null;
-            $primaryPhysicallyMounted = $orderedMounts === null;
+            $loadedKey = CatalogUnrealIdentityHash::fnameKey((string)$packageName);
+            $sourceLoadedId = $loadedLinkers[$loadedKey] ?? null;
+            $primaryPhysicallyMounted = $orderedMounts === null || $sourceLoadedId !== null;
             if ($orderedMounts !== null) {
                 $primaryIds = array_fill_keys($orderedMounts, true);
                 foreach ($candidates as $candidate) {
@@ -116,6 +122,29 @@ final class PdoUedb5PhysicalProviderSelector
                 if ($candidates !== []) {
                     $sourceFallback = $fallbackName;
                 }
+            }
+            if ($sourceFallback !== null) {
+                $loadedKey = CatalogUnrealIdentityHash::fnameKey((string)$sourceFallback);
+                $sourceLoadedId = $loadedLinkers[$loadedKey] ?? null;
+            }
+            if ($sourceLoadedId !== null) {
+                // An already-loaded original ULinkerLoad is selected before
+                // any configured runtime Paths, even if the physical archive
+                // has since moved or become temporarily unavailable.
+                $verified = array_values(array_filter($candidates,
+                    static fn(array $candidate):bool=>(int)$candidate['file_id']===$sourceLoadedId));
+                if (count($verified) !== 1) {
+                    throw new RuntimeException('Source-evidenced original loaded linker is absent from verified same-game provider candidates.');
+                }
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => $sourceLoadedId,
+                    'package_name' => (string)$packageName,
+                    'selection_status' => 'selected',
+                    'selection_source' => 'evidenced_original_classic_loaded_linker',
+                    'source_fallback_package_name' => $sourceFallback,
+                ];
+                continue;
             }
             if ($orderedMounts !== null) {
                 // Epic resolves a name using physical mount priority. Require
@@ -226,6 +255,45 @@ final class PdoUedb5PhysicalProviderSelector
             $seen[$fileId] = true;
         }
         return $ids;
+    }
+
+    /**
+     * Source-observed loaded ULinkerLoad roots override physical Paths search.
+     *
+     * @param mixed $context
+     * @param list<int>|null $orderedMounts
+     * @return array<string,int> Canonical FName key => verified file ID.
+     */
+    private static function classicSourceLoadedLinkers(
+        mixed $context, ?array $orderedMounts
+    ): array {
+        if (!is_array($context) || !array_key_exists('loaded_linkers', $context)) {
+            return [];
+        }
+        if ($orderedMounts === null) {
+            throw new RuntimeException('Loaded classic linkers require authoritative game/consumer-scoped runtime context.');
+        }
+        $list = $context['loaded_linkers'];
+        if (!is_array($list) || !array_is_list($list)) {
+            throw new RuntimeException('Classic original loaded linkers must be an ordered list.');
+        }
+        $result = [];
+        foreach ($list as $entry) {
+            if (!is_array($entry)
+                || !isset($entry['package_name'], $entry['file_id'])
+                || !is_string($entry['package_name'])
+                || trim($entry['package_name']) === ''
+                || !is_int($entry['file_id'])
+                || $entry['file_id'] < 1) {
+                throw new RuntimeException('Original classic loaded linker must identify a package name and verified positive file ID.');
+            }
+            $key = CatalogUnrealIdentityHash::fnameKey($entry['package_name']);
+            if (isset($result[$key])) {
+                throw new RuntimeException('Conflicting original loaded linkers for one package identity.');
+            }
+            $result[$key] = $entry['file_id'];
+        }
+        return $result;
     }
 
     /** @return list<array<string,mixed>> */

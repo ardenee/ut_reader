@@ -235,6 +235,56 @@ $check('ut99_original_source_mounted_primary_prevents_fallback',
     count($runtimePrimary)===1&&$runtimePrimary[0]['selection_status']==='selected'
     &&$runtimePrimary[0]['file_id']===31
     &&$runtimePrimary[0]['source_fallback_package_name']===null);
+// Genuine original UT99 GetPackageLinker checks existing GObj.Loaders before
+// the Path search; preserve already-loaded physical file even if paths change.
+$mountedWithLoaded=static function(array $mountOrder,mixed $loadedFileId,string $packageName='Pkg',int $consumer=10)use($mount):array{
+    $ctx=$mount($mountOrder,$consumer);
+    $ctx['classic_runtime_context']['loaded_linkers']=[
+        ['package_name'=>$packageName,'file_id'=>$loadedFileId],
+    ];
+    return $ctx;
+};
+$alreadyLinked=$selector->select(3,10,$mountedWithLoaded([20,21],21));
+$check('original_compiled_v432_already_loaded_linker_overrides_first_in_paths',
+    count($alreadyLinked)===1&&$alreadyLinked[0]['file_id']===21
+    &&$alreadyLinked[0]['selection_source']==='evidenced_original_classic_loaded_linker');
+$alreadyLinked=$selector->select(3,10,$mountedWithLoaded([21,20],20,'pKG'));
+$check('original_compiled_v432_reversed_live_linker_overrides_swapped_paths',
+    count($alreadyLinked)===1&&$alreadyLinked[0]['file_id']===20);
+$alreadyLinked=$selector->select(3,10,$mountedWithLoaded([],21));
+$check('original_compiled_v432_loaded_linker_persists_after_paths_remove_provider',
+    count($alreadyLinked)===1&&$alreadyLinked[0]['file_id']===21);
+$notLinked=$selector->select(3,10,['classic_runtime_context'=>[
+    'mount_order_authoritative'=>true,'game_id'=>3,'consumer_file_id'=>10,
+    'mounted_file_ids_search_order'=>[20,21],'loaded_linkers'=>[],
+]]);
+$check('original_compiled_v432_no_cached_linker_falls_back_to_physical_first',
+    count($notLinked)===1&&$notLinked[0]['file_id']===20);
+$badLoaded=[
+ ['unindexed',$mountedWithLoaded([20,21],99999)],
+ ['negative',$mountedWithLoaded([20,21],-1)],
+ ['wrong_type',$mountedWithLoaded([20,21],21.0)],
+ ['duplicated',['classic_runtime_context'=>[
+   'mount_order_authoritative'=>true,'game_id'=>3,'consumer_file_id'=>10,
+   'mounted_file_ids_search_order'=>[20,21],'loaded_linkers'=>[
+      ['package_name'=>'Pkg','file_id'=>20],['package_name'=>'pKG','file_id'=>21],
+   ]]]],
+ ['untrusted',['classic_runtime_context'=>[
+    'mount_order_authoritative'=>false,'game_id'=>3,'consumer_file_id'=>10,
+    'mounted_file_ids_search_order'=>[20,21],'loaded_linkers'=>[
+        ['package_name'=>'Pkg','file_id'=>21],
+    ]]]],
+];
+foreach($badLoaded as [$label,$badCtx]){
+    $rejected=false;try{$selector->select(3,10,$badCtx);}catch(RuntimeException){$rejected=true;}
+    $check('original_runtime_already_linked_provider_must_be_source_verified_'.$label,$rejected);
+}
+$unmountedPrimaryAlreadyLinked=$selector->select(3,24,$mountedWithLoaded([25],31,'UnrealI',24));
+$check('source_original_loaded_unreali_prevents_unrealshare_fallback_even_if_unmounted',
+   count($unmountedPrimaryAlreadyLinked)===1
+   &&($unmountedPrimaryAlreadyLinked[0]['file_id']??null)===31
+   &&array_key_exists('source_fallback_package_name',$unmountedPrimaryAlreadyLinked[0])
+   &&$unmountedPrimaryAlreadyLinked[0]['source_fallback_package_name']===null);
 $ut4=[
     'file'=>['id'=>30,'game_id'=>7,'package_name'=>'/Game/Empty','original_name'=>'Empty.uasset'],
     'package_family'=>Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY,
