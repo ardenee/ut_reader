@@ -1,0 +1,138 @@
+{
+  "schema": "G3-T073-oldunreal-ut99-469f-original-compiled-conditional-v70-UArrayProperty-archive-member-v1",
+  "date": "2026-11-01",
+  "frozen_owner": "T073",
+  "full_T073_pass": false,
+  "controlled_v70_not_genuine_physical_archive": true,
+  "original_true_physical_Engine_u": {
+    "archive_version": 69,
+    "licensee": 0,
+    "export_index_0based": 5627,
+    "original_export_name": "Touching",
+    "real_native_prefix_bytes": 15
+  },
+  "original_compiled_469f_runtime_case": {
+    "archive_version_before": 69,
+    "controlled_version_after": 70,
+    "ArIsLoading": 1,
+    "ArIsSaving": 0,
+    "ArIsError": 0,
+    "original_function": "Core!UArrayProperty::Serialize",
+    "real_branch_compiled_offset": "+0x96",
+    "true_native_32bit_member_offset": "+0x64",
+    "actual_original_native_value_before": 0,
+    "actual_original_native_value_after": 1342191717
+  },
+  "original_v432_differential": "Original compiled v432 UArrayProperty Serialize has no conditional extra archive member on version70; source overlay restricted to 469f explicit provenance",
+  "source_reader_new_rule": "File LOAD with explicit ut99-v469f and version>69 consumes one signed Int32 after original Inner. v69 and v432 remain prefix-only. Not a claim of genuine version70 file.",
+  "unverified_remaining": [
+    "Original full v70 physical files unavailable; controlled 70-mode is not original package format acceptance",
+    "Other 469f changed source methods fixed/map loaded values and cross build method union remain pending"
+  ],
+  "pins": {
+    "469f_controlled_original_native_v70_read_log": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v70-controlled-g3-t073-469f-controlled-v70-actual-extra-member-read.log",
+      "location": "repo",
+      "bytes": 6588,
+      "sha256": "a8bfdb31300cf81443a8aca06d1a90bc1bfe52f873085f6fb60d48e1f6f5476d"
+    },
+    "469f_original_CDB_v70_member_read_script": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v70-controlled-g3-t073-469f-controlled-v70-actual-extra-member-read.cmd",
+      "location": "repo",
+      "bytes": 694,
+      "sha256": "4b3de0567050e4a95ee6956d1e96b1f558d454f9d21d50918fb6701dcf004526"
+    },
+    "469f_controlled_original_native_branch_entry_log": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v70-controlled-g3-t073-original-469f-controlled-v70-specific-extra-branch.log",
+      "location": "repo",
+      "bytes": 6734,
+      "sha256": "06caac658b433e6d4b1a0413b6e17d262f6e13cf126f31740e594bedac00c1c5"
+    },
+    "469f_original_CDB_v70_branch_entry_script": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v70-controlled-g3-t073-original-469f-controlled-v70-specific-extra-branch.cmd",
+      "location": "repo",
+      "bytes": 678,
+      "sha256": "c7fac3312c967b02ef6c4819a93ee60c3cfe5b59299ba08f12dda7b18829d1b6"
+    },
+    "469f_original_x86_method": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-12-original-array-g3-t073-new-Native-469f-compiled-array-method.txt",
+      "location": "repo",
+      "bytes": 9701,
+      "sha256": "9aeba39dd1a9e83139b245bd68b63394882dc45f3a646a821f8eadd3a86a3de2",
+      "canonical_git_blob_sha256": "5ebfd9b1438657ce8cfdad78f84390b3f51d24245b16251c4f372b491b680b5b",
+      "canonical_git_blob_bytes": 9538
+    },
+    "v432_original_x86_method": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-12-original-array-g3-t073-new-Native-UCC-compiled-array-method.txt",
+      "location": "repo",
+      "bytes": 7566,
+      "sha256": "1e8878b96fd993d1c218a989864bd4a77138b7305cf772a6c8c6163d100448ec",
+      "canonical_git_blob_sha256": "1b7b4c686776697b6424a61a6089de903c2c6285083bfb8d91ad7a7c8b0103f6",
+      "canonical_git_blob_bytes": 7448
+    },
+    "469f_actual_original_v69_8_array_loads": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-12-original-array-g3-t073-original-469f-array-G3-Original-469f-Engine-Actor-Defaults.log",
+      "location": "repo",
+      "bytes": 8810,
+      "sha256": "d8764737a5e2239b2efc44a76721ff102c9ebc8002dc280998a1011d591d1d3b",
+      "canonical_git_blob_sha256": "9057b9283a42edf50095adef33e82030c4bd662f5cb025abf2ba05e15891926d",
+      "canonical_git_blob_bytes": 8693
+    },
+    "original_469f_genuine_Engine_u": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.u",
+      "location": "absolute",
+      "bytes": 1251453,
+      "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+    },
+    "original_469f_genuine_Core_u": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.u",
+      "location": "absolute",
+      "bytes": 67362,
+      "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0"
+    },
+    "original_469f_stock_Core_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
+      "location": "absolute",
+      "bytes": 1790328,
+      "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+    },
+    "original_469f_stock_Engine_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.dll",
+      "location": "absolute",
+      "bytes": 3463032,
+      "sha256": "625dabea278e314714a45c931c98ba6282a9198378499144429aa979a1a0570f"
+    },
+    "original_469f_stock_native_host": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\G3-T073-new-469f-array-native\\System\\G3-Original-469f-Engine-Actor-Defaults.exe",
+      "location": "absolute",
+      "bytes": 108544,
+      "sha256": "ea60bc628cb6f5c158e3fad201d11bdfc50d1f20a8973263b7a5c4b8e4793009"
+    },
+    "original_469f_sdk_property_source_header": {
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnType.h",
+      "location": "absolute",
+      "bytes": 24769,
+      "sha256": "0b302e92c3c079d60a0f896a69d4793e6c60728d4cef4708d072144dcbe8c4ef"
+    },
+    "modified_source_parser": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+      "location": "repo",
+      "bytes": 20770,
+      "sha256": "6d37cc4bf3499cf62294abd1fba9125cd60c46c82b9cbc77aceccac330d0d686",
+      "canonical_git_blob_sha256": "f0f9768a6218664b2a5531b103319347205bd38e61c27d1d2d9579ab44783213",
+      "canonical_git_blob_bytes": 20427
+    },
+    "focus_verifier": {
+      "path": "catalog/bin/verify-ue1-o06-g3-t073-469f-controlled-70-array-static-dim-native.php",
+      "location": "repo",
+      "bytes": 7064,
+      "sha256": "f547f469df42066c0744e6f48bea056fef2457160e5d39d528fd09e719443f8a"
+    },
+    "old_true_v69_native_evidence": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-v432-469f-original-12-array-native-methods.json",
+      "location": "repo",
+      "bytes": 7354,
+      "sha256": "ca3084b9378b4f278c381e707b8e7594d69ac592127e219d232cfb453ced6787"
+    }
+  }
+}

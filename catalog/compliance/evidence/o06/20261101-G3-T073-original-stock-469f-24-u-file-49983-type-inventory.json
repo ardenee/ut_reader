@@ -1,0 +1,578 @@
+{
+  "real_stock_469f_original_system_packages": 24,
+  "full_genuine_system_corpus": [
+    {
+      "package": "Botpack.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 13918,
+      "imports": 1511,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 3,
+      "matches": [
+        {
+          "idx": 12701,
+          "class": "ArrayProperty",
+          "name": "CachedFonts"
+        },
+        {
+          "idx": 13913,
+          "class": "ArrayProperty",
+          "name": "AvailableClasses"
+        },
+        {
+          "idx": 13914,
+          "class": "ArrayProperty",
+          "name": "AvailableDescriptions"
+        }
+      ]
+    },
+    {
+      "package": "Core.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 778,
+      "imports": 19,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 5,
+      "matches": [
+        {
+          "idx": 722,
+          "class": "PointerProperty",
+          "name": "ObjectInternal"
+        },
+        {
+          "idx": 724,
+          "class": "PointerProperty",
+          "name": "ExecVtbl"
+        },
+        {
+          "idx": 746,
+          "class": "ArrayProperty",
+          "name": "Values"
+        },
+        {
+          "idx": 748,
+          "class": "ArrayProperty",
+          "name": "ValueDescriptions"
+        },
+        {
+          "idx": 759,
+          "class": "ArrayProperty",
+          "name": "ReturnValue"
+        },
+        {
+          "idx": 763,
+          "class": "ArrayProperty",
+          "name": "ReturnValue"
+        },
+        {
+          "idx": 767,
+          "class": "ArrayProperty",
+          "name": "ReturnValue"
+        }
+      ]
+    },
+    {
+      "package": "Editor.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 419,
+      "imports": 36,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 6,
+      "matches": [
+        {
+          "idx": 104,
+          "class": "ArrayProperty",
+          "name": "VertexIndices"
+        },
+        {
+          "idx": 128,
+          "class": "ArrayProperty",
+          "name": "Vertices"
+        },
+        {
+          "idx": 135,
+          "class": "ArrayProperty",
+          "name": "Polys"
+        },
+        {
+          "idx": 150,
+          "class": "ArrayProperty",
+          "name": "Tools"
+        },
+        {
+          "idx": 240,
+          "class": "ArrayProperty",
+          "name": "EditPackages"
+        },
+        {
+          "idx": 388,
+          "class": "PointerProperty",
+          "name": "ConstraintsVtbl"
+        },
+        {
+          "idx": 389,
+          "class": "PointerProperty",
+          "name": "NotifyVtbl"
+        },
+        {
+          "idx": 399,
+          "class": "PointerProperty",
+          "name": "VertexEditingInternal"
+        },
+        {
+          "idx": 404,
+          "class": "ArrayProperty",
+          "name": "BrushBuilders"
+        },
+        {
+          "idx": 410,
+          "class": "PointerProperty",
+          "name": "LevelProperties"
+        },
+        {
+          "idx": 411,
+          "class": "PointerProperty",
+          "name": "Preferences"
+        },
+        {
+          "idx": 412,
+          "class": "PointerProperty",
+          "name": "UseDest"
+        },
+        {
+          "idx": 417,
+          "class": "PointerProperty",
+          "name": "ActorProperties"
+        }
+      ]
+    },
+    {
+      "package": "Engine.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 5740,
+      "imports": 63,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 8,
+      "matches": [
+        {
+          "idx": 2947,
+          "class": "ArrayProperty",
+          "name": "SurfList"
+        },
+        {
+          "idx": 4525,
+          "class": "ArrayProperty",
+          "name": "CompMips"
+        },
+        {
+          "idx": 4532,
+          "class": "ArrayProperty",
+          "name": "Mips"
+        },
+        {
+          "idx": 4749,
+          "class": "ArrayProperty",
+          "name": "Colors"
+        },
+        {
+          "idx": 5445,
+          "class": "ArrayProperty",
+          "name": "MD5Ignore"
+        },
+        {
+          "idx": 5448,
+          "class": "PointerProperty",
+          "name": "LogAr"
+        },
+        {
+          "idx": 5449,
+          "class": "PointerProperty",
+          "name": "Context"
+        },
+        {
+          "idx": 5450,
+          "class": "PointerProperty",
+          "name": "vfExec"
+        },
+        {
+          "idx": 5452,
+          "class": "PointerProperty",
+          "name": "vfOut"
+        },
+        {
+          "idx": 5453,
+          "class": "PointerProperty",
+          "name": "Junk3"
+        },
+        {
+          "idx": 5455,
+          "class": "PointerProperty",
+          "name": "vtblOut"
+        },
+        {
+          "idx": 5456,
+          "class": "PointerProperty",
+          "name": "FramePtr"
+        },
+        {
+          "idx": 5457,
+          "class": "PointerProperty",
+          "name": "RenderPtr"
+        },
+        {
+          "idx": 5458,
+          "class": "PointerProperty",
+          "name": "Junk2"
+        },
+        {
+          "idx": 5459,
+          "class": "PointerProperty",
+          "name": "Junk1"
+        },
+        {
+          "idx": 5558,
+          "class": "PointerProperty",
+          "name": "TextureHandle"
+        },
+        {
+          "idx": 5586,
+          "class": "PointerProperty",
+          "name": "SourceMip"
+        },
+        {
+          "idx": 5595,
+          "class": "ArrayProperty",
+          "name": "Junk5"
+        },
+        {
+          "idx": 5597,
+          "class": "ArrayProperty",
+          "name": "Junk4"
+        },
+        {
+          "idx": 5627,
+          "class": "ArrayProperty",
+          "name": "Touching"
+        }
+      ]
+    },
+    {
+      "package": "Fire.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 111,
+      "imports": 16,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 1,
+      "matches": [
+        {
+          "idx": 101,
+          "class": "ArrayProperty",
+          "name": "Sparks"
+        },
+        {
+          "idx": 108,
+          "class": "PointerProperty",
+          "name": "LocalSourceBitmap"
+        },
+        {
+          "idx": 109,
+          "class": "PointerProperty",
+          "name": "LocalSource"
+        },
+        {
+          "idx": 110,
+          "class": "PointerProperty",
+          "name": "SourceFields"
+        }
+      ]
+    },
+    {
+      "package": "IpDrv.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 174,
+      "imports": 30,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 1,
+      "matches": [
+        {
+          "idx": 129,
+          "class": "ArrayProperty",
+          "name": "SendFIFO"
+        },
+        {
+          "idx": 169,
+          "class": "PointerProperty",
+          "name": "RemoteSocket"
+        },
+        {
+          "idx": 170,
+          "class": "PointerProperty",
+          "name": "Socket"
+        },
+        {
+          "idx": 171,
+          "class": "PointerProperty",
+          "name": "PrivateResolveInfo"
+        }
+      ]
+    },
+    {
+      "package": "IpServer.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 181,
+      "imports": 72,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "OldUnreal469c.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 35,
+      "imports": 45,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "SkeletalChars.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 102,
+      "imports": 87,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "UBrowser.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 2087,
+      "imports": 297,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "UMenu.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 3413,
+      "imports": 542,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 2,
+      "matches": [
+        {
+          "idx": 3302,
+          "class": "ArrayProperty",
+          "name": "RegistryControls"
+        },
+        {
+          "idx": 3303,
+          "class": "ArrayProperty",
+          "name": "RegistryProperties"
+        }
+      ]
+    },
+    {
+      "package": "UTBrowser.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 115,
+      "imports": 90,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "UTMenu.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 3177,
+      "imports": 726,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "UTServerAdmin.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 386,
+      "imports": 132,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "UWeb.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 170,
+      "imports": 38,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": [
+        {
+          "idx": 168,
+          "class": "PointerProperty",
+          "name": "ReplacementMap"
+        },
+        {
+          "idx": 169,
+          "class": "PointerProperty",
+          "name": "VariableMap"
+        }
+      ]
+    },
+    {
+      "package": "UWindow.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 3767,
+      "imports": 104,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "UnrealI.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 3429,
+      "imports": 680,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "UnrealShare.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 9572,
+      "imports": 796,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 2,
+      "matches": [
+        {
+          "idx": 9555,
+          "class": "ArrayProperty",
+          "name": "AvailableClasses"
+        },
+        {
+          "idx": 9557,
+          "class": "ArrayProperty",
+          "name": "AvailableDescriptions"
+        }
+      ]
+    },
+    {
+      "package": "de.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 424,
+      "imports": 102,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "epiccustommodels.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 31,
+      "imports": 10,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "multimesh.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 243,
+      "imports": 231,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "relics.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 325,
+      "imports": 182,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "relicsbindings.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 2,
+      "imports": 6,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": []
+    },
+    {
+      "package": "udemo.u",
+      "archive_version": 69,
+      "licensee_version": 0,
+      "exports": 1384,
+      "imports": 481,
+      "fixedarrayproperty": 0,
+      "mapproperty": 0,
+      "arrayproperty": 0,
+      "matches": [
+        {
+          "idx": 977,
+          "class": "PointerProperty",
+          "name": "UzAr"
+        },
+        {
+          "idx": 978,
+          "class": "PointerProperty",
+          "name": "UzDeCompAr"
+        }
+      ]
+    }
+  ],
+  "source_specific_property_types": {
+    "ArrayProperty": 28,
+    "PointerProperty": 31
+  }
+}

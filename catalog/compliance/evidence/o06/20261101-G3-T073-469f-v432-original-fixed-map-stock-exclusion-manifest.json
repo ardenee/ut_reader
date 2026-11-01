@@ -1,0 +1,167 @@
+{
+  "schema": "UE1-T073-stock-469f-v432-original-compiled-FixedArray-Map-field-order-and-shipped-inapplicability-v1",
+  "date": "2026-11-01",
+  "frozen_owner": "T073",
+  "full_T073_pass": false,
+  "actual_stock_469f_genuine_package_SHA": {
+    "Botpack.u": {
+      "sha256": "09172d4e38709a75e88a068ca9080b57fe59f3775a617a2d797f2902c2dbb61a",
+      "bytes": 40048034
+    },
+    "Core.u": {
+      "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0",
+      "bytes": 67362
+    },
+    "Editor.u": {
+      "sha256": "1694e7a037b6bdb0ac4e504c47f60fb493d3445a2b15bd4aa31ea1326873aa13",
+      "bytes": 129786
+    },
+    "Engine.u": {
+      "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b",
+      "bytes": 1251453
+    },
+    "Fire.u": {
+      "sha256": "032ae8a2b2fb7af74d73190aa4fda7922153a31e78fef5bcd0c0726d5c224fd8",
+      "bytes": 19278
+    },
+    "IpDrv.u": {
+      "sha256": "70017bb8089ad9d52fa64738fe138c6e31bcb3e3ec2a8620de56277e92d5cc74",
+      "bytes": 22836
+    },
+    "IpServer.u": {
+      "sha256": "2ce3c4fdcb4832b62515139c341b8e9c4d7a04e7f61181030950506c4c06d694",
+      "bytes": 35987
+    },
+    "OldUnreal469c.u": {
+      "sha256": "19fbfbfacf71533c6200bdd74431f461dc2874143ebd4acfea9fa78ef242b24f",
+      "bytes": 9469
+    },
+    "SkeletalChars.u": {
+      "sha256": "bd3a2c0c2758e32b2d7e1447ecddb700d9cd7b51bbd72e992ea6580a2d754dcb",
+      "bytes": 1591818
+    },
+    "UBrowser.u": {
+      "sha256": "57fd4e4bfd529972f7c1fb125dbfcecded6c78b507997e1e031f2f1495ecc1c7",
+      "bytes": 393352
+    },
+    "UMenu.u": {
+      "sha256": "78c82b2bccd41fd54e0c8983e5aaeda7d6cac1acea45984510da81c431b0c8a3",
+      "bytes": 10311206
+    },
+    "UTBrowser.u": {
+      "sha256": "58ef9711b082fd5524f96fc8b47a2aa060a6d6df33a0f112c6ee8a80ed23fd1c",
+      "bytes": 23095
+    },
+    "UTMenu.u": {
+      "sha256": "b95fb72ab14c2fab41b9eb8839f2c755ae92de2cc39d053cf44e51ddd8f26efc",
+      "bytes": 4706234
+    },
+    "UTServerAdmin.u": {
+      "sha256": "2e50faf358d8efa5792cd79031da9b24aa5350ebb52e37bb67c63fae958a6169",
+      "bytes": 121080
+    },
+    "UWeb.u": {
+      "sha256": "f9e84c5c3d320223e56fd8e19b8be82054773afcbd2cebb8cbe54ec40e83d94b",
+      "bytes": 30462
+    },
+    "UWindow.u": {
+      "sha256": "b2b53b8fc5a21a8beb205df46e9ace4f429c21e06e9aae1eb46613cab5465d91",
+      "bytes": 681929
+    },
+    "UnrealI.u": {
+      "sha256": "d26f2d8802da0f9e1363dbfa305a4ff35999a3fd972e8e1d814e284eb6665bf0",
+      "bytes": 18568877
+    },
+    "UnrealShare.u": {
+      "sha256": "10b3d906fc7cca49470c1e8c680bd903b5e1fe480aebc0b1be2dac5546ee7562",
+      "bytes": 22088955
+    },
+    "de.u": {
+      "sha256": "335e2298c977e4a513d2d1bc76007e0c1a17bdeff5b1a54bee13cd814168d616",
+      "bytes": 72169
+    },
+    "epiccustommodels.u": {
+      "sha256": "6bd7d2fbe87297892151f98be66ff34a253f6179697cab70905a73c9d1749ac5",
+      "bytes": 2408888
+    },
+    "multimesh.u": {
+      "sha256": "4cae958dd3e0d711caac56af422fab38b4da841c478c8f4983ddc5ef01cd267f",
+      "bytes": 78157
+    },
+    "relics.u": {
+      "sha256": "0968dfbd8ab2cb91feceb8e2323cc5af0e790bbddf0f20046b8f26ca57e3d1d3",
+      "bytes": 456086
+    },
+    "relicsbindings.u": {
+      "sha256": "2b7f9cb5232956b433f072a5a76ddf47a46ac991c69cd01b3a2260248b684ef0",
+      "bytes": 582
+    },
+    "udemo.u": {
+      "sha256": "8c22f3fe8d500c610b616f512870985f0de169f12889eeb7090803dc7a7d9b7c",
+      "bytes": 432954
+    }
+  },
+  "original_469f_stock_system_directory": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-Windows-x86\\System",
+  "genuine_stock_469f_system_package_count": 24,
+  "original_stock_real_exports": 49983,
+  "no_genuine_stock_FixedArray_or_Map_direct_export": true,
+  "source_based_inapplicability_scope": "Genuine physically shipped original 469f System *.u direct exported UFixedArrayProperty/UMapProperty object. Not a global exclusion for third-party packages, which remain implemented from original compiled x86 field order.",
+  "native_compiled_archive_fields": {
+    "FixedArrayProperty": "Inherit UProperty, Inner at +0x5c, signed 32bit Count at +0x60",
+    "MapProperty": "Inherit UProperty, Key at +0x5c, Value at +0x60"
+  },
+  "loaded_original_FixedArray_or_Map_runtime_objects_proven": false,
+  "synthetic_field_order_fixture_is_not_genuine_original_archive": true,
+  "pins": {
+    "original_469f_real_24_package_type_inventory": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-original-stock-469f-24-u-file-49983-type-inventory.json",
+      "location": "repo",
+      "bytes": 13346,
+      "sha256": "9236c7e0316bcebc3162899a48d20c56a88928b443ce1f94efd5fda1fc4c7751"
+    },
+    "original_compiled_469f_FixedMap_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-original-method-only-g3-t073-new-Native-469f-array-map-native-symbols.log",
+      "location": "repo",
+      "bytes": 15946,
+      "sha256": "a17cdde32a177e4b04bc8a7ee823935dbf2fc12e45bc4f95f7cad4e041010a6a"
+    },
+    "original_compiled_v432_FixedMap_disassembly": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-original-method-only-g3-t073-new-Native-UCC-array-map-native-symbols.log",
+      "location": "repo",
+      "bytes": 15079,
+      "sha256": "a8c7296d501d5bb7e8fda03f70b57b013656809d30de1342429a7f0727e74b0c"
+    },
+    "original_469f_Engine_u": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.u",
+      "location": "absolute",
+      "bytes": 1251453,
+      "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+    },
+    "original_469f_Core_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
+      "location": "absolute",
+      "bytes": 1790328,
+      "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+    },
+    "original_v432_Core_dll": {
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "location": "absolute",
+      "bytes": 786432,
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "current_property_reader": {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+      "location": "repo",
+      "bytes": 20770,
+      "sha256": "6d37cc4bf3499cf62294abd1fba9125cd60c46c82b9cbc77aceccac330d0d686",
+      "canonical_git_blob_sha256": "f0f9768a6218664b2a5531b103319347205bd38e61c27d1d2d9579ab44783213",
+      "canonical_git_blob_bytes": 20427
+    },
+    "new_focus_verifier": {
+      "path": "catalog/bin/verify-ue1-o06-g3-t073-original-v432-469f-fixed-map-stock-exclusion.php",
+      "location": "repo",
+      "bytes": 8554,
+      "sha256": "a81d2cf546bef19809a5a1d4d6bb25b7c22e27d47bbce9bfc176fcff255fb559"
+    }
+  }
+}

@@ -142,6 +142,23 @@ final class CatalogUE1ClassicPropertyNativeReader
                 break;
             case 'arrayproperty':
                 $extra['inner_reference'] = $reference('UArrayProperty.Inner');
+                // Actual OldUnreal UT99 469f compiled Core.dll
+                // UArrayProperty::Serialize RVA 0x14890:
+                // Ver()>69 enters the +0x96 extra Ar << member [+0x64]
+                // after inherited UProperty and Inner. In an original
+                // LOAD archive with Ver()<=69 / ArIsLoading=1 / ArIsError=0,
+                // the compiled method clears the gate and reads NO extra
+                // bytes. Original v432 has NO corresponding operation.
+                // A controlled original 469f 70-mode native run proves
+                // +0x96 through +0xa3 executed, but is NOT proof of a
+                // genuine physical version70 package. This parser only
+                // models file LOAD, not the other archive flag modes.
+                if($ut99_469f&&$version>69){
+                    $raw=(int)$u32();
+                    $extra['static_array_dim']=$raw>=0x80000000
+                        ?$raw-0x100000000:$raw;
+                    $extra['static_array_dim_archived_in_469f_above_v69']=true;
+                }
                 // NetSerializeItem is NOT a package-file LOAD/SAVE method.
                 // Original 1999 v432 Core.dll: true/no bytes, actual
                 // zero/one/two real native UIntProperty array calls.

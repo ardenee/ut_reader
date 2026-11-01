@@ -29,11 +29,37 @@
       "id": "T073",
       "status": "BLOCKED",
       "unproven": [
-        "469f conditional StaticArrayDim archived read not yet reached in real source archive mode",
-        "Genuine FixedArrayProperty/MapProperty native direct instance or source-backed exclusion",
-        "Remaining v432-versus-469f changed method source oracles"
+        "Remaining v432-versus-469f changed method source oracles",
+        "No genuine stock physical version70 469f archive to verify full resulting loader; original compiled extra member read is proven only by controlled virtual version70 on genuine v69 Engine.u, not an original v70 package",
+        "Third-party FixedArray/Map direct runtime-loaded values have no original compiled stock instance; only the original compiled serializer field grammar and current PHP synthetic archive codec are verified"
       ],
-      "next_focused_original_oracle": "Next: target true 469f changed archive condition, no old native replays"
+      "next_focused_original_oracle": "Next: target true 469f changed archive condition, no old native replays",
+      "new_verified_469f_compiled_method_and_reader_branch": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-original-completed-version70-branch-manifest.json",
+          "sha256": "3a512e869505af789bf77133b0b0ccd8b9c6327894e33f424ed73e020c8cd574",
+          "bytes": 6387
+        },
+        "original_compiled_v70_branch_reached": true,
+        "original_compiled_extra_member_archive_call_returned": true,
+        "current_reader_version70_32bit_extra_field_implemented": true,
+        "v69_genuine_file_unchanged": true,
+        "v432_binary_diff_kept": true,
+        "new_assertions": 34
+      },
+      "verified_original_469f_v432_FixedArray_Map_serialization_methods_and_stock_only_exclusion": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-original-fixed-map-stock-exclusion-manifest.json",
+          "sha256": "b2cb5ce89fded008da2115898080b3e301100c0cd03b2a34d754d8902605d19c",
+          "bytes": 6880
+        },
+        "shipped_original_stock_package_count": 24,
+        "stock_export_count": 49983,
+        "stock_loaded_Fixed_or_Map_direct_instances": 0,
+        "source_compiled_archive_method_grammar": true,
+        "new_checks": 84,
+        "custom_native_loaded_instance_proof_claim": false
+      }
     },
     {
       "id": "T074",
@@ -133,5 +159,15 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-1795-UStruct-Line-TextPos-native-manifest.json",
     "sha256": "e7d1db720b82e74d8ea02d799e5f00d37a7c76eb63f228817af257253a55b1e3",
     "bytes": 4554
+  },
+  "new_2026_11_01_compiled_469f_method_v70_parity": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-original-completed-version70-branch-manifest.json",
+    "sha256": "3a512e869505af789bf77133b0b0ccd8b9c6327894e33f424ed73e020c8cd574",
+    "bytes": 6387
+  },
+  "new_2026_11_01_T073_fixed_map_source_compiled_and_stock_exclusion": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-original-fixed-map-stock-exclusion-manifest.json",
+    "sha256": "b2cb5ce89fded008da2115898080b3e301100c0cd03b2a34d754d8902605d19c",
+    "bytes": 6880
   }
 }

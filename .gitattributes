@@ -172,3 +172,7 @@ catalog/bin/verify-ue1-o06-g3-t075-2026-227k-Engine-2408-pointer-class.php -text
 catalog/bin/verify-ue1-o06-g3-t074-t075-2012-C227i-Engine-4268-1559-native.php -text
 
 catalog/bin/verify-ue1-o06-g3-t074-2012-original-1795-struct-line-textpos.php -text
+
+catalog/bin/verify-ue1-o06-g3-t073-469f-controlled-70-array-static-dim-native.php -text
+
+catalog/bin/verify-ue1-o06-g3-t073-original-v432-469f-fixed-map-stock-exclusion.php -text

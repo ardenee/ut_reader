@@ -1,0 +1,232 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-t073-new-Native-UCC-array-map-native-symbols.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.015 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\UCC.exe help
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+OK                                             C:\Temp\UnrealDB\O06\Native-UCC\System
+Symbol search path is: C:\Temp\UnrealDB\O06\Native-UCC\System
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 74ec0000 74ef3000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76900000 76985000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 764b0000 76535000   C:\WINDOWS\SysWOW64\sechost.dll
+(89fc.8a6c): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=85370000 edx=00000000 esi=005e5d68 edi=00241000
+eip=775ad248 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrInitShimEngineDynamic+0x6a8:
+775ad248 cc              int     3
+0:000> x Core!*UFixedArrayProperty*; x Core!*UMapProperty*; x Core!*UArrayProperty*; uf Core!UFixedArrayProperty::Serialize; uf Core!UMapProperty::Serialize; q
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+10101005          Core!UFixedArrayProperty::operator new (<no parameter info>)
+101010a0          Core!UFixedArrayProperty::Serialize (<no parameter info>)
+10101307          Core!UFixedArrayProperty::UFixedArrayProperty (<no parameter info>)
+101014ab          Core!UFixedArrayProperty::SerializeItem (<no parameter info>)
+101016e5          Core!UFixedArrayProperty::DestroyValue (<no parameter info>)
+10101a82          Core!UFixedArrayProperty::UFixedArrayProperty (<no parameter info>)
+10101cd0          Core!UFixedArrayProperty::Identical (<no parameter info>)
+10101e65          Core!UFixedArrayProperty::StaticClass (<no parameter info>)
+10101f19          Core!UFixedArrayProperty::operator new (<no parameter info>)
+10101fff          Core!UFixedArrayProperty::operator= (<no parameter info>)
+101020a9          Core!UFixedArrayProperty::ExportCppItem (<no parameter info>)
+10102432          Core!UFixedArrayProperty::~UFixedArrayProperty (<no parameter info>)
+1010264e          Core!UFixedArrayProperty::ExportTextItem (<no parameter info>)
+10102716          Core!UFixedArrayProperty::Link (<no parameter info>)
+101027a7          Core!UFixedArrayProperty::NetSerializeItem (<no parameter info>)
+10102897          Core!UFixedArrayProperty::CopySingleValue (<no parameter info>)
+10102900          Core!UFixedArrayProperty::AddCppProperty (<no parameter info>)
+10102d65          Core!UFixedArrayProperty::ImportText (<no parameter info>)
+10102f6d          Core!UFixedArrayProperty::UFixedArrayProperty (<no parameter info>)
+10103189          Core!UFixedArrayProperty::InternalConstructor (<no parameter info>)
+101770ac          Core!UFixedArrayProperty::`vftable' (<no parameter info>)
+102a5d28          Core!UFixedArrayProperty::PrivateStaticClass (<no parameter info>)
+102a6724          Core!autoclassUFixedArrayProperty (<no parameter info>)
+101011ea          Core!UMapProperty::Serialize (<no parameter info>)
+101017a3          Core!UMapProperty::operator= (<no parameter info>)
+10101dcf          Core!UMapProperty::CopySingleValue (<no parameter info>)
+10101f32          Core!UMapProperty::ImportText (<no parameter info>)
+10102077          Core!UMapProperty::ExportTextItem (<no parameter info>)
+101021fd          Core!UMapProperty::Link (<no parameter info>)
+1010222f          Core!UMapProperty::operator new (<no parameter info>)
+10102248          Core!UMapProperty::NetSerializeItem (<no parameter info>)
+101024dc          Core!UMapProperty::InternalConstructor (<no parameter info>)
+101025a9          Core!UMapProperty::UMapProperty (<no parameter info>)
+101027b6          Core!UMapProperty::SerializeItem (<no parameter info>)
+101027de          Core!UMapProperty::UMapProperty (<no parameter info>)
+10102b7b          Core!UMapProperty::UMapProperty (<no parameter info>)
+10102bc1          Core!UMapProperty::ExportCppItem (<no parameter info>)
+10102c16          Core!UMapProperty::~UMapProperty (<no parameter info>)
+10102d56          Core!UMapProperty::StaticClass (<no parameter info>)
+10102d79          Core!UMapProperty::DestroyValue (<no parameter info>)
+10102e5f          Core!UMapProperty::Identical (<no parameter info>)
+10103067          Core!UMapProperty::operator new (<no parameter info>)
+1017722c          Core!UMapProperty::`vftable' (<no parameter info>)
+102a3f40          Core!UMapProperty::PrivateStaticClass (<no parameter info>)
+102a4e34          Core!autoclassUMapProperty (<no parameter info>)
+1010115e          Core!UArrayProperty::CopySingleValue (<no parameter info>)
+101016bd          Core!UArrayProperty::StaticClass (<no parameter info>)
+10101983          Core!UArrayProperty::ExportCppItem (<no parameter info>)
+10101acd          Core!UArrayProperty::AddCppProperty (<no parameter info>)
+10101af5          Core!UArrayProperty::UArrayProperty (<no parameter info>)
+10101c26          Core!UArrayProperty::SerializeItem (<no parameter info>)
+10101d02          Core!UArrayProperty::DestroyValue (<no parameter info>)
+10101d39          Core!UArrayProperty::Link (<no parameter info>)
+10102306          Core!UArrayProperty::operator= (<no parameter info>)
+101023e7          Core!UArrayProperty::UArrayProperty (<no parameter info>)
+1010293c          Core!UArrayProperty::operator new (<no parameter info>)
+10102a95          Core!UArrayProperty::ExportTextItem (<no parameter info>)
+10102b26          Core!UArrayProperty::ImportText (<no parameter info>)
+10102c2a          Core!UArrayProperty::NetSerializeItem (<no parameter info>)
+10102d06          Core!UArrayProperty::Identical (<no parameter info>)
+10102ea5          Core!UArrayProperty::operator new (<no parameter info>)
+10102eaf          Core!UArrayProperty::UArrayProperty (<no parameter info>)
+10102f2c          Core!UArrayProperty::~UArrayProperty (<no parameter info>)
+1010341d          Core!UArrayProperty::Serialize (<no parameter info>)
+1010343b          Core!UArrayProperty::InternalConstructor (<no parameter info>)
+1017716c          Core!UArrayProperty::`vftable' (<no parameter info>)
+102a4440          Core!UArrayProperty::PrivateStaticClass (<no parameter info>)
+102a6720          Core!autoclassUArrayProperty (<no parameter info>)
+Core!UFixedArrayProperty::Serialize:
+101010a0 e9cb810600      jmp     Core!FRegistryObjectInfo::FRegistryObjectInfo+0x65db3 (10169270)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x65db3:
+10169270 55              push    ebp
+10169271 8bec            mov     ebp,esp
+10169273 6aff            push    0FFFFFFFFh
+10169275 68a8481710      push    offset Core!FRegistryObjectInfo::FRegistryObjectInfo+0x713eb (101748a8)
+1016927a 64a100000000    mov     eax,dword ptr fs:[00000000h]
+10169280 50              push    eax
+10169281 64892500000000  mov     dword ptr fs:[0],esp
+10169288 83ec10          sub     esp,10h
+1016928b 53              push    ebx
+1016928c 56              push    esi
+1016928d 57              push    edi
+1016928e 8b7d08          mov     edi,dword ptr [ebp+8]
+10169291 8965f0          mov     dword ptr [ebp-10h],esp
+10169294 8bf1            mov     esi,ecx
+10169296 57              push    edi
+10169297 8975e8          mov     dword ptr [ebp-18h],esi
+1016929a c745fc00000000  mov     dword ptr [ebp-4],0
+101692a1 e8f681f9ff      call    Core!UProperty::Serialize (1010149c)
+101692a6 8b07            mov     eax,dword ptr [edi]
+101692a8 8d4e5c          lea     ecx,[esi+5Ch]
+101692ab 51              push    ecx
+101692ac 8bcf            mov     ecx,edi
+101692ae ff5018          call    dword ptr [eax+18h]
+101692b1 8b10            mov     edx,dword ptr [eax]
+101692b3 83c660          add     esi,60h
+101692b6 6a04            push    4
+101692b8 56              push    esi
+101692b9 8bc8            mov     ecx,eax
+101692bb ff5204          call    dword ptr [edx+4]
+101692be 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+101692c1 5f              pop     edi
+101692c2 5e              pop     esi
+101692c3 64890d00000000  mov     dword ptr fs:[0],ecx
+101692ca 5b              pop     ebx
+101692cb 8be5            mov     esp,ebp
+101692cd 5d              pop     ebp
+101692ce c20400          ret     4
+Core!UMapProperty::Serialize:
+101011ea e941900600      jmp     Core!FRegistryObjectInfo::FRegistryObjectInfo+0x66d73 (1016a230)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x66d73:
+1016a230 55              push    ebp
+1016a231 8bec            mov     ebp,esp
+1016a233 6aff            push    0FFFFFFFFh
+1016a235 6820491710      push    offset Core!FRegistryObjectInfo::FRegistryObjectInfo+0x71463 (10174920)
+1016a23a 64a100000000    mov     eax,dword ptr fs:[00000000h]
+1016a240 50              push    eax
+1016a241 64892500000000  mov     dword ptr fs:[0],esp
+1016a248 83ec10          sub     esp,10h
+1016a24b 53              push    ebx
+1016a24c 56              push    esi
+1016a24d 57              push    edi
+1016a24e 8b7d08          mov     edi,dword ptr [ebp+8]
+1016a251 8965f0          mov     dword ptr [ebp-10h],esp
+1016a254 8bf1            mov     esi,ecx
+1016a256 57              push    edi
+1016a257 8975e8          mov     dword ptr [ebp-18h],esi
+1016a25a c745fc00000000  mov     dword ptr [ebp-4],0
+1016a261 e83672f9ff      call    Core!UProperty::Serialize (1010149c)
+1016a266 8b07            mov     eax,dword ptr [edi]
+1016a268 8d4e5c          lea     ecx,[esi+5Ch]
+1016a26b 51              push    ecx
+1016a26c 8bcf            mov     ecx,edi
+1016a26e ff5018          call    dword ptr [eax+18h]
+1016a271 8b10            mov     edx,dword ptr [eax]
+1016a273 83c660          add     esi,60h
+1016a276 56              push    esi
+1016a277 8bc8            mov     ecx,eax
+1016a279 ff5218          call    dword ptr [edx+18h]
+1016a27c 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+1016a27f 5f              pop     edi
+1016a280 5e              pop     esi
+1016a281 64890d00000000  mov     dword ptr fs:[0],ecx
+1016a288 5b              pop     ebx
+1016a289 8be5            mov     esp,ebp
+1016a28b 5d              pop     ebp
+1016a28c c20400          ret     4
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

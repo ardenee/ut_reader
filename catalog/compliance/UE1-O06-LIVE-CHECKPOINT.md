@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-T074-2012-C227i-UStruct-Line-TextPos-exact-ABI`
-- **Stage:** G3-70PASS-1NA-9BLOCKED
-- **Last completed action:** Original compiled 2012 UStruct::Serialize x86 disassembly shows Line native +0x58 and TextPos native +0x54. Prior old exploratory +0x70/+0x6c were wrong; generate only new real 2012 Engine source line/textpos oracle, do not rerun accepted 4268 property/1559 ref assertions.
-- **Resume at:** Run new targeted actual stock C227i Engine.u UStruct postload CDB Line/TextPos and only deduplicated unknown fields, compare exact saved parser records; preserve SHA and update owner T074/T075 only upon verified evidence.
-- **Active changed at:** 2026-11-01T18:25:48+00:00
+- **Contract:** `G3-five-technical-469f-UArray-FixedArray-Map-source-closure`
+- **Stage:** G3-70PASS-1NA-9BLOCKED-T073-fixed-3-methods
+- **Last completed action:** Original compiled 469f UArrayProperty controlled v70 extra native read completed and narrow source-family reader patch passed 34/34. Original compiled 469f/v432 UFixedArrayProperty and UMapProperty archive grammars exact and all 24 genuine original stock 469f System .u SHA/source type inventory (49983 exports, zero direct Fixed/Map) bounded exclusion passed 84/84. Original synthetic v70 not genuine physical; other source-method union still T073 BLOCKED. Earlier 2012 1795 struct ABI closed and pushed.
+- **Resume at:** Pursue remaining T065 real C98 pre36 compiled archive branch and T072 original 1998 Engine loaded-value type union; enumerate unproved method classes T073/T074/T075, do not repeat sealed tests, and do not deploy PRD.
+- **Active changed at:** 2026-11-01T18:49:54+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

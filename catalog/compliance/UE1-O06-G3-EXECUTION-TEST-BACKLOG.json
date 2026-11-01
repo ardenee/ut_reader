@@ -5254,10 +5254,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01: Genuine original compiled v432/469f UArrayProperty::Serialize branch SOURCE DIFFERENCE found and 12 genuine Engine.u runtime Inner references observed byte/identity exact. All v69 469f LOADs skip new conditional extra StaticArrayDim archive read; runtime Engine.Touching StaticArrayDim4 not to be confused with saved ArrayDim1. Still missing original source-applicable method families, UFixedArrayProperty and UMapProperty genuine original native or justified exclusion, and alternate 469f conditional oracle. 2026-11-01 original separate 469f v432 actual native differential: NEW independent OldUnreal UT99 469f actual x86 compiled Core.dll six original native method executions, real Core.Object/Core.Class UClass Serialize v61 versus62 and native loaded Engine.Actor reflected UProperty Serialize <=61 network flags and >=62 unchanged. All SIX actual returned original method numerical traces match previously accepted separate stock v432 build EXACTLY, direct byte/flag values; native methods did NOT rerun v432. Build-specific source profile and original binary SHA distinguish 469f from v432, no unverified whole-engine equivalence. Other applicable 469f-v432 serialization method/type deltas not fully tested, T073 remains BLOCKED.",
-      "last_attempt_at": "2026-11-01T16:14:10+00:00",
+      "blocking_reason": "2026-11-01 original compiled UT99 v432 and 469f FixedArrayProperty and MapProperty saved field order (inherited UProperty; Inner+Count or Key+Value) matches current source reader, 84/84 new assertions. All 24 real 469f stock System .u / 49983 exports physically SHA verified and zero direct FixedArray/Map exports: only stock loaded-object acceptance excluded; third-party packages still supported and native loaded-value unproven. Other method/type union still open. 2026-11-01 original 469f compiled UArrayProperty v70 conditional native branch and completed 32bit extra archive read VERIFIED in controlled debugger mode on real v69 Engine.u. Narrow source-only current reader version>69 field implemented; independent 34 strict native/source assertions PASS; genuine original v70 package NOT implied. 469f FixedArray/Map original loaded or documented exclusions and other compiled-method union still BLOCKED. 2026-11-01: Genuine original compiled v432/469f UArrayProperty::Serialize branch SOURCE DIFFERENCE found and 12 genuine Engine.u runtime Inner references observed byte/identity exact. All v69 469f LOADs skip new conditional extra StaticArrayDim archive read; runtime Engine.Touching StaticArrayDim4 not to be confused with saved ArrayDim1. Still missing original source-applicable method families, UFixedArrayProperty and UMapProperty genuine original native or justified exclusion, and alternate 469f conditional oracle. 2026-11-01 original separate 469f v432 actual native differential: NEW independent OldUnreal UT99 469f actual x86 compiled Core.dll six original native method executions, real Core.Object/Core.Class UClass Serialize v61 versus62 and native loaded Engine.Actor reflected UProperty Serialize <=61 network flags and >=62 unchanged. All SIX actual returned original method numerical traces match previously accepted separate stock v432 build EXACTLY, direct byte/flag values; native methods did NOT rerun v432. Build-specific source profile and original binary SHA distinguish 469f from v432, no unverified whole-engine equivalence. Other applicable 469f-v432 serialization method/type deltas not fully tested, T073 remains BLOCKED.",
+      "last_attempt_at": "2026-11-01T18:49:23+00:00",
       "attempted_native_execution": true,
-      "assessment": "NEW_COMPILED_V432_469F_ARRAY_DELTA_12_GENUINE_ENGINE_LOADED_REFS_MATCH_T073_STILL_BLOCKED",
+      "assessment": "469F_V432_ORIGINAL_FIXED_MAP_COMPILED_FIELD_GRAMMAR_MATCHED_24_STOCK_FILES_INAPPLICABLE_OTHER_METHODS_OPEN",
       "upstream_fixed_test_dependencies": [
         "T065"
       ],
@@ -5367,6 +5367,38 @@
         "new_focus_assertions_passed": 119,
         "full_acceptance": false,
         "remaining": "Actual original 469f additional mode/version conditional and unobserved source-registered UFixedArrayProperty / UMapProperty type ownership, plus all other original T073 method/native loaded values are NOT certified. Do not infer v432=469f."
+      },
+      "new_2026_11_01_original_compiled_469f_v70_runtime_mode_and_reader_rule": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-original-completed-version70-branch-manifest.json",
+          "sha256": "3a512e869505af789bf77133b0b0ccd8b9c6327894e33f424ed73e020c8cd574",
+          "bytes": 6387
+        },
+        "original_original_compiled_full_extra_member_read_at_v70": true,
+        "original_real_physical_file_version": 69,
+        "experimental_controlled_archive_version": 70,
+        "physical_version70_proven": false,
+        "source_selected_PHP_469f_version_above_69_signed_extra_field_implemented": true,
+        "source_selected_v69_unmodified": true,
+        "source_selected_v432_unmodified": true,
+        "new_independent_focused_native_source_assertions": 34,
+        "malformed_extra_member_truncation_rejected": true,
+        "full_T073_pass": false
+      },
+      "new_2026_11_01_compiled_v432_469f_FixedArray_Map_serialization_and_stock_exclusion": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-original-fixed-map-stock-exclusion-manifest.json",
+          "sha256": "b2cb5ce89fded008da2115898080b3e301100c0cd03b2a34d754d8902605d19c",
+          "bytes": 6880
+        },
+        "actual_469f_original_stock_u_packages": 24,
+        "genuine_original_stock_exports_checked": 49983,
+        "genuine_stock_direct_FixedArrayProperty_or_MapProperty_exports": 0,
+        "original_compiled_x86_FixedArray_and_Map_native_archive_field_order_verified": true,
+        "current_PHP_source_selected_both_UT99_builds_field_grammar_and_error_behavior_verified": true,
+        "independent_source_native_focus_assertions_PASS": 84,
+        "stock_corpus_scope_only_not_third_party_exclusion": true,
+        "full_frozen_T073_pass": false
       }
     },
     {
@@ -6326,6 +6358,16 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-1795-UStruct-Line-TextPos-native-manifest.json",
         "sha256": "e7d1db720b82e74d8ea02d799e5f00d37a7c76eb63f228817af257253a55b1e3",
         "bytes": 4554
+      },
+      "new_2026_11_01_upstream_469f_version70_source_method": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-original-completed-version70-branch-manifest.json",
+        "sha256": "3a512e869505af789bf77133b0b0ccd8b9c6327894e33f424ed73e020c8cd574",
+        "bytes": 6387
+      },
+      "new_2026_11_01_upstream_FixedArray_Map_original_method_and_stock_scope": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-original-fixed-map-stock-exclusion-manifest.json",
+        "sha256": "b2cb5ce89fded008da2115898080b3e301100c0cd03b2a34d754d8902605d19c",
+        "bytes": 6880
       }
     },
     {

@@ -1,0 +1,93 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System\G3-Original-469f-Engine-Actor-Defaults.exe
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+OK                                             C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System
+Symbol search path is: C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System
+Executable search path is: 
+ModLoad: 00470000 004b6000   G3-Original-469f-Engine-Actor-Defaults.exe
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 69730000 6974d000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+ModLoad: 65490000 65788000   C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System\Core.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 74ec0000 74ef3000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76900000 76985000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 764b0000 76535000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+(4380.8d60): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=666a0000 edx=00000000 esi=00cc5e70 edi=009d4000
+eip=775ad248 esp=007df764 ebp=007df790 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrInitShimEngineDynamic+0x6a8:
+775ad248 cc              int     3
+0:000> bp Core!UArrayProperty::Serialize+0x3a ".if (poi(@edi+0x14)==0x15fb) { .printf \"T073_SOURCE_ORIGINAL_CONTROLLED_BEFORE idx=%d linker=%p origVersion=%d isLoading=%d isSaving=%d isError=%d\\n\",poi(@edi+0x14),poi(@edi+0x10),poi(@esi+4),poi(@esi+0x10),poi(@esi+0x14),poi(@esi+0x18); ed @esi+4 0x46; .printf \"T073_SOURCE_ORIGINAL_CONTROLLED_SET_VERSION=%d\\n\",poi(@esi+4);};gc"
+0:000> bp Core!UArrayProperty::Serialize+0x96 ".if (poi(@edi+0x14)==0x15fb) { .printf \"T073_SOURCE_ORIGINAL_COMPILED_469F_EXTRA_ARCHIVE_EXECUTION idx=%d linker=%p archiveVer=%d target_member=%p before_StaticArrayDim=%d\\n\",poi(@edi+0x14),poi(@edi+0x10),poi(@esi+4),@edi+0x64,poi(@edi+0x64);q;};gc"
+0:000> g
+ModLoad: 76350000 76375000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 70a40000 70a5c000   C:\WINDOWS\SysWOW64\bcrypt.dll
+ModLoad: 75f20000 75f9a000   C:\WINDOWS\SysWOW64\bcryptprimitives.dll
+ModLoad: 71200000 71214000   C:\WINDOWS\SysWOW64\CRYPTSP.dll
+ModLoad: 711c0000 711f2000   C:\WINDOWS\SysWOW64\rsaenh.dll
+ModLoad: 70a70000 70a7a000   C:\WINDOWS\SysWOW64\CRYPTBASE.dll
+ModLoad: 6f270000 6f29c000   C:\WINDOWS\SysWOW64\SspiCli.dll
+ModLoad: 602e0000 60714000   C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System\Engine.DLL
+ModLoad: 75c20000 75c8a000   C:\WINDOWS\SysWOW64\WS2_32.dll
+T073_SOURCE_ORIGINAL_CONTROLLED_BEFORE idx=5627 linker=02cd9e50 origVersion=69 isLoading=1 isSaving=0 isError=0
+T073_SOURCE_ORIGINAL_CONTROLLED_SET_VERSION=70
+T073_SOURCE_ORIGINAL_COMPILED_469F_EXTRA_ARCHIVE_EXECUTION idx=5627 linker=02cd9e50 archiveVer=70 target_member=02fe52f4 before_StaticArrayDim=0
+                                                                                                                                                                                                                           ^ Syntax error in ' .printf "T073_SOURCE_ORIGINAL_COMPILED_469F_EXTRA_ARCHIVE_EXECUTION idx=%d linker=%p archiveVer=%d target_member=%p before_StaticArrayDim=%d
+'
+eax=02bd8470 ebx=02cd9ef4 ecx=b4fd57df edx=007de67b esi=02cd9ef4 edi=02fe5290
+eip=65514926 esp=007de6cc ebp=007de704 iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+Core!UArrayProperty::Serialize+0x96:
+65514926 8d4764          lea     eax,[edi+64h]
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
