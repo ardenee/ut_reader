@@ -4474,7 +4474,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: NEW original native method branch observed original C98 UObject::Serialize <=57 MUST have valid original linker (two actual original intrinsic classes fail original source Linker assertion for versions55,56,57, v58 both succeed); original UT99 v432 two real classes UClass::Serialize v61/v62 succeed with different original NameRef 2->3, UObjectRef7->8, raw66->62; actual real loaded Engine.Actor UProperty v61 old flags 0x00080043->0x00000003, v62 leaves 0x00080043 unchanged. 14 new method cases, 39/39 independent source/native assertions. Genuine retail physical archive cursor for C98 version34/35 and other separate original source-family version gates STILL open. T065 remains BLOCKED.",
+      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: NEW original compiled 469f source family 6 native method gates v61/v62 (2 live original Core.Object/Core.Class native UClass each two versions and actual Engine.Actor reflected UProperty two source versions), all 6 numerical archive operations/flags exactly match distinct original v432 Core.dll. Independent comparison 19/19 PASS and original stock 469f DLL SHA pinned. Remaining original C98 genuinely linked version34-58 source boundary and separate 2012/2026 engine method gate union not complete. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Four new successful original compiled 1998 UClass::Serialize v34/v35 native calls for original Core.u linked Core.Subsystem and Core.Object, controlled transactional FArchive; genuine retail v34 package file cursor and other source branches still missing.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "T011_V60_64_NATIVE_BRANCH_CLOSED_T065_ALL_SOURCE_METHOD_FAMILIES_UNPROVEN",
@@ -4558,6 +4558,41 @@
           "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-14-original-method-source-branch-verification.json",
           "sha256": "07df609116f3b571c5d10ceac306e7515b36359dd7ee4544e3dd8474a119d6ce",
           "bytes": 785
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-native-Class-Property-v61-v62-parity.json",
+          "sha256": "fa6856417d601549352dc24da1287ad6bdeb4e3fe977700a4d49209b35f590e2",
+          "bytes": 2759
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-original-methods-verified.json",
+          "sha256": "0b370e339f23046c3271741ce290677b33361337f403dd33cb1b9f2e28e4fba6",
+          "bytes": 407
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-four-native.log",
+          "sha256": "a5f2e678cdfd09e365657cebf38c5b1f5280e07dae486152298d2d9d0a35ff36",
+          "bytes": 787
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-observer-source.cpp",
+          "sha256": "f1913f4e7ef0c9cfb4c7d669fa63dffd2c90ce9984301e48bcb4669c5919aaef",
+          "bytes": 2477
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-compiler.log",
+          "sha256": "f6237aceb017a1393776b999039682325f41f4688f0d59b6dcf580d449dd7f9a",
+          "bytes": 9872
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-partial.json",
+          "sha256": "fb8d12f52d603a998fd19e892f065cf841aecb009a381cb4a7402e6bade13bd7",
+          "bytes": 2342
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-verified.json",
+          "sha256": "ded38e41e72adf341855453c37b0d285786d1776cb51c00fe19ce1f64f3cad8b",
+          "bytes": 350
         }
       ],
       "last_evidence_review": "2026-10-31",
@@ -4576,7 +4611,8 @@
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
       "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
-      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests."
+      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests.",
+      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61."
     },
     {
       "id": "T066",
@@ -5033,7 +5069,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Real 1998 C98 original Core.Object and Core.Class direct intrinsic UClass::Serialize v58 each completed, name2/object refs8/raw66 source-run; <=57 requires genuine linked object and cannot be represented by intrinsic fixture. Real v432 classes and loaded actor UProperty native metadata fields v61/62 newly observed, but C98 full direct UClass/UStruct/UProperty full loaded field union or explicit per-type exclusions missing. T072 BLOCKED.",
+      "blocking_reason": "2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Real 1998 C98 original Core.Object and Core.Class direct intrinsic UClass::Serialize v58 each completed, name2/object refs8/raw66 source-run; <=57 requires genuine linked object and cannot be represented by intrinsic fixture. Real v432 classes and loaded actor UProperty native metadata fields v61/62 newly observed, but C98 full direct UClass/UStruct/UProperty full loaded field union or explicit per-type exclusions missing. T072 BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Original linked Core.Subsystem/Core.Object UClass native method fields at v34/v35 added; full 100 percent direct C98 class/struct/property methods not verified.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5125,6 +5161,31 @@
           "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-14-original-method-source-branch-verification.json",
           "sha256": "07df609116f3b571c5d10ceac306e7515b36359dd7ee4544e3dd8474a119d6ce",
           "bytes": 785
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-four-native.log",
+          "sha256": "a5f2e678cdfd09e365657cebf38c5b1f5280e07dae486152298d2d9d0a35ff36",
+          "bytes": 787
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-observer-source.cpp",
+          "sha256": "f1913f4e7ef0c9cfb4c7d669fa63dffd2c90ce9984301e48bcb4669c5919aaef",
+          "bytes": 2477
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-compiler.log",
+          "sha256": "f6237aceb017a1393776b999039682325f41f4688f0d59b6dcf580d449dd7f9a",
+          "bytes": 9872
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-partial.json",
+          "sha256": "fb8d12f52d603a998fd19e892f065cf841aecb009a381cb4a7402e6bade13bd7",
+          "bytes": 2342
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-verified.json",
+          "sha256": "ded38e41e72adf341855453c37b0d285786d1776cb51c00fe19ce1f64f3cad8b",
+          "bytes": 350
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
@@ -5132,7 +5193,8 @@
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
       "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
-      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests."
+      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests.",
+      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61."
     },
     {
       "id": "T073",
@@ -5147,7 +5209,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: Prior 20 genuine original stock UT99 v432/469f installed five same-name physical providers sealed 173/173, still distinct original source/469f method full property type union incomplete; new C227 source difference does not resolve UT99 C++ overlay. BLOCKED.",
+      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: NEW independent OldUnreal UT99 469f actual x86 compiled Core.dll six original native method executions, real Core.Object/Core.Class UClass Serialize v61 versus62 and native loaded Engine.Actor reflected UProperty Serialize <=61 network flags and >=62 unchanged. All SIX actual returned original method numerical traces match previously accepted separate stock v432 build EXACTLY, direct byte/flag values; native methods did NOT rerun v432. Build-specific source profile and original binary SHA distinguish 469f from v432, no unverified whole-engine equivalence. Other applicable 469f-v432 serialization method/type deltas not fully tested, T073 remains BLOCKED.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5227,6 +5289,16 @@
           "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
           "sha256": "7fefdfc3b82d08c0daea8203f615992782daa1574ac587d85f0468c1ac57f7b8",
           "bytes": 83187
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-native-Class-Property-v61-v62-parity.json",
+          "sha256": "fa6856417d601549352dc24da1287ad6bdeb4e3fe977700a4d49209b35f590e2",
+          "bytes": 2759
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-original-methods-verified.json",
+          "sha256": "0b370e339f23046c3271741ce290677b33361337f403dd33cb1b9f2e28e4fba6",
+          "bytes": 407
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
@@ -5341,7 +5413,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Actual original 1998 compiled real intrinsic Core.Object/Core.Class UClass* and v432 original compiled real Engine.Actor UClass pointer and its reflected live UProperty pointer 033CCF48 observed; v432 compiled actual UClass v61/62 and UProperty native flags observed. These are live original native pointers and runtime flags, not derived from file bytes; additional methods/builds native object identity matrix not fully complete. T075 BLOCKED.",
+      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: NEW actual compiled 469f native live original Core.Object/Core.Class UClass pointers, real Engine.Actor UClass ptr 60652450, actual reflected native UProperty ptr 03092ED0; v61/v62 actual pointer/field semantics verified by compiled original engine, not wire inference. Combined stock v432-v469f and original C98 pointer source evidence still lacks full C227 and all native field/size identities. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Actual native C98 nonnull UClass and ULinkerLoad pointer identities and export ordinals 229 and 0 observed; full source-family pointer ownership still open.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5435,6 +5507,41 @@
           "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-14-original-method-source-branch-verification.json",
           "sha256": "07df609116f3b571c5d10ceac306e7515b36359dd7ee4544e3dd8474a119d6ce",
           "bytes": 785
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-native-Class-Property-v61-v62-parity.json",
+          "sha256": "fa6856417d601549352dc24da1287ad6bdeb4e3fe977700a4d49209b35f590e2",
+          "bytes": 2759
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-original-methods-verified.json",
+          "sha256": "0b370e339f23046c3271741ce290677b33361337f403dd33cb1b9f2e28e4fba6",
+          "bytes": 407
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-four-native.log",
+          "sha256": "a5f2e678cdfd09e365657cebf38c5b1f5280e07dae486152298d2d9d0a35ff36",
+          "bytes": 787
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-observer-source.cpp",
+          "sha256": "f1913f4e7ef0c9cfb4c7d669fa63dffd2c90ce9984301e48bcb4669c5919aaef",
+          "bytes": 2477
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-compiler.log",
+          "sha256": "f6237aceb017a1393776b999039682325f41f4688f0d59b6dcf580d449dd7f9a",
+          "bytes": 9872
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-partial.json",
+          "sha256": "fb8d12f52d603a998fd19e892f065cf841aecb009a381cb4a7402e6bade13bd7",
+          "bytes": 2342
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-verified.json",
+          "sha256": "ded38e41e72adf341855453c37b0d285786d1776cb51c00fe19ce1f64f3cad8b",
+          "bytes": 350
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
@@ -5442,7 +5549,8 @@
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
       "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
-      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests."
+      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests.",
+      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61."
     },
     {
       "id": "T076",
@@ -5640,7 +5748,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: 14 NEW distinct original actual compiled method/version observations across 1998 C98 and original UT99 v432; 8 successful + 6 original source Linker assertions explain invalid intrinsic v<58 harness; real v61/v62 UClass and UProperty source boundaries verified, 39/39 independent acceptance. Version34/35/36/55-58 genuine PRD verified corpus query returned zero records (bounded indexed read-only, no global source exclusions implied). Full C98 physical package load and other 227/v432/469f method gates remain. T077 BLOCKED.",
+      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: Scoped six NEW original 469f compiled native actual method successes plus previous fourteen C98/v432 distinct methods, original v432 vs469f class/property v61/v62 exact numerical differential 19/19 SHA-proven. Four original stock Core engine families now have many positive source method/load gates, but C98 physical linked v34/35 and C227 full method union, provider mounts remain outstanding. Not all frozen T-owner acceptance full; BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: New original C98 linked v34/v35 UClass method source matrix added; other required original method gates remain open.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5748,6 +5856,41 @@
           "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-14-original-method-source-branch-verification.json",
           "sha256": "07df609116f3b571c5d10ceac306e7515b36359dd7ee4544e3dd8474a119d6ce",
           "bytes": 785
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-native-Class-Property-v61-v62-parity.json",
+          "sha256": "fa6856417d601549352dc24da1287ad6bdeb4e3fe977700a4d49209b35f590e2",
+          "bytes": 2759
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-six-original-methods-verified.json",
+          "sha256": "0b370e339f23046c3271741ce290677b33361337f403dd33cb1b9f2e28e4fba6",
+          "bytes": 407
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-four-native.log",
+          "sha256": "a5f2e678cdfd09e365657cebf38c5b1f5280e07dae486152298d2d9d0a35ff36",
+          "bytes": 787
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-observer-source.cpp",
+          "sha256": "f1913f4e7ef0c9cfb4c7d669fa63dffd2c90ce9984301e48bcb4669c5919aaef",
+          "bytes": 2477
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-C98-1998-linked-Core-u-v34-v35-compiler.log",
+          "sha256": "f6237aceb017a1393776b999039682325f41f4688f0d59b6dcf580d449dd7f9a",
+          "bytes": 9872
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-partial.json",
+          "sha256": "fb8d12f52d603a998fd19e892f065cf841aecb009a381cb4a7402e6bade13bd7",
+          "bytes": 2342
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-original-C98-four-linked-v34-v35-native-methods-verified.json",
+          "sha256": "ded38e41e72adf341855453c37b0d285786d1776cb51c00fe19ce1f64f3cad8b",
+          "bytes": 350
         }
       ],
       "last_grouped_source_native_gap_assessment": "2026-10-31 eight fixed owners original 2000 stock imported reference and original 1998 attempted v34/v35 loader, no new PASS",
@@ -5755,7 +5898,8 @@
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
       "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
-      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests."
+      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests.",
+      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61."
     },
     {
       "id": "T078",

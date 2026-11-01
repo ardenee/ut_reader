@@ -1,0 +1,9 @@
+{
+  "ok": true,
+  "checks": 20,
+  "errors": [],
+  "new_original_1998_compiled_C98_linked_class_method_cases": 4,
+  "original_native_executions_by_verifier": 0,
+  "current_frozen_T065": "BLOCKED: method transacting archive gate proven but genuine retail v34 binary and all source branches unverified",
+  "source_and_binary_unchanged": true
+}

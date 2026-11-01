@@ -1,0 +1,90 @@
+{
+  "frozen_fixed_owner_affected": [
+    "T065",
+    "T073",
+    "T075",
+    "T077"
+  ],
+  "new_true_original_469f_compiled_native_UStruct_UClass_UProperty_method_cases": 6,
+  "original_469f_Core_DLL_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+  "original_v432_Core_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "original_469f_own_Cpp_licensed_source_unchanged": true,
+  "native_observer_compiled_against_469f_sdk_includes": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc",
+  "compiled_original_DLL_runtime_system": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System",
+  "native_observer_marker_note": "G3_T065_ORIGINAL_V432_ string reused from v432 original source observer, but compilation path, Core.dll SHA and separate 469f GPackage unequivocally identify the 469f original runtime.",
+  "original_469f_native_output_source_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-T065-T075-original-stock-469f-six-class-property-v61v62-native.log",
+      "sha256": "8c7d1d1ab9b0d38cfe7ed82d0e1164205831ceaddc886647105c912123a579a7",
+      "bytes": 889
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-T065-T075-original-stock-469f-six-class-property-v61v62-Cpp-source.cpp",
+      "sha256": "6b61cf95b5e83ad45014c1701bd51053d2f642c7ab1cec336b7a2dabf85d47b8",
+      "bytes": 3316
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-T065-T075-original-stock-469f-six-class-property-v61v62-compiler.log",
+      "sha256": "9e2758bab78f3d66eacc7a1027fb124119bde387844956181ad208fca6c6f717",
+      "bytes": 3598
+    }
+  ],
+  "four_real_Class_v61_v62_records_match_v432_469f": true,
+  "two_real_Property_v61_v62_records_match_v432_469f": true,
+  "source_selected_UClass_native_records": [
+    [
+      "61",
+      "0",
+      "2",
+      "7",
+      "66",
+      "15"
+    ],
+    [
+      "61",
+      "1",
+      "2",
+      "7",
+      "66",
+      "15"
+    ],
+    [
+      "62",
+      "0",
+      "3",
+      "8",
+      "62",
+      "14"
+    ],
+    [
+      "62",
+      "1",
+      "3",
+      "8",
+      "62",
+      "14"
+    ]
+  ],
+  "source_selected_UProperty_native_records": [
+    [
+      "61",
+      "00080043",
+      "00000003",
+      "2",
+      "5",
+      "12",
+      "3"
+    ],
+    [
+      "62",
+      "00080043",
+      "00080043",
+      "2",
+      "5",
+      "12",
+      "3"
+    ]
+  ],
+  "original_native_reexecutions_of_accepted_v432": 0,
+  "full_T073_acceptance": "BLOCKED: compared two original compiled sources for this specific method/version pair only; other method/type native source deltas not exhausted"
+}

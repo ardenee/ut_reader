@@ -148,3 +148,7 @@ catalog/bin/verify-ue1-o06-g3-t065-original-C98-v34-v35-source-method.php -text
 
 # T065 new original 1998 and stock v432 native method-branch read-only verifier.
 catalog/bin/verify-ue1-o06-g3-t065-14-original-C98-v432-methods.py -text
+
+# Original C98 linked-v34/35 source method and 469f standalone parity checker.
+catalog/bin/verify-ue1-o06-g3-t065-c98-four-original-linked-v34-v35.py -text
+catalog/bin/verify-ue1-o06-g3-t073-469f-v432-6-native-class-property.py -text

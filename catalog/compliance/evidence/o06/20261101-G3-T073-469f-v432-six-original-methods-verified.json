@@ -1,0 +1,13 @@
+{
+  "ok": true,
+  "checks": 19,
+  "errors": [],
+  "original_v432_vs_469f_same_numerical_archive_method_results": 6,
+  "source_method_profiles": [
+    "stock UT99 v432 Core.dll",
+    "stock OldUnreal 469f Core.dll"
+  ],
+  "original_native_executions_by_verifier": 0,
+  "new_actual_original_469f_cases": 6,
+  "T073_full_owner": "BLOCKED until remaining method/type branch source gaps resolved"
+}
