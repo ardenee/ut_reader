@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "checks": 39,
+  "errors": [],
+  "new_original_stock_compiled_method_cases": 14,
+  "actual_positive_compiled_method_cases": 8,
+  "original_compiled_intrinsic_unlinked_expected_assertion_cases": 6,
+  "original_compiled_engine_profiles": [
+    "C98 1998",
+    "UT99 v432"
+  ],
+  "source_version_gates_new_verified": [
+    "C98 UObject::Serialize v<58 link requirement",
+    "UT99 v432 UClass::Serialize 61 old ClassRecordSize versus 62 ClassWithin/Config",
+    "UT99 v432 UProperty::Serialize <=61 PropertyFlags 0x00080040 clear versus 62 preserve"
+  ],
+  "original_native_tests_launched_by_this_regression": 0,
+  "complete_frozen_T065_T071_T072_T075_T077": "STILL BLOCKED: other source families/methods and genuine source physical archive cursors"
+}

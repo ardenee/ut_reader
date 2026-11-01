@@ -145,3 +145,6 @@ catalog/bin/verify-ue1-o06-g3-t074-12-native-227i-227k-56-bmp.py -text
 # C98 real May1998 original compiled native method source parity correction verifier bytes.
 catalog/bin/verify-ue1-o06-g3-t065-source-family-11-branches-legacy-v34-gap.py -text
 catalog/bin/verify-ue1-o06-g3-t065-original-C98-v34-v35-source-method.php -text
+
+# T065 new original 1998 and stock v432 native method-branch read-only verifier.
+catalog/bin/verify-ue1-o06-g3-t065-14-original-C98-v432-methods.py -text

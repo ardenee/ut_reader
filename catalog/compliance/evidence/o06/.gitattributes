@@ -23,3 +23,6 @@
 
 # T065 preserve historical C98 reader CRLF source, four original 1998 method logs/source exactly.
 20261101-G3-T065-* -text
+
+# T065 14 distinct original compiled C98-v55/58 and v432-v61/62 UClass/UProperty native observables.
+20261101-G3-T065-T071-T072-T075-* -text

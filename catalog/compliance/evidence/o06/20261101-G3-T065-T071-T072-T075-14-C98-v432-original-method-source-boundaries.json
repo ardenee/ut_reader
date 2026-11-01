@@ -1,0 +1,90 @@
+{
+  "fixed_tests_partial_evidence": [
+    "T065",
+    "T071",
+    "T072",
+    "T075",
+    "T077"
+  ],
+  "frozen_id_status_unchanged": "68 PASS,1 SOURCE_NA,11 BLOCKED",
+  "NEW_genuine_original_method_ver_distinct_14_cases": 14,
+  "NEW_original_1998_C98_method_cases": 8,
+  "C98_original_linker_assertions_v55to57": 6,
+  "NEW_original_v432_native_method_cases": 6,
+  "original_v432_UClass_cases_both_versions_two_classes": 4,
+  "original_v432_UProperty_real_native_cases": 2,
+  "C98_ver55_57_intrinsic_without_linker_is_harness_inapplicable_to_retail_archive": true,
+  "C98_linker_assertion_source_location": "original May1998 Core/Src/UnObj.cpp:525; UObject::Serialize Ar.Ver()<58 requires nonnull Linker/LinkerIndex",
+  "original_ut99_v432_class_v61_v62_actual_counts": {
+    "v61": {
+      "name_operations": 2,
+      "object_reference_operations": 7,
+      "raw_bytes": 66,
+      "native_calls": 15
+    },
+    "v62": {
+      "name_operations": 3,
+      "object_reference_operations": 8,
+      "raw_bytes": 62,
+      "native_calls": 14
+    }
+  },
+  "original_ut99_v432_live_property_v61": {
+    "flags_before": "00080043",
+    "flags_after": "00000003",
+    "native_property_ptr": "033CCF48"
+  },
+  "original_ut99_v432_live_property_v62": {
+    "flags_before": "00080043",
+    "flags_after": "00080043",
+    "native_property_ptr": "033CCF48"
+  },
+  "original_ut99_v432_loaded_class_Actor_actual": "10589798",
+  "original_source_cpp_untouched": true,
+  "original_stock_Core_binaries_untouched": true,
+  "original_PRD_database_query_readonly": true,
+  "PRD_verified_package_versions_34_35_36_55_56_57_58": "none in the indexed verified PRD sample as of date, not global source exclusion",
+  "scope_limit": "Original test archive FArchive is controlled native C++ trans archive, NOT true retail package byte cursor or full UClass loaded defaults; no T065/T072/T077 full promotion.",
+  "original_stdout_and_oracle_source_SHA_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-original-stock-C98-1998-v55-v58-real-UClass-methods.log",
+      "sha256": "bd2791bc2ed52e70af42f322adfa23431e294387b575c05b678b69d19ff84f86",
+      "bytes": 5444
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-original-stock-v432-UClass-v61-v62-four-native-methods.log",
+      "sha256": "5b13ee812eeeef719fd4178fcd61f879c8aeafe61f70635f2b0fda8890e0d1fc",
+      "bytes": 614
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-original-stock-v432-UProperty-v61-v62-two-native-methods.log",
+      "sha256": "e38453244691f03831c0b2711bb4f166c5e0a89f80c2f35fb1290f9e87c86e6f",
+      "bytes": 369
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-PRD-readonly-real-v34-58-corpus-availability.json",
+      "sha256": "924a58a0873b19255ba6de20565edb020fdc7d501fb8ecd97490b48eb38d2646",
+      "bytes": 215
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-original-stock-C98-1998-UClass-v55-v58-Cpp-observer.cpp",
+      "sha256": "b63e148f04c6dc6248f8ebecd82fbcfb6e352e8491651006738bbbf5a93880ff",
+      "bytes": 1797
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-original-stock-v432-UClass-UProperty-v61-v62-Cpp-observer.cpp",
+      "sha256": "ad7a2a66f438f9d253d12dc28cc24a53fdaa12bf1fe7905b3c7b604b25388ec4",
+      "bytes": 3251
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-original-stock-C98-UClass-v55-v58-original-compile.log",
+      "sha256": "5a40e736c2837f6d66080e842a4eed4e6aae6d4d0bc032c852ede7f0ba99a86f",
+      "bytes": 19700
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T065-T071-T072-T075-original-stock-v432-UClass-UProperty-v61-v62-original-compile.log",
+      "sha256": "9bc5b6a62a402f32031afd79a36416f78e275edbd10aa97900484309ae9eae98",
+      "bytes": 3894
+    }
+  ]
+}
