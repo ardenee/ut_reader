@@ -1,0 +1,150 @@
+{
+  "schema": "UE1-G3-C227k-original-2026-Engine-native-original-method-v1",
+  "date": "2026-11-01",
+  "frozen_owners": [
+    "T074",
+    "T075"
+  ],
+  "complete_T074": false,
+  "complete_T075": false,
+  "original_engine_package": {
+    "exports": 9477,
+    "version": 69,
+    "licensee": 227
+  },
+  "new_original_compiled_native_loader_events": {
+    "property": 6316,
+    "struct": 2408,
+    "class": 187,
+    "nonnull_Children_live_target": 1768,
+    "nonnull_ScriptText_live_target": 187,
+    "actual_class_within_Core_Object": 187
+  },
+  "new_source_typed_original_archive_verifications": {
+    "Engine_property_and_struct_exact_value_or_nullness_comparison_assertions": 26179,
+    "Engine_property_and_struct_exact_value_or_nullness_matched": 8724,
+    "Engine_2408_native_struct_and_187_class_field_and_reference_assertions": 7789,
+    "Engine_2408_struct_child_and_scripttext_actual_original_runtime_reference_identity_matched": 2408,
+    "Engine_187_UClass_ClassFlags_matched": 187,
+    "Engine_187_class_within_import_Core_Object_identity_matched": 187,
+    "errors": 0
+  },
+  "separate_2012_C227i_original_method_family_not_equated": true,
+  "unverified_remaining": [
+    "C227i distinct full Engine.u method union",
+    "other 227k class/prop subclass methods and cross versions",
+    "2026 class_config_name global FName content not compared to 187 original native FName indexes",
+    "other original engine-family actual pointer size layouts"
+  ],
+  "new_original_native_callbacks_accepted_once_only": true,
+  "pins": {
+    "original_2026_engine_property_struct_loader_trace": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2026-original-Engine-6316-property-2408-struct-native.log",
+      "bytes": 741364,
+      "sha256": "8e8960fed96234cf7b8f29d3d83635e0f9df52f296a47c2f8cfb43ae62ef30ab"
+    },
+    "original_2026_engine_property_struct_loader_cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2026-original-Engine-three-method-CDB.cmd",
+      "bytes": 644,
+      "sha256": "679f1c1f3111d9eaee09dc2149c5e9430f768e7b45b659f0237ed8a1df6a1f03"
+    },
+    "original_2026_engine_pointer_class_loader_trace": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-2026-original-Engine-2408-187-pointer-class-native.log",
+      "bytes": 358475,
+      "sha256": "a3b238d64d148701a72311d0dd8a002b0bae3557bc755e4fd88664413fe5f270"
+    },
+    "original_2026_engine_pointer_class_loader_cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-2026-original-Engine-class-pointer-CDB.cmd",
+      "bytes": 828,
+      "sha256": "071cf2bdfac2d438c0de33127a50677ae19333e3d7ce83a31ad579b4bf29f961"
+    },
+    "actual_new_Engine_property_struct_verifier": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t074-2026-227k-Engine-8724-original-native.php",
+      "bytes": 6458,
+      "sha256": "e79510299e526913dcbee719d0d3ac05045904eb180a722a65e2420ea186c6b3"
+    },
+    "actual_new_Engine_class_pointer_verifier": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t075-2026-227k-Engine-2408-pointer-class.php",
+      "bytes": 7223,
+      "sha256": "202641b7fe174357e1d772f346eef1a7c7acb687723d7871952fcbf087c87623"
+    },
+    "accepted_2026_Engine_property_struct_original_comparison": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2026-original-Engine-8724-26179-accepted-comparison.json",
+      "bytes": 501,
+      "sha256": "df5b00a56ef105d646f0f2dc36d7e233125066b6d8a87cc4c2c560f1764eac70"
+    },
+    "authentic_2026_original_Core_DLL": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+      "bytes": 1286008,
+      "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194"
+    },
+    "authentic_2026_original_Engine_DLL": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Engine.dll",
+      "bytes": 4768120,
+      "sha256": "92f6bd4ed6f3fd6162af30e45871a6f3e5093647115f1ea74ef87ac2d24314aa"
+    },
+    "authentic_2026_original_Core_package": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.u",
+      "bytes": 103686,
+      "sha256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c"
+    },
+    "authentic_2026_original_Engine_package": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Engine.u",
+      "bytes": 3699955,
+      "sha256": "a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e"
+    },
+    "authentic_2026_original_commandlet": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\UCC.exe",
+      "bytes": 240504,
+      "sha256": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a"
+    },
+    "original_2026_UnObjBas_header": {
+      "location": "absolute",
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnObjBas.h",
+      "bytes": 59461,
+      "sha256": "f933b807aa9dbffc14a08c409b89446839121ac20310bb8926dbbff6fbbd0f13"
+    },
+    "original_2026_UnClass_header": {
+      "location": "absolute",
+      "path": "L:\\Source\\Games\\Unreal\\OldUnreal-UnrealPatch227k-SDK-Windows\\Core\\Inc\\UnClass.h",
+      "bytes": 16809,
+      "sha256": "5d55442733113af569e97540f60bdc3e5d35e480baeca0e29aedf0696dc304ae"
+    },
+    "current_PHP_Engine_parser": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
+      "bytes": 33393,
+      "sha256": "9ef04ca52dcc11c9a9c5c47841adc029935365e2270a4fb54d246f03f2bceadc"
+    },
+    "current_PHP_Engine_property_parser": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+      "bytes": 19685,
+      "sha256": "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be"
+    },
+    "current_PHP_Engine_struct_parser": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+      "bytes": 10388,
+      "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"
+    },
+    "current_PHP_Engine_class_parser": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+      "bytes": 20596,
+      "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4"
+    }
+  }
+}

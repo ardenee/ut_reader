@@ -37,3 +37,8 @@
 
 # T071 original accepted native source/error-version ownership record.
 20261101-G3-T071-original-64-frozen-errors-version-owner-reconciliation.json -text
+
+# 2026-11-01 preserve original raw UE1 historical source/native SHA evidence for frozen T065/T074/T075.
+20261101-G3-T065-local-* -text
+20261101-G3-T074-* -text
+20261101-G3-T075-* -text

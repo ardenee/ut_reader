@@ -1,0 +1,23 @@
+{
+  "ok": true,
+  "source": "2026 compiled genuine C227k Engine.u",
+  "engine_linker": "00d49714",
+  "physical_exports": 9477,
+  "original_runtime_linker_counts": {
+    "005f47b4": {
+      "property": 754,
+      "struct": 277
+    },
+    "00d49714": {
+      "property": 6316,
+      "struct": 2408
+    }
+  },
+  "checks": 26179,
+  "errors": [],
+  "property_matches": 6316,
+  "struct_matches": 2408,
+  "children_nonzero": 1768,
+  "source_type_mismatch_samples": [],
+  "frozen_full_T074_accepted": false
+}

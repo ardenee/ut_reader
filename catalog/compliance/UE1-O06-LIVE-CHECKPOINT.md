@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-T073-original-v432-469f-ArrayProperty-native`
-- **Stage:** G3-70PASS-1NA-9BLOCKED-T073_DIFFERENTIAL
-- **Last completed action:** Distinct original stock v432 four plus OldUnreal 469f eight genuine Engine.u ArrayProperty loaded Inner pointers equal original archived source refs, compiled 469f conditional StaticArrayDim read exists but 0 of 8 v69 LOADs take it, genuine native Touching StaticArrayDim=4 vs saved ArrayDim=1. Independent 119 assertions PASS and 21 source/native SHA pins. No original accepted tests replayed, no decoder changes.
-- **Resume at:** T073 still BLOCKED: obtain original 469f conditional archive mode/version oracle and genuine/direct FixedArrayProperty and MapProperty loaded values or explicit source exclusion; pursue grouped T065/T072/T074/T075 owner gaps. Do not run final T077-T080 or deploy PRD.
-- **Active changed at:** 2026-11-01T16:14:27+00:00
+- **Contract:** `G3-FIVE-TECHNICAL-T065-T072-T073-T074-T075`
+- **Stage:** G3-70PASS-1NA-9BLOCKED-REAL_ENGINE_2026
+- **Last completed action:** Original genuine UE1 source physical 61 archives v35..61 matched 1596/1596 source summary assertions, while 24 v35/55-58 have no Class/Struct/Property direct native exports. DISTINCT original compiled 2026 227k Engine.u 9477 exports loaded; 6316 Property+2408 Struct source typed values matched 26179/26179, 1768 native Children+187 ScriptText exact target references and 187 native UClass flags/Within identities matched 7789/7789. Two actual SHA-pinned original native sessions. NO frozen owner falsely promoted; 5 technical BLOCKED.
+- **Resume at:** Close only residual original method/branch oracles from UE1-O06-G3-FIVE-TECHNICAL-BLOCKERS-RESIDUAL-MATRIX.json: C98 compiled Engine and pre36 method, UT99 469f extra archive branch, 2012 C227i remaining class/method ABI, cross-family pointers. T077-T080 still release-ineligible. PRD untouched.
+- **Active changed at:** 2026-11-01T17:00:56+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

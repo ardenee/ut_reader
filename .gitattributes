@@ -162,3 +162,8 @@ catalog/bin/verify-ue1-o06-g3-t071-original-64-source-error-version-owner.py -te
 
 # UE1 T076 original x86 loaded-linker runtime precedence/source-shadow verifier.
 catalog/bin/verify-ue1-o06-g3-t076-original-v432-two-loaded-linker-shadow-native.py -text
+
+# UE1 G3 original T065/T074/T075 focused source-typed verifiers: no Git automatic line-ending conversion.
+catalog/bin/verify-ue1-o06-g3-t065-genuine-61-local-historical-source-summaries.php -text
+catalog/bin/verify-ue1-o06-g3-t074-2026-227k-Engine-8724-original-native.php -text
+catalog/bin/verify-ue1-o06-g3-t075-2026-227k-Engine-2408-pointer-class.php -text

@@ -4474,10 +4474,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: NEW original compiled 469f source family 6 native method gates v61/v62 (2 live original Core.Object/Core.Class native UClass each two versions and actual Engine.Actor reflected UProperty two source versions), all 6 numerical archive operations/flags exactly match distinct original v432 Core.dll. Independent comparison 19/19 PASS and original stock 469f DLL SHA pinned. Remaining original C98 genuinely linked version34-58 source boundary and separate 2012/2026 engine method gate union not complete. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Four new successful original compiled 1998 UClass::Serialize v34/v35 native calls for original Core.u linked Core.Subsystem and Core.Object, controlled transactional FArchive; genuine retail v34 package file cursor and other source branches still missing.",
+      "blocking_reason": "2026-11-01: Actual original Epic tree includes 13 physical v35 and 11 physical v55-58 files previously absent from the production index; all 61 35..61 files, 671 exports, 1596 source-summary assertions match. However 24 old source files export only Palette, Texture or FireTexture, not actual native original 1998 C98 UClass/Struct/Property instances. C98 physical pre36 original native class cursor and other source-specific boundaries still not accepted. 2026-11-01 original separate 469f v432 actual native differential: NEW original compiled 469f source family 6 native method gates v61/v62 (2 live original Core.Object/Core.Class native UClass each two versions and actual Engine.Actor reflected UProperty two source versions), all 6 numerical archive operations/flags exactly match distinct original v432 Core.dll. Independent comparison 19/19 PASS and original stock 469f DLL SHA pinned. Remaining original C98 genuinely linked version34-58 source boundary and separate 2012/2026 engine method gate union not complete. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Four new successful original compiled 1998 UClass::Serialize v34/v35 native calls for original Core.u linked Core.Subsystem and Core.Object, controlled transactional FArchive; genuine retail v34 package file cursor and other source branches still missing.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "T011_V60_64_NATIVE_BRANCH_CLOSED_T065_ALL_SOURCE_METHOD_FAMILIES_UNPROVEN",
+      "assessment": "61_ORIGINAL_HISTORICAL_PHYSICAL_SOURCE_SUMMARIES_ACCEPTED_C98_METHOD_UNION_OPEN",
       "partial_verified_evidence": [
         {
           "path": "catalog/compliance/evidence/o06/20261031-G3-T065-multi-source-version-gates-still-blocked.json",
@@ -4612,7 +4612,26 @@
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
       "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
       "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests.",
-      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61."
+      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61.",
+      "new_2026_11_01_original_61_historical_source_file_summary": {
+        "source_only_real_61_historical_physical_summary": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-local-original-historical-v35-v55to58-physical-61-summary.json",
+          "bytes": 16094,
+          "sha256": "6fc44636b910cb143e2c49b88309457213589afce2b48d0d797e66ab576c9b83"
+        },
+        "source_summary_checks_pass": 1596,
+        "original_61_physical_files": 61,
+        "original_1997_version35_files": 13,
+        "original_1998_version55to58_files": 11,
+        "original_exports": 671,
+        "v35_55to58_actual_export_classes": [
+          "FireTexture",
+          "Palette",
+          "Texture"
+        ],
+        "C98_original_compiled_UClass_UStruct_property_loaded_claim": false,
+        "full_owner_pass": false
+      }
     },
     {
       "id": "T066",
@@ -5076,7 +5095,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Real 1998 C98 original Core.Object and Core.Class direct intrinsic UClass::Serialize v58 each completed, name2/object refs8/raw66 source-run; <=57 requires genuine linked object and cannot be represented by intrinsic fixture. Real v432 classes and loaded actor UProperty native metadata fields v61/62 newly observed, but C98 full direct UClass/UStruct/UProperty full loaded field union or explicit per-type exclusions missing. T072 BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Original linked Core.Subsystem/Core.Object UClass native method fields at v34/v35 added; full 100 percent direct C98 class/struct/property methods not verified.",
+      "blocking_reason": "2026-11-01: The 24 original historical v35 and v55-58 physical packages discovered locally contain no direct required C98 UClass/UStruct/UProperty exports, so are not valid substitute native loaded-value fixtures. Genuine compiled 1998 Engine.u full type union is still unresolved. 2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Real 1998 C98 original Core.Object and Core.Class direct intrinsic UClass::Serialize v58 each completed, name2/object refs8/raw66 source-run; <=57 requires genuine linked object and cannot be represented by intrinsic fixture. Real v432 classes and loaded actor UProperty native metadata fields v61/62 newly observed, but C98 full direct UClass/UStruct/UProperty full loaded field union or explicit per-type exclusions missing. T072 BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Original linked Core.Subsystem/Core.Object UClass native method fields at v34/v35 added; full 100 percent direct C98 class/struct/property methods not verified.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -5201,7 +5220,26 @@
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
       "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
       "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests.",
-      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61."
+      "original_C98_1998_linked_UClass_four_v34_v35_source_method_evidence": "Original compiled source method 4 new cases and read-only native/real Core.u SHA checks 20/20 PASS. Controlled ArIsTrans archive versions 34/35, actual loaded package version61.",
+      "new_2026_11_01_old_original_package_type_limitation": {
+        "source_only_real_61_historical_physical_summary": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-local-original-historical-v35-v55to58-physical-61-summary.json",
+          "bytes": 16094,
+          "sha256": "6fc44636b910cb143e2c49b88309457213589afce2b48d0d797e66ab576c9b83"
+        },
+        "source_summary_checks_pass": 1596,
+        "original_61_physical_files": 61,
+        "original_1997_version35_files": 13,
+        "original_1998_version55to58_files": 11,
+        "original_exports": 671,
+        "v35_55to58_actual_export_classes": [
+          "FireTexture",
+          "Palette",
+          "Texture"
+        ],
+        "C98_original_compiled_UClass_UStruct_property_loaded_claim": false,
+        "full_owner_pass": false
+      }
     },
     {
       "id": "T073",
@@ -5344,10 +5382,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 NEW TRUE compiled 2026 227k native family: 1051 exact UField, 753 exact UProperty, 271 exact UStruct original Core.u v69/lic227 loaded values compare to UnrealDB under explicitly selected unreal-v227k; 265 native Children, 3 SuperField, 777 Next, two fully dereferenced UClass.ScriptText export targets586/654->saved refs587/655 verified. Both SHA-pinned authentic compiled native manifests and current source reader verifiers PASS, no 2012 original engine native proof rerun. 2026-11-01 G3 EIGHT OWNER GROUP: NEW 2012 C227i versus independent 2026 C227k original stock native binaries actually executed 5 distinct genuine shipped UT99 source archive versions 61/68/69 each (10 original UCC batchexport calls). Both succeeded on same 4 physical packages and failed identically with UTextureExporterBMP::ExportBinary GPF on ID148267 v69. All 56 successful texture BMP pairs generated by two separate actual original engines byte-for-byte identical, each preserved original SHA256. 2026 listobjects on ID148267 enumerated actual Texture/WaveTexture objects without error (separate original native command), 2012 checksumpackage silent success not claimed as archive load. Separate game-selected C227i/227k full method class/property/flags/native branch matrix remains unverified. BLOCKED.",
+      "blocking_reason": "2026-11-01: New original stock compiled 2026 C227k real Engine.u has 6316 UProperty plus 2408 UStruct unique native serializer records and 187 UClass loaded flags and ClassWithin. Genuine saved vs runtime loaded PHP 26179 + pointer 7789 source checks PASS. Full 2012 C227i counterpart and untested method family and native global FName-to-ClassConfigName are not verified. 2026-11-01 NEW TRUE compiled 2026 227k native family: 1051 exact UField, 753 exact UProperty, 271 exact UStruct original Core.u v69/lic227 loaded values compare to UnrealDB under explicitly selected unreal-v227k; 265 native Children, 3 SuperField, 777 Next, two fully dereferenced UClass.ScriptText export targets586/654->saved refs587/655 verified. Both SHA-pinned authentic compiled native manifests and current source reader verifiers PASS, no 2012 original engine native proof rerun. 2026-11-01 G3 EIGHT OWNER GROUP: NEW 2012 C227i versus independent 2026 C227k original stock native binaries actually executed 5 distinct genuine shipped UT99 source archive versions 61/68/69 each (10 original UCC batchexport calls). Both succeeded on same 4 physical packages and failed identically with UTextureExporterBMP::ExportBinary GPF on ID148267 v69. All 56 successful texture BMP pairs generated by two separate actual original engines byte-for-byte identical, each preserved original SHA256. 2026 listobjects on ID148267 enumerated actual Texture/WaveTexture objects without error (separate original native command), 2012 checksumpackage silent success not claimed as archive load. Separate game-selected C227i/227k full method class/property/flags/native branch matrix remains unverified. BLOCKED.",
       "last_attempt_at": "2026-11-01T15:45:51+00:00",
       "attempted_native_execution": true,
-      "assessment": "NEW_2026_C227K_2075_GENUINE_DIRECT_METHOD_VALUES_MATCH_REMAINING_ALL_SOURCE_PROFILE_UNION_BLOCKED",
+      "assessment": "C227K_NATIVE_CORE_2075_PLUS_ENGINE_8724_MATCH_C227I_AND_METHOD_UNION_STILL_OPEN",
       "upstream_fixed_test_dependencies": [],
       "last_grouped_evidence_audit": "2026-10-31",
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
@@ -5460,6 +5498,25 @@
           }
         ],
         "remaining": "Complete source-applicable C227i/227k class/state/function/property-method oracle union, version and genuine loaded-value comparisons. 2012 934-export Core.u is not interchangeable with 2026 1142-export Core.u."
+      },
+      "new_2026_11_01_genuine_compiled_C227k_Engine_8724_loaded": {
+        "original_compiled_2026_C227k_Engine_u_source_native": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-227k-Engine-8724-fields-2408-pointer-187-class-manifest.json",
+          "bytes": 6763,
+          "sha256": "2233ba66d11f49793ce61dbd2352e9f52e7bacaf3ea1c21e57e658d29c255e05"
+        },
+        "original_Engine_u_exports": 9477,
+        "native_UProperty_objects": 6316,
+        "native_UStruct_objects": 2408,
+        "native_loaded_values_matched": 8724,
+        "independent_loaded_fields_assertions_pass": 26179,
+        "native_linked_children_exact_targets": 1768,
+        "native_linked_ScriptText_exact_targets": 187,
+        "native_UClass_ClassFlags_match": 187,
+        "native_UClass_ClassWithin_original_Core_Object_import_identity": 187,
+        "independent_pointer_and_class_assertions_pass": 7789,
+        "full_2012_2026_C227i_C227k_method_union_proven": false,
+        "full_owner_pass": false
       }
     },
     {
@@ -5475,10 +5532,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 NEW TRUE compiled 2026 227k native family: 1051 exact UField, 753 exact UProperty, 271 exact UStruct original Core.u v69/lic227 loaded values compare to UnrealDB under explicitly selected unreal-v227k; 265 native Children, 3 SuperField, 777 Next, two fully dereferenced UClass.ScriptText export targets586/654->saved refs587/655 verified. Both SHA-pinned authentic compiled native manifests and current source reader verifiers PASS, no 2012 original engine native proof rerun. 2026-11-01 original separate 469f v432 actual native differential: NEW actual compiled 469f native live original Core.Object/Core.Class UClass pointers, real Engine.Actor UClass ptr 60652450, actual reflected native UProperty ptr 03092ED0; v61/v62 actual pointer/field semantics verified by compiled original engine, not wire inference. Combined stock v432-v469f and original C98 pointer source evidence still lacks full C227 and all native field/size identities. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Actual native C98 nonnull UClass and ULinkerLoad pointer identities and export ordinals 229 and 0 observed; full source-family pointer ownership still open.",
+      "blocking_reason": "2026-11-01: New original 2026 C227k Engine.u 1768 actual linked Children pointer targets and 187 ScriptText targets all dereferenced and equal saved positive export references; 187 native ClassWithin Core.Object pointers and 187 flags match, 7789 original-source assertions PASS. Other historical C98, UT99 432/469f and 2012 C227i pointer/member size unions still missing. 2026-11-01 NEW TRUE compiled 2026 227k native family: 1051 exact UField, 753 exact UProperty, 271 exact UStruct original Core.u v69/lic227 loaded values compare to UnrealDB under explicitly selected unreal-v227k; 265 native Children, 3 SuperField, 777 Next, two fully dereferenced UClass.ScriptText export targets586/654->saved refs587/655 verified. Both SHA-pinned authentic compiled native manifests and current source reader verifiers PASS, no 2012 original engine native proof rerun. 2026-11-01 original separate 469f v432 actual native differential: NEW actual compiled 469f native live original Core.Object/Core.Class UClass pointers, real Engine.Actor UClass ptr 60652450, actual reflected native UProperty ptr 03092ED0; v61/v62 actual pointer/field semantics verified by compiled original engine, not wire inference. Combined stock v432-v469f and original C98 pointer source evidence still lacks full C227 and all native field/size identities. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Actual native C98 nonnull UClass and ULinkerLoad pointer identities and export ordinals 229 and 0 observed; full source-family pointer ownership still open.",
       "last_attempt_at": "2026-11-01T15:45:51+00:00",
       "attempted_native_execution": true,
-      "assessment": "NEW_2026_C227K_2075_GENUINE_DIRECT_METHOD_VALUES_MATCH_REMAINING_ALL_SOURCE_PROFILE_UNION_BLOCKED",
+      "assessment": "ENGINE_2026_1955_EXACT_POINTER_TARGETS_187_UCLASS_IDENTITIES_ACCEPTED_OTHER_BUILD_UNION_OPEN",
       "upstream_fixed_test_dependencies": [
         "T065"
       ],
@@ -5650,6 +5707,25 @@
           }
         ],
         "remaining": "Complete source-applicable C227i/227k class/state/function/property-method oracle union, version and genuine loaded-value comparisons. 2012 934-export Core.u is not interchangeable with 2026 1142-export Core.u."
+      },
+      "new_2026_11_01_C227k_Engine_1955_native_linker_pointers": {
+        "original_compiled_2026_C227k_Engine_u_source_native": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-227k-Engine-8724-fields-2408-pointer-187-class-manifest.json",
+          "bytes": 6763,
+          "sha256": "2233ba66d11f49793ce61dbd2352e9f52e7bacaf3ea1c21e57e658d29c255e05"
+        },
+        "original_Engine_u_exports": 9477,
+        "native_UProperty_objects": 6316,
+        "native_UStruct_objects": 2408,
+        "native_loaded_values_matched": 8724,
+        "independent_loaded_fields_assertions_pass": 26179,
+        "native_linked_children_exact_targets": 1768,
+        "native_linked_ScriptText_exact_targets": 187,
+        "native_UClass_ClassFlags_match": 187,
+        "native_UClass_ClassWithin_original_Core_Object_import_identity": 187,
+        "independent_pointer_and_class_assertions_pass": 7789,
+        "full_2012_2026_C227i_C227k_method_union_proven": false,
+        "full_owner_pass": false
       }
     },
     {
@@ -6127,6 +6203,19 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T073-v432-469f-original-12-array-native-methods.json",
         "sha256": "ca3084b9378b4f278c381e707b8e7594d69ac592127e219d232cfb453ced6787",
         "T073_closed": false
+      },
+      "new_2026_11_01_historical_source_and_native_Engine_upstream": {
+        "historic": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-local-original-historical-v35-v55to58-physical-61-summary.json",
+          "bytes": 16094,
+          "sha256": "6fc44636b910cb143e2c49b88309457213589afce2b48d0d797e66ab576c9b83"
+        },
+        "native_Engine": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-227k-Engine-8724-fields-2408-pointer-187-class-manifest.json",
+          "bytes": 6763,
+          "sha256": "2233ba66d11f49793ce61dbd2352e9f52e7bacaf3ea1c21e57e658d29c255e05"
+        },
+        "five_frozen_technical_owners_still_blocked": true
       }
     },
     {
@@ -6192,5 +6281,6 @@
     "G3-07",
     "G3-09"
   ],
-  "historical_original_evidence": "Reuse sealed original G3-03 and G3-04 and prior G5 where source/build relevant; previously accepted native tests not rerun."
+  "historical_original_evidence": "Reuse sealed original G3-03 and G3-04 and prior G5 where source/build relevant; previously accepted native tests not rerun.",
+  "updated_at_utc": "2026-11-01T17:00:33+00:00"
 }
