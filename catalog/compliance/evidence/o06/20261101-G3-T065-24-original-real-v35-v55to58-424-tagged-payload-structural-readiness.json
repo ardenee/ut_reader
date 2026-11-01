@@ -1,0 +1,77 @@
+{
+  "schema": "G3-T065-real-old-physical-object-payload-parsed-not-C98-native-verified-v1",
+  "date": "2026-11-01",
+  "frozen_T065_full_PASS": false,
+  "frozen_T072_full_PASS": false,
+  "real_original_physical_files": 24,
+  "package_archive_versions": [
+    35,
+    55,
+    56,
+    57,
+    58
+  ],
+  "exact_UE1_original_saved_UObject_export_payloads": 424,
+  "exact_saved_tag_envelopes": 3277,
+  "tagged_exports_validly_decoded": 424,
+  "source_current_reader_exceptions": 0,
+  "source_family": "epic-ue1",
+  "objectproperty_tags_in_real_version35_archives": 59,
+  "objectproperty_tags_in_all_24_old_archives": 438,
+  "per_physical_version_original_disk_tag_type_counts": {
+    "35": {
+      "ByteProperty": 143,
+      "BoolProperty": 18,
+      "IntProperty": 181,
+      "ObjectProperty": 59,
+      "FloatProperty": 140,
+      "StructProperty": 58
+    },
+    "55": {
+      "ObjectProperty": 3,
+      "ByteProperty": 6,
+      "IntProperty": 18,
+      "StructProperty": 6
+    },
+    "56": {
+      "BoolProperty": 142,
+      "ObjectProperty": 352,
+      "ByteProperty": 385,
+      "IntProperty": 1130,
+      "StructProperty": 375,
+      "FloatProperty": 38
+    },
+    "57": {
+      "ByteProperty": 45,
+      "BoolProperty": 9,
+      "IntProperty": 32,
+      "ObjectProperty": 4
+    },
+    "58": {
+      "BoolProperty": 6,
+      "ObjectProperty": 20,
+      "FloatProperty": 8,
+      "ByteProperty": 20,
+      "IntProperty": 60,
+      "StructProperty": 19
+    }
+  },
+  "all_original_export_types_are": [
+    "Texture",
+    "Palette",
+    "FireTexture"
+  ],
+  "important_scope": "This is the CURRENT reader structural parser over genuine original archives, NOT original 1998 compiled Core.dll native object tagged-data value parity and NOT native tag cursor equivalence. 59 true version35 ObjectProperty tags now available as ORIGINAL physical branch cases. No original C98 loaded-value claim and no PRD import.",
+  "pins": {
+    "previous_source_physical_61_file_SHA_manifest": {
+      "path": "catalog\\compliance\\evidence\\o06\\20261101-G3-T065-local-original-historical-v35-v55to58-physical-61-summary.json",
+      "bytes": 16094,
+      "sha256": "6fc44636b910cb143e2c49b88309457213589afce2b48d0d797e66ab576c9b83"
+    },
+    "current_true_tagged_property_PHP_reader": {
+      "path": "catalog\\src\\Infrastructure\\Readers\\CatalogUE1ClassicTaggedPropertyReader.php",
+      "bytes": 83187,
+      "sha256": "7fefdfc3b82d08c0daea8203f615992782daa1574ac587d85f0468c1ac57f7b8"
+    }
+  }
+}
