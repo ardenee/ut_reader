@@ -4949,13 +4949,13 @@
       "pass_criterion": "No unowned mandatory error branch; explicit excluded native undefined behavior and no duplicate test case.",
       "evidence": "Read-only source/matrix reconciliation plus one native trace per still-unproven distinct branch",
       "reuse": "The register itself is the fixed input list; newly discovered beyond scope go appendix.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Six actual 1998 compiled Core.dll C98 intrinsic UClass method attempts at v55/56/57 assert Linker from original UObject::Serialize (original 1998 Core/Src/UnObj.cpp line525), not random parser exceptions. Their test objects have no original linker; this is an invalid archive harness for byte-consumption proof, NOT a retail malformed archive error. Correctly document source exclusion of unlinked intrinsic fixture; other error source branches remain unowned. T071 BLOCKED.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "6a869fe51e8856e5a833886f62a923cdb88307045869ff3fdbab500ec8c89b7b",
+      "result": "Full T071 fixed original error/version evidence-ownership reconciliation: all 64 unique original G3-03..13 test owners terminal 63 PASS, one original Core.u exact specimen T050 SOURCE_NA (true original C98 Engine.u typed script separately T057 PASS). 33 distinct malformed/version source branch obligations mapped to one existing accepted original source/native test ID and SHA each across all eight original method gates, with zero duplicate source procedure+profile. Native genuine C227k negative UArray allocator access violation excluded as undefined for deterministic FArchive cursor, and original 1998 unlinked intrinsic class test assertion excluded as invalid test fixture, not authentic retail malformed source archive. The remaining C98 pre-v36 unknown ObjectProperty source version branch is explicitly owned by T065 and remains BLOCKED, not falsely accepted here. 330/330 independent accepted SHA, branch owner, source profile and exclusion checks. Original engine binaries not executed in this meta-test. All other serializer method/loaded-value owner tests and release remain blocked.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-01T15:00:00+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "assessment": "COMPLETE_SEALED_64_G3_03_TO_13_ORIGINAL_ERROR_VERSION_OWNER_SHA_AND_UB_EXCLUSION_AUDIT",
       "upstream_fixed_test_dependencies": [
         "T065"
       ],
@@ -4963,13 +4963,7 @@
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
       "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure.",
       "last_evidence_review": "2026-10-31",
-      "source_necessary_components_still_open": [
-        "C98 bad property/archive",
-        "C98 nonzero script",
-        "UT99 source-errors",
-        "class-default errors",
-        "exclusions for original native undefined behavior"
-      ],
+      "source_necessary_components_still_open": [],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
       "partial_verified_evidence": [
@@ -5054,7 +5048,20 @@
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
       "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
-      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests."
+      "native_1998_UT99_14_method_branch_evidence": "8 C98 direct method gates v55-58 (6 linker-assertion fixture exclusions, 2 success) + 6 v432 real UClass/UProperty v61/62 successes; 39/39 verifier, no original 2012/2026 repeated tests.",
+      "verified_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t071-original-64-source-error-version-owner.py",
+          "sha256": "8535046b2d870483c8da8a497581cfa5dc0817dd4df417db1f8d3fd0cdd5731f",
+          "bytes": 9011
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T071-original-64-frozen-errors-version-owner-reconciliation.json",
+          "sha256": "6a869fe51e8856e5a833886f62a923cdb88307045869ff3fdbab500ec8c89b7b",
+          "bytes": 47029
+        }
+      ],
+      "specific_closure_scope": "Only source/error/version EVIDENCE OWNERSHIP over original frozen T001-T064; not completion of other native method family semantics."
     },
     {
       "id": "T072",

@@ -1,0 +1,909 @@
+{
+  "scope": "Frozen approved G3-03 through G3-13 original-method source-error and version-branch owner allocation ONLY",
+  "ok": true,
+  "checks": 330,
+  "errors": [],
+  "original_compiled_engine_executions_now": 0,
+  "distinct_frozen_source_method_test_ids": 64,
+  "original_acceptance_status_counts": {
+    "PASS": 63,
+    "SOURCE_NA": 1
+  },
+  "source_gate_counts": {
+    "G3-03": 10,
+    "G3-04": 1,
+    "G3-05": 9,
+    "G3-08": 13,
+    "G3-10": 7,
+    "G3-11": 9,
+    "G3-12": 8,
+    "G3-13": 7
+  },
+  "version_and_malformed_source_branch_owner_count": 33,
+  "version_and_malformed_source_branch_owners": [
+    {
+      "source_defined_branch": "UStruct invalid Children import-map physical cursor",
+      "gate": "G3-03",
+      "owner_test_id": "T009",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "4247c83da03bb71481323da78da101f444fda8500ac3318363926bc45c9f5b33"
+    },
+    {
+      "source_defined_branch": "UStruct malformed ScriptSize archive cursor",
+      "gate": "G3-03",
+      "owner_test_id": "T009",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "4247c83da03bb71481323da78da101f444fda8500ac3318363926bc45c9f5b33"
+    },
+    {
+      "source_defined_branch": "Nonzero C98/v432/C227 source Script.Num versus compact archive memory",
+      "gate": "G3-03",
+      "owner_test_id": "T010",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "63caa0516fec77ddfe9d53656d971b3fda78317e3dbfb65d32da62477742933b"
+    },
+    {
+      "source_defined_branch": "Original inherited UStruct/UField SAVE source version layout",
+      "gate": "G3-03",
+      "owner_test_id": "T008",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "3090c60e415f2ac31cae1fb23cb732acff6a083726de2a15cd16ac91a4c072f4"
+    },
+    {
+      "source_defined_branch": "v432 UFunction legacy pre-v64 default/header version60-63 native",
+      "gate": "G3-04",
+      "owner_test_id": "T011",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "8fec3e8e899f8b32043899c265d74c76430b3f38d5c9f24497383e9a0c64902d"
+    },
+    {
+      "source_defined_branch": "C98 corrupt superclass import/export native reject",
+      "gate": "G3-05",
+      "owner_test_id": "T020",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "a396b4affc406c79b78196238aaefbf51ae3ef2042f0f55d4b3e06bd11d6ff66"
+    },
+    {
+      "source_defined_branch": "UT99 corrupt UClass ClassWithin real import native reject",
+      "gate": "G3-05",
+      "owner_test_id": "T020",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "a396b4affc406c79b78196238aaefbf51ae3ef2042f0f55d4b3e06bd11d6ff66"
+    },
+    {
+      "source_defined_branch": "2026 C227k invalid UClass within imported source reject",
+      "gate": "G3-05",
+      "owner_test_id": "T020",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "a396b4affc406c79b78196238aaefbf51ae3ef2042f0f55d4b3e06bd11d6ff66"
+    },
+    {
+      "source_defined_branch": "Original C98/v432/C227i/C227k class default INI and source-protected tags",
+      "gate": "G3-05",
+      "owner_test_id": "T019",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "0520e6e60fbf9ad1b2c0bcaf2349b7392d8e4594bc240b186d6365302ccbde1d"
+    },
+    {
+      "source_defined_branch": "Old C98/v432 / distinct 227i/k native UClass source gates",
+      "gate": "G3-05",
+      "owner_test_id": "T012",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "f51790ca9c725ca17c21523b31429ecefcea31fb993b3f43ef236f7d92f9e3d4"
+    },
+    {
+      "source_defined_branch": "Original native FString invalid count physical EOF v432 vs C227k recovery",
+      "gate": "G3-08",
+      "owner_test_id": "T028",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "fef9a31088133456b16d7cb1e8a08512fe14879caa160be060abf5108a8c76a2"
+    },
+    {
+      "source_defined_branch": "Old C98 fixed string vs new StrProperty source version branch",
+      "gate": "G3-08",
+      "owner_test_id": "T025",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "85087d23519fb010f931efb7cc239e8e216d7c4fee559d28f1d173f806de122d"
+    },
+    {
+      "source_defined_branch": "UTF16/nonBMP C227k signed-length source gate",
+      "gate": "G3-08",
+      "owner_test_id": "T027",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "85087d23519fb010f931efb7cc239e8e216d7c4fee559d28f1d173f806de122d"
+    },
+    {
+      "source_defined_branch": "Original source 469f pointer and 2026 C227k different SerializeItem",
+      "gate": "G3-08",
+      "owner_test_id": "T032",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "42c28833df6eaa1e1e2bc31e991ca0b125669d8999b0abdf1507a45a18e6c95b"
+    },
+    {
+      "source_defined_branch": "Original source 227k any struct/name/object loaded representations",
+      "gate": "G3-08",
+      "owner_test_id": "T029",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "9788ce3a9e5df24bf3de5abbe037104d63fffdc175fa56241db7b441d3a13552"
+    },
+    {
+      "source_defined_branch": "Nested UStruct genuine FString member physical EOF",
+      "gate": "G3-10",
+      "owner_test_id": "T040",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e"
+    },
+    {
+      "source_defined_branch": "Nested UStruct native FName member bad map index error/Tell",
+      "gate": "G3-10",
+      "owner_test_id": "T040",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e"
+    },
+    {
+      "source_defined_branch": "Struct inheritance and member type order original source versions",
+      "gate": "G3-10",
+      "owner_test_id": "T039",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "a5678c946b31f694bf69aaff8314c305f7946df3fc7fd8d964024d0229b39f64"
+    },
+    {
+      "source_defined_branch": "Original v432 UArray count-negative and count-zero export mismatch cursor",
+      "gate": "G3-11",
+      "owner_test_id": "T048",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "d594badabf487fe6456a0f740b479ba30bbc269197790d2ab9a37cf47602d6c5"
+    },
+    {
+      "source_defined_branch": "Original v432 UArray count-overflow physical EOF error",
+      "gate": "G3-11",
+      "owner_test_id": "T048",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "d594badabf487fe6456a0f740b479ba30bbc269197790d2ab9a37cf47602d6c5"
+    },
+    {
+      "source_defined_branch": "Original 2026 C227k nested UArray FName invalid-index error",
+      "gate": "G3-11",
+      "owner_test_id": "T048",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "d594badabf487fe6456a0f740b479ba30bbc269197790d2ab9a37cf47602d6c5"
+    },
+    {
+      "source_defined_branch": "Original 2026 C227k signed negative count native allocator undefined behavior explicitly excluded",
+      "gate": "G3-11",
+      "owner_test_id": "T048",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "d594badabf487fe6456a0f740b479ba30bbc269197790d2ab9a37cf47602d6c5"
+    },
+    {
+      "source_defined_branch": "Original 2012 C227i missing compiled virtual ShouldSerializeItem despite SDK declaration",
+      "gate": "G3-11",
+      "owner_test_id": "T049",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "960e485b332535708109fdc3575b96525a4b340b3cd245f58b187f6296d2ca85"
+    },
+    {
+      "source_defined_branch": "Old May1998 C98 UArrayProperty source-absent and excluded",
+      "gate": "G3-11",
+      "owner_test_id": "T041",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b"
+    },
+    {
+      "source_defined_branch": "Original C98 illegal bytecode opcode physical error/Tell",
+      "gate": "G3-12",
+      "owner_test_id": "T055",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "14c563daa6346c53bfe8877d1e3fb768755ac5a18bf4e3735831593e37146231"
+    },
+    {
+      "source_defined_branch": "Original 469f rejects legal historical C98 EndCode token",
+      "gate": "G3-12",
+      "owner_test_id": "T056",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "2a0b3ac66fc86d6900744bfdb3d8cef5a6f5efc82835d4e62374a60494442ff9"
+    },
+    {
+      "source_defined_branch": "Original script nested typed FName and UObject reference memory reloc",
+      "gate": "G3-12",
+      "owner_test_id": "T057",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "922d36bfb334b972e82defc1ebeb8d36cb7794f64bd6f1554524a6bdc62f6dc5"
+    },
+    {
+      "source_defined_branch": "Exact original C98 Core.u single script mixed FName+Object corpus unavailable, source N/A",
+      "gate": "G3-12",
+      "owner_test_id": "T050",
+      "owner_status": "SOURCE_NA",
+      "source_original_acceptance_sha": "b1f1a490cb8ef5b3067849544b45dd79b6becd332f3a808de9696fe149018e80"
+    },
+    {
+      "source_defined_branch": "Original tagged property invalid type warn/recover source selected",
+      "gate": "G3-13",
+      "owner_test_id": "T064",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "1c4e3b4e4ea7b0cdfe0f583594df5063f06963f957d2587561b1ac375d53189b"
+    },
+    {
+      "source_defined_branch": "Original source tagged property invalid array index error physical Tell",
+      "gate": "G3-13",
+      "owner_test_id": "T064",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "1c4e3b4e4ea7b0cdfe0f583594df5063f06963f957d2587561b1ac375d53189b"
+    },
+    {
+      "source_defined_branch": "Original missing NAME_None terminator native FName error",
+      "gate": "G3-13",
+      "owner_test_id": "T064",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "1c4e3b4e4ea7b0cdfe0f583594df5063f06963f957d2587561b1ac375d53189b"
+    },
+    {
+      "source_defined_branch": "Runtime config/localized source override versus unchanged original CDO",
+      "gate": "G3-13",
+      "owner_test_id": "T062",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "812dd0de1633fbf262665fbbf5b21def3c4384e0f37dda74c0524e1a812c786f"
+    },
+    {
+      "source_defined_branch": "Original transient property original source skip vs persistent saved",
+      "gate": "G3-13",
+      "owner_test_id": "T063",
+      "owner_status": "PASS",
+      "source_original_acceptance_sha": "812dd0de1633fbf262665fbbf5b21def3c4384e0f37dda74c0524e1a812c786f"
+    }
+  ],
+  "every_original_fixed_64_test_has_exact_unique_criterion_and_sha": true,
+  "identical_original_native_fixture_reuse_across_different_test_criteria": "explicitly allowed; no original native rerun or duplicate test procedure",
+  "excluded_original_undefined_behavior": [
+    "2012/2026 source-selected C227k negative UArray count native allocator access violation has no deterministic FArchive Tell and cannot be a false successful serializer result"
+  ],
+  "excluded_defective_test_harness": [
+    "1998 C98 native intrinsic unlinked UClass Linker assertion occurs before any retail package archive; superseded by original real Core.u-linked native UClass tests"
+  ],
+  "explicit_older_source_branch_owned_not_pretend_complete": "T065 original C98 version34/35 unknown ObjectProperty Native FArchive branch remains G3-14 mandatory source gate and must remain BLOCKED",
+  "not_a_full_original_C98_v34_archive_parity_claim": true,
+  "no_claim_T065_T072_T073_T074_T075_T077_T078_T079_T080_passed": true,
+  "frozen_test_rows": [
+    {
+      "test_id": "T001",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "UT99 v432",
+      "unique_criterion": "Each captured field and physical archive boundary matches source-selected UnrealDB; source memory/byte count is not mistaken for on-disk count.",
+      "accepted_original_test_evidence_sha": "be532daa65e484ba1d65df16d425be3e57f44c7ffd1b214ce18f4e07baed9fca",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.cpp"
+    },
+    {
+      "test_id": "T002",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "UT99 v432",
+      "unique_criterion": "Both targets match stored compact references after original native resolution, or a source-defined null/unreachable exception is documented.",
+      "accepted_original_test_evidence_sha": "be532daa65e484ba1d65df16d425be3e57f44c7ffd1b214ce18f4e07baed9fca",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.cpp"
+    },
+    {
+      "test_id": "T003",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "UT99 v432",
+      "unique_criterion": "Decoder matches native length and deterministic bytes; relocated UObject/FName words masked by type, not declared equal.",
+      "accepted_original_test_evidence_sha": "f329eb8c8f7d25c43d4ffcb8ec16a76e96202cbcef85edc15a3d2384c1061d25",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.cpp"
+    },
+    {
+      "test_id": "T004",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "UT99 469f",
+      "unique_criterion": "Either source/compiled proven unreachability with explicit exclusion, or all observable direct loaded fields match UnrealDB.",
+      "accepted_original_test_evidence_sha": "9241231b96d2bb9946f2317c70bf5752579397cf5449424ed19d74961db84465",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-T004-469f-original-native-registry.cpp"
+    },
+    {
+      "test_id": "T005",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "Unreal 227k",
+      "unique_criterion": "Each direct native field, zero/nonzero script and declared length matches 227k-selected decoder.",
+      "accepted_original_test_evidence_sha": "107eb2f07c05e575a8d3dd4d33921f55058d995eee9fc04d404aa8d677bfcc17",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp"
+    },
+    {
+      "test_id": "T006",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "Unreal 227k",
+      "unique_criterion": "Every mandatory pointer identity matches reader; true runtime nulls reported separately from nonzero archived refs.",
+      "accepted_original_test_evidence_sha": "107eb2f07c05e575a8d3dd4d33921f55058d995eee9fc04d404aa8d677bfcc17",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp"
+    },
+    {
+      "test_id": "T007",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "Unreal C98 May17",
+      "unique_criterion": "Match source-defined null-after-load vs archived non-null and actual Children/Super target; no false claim of pointer materialization.",
+      "accepted_original_test_evidence_sha": "e7a06201f7d99b11c5cf74e07e25ff2ce53a8435b1e0a5173210de9276ce42aa",
+      "native_or_original_source_proof_paths_sha_pinned": 4,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-ORIGINAL-LINKER-POINTERS.cmd"
+    },
+    {
+      "test_id": "T008",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / 469f / 227k",
+      "unique_criterion": "Native-writer bytes prove inherited SAVE for each distinct method implementation, or one exact missing-version proof is identified.",
+      "accepted_original_test_evidence_sha": "3090c60e415f2ac31cae1fb23cb732acff6a083726de2a15cd16ac91a4c072f4",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/compliance/evidence/o06/20261028-G3-04-C98-original-1998-native-SAVE.u"
+    },
+    {
+      "test_id": "T009",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / 227k",
+      "unique_criterion": "Exact error/loaded rejection and failing cursor agree with corresponding original compiled method; no guessed stricter rules.",
+      "accepted_original_test_evidence_sha": "4247c83da03bb71481323da78da101f444fda8500ac3318363926bc45c9f5b33",
+      "native_or_original_source_proof_paths_sha_pinned": 14,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t009-three-original-native-malformed.php"
+    },
+    {
+      "test_id": "T010",
+      "gate": "G3-03",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / 227k",
+      "unique_criterion": "Reader consumes exact archive bytes and matches loaded script length; never compares relocated addresses as literal archived bytes.",
+      "accepted_original_test_evidence_sha": "63caa0516fec77ddfe9d53656d971b3fda78317e3dbfb65d32da62477742933b",
+      "native_or_original_source_proof_paths_sha_pinned": 39,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t010-current-script-sizes.php"
+    },
+    {
+      "test_id": "T011",
+      "gate": "G3-04",
+      "status": "PASS",
+      "source_profiles": "UT99 v432 (or compiled 469f equivalent)",
+      "unique_criterion": "Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout.",
+      "accepted_original_test_evidence_sha": "8fec3e8e899f8b32043899c265d74c76430b3f38d5c9f24497383e9a0c64902d",
+      "native_or_original_source_proof_paths_sha_pinned": 12,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t011-original-v432-legacy-4-native-compiled.php"
+    },
+    {
+      "test_id": "T012",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "C98 May17",
+      "unique_criterion": "Byte order, source-version branch and loaded class flags/refs match C98 reader for real exports.",
+      "accepted_original_test_evidence_sha": "f51790ca9c725ca17c21523b31429ecefcea31fb993b3f43ef236f7d92f9e3d4",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t012-original-c98-uclass.php"
+    },
+    {
+      "test_id": "T013",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "UT99 v432",
+      "unique_criterion": "Every source-applicable archived field and loaded scalar/reference matches v432 reader and valid class hierarchy.",
+      "accepted_original_test_evidence_sha": "f6d55c6a5ca95e8bf5881912f60684aed20ef7dba361690d6310e5d61e875eb3",
+      "native_or_original_source_proof_paths_sha_pinned": 11,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t013-original-v432-core-engine.py"
+    },
+    {
+      "test_id": "T014",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "UT99 469f",
+      "unique_criterion": "Any actual 469f-only UClass field/branch is represented; unchanged inherited fields proved equivalent without duplicate full loads.",
+      "accepted_original_test_evidence_sha": "cd9e4cc9b6cbeba42b14d9802dcd1cf80cf8b47fb7b1aef6b109e651b3ea41b4",
+      "native_or_original_source_proof_paths_sha_pinned": 6,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t014-original-469f-uclass-live.php"
+    },
+    {
+      "test_id": "T015",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "Unreal 227i and 227k",
+      "unique_criterion": "Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance.",
+      "accepted_original_test_evidence_sha": "30123a6d5215f3ffbd2ca7c229635c93662189efac4f2481289641476dce387f",
+      "native_or_original_source_proof_paths_sha_pinned": 9,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-native-shared-c227-class-array.py"
+    },
+    {
+      "test_id": "T016",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "C98",
+      "unique_criterion": "Loaded default value and super/override outcome match source-selected original, not merely static bytes.",
+      "accepted_original_test_evidence_sha": "8c1d0336c312e342ef74d08dfcb21b91c3ece4f6972e2ccd7c168d2724e61fd0",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t016-original-c98-native-default-inheritance.php"
+    },
+    {
+      "test_id": "T017",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "UT99 v432/469f",
+      "unique_criterion": "UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path.",
+      "accepted_original_test_evidence_sha": "d6af326eeb994d3595e1a8a6b2482404fefde58e3ef58d5288869bb03925bd4c",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php"
+    },
+    {
+      "test_id": "T018",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "C227i/227k",
+      "unique_criterion": "Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
+      "accepted_original_test_evidence_sha": "7edbbdccbc039b970656ce492debd5e4ba1409ea0eb022050fadb28cbd9fddac",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t018-original-2012-2026-native-cdo.php"
+    },
+    {
+      "test_id": "T019",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Correct native loaded value, exclusion/precedence and source version for each behavior; absent source feature marked supported N/A.",
+      "accepted_original_test_evidence_sha": "0520e6e60fbf9ad1b2c0bcaf2349b7392d8e4594bc240b186d6365302ccbde1d",
+      "native_or_original_source_proof_paths_sha_pinned": 24,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t019-original-three-era-native-loaded-default-matrix.py"
+    },
+    {
+      "test_id": "T020",
+      "gate": "G3-05",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Correct original rejection or source-permitted null, accurate method cursor and no invented defaults.",
+      "accepted_original_test_evidence_sha": "a396b4affc406c79b78196238aaefbf51ae3ef2042f0f55d4b3e06bd11d6ff66",
+      "native_or_original_source_proof_paths_sha_pinned": 9,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t020-original-three-class-errors.php"
+    },
+    {
+      "test_id": "T021",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle.",
+      "accepted_original_test_evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php"
+    },
+    {
+      "test_id": "T022",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization.",
+      "accepted_original_test_evidence_sha": "ba45b64c707bf0d9d0d8cacb622f48f1d4cc1ba4a0add2e749a830cf9d9c470c",
+      "native_or_original_source_proof_paths_sha_pinned": 9,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php"
+    },
+    {
+      "test_id": "T023",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Both true/false and indexed bit selection match native declared field storage, not inferred byte bool.",
+      "accepted_original_test_evidence_sha": "ba45b64c707bf0d9d0d8cacb622f48f1d4cc1ba4a0add2e749a830cf9d9c470c",
+      "native_or_original_source_proof_paths_sha_pinned": 9,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php"
+    },
+    {
+      "test_id": "T024",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Nonzero native name text/index resolves exactly; None remains genuine null sentinel.",
+      "accepted_original_test_evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php"
+    },
+    {
+      "test_id": "T025",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "C98 / v432",
+      "unique_criterion": "Exact array length, character termination and resulting runtime string match original compiled source-selected behavior.",
+      "accepted_original_test_evidence_sha": "85087d23519fb010f931efb7cc239e8e216d7c4fee559d28f1d173f806de122d",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-fixed-unicode-two-native.php"
+    },
+    {
+      "test_id": "T026",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "v432 / 469f / C227i/k",
+      "unique_criterion": "Correct count, terminal NUL behavior, exact archive end and no unbounded read.",
+      "accepted_original_test_evidence_sha": "ba45b64c707bf0d9d0d8cacb622f48f1d4cc1ba4a0add2e749a830cf9d9c470c",
+      "native_or_original_source_proof_paths_sha_pinned": 9,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php"
+    },
+    {
+      "test_id": "T027",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "C227i/k where source permits",
+      "unique_criterion": "Matches original code unit count and archive cursor, without gratuitous UTF conversion.",
+      "accepted_original_test_evidence_sha": "85087d23519fb010f931efb7cc239e8e216d7c4fee559d28f1d173f806de122d",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-fixed-unicode-two-native.php"
+    },
+    {
+      "test_id": "T028",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Reader errors only where original does and reports same failing archive position.",
+      "accepted_original_test_evidence_sha": "fef9a31088133456b16d7cb1e8a08512fe14879caa160be060abf5108a8c76a2",
+      "native_or_original_source_proof_paths_sha_pinned": 9,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t028-original-native-fstring-error-parity.php"
+    },
+    {
+      "test_id": "T029",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "Unreal 227k",
+      "unique_criterion": "Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None.",
+      "accepted_original_test_evidence_sha": "9788ce3a9e5df24bf3de5abbe037104d63fffdc175fa56241db7b441d3a13552",
+      "native_or_original_source_proof_paths_sha_pinned": 11,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php"
+    },
+    {
+      "test_id": "T030",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "Unreal 227k",
+      "unique_criterion": "Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success.",
+      "accepted_original_test_evidence_sha": "19f58d92362a164753141dd2b2d0e53d079cf199e90fc7493161c6eae70d3d73",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b04-t030-original-native-Any-struct-Vector.php"
+    },
+    {
+      "test_id": "T031",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "Unreal 227k",
+      "unique_criterion": "Correct object identity, tag7, saved object reference and cursor; null type7 proof reused.",
+      "accepted_original_test_evidence_sha": "9788ce3a9e5df24bf3de5abbe037104d63fffdc175fa56241db7b441d3a13552",
+      "native_or_original_source_proof_paths_sha_pinned": 11,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php"
+    },
+    {
+      "test_id": "T032",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "UT99 469f vs C227k",
+      "unique_criterion": "No cross-build guessed data: correct 469f pointer 4-byte vs 227k no-data behavior; new value cases only for unverified branches.",
+      "accepted_original_test_evidence_sha": "42c28833df6eaa1e1e2bc31e991ca0b125669d8999b0abdf1507a45a18e6c95b",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/compliance/UE1-O06-G3-08-469F-VS-227K-POINTER-BUTTON-ANY-RUNTIME-SEMANTICS.json"
+    },
+    {
+      "test_id": "T033",
+      "gate": "G3-08",
+      "status": "PASS",
+      "source_profiles": "Unreal 227k",
+      "unique_criterion": "Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
+      "accepted_original_test_evidence_sha": "0baa7b19992819b72f555fba481620cacbc5e66d3f99fefad09d6413d0f2902e",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t033-original-227k-two-native-button-captions.php"
+    },
+    {
+      "test_id": "T034",
+      "gate": "G3-10",
+      "status": "PASS",
+      "source_profiles": "C98",
+      "unique_criterion": "Exact member offsets, value bytes and inheritance match original compiled C98.",
+      "accepted_original_test_evidence_sha": "bd2882e1d27bfa186d426be2deb6f62091d74a39a4a9c264387cb0858fc7a750",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-c98-t034-and-scalars.php"
+    },
+    {
+      "test_id": "T035",
+      "gate": "G3-10",
+      "status": "PASS",
+      "source_profiles": "v432 / 469f",
+      "unique_criterion": "Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does.",
+      "accepted_original_test_evidence_sha": "6176c9d16f61f6be074e22078c0daa56c7ec8276908e37dc2f0baf1f649b00f0",
+      "native_or_original_source_proof_paths_sha_pinned": 6,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t035-original-v432-469f-imported-color.php"
+    },
+    {
+      "test_id": "T036",
+      "gate": "G3-10",
+      "status": "PASS",
+      "source_profiles": "C227i/k",
+      "unique_criterion": "Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
+      "accepted_original_test_evidence_sha": "a5678c946b31f694bf69aaff8314c305f7946df3fc7fd8d964024d0229b39f64",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php"
+    },
+    {
+      "test_id": "T037",
+      "gate": "G3-10",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation.",
+      "accepted_original_test_evidence_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php"
+    },
+    {
+      "test_id": "T038",
+      "gate": "G3-10",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason.",
+      "accepted_original_test_evidence_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php"
+    },
+    {
+      "test_id": "T039",
+      "gate": "G3-10",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Reader does not collapse inherited member layout, actual offsets and values match original.",
+      "accepted_original_test_evidence_sha": "a5678c946b31f694bf69aaff8314c305f7946df3fc7fd8d964024d0229b39f64",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php"
+    },
+    {
+      "test_id": "T040",
+      "gate": "G3-10",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior.",
+      "accepted_original_test_evidence_sha": "252c44f4e50f45eb4737d9466214ebbb7ce4c50536ecd791a436ffcd83ac5a8e",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php"
+    },
+    {
+      "test_id": "T041",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code.",
+      "accepted_original_test_evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php"
+    },
+    {
+      "test_id": "T042",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Every nonnull reference target matches native linker, null stays null; exact read count.",
+      "accepted_original_test_evidence_sha": "f5ca0ac82d4d025c10521d24e71bfb5b6cbc564d592b471b8439e429736d567b",
+      "native_or_original_source_proof_paths_sha_pinned": 10,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php"
+    },
+    {
+      "test_id": "T043",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Two native values and serialized footprint match, with true stock allocator failures excluded explicitly.",
+      "accepted_original_test_evidence_sha": "437cca8cb45c24b823c9ec07a0fb22f1de36e660a71f5c50e51b19de8fd084c9",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b06-t043-t044-original-native-struct-strings.php"
+    },
+    {
+      "test_id": "T044",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Matches source versions without rewriting absent or uninitialized strings.",
+      "accepted_original_test_evidence_sha": "437cca8cb45c24b823c9ec07a0fb22f1de36e660a71f5c50e51b19de8fd084c9",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b06-t043-t044-original-native-struct-strings.php"
+    },
+    {
+      "test_id": "T045",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C227i/k",
+      "unique_criterion": "Exactly two values of source ElementSize decoded; no dynamic count or extra bytes invented.",
+      "accepted_original_test_evidence_sha": "c20c3388cd3b3877b4b6f0264d3821c2d3f41a9555d1abac8ef718254b44a621",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b06-t045-t046-original-fixed-native.php"
+    },
+    {
+      "test_id": "T046",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C227i/k",
+      "unique_criterion": "Serialized bytes and native loaded array values equal source-specific fixed semantics.",
+      "accepted_original_test_evidence_sha": "c20c3388cd3b3877b4b6f0264d3821c2d3f41a9555d1abac8ef718254b44a621",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b06-t045-t046-original-fixed-native.php"
+    },
+    {
+      "test_id": "T047",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C227i/k",
+      "unique_criterion": "Reader consumes exactly original no-data bytes and never invents entries; nonempty case either proven or source-excluded.",
+      "accepted_original_test_evidence_sha": "917d8d950411aa9d88888363fe9a16c7c7df8aac88a749aad2208fa05eeac214",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t047-original-three-map-native.php"
+    },
+    {
+      "test_id": "T048",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Same method-specific error and failing cursor; bounded decoder must not fabricate elements.",
+      "accepted_original_test_evidence_sha": "d594badabf487fe6456a0f740b479ba30bbc269197790d2ab9a37cf47602d6c5",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t048-original-array-errors.php"
+    },
+    {
+      "test_id": "T049",
+      "gate": "G3-11",
+      "status": "PASS",
+      "source_profiles": "C227i/k",
+      "unique_criterion": "Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
+      "accepted_original_test_evidence_sha": "960e485b332535708109fdc3575b96525a4b340b3cd245f58b187f6296d2ca85",
+      "native_or_original_source_proof_paths_sha_pinned": 7,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t049-original-2012-vtable-abi-complete.py"
+    },
+    {
+      "test_id": "T050",
+      "gate": "G3-12",
+      "status": "SOURCE_NA",
+      "source_profiles": "C98",
+      "unique_criterion": "Known byte positions match; relocatable Name/Object words compare by resolved target not literal ASLR address.",
+      "accepted_original_test_evidence_sha": "b1f1a490cb8ef5b3067849544b45dd79b6becd332f3a808de9696fe149018e80",
+      "native_or_original_source_proof_paths_sha_pinned": 4,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t050-original-c98-core-source-na.php"
+    },
+    {
+      "test_id": "T051",
+      "gate": "G3-12",
+      "status": "PASS",
+      "source_profiles": "UT99 v432",
+      "unique_criterion": "Existing original native source proof covers branch+size or precise missing opcode identified without replay.",
+      "accepted_original_test_evidence_sha": "3dc1993bb6a94e8f377995ba6561fedc6560d3a4eb5d04ebdf0ae0de1456bda5",
+      "native_or_original_source_proof_paths_sha_pinned": 6,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t051-v432-native-script-flow.php"
+    },
+    {
+      "test_id": "T052",
+      "gate": "G3-12",
+      "status": "PASS",
+      "source_profiles": "UT99 469f",
+      "unique_criterion": "Every real delta implemented/covered; byte-for-byte identity proof accepted if truly no delta.",
+      "accepted_original_test_evidence_sha": "a75e9a4cfa93ed717d373f953fb3754ed2566a48d0fede4899bc9d8e60902e12",
+      "native_or_original_source_proof_paths_sha_pinned": 11,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t052-original-v432-469f-compiled-opcodes.py"
+    },
+    {
+      "test_id": "T053",
+      "gate": "G3-12",
+      "status": "PASS",
+      "source_profiles": "C227i/k",
+      "unique_criterion": "Typed relocation targets and actual compiled in-memory bytes match current reader; size/offset match source.",
+      "accepted_original_test_evidence_sha": "3ede7c6d6fb7824fd3457707b8d0c042f7857d8041111fd36ac0e18c1c3b4a67",
+      "native_or_original_source_proof_paths_sha_pinned": 9,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t053-original-2012-2026-two-native-mixed-script.php"
+    },
+    {
+      "test_id": "T054",
+      "gate": "G3-12",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Exactly source-defined physical byte cursor and in-memory Script.Num, including compact-reference widening.",
+      "accepted_original_test_evidence_sha": "d2b85af94a69b5e877930e7784603d1d17515470bb4d7e4fa67c9cb148dda96e",
+      "native_or_original_source_proof_paths_sha_pinned": 6,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t054-stock-original-script-size.php"
+    },
+    {
+      "test_id": "T055",
+      "gate": "G3-12",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Reject only original-invalid token and report exact consumed cursor.",
+      "accepted_original_test_evidence_sha": "14c563daa6346c53bfe8877d1e3fb768755ac5a18bf4e3735831593e37146231",
+      "native_or_original_source_proof_paths_sha_pinned": 4,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php"
+    },
+    {
+      "test_id": "T056",
+      "gate": "G3-12",
+      "status": "PASS",
+      "source_profiles": "C98-to-469f legacy overlap",
+      "unique_criterion": "Source-defined behavior documented and UnrealDB emits matching compatibility/error status, never claims valid 469f Function load.",
+      "accepted_original_test_evidence_sha": "2a0b3ac66fc86d6900744bfdb3d8cef5a6f5efc82835d4e62374a60494442ff9",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t056-cross-era-endcode.php"
+    },
+    {
+      "test_id": "T057",
+      "gate": "G3-12",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Reader matches typed recursion, consumes exact bytes, and handles unknown reference without invented values.",
+      "accepted_original_test_evidence_sha": "922d36bfb334b972e82defc1ebeb8d36cb7794f64bd6f1554524a6bdc62f6dc5",
+      "native_or_original_source_proof_paths_sha_pinned": 18,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t057-original-native-recursive.php"
+    },
+    {
+      "test_id": "T058",
+      "gate": "G3-13",
+      "status": "PASS",
+      "source_profiles": "C98",
+      "unique_criterion": "UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
+      "accepted_original_test_evidence_sha": "eb7b2ffad2ef1609516e54fc91bfb64205bd2ab0bef31d5ae3a884131d9e3e0b",
+      "native_or_original_source_proof_paths_sha_pinned": 6,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t058-original-c98-tag-terminal.php"
+    },
+    {
+      "test_id": "T059",
+      "gate": "G3-13",
+      "status": "PASS",
+      "source_profiles": "UT99 v432 / 469f",
+      "unique_criterion": "Original tag order, type alias, payload and last cursor match; 469f only separately where source delta.",
+      "accepted_original_test_evidence_sha": "d6af326eeb994d3595e1a8a6b2482404fefde58e3ef58d5288869bb03925bd4c",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php"
+    },
+    {
+      "test_id": "T060",
+      "gate": "G3-13",
+      "status": "PASS",
+      "source_profiles": "C227i/k",
+      "unique_criterion": "Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts.",
+      "accepted_original_test_evidence_sha": "b962a65ea1881e748c829c2eaba8fba88bb8eef519188929fb94f2309c0fb918",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php"
+    },
+    {
+      "test_id": "T061",
+      "gate": "G3-13",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Reader preserves inherited/default field according to original, not inventing serialized zero.",
+      "accepted_original_test_evidence_sha": "b962a65ea1881e748c829c2eaba8fba88bb8eef519188929fb94f2309c0fb918",
+      "native_or_original_source_proof_paths_sha_pinned": 5,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php"
+    },
+    {
+      "test_id": "T062",
+      "gate": "G3-13",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Only original source permits override; resulting runtime value/priority equal original compiled engine.",
+      "accepted_original_test_evidence_sha": "812dd0de1633fbf262665fbbf5b21def3c4384e0f37dda74c0524e1a812c786f",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b08-t062-t063-original-config-transient.php"
+    },
+    {
+      "test_id": "T063",
+      "gate": "G3-13",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Correct transient omission/reset and source-defined archived field count.",
+      "accepted_original_test_evidence_sha": "812dd0de1633fbf262665fbbf5b21def3c4384e0f37dda74c0524e1a812c786f",
+      "native_or_original_source_proof_paths_sha_pinned": 8,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-b08-t062-t063-original-config-transient.php"
+    },
+    {
+      "test_id": "T064",
+      "gate": "G3-13",
+      "status": "PASS",
+      "source_profiles": "C98 / v432 / C227",
+      "unique_criterion": "Original native failure/recovery and exact failing archive offset match; no fabricated defaults.",
+      "accepted_original_test_evidence_sha": "1c4e3b4e4ea7b0cdfe0f583594df5063f06963f957d2587561b1ac375d53189b",
+      "native_or_original_source_proof_paths_sha_pinned": 23,
+      "evidence_primary": "catalog/bin/verify-ue1-o06-g3-t064-original-c98-tag-failures.php"
+    }
+  ]
+}

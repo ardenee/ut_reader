@@ -34,3 +34,6 @@
 
 # T076 original five engine physical provider native logs, import proof and runtime context.
 20261101-G3-T076-* -text
+
+# T071 original accepted native source/error-version ownership record.
+20261101-G3-T071-original-64-frozen-errors-version-owner-reconciliation.json -text
