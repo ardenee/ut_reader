@@ -1,0 +1,16 @@
+{
+    "ok": true,
+    "checks": 118,
+    "errors": [],
+    "actual_original_compiled_native_shipped_cases_correlated": 20,
+    "previous_native_executions_replayed": 0,
+    "native_profiles": {
+        "v432": 10,
+        "469f": 10
+    },
+    "source_real_same_name_indexed_candidates": 5,
+    "runtime_provider_context": "authoritative scoped original physical mount order only",
+    "source_ambiguity_without_mounts_preserved": true,
+    "original_engine_assets_modified": false,
+    "full_T076_source_family_gate_status": "BLOCKED: C98 and C227i/k original native imported-provider oracle and production mount provenance not fully accepted"
+}

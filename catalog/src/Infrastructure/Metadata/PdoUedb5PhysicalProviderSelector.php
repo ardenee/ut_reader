@@ -19,7 +19,7 @@ final class PdoUedb5PhysicalProviderSelector
     }
 
     /**
-     * @param array{common_packages?:list<string>} $options
+     * @param array{common_packages?:list<string>,classic_runtime_context?:array{mount_order_authoritative:bool,game_id:int,consumer_file_id:int,mounted_file_ids_search_order:list<int>}} $options
      * @return list<array<string,mixed>>
      */
     public function select(int $gameId, int $fileId, array $options = []): array
@@ -69,6 +69,16 @@ final class PdoUedb5PhysicalProviderSelector
             $requirements[$requirementKey] ??= $packageName;
         }
 
+        // A classic FPackageName has no global physical file ID. Real original
+        // engines use the configured, ordered physical package search path
+        // (and already mounted linkers), not the DB upload order or a GUID.
+        // An explicit, scope-bound original runtime mount snapshot is the only
+        // acceptable way to break candidate ties; otherwise fail closed.
+        $orderedMounts = self::classicAuthoritativeMountOrder(
+            $options['classic_runtime_context'] ?? null,
+            $gameId,
+            $consumerFileId
+        );
         $selected = [];
         foreach ($requirements as $packageName) {
             $packageKey = Uedb5SqlProjectionContract::classicPackageKeyBinary((string)$packageName, $packageKeyKind);
@@ -79,7 +89,17 @@ final class PdoUedb5PhysicalProviderSelector
                 $packageKey
             );
             $sourceFallback = null;
-            if ($candidates === []
+            $primaryPhysicallyMounted = $orderedMounts === null;
+            if ($orderedMounts !== null) {
+                $primaryIds = array_fill_keys($orderedMounts, true);
+                foreach ($candidates as $candidate) {
+                    if (isset($primaryIds[(int)$candidate['file_id']])) {
+                        $primaryPhysicallyMounted = true;
+                        break;
+                    }
+                }
+            }
+            if (($candidates === [] || !$primaryPhysicallyMounted)
                 && self::usesUnrealIToUnrealSharePackageFallback($consumer)
                 && self::sameFname((string)$packageName, 'UnrealI')) {
                 // The exact audited source profile catches a failed UnrealI package load and
@@ -96,6 +116,44 @@ final class PdoUedb5PhysicalProviderSelector
                 if ($candidates !== []) {
                     $sourceFallback = $fallbackName;
                 }
+            }
+            if ($orderedMounts !== null) {
+                // Epic resolves a name using physical mount priority. Require
+                // an actual V5 verified candidate in this same game, never a
+                // synthetic provider supplied only by caller options.
+                $indexed = [];
+                foreach ($candidates as $candidate) {
+                    $indexed[(int)$candidate['file_id']] = true;
+                }
+                $winner = null;
+                foreach ($orderedMounts as $fileId) {
+                    if (isset($indexed[$fileId])) {
+                        $winner = $fileId;
+                        break;
+                    }
+                }
+                if ($winner !== null) {
+                    $selected[] = [
+                        'game_id' => $gameId,
+                        'file_id' => $winner,
+                        'package_name' => (string)$packageName,
+                        'selection_status' => 'selected',
+                        'selection_source' => 'evidenced_original_classic_mount_order',
+                        'source_fallback_package_name' => $sourceFallback,
+                    ];
+                } else {
+                    // Even indexed files are unavailable to this runtime if
+                    // no matching file occurs in its authoritative mount set.
+                    $selected[] = [
+                        'game_id' => $gameId,
+                        'file_id' => null,
+                        'package_name' => (string)$packageName,
+                        'selection_status' => 'missing',
+                        'selection_source' => 'evidenced_original_classic_mount_order',
+                        'source_fallback_package_name' => $sourceFallback,
+                    ];
+                }
+                continue;
             }
             // Epic selects one package/linker before VerifyImport inspects exports.
             // candidateRows() discovers the known physical candidate set only.
@@ -128,6 +186,46 @@ final class PdoUedb5PhysicalProviderSelector
             }
         }
         return $selected;
+    }
+
+    /**
+     * Exact original classic-loader physical mount order.
+     *
+     * @param mixed $context
+     * @return list<int>|null Null means no authoritative mount evidence.
+     */
+    private static function classicAuthoritativeMountOrder(
+        mixed $context, int $gameId, int $consumerFileId
+    ): ?array {
+        if ($context === null) {
+            return null;
+        }
+        if (!is_array($context)) {
+            throw new RuntimeException('Classic runtime context must be an array.');
+        }
+        $authoritative = $context['mount_order_authoritative'] ?? false;
+        if ($authoritative === false) {
+            // Prevent an allegedly partial context from affecting the normal
+            // ambiguous result, but reject claims of malformed authority.
+            return null;
+        }
+        if ($authoritative !== true
+            || ($context['game_id'] ?? null) !== $gameId
+            || ($context['consumer_file_id'] ?? null) !== $consumerFileId
+            || !isset($context['mounted_file_ids_search_order'])
+            || !is_array($context['mounted_file_ids_search_order'])
+            || !array_is_list($context['mounted_file_ids_search_order'])) {
+            throw new RuntimeException('Authoritative classic mount evidence requires exact scoped game, consumer and ordered file IDs.');
+        }
+        $ids = $context['mounted_file_ids_search_order'];
+        $seen = [];
+        foreach ($ids as $fileId) {
+            if (!is_int($fileId) || $fileId < 1 || isset($seen[$fileId])) {
+                throw new RuntimeException('Original classic mount order requires distinct positive integer file IDs.');
+            }
+            $seen[$fileId] = true;
+        }
+        return $ids;
     }
 
     /** @return list<array<string,mixed>> */

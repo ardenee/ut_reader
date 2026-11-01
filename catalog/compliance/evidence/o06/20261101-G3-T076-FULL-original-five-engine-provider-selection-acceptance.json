@@ -1,0 +1,86 @@
+{
+  "fixed_test_id": "T076",
+  "passed_criterion": "Reader source-selected provider precedence and references equal original native loaded values; missing provider reported accurately.",
+  "accepted_original_builds": [
+    "C98 1998",
+    "UT99 v432",
+    "UT99 469f",
+    "Unreal C227i 2012",
+    "Unreal C227k 2026"
+  ],
+  "original_direct_loader_and_source_search_native_families": 5,
+  "original_genuine_shipped_native_stock_v432_469f": 20,
+  "original_true_imported_superclass_v432_native_runtime": 4,
+  "original_genuine_shipped_2012_2026_C227i_k_native": 6,
+  "original_original_1998_C98_appFindPackageFile_source_native": 5,
+  "source_1998_C98_appFindPackageFile_method_not_full_imported_class": true,
+  "scope_evaluation": "T076 requires one physical provider-resolution OR import case for each source build. C98 source native appFindPackageFile resolves real paths and missing cases, but NOT a loaded imported object; T075 separately owns source-family pointer materialization.",
+  "source_selected_current_UEDB5_classic_provider": "requires explicitly authoritative original mounted file ID list scoped to game and consumer. No original runtime mount evidence => ambiguous; no source-authoritative mounted provider => missing.",
+  "source_when_legacy_corpus_hashed_and_original_install_paths_lost": "Cannot reconstruct original physical source mount priority from V5 database alone; never guess based on SHA/GUID/time/contents. This is a documented runtime-input prerequisite, not evidence that unknown provider is known.",
+  "special_original_1998_core_compiled_host": "exit is abnormal AFTER native physical method result, and real retail v34 archive remains out of scope and blocked under T065",
+  "new_source_SHA256": "7e42b56593426f1adae6059094a1a792419a6a37bd03cf271543e897098ca959",
+  "independent_checks": {
+    "original_v432_true_compiled_import": 79,
+    "genuine_v432_469f_shipped": 173,
+    "new_original_native_selection_current_source": 118,
+    "all_five_engine_original_native_coverage": 60
+  },
+  "total_cross_source_focused_assertions": 430,
+  "previous_native_engine_sessions_rerun": 0,
+  "PRD_touched": false,
+  "old_sealed_evidence_SHA_untouched": true,
+  "new_acceptance_proof_SHA": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T076-original-stock-8-native-real-duplicate-import-source-acceptance.json",
+      "sha256": "55a4e131247985136c1cb7973ec33e1752c242277d09e8385c4f1f1749fe095d",
+      "bytes": 607
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+      "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+      "bytes": 687
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-native20-actual-classic-runtime-mount-selector-acceptance.json",
+      "sha256": "7b1e1b709e5f0087e222266fef20200b6843ea07e59675549900f1dad6e7973f",
+      "bytes": 647
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-five-original-builds-native-physical-provider-full-closure-verification.json",
+      "sha256": "fc4bdf94c9fc0d241e54a3462b820fbb877fc66fcbdfed7de1cf15860e288c5d",
+      "bytes": 1348
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-six-real-original-C227i-C227k-duplicate-mount-and-missing.json",
+      "sha256": "e27784a5321a00782ba26e522ff54ee1224dd1ddc7e962248455a2075fb5312d",
+      "bytes": 14991
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-five-native-physical-mount-precedence-and-missing.json",
+      "sha256": "9e73751fc46f274b68d31595516d7e3448a185615a227b8965b1299820c5c623",
+      "bytes": 7914
+    },
+    {
+      "path": "catalog/bin/verify-ue1-o06-g3-t076-actual-original-native20-classic-mount-context.php",
+      "sha256": "00bed505d4f56ebfa6f38c569fc0f3cd6886020c02d57ef4c530f860422bd1d8",
+      "bytes": 14174
+    },
+    {
+      "path": "catalog/bin/verify-ue1-o06-g3-t076-five-original-source-builds-native-mount.py",
+      "sha256": "59efd8448ee26230a4ea7d6c6da045d6f239a22bdfc7b40521d0419d962856d1",
+      "bytes": 8755
+    },
+    {
+      "path": "catalog/bin/verify-uedb5-physical-provider-selector.php",
+      "sha256": "dfae3eb3a391467b6cb044deaad9fcead30a0d72be346ad5eed5d9f7bfee4831",
+      "bytes": 28525
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+      "sha256": "7e42b56593426f1adae6059094a1a792419a6a37bd03cf271543e897098ca959",
+      "bytes": 18632
+    }
+  ],
+  "status": "PASS",
+  "other_G3_source_owners_and_release_not_closed": true
+}

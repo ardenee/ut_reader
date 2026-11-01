@@ -152,3 +152,7 @@ catalog/bin/verify-ue1-o06-g3-t065-14-original-C98-v432-methods.py -text
 # Original C98 linked-v34/35 source method and 469f standalone parity checker.
 catalog/bin/verify-ue1-o06-g3-t065-c98-four-original-linked-v34-v35.py -text
 catalog/bin/verify-ue1-o06-g3-t073-469f-v432-6-native-class-property.py -text
+
+# UE1 G3 T076 exact original runtime-mount provider source and native acceptance verifier.
+catalog/bin/verify-ue1-o06-g3-t076-actual-original-native20-classic-mount-context.php -text
+catalog/bin/verify-ue1-o06-g3-t076-five-original-source-builds-native-mount.py -text

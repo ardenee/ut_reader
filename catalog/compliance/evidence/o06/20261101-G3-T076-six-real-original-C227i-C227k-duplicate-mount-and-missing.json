@@ -1,0 +1,237 @@
+{
+  "status": "PARTIAL: original 2012 and 2026 compiled native provider search/missing cases proven; C98 and full original consumer import provider source still open",
+  "native_original_new_executions": 6,
+  "original_native_C227_2012_cases": 3,
+  "original_native_C227_2026_cases": 3,
+  "source_original_game": "Unreal 227i / 227k",
+  "original_physical_package_ids": [
+    1256343,
+    1276716
+  ],
+  "original_source_mount_context": "System/Detail.u before Textures/Detail.utx in real native original engine",
+  "original_missing_package_process_exit_is_zero": true,
+  "must_use_actual_original_failure_message_not_exitcode": true,
+  "native_core_and_engine_config_restored_original_SHA": true,
+  "PRD_READ_ONLY": true,
+  "new_native_cases": [
+    {
+      "profile": "2012-C227i",
+      "original_source_mount_system_id": 1256343,
+      "original_source_mount_textures_id": 1276716,
+      "case": "system_v68_textures_v69",
+      "real_original_core_dll_SHA256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+      "real_original_native_UCC_SHA256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672",
+      "real_source_native_executable_exit": 0,
+      "native_output_BMP_count": 4,
+      "output_BMP_sample": [
+        "dirty.bmp",
+        "paint1.bmp",
+        "stones.bmp",
+        "wood1.bmp"
+      ],
+      "native_stdout_SHA256": "37944e9f1b786e58d19dd7f66e91a609d926ebf96263630b3a938b0ad617f3ac",
+      "actual_native_stdout_tail": [
+        "Loading package Detail...",
+        "Exported Texture Detail.paint1 to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v68_textures_v69-BMP\\paint1.bmp",
+        "Exported Texture Detail.wood1 to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v68_textures_v69-BMP\\wood1.bmp",
+        "Exported Texture Detail.stones to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v68_textures_v69-BMP\\stones.bmp",
+        "Exported Texture Detail.dirty to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v68_textures_v69-BMP\\dirty.bmp"
+      ],
+      "committed_original_stdout_proof": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2012-C227i-system_v68_textures_v69.log",
+        "sha256": "37944e9f1b786e58d19dd7f66e91a609d926ebf96263630b3a938b0ad617f3ac",
+        "bytes": 729
+      }
+    },
+    {
+      "profile": "2012-C227i",
+      "original_source_mount_system_id": 1276716,
+      "original_source_mount_textures_id": 1256343,
+      "case": "system_v69_textures_v68",
+      "real_original_core_dll_SHA256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+      "real_original_native_UCC_SHA256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672",
+      "real_source_native_executable_exit": 0,
+      "native_output_BMP_count": 11,
+      "output_BMP_sample": [
+        "Marble.bmp",
+        "Rough.bmp",
+        "bubbles.bmp",
+        "caustics.bmp",
+        "decloth.bmp",
+        "dirty.bmp",
+        "dirty2.bmp",
+        "pebble.bmp",
+        "sandy.bmp",
+        "stones.bmp",
+        "wood1v.bmp"
+      ],
+      "native_stdout_SHA256": "f3e3d3edd040cd537f699459e39c61d5440a6420aadffd2783201f9ef8d27335",
+      "actual_native_stdout_tail": [
+        "Loading package Detail...",
+        "Exported Texture Detail.sandy to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\sandy.bmp",
+        "Exported Texture Detail.pebble to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\pebble.bmp",
+        "Exported Texture Detail.bubbles to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\bubbles.bmp",
+        "Exported Texture Detail.dirty2 to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\dirty2.bmp",
+        "Exported Texture Detail.Marble to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\Marble.bmp",
+        "Exported Texture Detail.decloth to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\decloth.bmp",
+        "Exported Texture Detail.dirty to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\dirty.bmp",
+        "Exported Texture Detail.caustics to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\caustics.bmp",
+        "Exported Texture Detail.Rough to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\Rough.bmp",
+        "Exported Texture Detail.stones to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\stones.bmp",
+        "Exported Texture Detail.wood1v to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2012-C227i-system_v69_textures_v68-BMP\\wood1v.bmp"
+      ],
+      "committed_original_stdout_proof": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2012-C227i-system_v69_textures_v68.log",
+        "sha256": "f3e3d3edd040cd537f699459e39c61d5440a6420aadffd2783201f9ef8d27335",
+        "bytes": 1946
+      }
+    },
+    {
+      "profile": "2012-C227i",
+      "original_source_mount_system_id": null,
+      "original_source_mount_textures_id": null,
+      "case": "missing_both",
+      "real_original_core_dll_SHA256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+      "real_original_native_UCC_SHA256": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672",
+      "real_source_native_executable_exit": 0,
+      "native_output_BMP_count": 0,
+      "output_BMP_sample": [],
+      "native_stdout_SHA256": "3e72d622659c67350e5faf84aad53dca7b369e8717057b502720921e5967837a",
+      "actual_native_stdout_tail": [
+        "Loading package Detail...",
+        "Failed loading package: Can't find file 'Detail'"
+      ],
+      "committed_original_stdout_proof": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2012-C227i-missing_both.log",
+        "sha256": "3e72d622659c67350e5faf84aad53dca7b369e8717057b502720921e5967837a",
+        "bytes": 91
+      }
+    },
+    {
+      "profile": "2026-C227k",
+      "original_source_mount_system_id": 1256343,
+      "original_source_mount_textures_id": 1276716,
+      "case": "system_v68_textures_v69",
+      "real_original_core_dll_SHA256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+      "real_original_native_UCC_SHA256": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a",
+      "real_source_native_executable_exit": 0,
+      "native_output_BMP_count": 4,
+      "output_BMP_sample": [
+        "dirty.bmp",
+        "paint1.bmp",
+        "stones.bmp",
+        "wood1.bmp"
+      ],
+      "native_stdout_SHA256": "a8a0fa4f0cd6febaa71e80e7e18a82482f1572b4ac3551fdf68c78b1de423d04",
+      "actual_native_stdout_tail": [
+        "Loading package Detail...",
+        "Exported Texture Detail.paint1 to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v68_textures_v69-BMP\\paint1.bmp",
+        "Exported Texture Detail.wood1 to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v68_textures_v69-BMP\\wood1.bmp",
+        "Exported Texture Detail.stones to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v68_textures_v69-BMP\\stones.bmp",
+        "Exported Texture Detail.dirty to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v68_textures_v69-BMP\\dirty.bmp"
+      ],
+      "committed_original_stdout_proof": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2026-C227k-system_v68_textures_v69.log",
+        "sha256": "a8a0fa4f0cd6febaa71e80e7e18a82482f1572b4ac3551fdf68c78b1de423d04",
+        "bytes": 881
+      }
+    },
+    {
+      "profile": "2026-C227k",
+      "original_source_mount_system_id": 1276716,
+      "original_source_mount_textures_id": 1256343,
+      "case": "system_v69_textures_v68",
+      "real_original_core_dll_SHA256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+      "real_original_native_UCC_SHA256": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a",
+      "real_source_native_executable_exit": 0,
+      "native_output_BMP_count": 11,
+      "output_BMP_sample": [
+        "Marble.bmp",
+        "Rough.bmp",
+        "bubbles.bmp",
+        "caustics.bmp",
+        "decloth.bmp",
+        "dirty.bmp",
+        "dirty2.bmp",
+        "pebble.bmp",
+        "sandy.bmp",
+        "stones.bmp",
+        "wood1v.bmp"
+      ],
+      "native_stdout_SHA256": "ac3d954a1b0a66eb573602a401a582705609d6737ae78ec90d3aaa3a3e58c18a",
+      "actual_native_stdout_tail": [
+        "Loading package Detail...",
+        "Exported Texture Detail.sandy to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\sandy.bmp",
+        "Exported Texture Detail.pebble to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\pebble.bmp",
+        "Exported Texture Detail.bubbles to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\bubbles.bmp",
+        "Exported Texture Detail.dirty2 to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\dirty2.bmp",
+        "Exported Texture Detail.Marble to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\Marble.bmp",
+        "Exported Texture Detail.decloth to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\decloth.bmp",
+        "Exported Texture Detail.dirty to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\dirty.bmp",
+        "Exported Texture Detail.caustics to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\caustics.bmp",
+        "Exported Texture Detail.Rough to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\Rough.bmp",
+        "Exported Texture Detail.stones to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\stones.bmp",
+        "Exported Texture Detail.wood1v to C:\\Temp\\UnrealDB\\O06\\G3-T076-NEW-original-2012-C227i-2026-C227k-real-two-mounted-Detail\\2026-C227k-system_v69_textures_v68-BMP\\wood1v.bmp"
+      ],
+      "committed_original_stdout_proof": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2026-C227k-system_v69_textures_v68.log",
+        "sha256": "ac3d954a1b0a66eb573602a401a582705609d6737ae78ec90d3aaa3a3e58c18a",
+        "bytes": 2098
+      }
+    },
+    {
+      "profile": "2026-C227k",
+      "original_source_mount_system_id": null,
+      "original_source_mount_textures_id": null,
+      "case": "missing_both",
+      "real_original_core_dll_SHA256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+      "real_original_native_UCC_SHA256": "8377f0e1a8adcfb087a4ada317ff5dedbab406a7888226af904aca84908d907a",
+      "real_source_native_executable_exit": 0,
+      "native_output_BMP_count": 0,
+      "output_BMP_sample": [],
+      "native_stdout_SHA256": "f6220113d2c77c17d851f1e336f02deafd57f4a5f63df47459a19c7de4853754",
+      "actual_native_stdout_tail": [
+        "Loading package Detail...",
+        "Failed loading package: Can't find file Detail.. (Package Detail)"
+      ],
+      "committed_original_stdout_proof": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2026-C227k-missing_both.log",
+        "sha256": "f6220113d2c77c17d851f1e336f02deafd57f4a5f63df47459a19c7de4853754",
+        "bytes": 260
+      }
+    }
+  ],
+  "source_SHA_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2012-C227i-system_v68_textures_v69.log",
+      "sha256": "37944e9f1b786e58d19dd7f66e91a609d926ebf96263630b3a938b0ad617f3ac",
+      "bytes": 729
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2012-C227i-system_v69_textures_v68.log",
+      "sha256": "f3e3d3edd040cd537f699459e39c61d5440a6420aadffd2783201f9ef8d27335",
+      "bytes": 1946
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2012-C227i-missing_both.log",
+      "sha256": "3e72d622659c67350e5faf84aad53dca7b369e8717057b502720921e5967837a",
+      "bytes": 91
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2026-C227k-system_v68_textures_v69.log",
+      "sha256": "a8a0fa4f0cd6febaa71e80e7e18a82482f1572b4ac3551fdf68c78b1de423d04",
+      "bytes": 881
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2026-C227k-system_v69_textures_v68.log",
+      "sha256": "ac3d954a1b0a66eb573602a401a582705609d6737ae78ec90d3aaa3a3e58c18a",
+      "bytes": 2098
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-2012-2026-mounted-Detail-2026-C227k-missing_both.log",
+      "sha256": "f6220113d2c77c17d851f1e336f02deafd57f4a5f63df47459a19c7de4853754",
+      "bytes": 260
+    }
+  ],
+  "original_engine_binary_archives_not_committed": true
+}

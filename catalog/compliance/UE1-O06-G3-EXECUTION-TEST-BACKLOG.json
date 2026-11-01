@@ -5562,25 +5562,20 @@
       "pass_criterion": "Reader source-selected provider precedence and references equal original native loaded values; missing provider reported accurately.",
       "evidence": "Actual shipped Core/Engine and documented dependency cases; owner gates sealed",
       "reuse": "Do not rescan 235k files without a named gap.",
-      "status": "BLOCKED",
-      "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-11-01 G3 EIGHT OWNER GROUP: New original C227i and C227k original stock UCC actually loaded four of same real indexed UT99 Detail provider files under isolated Textures only, successful native export 56 original decoded pixel BMP values from each build. One genuine v69 candidate (ID148267) caused stock BMP exporter native crash in both builds, although 2026 native listobjects enumerates its object names: index presence cannot establish an asset is safely exportable. Previous genuine v432/469f physical source priority proof stands, indexed production DB lacks runtime physical mount provenance; other original source contexts still unverified. BLOCKED.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "status": "PASS",
+      "evidence_sha": "424d9474c05a11ad1a0a63483b7dad917cd8453761dc26ae65de7da0fbb25341",
+      "result": "T076 completed on exact frozen original provider/physical selection requirement. Original 1998 C98 compiled appFindPackageFile five path/missing cases; stock UT99 v432/469f original Core.dll twenty actual genuine shipped v61/68/69 loads including live ULinkerLoad/texture pointers, original compiled v432 four genuine imported superclass references with original UCC-built consumer, separate original C227i2012/C227k2026 six reversed duplicate/missing source package loads and original texture identities. Current UEDB5 runtime-context source selector matches all source-authoritative physical mount paths and direct original compiled data; missing explicit even when UCC process rc0; unknown installation mount order stays ambiguous, never fabricated. 79+173+118+60 SHA/native/current source acceptance assertions passed. Original C98 method call exits abnormally after result and is not represented as fully imported class; remaining full method/pointer/version gates owned by T065,T072,T075. PRD untouched.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-01T14:10:00+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "assessment": "COMPLETE_ORIGINAL_COMPILED_FIVE_BUILD_PROVIDER_RESOLUTION_NATIVE_PARITY_SOURCE_AUTHORITY_REQUIRED",
       "upstream_fixed_test_dependencies": [],
       "last_grouped_evidence_audit": "2026-10-31",
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
       "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure.",
       "distinct_original_remaining_provider_oracle": "Need duplicate or ambiguous provider precedence on actual source family, not one successful 3-import Core/State/Function graph",
       "last_evidence_review": "2026-10-31",
-      "source_necessary_components_still_open": [
-        "missing provider",
-        "duplicate same-name provider",
-        "source-selected import resolution",
-        "actual runtime provider identities"
-      ],
+      "source_necessary_components_still_open": [],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
       "partial_verified_evidence": [
@@ -5733,7 +5728,77 @@
       "last_original_compiled_native_result": "8 distinct original v432 x86 source-class / loader executions, 3 original UCC packages, 79/79 read-only checks; scoped PASS, T076 overall BLOCKED",
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
-      "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN"
+      "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
+      "verified_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T076-original-stock-8-native-real-duplicate-import-source-acceptance.json",
+          "sha256": "55a4e131247985136c1cb7973ec33e1752c242277d09e8385c4f1f1749fe095d",
+          "bytes": 607
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "sha256": "d10099c33dec9584610b574d523ebd7df4ca358d25bb6bba75709ac5960e81d3",
+          "bytes": 687
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-native20-actual-classic-runtime-mount-selector-acceptance.json",
+          "sha256": "7b1e1b709e5f0087e222266fef20200b6843ea07e59675549900f1dad6e7973f",
+          "bytes": 647
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-five-original-builds-native-physical-provider-full-closure-verification.json",
+          "sha256": "fc4bdf94c9fc0d241e54a3462b820fbb877fc66fcbdfed7de1cf15860e288c5d",
+          "bytes": 1348
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-six-real-original-C227i-C227k-duplicate-mount-and-missing.json",
+          "sha256": "e27784a5321a00782ba26e522ff54ee1224dd1ddc7e962248455a2075fb5312d",
+          "bytes": 14991
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-five-native-physical-mount-precedence-and-missing.json",
+          "sha256": "9e73751fc46f274b68d31595516d7e3448a185615a227b8965b1299820c5c623",
+          "bytes": 7914
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t076-actual-original-native20-classic-mount-context.php",
+          "sha256": "00bed505d4f56ebfa6f38c569fc0f3cd6886020c02d57ef4c530f860422bd1d8",
+          "bytes": 14174
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t076-five-original-source-builds-native-mount.py",
+          "sha256": "59efd8448ee26230a4ea7d6c6da045d6f239a22bdfc7b40521d0419d962856d1",
+          "bytes": 8755
+        },
+        {
+          "path": "catalog/bin/verify-uedb5-physical-provider-selector.php",
+          "sha256": "dfae3eb3a391467b6cb044deaad9fcead30a0d72be346ad5eed5d9f7bfee4831",
+          "bytes": 28525
+        },
+        {
+          "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "sha256": "7e42b56593426f1adae6059094a1a792419a6a37bd03cf271543e897098ca959",
+          "bytes": 18632
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-FULL-original-five-engine-provider-selection-acceptance.json",
+          "sha256": "424d9474c05a11ad1a0a63483b7dad917cd8453761dc26ae65de7da0fbb25341",
+          "bytes": 4723
+        }
+      ],
+      "final_original_native_source_contract_notes": [
+        "T076 passed using an original compiled physical provider resolution OR import test per original game/build, as required by its procedure",
+        "No source selection occurs when original mount priority unavailable; this is an explicit unavailable-context outcome, not an inferred engine choice",
+        "Only T076 provider selection is closed; never infer T065 genuine v34 archive, T075 per-field pointer, or T077 full acceptance"
+      ],
+      "authoritative_mount_knowledge_limit": "Physical original mount/search order is not recoverable from a hashed V5 corpus alone; absent runtime context remains ambiguous and is deliberately not guessed.",
+      "original_T076_one_case_per_build_ownership": {
+        "1998 C98": "Original compiled Core.dll appFindPackageFile five physical path/absence cases, original Core.u and original C98 save archive copied only as controlled file fixtures, no claim of complete loaded C98 class import.",
+        "UT99 v432": "Original compiled Core.dll true staged imported superclass in original UCC-generated consumer four native, genuine five shipped Detail providers, live ULinkerLoad/texture pointers ten native.",
+        "UT99 469f": "Distinct original compiled Core.dll genuine five shipped Detail providers, live native linker/texture pointers ten native.",
+        "2012 C227i": "Separate genuine original UCC + Core.dll physically selected reversed priority v68/v69 original Detail and missing loader, three original native sessions.",
+        "2026 C227k": "Separate genuine original UCC + Core.dll physically selected reversed priority v68/v69 original Detail and missing loader, three original native sessions."
+      }
     },
     {
       "id": "T077",
@@ -5748,7 +5813,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: Scoped six NEW original 469f compiled native actual method successes plus previous fourteen C98/v432 distinct methods, original v432 vs469f class/property v61/v62 exact numerical differential 19/19 SHA-proven. Four original stock Core engine families now have many positive source method/load gates, but C98 physical linked v34/35 and C227 full method union, provider mounts remain outstanding. Not all frozen T-owner acceptance full; BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: New original C98 linked v34/v35 UClass method source matrix added; other required original method gates remain open.",
+      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: Scoped six NEW original 469f compiled native actual method successes plus previous fourteen C98/v432 distinct methods, original v432 vs469f class/property v61/v62 exact numerical differential 19/19 SHA-proven. Four original stock Core engine families now have many positive source method/load gates, but C98 physical linked v34/35 and C227 full method union, provider mounts remain outstanding. Not all frozen T-owner acceptance full; BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: New original C98 linked v34/v35 UClass method source matrix added; other required original method gates remain open. 2026-11-01 UPDATE: Frozen original T076 FULL CLOSED using 5 independently compiled engine family physical source lookup/import native evidence and actual source-correct UEDB5 runtime mount selector; source-selected provider owner no longer an open blocker. Remaining T065,T071,T072,T073,T074,T075 and T077 aggregate still require full original/native method gates.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",

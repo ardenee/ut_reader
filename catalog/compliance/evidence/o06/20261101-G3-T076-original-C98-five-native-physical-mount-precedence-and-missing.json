@@ -1,0 +1,146 @@
+{
+  "new_original_compiled_C98_1998_appFindPackageFile_source_method_cases": 5,
+  "original_stock_Core_DLL_SHA256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+  "control_package_files": "genuine 1998 original Core.u and original C98 Save.u copied read-only under disposable renamed mounts, not claimed retail imported package",
+  "original_methods_returned_all_cases": true,
+  "original_host_abnormal_exit_after_native_method_values": true,
+  "physical_mount_paths": "System first, Tex second, each original USystem.Paths[] cell <=15 char",
+  "one_original_native_missing_case": true,
+  "full_T076_original_import_verification_by_C98": false,
+  "PRD_modified": false,
+  "canonical_C98_files_unchanged": true,
+  "new_original_native_case_rows": [
+    {
+      "case": "system_original_Core_vs_tex_original_Saved",
+      "original_source_core_DLL_SHA": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "physical_System_original_file": 1,
+      "physical_Tex_original_file": 2,
+      "expected_original_C98_source_search_priority": "System",
+      "native_exit_after_method": 3221226505,
+      "actual_compiled_original_source_method_markers": [
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_PhysicalResult=1 File=../System/G3T076C98Probe.u",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_SearchPath0=../System/*.u SearchPath1=../Tex/*.utx",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_END"
+      ],
+      "native_log_SHA256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+      "original_native_log": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-system_original_Core_vs_tex_original_Saved.log",
+        "sha256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+        "bytes": 206
+      }
+    },
+    {
+      "case": "system_original_Saved_vs_tex_original_Core",
+      "original_source_core_DLL_SHA": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "physical_System_original_file": 2,
+      "physical_Tex_original_file": 1,
+      "expected_original_C98_source_search_priority": "System",
+      "native_exit_after_method": 3221226505,
+      "actual_compiled_original_source_method_markers": [
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_PhysicalResult=1 File=../System/G3T076C98Probe.u",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_SearchPath0=../System/*.u SearchPath1=../Tex/*.utx",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_END"
+      ],
+      "native_log_SHA256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+      "original_native_log": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-system_original_Saved_vs_tex_original_Core.log",
+        "sha256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+        "bytes": 206
+      }
+    },
+    {
+      "case": "tex_only_original_Core",
+      "original_source_core_DLL_SHA": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "physical_System_original_file": null,
+      "physical_Tex_original_file": 1,
+      "expected_original_C98_source_search_priority": "Tex",
+      "native_exit_after_method": 3221226505,
+      "actual_compiled_original_source_method_markers": [
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_PhysicalResult=1 File=../Tex/G3T076C98Probe.utx",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_SearchPath0=../System/*.u SearchPath1=../Tex/*.utx",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_END"
+      ],
+      "native_log_SHA256": "6a043133d70a07e742d7649958c42137ef0f54647b9709065b445e7929066bf8",
+      "original_native_log": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-tex_only_original_Core.log",
+        "sha256": "6a043133d70a07e742d7649958c42137ef0f54647b9709065b445e7929066bf8",
+        "bytes": 205
+      }
+    },
+    {
+      "case": "system_only_original_Core",
+      "original_source_core_DLL_SHA": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "physical_System_original_file": 1,
+      "physical_Tex_original_file": null,
+      "expected_original_C98_source_search_priority": "System",
+      "native_exit_after_method": 3221226505,
+      "actual_compiled_original_source_method_markers": [
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_PhysicalResult=1 File=../System/G3T076C98Probe.u",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_SearchPath0=../System/*.u SearchPath1=../Tex/*.utx",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_END"
+      ],
+      "native_log_SHA256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+      "original_native_log": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-system_only_original_Core.log",
+        "sha256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+        "bytes": 206
+      }
+    },
+    {
+      "case": "missing_both",
+      "original_source_core_DLL_SHA": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "physical_System_original_file": null,
+      "physical_Tex_original_file": null,
+      "expected_original_C98_source_search_priority": "missing",
+      "native_exit_after_method": 3221226505,
+      "actual_compiled_original_source_method_markers": [
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_PhysicalResult=0 File=",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_SearchPath0=../System/*.u SearchPath1=../Tex/*.utx",
+        "G3_T076_ORIGINAL_C98_1998_NATIVE_END"
+      ],
+      "native_log_SHA256": "6d5015810cbd6883171c2edec742c0251ea6a30415439388a5c98a5e85ededc7",
+      "original_native_log": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-missing_both.log",
+        "sha256": "6d5015810cbd6883171c2edec742c0251ea6a30415439388a5c98a5e85ededc7",
+        "bytes": 180
+      }
+    }
+  ],
+  "original_observer_build_and_stdout_sha_pins": [
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-G3-T076-original-1998-C98-appFindPackageFile-source-observer.cpp",
+      "sha256": "b92a69afbfeeb50952f31317bc32f3618978e767b7ae5eda75784e0736ce5c11",
+      "bytes": 999
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-G3-T076-1998-original-C98-probe-compile.log",
+      "sha256": "09b395b70952472292390e1e92e25bb8d871a9142d713130434e077b48fc9bdc",
+      "bytes": 9908
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-system_original_Core_vs_tex_original_Saved.log",
+      "sha256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+      "bytes": 206
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-system_original_Saved_vs_tex_original_Core.log",
+      "sha256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+      "bytes": 206
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-tex_only_original_Core.log",
+      "sha256": "6a043133d70a07e742d7649958c42137ef0f54647b9709065b445e7929066bf8",
+      "bytes": 205
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-system_only_original_Core.log",
+      "sha256": "3bad1366c5915a50c945b7a3a7a2e843a2c637109fe4fdbb6b1924ca9c6c9e42",
+      "bytes": 206
+    },
+    {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-1998-physical-mount-missing_both.log",
+      "sha256": "6d5015810cbd6883171c2edec742c0251ea6a30415439388a5c98a5e85ededc7",
+      "bytes": 180
+    }
+  ]
+}

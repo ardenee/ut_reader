@@ -170,6 +170,71 @@ $db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([29,2,'Unreal2
 $unreal2UnverifiedFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(2,29);
 $check('unreal2_v126_does_not_inherit_v69_package_fallback',$unreal2UnverifiedFallback===[]);
 
+// Original classic-loader runtime mount context: authoritative physical path
+// priority, never content/GUID/upload-time scoring or a guessed file ID.
+// Restore the original second verified candidate after the earlier
+// intentional single-provider regression has completed.
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,21,3,$classic,$pkgKey,21]);
+$mount=static fn(array $ids,int $consumer=10,int $game=3):array=>[
+ 'classic_runtime_context'=>[
+  'mount_order_authoritative'=>true,'game_id'=>$game,
+  'consumer_file_id'=>$consumer,'mounted_file_ids_search_order'=>$ids,
+ ],
+];
+$sourceSelected=$selector->select(3,10,$mount([21,20]));
+$check('classic_authoritative_runtime_mount_order_can_pick_later_indexed_file',
+    count($sourceSelected)===1
+    && ($sourceSelected[0]['file_id']??null)===21
+    && ($sourceSelected[0]['selection_source']??null)==='evidenced_original_classic_mount_order');
+$sourceSelected=$selector->select(3,10,$mount([20,21]));
+$check('classic_authoritative_runtime_mount_order_reversed_changes_actual_selected_file',
+    count($sourceSelected)===1 && ($sourceSelected[0]['file_id']??null)===20);
+$sourceMissing=$selector->select(3,10,$mount([]));
+$check('classic_authoritative_runtime_missing_provider_does_not_reveal_unmounted_catalog_candidate',
+    count($sourceMissing)===1&&$sourceMissing[0]['selection_status']==='missing'
+    && array_key_exists('file_id',$sourceMissing[0])&&$sourceMissing[0]['file_id']===null);
+$sourceMissing=$selector->select(3,10,$mount([999999]));
+$check('classic_authoritative_context_cannot_inject_unknown_physical_file',
+    count($sourceMissing)===1&&$sourceMissing[0]['selection_status']==='missing');
+$sourcePartial=$selector->select(3,10,['classic_runtime_context'=>[
+    'mount_order_authoritative'=>false,'game_id'=>3,
+    'consumer_file_id'=>10,'mounted_file_ids_search_order'=>[21],
+]]);
+$check('classic_unverified_runtime_hint_leaves_original_physical_candidates_ambiguous',
+    count($sourcePartial)===1&&$sourcePartial[0]['selection_status']==='ambiguous');
+$malformed=[
+ ['mismatched_game',$mount([20],10,4)],
+ ['mismatched_consumer',$mount([20],11)],
+ ['negative_id',$mount([-1])],['zero_id',$mount([0])],
+ ['string_id',$mount(['20'])],['duplicate',$mount([20,20])],
+ ['not_a_list',['classic_runtime_context'=>['mount_order_authoritative'=>true,
+   'game_id'=>3,'consumer_file_id'=>10,'mounted_file_ids_search_order'=>[7=>20]]]],
+ ['wrong_type',['classic_runtime_context'=>'unknown']],
+];
+foreach($malformed as [$label,$badContext]){
+    $rejected=false;try{$selector->select(3,10,$badContext);}catch(RuntimeException){$rejected=true;}
+    $check('classic_malformed_runtime_mount_context_fails_closed_'.$label,$rejected);
+}
+// The original retail UT99 source retries UnrealI as UnrealShare ONLY after
+// the original physical UnrealI package cannot load from the actual mount.
+// The catalog might index an unmounted UnrealI and must not suppress retry.
+$writer->write($snapshot(31,'UnrealI',[],[$export(0,'LegacyTex')],$ut99Retail,68));
+$db->prepare('INSERT INTO ue_files VALUES(?,?,?,?,?,?,?)')->execute([
+ 31,3,'verified','2026-10-02 14:10:00',31,md5('31'),sha1('31')]);
+$db->prepare('INSERT INTO ue_uedb5_files VALUES(?,?,?)')->execute([31,3,'UnrealI']);
+$db->prepare('INSERT INTO ue_uedb5_provider_keys VALUES(?,?,?,?,?,?)')
+    ->execute([1,31,3,$classic,md5('unreali',true),31]);
+$runtimeFallback=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,24,$mount([25],24));
+$check('ut99_original_source_unmounted_primary_retries_mounted_unrealshare',
+    count($runtimeFallback)===1&&$runtimeFallback[0]['selection_status']==='selected'
+    &&$runtimeFallback[0]['file_id']===25
+    &&$runtimeFallback[0]['source_fallback_package_name']==='UnrealShare');
+$runtimePrimary=(new PdoUedb5PhysicalProviderSelector($db,$tmp))->select(3,24,$mount([31,25],24));
+$check('ut99_original_source_mounted_primary_prevents_fallback',
+    count($runtimePrimary)===1&&$runtimePrimary[0]['selection_status']==='selected'
+    &&$runtimePrimary[0]['file_id']===31
+    &&$runtimePrimary[0]['source_fallback_package_name']===null);
 $ut4=[
     'file'=>['id'=>30,'game_id'=>7,'package_name'=>'/Game/Empty','original_name'=>'Empty.uasset'],
     'package_family'=>Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY,

@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "checks": 60,
+  "errors": [],
+  "original_builds_with_direct_native_physical_search_or_loaded_oracle": [
+    "C98 1998",
+    "UT99 v432",
+    "UT99 469f",
+    "Unreal C227i 2012",
+    "Unreal C227k 2026"
+  ],
+  "old_source_backed_v432_imported_superclass_true_native_sessions": 4,
+  "old_native_real_shipped_UT99_file_sessions": 20,
+  "new_native_original_C227i_C227k_duplicate_provider_and_missing_sessions": 6,
+  "new_native_original_C98_1998_appFindPackageFile_physical_path_method_sessions": 5,
+  "no_original_native_sessions_reexecuted_by_this_verifier": true,
+  "original_shipped_packages": 5,
+  "authoritative_real_runtime_mount_context_required": true,
+  "when_original_install_mount_order_unavailable": "ambiguous: original physically selected file cannot be inferred from hashed catalog",
+  "missing_provider_when_original_mounts_known": "explicit missing even if native UCC process exitcode is 0",
+  "original_1998_C98_full_imported_consumer_not_proven": true,
+  "overall_UE1_G3_source_owners_T065_T071_T072_T073_T074_T075_T077_still_blocked": true,
+  "T076_source_selected_provider_gate": "CANDIDATE_PASS - one original source native physical lookup or provider load per build; v432 true imported reference and four-build loaded-value provider selection; source-scoped missing and ambiguity"
+}
