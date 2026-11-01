@@ -188,3 +188,5 @@ catalog/bin/verify-ue1-o06-g3-t072-c98-Engine-31-uncovered-Const-Enum-reader.php
 catalog/bin/verify-ue1-o06-g3-t072-c98-Engine-31-uncovered-Const-Enum-original-native.py -text
 
 catalog/bin/verify-ue1-o06-g3-t075-full-source-native-refs-and-sizes.py -text
+
+catalog/bin/verify-ue1-o06-g3-t073-immutable-original-method-join.py -text

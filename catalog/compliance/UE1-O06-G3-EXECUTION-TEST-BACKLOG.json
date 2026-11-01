@@ -5294,13 +5294,13 @@
       "pass_criterion": "Zero unexplained source-applicable method/type gaps and no false 469f-v432 equivalence.",
       "evidence": "Aggregate existing sealed original native snapshots and owner gate evidence",
       "reuse": "Avoid proof-count inflation per export.",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-11-01 original compiled UT99 v432 and 469f FixedArrayProperty and MapProperty saved field order (inherited UProperty; Inner+Count or Key+Value) matches current source reader, 84/84 new assertions. All 24 real 469f stock System .u / 49983 exports physically SHA verified and zero direct FixedArray/Map exports: only stock loaded-object acceptance excluded; third-party packages still supported and native loaded-value unproven. Other method/type union still open. 2026-11-01 original 469f compiled UArrayProperty v70 conditional native branch and completed 32bit extra archive read VERIFIED in controlled debugger mode on real v69 Engine.u. Narrow source-only current reader version>69 field implemented; independent 34 strict native/source assertions PASS; genuine original v70 package NOT implied. 469f FixedArray/Map original loaded or documented exclusions and other compiled-method union still BLOCKED. 2026-11-01: Genuine original compiled v432/469f UArrayProperty::Serialize branch SOURCE DIFFERENCE found and 12 genuine Engine.u runtime Inner references observed byte/identity exact. All v69 469f LOADs skip new conditional extra StaticArrayDim archive read; runtime Engine.Touching StaticArrayDim4 not to be confused with saved ArrayDim1. Still missing original source-applicable method families, UFixedArrayProperty and UMapProperty genuine original native or justified exclusion, and alternate 469f conditional oracle. 2026-11-01 original separate 469f v432 actual native differential: NEW independent OldUnreal UT99 469f actual x86 compiled Core.dll six original native method executions, real Core.Object/Core.Class UClass Serialize v61 versus62 and native loaded Engine.Actor reflected UProperty Serialize <=61 network flags and >=62 unchanged. All SIX actual returned original method numerical traces match previously accepted separate stock v432 build EXACTLY, direct byte/flag values; native methods did NOT rerun v432. Build-specific source profile and original binary SHA distinguish 469f from v432, no unverified whole-engine equivalence. Other applicable 469f-v432 serialization method/type deltas not fully tested, T073 remains BLOCKED.",
-      "last_attempt_at": "2026-11-01T18:49:23+00:00",
+      "result": "ORIGINAL UT99 v432 and 469f true shipped Core.u/Engine.u complete source-method union. Original compiled Core.dll exported 24 v432/25 469f serializer classes, distinct 469f ULinkerLoad; matched source-specific method owners already PASS. All 12557 physical exports classify as 12355 original native materialized or 202 exact zero-byte NAME_None/classIndex0/flags0/serialOffset0 inert export-map entries. Original v432 focused StaticLoadClass materialized missing 40 classes and 148 new source method class/function/state/struct original loaded fields match; 469f original Core+Engine LoadAllObjects followed by explicit Preload is necessary, 17 new objects match actual saved fields. 165 new method objects 1489/1489 source-native checks. Six 469f Registry properties are real unlinked runtime ElementSize0 but archived ArrayDim+PropertyFlags 12/12 exact. UFixedArrayProperty and UMapProperty absent from stock Core/Engine export maps are narrow source-exclusions only; inherited reader/source method branches already accepted in G3-11. 469f v70 conditional branch separately accepted. No old accepted tests repeated; 469f disposable native host abnormal exit after completed original loader and method callbacks not misrepresented as clean game run. T073 full pass; T065/T074 stay BLOCKED.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-01T21:21:04+00:00",
       "attempted_native_execution": true,
-      "assessment": "469F_V432_ORIGINAL_FIXED_MAP_COMPILED_FIELD_GRAMMAR_MATCHED_24_STOCK_FILES_INAPPLICABLE_OTHER_METHODS_OPEN",
+      "assessment": "PASS_FULL_ORIGINAL_V432_469F_BOTH_COMPLETE_EXPORT_MAP_TYPED_PRELOAD_METHOD_UNION_SOURCE_PROVEN_NA",
       "upstream_fixed_test_dependencies": [
         "T065"
       ],
@@ -5308,13 +5308,7 @@
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
       "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure.",
       "last_evidence_review": "2026-10-31",
-      "source_necessary_components_still_open": [
-        "v432 Core",
-        "v432 Engine",
-        "469f Core",
-        "469f Engine",
-        "source-only class extensions"
-      ],
+      "source_necessary_components_still_open": [],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
       "partial_verified_evidence": [
@@ -5442,6 +5436,11 @@
         "independent_source_native_focus_assertions_PASS": 84,
         "stock_corpus_scope_only_not_third_party_exclusion": true,
         "full_frozen_T073_pass": false
+      },
+      "new_2026_11_01_T073_complete_immutable_original_12557_export_native_source_method_union": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-v432-469f-complete-source-method-parity.json",
+        "bytes": 10858,
+        "sha256": "39d89389de23b2e06c5aa0e098eadd67ad71ce3590db51ca27d676a1a3103c61"
       }
     },
     {
@@ -6469,6 +6468,11 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
         "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5",
         "bytes": 13432
+      },
+      "upstream_T073_full_original_source_method_family_gate_PASS": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-v432-469f-complete-source-method-parity.json",
+        "bytes": 10858,
+        "sha256": "39d89389de23b2e06c5aa0e098eadd67ad71ce3590db51ca27d676a1a3103c61"
       }
     },
     {
@@ -6538,14 +6542,13 @@
   "updated_at_utc": "2026-11-01T17:00:33+00:00",
   "overall_summary_2026_11_01": {
     "total_frozen": 80,
-    "PASS": 72,
+    "PASS": 73,
     "SOURCE_NA": 1,
-    "BLOCKED": 7,
+    "BLOCKED": 6,
     "FAIL": 0,
-    "new_full_pass": "T075",
+    "new_full_pass": "T073",
     "remaining_blocked_ids": [
       "T065",
-      "T073",
       "T074",
       "T077",
       "T078",

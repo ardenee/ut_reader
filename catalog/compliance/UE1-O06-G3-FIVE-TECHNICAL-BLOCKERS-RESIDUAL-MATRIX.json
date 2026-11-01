@@ -2,9 +2,9 @@
   "kind": "FIXED_FIVE_FROZEN_OWNERS_RESIDUALS_NO_NEW_T_OR_S_CASES",
   "date": "2026-11-01",
   "backlog_states": {
-    "PASS": 72,
+    "PASS": 73,
     "SOURCE_NA": 1,
-    "BLOCKED": 7
+    "BLOCKED": 6
   },
   "owners": [
     {
@@ -55,13 +55,9 @@
     },
     {
       "id": "T073",
-      "status": "BLOCKED",
-      "unproven": [
-        "Remaining v432-versus-469f changed method source oracles",
-        "No genuine stock physical version70 469f archive to verify full resulting loader; original compiled extra member read is proven only by controlled virtual version70 on genuine v69 Engine.u, not an original v70 package",
-        "Third-party FixedArray/Map direct runtime-loaded values have no original compiled stock instance; only the original compiled serializer field grammar and current PHP synthetic archive codec are verified"
-      ],
-      "next_focused_original_oracle": "Next: target true 469f changed archive condition, no old native replays",
+      "status": "PASS",
+      "unproven": [],
+      "next_focused_original_oracle": "NONE for original UT99 v432 and 469f shipped Core/Engine; G3 T065 historic archive boundaries and C227 T074 are separate.",
       "new_verified_469f_compiled_method_and_reader_branch": {
         "manifest": {
           "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-original-completed-version70-branch-manifest.json",
@@ -87,7 +83,15 @@
         "source_compiled_archive_method_grammar": true,
         "new_checks": 84,
         "custom_native_loaded_instance_proof_claim": false
-      }
+      },
+      "terminal_original_stock_method_and_native_loaded_12557_export_coverage": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-v432-469f-complete-source-method-parity.json",
+        "bytes": 10858,
+        "sha256": "39d89389de23b2e06c5aa0e098eadd67ad71ce3590db51ca27d676a1a3103c61"
+      },
+      "new_true_loaded_struct_refs_165": 165,
+      "new_strict_loaded_native_field_assertions": 1501,
+      "zero_serial_original_package_placeholders_explicit_source_exclusions": 202
     },
     {
       "id": "T074",
@@ -221,7 +225,7 @@
   "frozen_original_five_technical_owner_statuses_2026_11_01": {
     "T065": "BLOCKED",
     "T072": "PASS",
-    "T073": "BLOCKED",
+    "T073": "PASS",
     "T074": "BLOCKED",
     "T075": "PASS"
   },
@@ -234,5 +238,10 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
     "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5",
     "bytes": 13432
+  },
+  "new_2026_11_01_full_T073_PASS_original_Epic_loaded_source_method_union": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-v432-469f-complete-source-method-parity.json",
+    "bytes": 10858,
+    "sha256": "39d89389de23b2e06c5aa0e098eadd67ad71ce3590db51ca27d676a1a3103c61"
   }
 }

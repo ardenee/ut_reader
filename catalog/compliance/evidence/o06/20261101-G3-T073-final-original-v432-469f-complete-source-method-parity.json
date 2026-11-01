@@ -1,0 +1,202 @@
+{
+  "date": "2026-11-01",
+  "owner": "T073",
+  "frozen_criterion": "Zero unexplained source-applicable method/type gaps and no false 469f-v432 equivalence.",
+  "original_compiled_serializer_types": {
+    "v432": 24,
+    "469f": 25,
+    "469f_extra_ULinkerLoad": true
+  },
+  "true_original_stock_physical_export_map_coverage": {
+    "v432": {
+      "Core_Engine_physical_exports": 6039,
+      "genuine_original_materialized": 5996,
+      "source_inert_unconstructed_zero_byte_CLASS0_NAME_None": 43
+    },
+    "469f": {
+      "Core_Engine_physical_exports": 6518,
+      "genuine_original_materialized": 6359,
+      "source_inert_unconstructed_zero_byte_CLASS0_NAME_None": 159
+    },
+    "zero_unexplained_nonempty_stock_export_gaps": true
+  },
+  "strict_original_compiled_only_PREVIOUSLY_UNOBSERVED_values": {
+    "v432_new_loaded_class_function_state_struct_records_exact": 148,
+    "469f_new_preloaded_class_function_struct_records_exact": 17,
+    "total_new_direct_method_objects": 165,
+    "new_native_saved_value_assertions_exact": 1489,
+    "469f_last_six_new_Registry_property_ArrayDim_and_PropertyFlags_loaded_matched": 12,
+    "no_unverified_remaining_real_nonempty_stock_exports": true
+  },
+  "469f_loader_LoadAllObjects_constructs_but_does_not_imply_preload": true,
+  "source_caveat_469f_six_Registry_properties_unlinked_ElementSize_zero": "Original engine Preload loads saved array dimension and flags (12/12), but these six registry properties have runtime ElementSize=0; do not claim complete runtime linked size or fabricate archived ElementSize.",
+  "original_CDB_and_disposable_engine_final_exit": "469f disposable native host ended with post-load process return 0xC0000409, even though source Loader/Preload and all focused loaded method callbacks completed. Genuine v432 native session exits 0.",
+  "source_only_exclusions": [
+    "UFixedArrayProperty and UMapProperty original compiled classes have zero direct Core/Engine stock exports; their source method layouts are already accepted in G3-10/11 separately, not asserted to have run on original stock Core/Engine",
+    "Extra ULinkerLoad::Serialize overloads occur in 469f original compiled binary, but are loader/archive operations rather than directly exported stock UObject instances; existing completed G3-02/09/12 loader owners reused",
+    "202 NAME_None/classIndex0/serialSize0/serialOffset0/flags0 rows have no archivable body, verified from actual original files and excluded only from object-instance parity"
+  ],
+  "previous_accepted_method_parity_reused_not_replayed": true,
+  "original_Core_Engine_binary_bytes_unchanged": true,
+  "T073_final_frozen_owner_pass": true,
+  "pins": {
+    "compiled_original_Core_method_diff": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-original-v432-469f-compiled-Core-method-actual-diff.json",
+      "bytes": 8599,
+      "sha256": "c4a70f02ef1574c50b984209b20b85f274f8333d47ab8036d59a2d6c470a5f44"
+    },
+    "native_loaded_original_v432_all_40_new_class_requests": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-v432-targeted-original-40-unloaded-classes-native.log",
+      "bytes": 1445297,
+      "sha256": "4890f762963e372e35612ac89aa125626aafa4c6413492af42abd64f4f7e1804"
+    },
+    "native_v432_148_new_real_loaded_structs": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-v432-new-only-real-source-native-struct-values.log",
+      "bytes": 1471668,
+      "sha256": "66be2e26b9dc743ae8e201aab7774d8bcf2b87bb0bbb0fa833c0254376046b38"
+    },
+    "native_469f_17_new_real_preloaded_structs": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-f469-new-only-real-source-native-Preloaded-struct-values.log",
+      "bytes": 1571546,
+      "sha256": "e8bf5b2975a35a854cd16445b3529eb43f0fda68f561813b84db665928a5aba4"
+    },
+    "native_469f_six_remaining_real_preloaded_property_fields": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-f469-six-Registry-actual-native-serialized-dim-flags.log",
+      "bytes": 1572821,
+      "sha256": "6fc8b900d3126a9a3bc57d884901411cbe14eb0bab4c31e7f388b0dacade89e4"
+    },
+    "native_469f_original_full_export_materialization": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-469f-original-compiled-LoadAllObjects-all-missing-records.log",
+      "bytes": 1568648,
+      "sha256": "89ed838bf558b484572ae887b0115333e130f312eee4e5d089ddb609f5d44db9"
+    },
+    "genuine_v432_469f_export_gap_input": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-new-shipped-original-native-unobserved-export-register.json",
+      "bytes": 171308,
+      "sha256": "4cabda48941fe77fdac077c09da4e377a7902f1615e7d4687d9a0e9fa8f67989"
+    },
+    "independent_165_real_values_verifier": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-original-165-NEW-Preloaded-source-native-struct-values-compare.php",
+      "bytes": 3482,
+      "sha256": "0c9cab661a4661546a3f23bbe28a2cef50c569cd1e831fbb036235afa97639e0"
+    },
+    "independent_165_real_values_verifier_result": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-original-165-NEW-Preloaded-source-native-struct-values-result.json",
+      "bytes": 1468,
+      "sha256": "78e8949fd1870b5226d20b6809c3b8a5ad783a3f736716c6b892fb47e8d31a4d"
+    },
+    "independent_159_469f_zero_serial_exclusions": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-469f-159-zero-serial-inert-source-exclusion.php",
+      "bytes": 1688,
+      "sha256": "fd4e0e362c59e9387836a893ae109d81329335e55ebcebe2df6c27bd4cf8be15"
+    },
+    "independent_43_v432_zero_serial_exclusions": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-v432-43-None-no-serializer-exclusions.php",
+      "bytes": 1480,
+      "sha256": "6264db62acd096087e388236f59babf00721210ad35cc7f0dc9cfb508a6a9d60"
+    },
+    "independent_six_469f_saved_field_verifier": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-469f-six-last-nonlinked-saved-fields-compare.php",
+      "bytes": 1443,
+      "sha256": "d2b2ccfd464edaa733889fee9016d5cff0c6fd8b91f16aefa97cfdcc6b29267a"
+    },
+    "original_v432_class_loader_host_source": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-v432-load-all-real-new-original-Class-exports.cpp",
+      "bytes": 6057,
+      "sha256": "14b866a94211baea354656a6e56743188725aa46b3852a39301b368ff160096b"
+    },
+    "original_v432_class_loader_build": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-v432-build-targeted-original-class-exports.cmd",
+      "bytes": 544,
+      "sha256": "8fc63af76f5644c5b7bd6d6bfa861bc624d26444b91d7020e22dcfec294912d6"
+    },
+    "original_469f_native_preload_host_source": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-f469-original-only-Preloaded-new-struct-native-values.cpp",
+      "bytes": 6348,
+      "sha256": "01faaaeab1ec6daf7cf65e175c2a1727daa709396014f4f91ab90dd2d0d84d23"
+    },
+    "original_469f_native_preload_host_build": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-g3-t073-f469-build-new-only-original-Preloaded-struct-values.cmd",
+      "bytes": 578,
+      "sha256": "9568609f0eae62920913aaaab867533c3639b088ce7e530382fffd79d92616fa"
+    },
+    "actual_original_v432_Core_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "bytes": 786432,
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "actual_original_v432_Engine_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.dll",
+      "bytes": 1785856,
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+    },
+    "actual_original_v432_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.u",
+      "bytes": 59214,
+      "sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70"
+    },
+    "actual_original_v432_Engine_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.u",
+      "bytes": 1149560,
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+    },
+    "actual_original_469f_Core_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
+      "bytes": 1790328,
+      "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+    },
+    "actual_original_469f_Engine_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.dll",
+      "bytes": 3463032,
+      "sha256": "625dabea278e314714a45c931c98ba6282a9198378499144429aa979a1a0570f"
+    },
+    "actual_original_469f_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.u",
+      "bytes": 67362,
+      "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0"
+    },
+    "actual_original_469f_Engine_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.u",
+      "bytes": 1251453,
+      "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+    },
+    "accepted_prior_T075_native_pointer_element_size_oracle": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
+      "bytes": 13870,
+      "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5"
+    },
+    "accepted_Epic_source_method_register": {
+      "location": "repo",
+      "path": "catalog/compliance/UE1-O06-G3-CUMULATIVE-CORE-SERIALIZER-METHOD-REGISTER.json",
+      "bytes": 176338,
+      "sha256": "1422de5431bc3538e9f199b8163513d50fd18bd6ef4bb40bed02b97509af57d7",
+      "canonical_git_blob_sha256": "bb5e8ec016ff5aca75b5688047f03bbfe098c131861b96ba67997f3834ec245a",
+      "canonical_git_blob_bytes": 172756
+    }
+  }
+}

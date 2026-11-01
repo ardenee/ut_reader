@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-T073-T074-original-method-gaps`
-- **Stage:** G3-72PASS-1NA-7BLOCKED-T075-CLOSED
-- **Last completed action:** T075 FULL frozen native linked reference identity and source size claim gate accepted: 6153 actual original compiled v432/469f loaded pointer targets exact signed refs, 8707 original loaded linked runtime UProperty ElementSize/ArrayDim/GetSize/Offset scalar/struct ABI plus 88223/88223 SHA-pinned new assertions. Reused original C98/C227 real pointer and G3-10 imported struct proof without replay; native transient ElementSize not falsely archived. T073 T074 still independent method-union BLOCKED.
-- **Resume at:** Close T073 original v432 vs 469f remaining source-applicable methods by already accepted original method register and new source-only gap; T074 separately 2012/2026 method union; T065 real old archive branch if verified. T077-T080 dependent.
-- **Active changed at:** 2026-11-01T20:12:07+00:00
+- **Contract:** `G3-T065-T074-technical-remaining`
+- **Stage:** G3-73PASS-1NA-6BLOCKED-T073-CLOSED
+- **Last completed action:** Fully closed frozen T073: original compiled v432+469f stock 12557 actual physical Core/Engine exports resolved as 12355 original native materialized + 202 genuine zero-byte None slots; genuine new v432 148 and 469f 17 distinct class/struct/function states match true compiled loaded archive members in 1489 checks, last 6 real Registry properties saved dims/flags 12 match even where unlinked ElementSize0. All 24 vs25 original compiled method families reconciled; reuse previously accepted G3 method contracts, no old tests replayed.
+- **Resume at:** Close T074 C227i/k distinct mandatory original methods via source-mapped method/export inventory, then T065 exact historical v34/v35 physical/source branch and correct exclusions. Only then T077-T080 final acceptance/release. PRD not touched.
+- **Active changed at:** 2026-11-01T21:21:04+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

@@ -1,0 +1,344 @@
+{
+  "original_compiled_DLL_export_methods": {
+    "v432": {
+      "UArrayProperty": [
+        {
+          "rva": "0000341D",
+          "symbol": "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UBoolProperty": [
+        {
+          "rva": "00001E24",
+          "symbol": "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UByteProperty": [
+        {
+          "rva": "00001C80",
+          "symbol": "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClass": [
+        {
+          "rva": "00001203",
+          "symbol": "?Serialize@UClass@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClassProperty": [
+        {
+          "rva": "0000181B",
+          "symbol": "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UConst": [
+        {
+          "rva": "000029FA",
+          "symbol": "?Serialize@UConst@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UEnum": [
+        {
+          "rva": "00003409",
+          "symbol": "?Serialize@UEnum@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UExporter": [
+        {
+          "rva": "0000306C",
+          "symbol": "?Serialize@UExporter@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFactory": [
+        {
+          "rva": "00001361",
+          "symbol": "?Serialize@UFactory@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UField": [
+        {
+          "rva": "00001DC0",
+          "symbol": "?Serialize@UField@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFixedArrayProperty": [
+        {
+          "rva": "000010A0",
+          "symbol": "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFunction": [
+        {
+          "rva": "00001AAA",
+          "symbol": "?Serialize@UFunction@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "ULinker": [
+        {
+          "rva": "00001C9E",
+          "symbol": "?Serialize@ULinker@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UMapProperty": [
+        {
+          "rva": "000011EA",
+          "symbol": "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObject": [
+        {
+          "rva": "000017B7",
+          "symbol": "?Serialize@UObject@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObjectProperty": [
+        {
+          "rva": "00002784",
+          "symbol": "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackage": [
+        {
+          "rva": "00002D15",
+          "symbol": "?Serialize@UPackage@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackageMap": [
+        {
+          "rva": "00001393",
+          "symbol": "?Serialize@UPackageMap@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UProperty": [
+        {
+          "rva": "0000149C",
+          "symbol": "?Serialize@UProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UState": [
+        {
+          "rva": "0000179E",
+          "symbol": "?Serialize@UState@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStrProperty": [
+        {
+          "rva": "0000254F",
+          "symbol": "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStruct": [
+        {
+          "rva": "00002B99",
+          "symbol": "?Serialize@UStruct@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStructProperty": [
+        {
+          "rva": "0000173F",
+          "symbol": "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UTextBuffer": [
+        {
+          "rva": "000031BB",
+          "symbol": "?Serialize@UTextBuffer@@UAEXAAVFArchive@@@Z"
+        },
+        {
+          "rva": "00002C34",
+          "symbol": "?Serialize@UTextBuffer@@UAEXPBGW4EName@@@Z"
+        }
+      ]
+    },
+    "469f": {
+      "UArrayProperty": [
+        {
+          "rva": "00084890",
+          "symbol": "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UBoolProperty": [
+        {
+          "rva": "000849C0",
+          "symbol": "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UByteProperty": [
+        {
+          "rva": "00084AA0",
+          "symbol": "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClass": [
+        {
+          "rva": "00049F00",
+          "symbol": "?Serialize@UClass@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClassProperty": [
+        {
+          "rva": "00084B70",
+          "symbol": "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UConst": [
+        {
+          "rva": "0004A4B0",
+          "symbol": "?Serialize@UConst@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UEnum": [
+        {
+          "rva": "00036D00",
+          "symbol": "?Serialize@UEnum@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UExporter": [
+        {
+          "rva": "000409E0",
+          "symbol": "?Serialize@UExporter@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFactory": [
+        {
+          "rva": "000411B0",
+          "symbol": "?Serialize@UFactory@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UField": [
+        {
+          "rva": "0004A550",
+          "symbol": "?Serialize@UField@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFixedArrayProperty": [
+        {
+          "rva": "00084C50",
+          "symbol": "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFunction": [
+        {
+          "rva": "0004A640",
+          "symbol": "?Serialize@UFunction@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "ULinker": [
+        {
+          "rva": "00065B30",
+          "symbol": "?Serialize@ULinker@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "ULinkerLoad": [
+        {
+          "rva": "00065C60",
+          "symbol": "?Serialize@ULinkerLoad@@EAEXAAVFArchive@@@Z"
+        },
+        {
+          "rva": "00065D00",
+          "symbol": "?Serialize@ULinkerLoad@@EAEXPAXH@Z"
+        }
+      ],
+      "UMapProperty": [
+        {
+          "rva": "00084D30",
+          "symbol": "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObject": [
+        {
+          "rva": "00036DD0",
+          "symbol": "?Serialize@UObject@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObjectProperty": [
+        {
+          "rva": "00084E10",
+          "symbol": "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackage": [
+        {
+          "rva": "00037270",
+          "symbol": "?Serialize@UPackage@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackageMap": [
+        {
+          "rva": "00061380",
+          "symbol": "?Serialize@UPackageMap@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UProperty": [
+        {
+          "rva": "00084EE0",
+          "symbol": "?Serialize@UProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UState": [
+        {
+          "rva": "0004A7B0",
+          "symbol": "?Serialize@UState@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStrProperty": [
+        {
+          "rva": "00085000",
+          "symbol": "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStruct": [
+        {
+          "rva": "0004A880",
+          "symbol": "?Serialize@UStruct@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStructProperty": [
+        {
+          "rva": "000850C0",
+          "symbol": "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UTextBuffer": [
+        {
+          "rva": "00037300",
+          "symbol": "?Serialize@UTextBuffer@@UAEXAAVFArchive@@@Z"
+        },
+        {
+          "rva": "000373F0",
+          "symbol": "?Serialize@UTextBuffer@@UAEXPBGW4EName@@@Z"
+        }
+      ]
+    }
+  },
+  "same_symbol_families": [
+    "UArrayProperty",
+    "UBoolProperty",
+    "UByteProperty",
+    "UClass",
+    "UClassProperty",
+    "UConst",
+    "UEnum",
+    "UExporter",
+    "UFactory",
+    "UField",
+    "UFixedArrayProperty",
+    "UFunction",
+    "ULinker",
+    "ULinkerLoad",
+    "UMapProperty",
+    "UObject",
+    "UObjectProperty",
+    "UPackage",
+    "UPackageMap",
+    "UProperty",
+    "UState",
+    "UStrProperty",
+    "UStruct",
+    "UStructProperty",
+    "UTextBuffer"
+  ],
+  "total_original_compiled_serialize_types": 25,
+  "v432_DLL_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "469f_DLL_sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+}
