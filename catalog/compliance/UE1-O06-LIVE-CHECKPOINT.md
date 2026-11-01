@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-T072-original-C98-Core-and-Engine-full-compiled-native-source`
-- **Stage:** G3-70PASS-1NA-9BLOCKED-1998_C98_REPARITY
-- **Last completed action:** Actual original May1998 compiled Core.dll and Engine.dll LoadPackage(Core.u then Engine.u) succeeded; 3968 UField, 2820 UProperty, 1114 UStruct original native events plus 71 real UClass flags/FGuid load fields all exact; 4341 original true Super/Next/Children/ScriptText linked pointer target refs exact with 38 Engine-to-Core import pointers. Independently SHA-pinned 36090 original compiled source-selected assertions PASS; T072/T075 still open on missing specialized source method subtype union.
-- **Resume at:** Deduplicate C98 original UEnum/UConst direct method loaded fields and all remaining T072 type/method obligations; then re-evaluate owner T072 as PASS only if frozen criterion 100% met. T075 other UT99 v432/469f source-pointer union open. Do not retest already accepted field/property/struct/class values, no PRD deployment.
-- **Active changed at:** 2026-11-01T19:09:16+00:00
+- **Contract:** `G3-T073-then-T074-T075-remaining-unique-method-gaps`
+- **Stage:** G3-71PASS-1NA-8BLOCKED-T072-CLOSED
+- **Last completed action:** FULL original C98 May1998 frozen T072 PASS. Original stock Core.u+Engine.u 7973 compiled UField/UProperty/UStruct/UClass method records with 36090 source-native asserts and 4341 exact reference identities. Previous G3-06 Const Enum accepted proof reused. ONLY previously uncovered 24 Engine enums 644 exact native global FName texts + 7 Engine Const original loaded strings verified with fresh focused original engine value capture. No old version-gate scripts rerun; previous accepted tests not rerun. No PRD deployment.
+- **Resume at:** Next T073 original UT99 v432/469f genuinely unresolved changed method classes, T074 C227i/k unique source gates, T075 unverified UT99 linker element sizes; T065 physical pre36 original only if genuine specimen or justified exclusion. Do not rerun accepted gates. T077-T080 dependent final.
+- **Active changed at:** 2026-11-01T19:40:20+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

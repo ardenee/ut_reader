@@ -5092,13 +5092,13 @@
       "pass_criterion": "100% of required observable fields matched or each unobservable direct type has an explicit documented exclusion.",
       "evidence": "Reuse C98 direct loaded native registers and G3-03..13 closure proofs; compare only missing types",
       "reuse": "Not a new full CDB replay.",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-11-01 actual stock 1998 C98 May compiled Core.dll+Engine.dll successfully loaded genuine Core.u THEN genuine Engine.u (previous Engine-alone null missing prerequisite), original 458/3619 exports. 3968 UField + 2820 UProperty + 1114 UStruct original source loaded records match current reader; 71 original UClass flags/size/FGuid values match; original 4341 actual linked UObject target refs match 36090 / 36090 independent checks. Other source-applicable UEnum/UConst special values and source-specific method union must still be reconciled before T072 owner PASS. 2026-11-01: The 24 original historical v35 and v55-58 physical packages discovered locally contain no direct required C98 UClass/UStruct/UProperty exports, so are not valid substitute native loaded-value fixtures. Genuine compiled 1998 Engine.u full type union is still unresolved. 2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Real 1998 C98 original Core.Object and Core.Class direct intrinsic UClass::Serialize v58 each completed, name2/object refs8/raw66 source-run; <=57 requires genuine linked object and cannot be represented by intrinsic fixture. Real v432 classes and loaded actor UProperty native metadata fields v61/62 newly observed, but C98 full direct UClass/UStruct/UProperty full loaded field union or explicit per-type exclusions missing. T072 BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Original linked Core.Subsystem/Core.Object UClass native method fields at v34/v35 added; full 100 percent direct C98 class/struct/property methods not verified.",
-      "last_attempt_at": "2026-11-01T19:09:16+00:00",
+      "result": "FROZEN T072 COMPLETE: stock original May1998 C98 Core.u (458 exports), Engine.u (3619 exports) actual native loaded Core first. Original 3968 UField, 2820 UProperty, 1114 UStruct, 71 UClass native callbacks and 4341 true linked pointer target identities match UnrealDB, 36090 independent checks PASS. Last genuine original Engine.u seven UConst strings and 24 UEnum arrays with 644 real runtime global FName strings match saved source-specific archive exactly. Reuse G3-06 fully sealed source method/error/type tests, no accepted reruns. All frozen original C98 genuine direct class/struct/property observable method fields covered; other build owners remain separate.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-01T19:40:20+00:00",
       "attempted_native_execution": false,
-      "assessment": "MAY1998_STOCK_CORE_ENGINE_ORIGINAL_LINKED_7902_FIELD_PROP_STRUCT_71_CLASS_36090_MATCH_REMAINING_METHOD_FIELDS",
+      "assessment": "PASS_ACTUAL_ORIGINAL_MAY1998_C98_CORE_ENGINE_COMPLETE_SOURCE_METHOD_TYPE_UNION",
       "upstream_fixed_test_dependencies": [],
       "last_grouped_evidence_audit": "2026-10-31",
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
@@ -5261,6 +5261,27 @@
         "new_independent_C98_original_source_native_assertions_PASS": 36090,
         "source_native_mismatches": 0,
         "full_owner_pass": false
+      },
+      "original_C98_full_T072_terminal_evidence": {
+        "previous_compiled_field_class_and_pointer": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "bytes": 11636,
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981"
+        },
+        "reused_G3_06_const_enum_full_acceptance": {
+          "path": "catalog/compliance/UE1-O06-G3-06-FULL-CLOSURE-MATRIX.json",
+          "bytes": 6727,
+          "sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871"
+        },
+        "new_original_Engine_31_uncovered_const_enum_native": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-1998-Engine-31-Const-Enum-final-closure.json",
+          "bytes": 5412,
+          "sha256": "d08fc9926fc6c388a8c8f3cabce040a0da7f3265211d5e1697e03d5ce80b6556"
+        },
+        "native_loaded_value_assertions": 36090,
+        "new_native_Engine_enum_names_exact": 644,
+        "new_native_Engine_const_strings_exact": 7,
+        "full_frozen_T072_pass": true
       }
     },
     {
@@ -6417,7 +6438,24 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
         "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
         "bytes": 10906
-      }
+      },
+      "upstream_T072_C98_original_compiled_method_type_union_now_PASS": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "bytes": 11636,
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-06-FULL-CLOSURE-MATRIX.json",
+          "bytes": 6727,
+          "sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-1998-Engine-31-Const-Enum-final-closure.json",
+          "bytes": 5412,
+          "sha256": "d08fc9926fc6c388a8c8f3cabce040a0da7f3265211d5e1697e03d5ce80b6556"
+        }
+      ]
     },
     {
       "id": "T078",
@@ -6483,5 +6521,23 @@
     "G3-09"
   ],
   "historical_original_evidence": "Reuse sealed original G3-03 and G3-04 and prior G5 where source/build relevant; previously accepted native tests not rerun.",
-  "updated_at_utc": "2026-11-01T17:00:33+00:00"
+  "updated_at_utc": "2026-11-01T17:00:33+00:00",
+  "overall_summary_2026_11_01": {
+    "total_frozen": 80,
+    "PASS": 71,
+    "SOURCE_NA": 1,
+    "BLOCKED": 8,
+    "FAIL": 0,
+    "new_full_pass": "T072",
+    "remaining_blocked_ids": [
+      "T065",
+      "T073",
+      "T074",
+      "T075",
+      "T077",
+      "T078",
+      "T079",
+      "T080"
+    ]
+  }
 }

@@ -182,3 +182,7 @@ catalog/bin/verify-ue1-o06-g3-t072-C98-1998-7902-original-loaded-methods.php -te
 catalog/bin/verify-ue1-o06-g3-t075-C98-1998-4341-original-linked-pointers.php -text
 
 catalog/bin/verify-ue1-o06-g3-t072-C98-1998-71-original-UClass-metadata.php -text
+
+catalog/bin/verify-ue1-o06-g3-t072-c98-Engine-31-uncovered-Const-Enum-reader.php -text
+
+catalog/bin/verify-ue1-o06-g3-t072-c98-Engine-31-uncovered-Const-Enum-original-native.py -text

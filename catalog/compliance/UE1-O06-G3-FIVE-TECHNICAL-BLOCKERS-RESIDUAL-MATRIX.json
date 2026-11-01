@@ -2,9 +2,9 @@
   "kind": "FIXED_FIVE_FROZEN_OWNERS_RESIDUALS_NO_NEW_T_OR_S_CASES",
   "date": "2026-11-01",
   "backlog_states": {
-    "PASS": 70,
+    "PASS": 71,
     "SOURCE_NA": 1,
-    "BLOCKED": 9
+    "BLOCKED": 8
   },
   "owners": [
     {
@@ -18,11 +18,9 @@
     },
     {
       "id": "T072",
-      "status": "BLOCKED",
-      "unproven": [
-        "Remaining original C98 UEnum/UConst direct subclass data and other source-required member/method type union not yet fully reconciled; original Core/Engine common method and Class values are now native verified"
-      ],
-      "next_focused_original_oracle": "Next: obtain C98 compiled Engine.u actual class/struct/property memory and compare only uncovered types",
+      "status": "PASS",
+      "unproven": [],
+      "next_focused_original_oracle": "NONE for frozen T072; other historical source/version and UT99/C227 oracles belong to T065/T073/T074/T075.",
       "new_verified_actual_stock_original_C98_Engine_full_native_method_values": {
         "manifest": {
           "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
@@ -35,6 +33,24 @@
         "original_1998_struct_events": 1114,
         "original_1998_UClass_events": 71,
         "independent_verifier_checks": 36090
+      },
+      "terminal_pass_evidence": {
+        "prior_original_compiled": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "bytes": 11636,
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981"
+        },
+        "reused_accepted_G3_06": {
+          "path": "catalog/compliance/UE1-O06-G3-06-FULL-CLOSURE-MATRIX.json",
+          "bytes": 6727,
+          "sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871"
+        },
+        "new_genuine_Engine_subtypes": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-1998-Engine-31-Const-Enum-final-closure.json",
+          "bytes": 5412,
+          "sha256": "d08fc9926fc6c388a8c8f3cabce040a0da7f3265211d5e1697e03d5ce80b6556"
+        },
+        "full_criterion_met": true
       }
     },
     {
@@ -196,5 +212,17 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
     "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
     "bytes": 10906
+  },
+  "frozen_original_five_technical_owner_statuses_2026_11_01": {
+    "T065": "BLOCKED",
+    "T072": "PASS",
+    "T073": "BLOCKED",
+    "T074": "BLOCKED",
+    "T075": "BLOCKED"
+  },
+  "new_2026_11_01_T072_C98_final_full_owner_closure": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T072-1998-Engine-31-Const-Enum-final-closure.json",
+    "bytes": 5412,
+    "sha256": "d08fc9926fc6c388a8c8f3cabce040a0da7f3265211d5e1697e03d5ce80b6556"
   }
 }

@@ -1,0 +1,101 @@
+{
+  "kind": "UE1_O06_G3_T072_FINAL_ACCEPTANCE_ORIGINAL_C98_MAY1998_GENUINE_CORE_ENGINE_NO_OLD_REPLAYS",
+  "date": "2026-11-01",
+  "frozen_gate": "T072",
+  "prior_acceptance_reused_no_retest": [
+    "G3-06 original May1998 stock UConst UEnum",
+    "T001-T064 accepted source-method gates",
+    "G3 T072 C98 original 36090 field/value/identity SHA proof"
+  ],
+  "source_branch_last_unproven": "Genuine stock Engine.u 7 UConst and 24 UEnum subclass loaded text and global FName identity",
+  "original_native_Engine_u_new_loaded_subclasses": {
+    "UEnum_objects": 24,
+    "UEnum_real_global_FName_strings": 644,
+    "UConst_objects": 7,
+    "UConst_string_values": 7
+  },
+  "original_native_Engine_u_source_selected_last_subtypes_exact": true,
+  "verification": "New verifier checks SHA pins and 24 native Enum global FName texts against source selected saved Core/Engine archive; compares seven C98 original loaded FString texts/lengths; no old Core objects asserted anew.",
+  "actual_archive_version": 61,
+  "no_synthetic_version_replacement": true,
+  "source_stock_compiled_binaries_unchanged": true,
+  "observed_source_naming": "May17 1998 compiled retail binaries; May19 source snapshot kept distinct",
+  "known_original_runtime_shutdown_first_chance": "Native debugger reported first-chance AV during disposable host cleanup after successful both LoadPackage results, after all new method callbacks. Not ignored as a successful shutdown. Preexisting host CDB also clean run in earlier proof.",
+  "g3_15_scope": "Original C98 genuine Core and Engine direct class, struct, property loaded-value aggregate; all other special serializer method gates already accepted and reused.",
+  "pins": {
+    "original_stock_Core_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.dll",
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+      "bytes": 506368
+    },
+    "original_stock_Engine_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Engine.dll",
+      "sha256": "2f3ab0f8bc40960e6be5e1f540ca974a1537d9b23f2b9d7d06af589400b70069",
+      "bytes": 998400
+    },
+    "original_stock_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.u",
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c",
+      "bytes": 31472
+    },
+    "original_stock_Engine_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Engine.u",
+      "sha256": "bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d",
+      "bytes": 852255
+    },
+    "original_C98_1998_full_loaded_parity": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+      "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+      "bytes": 11636
+    },
+    "previously_accepted_G3_06_Const_Enum_method_parity": {
+      "location": "repo",
+      "path": "catalog/compliance/UE1-O06-G3-06-FULL-CLOSURE-MATRIX.json",
+      "sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871",
+      "bytes": 6727,
+      "canonical_git_blob_sha256": "65c5d3b2de9b17d2e685ba619ab60a32377c7a25c4e2cb61274cd52b817ec5da",
+      "canonical_git_blob_bytes": 6636
+    },
+    "source_PHP_reader": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t072-c98-Engine-31-uncovered-Const-Enum-reader.php",
+      "sha256": "4635ac66e7eec6f4fa4ec0a5d5ce5c572fea179b04a123b060377efbeb8ff7cf",
+      "bytes": 1465
+    },
+    "source_native_verifier": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t072-c98-Engine-31-uncovered-Const-Enum-original-native.py",
+      "sha256": "93a2835903d3923b901d1a614026828cfaa9325dc6b257ce6d037ced5afaa241",
+      "bytes": 4430
+    },
+    "g3-t072-C98-original-Engine-uncovered-31-Const-Enum-fixed-ABI.cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-original-1998-Engine-31-only-g3-t072-C98-original-Engine-uncovered-31-Const-Enum-fixed-ABI.cmd",
+      "sha256": "9ca2dec6daa8ecc039923bf459bc45da440b8341215dd39bbd756f41232f8802",
+      "bytes": 367
+    },
+    "g3-t072-C98-original-Engine-uncovered-31-Const-Enum-fixed-ABI.log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-original-1998-Engine-31-only-g3-t072-C98-original-Engine-uncovered-31-Const-Enum-fixed-ABI.log",
+      "sha256": "fddb2447c09aee19b1a1eb2e590713c077b63e3cbe58c11e5303342e4130d916",
+      "bytes": 16872
+    },
+    "g3-t072-C98-Engine-uncovered-native-global-FName-enum.cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-original-1998-Engine-31-only-g3-t072-C98-Engine-uncovered-native-global-FName-enum.cmd",
+      "sha256": "c5578400328cee79fc09402c443de51b95acae5a10e34b54e288b621dd8550fd",
+      "bytes": 341
+    },
+    "g3-t072-C98-Engine-uncovered-native-global-FName-enum.log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-original-1998-Engine-31-only-g3-t072-C98-Engine-uncovered-native-global-FName-enum.log",
+      "sha256": "5e36a91e9a69a46d83f90f9ac1f8f7fb981c526793163ada5d017267926a5793",
+      "bytes": 55378
+    }
+  }
+}
