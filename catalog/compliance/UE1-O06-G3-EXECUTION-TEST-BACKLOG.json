@@ -5216,10 +5216,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01 original separate 469f v432 actual native differential: NEW independent OldUnreal UT99 469f actual x86 compiled Core.dll six original native method executions, real Core.Object/Core.Class UClass Serialize v61 versus62 and native loaded Engine.Actor reflected UProperty Serialize <=61 network flags and >=62 unchanged. All SIX actual returned original method numerical traces match previously accepted separate stock v432 build EXACTLY, direct byte/flag values; native methods did NOT rerun v432. Build-specific source profile and original binary SHA distinguish 469f from v432, no unverified whole-engine equivalence. Other applicable 469f-v432 serialization method/type deltas not fully tested, T073 remains BLOCKED.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
-      "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "blocking_reason": "2026-11-01: Genuine original compiled v432/469f UArrayProperty::Serialize branch SOURCE DIFFERENCE found and 12 genuine Engine.u runtime Inner references observed byte/identity exact. All v69 469f LOADs skip new conditional extra StaticArrayDim archive read; runtime Engine.Touching StaticArrayDim4 not to be confused with saved ArrayDim1. Still missing original source-applicable method families, UFixedArrayProperty and UMapProperty genuine original native or justified exclusion, and alternate 469f conditional oracle. 2026-11-01 original separate 469f v432 actual native differential: NEW independent OldUnreal UT99 469f actual x86 compiled Core.dll six original native method executions, real Core.Object/Core.Class UClass Serialize v61 versus62 and native loaded Engine.Actor reflected UProperty Serialize <=61 network flags and >=62 unchanged. All SIX actual returned original method numerical traces match previously accepted separate stock v432 build EXACTLY, direct byte/flag values; native methods did NOT rerun v432. Build-specific source profile and original binary SHA distinguish 469f from v432, no unverified whole-engine equivalence. Other applicable 469f-v432 serialization method/type deltas not fully tested, T073 remains BLOCKED.",
+      "last_attempt_at": "2026-11-01T16:14:10+00:00",
+      "attempted_native_execution": true,
+      "assessment": "NEW_COMPILED_V432_469F_ARRAY_DELTA_12_GENUINE_ENGINE_LOADED_REFS_MATCH_T073_STILL_BLOCKED",
       "upstream_fixed_test_dependencies": [
         "T065"
       ],
@@ -5312,7 +5312,24 @@
       "latest_grouped_native_observation": "True v432 original UClass::SuperField external reference and loaded imported-provider CDO pointer are now evidenced under T076; 469f-specific source method/type union and genuine 469f compiled native provenance still incomplete.",
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
       "last_grouped_original_C227_2012_2026_native": "10 new compiled original C227i/k source build cases + 2 focused source-failure alternate commandlet cases, 56 identical original BMP pairs, 177/177 verifier; 1998 C98 true v61 map bootstrap attempted, no serializer cursor",
-      "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN"
+      "new_original_1998_C98_native_source_unknown_reference_branch": "2026-11-01: 4 actual original compiled method dispatches v34/v35 Object skip and v35 Class/v36 Object raw skip, 47/47 current source reader PASS, historical SHA pinned separately; actual retail v34 package archive cursor still OPEN",
+      "new_2026_11_01_original_12_array_native_source_differential": {
+        "evidence_manifest": "catalog/compliance/evidence/o06/20261101-G3-T073-v432-469f-original-12-array-native-methods.json",
+        "sha256": "ca3084b9378b4f278c381e707b8e7594d69ac592127e219d232cfb453ced6787",
+        "bytes": 7354,
+        "original_distinct_compiled_builds": [
+          "ut99-v432",
+          "ut99-v469f"
+        ],
+        "original_native_Engine_UArrayProperty_Inner_loaded_value_matches": {
+          "ut99-v432": 4,
+          "ut99-v469f": 8
+        },
+        "new_source_distinction": "469f compiled UArrayProperty Serialize has extra version/flags gated StaticArrayDim archive operation not present in stock compiled v432. Actual 469f v69 Engine.u LOAD does not take the extra read; original native Engine.Touching runtime StaticArrayDim=4 does not equal source saved UProperty.ArrayDim=1 and is not misreported as a persisted field.",
+        "new_focus_assertions_passed": 119,
+        "full_acceptance": false,
+        "remaining": "Actual original 469f additional mode/version conditional and unobserved source-registered UFixedArrayProperty / UMapProperty type ownership, plus all other original T073 method/native loaded values are NOT certified. Do not infer v432=469f."
+      }
     },
     {
       "id": "T074",
@@ -6105,7 +6122,12 @@
           "sha256": "058ee2f5387f52372fd48d9519f4eaedf47dfadb762b86924b471550b36ad8d2",
           "bytes": 6304
         }
-      ]
+      ],
+      "new_original_2026_11_01_T073_12_array_owner_upstream": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T073-v432-469f-original-12-array-native-methods.json",
+        "sha256": "ca3084b9378b4f278c381e707b8e7594d69ac592127e219d232cfb453ced6787",
+        "T073_closed": false
+      }
     },
     {
       "id": "T078",

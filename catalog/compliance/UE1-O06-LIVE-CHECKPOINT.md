@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-T074`
-- **Stage:** G3-70PASS-1NA-9BLOCKED
-- **Last completed action:** Original compiled C227k 1051 Field, 753 Property, 271 Struct saved-versus-loaded results accepted as new T074/T075 evidence, two real ScriptText linked pointer identities observed, original 2012 evidence not rerun, no frozen owner promoted.
-- **Resume at:** Continue original source-specific pending T065 T072 T073 T074 T075; final T077-T080 remain blocked. No PRD deployment.
-- **Active changed at:** 2026-11-01T15:47:14+00:00
+- **Contract:** `G3-T073-original-v432-469f-ArrayProperty-native`
+- **Stage:** G3-70PASS-1NA-9BLOCKED-T073_DIFFERENTIAL
+- **Last completed action:** Distinct original stock v432 four plus OldUnreal 469f eight genuine Engine.u ArrayProperty loaded Inner pointers equal original archived source refs, compiled 469f conditional StaticArrayDim read exists but 0 of 8 v69 LOADs take it, genuine native Touching StaticArrayDim=4 vs saved ArrayDim=1. Independent 119 assertions PASS and 21 source/native SHA pins. No original accepted tests replayed, no decoder changes.
+- **Resume at:** T073 still BLOCKED: obtain original 469f conditional archive mode/version oracle and genuine/direct FixedArrayProperty and MapProperty loaded values or explicit source exclusion; pursue grouped T065/T072/T074/T075 owner gaps. Do not run final T077-T080 or deploy PRD.
+- **Active changed at:** 2026-11-01T16:14:27+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

@@ -1,0 +1,117 @@
+Opened log file 'C:\Temp\UnrealDB\O06\g3-t073-original-469f-array-G3-Original-469f-Engine-Actor-Defaults.log'
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.031 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: .\G3-Original-469f-Engine-Actor-Defaults.exe
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script successfully loaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+OK                                             C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System
+Symbol search path is: C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System
+Executable search path is: 
+ModLoad: 00470000 004b6000   G3-Original-469f-Engine-Actor-Defaults.exe
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 728e0000 7298f000   C:\WINDOWS\SysWOW64\apphelp.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 65490000 65788000   C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System\Core.dll
+ModLoad: 69730000 6974d000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 74ec0000 74ef3000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76900000 76985000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\msvcrt.dll
+ModLoad: 764b0000 76535000   C:\WINDOWS\SysWOW64\sechost.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+(20c8.6834): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=f0bf0000 edx=00000000 esi=00bb5d68 edi=0079d000
+eip=775ad248 esp=0093f31c ebp=0093f348 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrInitShimEngineDynamic+0x6a8:
+775ad248 cc              int     3
+0:000> bp Core!UArrayProperty::Serialize+0xa3 ".printf \"T073_469F_ARRAY idx=%d linker=%p inner=%p next=%p staticdim=%d archivever=%d flags=%08x,%08x,%08x\\n\",poi(@edi+0x14),poi(@edi+0x10),poi(@edi+0x5c),poi(@edi+0x60),poi(@edi+0x64),poi(@esi+4),poi(@esi+0x10),poi(@esi+0x14),poi(@esi+0x18); .if (poi(@edi+0x5c)!=0){.printf \"T073_469F_INNER idx=%d linker=%p\\n\",poi(poi(@edi+0x5c)+0x14),poi(poi(@edi+0x5c)+0x10);};gc"
+0:000> g
+ModLoad: 76350000 76375000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 70a40000 70a5c000   C:\WINDOWS\SysWOW64\bcrypt.dll
+ModLoad: 75f20000 75f9a000   C:\WINDOWS\SysWOW64\bcryptprimitives.dll
+ModLoad: 71200000 71214000   C:\WINDOWS\SysWOW64\CRYPTSP.dll
+ModLoad: 711c0000 711f2000   C:\WINDOWS\SysWOW64\rsaenh.dll
+ModLoad: 70a70000 70a7a000   C:\WINDOWS\SysWOW64\CRYPTBASE.dll
+ModLoad: 6f270000 6f29c000   C:\WINDOWS\SysWOW64\SspiCli.dll
+ModLoad: 602e0000 60714000   C:\Temp\UnrealDB\O06\G3-T073-new-469f-array-native\System\Engine.DLL
+ModLoad: 75c20000 75c8a000   C:\WINDOWS\SysWOW64\WS2_32.dll
+T073_469F_ARRAY idx=4749 linker=02b29e50 inner=02aad4c0 next=00000000 staticdim=0 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=4748 linker=02b29e50
+T073_469F_ARRAY idx=4532 linker=02b29e50 inner=02dba0f0 next=00000000 staticdim=0 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=4531 linker=02b29e50
+T073_469F_ARRAY idx=4525 linker=02b29e50 inner=02dba1b0 next=00000000 staticdim=0 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=4524 linker=02b29e50
+T073_469F_ARRAY idx=5627 linker=02b29e50 inner=02e35300 next=00000000 staticdim=4 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=5626 linker=02b29e50
+T073_469F_ARRAY idx=2947 linker=02b29e50 inner=02dbecb0 next=00000000 staticdim=0 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=2953 linker=02b29e50
+T073_469F_ARRAY idx=5597 linker=02b29e50 inner=02e4b5f0 next=00000000 staticdim=0 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=5596 linker=02b29e50
+T073_469F_ARRAY idx=5595 linker=02b29e50 inner=02e4b530 next=00000000 staticdim=0 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=5593 linker=02b29e50
+T073_469F_ARRAY idx=5445 linker=02b29e50 inner=02e499d0 next=00000000 staticdim=0 archivever=69 flags=00000001,00000000,00000000
+T073_469F_INNER idx=5461 linker=02b29e50
+ModLoad: 74e60000 74e75000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+eax=00000000 ebx=775cc260 ecx=00000000 edx=00000000 esi=00000000 edi=00000000
+eip=7750861c esp=0093f6c4 ebp=0093f798 iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000202
+ntdll!NtTerminateProcess+0xc:
+7750861c c20800          ret     8
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
