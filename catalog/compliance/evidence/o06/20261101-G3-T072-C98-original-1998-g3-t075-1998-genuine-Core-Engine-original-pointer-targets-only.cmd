@@ -1,0 +1,4 @@
+bp Core+0xf3dd ".if (poi(@esi+0x10) != 0) { .if (poi(@esi+0x28) != 0) { .printf \"T075_C98_SUPER owner=%d linker=%p targetIdx=%d targetLinker=%p\\n\",poi(@esi+0x14),poi(@esi+0x10),poi(poi(@esi+0x28)+0x14),poi(poi(@esi+0x28)+0x10); }; .if (poi(@esi+0x2c) != 0) { .printf \"T075_C98_NEXT owner=%d linker=%p targetIdx=%d targetLinker=%p\\n\",poi(@esi+0x14),poi(@esi+0x10),poi(poi(@esi+0x2c)+0x14),poi(poi(@esi+0x2c)+0x10); } };gc"
+bp Core+0x10c88 ".if (poi(@esi+0x10) != 0) { .if (poi(@esi+0x38) != 0) { .printf \"T075_C98_CHILD owner=%d linker=%p targetIdx=%d targetLinker=%p\\n\",poi(@esi+0x14),poi(@esi+0x10),poi(poi(@esi+0x38)+0x14),poi(poi(@esi+0x38)+0x10); }; .if (poi(@esi+0x34) != 0) { .printf \"T075_C98_SCRIPTTEXT owner=%d linker=%p targetIdx=%d targetLinker=%p\\n\",poi(@esi+0x14),poi(@esi+0x10),poi(poi(@esi+0x34)+0x14),poi(poi(@esi+0x34)+0x10); } };gc"
+g
+q

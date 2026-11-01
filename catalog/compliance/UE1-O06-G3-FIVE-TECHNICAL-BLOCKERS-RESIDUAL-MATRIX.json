@@ -20,10 +20,22 @@
       "id": "T072",
       "status": "BLOCKED",
       "unproven": [
-        "Full original May1998 compiled Core.u and Engine.u UClass, UStruct, UProperty direct loaded-type union",
-        "Original original 1998 Engine.u loader full native oracle remains missing"
+        "Remaining original C98 UEnum/UConst direct subclass data and other source-required member/method type union not yet fully reconciled; original Core/Engine common method and Class values are now native verified"
       ],
-      "next_focused_original_oracle": "Next: obtain C98 compiled Engine.u actual class/struct/property memory and compare only uncovered types"
+      "next_focused_original_oracle": "Next: obtain C98 compiled Engine.u actual class/struct/property memory and compare only uncovered types",
+      "new_verified_actual_stock_original_C98_Engine_full_native_method_values": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+          "bytes": 10906
+        },
+        "real_Engine_u_loaded_by_native": true,
+        "original_1998_field_events": 3968,
+        "original_1998_property_events": 2820,
+        "original_1998_struct_events": 1114,
+        "original_1998_UClass_events": 71,
+        "independent_verifier_checks": 36090
+      }
     },
     {
       "id": "T073",
@@ -120,6 +132,16 @@
           "TextPos +0x54",
           "Script.Num +0x4c"
         ]
+      },
+      "new_verified_true_1998_native_linked_object_ref_identities": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+          "bytes": 10906
+        },
+        "original_nonnull_target_ptrs": 4341,
+        "super_cross_Core_Engine_imports": 38,
+        "assertions": 8665
       }
     }
   ],
@@ -169,5 +191,10 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-original-fixed-map-stock-exclusion-manifest.json",
     "sha256": "b2cb5ce89fded008da2115898080b3e301100c0cd03b2a34d754d8902605d19c",
     "bytes": 6880
+  },
+  "new_2026_11_01_actual_C98_Core_Engine_loaded_source_native_acceptance": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+    "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+    "bytes": 10906
   }
 }

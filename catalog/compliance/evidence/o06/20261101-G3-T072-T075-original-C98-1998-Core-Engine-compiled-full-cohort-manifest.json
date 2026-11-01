@@ -1,0 +1,235 @@
+{
+  "schema": "G3-original-compiled-May-1998-C98-genuine-Core-Engine-UField-UProperty-UStruct-UClass-plus-linked-pointer-targets-v1",
+  "date": "2026-11-01",
+  "frozen_owners": [
+    "T072",
+    "T075"
+  ],
+  "full_T072_closed": false,
+  "full_T075_closed": false,
+  "genuine_loaded_archives": {
+    "Core.u": {
+      "archive_version": 61,
+      "exports": 458
+    },
+    "Engine.u": {
+      "archive_version": 61,
+      "exports": 3619
+    }
+  },
+  "new_actual_original_native_serialization_method_callbacks": {
+    "UField": 3968,
+    "UProperty": 2820,
+    "UStruct": 1114,
+    "UClass": 71
+  },
+  "new_independent_source_selected_real_loaded_comparisons": {
+    "FieldPropertyStruct_matched_records": 7902,
+    "FieldPropertyStruct_checks": 27065,
+    "all_71_UClass_native_flags_old_size_guid_matched": 71,
+    "UClass_extra_checks": 360,
+    "actual_nonnull_pointer_target_export_idx_and_sign_matches": 4341,
+    "pointer_target_checks": 8665,
+    "original_loaded_mismatches": 0
+  },
+  "important_c98_loader_fix": "Original May1998 FObjectManager::LoadPackage cannot deserialize genuine Engine.u until genuine Core.u is loaded first. Both Core.u and Engine.u actual original loaded pointers nonnull in two-stage stock native program; original standalone appExit may return exception code while successful native load already observed. CDB variant clean exit.",
+  "source_specific_1998_C98_native_offsets": {
+    "UObject.Linker": "+0x10",
+    "UObject.LinkerIndex": "+0x14",
+    "UField.Super": "+0x28",
+    "UField.Next": "+0x2c",
+    "UProperty.ArrayDim": "+0x34",
+    "UProperty.Flags": "+0x38",
+    "UStruct.ScriptText": "+0x34",
+    "UStruct.Children": "+0x38",
+    "UStruct.TextPos": "+0x44",
+    "UStruct.Line": "+0x48",
+    "UStruct.Script.Num": "+0x50",
+    "UClass.ClassFlags": "+0x7c",
+    "UClass.ClassRecordSize": "+0x80",
+    "UClass.Guid": "+0x88"
+  },
+  "original_pointer_cross_linker_Engine_super_edges": 38,
+  "original_loaded_values_observed_not_simulated": true,
+  "remaining_T072_unknowns": [
+    "C98 UEnum::Serialize and UConst::Serialize direct instance native values not yet recomputed in this bundle",
+    "C98 class defaults post-load runtime effects and other serializing type members require owner contract reconciliation"
+  ],
+  "remaining_T075_unknowns": [
+    "Other UT99 v432/469f 2012/2026 cross-source family native element layout and pointer identity union not yet fully reconciled"
+  ],
+  "pins": {
+    "1998_original_core_then_engine_native_open_log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t072-1998-original-preloaded-Core-then-Engine-native-2stage.log",
+      "bytes": 718,
+      "sha256": "110dbaa127232ff1335c0b862d269f11013add276ccbe087dfb13f74a32d7f8f"
+    },
+    "1998_original_Field_Property_Struct_true_loaded_values_log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t072-1998-original-Core-Engine-native-field-property-struct.log",
+      "bytes": 613450,
+      "sha256": "fd407d20e97a20d4d094e3b244d2226aa9099a9c3ec930e55d76fdf7a70f75ef"
+    },
+    "1998_original_nonnull_linked_pointer_target_log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t075-1998-genuine-Core-Engine-original-pointer-targets-only.log",
+      "bytes": 343508,
+      "sha256": "4d15d8949c4d66cd2f43fa9cf71fd672ace0aa77f7d7df742ffde792e07f7bf7"
+    },
+    "1998_original_UClass_flags_guid_and_record_size_log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t072-1998-C98-genuine-class-flags-guid-native.log",
+      "bytes": 15164,
+      "sha256": "cc7f456c06f3aa0338a87ae340fe50362f3e9e12370b1acaec07e990676f8a97"
+    },
+    "1998_original_UClass_compiled_x86_disassembly": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t072-C98-1998-original-UClass-compiled-disasm-after-module-load.log",
+      "bytes": 19589,
+      "sha256": "76fbd56c068825816bc8fc3310d6361cdf5e26502a1b7e09419e0b543cd2c512"
+    },
+    "1998_original_native_load_Core_then_Engine_host_cpp": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-G3-T072-C98-1998-original-native-two-package-Core-then-Engine.cpp",
+      "bytes": 3149,
+      "sha256": "b9e82dd94341ab301cce9115b3994a784316247a5baf2eca4ec5377f810cd31d"
+    },
+    "1998_original_native_load_Core_then_Engine_build_cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-G3-T072-C98-1998-original-native-two-package-build.cmd",
+      "bytes": 385,
+      "sha256": "09affa193760469d4ac861af6a33899ee6b177e13be9f3b85ae8f4289b55ad67"
+    },
+    "1998_CDB_Field_Property_Struct_breakpoints": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t072-1998-original-Core-Engine-native-field-property-struct.cmd",
+      "bytes": 636,
+      "sha256": "661b043ad820759fd91eb01d7357ceae62c03b779a7d9c61d89c36209b2dc537"
+    },
+    "1998_CDB_UField_UStruct_native_target_breakpoints": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t075-1998-genuine-Core-Engine-original-pointer-targets-only.cmd",
+      "bytes": 871,
+      "sha256": "5c0f235ee57deacef994023e7b63439059a8ee376c785a20f6ff0f7563e01554"
+    },
+    "1998_CDB_UClass_flags_guid_breakpoints": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t072-1998-C98-genuine-class-flags-guid-native.cmd",
+      "bytes": 308,
+      "sha256": "c29771f311a588b31e952ca75a68fd62846aae32b9cc967d86abe51ba05814b6"
+    },
+    "1998_CDB_UClass_source_disassembly_cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-C98-original-1998-g3-t072-C98-1998-original-UClass-compiled-disasm-after-module-load.cmd",
+      "bytes": 77,
+      "sha256": "7364b51f8f13a20bb096504608ea4557b3511ef68858fdc9e551bd6402316574"
+    },
+    "1998_original_Core_Engine_Field_Property_Struct_loaded_values_verifier": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t072-C98-1998-7902-original-loaded-methods.php",
+      "bytes": 7522,
+      "sha256": "cef9a4b67d4627ea8b4ef4663757d9a555c93f4c379b22ba0d3b02c34ff446a2"
+    },
+    "1998_original_Core_Engine_pointer_target_identity_verifier": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t075-C98-1998-4341-original-linked-pointers.php",
+      "bytes": 5401,
+      "sha256": "fe8c30499e9c1ae340ef86e874b508cb70dc8b8244813f59704b7b726dd3cb57"
+    },
+    "1998_original_Core_Engine_UClass_metadata_verifier": {
+      "location": "repo",
+      "path": "catalog/bin/verify-ue1-o06-g3-t072-C98-1998-71-original-UClass-metadata.php",
+      "bytes": 4457,
+      "sha256": "7f20b36d2d760cff741e4a88db4232303f82225aa654d5680911b2d9247ca137"
+    },
+    "1998_original_Core_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.dll",
+      "bytes": 506368,
+      "sha256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92"
+    },
+    "1998_original_Engine_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Engine.dll",
+      "bytes": 998400,
+      "sha256": "2f3ab0f8bc40960e6be5e1f540ca974a1537d9b23f2b9d7d06af589400b70069"
+    },
+    "1998_original_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Core.u",
+      "bytes": 31472,
+      "sha256": "7c94b2a68d8f6fc0bfb5264c9e9aad4ce35ccf12a8b8057d456dacd33d74140c"
+    },
+    "1998_original_Engine_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\Engine.u",
+      "bytes": 852255,
+      "sha256": "bdccc8ee1557b758554714bcc676edb2cb4474239c70bedaaf81f07e9a419b7d"
+    },
+    "1998_original_C98_native_disposable_host_executable": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C98-1998-G304\\System\\G3-T072-C98-original-1998-Core-then-Engine.exe",
+      "bytes": 11776,
+      "sha256": "29ff83e4b1d46708c8a594d5dc913267e7e12ab42a3f2141094ba8ac131c66c8"
+    },
+    "1998_original_C98_source_UnClass_h": {
+      "location": "absolute",
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnClass.h",
+      "bytes": 12622,
+      "sha256": "81da122edf51f839f9135782230eb4fb538f00b2f19cd1c5888a60d5e1848765"
+    },
+    "1998_original_C98_source_UnClass_cpp": {
+      "location": "absolute",
+      "path": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnClass.cpp",
+      "bytes": 38410,
+      "sha256": "ea4b7304d6cfe45f35929b59a10cefe51e5ee132f3603fc43e3f0e3d97aa1291"
+    },
+    "current_C98_PHP_class_metadata_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+      "bytes": 20596,
+      "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+      "canonical_git_blob_sha256": "f5a107d2278f58e9d12ea64260329dddd16a52fcc990dbded3b7b0a42062dba1",
+      "canonical_git_blob_bytes": 20235
+    },
+    "current_C98_PHP_native_object_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+      "bytes": 50490,
+      "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+      "canonical_git_blob_sha256": "00ac4fbb54b79d7ef4b349c6078c6e615c891fab6c7e397a95b2a90c1f3b79a0",
+      "canonical_git_blob_bytes": 49638
+    },
+    "current_C98_PHP_tagged_envelope_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+      "bytes": 83187,
+      "sha256": "7fefdfc3b82d08c0daea8203f615992782daa1574ac587d85f0468c1ac57f7b8",
+      "canonical_git_blob_sha256": "6a21d40ce2930385e16fa0a4217eacbef4fed8af26a944753ddf12bab214cb49",
+      "canonical_git_blob_bytes": 81848
+    },
+    "current_C98_PHP_struct_metadata_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+      "bytes": 10388,
+      "sha256": "2b87b97b2c6c0d830205623cce6cf2594792952ef6ebf5314e88f0a2511f27b1"
+    },
+    "current_C98_PHP_property_metadata_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+      "bytes": 20770,
+      "sha256": "6d37cc4bf3499cf62294abd1fba9125cd60c46c82b9cbc77aceccac330d0d686",
+      "canonical_git_blob_sha256": "f0f9768a6218664b2a5531b103319347205bd38e61c27d1d2d9579ab44783213",
+      "canonical_git_blob_bytes": 20427
+    },
+    "current_C98_PHP_source_selector": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicSourceFamily.php",
+      "bytes": 13317,
+      "sha256": "dd52b3c9cdf5e18d83ebe7341b74780e5c96e0fc8ccdf728882da2b05f0c911e",
+      "canonical_git_blob_sha256": "399caf7f5fb032a89b0767bdfb27b16b9db8f6b952d6cf5a3092aa9530fab4af",
+      "canonical_git_blob_bytes": 13056
+    }
+  }
+}

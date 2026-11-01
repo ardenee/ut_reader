@@ -1,0 +1,164 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.016 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\G3-T072-C98-original-1998-Core-then-Engine.exe
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+OK                                             C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System
+Symbol search path is: C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System
+Executable search path is: 
+ModLoad: 00390000 00397000   image00390000
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 69730000 6974d000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+(6394.69c0): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=a3890000 edx=00000000 esi=01445e70 edi=00f76000
+eip=775ad248 esp=0119f984 ebp=0119f9b0 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrInitShimEngineDynamic+0x6a8:
+775ad248 cc              int     3
+0:000> bp Core+0x12baf ".if (poi(@esi+0x10)!=0) { .printf \"T072_C98_NEW_CLASS linker=%p idx=%d flags=%08x oldRecordSize=%d classUnique=%d guid=%08x%08x%08x%08x\\n\",poi(@esi+0x10),poi(@esi+0x14),poi(@esi+0x7c),poi(@esi+0x80),poi(@esi+0x84),poi(@esi+0x88),poi(@esi+0x8c),poi(@esi+0x90),poi(@esi+0x94); };gc"
+Bp expression 'Core+0x12baf' could not be resolved, adding deferred bp
+*** Bp expression 'Core+0x12baf' contains symbols not qualified with module name.
+0:000> g
+G3_T065_C98_REAL_ORIGINAL_DLL_LOADER_ENTER
+ModLoad: 10100000 101ab000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 76350000 76375000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 10300000 1046e000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Engine.dll
+G3_T065_C98_ORIGINAL_NATIVE_ENGINE_DLL_PRELOAD=10300000 error=126
+G3_T065_C98_GENUINE_ABI core=10100000 init=101011B8 LoadPackage=101019DD GObj=10174F38 GTempPlatform=101A09D0 GSystem=10184FBC
+G3_T065_C98_GENUINE_ABI_INIT_START original Core.appInit
+G3_T065_C98_GENUINE_ABI_INIT_SUCCESS actual GObj.Init completed
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_CORE_ENTER path=C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.u
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll
+T072_C98_NEW_CLASS linker=03134f80 idx=0 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03134f80 idx=229 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_CORE_RESULT=03132FC0
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_ENGINE_ENTER path=C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Engine.u
+T072_C98_NEW_CLASS linker=03151d30 idx=144 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1118 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=20 flags=00000052 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=797 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=0 flags=00000017 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=9 flags=00000016 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=498 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=39 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3559 flags=0000001f oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=156 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=470 flags=0000001a oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=18 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=23 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1308 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1307 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=38 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=185 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=22 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=79 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=41 flags=00000017 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3487 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3467 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3464 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=123 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=66 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=868 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=4 flags=00000033 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=119 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=737 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=141 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=8 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=224 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=183 flags=00000013 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=108 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3366 flags=00000016 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3356 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=198 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3324 flags=00000016 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=15 flags=00000036 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=11 flags=00000033 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=933 flags=00000033 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=19 flags=00000033 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=539 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=2544 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=55 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=2631 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=186 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=191 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=975 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1910 flags=00000016 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3030 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=2798 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=2723 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=608 flags=00000032 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3059 flags=00000033 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1063 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1082 flags=00000016 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3273 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1419 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=1572 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=2930 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=2591 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=2666 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3131 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3236 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3246 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+T072_C98_NEW_CLASS linker=03151d30 idx=3293 flags=00000012 oldRecordSize=0 classUnique=0 guid=00000000000000000000000000000000
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_ENGINE_RESULT=03132B90
+ModLoad: 74e60000 74e75000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+(6394.69c0): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+eax=feeefefa ebx=00000000 ecx=7ffffffe edx=7fffffff esi=feeefefa edi=0119fae4
+eip=75bbee84 esp=0119f7d4 ebp=0119fa64 iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010202
+MSVCRT!ungetwc+0xa44:
+75bbee84 803800          cmp     byte ptr [eax],0           ds:002b:feeefefa=??
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

@@ -176,3 +176,9 @@ catalog/bin/verify-ue1-o06-g3-t074-2012-original-1795-struct-line-textpos.php -t
 catalog/bin/verify-ue1-o06-g3-t073-469f-controlled-70-array-static-dim-native.php -text
 
 catalog/bin/verify-ue1-o06-g3-t073-original-v432-469f-fixed-map-stock-exclusion.php -text
+
+catalog/bin/verify-ue1-o06-g3-t072-C98-1998-7902-original-loaded-methods.php -text
+
+catalog/bin/verify-ue1-o06-g3-t075-C98-1998-4341-original-linked-pointers.php -text
+
+catalog/bin/verify-ue1-o06-g3-t072-C98-1998-71-original-UClass-metadata.php -text

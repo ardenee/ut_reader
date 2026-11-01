@@ -5095,10 +5095,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01: The 24 original historical v35 and v55-58 physical packages discovered locally contain no direct required C98 UClass/UStruct/UProperty exports, so are not valid substitute native loaded-value fixtures. Genuine compiled 1998 Engine.u full type union is still unresolved. 2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Real 1998 C98 original Core.Object and Core.Class direct intrinsic UClass::Serialize v58 each completed, name2/object refs8/raw66 source-run; <=57 requires genuine linked object and cannot be represented by intrinsic fixture. Real v432 classes and loaded actor UProperty native metadata fields v61/62 newly observed, but C98 full direct UClass/UStruct/UProperty full loaded field union or explicit per-type exclusions missing. T072 BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Original linked Core.Subsystem/Core.Object UClass native method fields at v34/v35 added; full 100 percent direct C98 class/struct/property methods not verified.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "blocking_reason": "2026-11-01 actual stock 1998 C98 May compiled Core.dll+Engine.dll successfully loaded genuine Core.u THEN genuine Engine.u (previous Engine-alone null missing prerequisite), original 458/3619 exports. 3968 UField + 2820 UProperty + 1114 UStruct original source loaded records match current reader; 71 original UClass flags/size/FGuid values match; original 4341 actual linked UObject target refs match 36090 / 36090 independent checks. Other source-applicable UEnum/UConst special values and source-specific method union must still be reconciled before T072 owner PASS. 2026-11-01: The 24 original historical v35 and v55-58 physical packages discovered locally contain no direct required C98 UClass/UStruct/UProperty exports, so are not valid substitute native loaded-value fixtures. Genuine compiled 1998 Engine.u full type union is still unresolved. 2026-11-01 original C98/v432 NEW SOURCE METHOD BULK: Real 1998 C98 original Core.Object and Core.Class direct intrinsic UClass::Serialize v58 each completed, name2/object refs8/raw66 source-run; <=57 requires genuine linked object and cannot be represented by intrinsic fixture. Real v432 classes and loaded actor UProperty native metadata fields v61/62 newly observed, but C98 full direct UClass/UStruct/UProperty full loaded field union or explicit per-type exclusions missing. T072 BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Original linked Core.Subsystem/Core.Object UClass native method fields at v34/v35 added; full 100 percent direct C98 class/struct/property methods not verified.",
+      "last_attempt_at": "2026-11-01T19:09:16+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "assessment": "MAY1998_STOCK_CORE_ENGINE_ORIGINAL_LINKED_7902_FIELD_PROP_STRUCT_71_CLASS_36090_MATCH_REMAINING_METHOD_FIELDS",
       "upstream_fixed_test_dependencies": [],
       "last_grouped_evidence_audit": "2026-10-31",
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
@@ -5238,6 +5238,28 @@
           "Texture"
         ],
         "C98_original_compiled_UClass_UStruct_property_loaded_claim": false,
+        "full_owner_pass": false
+      },
+      "new_2026_11_01_C98_original_1998_genuine_Core_Engine_full_load_and_36k_native": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+          "bytes": 10906
+        },
+        "unmodified_stock_1998_CoreDLL_and_EngineDLL_used": true,
+        "verified_1998_C98_original_Core_u_export_count": 458,
+        "verified_1998_C98_original_Engine_u_export_count": 3619,
+        "verified_actual_original_1998_Core_then_Engine_LoadPackage": true,
+        "new_original_method_events": {
+          "UField": 3968,
+          "UProperty": 2820,
+          "UStruct": 1114,
+          "UClass": 71
+        },
+        "new_actual_native_class_exact_records": 71,
+        "new_actual_original_pointer_target_export_ref_identities": 4341,
+        "new_independent_C98_original_source_native_assertions_PASS": 36090,
+        "source_native_mismatches": 0,
         "full_owner_pass": false
       }
     },
@@ -5617,10 +5639,10 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "2026-11-01: 2012 UStruct Line +0x58, TextPos +0x54, ScriptNum +0x4c layout resolved on 1795 real objects; other legacy source family layout/pointer union pending. 2012 original distinct Engine.u native: 4268 property plus 1559 struct real signed reference records and 1280 actual native pointer targets source matched (13219 focused checks); source 2012 Line/TextPos memory offsets and other build families unresolved. 2026-11-01: NEW original 2012 C227i Engine.u 1162 nonnull Children plus 118 nonnull ScriptText pointers each actual same-linker native target export ID matches saved reference. Native 2012 source real pointer ABI +0x10 linker; 2026 ABI +0x0c is distinct. Native UStruct Line/TextPos offsets were NOT resolved and are excluded from these 13219 checks; legacy C98/v432/469f completeness still blocked. 2026-11-01: New original 2026 C227k Engine.u 1768 actual linked Children pointer targets and 187 ScriptText targets all dereferenced and equal saved positive export references; 187 native ClassWithin Core.Object pointers and 187 flags match, 7789 original-source assertions PASS. Other historical C98, UT99 432/469f and 2012 C227i pointer/member size unions still missing. 2026-11-01 NEW TRUE compiled 2026 227k native family: 1051 exact UField, 753 exact UProperty, 271 exact UStruct original Core.u v69/lic227 loaded values compare to UnrealDB under explicitly selected unreal-v227k; 265 native Children, 3 SuperField, 777 Next, two fully dereferenced UClass.ScriptText export targets586/654->saved refs587/655 verified. Both SHA-pinned authentic compiled native manifests and current source reader verifiers PASS, no 2012 original engine native proof rerun. 2026-11-01 original separate 469f v432 actual native differential: NEW actual compiled 469f native live original Core.Object/Core.Class UClass pointers, real Engine.Actor UClass ptr 60652450, actual reflected native UProperty ptr 03092ED0; v61/v62 actual pointer/field semantics verified by compiled original engine, not wire inference. Combined stock v432-v469f and original C98 pointer source evidence still lacks full C227 and all native field/size identities. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Actual native C98 nonnull UClass and ULinkerLoad pointer identities and export ordinals 229 and 0 observed; full source-family pointer ownership still open.",
-      "last_attempt_at": "2026-11-01T17:14:27+00:00",
+      "blocking_reason": "2026-11-01 original compiled 1998 C98 Core.u and Engine.u all 4341 non-null Super/Next/Children/ScriptText native target pointers dereferenced and exact saved signed refs verified in 8665 source-native checks (38 true Engine-to-Core superclass imported edges). 1998 source-native ABI offset evidence +0x10 linker/+0x14 index; other UT99 build/layout source family obligations remain. 2026-11-01: 2012 UStruct Line +0x58, TextPos +0x54, ScriptNum +0x4c layout resolved on 1795 real objects; other legacy source family layout/pointer union pending. 2012 original distinct Engine.u native: 4268 property plus 1559 struct real signed reference records and 1280 actual native pointer targets source matched (13219 focused checks); source 2012 Line/TextPos memory offsets and other build families unresolved. 2026-11-01: NEW original 2012 C227i Engine.u 1162 nonnull Children plus 118 nonnull ScriptText pointers each actual same-linker native target export ID matches saved reference. Native 2012 source real pointer ABI +0x10 linker; 2026 ABI +0x0c is distinct. Native UStruct Line/TextPos offsets were NOT resolved and are excluded from these 13219 checks; legacy C98/v432/469f completeness still blocked. 2026-11-01: New original 2026 C227k Engine.u 1768 actual linked Children pointer targets and 187 ScriptText targets all dereferenced and equal saved positive export references; 187 native ClassWithin Core.Object pointers and 187 flags match, 7789 original-source assertions PASS. Other historical C98, UT99 432/469f and 2012 C227i pointer/member size unions still missing. 2026-11-01 NEW TRUE compiled 2026 227k native family: 1051 exact UField, 753 exact UProperty, 271 exact UStruct original Core.u v69/lic227 loaded values compare to UnrealDB under explicitly selected unreal-v227k; 265 native Children, 3 SuperField, 777 Next, two fully dereferenced UClass.ScriptText export targets586/654->saved refs587/655 verified. Both SHA-pinned authentic compiled native manifests and current source reader verifiers PASS, no 2012 original engine native proof rerun. 2026-11-01 original separate 469f v432 actual native differential: NEW actual compiled 469f native live original Core.Object/Core.Class UClass pointers, real Engine.Actor UClass ptr 60652450, actual reflected native UProperty ptr 03092ED0; v61/v62 actual pointer/field semantics verified by compiled original engine, not wire inference. Combined stock v432-v469f and original C98 pointer source evidence still lacks full C227 and all native field/size identities. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Actual native C98 nonnull UClass and ULinkerLoad pointer identities and export ordinals 229 and 0 observed; full source-family pointer ownership still open.",
+      "last_attempt_at": "2026-11-01T19:09:16+00:00",
       "attempted_native_execution": true,
-      "assessment": "2012_C227I_ENGINE_1280_NATIVE_TARGET_POINTERS_AND_2026_C227K_1955_ACCEPTED_OTHER_FAMILIES_OPEN",
+      "assessment": "C98_CORE_ENGINE_4341_ORIGINAL_LINKED_POINTER_TARGETS_EXACT_2012_2026_ACCEPTED_OTHER_BUILD_UNION_OPEN",
       "upstream_fixed_test_dependencies": [
         "T065"
       ],
@@ -5853,6 +5875,28 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T074-2012-C227i-1795-UStruct-Line-TextPos-native-manifest.json",
         "sha256": "e7d1db720b82e74d8ea02d799e5f00d37a7c76eb63f228817af257253a55b1e3",
         "bytes": 4554
+      },
+      "new_2026_11_01_C98_1998_exact_4341_true_linker_pointer_ref_targets": {
+        "manifest": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+          "bytes": 10906
+        },
+        "unmodified_stock_1998_CoreDLL_and_EngineDLL_used": true,
+        "verified_1998_C98_original_Core_u_export_count": 458,
+        "verified_1998_C98_original_Engine_u_export_count": 3619,
+        "verified_actual_original_1998_Core_then_Engine_LoadPackage": true,
+        "new_original_method_events": {
+          "UField": 3968,
+          "UProperty": 2820,
+          "UStruct": 1114,
+          "UClass": 71
+        },
+        "new_actual_native_class_exact_records": 71,
+        "new_actual_original_pointer_target_export_ref_identities": 4341,
+        "new_independent_C98_original_source_native_assertions_PASS": 36090,
+        "source_native_mismatches": 0,
+        "full_owner_pass": false
       }
     },
     {
@@ -6368,6 +6412,11 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T073-469f-v432-original-fixed-map-stock-exclusion-manifest.json",
         "sha256": "b2cb5ce89fded008da2115898080b3e301100c0cd03b2a34d754d8902605d19c",
         "bytes": 6880
+      },
+      "new_2026_11_01_actual_original_May1998_C98_Core_then_Engine_native_upstream": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+        "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+        "bytes": 10906
       }
     },
     {
