@@ -2,9 +2,9 @@
   "kind": "FIXED_FIVE_FROZEN_OWNERS_RESIDUALS_NO_NEW_T_OR_S_CASES",
   "date": "2026-11-01",
   "backlog_states": {
-    "PASS": 71,
+    "PASS": 72,
     "SOURCE_NA": 1,
-    "BLOCKED": 8
+    "BLOCKED": 7
   },
   "owners": [
     {
@@ -120,12 +120,9 @@
     },
     {
       "id": "T075",
-      "status": "BLOCKED",
-      "unproven": [
-        "C98, UT99 v432/469f and C227i native linked element sizes and referenced object identities remain unverified across applicable branches",
-        "Other compiled native field offsets/size source family union incomplete"
-      ],
-      "next_focused_original_oracle": "Next: select first genuinely absent legacy build/layout native target identity, avoid retesting 2026",
+      "status": "PASS",
+      "unproven": [],
+      "next_focused_original_oracle": "NONE for frozen source-backed pointer/linked ElementSize claim; T073/T074 method family union remains separate.",
       "verified_new_original_2012_Engine": [
         "1162 actual native original 2012 Children UObject pointer targets",
         "118 actual native original 2012 ScriptText UObject targets",
@@ -158,7 +155,15 @@
         "original_nonnull_target_ptrs": 4341,
         "super_cross_Core_Engine_imports": 38,
         "assertions": 8665
-      }
+      },
+      "terminal_complete_T075_compiled_original_native_evidence": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
+        "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5",
+        "bytes": 13432
+      },
+      "new_UT99_two_real_source_profile_pointer_targets": 6153,
+      "new_UT99_original_native_runtime_linked_property_sizes": 8707,
+      "new_independent_checks_PASS": 88223
     }
   ],
   "upstream_sha256": {
@@ -218,11 +223,16 @@
     "T072": "PASS",
     "T073": "BLOCKED",
     "T074": "BLOCKED",
-    "T075": "BLOCKED"
+    "T075": "PASS"
   },
   "new_2026_11_01_T072_C98_final_full_owner_closure": {
     "path": "catalog/compliance/evidence/o06/20261101-G3-T072-1998-Engine-31-Const-Enum-final-closure.json",
     "bytes": 5412,
     "sha256": "d08fc9926fc6c388a8c8f3cabce040a0da7f3265211d5e1697e03d5ce80b6556"
+  },
+  "new_2026_11_01_final_T075_PASSED_original_source_sizes_linked_references": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
+    "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5",
+    "bytes": 13432
   }
 }

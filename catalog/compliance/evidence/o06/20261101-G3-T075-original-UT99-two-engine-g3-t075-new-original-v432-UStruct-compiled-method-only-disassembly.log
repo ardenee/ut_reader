@@ -1,0 +1,224 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-UCC\System\UCC.exe help
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+OK                                             C:\Temp\UnrealDB\O06\Native-UCC\System
+Symbol search path is: C:\Temp\UnrealDB\O06\Native-UCC\System
+Executable search path is: 
+ModLoad: 00400000 0041b000   UCC.exe 
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 10100000 102b7000   C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 74ec0000 74ef3000   C:\WINDOWS\SysWOW64\WINMM.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 76900000 76985000   C:\WINDOWS\SysWOW64\ADVAPI32.dll
+ModLoad: 764b0000 76535000   C:\WINDOWS\SysWOW64\sechost.dll
+(7bbc.882c): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=8b2d0000 edx=00000000 esi=00535e70 edi=0025a000
+eip=775ad248 esp=001afa54 ebp=001afa80 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrInitShimEngineDynamic+0x6a8:
+775ad248 cc              int     3
+0:000> cdb: Reading initial command 'uf Core!UStruct::Serialize; q'
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll
+Core!UStruct::Serialize:
+10102b99 e9823d0200      jmp     Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23463 (10126920)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23463:
+10126920 55              push    ebp
+10126921 8bec            mov     ebp,esp
+10126923 6aff            push    0FFFFFFFFh
+10126925 687a231710      push    offset Core!FRegistryObjectInfo::FRegistryObjectInfo+0x6eebd (1017237a)
+1012692a 64a100000000    mov     eax,dword ptr fs:[00000000h]
+10126930 50              push    eax
+10126931 64892500000000  mov     dword ptr fs:[0],esp
+10126938 83ec14          sub     esp,14h
+1012693b 53              push    ebx
+1012693c 56              push    esi
+1012693d 57              push    edi
+1012693e 8b7d08          mov     edi,dword ptr [ebp+8]
+10126941 8965f0          mov     dword ptr [ebp-10h],esp
+10126944 8bd9            mov     ebx,ecx
+10126946 57              push    edi
+10126947 895de4          mov     dword ptr [ebp-1Ch],ebx
+1012694a c745fc00000000  mov     dword ptr [ebp-4],0
+10126951 e86ab4fdff      call    Core!UField::Serialize (10101dc0)
+10126956 8b07            mov     eax,dword ptr [edi]
+10126958 8d4b34          lea     ecx,[ebx+34h]
+1012695b 51              push    ecx
+1012695c 8bcf            mov     ecx,edi
+1012695e ff5018          call    dword ptr [eax+18h]
+10126961 8b10            mov     edx,dword ptr [eax]
+10126963 8d4b38          lea     ecx,[ebx+38h]
+10126966 51              push    ecx
+10126967 8bc8            mov     ecx,eax
+10126969 ff5218          call    dword ptr [edx+18h]
+1012696c 8b17            mov     edx,dword ptr [edi]
+1012696e 8d7344          lea     esi,[ebx+44h]
+10126971 56              push    esi
+10126972 8bcf            mov     ecx,edi
+10126974 ff521c          call    dword ptr [edx+1Ch]
+10126977 833e00          cmp     dword ptr [esi],0
+1012697a 7517            jne     Core!FRegistryObjectInfo::FRegistryObjectInfo+0x234d6 (10126993)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x234bf:
+1012697c 689c020000      push    29Ch
+10126981 68e8961a10      push    offset Core!`string'+0x1434 (101a96e8)
+10126986 6808971a10      push    offset Core!`string'+0x1454 (101a9708)
+1012698b e812c3fdff      call    Core!appFailAssert (10102ca2)
+10126990 83c40c          add     esp,0Ch
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x234d6:
+10126993 8b07            mov     eax,dword ptr [edi]
+10126995 8d4b58          lea     ecx,[ebx+58h]
+10126998 6a04            push    4
+1012699a 51              push    ecx
+1012699b 8bcf            mov     ecx,edi
+1012699d ff5004          call    dword ptr [eax+4]
+101269a0 8b17            mov     edx,dword ptr [edi]
+101269a2 8d4354          lea     eax,[ebx+54h]
+101269a5 6a04            push    4
+101269a7 50              push    eax
+101269a8 8bcf            mov     ecx,edi
+101269aa ff5204          call    dword ptr [edx+4]
+101269ad 8b434c          mov     eax,dword ptr [ebx+4Ch]
+101269b0 8b17            mov     edx,dword ptr [edi]
+101269b2 894508          mov     dword ptr [ebp+8],eax
+101269b5 8d4508          lea     eax,[ebp+8]
+101269b8 6a04            push    4
+101269ba 50              push    eax
+101269bb 8bcf            mov     ecx,edi
+101269bd ff5204          call    dword ptr [edx+4]
+101269c0 8b4710          mov     eax,dword ptr [edi+10h]
+101269c3 85c0            test    eax,eax
+101269c5 7444            je      Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2354e (10126a0b)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2350a:
+101269c7 8d7348          lea     esi,[ebx+48h]
+101269ca 33c0            xor     eax,eax
+101269cc 6a01            push    1
+101269ce 8bce            mov     ecx,esi
+101269d0 894604          mov     dword ptr [esi+4],eax
+101269d3 894608          mov     dword ptr [esi+8],eax
+101269d6 e8a0adfdff      call    Core!FArray::Realloc (1010177b)
+101269db 8b4d08          mov     ecx,dword ptr [ebp+8]
+101269de 8b5604          mov     edx,dword ptr [esi+4]
+101269e1 8b4608          mov     eax,dword ptr [esi+8]
+101269e4 03d1            add     edx,ecx
+101269e6 8bca            mov     ecx,edx
+101269e8 895604          mov     dword ptr [esi+4],edx
+101269eb 3bc8            cmp     ecx,eax
+101269ed 7e1c            jle     Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2354e (10126a0b)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23532:
+101269ef 8d0449          lea     eax,[ecx+ecx*2]
+101269f2 6a01            push    1
+101269f4 99              cdq
+101269f5 83e207          and     edx,7
+101269f8 03c2            add     eax,edx
+101269fa c1f803          sar     eax,3
+101269fd 8d540820        lea     edx,[eax+ecx+20h]
+10126a01 8bce            mov     ecx,esi
+10126a03 895608          mov     dword ptr [esi+8],edx
+10126a06 e870adfdff      call    Core!FArray::Realloc (1010177b)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2354e:
+10126a0b 33c0            xor     eax,eax
+10126a0d 8945ec          mov     dword ptr [ebp-14h],eax
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23553:
+10126a10 8b4d08          mov     ecx,dword ptr [ebp+8]
+10126a13 3bc1            cmp     eax,ecx
+10126a15 7d11            jge     Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2356b (10126a28)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2355a:
+10126a17 8b03            mov     eax,dword ptr [ebx]
+10126a19 8d4dec          lea     ecx,[ebp-14h]
+10126a1c 57              push    edi
+10126a1d 51              push    ecx
+10126a1e 8bcb            mov     ecx,ebx
+10126a20 ff507c          call    dword ptr [eax+7Ch]
+10126a23 8b45ec          mov     eax,dword ptr [ebp-14h]
+10126a26 ebe8            jmp     Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23553 (10126a10)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2356b:
+10126a28 7416            je      Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23583 (10126a40)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2356d:
+10126a2a 8b15847b1a10    mov     edx,dword ptr [Core!GError (101a7b84)]
+10126a30 51              push    ecx
+10126a31 50              push    eax
+10126a32 6820971a10      push    offset Core!`string'+0x146c (101a9720)
+10126a37 52              push    edx
+10126a38 e80fbefdff      call    Core!FOutputDevice::Logf (1010284c)
+10126a3d 83c410          add     esp,10h
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23583:
+10126a40 8b4710          mov     eax,dword ptr [edi+10h]
+10126a43 85c0            test    eax,eax
+10126a45 740a            je      Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23594 (10126a51)
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x2358a:
+10126a47 8b03            mov     eax,dword ptr [ebx]
+10126a49 6a01            push    1
+10126a4b 57              push    edi
+10126a4c 8bcb            mov     ecx,ebx
+10126a4e ff506c          call    dword ptr [eax+6Ch]
+
+Core!FRegistryObjectInfo::FRegistryObjectInfo+0x23594:
+10126a51 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+10126a54 5f              pop     edi
+10126a55 5e              pop     esi
+10126a56 64890d00000000  mov     dword ptr fs:[0],ecx
+10126a5d 5b              pop     ebx
+10126a5e 8be5            mov     esp,ebp
+10126a60 5d              pop     ebp
+10126a61 c20400          ret     4
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

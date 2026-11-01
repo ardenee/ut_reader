@@ -1,0 +1,4 @@
+@echo off
+call "C:\Program Files\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvarsall.bat" x86 >nul
+if errorlevel 1 exit /b 1
+cl /nologo /EHsc /MD /Zc:wchar_t- /DWIN32=1 /D_WINDOWS=1 /DUNICODE /D_UNICODE /I "L:\Source\Games\UT99\Unreal Tournament v432\Core\Inc" "C:\Temp\UnrealDB\O06\g3-t075-v432-original-compiled-full-linked-property-sizes.cpp" /link /LIBPATH:"L:\Source\Games\UT99\Unreal Tournament v432\Core\Lib" Core.lib /OUT:"C:\Temp\UnrealDB\O06\Native-UCC\System\G3-T075-v432-actual-linked-element-sizes.exe"

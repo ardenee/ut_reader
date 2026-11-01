@@ -5657,13 +5657,13 @@
       "pass_criterion": "No value presented as actual runtime pointer unless native observed; exact source-backed sizes and identities.",
       "evidence": "Original per-build native linker reference index mapping",
       "reuse": "G3-03 child refs and G3-04 param chain feed this.",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-11-01 original compiled 1998 C98 Core.u and Engine.u all 4341 non-null Super/Next/Children/ScriptText native target pointers dereferenced and exact saved signed refs verified in 8665 source-native checks (38 true Engine-to-Core superclass imported edges). 1998 source-native ABI offset evidence +0x10 linker/+0x14 index; other UT99 build/layout source family obligations remain. 2026-11-01: 2012 UStruct Line +0x58, TextPos +0x54, ScriptNum +0x4c layout resolved on 1795 real objects; other legacy source family layout/pointer union pending. 2012 original distinct Engine.u native: 4268 property plus 1559 struct real signed reference records and 1280 actual native pointer targets source matched (13219 focused checks); source 2012 Line/TextPos memory offsets and other build families unresolved. 2026-11-01: NEW original 2012 C227i Engine.u 1162 nonnull Children plus 118 nonnull ScriptText pointers each actual same-linker native target export ID matches saved reference. Native 2012 source real pointer ABI +0x10 linker; 2026 ABI +0x0c is distinct. Native UStruct Line/TextPos offsets were NOT resolved and are excluded from these 13219 checks; legacy C98/v432/469f completeness still blocked. 2026-11-01: New original 2026 C227k Engine.u 1768 actual linked Children pointer targets and 187 ScriptText targets all dereferenced and equal saved positive export references; 187 native ClassWithin Core.Object pointers and 187 flags match, 7789 original-source assertions PASS. Other historical C98, UT99 432/469f and 2012 C227i pointer/member size unions still missing. 2026-11-01 NEW TRUE compiled 2026 227k native family: 1051 exact UField, 753 exact UProperty, 271 exact UStruct original Core.u v69/lic227 loaded values compare to UnrealDB under explicitly selected unreal-v227k; 265 native Children, 3 SuperField, 777 Next, two fully dereferenced UClass.ScriptText export targets586/654->saved refs587/655 verified. Both SHA-pinned authentic compiled native manifests and current source reader verifiers PASS, no 2012 original engine native proof rerun. 2026-11-01 original separate 469f v432 actual native differential: NEW actual compiled 469f native live original Core.Object/Core.Class UClass pointers, real Engine.Actor UClass ptr 60652450, actual reflected native UProperty ptr 03092ED0; v61/v62 actual pointer/field semantics verified by compiled original engine, not wire inference. Combined stock v432-v469f and original C98 pointer source evidence still lacks full C227 and all native field/size identities. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Actual native C98 nonnull UClass and ULinkerLoad pointer identities and export ordinals 229 and 0 observed; full source-family pointer ownership still open.",
-      "last_attempt_at": "2026-11-01T19:09:16+00:00",
+      "result": "COMPLETE frozen T075 ALL original build families: actual native compiled runtime linker identities accepted in C98 1998 (4341 pointers), C227i 2012 (1280 pointers), C227k 2026 (1955 pointers), and newly UT99 v432+469f original Core/Engine 6153 true signed pointer target comparisons. Distinct native x86 runtime linked native element-size values newly measured on 4227 original v432 and 4480 original 469f genuine properties, each matching source-selected archived ArrayDim, compiled scalar/struct ABI and GetSize/Offset; 88223 independent checks 0 mismatches. G3-10 already PASS for source-defined imported struct layouts and all unarchived runtime-only values are described as native observation, never fabricated package fields; original 3 extra v432 objects from third linker excluded from Core/Engine physical test. Other source-method gates T065/T073/T074 unchanged.",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-01T20:12:07+00:00",
       "attempted_native_execution": true,
-      "assessment": "C98_CORE_ENGINE_4341_ORIGINAL_LINKED_POINTER_TARGETS_EXACT_2012_2026_ACCEPTED_OTHER_BUILD_UNION_OPEN",
+      "assessment": "PASS_ALL_SOURCE_BUILD_POINTER_REFERENT_IDENTITY_AND_NATIVE_LINKED_RUNTIME_PROPERTY_ABI_BOUNDED_NO_UNARCHIVED_CLAIMS",
       "upstream_fixed_test_dependencies": [
         "T065"
       ],
@@ -5671,12 +5671,7 @@
       "aggregate_evidence_status": "SOURCE_HASH_INTEGRITY_RECONCILED_ONLY_NOT_NATIVE_AGGREGATE_ACCEPTANCE",
       "last_grouped_aggregate_review": "2026-10-31: T011 four original stock v60-v63 loaded values now ACCEPTED; T019 v432 direct localization resource proven but original CDO effect unproven; T065 11 explicit C98/UT99 version gates enumerated but all C227/source method boundaries not accepted. No derived aggregate closure.",
       "last_evidence_review": "2026-10-31",
-      "source_necessary_components_still_open": [
-        "C98 Core linker",
-        "T99 Core/Engine linker",
-        "C227i/k linker",
-        "native member offsets source build"
-      ],
+      "source_necessary_components_still_open": [],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
       "partial_verified_evidence": [
@@ -5918,6 +5913,20 @@
         "new_independent_C98_original_source_native_assertions_PASS": 36090,
         "source_native_mismatches": 0,
         "full_owner_pass": false
+      },
+      "T075_original_compiled_final_full_pass": {
+        "new_exact_SHA_pinned_source_native_evidence": {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
+          "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5",
+          "bytes": 13432
+        },
+        "new_original_v432_469f_runtime_reference_identities": 6153,
+        "new_original_v432_469f_compiled_linked_UProperty_elements": 8707,
+        "new_original_source_native_focused_checks_PASS": 88223,
+        "reused_previously_accepted_original_C98_C227_and_G3_10": true,
+        "original_3_non_Core_Engine_additional_v432_linker_records_separate": true,
+        "transient_ElementSize_not_claimed_as_archive_field": true,
+        "full_T075_pass": true
       }
     },
     {
@@ -6455,7 +6464,12 @@
           "bytes": 5412,
           "sha256": "d08fc9926fc6c388a8c8f3cabce040a0da7f3265211d5e1697e03d5ce80b6556"
         }
-      ]
+      ],
+      "upstream_T075_source_native_compiled_pointer_and_element_size_gate_PASS": {
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
+        "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5",
+        "bytes": 13432
+      }
     },
     {
       "id": "T078",
@@ -6524,16 +6538,15 @@
   "updated_at_utc": "2026-11-01T17:00:33+00:00",
   "overall_summary_2026_11_01": {
     "total_frozen": 80,
-    "PASS": 71,
+    "PASS": 72,
     "SOURCE_NA": 1,
-    "BLOCKED": 8,
+    "BLOCKED": 7,
     "FAIL": 0,
-    "new_full_pass": "T072",
+    "new_full_pass": "T075",
     "remaining_blocked_ids": [
       "T065",
       "T073",
       "T074",
-      "T075",
       "T077",
       "T078",
       "T079",

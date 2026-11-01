@@ -1,7 +1,7 @@
 {
-  "contract": "G3-T073-then-T074-T075-remaining-unique-method-gaps",
-  "stage": "G3-71PASS-1NA-8BLOCKED-T072-CLOSED",
-  "last_action": "FULL original C98 May1998 frozen T072 PASS. Original stock Core.u+Engine.u 7973 compiled UField/UProperty/UStruct/UClass method records with 36090 source-native asserts and 4341 exact reference identities. Previous G3-06 Const Enum accepted proof reused. ONLY previously uncovered 24 Engine enums 644 exact native global FName texts + 7 Engine Const original loaded strings verified with fresh focused original engine value capture. No old version-gate scripts rerun; previous accepted tests not rerun. No PRD deployment.",
-  "next_step": "Next T073 original UT99 v432/469f genuinely unresolved changed method classes, T074 C227i/k unique source gates, T075 unverified UT99 linker element sizes; T065 physical pre36 original only if genuine specimen or justified exclusion. Do not rerun accepted gates. T077-T080 dependent final.",
-  "updated_at_utc": "2026-11-01T19:40:20+00:00"
+  "contract": "G3-T073-T074-original-method-gaps",
+  "stage": "G3-72PASS-1NA-7BLOCKED-T075-CLOSED",
+  "last_action": "T075 FULL frozen native linked reference identity and source size claim gate accepted: 6153 actual original compiled v432/469f loaded pointer targets exact signed refs, 8707 original loaded linked runtime UProperty ElementSize/ArrayDim/GetSize/Offset scalar/struct ABI plus 88223/88223 SHA-pinned new assertions. Reused original C98/C227 real pointer and G3-10 imported struct proof without replay; native transient ElementSize not falsely archived. T073 T074 still independent method-union BLOCKED.",
+  "next_step": "Close T073 original v432 vs 469f remaining source-applicable methods by already accepted original method register and new source-only gap; T074 separately 2012/2026 method union; T065 real old archive branch if verified. T077-T080 dependent.",
+  "updated_at_utc": "2026-11-01T20:12:07+00:00"
 }

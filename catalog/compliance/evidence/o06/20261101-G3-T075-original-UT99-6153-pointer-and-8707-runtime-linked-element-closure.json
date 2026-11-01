@@ -1,0 +1,266 @@
+{
+  "schema": "UE1-O06-G3-T075-final-original-source-native-linked-reference-and-runtime-only-property-size-v1",
+  "date": "2026-11-01",
+  "frozen_owner": "T075",
+  "source_truth": "Original compiled Epic/OldUnreal Core.dll/Engine.dll with pinned build-specific native C++ SDK headers. Original compiled source first; no inferred runtime pointers.",
+  "frozen_pass_criterion": "No value presented as actual runtime pointer unless native observed; exact source-backed sizes and identities.",
+  "native_original_source_profile_pointer_captures": {
+    "v432": {
+      "Core_structs": 169,
+      "Engine_structs": 1236,
+      "nonnull_true_pointer_targets": 2861,
+      "true_cross_Core_imports": 45,
+      "additional_unknown_shipped_linker_structs_NOT_CLAIMED": 3
+    },
+    "469f": {
+      "Core_structs": 178,
+      "Engine_structs": 1427,
+      "nonnull_true_pointer_targets": 3292,
+      "true_cross_Core_imports": 47
+    },
+    "total_real_original_pointer_target_identities_exact": 6153,
+    "strict_source_selected_actual_object_pointer_checks": 27271,
+    "zero_mismatches": true
+  },
+  "actual_original_compile_source_linked_size_capture": {
+    "v432_property_objects": 4227,
+    "469f_property_objects": 4480,
+    "total_native_property_objects": 8707,
+    "source_saved_ArrayDim_exact": true,
+    "native_runtime_ElementSize": true,
+    "native_runtime_GetSize_and_Offset": true,
+    "native_Linked_GetSize_is_ArrayDim_times_ElementSize": true,
+    "scalar_native_source_fixed_types_checked": [
+      "IntProperty",
+      "BoolProperty",
+      "ObjectProperty",
+      "FloatProperty",
+      "ByteProperty",
+      "NameProperty",
+      "ClassProperty",
+      "StrProperty",
+      "ArrayProperty",
+      "PointerProperty [469f only]"
+    ],
+    "variable_UStructProperty_ElementSize": {
+      "v432": 522,
+      "469f": 540,
+      "all_positive_native_observed": true,
+      "not_pretended_to_be_archived_field": true
+    },
+    "strict_source_selected_actual_compiled_size_assertions": 60952,
+    "zero_mismatches": true
+  },
+  "total_new_distinct_source_native_check_assertions": 88223,
+  "actual_property_ElementSize_is_not_UProperty_Serialize_saved_archive_member": true,
+  "source_bounded_exclusion": "Other source-family unarchived, runtime-only transient ElementSize must never be synthesized as on-disk archive evidence; original C98/C227 imported struct archive sizes and runtime pointer identities reused from already accepted G3-10 and original native pointer source proofs. Broader method total in T073/T074 stays independently blocked.",
+  "prior_original_C98_C227_original_native_proofs_reused_not_reexecuted": true,
+  "new_native_exception_caveat": "Original v432 host also enumerated 3 additional UStruct objects with third non-Core/Engine linker, observed but not presented as checked Core/Engine physical archive pointer IDs. Their provider/lookup behaviour belongs sealed T076 and broader T073.",
+  "frozen_T073_T074_T065_not_inherited": true,
+  "pins": {
+    "v432_original_native_linked_UObject_pointer_targets": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-v432-new-original-Engine-pointer-targets-singleline.log",
+      "bytes": 381772,
+      "sha256": "eb43723c26f5ce6420b988418aede218e06004ea94158fb1da30c025ebb93f59"
+    },
+    "469f_original_native_linked_UObject_pointer_targets": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-f469-new-original-Engine-pointer-targets-singleline.log",
+      "bytes": 486095,
+      "sha256": "d9216fa0c08241cff1b448524622a5aff01c192c59b1c55c1fa4385f95f27f00"
+    },
+    "v432_original_runtime_property_element_sizes": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-v432-original-compiled-native-linked-element-sizes.log",
+      "bytes": 720504,
+      "sha256": "293632f36ba5f574b040a6bb1b9226f005680950bb43ccc1bfe5e56a040992be"
+    },
+    "469f_original_runtime_property_element_sizes": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-f469-original-compiled-native-linked-element-sizes.log",
+      "bytes": 764495,
+      "sha256": "ce310727c5a9dca8373949b99681eddbd8f3ec41ca16a86d455fa8dbdad69ebc"
+    },
+    "v432_CDB_pointer_target_commands": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-v432-new-original-Engine-pointer-targets-singleline.cmd",
+      "bytes": 994,
+      "sha256": "0d1022d4d40b8ea6ccdf6f51d455c7f78b4c412ae0193726bcb1796a1ba5acf3"
+    },
+    "469f_CDB_pointer_target_commands": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-f469-new-original-Engine-pointer-targets-singleline.cmd",
+      "bytes": 1011,
+      "sha256": "18cce42bcd663aa047921e692e5cecadca65989e3a605157cde5dae325d3ff53"
+    },
+    "v432_compiled_x86_runtime_property_host": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-v432-original-compiled-full-linked-property-sizes.cpp",
+      "bytes": 3146,
+      "sha256": "374cf9e1917e6b85eb71abc01a27dbfda23d0b7231cbaf61ed7a371dbdbead29"
+    },
+    "469f_compiled_x86_runtime_property_host": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-f469-original-compiled-full-linked-property-sizes.cpp",
+      "bytes": 2975,
+      "sha256": "8f648e50d2549234fddb34496438a8b33ca7e287e7a2e972bfc8b2fe45f01981"
+    },
+    "v432_native_build_commands": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-v432-build-original-compiled-linked-element-sizes.cmd",
+      "bytes": 538,
+      "sha256": "88807851b83d44eda8084ae9197acbc2df892198c717605ae798abbd8320ad9a"
+    },
+    "469f_native_build_commands": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-f469-build-original-compiled-linked-element-sizes.cmd",
+      "bytes": 565,
+      "sha256": "932048aaafe20ad4f9a6c4b99f02b1a8b24fdd20f2ce6722392def8c8008fb6b"
+    },
+    "v432_new_native_linker_target_compiler_disassembly": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-new-original-v432-UStruct-compiled-method-only-disassembly.log",
+      "bytes": 11517,
+      "sha256": "938d551c7c45f1aa94325ad348d0f3b267b8fe925913d918e7ee92bfbd6fb786"
+    },
+    "original_native_pointer_source_comparator": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-UT99-v432-469f-new-original-Engine-6212-pointer-targets-compare.php",
+      "bytes": 5708,
+      "sha256": "39f28dd27beb9d854a2b286a828fcf2448bdc7b19bcc8af7b31f8e673adbf182"
+    },
+    "original_native_linked_property_size_source_comparator": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-original-8707-UT99-actual-linked-size-vs-saved-compare.php",
+      "bytes": 3419,
+      "sha256": "e8f4312d1315546875f1604d5a9e2300985f35acb2fc9539706cdcfe98dbf534"
+    },
+    "pointer_exact_match_focused_pass_result": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-UT99-2-build-new-original-pointer-comparison.json",
+      "bytes": 5550,
+      "sha256": "259a5dbfbc24f3f2ca3c5b71be2c3b05f37f65725dc5c435be1dd2afdb331f8e"
+    },
+    "runtime_property_exact_size_focused_pass_result": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-two-engine-g3-t075-original-8707-UT99-element-size-verifier.json",
+      "bytes": 4110,
+      "sha256": "226e67a6305158220092f24421fca80213f55e6f79594428b5ca1b935fecd628"
+    },
+    "v432_true_compiled_original_core_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.dll",
+      "bytes": 786432,
+      "sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8"
+    },
+    "v432_true_compiled_original_engine_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.dll",
+      "bytes": 1785856,
+      "sha256": "f87a979d6a2ead47e92e3e779142953d7748a9feb068635629bb4017e4b0c7ac"
+    },
+    "v432_genuine_original_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Core.u",
+      "bytes": 59214,
+      "sha256": "ae42de48103317761ffce4da2ee50300a57a653952d88d3451364f3d48975f70"
+    },
+    "v432_genuine_original_Engine_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\Engine.u",
+      "bytes": 1149560,
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695"
+    },
+    "v432_disposable_compiled_original_ElementSize_host": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-UCC\\System\\G3-T075-v432-actual-linked-element-sizes.exe",
+      "bytes": 77824,
+      "sha256": "15e1a42fdad871e08bb4b53384cc34cf3a30ed8da2c2530960a22fefe3e201ae"
+    },
+    "f469_true_compiled_original_core_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.dll",
+      "bytes": 1790328,
+      "sha256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2"
+    },
+    "f469_true_compiled_original_engine_dll": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.dll",
+      "bytes": 3463032,
+      "sha256": "625dabea278e314714a45c931c98ba6282a9198378499144429aa979a1a0570f"
+    },
+    "f469_genuine_original_Core_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Core.u",
+      "bytes": 67362,
+      "sha256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0"
+    },
+    "f469_genuine_original_Engine_u": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\Engine.u",
+      "bytes": 1251453,
+      "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b"
+    },
+    "f469_disposable_compiled_original_ElementSize_host": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-469f\\System\\G3-T075-f469-actual-linked-element-sizes.exe",
+      "bytes": 108544,
+      "sha256": "97047c6d98a2648b9fff9c64d064b09f72f504138a47ba5d31e0fe7c5ea703a7"
+    },
+    "original_v432_source_property_abi": {
+      "location": "absolute",
+      "path": "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnType.h",
+      "bytes": 19797,
+      "sha256": "c67266ae84c76004272c495cce931420c7dac5cb7b5fa71476b7dbab2d907636"
+    },
+    "original_f469_source_property_abi": {
+      "location": "absolute",
+      "path": "L:\\Source\\Games\\UT99\\OldUnreal-UTPatch469f-SDK-Windows\\Core\\Inc\\UnType.h",
+      "bytes": 24769,
+      "sha256": "0b302e92c3c079d60a0f896a69d4793e6c60728d4cef4708d072144dcbe8c4ef"
+    },
+    "previously_accepted_C98_1998_genuine_linker_refs": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+      "bytes": 11636,
+      "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981"
+    },
+    "previously_accepted_2012_genuine_linker_refs": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-2012-C227i-Engine-4268-1559-manifest.json",
+      "bytes": 5509,
+      "sha256": "fde02b89b0a8a1b53da9481e9f9e95ded55ff6ceb57657e0c2170520f6362872"
+    },
+    "previously_accepted_2026_genuine_linker_refs": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-227k-Engine-8724-fields-2408-pointer-187-class-manifest.json",
+      "bytes": 6763,
+      "sha256": "2233ba66d11f49793ce61dbd2352e9f52e7bacaf3ea1c21e57e658d29c255e05"
+    },
+    "current_UT99_property_source_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+      "bytes": 20770,
+      "sha256": "6d37cc4bf3499cf62294abd1fba9125cd60c46c82b9cbc77aceccac330d0d686",
+      "canonical_git_blob_sha256": "f0f9768a6218664b2a5531b103319347205bd38e61c27d1d2d9579ab44783213",
+      "canonical_git_blob_bytes": 20427
+    },
+    "current_UT99_object_source_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+      "bytes": 50490,
+      "sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+      "canonical_git_blob_sha256": "00ac4fbb54b79d7ef4b349c6078c6e615c891fab6c7e397a95b2a90c1f3b79a0",
+      "canonical_git_blob_bytes": 49638
+    },
+    "current_UT99_class_source_reader": {
+      "location": "repo",
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+      "bytes": 20596,
+      "sha256": "888e12fbc43dffd0d55cc0536f5e964acd017cb41ac68c16f744906435a0d4d4",
+      "canonical_git_blob_sha256": "f5a107d2278f58e9d12ea64260329dddd16a52fcc990dbded3b7b0a42062dba1",
+      "canonical_git_blob_bytes": 20235
+    }
+  }
+}
