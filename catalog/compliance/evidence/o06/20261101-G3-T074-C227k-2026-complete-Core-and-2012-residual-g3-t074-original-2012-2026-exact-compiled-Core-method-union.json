@@ -1,0 +1,444 @@
+{
+  "C227i": {
+    "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+    "Serialize_symbols": {
+      "FArchive": [
+        {
+          "rva": "00001000",
+          "decorated": "?Serialize@FArchive@@UAEXPAXH@Z"
+        }
+      ],
+      "FBitReader": [
+        {
+          "rva": "00014980",
+          "decorated": "?Serialize@FBitReader@@UAEXPAXH@Z"
+        }
+      ],
+      "FBitWriter": [
+        {
+          "rva": "00014D30",
+          "decorated": "?Serialize@FBitWriter@@UAEXPAXH@Z"
+        }
+      ],
+      "FBufferReader": [
+        {
+          "rva": "000083F0",
+          "decorated": "?Serialize@FBufferReader@@UAEXPAXH@Z"
+        }
+      ],
+      "FErrorOutError": [
+        {
+          "rva": "00001000",
+          "decorated": "?Serialize@FErrorOutError@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FFrame": [
+        {
+          "rva": "00023C90",
+          "decorated": "?Serialize@FFrame@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FLogOutError": [
+        {
+          "rva": "00001000",
+          "decorated": "?Serialize@FLogOutError@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FNullOutError": [
+        {
+          "rva": "00001000",
+          "decorated": "?Serialize@FNullOutError@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FThrowOut": [
+        {
+          "rva": "00001010",
+          "decorated": "?Serialize@FThrowOut@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "UArrayProperty": [
+        {
+          "rva": "00049A30",
+          "decorated": "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UBoolProperty": [
+        {
+          "rva": "00048680",
+          "decorated": "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UByteProperty": [
+        {
+          "rva": "00048390",
+          "decorated": "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClass": [
+        {
+          "rva": "0001A050",
+          "decorated": "?Serialize@UClass@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClassProperty": [
+        {
+          "rva": "00048F70",
+          "decorated": "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UConst": [
+        {
+          "rva": "00016F60",
+          "decorated": "?Serialize@UConst@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UEnum": [
+        {
+          "rva": "0003F6C0",
+          "decorated": "?Serialize@UEnum@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UExporter": [
+        {
+          "rva": "00013440",
+          "decorated": "?Serialize@UExporter@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFactory": [
+        {
+          "rva": "00013690",
+          "decorated": "?Serialize@UFactory@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UField": [
+        {
+          "rva": "00016850",
+          "decorated": "?Serialize@UField@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFixedArrayProperty": [
+        {
+          "rva": "000494C0",
+          "decorated": "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFunction": [
+        {
+          "rva": "00018390",
+          "decorated": "?Serialize@UFunction@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "ULinker": [
+        {
+          "rva": "0002D370",
+          "decorated": "?Serialize@ULinker@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UMapProperty": [
+        {
+          "rva": "00049FF0",
+          "decorated": "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObject": [
+        {
+          "rva": "0003DE00",
+          "decorated": "?Serialize@UObject@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObjectProperty": [
+        {
+          "rva": "00048E00",
+          "decorated": "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackage": [
+        {
+          "rva": "0003F820",
+          "decorated": "?Serialize@UPackage@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackageMap": [
+        {
+          "rva": "0001C500",
+          "decorated": "?Serialize@UPackageMap@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UProperty": [
+        {
+          "rva": "000480F0",
+          "decorated": "?Serialize@UProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UState": [
+        {
+          "rva": "000179F0",
+          "decorated": "?Serialize@UState@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStrProperty": [
+        {
+          "rva": "000492C0",
+          "decorated": "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStruct": [
+        {
+          "rva": "000177F0",
+          "decorated": "?Serialize@UStruct@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStructProperty": [
+        {
+          "rva": "0004A300",
+          "decorated": "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UTextBuffer": [
+        {
+          "rva": "0003F5F0",
+          "decorated": "?Serialize@UTextBuffer@@UAEXAAVFArchive@@@Z"
+        },
+        {
+          "rva": "0003CB70",
+          "decorated": "?Serialize@UTextBuffer@@UAEXPB_WW4EName@@@Z"
+        }
+      ]
+    }
+  },
+  "C227k": {
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+    "Serialize_symbols": {
+      "FAnyProperty": [
+        {
+          "rva": "0006F450",
+          "decorated": "?Serialize@FAnyProperty@@QAEXAAVFArchive@@@Z"
+        }
+      ],
+      "FArchive": [
+        {
+          "rva": "0001EC40",
+          "decorated": "?Serialize@FArchive@@UAEXPAXH@Z"
+        }
+      ],
+      "FBitReader": [
+        {
+          "rva": "00033440",
+          "decorated": "?Serialize@FBitReader@@UAEXPAXH@Z"
+        }
+      ],
+      "FBitWriter": [
+        {
+          "rva": "00033460",
+          "decorated": "?Serialize@FBitWriter@@UAEXPAXH@Z"
+        }
+      ],
+      "FBufferReader": [
+        {
+          "rva": "0002AD90",
+          "decorated": "?Serialize@FBufferReader@@UAEXPAXH@Z"
+        }
+      ],
+      "FErrorOutError": [
+        {
+          "rva": "0001EC40",
+          "decorated": "?Serialize@FErrorOutError@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FFrame": [
+        {
+          "rva": "000573A0",
+          "decorated": "?Serialize@FFrame@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FLogOutError": [
+        {
+          "rva": "0001EC40",
+          "decorated": "?Serialize@FLogOutError@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FNullOutError": [
+        {
+          "rva": "0001EC40",
+          "decorated": "?Serialize@FNullOutError@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "FThrowOut": [
+        {
+          "rva": "00030970",
+          "decorated": "?Serialize@FThrowOut@@UAEXPB_WW4EName@@@Z"
+        }
+      ],
+      "UArrayProperty": [
+        {
+          "rva": "0007FE90",
+          "decorated": "?Serialize@UArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UBoolProperty": [
+        {
+          "rva": "0007FF50",
+          "decorated": "?Serialize@UBoolProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UButtonProperty": [
+        {
+          "rva": "00080010",
+          "decorated": "?Serialize@UButtonProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UByteProperty": [
+        {
+          "rva": "00080040",
+          "decorated": "?Serialize@UByteProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClass": [
+        {
+          "rva": "00039C30",
+          "decorated": "?Serialize@UClass@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UClassProperty": [
+        {
+          "rva": "00080100",
+          "decorated": "?Serialize@UClassProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UConst": [
+        {
+          "rva": "0003A1D0",
+          "decorated": "?Serialize@UConst@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UEnum": [
+        {
+          "rva": "0002ADE0",
+          "decorated": "?Serialize@UEnum@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UExporter": [
+        {
+          "rva": "00031AD0",
+          "decorated": "?Serialize@UExporter@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFactory": [
+        {
+          "rva": "00032140",
+          "decorated": "?Serialize@UFactory@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UField": [
+        {
+          "rva": "0003A270",
+          "decorated": "?Serialize@UField@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFixedArrayProperty": [
+        {
+          "rva": "000801E0",
+          "decorated": "?Serialize@UFixedArrayProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UFunction": [
+        {
+          "rva": "0003A360",
+          "decorated": "?Serialize@UFunction@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "ULinker": [
+        {
+          "rva": "000612C0",
+          "decorated": "?Serialize@ULinker@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "ULinkerLoad": [
+        {
+          "rva": "000613F0",
+          "decorated": "?Serialize@ULinkerLoad@@EAEXAAVFArchive@@@Z"
+        },
+        {
+          "rva": "00061490",
+          "decorated": "?Serialize@ULinkerLoad@@UAEXPAXH@Z"
+        }
+      ],
+      "ULogHandler": [
+        {
+          "rva": "00057520",
+          "decorated": "?Serialize@ULogHandler@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UMapProperty": [
+        {
+          "rva": "000802B0",
+          "decorated": "?Serialize@UMapProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObject": [
+        {
+          "rva": "0002AEA0",
+          "decorated": "?Serialize@UObject@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UObjectProperty": [
+        {
+          "rva": "00080380",
+          "decorated": "?Serialize@UObjectProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackage": [
+        {
+          "rva": "0002B290",
+          "decorated": "?Serialize@UPackage@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UPackageMap": [
+        {
+          "rva": "0005A880",
+          "decorated": "?Serialize@UPackageMap@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UProperty": [
+        {
+          "rva": "00080440",
+          "decorated": "?Serialize@UProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UState": [
+        {
+          "rva": "0003A570",
+          "decorated": "?Serialize@UState@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStrProperty": [
+        {
+          "rva": "00080540",
+          "decorated": "?Serialize@UStrProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStruct": [
+        {
+          "rva": "0003A770",
+          "decorated": "?Serialize@UStruct@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UStructProperty": [
+        {
+          "rva": "000805F0",
+          "decorated": "?Serialize@UStructProperty@@UAEXAAVFArchive@@@Z"
+        }
+      ],
+      "UTextBuffer": [
+        {
+          "rva": "0002B330",
+          "decorated": "?Serialize@UTextBuffer@@UAEXAAVFArchive@@@Z"
+        },
+        {
+          "rva": "0002B400",
+          "decorated": "?Serialize@UTextBuffer@@UAEXPB_WW4EName@@@Z"
+        }
+      ]
+    }
+  }
+}

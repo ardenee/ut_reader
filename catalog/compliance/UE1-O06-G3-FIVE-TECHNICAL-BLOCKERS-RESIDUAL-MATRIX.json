@@ -97,11 +97,10 @@
       "id": "T074",
       "status": "BLOCKED",
       "unproven": [
-        "Original 2012 C227i complete method/field and subclass parity union vs distinct 2026 C227k",
-        "Original 2026 class ConfigName global FName identity not verified",
-        "Other mandatory method/source versions not yet accepted"
+        "2012 original C227i Core.u exactly 5 newly unobserved source-applicable structs/classes/functions",
+        "2012 original C227i Core.u exactly 5 newly unobserved source-applicable property methods"
       ],
-      "next_focused_original_oracle": "Next: method-deduplicated 2012/2026 remaining source-compiled method oracle only",
+      "next_focused_original_oracle": "Original 2012 compiled engine source-specific C227i loader for only 10 nonempty Core.u exports. Never rerun 2026 Core/Engine or existing 2012 Engine native method suites.",
       "verified_new_original_2012_Engine": [
         "4268 genuine original 2012 UProperty dim/flags actual method LOAD and reader exact",
         "1559 original 2012 UStruct nonnull/null pointer target identity against actual archived refs",
@@ -120,6 +119,12 @@
         "objects": 1795,
         "values": 5385,
         "assertions": 7183
+      },
+      "2026_C227k_complete_original_Core_native_and_2012_10_remaining_evidence": {
+        "location": "repo",
+        "path": "catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json",
+        "sha256": "2200c2a76e163d0c9815852a016814d43766acff0ddea33551a24095df048303",
+        "bytes": 7869
       }
     },
     {
@@ -243,5 +248,11 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-v432-469f-complete-source-method-parity.json",
     "bytes": 10858,
     "sha256": "39d89389de23b2e06c5aa0e098eadd67ad71ce3590db51ca27d676a1a3103c61"
+  },
+  "new_2026_11_01_original_C227k_Core_complete_2012_C227i_10_remaining": {
+    "location": "repo",
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T074-original-2026-227k-full-Core-2012-227i-10-real-obligations-open.json",
+    "sha256": "2200c2a76e163d0c9815852a016814d43766acff0ddea33551a24095df048303",
+    "bytes": 7869
   }
 }

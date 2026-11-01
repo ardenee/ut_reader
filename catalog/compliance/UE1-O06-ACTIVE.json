@@ -1,7 +1,7 @@
 {
-  "contract": "G3-T065-T074-technical-remaining",
-  "stage": "G3-73PASS-1NA-6BLOCKED-T073-CLOSED",
-  "last_action": "Fully closed frozen T073: original compiled v432+469f stock 12557 actual physical Core/Engine exports resolved as 12355 original native materialized + 202 genuine zero-byte None slots; genuine new v432 148 and 469f 17 distinct class/struct/function states match true compiled loaded archive members in 1489 checks, last 6 real Registry properties saved dims/flags 12 match even where unlinked ElementSize0. All 24 vs25 original compiled method families reconciled; reuse previously accepted G3 method contracts, no old tests replayed.",
-  "next_step": "Close T074 C227i/k distinct mandatory original methods via source-mapped method/export inventory, then T065 exact historical v34/v35 physical/source branch and correct exclusions. Only then T077-T080 final acceptance/release. PRD not touched.",
-  "updated_at_utc": "2026-11-01T21:21:04+00:00"
+  "contract": "G3-T074-2012-only-ten-real-methods",
+  "stage": "G3-73PASS-1NA-6BLOCKED-2026_C227k_FULL_COMPLETE",
+  "last_action": "T074 2026 227k original full Core.u 1116 nonempty export objects including all 289 UStruct/Class/Function and 791 UProperty source native loaded values exact 4688/4688, one explicitly runtime-derived HelloWorld.Main inherited SuperField not archived. Existing C227k Engine 2408/6316 and 2012 Engine 1559/4268 source native reused without reruns. Original 2012 C227i Core has exact 5+5 missed, original UCC ClassExporter native path crashed, not used for pass; no source ABI substitution.",
+  "next_step": "Find a safe original 2012 C227i compiled loader oracle for only 5 Core struct/function and 5 Core property exports. T065 original pre36 physical source boundary still blocked. No PRD release and no historical accepted source/native test replays.",
+  "updated_at_utc": "2026-11-01T21:37:35+00:00"
 }

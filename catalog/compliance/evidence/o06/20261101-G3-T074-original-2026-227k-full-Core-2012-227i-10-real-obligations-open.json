@@ -1,0 +1,147 @@
+{
+  "schema": "G3-T074-new-original-2026-full-Core-native-completion-and-single-2012-remaining-oracle-v1",
+  "date": "2026-11-01",
+  "frozen_owner": "T074",
+  "2026_C227k_source_native_complete": {
+    "physical_Core_u_exports": 1142,
+    "source_proven_inert_NONE_class0_size0_flags0": 26,
+    "original_compiled_full_materialized_nonempty_Core_u": 1116,
+    "full_true_original_loaded_UStruct_Class_Function_owners": 289,
+    "full_true_original_loaded_UProperty_owners": 791,
+    "genuine_original_source_field_assertions_PASS": 4688,
+    "mismatches": 0,
+    "original_one_engine_synthesized_HelloWorldCommandlet_Main_parent_link_not_archived": 1,
+    "true_original_compiled_exit": 0
+  },
+  "2012_C227i_remaining": {
+    "original_physical_Core_u_exports": 934,
+    "physical_inert_None_class0_size0": 3,
+    "physical_real_UStruct_Class_Function": 242,
+    "previously_original_loaded_UStruct_Class_Function": 237,
+    "uncovered_native_loaded_direct_UStruct_Class_Function_instances": 5,
+    "physical_real_UProperty": 673,
+    "previously_native_loaded_UProperty": 668,
+    "uncovered_native_loaded_direct_UProperty_instances": 5,
+    "2012_native_UCC_HelloWorldCommandlet_not_registered": true,
+    "2012_original_UCC_Class_batchexport_crashed_inside_UClassExporterUC": true,
+    "2012_missing_complete_source_accurate_native_loader_oracle": true
+  },
+  "compiled_method_source_2012_vs_2026": {
+    "actual_original_2012_core_Serialize_method_types": 33,
+    "actual_original_2026_core_Serialize_method_types": 37,
+    "2026_only_compiled_method_types": [
+      "FAnyProperty",
+      "UButtonProperty",
+      "ULinkerLoad",
+      "ULogHandler"
+    ],
+    "no_source_family_inference": true
+  },
+  "full_T074_PASS": false,
+  "no_unverified_2012_values_presented_as_native": true,
+  "earlier_native_oracles_untouched_not_reexecuted": true,
+  "pins": {
+    "original_2026_227k_native_new_Core_all_class_property_script_values": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-2026-original-Core-all-eight-class-target-actual-loaded-struct-property.log",
+      "sha256": "7e603ed396c5ca7cdadf4815a09a791a373edf60bae08580c7ca7fb29cf4eab6",
+      "bytes": 89969
+    },
+    "original_2026_227k_native_new_Core_disposable_CPP_source": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-2026-original-Core-eight-classes-full-direct-native.cpp",
+      "sha256": "e114821faa46ac1d5b4c24eb6d33f7ea71079d442af56005b37dde1d6f482fc2",
+      "bytes": 4920
+    },
+    "original_2026_227k_native_new_Core_build_cmd": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-2026-build-original-Core-all-eight-classes.cmd",
+      "sha256": "f52f9d32c19be0a43686b86dd87c7fa4f3c45b64be9cd6958578d0e4cdf13141",
+      "bytes": 565
+    },
+    "2026_original_source_selected_new_complete_Core_native_comparator": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-2026-new-physical-full-Core-native-vs-source.php",
+      "sha256": "7091fb254830b2f4bee6448ff87bc8d6a57a414de153103fd6e15a406877f32b",
+      "bytes": 3992
+    },
+    "2026_original_source_selected_new_complete_Core_native_comparison_result": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-2026-Core-1080-full-original-native-value-result.json",
+      "sha256": "e048d830756c2559f841e0c096cc2c4c1812ce9fa977bcf8c9c0eb723d77e427",
+      "bytes": 920
+    },
+    "distinct_2012_2026_original_compiled_method_DLL_export_diff": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-original-2012-2026-exact-compiled-Core-method-union.json",
+      "sha256": "155b9d4c4eaf01f4c5f7327a5bda911e21c2db8f953b2d8d84d6080ef5938a7d",
+      "bytes": 11393
+    },
+    "distinct_2012_2026_original_Core_and_Engine_physical_types": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-original-2012-2026-Core-Engine-real-physical-class-matrix.json",
+      "sha256": "271e78dd3cf7a7974eedededa30c1e25bb0524d2bacc2d60aa1da02024368a47",
+      "bytes": 6792
+    },
+    "distinct_2012_2026_physical_export_type_reader_script": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-original-2012-2026-Core-Engine-real-physical-class-matrix.php",
+      "sha256": "fc7ebb3d690edd6b7985752373eb9682ce310617a6de7a1e2bad3678748705a1",
+      "bytes": 941
+    },
+    "source_specific_zero_byte_genuine_export_exclusion_script": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-original-2012-2026-physical-serial-relevance.php",
+      "sha256": "d27d06c9f068bf3b1d834b2f43b8caf3d3e3700e5bf0cdc128d9db709e9e0bb9",
+      "bytes": 1327
+    },
+    "source_specific_2026_HelloWorldCommandlet_runtime_super_link_relation": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-2026-original-function-override-physical-provenance.php",
+      "sha256": "84638adce908465100a15cf6ac6481020de4e4ee924f186752e6f8eb31a0a657",
+      "bytes": 577
+    },
+    "original_2012_UCC_ClassExporter_failure_log": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-C227k-2026-complete-Core-and-2012-residual-g3-t074-2012-original-Core-Class-batchexport-native.log",
+      "sha256": "f3b2931a0b67cabda983b44d72bb95af7c6b570696fd572e2d1bc5eb75822682",
+      "bytes": 277
+    },
+    "original_2026_compiled_Core_DLL": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.dll",
+      "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+      "bytes": 1286008
+    },
+    "original_2026_compiled_Core_pkg": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-227k\\System\\Core.u",
+      "sha256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c",
+      "bytes": 103686
+    },
+    "original_2012_compiled_Core_DLL": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Core.dll",
+      "sha256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+      "bytes": 901120
+    },
+    "original_2012_compiled_Core_pkg": {
+      "location": "absolute",
+      "path": "C:\\Temp\\UnrealDB\\O06\\Native-C227i-G304\\System\\Core.u",
+      "sha256": "bd42f3dff0a9ef5521623d45c29b51104b1ec366cf27b89bdeeb888b9ba3973b",
+      "bytes": 81184
+    },
+    "previous_accepted_2012_original_Engine_native_manifest": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-2012-C227i-Engine-4268-1559-manifest.json",
+      "sha256": "fde02b89b0a8a1b53da9481e9f9e95ded55ff6ceb57657e0c2170520f6362872",
+      "bytes": 5509
+    },
+    "previous_accepted_2026_original_Engine_native_manifest": {
+      "location": "repo",
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-227k-Engine-8724-fields-2408-pointer-187-class-manifest.json",
+      "sha256": "2233ba66d11f49793ce61dbd2352e9f52e7bacaf3ea1c21e57e658d29c255e05",
+      "bytes": 6763
+    }
+  }
+}

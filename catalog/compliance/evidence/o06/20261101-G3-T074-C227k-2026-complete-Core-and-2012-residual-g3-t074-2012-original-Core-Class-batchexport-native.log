@@ -1,0 +1,6 @@
+Loading package Core.u...
+General protection fault!
+
+History: UExporter::FindExporter <- UExporter::ExportToOutputDevice <- UClassExporterUC::ExportText <- UExporter::ExportToOutputDevice <- UExporter::ExportToFile <- UBatchExportCommandlet::Main
+
+Exiting due to error
