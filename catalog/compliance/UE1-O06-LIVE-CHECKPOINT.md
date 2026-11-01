@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-FIVE-TECHNICAL-T065-T072-T073-T074-T075`
-- **Stage:** G3-70PASS-1NA-9BLOCKED-REAL_ENGINE_2026
-- **Last completed action:** Original genuine UE1 source physical 61 archives v35..61 matched 1596/1596 source summary assertions, while 24 v35/55-58 have no Class/Struct/Property direct native exports. DISTINCT original compiled 2026 227k Engine.u 9477 exports loaded; 6316 Property+2408 Struct source typed values matched 26179/26179, 1768 native Children+187 ScriptText exact target references and 187 native UClass flags/Within identities matched 7789/7789. Two actual SHA-pinned original native sessions. NO frozen owner falsely promoted; 5 technical BLOCKED.
-- **Resume at:** Close only residual original method/branch oracles from UE1-O06-G3-FIVE-TECHNICAL-BLOCKERS-RESIDUAL-MATRIX.json: C98 compiled Engine and pre36 method, UT99 469f extra archive branch, 2012 C227i remaining class/method ABI, cross-family pointers. T077-T080 still release-ineligible. PRD untouched.
-- **Active changed at:** 2026-11-01T17:00:56+00:00
+- **Contract:** `G3-FIVE-TECHNICAL-C227I-ENGINE-NATIVE-BATCH`
+- **Stage:** G3-70PASS-1NA-9BLOCKED-2012_C227I_ENGINE
+- **Last completed action:** Additional NEW 2012 original stock C227i Engine.u v69 lic0 6140 exports, 4268 true native UProperty saved values and 1559 UStruct saved linked reference identities, 1162 native Children and 118 ScriptText target exports exact; 13219/13219 SHA original source assertions PASS. Separate actual original C227i and 2026 C227k; no incorrect 2012 UStruct Line/TextPos acceptance. Five owners still blocked.
+- **Resume at:** Required outstanding source-specific C98 pre36 physical compiled class, 469f conditional ArrayProperty method, remaining method union and 2012 Line/TextPos original native ABI offset. Do not promote frozen PASS or deploy PRD.
+- **Active changed at:** 2026-11-01T17:14:27+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

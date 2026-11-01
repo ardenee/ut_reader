@@ -41,9 +41,21 @@
       "unproven": [
         "Original 2012 C227i complete method/field and subclass parity union vs distinct 2026 C227k",
         "Original 2026 class ConfigName global FName identity not verified",
-        "Other mandatory method/source versions not yet accepted"
+        "Other mandatory method/source versions not yet accepted",
+        "2012 UStruct Line and TextPos actual in-memory offsets cannot be reused from 2026; explicitly unaccepted"
       ],
-      "next_focused_original_oracle": "Next: method-deduplicated 2012/2026 remaining source-compiled method oracle only"
+      "next_focused_original_oracle": "Next: method-deduplicated 2012/2026 remaining source-compiled method oracle only",
+      "verified_new_original_2012_Engine": [
+        "4268 genuine original 2012 UProperty dim/flags actual method LOAD and reader exact",
+        "1559 original 2012 UStruct nonnull/null pointer target identity against actual archived refs",
+        "13219 strict SHA-pinned independent assertions"
+      ],
+      "new_accepted_distinct_source_2012_Engine_records": {
+        "props": 4268,
+        "struct_refs": 1559,
+        "native_ptr_targets": 1280,
+        "assertions": 13219
+      }
     },
     {
       "id": "T075",
@@ -52,7 +64,18 @@
         "C98, UT99 v432/469f and C227i native linked element sizes and referenced object identities remain unverified across applicable branches",
         "Other compiled native field offsets/size source family union incomplete"
       ],
-      "next_focused_original_oracle": "Next: select first genuinely absent legacy build/layout native target identity, avoid retesting 2026"
+      "next_focused_original_oracle": "Next: select first genuinely absent legacy build/layout native target identity, avoid retesting 2026",
+      "verified_new_original_2012_Engine": [
+        "1162 actual native original 2012 Children UObject pointer targets",
+        "118 actual native original 2012 ScriptText UObject targets",
+        "All 1280 distinct real original target export identities and null saved refs matched"
+      ],
+      "new_accepted_distinct_source_2012_Engine_records": {
+        "props": 4268,
+        "struct_refs": 1559,
+        "native_ptr_targets": 1280,
+        "assertions": 13219
+      }
     }
   ],
   "upstream_sha256": {
@@ -70,6 +93,21 @@
       "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-227k-Engine-8724-fields-2408-pointer-187-class-manifest.json",
       "bytes": 6763,
       "sha256": "2233ba66d11f49793ce61dbd2352e9f52e7bacaf3ea1c21e57e658d29c255e05"
+    },
+    "T074_T075_original_2012_C227i_Engine": {
+      "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-2012-C227i-Engine-4268-1559-manifest.json",
+      "sha256": "fde02b89b0a8a1b53da9481e9f9e95ded55ff6ceb57657e0c2170520f6362872",
+      "bytes": 5509
     }
+  },
+  "dated_2026_11_01_additional_2012_Engine_evidence": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-2012-C227i-Engine-4268-1559-manifest.json",
+    "sha256": "fde02b89b0a8a1b53da9481e9f9e95ded55ff6ceb57657e0c2170520f6362872",
+    "bytes": 5509
+  },
+  "new_original_2012_C227i_Engine_evidence": {
+    "path": "catalog/compliance/evidence/o06/20261101-G3-T074-T075-original-2012-C227i-Engine-4268-1559-manifest.json",
+    "sha256": "fde02b89b0a8a1b53da9481e9f9e95ded55ff6ceb57657e0c2170520f6362872",
+    "bytes": 5509
   }
 }
