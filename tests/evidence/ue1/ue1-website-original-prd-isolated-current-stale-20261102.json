@@ -1,0 +1,117 @@
+{
+  "source_SHA256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+  "actual_code_SHA256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
+    "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php": "2d17738e8c01a155507a33512f9e253d6e814a448954ec0e4a8bcf17157e3494",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "2c567a423f28eb684e7acd04e6438d234cad2eb79e8e32c162e0b4c2c78513da",
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "440f19de2b3a2d3860c7f9d59b65cc6248b8dd98747c6d73c0f00312f975676d",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
+    "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php": "9310eebfff0c1be004c16b01f520739be8ce146a93ce99eb40ed8d22bbff4650",
+    "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
+    "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+    "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
+  },
+  "temporary_verifiers_SHA256": {
+    "accept_real_ue1_metadata_SQL_publisher.php": "1202877e983b283c1dd5b0ba790d0f7be12387617412252ae50d0748cfa26b90",
+    "accept_ue1_publisher_website_current_stale.php": "e9d8c6211b432b1bcf00f31b362e50d3fec0ea3b1aab43885d11a85c26eab738",
+    "accept_ue1_website_real_provider_links_and_live_prd.php": "0c333121c46283e1e8a40c0254ee073899c8dc8c50c46c5d114cd6887e8b6d7e",
+    "accept_real_prd_ue1_actual_mount_unselected_projection.php": "3712206db7355f5869a888ff9cde5bcb1ee051374f3e4d8a8737448a04b91b83",
+    "inspect_real_prd_ue1_pass2_ready_and_dryrun.php": "49c34aad7aaf3f75c63a0a80a8b4d87f1c1550e5cd329fd4acfe2a6b4e570791"
+  },
+  "accepted_results_SHA256": {
+    "accept_ue1_publisher_website_final_original_prd.json": "e23814f69d63d2d300c0be436d453e8f8bc1146f0c4b8c58e0275bbe78b91cb3",
+    "accept_ue1_mount_safety_final_original_prd.json": "87da78e80c14cd497ec6a7ee57041bca2031e987820c87bb170b4f06296334b1"
+  },
+  "new_fixed_test_ids": 0,
+  "PRD_SQL_writes": 0,
+  "date": "2026-11-02",
+  "existing_contract": "ue1-website-dependency",
+  "status": "PASS_FOR_IMPLEMENTED_QUERY_AND_UI_GUARD_PATH",
+  "original_current_read_model_providers": [
+    1214310,
+    1214312,
+    1214313
+  ],
+  "original_Engine_provider_required_by": [
+    113256
+  ],
+  "stale_policy_outgoing_and_incoming_excluded": true,
+  "wrong_payload_outgoing_and_incoming_excluded": true,
+  "current_policy_and_matching_payload_restores_links": true,
+  "current_policy_query": {
+    "verified": 2,
+    "current": 2,
+    "stale": 0,
+    "expected_policy": "uedb5-dependency-pass-ue1-mount-v14"
+  },
+  "old_policy_query": {
+    "verified": 2,
+    "current": 1,
+    "stale": 1,
+    "expected_policy": "uedb5-dependency-pass-ue1-mount-v14"
+  },
+  "wrong_payload_query": {
+    "verified": 2,
+    "current": 1,
+    "stale": 1,
+    "expected_policy": "uedb5-dependency-pass-ue1-mount-v14"
+  },
+  "website_missing_totals_current_isolated": {
+    "missing_objects": 0,
+    "missing_packages": 0,
+    "files_with_missing": 0
+  },
+  "live_PRD_policy_inventory_readonly": {
+    "3": {
+      "engine": "UE1",
+      "verified": 74303,
+      "current": 0,
+      "stale": 74303
+    },
+    "12": {
+      "engine": "UE1",
+      "verified": 10788,
+      "current": 0,
+      "stale": 10788
+    },
+    "2": {
+      "engine": "UE2",
+      "verified": 1217,
+      "current": 1217,
+      "stale": 0
+    },
+    "5": {
+      "engine": "UE3",
+      "verified": 72880,
+      "current": 72880,
+      "stale": 0
+    },
+    "6": {
+      "engine": "UE4",
+      "verified": 6722,
+      "current": 6722,
+      "stale": 0
+    },
+    "7": {
+      "engine": "UE4",
+      "verified": 64247,
+      "current": 64247,
+      "stale": 0
+    }
+  },
+  "previous_real_PRD_website_stale_gate_evidence_SHA256": "150af91fdae9bb65e7817b5cac6939aed3138f9c9b1aee5c3a43db62f104d590",
+  "authenticated_UI_browser_run": "NOT EXECUTED; PHP source guard and actual read-model SQL verified",
+  "production_rollout": {
+    "status": "NOT_APPLIED_TO_PRD",
+    "original_UE1_verified_stale_file_count": 85091,
+    "UT99_stale": 74303,
+    "UnrealGold_stale": 10788,
+    "current_UE1_published": 0,
+    "target_policy": "uedb5-dependency-pass-ue1-mount-v14",
+    "actual_prd_preflight": "Both UE1 games ready, 85091 verified/staged, no invalid staged files, no missing primary providers. Four actual production Pass2 runFile(apply=false) calls passed.",
+    "production_migration_required": "UE1 Pass2 republish 85091 files, verify source-dependency counts and re-enable current UE1 website pages. No PRD MySQL writes in verification."
+  }
+}

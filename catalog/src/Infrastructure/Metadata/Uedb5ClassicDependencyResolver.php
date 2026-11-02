@@ -223,15 +223,18 @@ final class Uedb5ClassicDependencyResolver
 
             $providerKey = self::key($root);
             $provider = $providers[$providerKey] ?? null;
-            // A missing selected provider is not proof of a missing UE1
-            // dependency when the game's original import-resolution
-            // implementation is not source-authorized. For example, v69
-            // package versions cannot identify their native build/mount
-            // context from the package header alone.
-            if ($engine === 'ue1' && $ue1Profile === null && !is_array($provider)) {
+            // A provider absent from the *selected* runtime mount is not
+            // proof that its package is missing from the game. This applies
+            // even if an original UE1 source revision is known (e.g. UT99
+            // v68): the original mount/search order is separate evidence
+            // from the package version and the stored catalogue candidates.
+            // Never turn an unknown mount into a false missing SQL edge.
+            if ($engine === 'ue1' && !is_array($provider)) {
+                $reason = $ue1Profile === null
+                    ? 'ue1_verify_import_source_implementation_unavailable'
+                    : 'ue1_runtime_mount_provider_unselected';
                 $resolved[(int)$importIndex] = self::result(
-                    'unresolved', $root, null, null,
-                    'ue1_verify_import_source_implementation_unavailable',
+                    'unresolved', $root, null, null, $reason,
                     $engine, 'runtime_derived'
                 );
                 continue;

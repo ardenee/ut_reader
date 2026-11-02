@@ -763,17 +763,15 @@
       ],
       "runtime_call_chain_verified": true,
       "test_authorization": "TABLE-ONLY COMPLETE: genuine PRD UT99 v68 consumer and three genuine v68 providers yield 4 exact export indices, 3 package_only and 1 source-unresolved; genuine v69 unsupported sources 27/27 fail closed, no false missing.",
-      "result_evidence": "tests/evidence/ue1/ue1-verifyimport-metadata-real-prd-source-path-pass-20261102.json",
+      "result_evidence": "tests/evidence/ue1/ue1-original-prd-real-mount-metadata-source-final-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "75c4cc57a922b1db3fc89861dbdbf74e2e773b253009846d7922e14089a7ae2a",
-        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "d4af3ea65d3bfb217751723ba673a2c8d179b80e338a6f8a4d2298e0d0698dd6",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "2c567a423f28eb684e7acd04e6438d234cad2eb79e8e32c162e0b4c2c78513da",
         "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
         "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
         "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
-        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
-        "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
-        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df"
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8"
       },
       "php_source_sites": [
         {
@@ -825,7 +823,8 @@
         "Four real table-projection callers traced: Uedb5ClassicDependencyResolver, CatalogParsedPackageMetadataSnapshotBuilder, PdoGameDependencyCrossExamineQuery, PdoDependencyResolver; source-specific UE1 gate controls use. Dependency publishing and website are separate contracts.",
         "METADATA-ONLY PASS: real PRD verified v68 Belt_fx#113256 with original Core#1214310, Engine#1214312, Fire#1214313 source-selected provider tables returned four exact export indices 214/40/23/42, three package_only, one explicit runtime-unresolved, zero false missing.",
         "FIXED PRODUCTION FALSE MISSING: source-unsupported v69 PRD objects were classified missing when no provider selected; now 27 original imports in 3 v69 files remain unresolved both with absent and source-incompatible v68 provider context.",
-        "Epic source profiles and existing original native import map evidence retained. This closes only UnrealDB actual static metadata resolver, not SQL publication or website query (those remain separate open contracts)."
+        "Epic source profiles and existing original native import map evidence retained. This closes only UnrealDB actual static metadata resolver, not SQL publication or website query (those remain separate open contracts).",
+        "SUPERSEDED PRIOR EMPTY-PROVIDER v68 MISSING INTERPRETATION. Final actual PRD mount-selection path on four original UE1 files with 134 imports and no original native mount IDs yields common/unresolved, zero false missing/resolved; corrected UE1-only branch and pinned evidence."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -928,8 +927,8 @@
         "F18",
         "F19"
       ],
-      "status": "BLOCKED",
-      "code_path_evidence": "PRODUCTION_READONLY_PRD_ORIGINAL_FILES_AND_STORED_METADATA_OBSERVED; EPIC_NATIVE_RUNTIME_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "REAL_PRD_SOURCE_BYTES_AND_READONLY_PRODUCTION_PASS2_PREFLIGHT; ISOLATED_SQL_PUBLICATION_AND_ACTUAL_WEBSITE_STALE_CURRENT_QUERY_PATH; NO_PRD_SQL_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -949,10 +948,14 @@
       "existing_proof_sha_refs": [
         "1325ddb9393400a514691cd0d2b4b94c8bc20a23b1acadc5c2941b7742f1990b3"
       ],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "BLOCKED_ORIGINAL_EPIC_NATIVE_RUNTIME_REFERENCE_OR_UNTESTED_WRITING_PATH; PRD_READ_ONLY_ACCESS_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Production implementation verified on original PRD metadata via disposable SQL publisher/website and actual PRD read-only preflight. PRD 85091-file data rollout separately pending.",
+      "result_evidence": "tests/evidence/ue1/ue1-publisher-original-prd-sql-isolated-acceptance-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
@@ -974,12 +977,15 @@
         "PRD source rows and stored per-import dependency outcomes inspected read-only for 4 real files. Actual SQL publication writes and original Epic native VerifyImport verdicts not compared.",
         "Corrected UE1 runtime-mount unknown cases cause pre-fix PRD stored outcomes to be potentially stale. No PRD database write or republish was performed.",
         "Read-only PRD inventory on 2026-11-02 confirms 85091 UE1 dependency-policy=v13 rows; a future source-correct republish needs UE1-scoped policy invalidation without regressing UE2–UE5, and cannot be treated as completed by this audit.",
-        "New UE1 v14 policy distinguishes all 85091 historical PRD UE1 v13 rows from current, UE2–UE5 still v13. Actual PRD consumer snapshots generated 442 correct unresolved/common rows through production SQL publisher to isolated SQLite. PRD MySQL write and regeneration not performed: remains BLOCKED."
+        "New UE1 v14 policy distinguishes all 85091 historical PRD UE1 v13 rows from current, UE2–UE5 still v13. Actual PRD consumer snapshots generated 442 correct unresolved/common rows through production SQL publisher to isolated SQLite. PRD MySQL write and regeneration not performed: remains BLOCKED.",
+        "PASS implemented metadata path: original UE1 source files, actual UEDB5 table dependency resolver, real SQL projection publisher in disposable DB, current/stale/payload website queries, original provider IDs and links, rollback/idempotence.",
+        "PRODUCTION DATABASE IS NOT CURRENT: 85091 original UE1 verified files still v13. Both UE1 games read-only Pass2 preflight ready, but no PRD SQL writes occurred. Website currently rejects stale UE1 results correctly; rollout tracked explicitly separate."
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
       "production_prd_readonly_access": "verified MySQL 8.4.11 192.168.0.55:3306; PHP file access via //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage",
-      "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737"
+      "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737",
+      "production_rollout_status": "PRD_UE1_85091_DEPENDENCY_ROWS_STALE_PASS2_NOT_APPLIED"
     },
     {
       "key": "ue1-website-dependency",
@@ -989,8 +995,8 @@
         "F17",
         "F22"
       ],
-      "status": "BLOCKED",
-      "code_path_evidence": "PRODUCTION_READONLY_PRD_ORIGINAL_FILES_AND_STORED_METADATA_OBSERVED; EPIC_NATIVE_RUNTIME_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "REAL_PRD_SOURCE_BYTES_AND_READONLY_PRODUCTION_PASS2_PREFLIGHT; ISOLATED_SQL_PUBLICATION_AND_ACTUAL_WEBSITE_STALE_CURRENT_QUERY_PATH; NO_PRD_SQL_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -1012,10 +1018,16 @@
       "existing_proof_sha_refs": [
         "1325ddb9393400a514691cd0d2b4b94c8bc20a23b1acadc5c2941b7742f1990b3"
       ],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "BLOCKED_ORIGINAL_EPIC_NATIVE_RUNTIME_REFERENCE_OR_UNTESTED_WRITING_PATH; PRD_READ_ONLY_ACCESS_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Production implementation verified on original PRD metadata via disposable SQL publisher/website and actual PRD read-only preflight. PRD 85091-file data rollout separately pending.",
+      "result_evidence": "tests/evidence/ue1/ue1-website-original-prd-isolated-current-stale-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
+        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
+        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
+      },
       "php_source_sites": [
         {
           "file": "catalog/game-missing.php",
@@ -1037,12 +1049,15 @@
         "PRD database, stored edges and original file corpus are accessible; native expected dependency outcome and website result equivalence still unverified.",
         "Read-only original consumer checks show old PRD SQL dependency outcomes for some files predate UE1 native-mount uncertainty correction; UI parity remains blocked.",
         "Pre-fix UE1 dependency v13 status covers 85091 PRD verified files; stale cached SQL cannot be used as an Epic native oracle even if website renders it correctly.",
-        "Current UEDB5 file dependency reader rejects old UE1 outcomes. Game-missing page withholds stale UE1 counts until current, with explicit user warning; isolated website SQL query reports zero false missing on 442 corrected imports. Logged-in PRD browser acceptance remains BLOCKED."
+        "Current UEDB5 file dependency reader rejects old UE1 outcomes. Game-missing page withholds stale UE1 counts until current, with explicit user warning; isolated website SQL query reports zero false missing on 442 corrected imports. Logged-in PRD browser acceptance remains BLOCKED.",
+        "PASS implemented metadata path: original UE1 source files, actual UEDB5 table dependency resolver, real SQL projection publisher in disposable DB, current/stale/payload website queries, original provider IDs and links, rollback/idempotence.",
+        "PRODUCTION DATABASE IS NOT CURRENT: 85091 original UE1 verified files still v13. Both UE1 games read-only Pass2 preflight ready, but no PRD SQL writes occurred. Website currently rejects stale UE1 results correctly; rollout tracked explicitly separate."
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
       "production_prd_readonly_access": "verified MySQL 8.4.11 192.168.0.55:3306; PHP file access via //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage",
-      "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737"
+      "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737",
+      "production_rollout_status": "PRD_UE1_85091_DEPENDENCY_ROWS_STALE_PASS2_NOT_APPLIED"
     },
     {
       "key": "ue2-dispatch",

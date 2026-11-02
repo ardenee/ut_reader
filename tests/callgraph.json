@@ -15632,7 +15632,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 587
+      "line": 590
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -15644,43 +15644,43 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogLegacyNameMapPreprocessor.php",
       "syntax": "static_or_expression",
-      "line": 682
+      "line": 685
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php",
       "syntax": "static_or_expression",
-      "line": 819
+      "line": 822
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 857
+      "line": 860
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 791
+      "line": 794
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 798
+      "line": 801
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 727
+      "line": 730
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 843
+      "line": 846
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
