@@ -19,7 +19,7 @@ Source of terminal decisions: immutable T001–T080 execution register, the orig
 | G3-13 | **ACCEPTED** | T058–T064 original tagged property |
 | G3-14 | **ACCEPTED** | T065–T071 original archive/version boundary |
 | G3-15 | **ACCEPTED** | T072–T077 original compiled/source/native full owner evidence |
-| G3-16 | **RELEASE PENDING** | T079 one-time combined PASS; T078/T080 PRD protected release/manifest remain |
+| G3-16 | **ACCEPTED — FINAL PROTECTED RELEASE** | T079 current source accepted; T080 actual 1610/1610 production SHA and protected exclusions, T078 79 PASS/1 SOURCE_NA |
 
 The G5 original UT99-v432 eight selected serializer methods each had an earlier source-fingerprint FULL at Oct26. The later original G3 code changes were independently current-source reviewed once: 2129/2129 substantive native/archive assertions PASSED; six old SHA-only mismatches remain historical pinned source versions rather than silently repinning them. See catalog/compliance/evidence/o06/20261102-G3-T079-final-current-source-G3-plus-G5-one-time-review.json.
 

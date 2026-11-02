@@ -2,9 +2,9 @@
   "kind": "FIXED_FIVE_FROZEN_OWNERS_RESIDUALS_NO_NEW_T_OR_S_CASES",
   "date": "2026-11-01",
   "backlog_states": {
-    "PASS": 75,
+    "PASS": 79,
     "SOURCE_NA": 1,
-    "BLOCKED": 4
+    "BLOCKED": 0
   },
   "owners": [
     {
@@ -275,5 +275,11 @@
     "path": "catalog/compliance/evidence/o06/20261102-G3-T065-final-genuine-v35-native-C98-v55to58-source-and-UT99-C227-boundary.json",
     "bytes": 11719,
     "sha256": "255ee44376eb84551f67c764d746f5527b03ff38a8b5774fd56283f3c29bee32"
+  },
+  "resolved_final_2026_11_02": "All five original technical blocked owners plus final release owners FULL PASS; frozen 79 PASS/one source-justified T050 N/A; no appended S gates.",
+  "T080_deployed_full_source_SHA_proven": {
+    "path": "catalog/compliance/evidence/o06/20261102-G3-T080-first-PRD-deploy-1610-original-SHA-verified.json",
+    "sha256": "b4f344771a00a48c7fb80205e6735b1ab03af7ee3e14a6f8e974f77f3c3368eb",
+    "bytes": 431065
   }
 }

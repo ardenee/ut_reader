@@ -8,7 +8,7 @@ b=read(c/'UE1-O06-G3-EXECUTION-TEST-BACKLOG.json');by={v['id']:v for v in b['bas
 assert all(v['status'] in ('PASS','SOURCE_NA') for v in b['baseline'][:77])
 assert collections.Counter(v['status'] for v in b['baseline'][:77])=={'PASS':76,'SOURCE_NA':1}
 assert by['T079']['status'] in ('BLOCKED','PASS')
-assert by['T078']['status']=='BLOCKED' and by['T080']['status']=='BLOCKED'
+assert by['T078']['status'] in ('BLOCKED','PASS') and by['T080']['status'] in ('BLOCKED','PASS')
 g5=read(c/'UE1-O06-G5-CONSOLIDATED-CLOSURE-DECISIONS.json')
 assert len(g5['methods'])==g5['method_count']==g5['fully_epic_verified']==8
 assert g5['blocked']==g5['failed']==0
