@@ -188,21 +188,27 @@ final class PdoUedb5PhysicalProviderSelector
                 }
                 continue;
             }
-            // UE1 GetPackageLinker resolves already-loaded linkers or the
-            // original ordered Paths, never a catalogue row count. Even a
-            // unique indexed provider (or zero indexed providers) cannot
-            // establish what was physically accessible to that game session.
-            // Keep the indexed candidate list as evidence, not as a native
-            // loader decision, when no authoritative mount context exists.
-            if ($orderedMounts === null && str_starts_with(
-                strtolower((string)($consumer['section_schemas']['imports'] ?? '')), 'ue1.'
-            )) {
+            // Original UE1 and UE2 GetPackageLinker both search loaded
+            // linkers and actual configured Paths, never the catalogue's
+            // candidate count. A unique indexed package still might NOT be
+            // present in the game's physical runtime mount environment.
+            // UT2004 version<100 uses a UE2-owned UE1-wire compatibility
+            // schema, so use the game profile as the owner, not just 'ue1.'.
+            $classicSchema = strtolower((string)($consumer['section_schemas']['imports'] ?? ''));
+            $ue2Source = in_array($gameId, [2, 4, 5], true)
+                && (str_starts_with($classicSchema, 'ue2.')
+                    || str_starts_with($classicSchema, 'ue1.ut2004.compat.'));
+            $ue1Source = in_array($gameId, [3, 12], true)
+                && str_starts_with($classicSchema, 'ue1.');
+            if ($orderedMounts === null && ($ue1Source || $ue2Source)) {
                 $selected[] = [
                     'game_id' => $gameId,
                     'file_id' => null,
                     'package_name' => (string)$packageName,
                     'selection_status' => 'source_unresolved',
-                    'selection_source' => 'ue1_runtime_mount_context_unavailable',
+                    'selection_source' => $ue2Source
+                        ? 'ue2_runtime_mount_context_unavailable'
+                        : 'ue1_runtime_mount_context_unavailable',
                     'candidate_file_ids' => array_values(array_map(
                         static fn(array $candidate): int => (int)$candidate['file_id'],
                         $candidates

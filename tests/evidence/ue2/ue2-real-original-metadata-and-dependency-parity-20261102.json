@@ -25,8 +25,8 @@
     "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php": "f78dba1e6b21f4cb43e782fb87b6800461a04063272b58e1d86d5a3376c0814e",
     "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php": "40cb5676b268676ffef97fb39481f8ed5ff0dfe386e82791b1595537bdaacca8",
     "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php": "016b64743ec44abb57704677953baba753776640caed7535130ac07eadbe9c94",
-    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "64659bfce95ace0770debc8009166d0d92111f68705736fc0fdde8e22ea7f155",
-    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "712808fb298fcca462fadd6bdf2efe1c6d887f4e3c4474f665218e3ffad4c73e",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "6b99e31025840be7b4d6aa4c4b06c595db799e4eb6efb8df0deeba28bca0265e",
     "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb",
     "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
     "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
@@ -167,8 +167,10 @@
         }
       }
     ],
-    "real_UE2_original_resolved_static_export_count": 158,
-    "real_selected_unresolved_ambiguous_roots_remain_unresolved": true
+    "real_UE2_original_resolved_static_export_count": 0,
+    "real_selected_unresolved_ambiguous_roots_remain_unresolved": true,
+    "conditional_explicit_provider_export_match_count": 158,
+    "real_unmounted_all_313_unresolved": true
   },
   "mount_provider": {
     "genuine_original_PRD_real_candidate_cases": [
@@ -176,18 +178,15 @@
         "game": 2,
         "file_id": 149508,
         "imports": 14,
-        "selected_provider_ids": [
-          149492
-        ],
-        "source_ambiguity_count": 2,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 3,
         "source_ambiguity_packages": [
           "Engine",
+          "Detail",
           "Core"
         ],
         "outcomes": {
-          "unresolved": 5,
-          "package_only": 1,
-          "resolved": 8
+          "unresolved": 14
         }
       },
       {
@@ -231,19 +230,37 @@
         "game": 5,
         "file_id": 159806,
         "imports": 230,
-        "selected_provider_ids": [
-          159807,
-          150180
-        ],
-        "source_ambiguity_count": 2,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 25,
         "source_ambiguity_packages": [
+          "Civil_Unrest_Tex",
           "Engine",
-          "train"
+          "MetalShaders",
+          "Hotel",
+          "SwatGearTex",
+          "DNA_tex",
+          "barbershop_tex",
+          "Power_Tex",
+          "Con_Tex",
+          "Hosp",
+          "VIP_Tex",
+          "Cars",
+          "Outdoors_Tex",
+          "RedLibrary_Tex",
+          "Bar_Tex",
+          "Tenement_Tex",
+          "Silence_Tex",
+          "doors_Tex",
+          "train",
+          "Repo_Tex",
+          "bullseye_Tex",
+          "mac_Tex",
+          "Jewel_Tex",
+          "office_Tex",
+          "Engine_res"
         ],
         "outcomes": {
-          "package_only": 2,
-          "unresolved": 78,
-          "resolved": 150
+          "unresolved": 230
         }
       },
       {
@@ -279,7 +296,9 @@
       "evidence_kind": "Scenario verifies code respects explicit source-ordered mount IDs from two real verified provider candidates; no claim that either is the observed actual runtime order",
       "PRD_DB_writes": 0
     },
-    "limit": "Explicit two-provider mount-order reversal uses genuine original PRD duplicate provider rows but a simulated *input* source order, not a captured original UE2 native runtime mount. Unknown order returned ambiguous, and wrong game/consumer context was rejected. No claim of native path discovery."
+    "limit": "Explicit two-provider mount-order reversal uses genuine original PRD duplicate provider rows but a simulated *input* source order, not a captured original UE2 native runtime mount. Unknown order returned ambiguous, and wrong game/consumer context was rejected. No claim of native path discovery.",
+    "past_unmounted_unique_auto_selections_are_superseded": true,
+    "measured_original_runtime_mount_ids": 0
   },
   "publisher": {
     "no_authoritative_mount_originals": [
@@ -412,7 +431,8 @@
     ],
     "atomic_rollback": true,
     "PRD_database_writes": 0,
-    "evidence_SHA256": "3ea6bf7ef9eff9d4f05c5c3db8fda4925b264cbf04be20e70e266dd60c84d17d"
+    "evidence_SHA256": "3ea6bf7ef9eff9d4f05c5c3db8fda4925b264cbf04be20e70e266dd60c84d17d",
+    "selected_original_provider_context": "CONDITIONAL supplied verified original provider file IDs; NOT a captured native mounted runtime session."
   },
   "website": {
     "actual_original_provider_requires_and_required_by": {
@@ -429,7 +449,8 @@
     "isolated_website_no_selected_source_missing_objects": 0,
     "isolated_website_no_selected_source_missing_packages": 0,
     "positive_evidence_SHA256": "f105a2fe08060afb21a12c89d84d4e17e11ccdd16f79d8b5c70480791f7c8219",
-    "no_authenticated_UI_browser_run": true
+    "no_authenticated_UI_browser_run": true,
+    "original_provider_link_context": "Conditional original verified physical providers, not inferred live native mounted Paths."
   },
   "source_rule_unreali_unrealshare": "Original Unreal II v69 fallback is a linker retry after a native UnrealI package lookup failure, never a general license to infer missing/resolve. UE2 static source root projection preserves only specific UnrealI->UnrealShare profile while selector requires explicit mount evidence; UT2003/UT2004 cannot borrow alias.",
   "synthetic_source_validation_sha256": {
@@ -440,5 +461,125 @@
   "production_cutover_status": "NOT_APPLIED. UE2 actual catalog SQL and on-disk UEDB5 are untouched. Existing shared v13 published edges may need republication after ALL UE readers are certified, as directed by user; new UE2 reader conclusions do not certify old PRD data.",
   "new_test_case_ids": 0,
   "PRD_SQL_writes": 0,
-  "PRD_uedb5_writes": 0
+  "PRD_uedb5_writes": 0,
+  "final_source_correction": {
+    "date": "2026-11-02",
+    "real_defect": "Before final correction, UE2 single SQL candidate was promoted to a mounted physical provider without original runtime proof. UE2 GetPackageLinker searches loaded linkers and game Paths, not catalogue uniqueness.",
+    "code_fix": "UE2 game IDs 2,4,5, including UT2004 legacy UE1-wire source syntax, now return source_unresolved with indexed candidate IDs unless original runtime source-specific mount is provided. UE2 and UE1 missing-mount reason codes are separate.",
+    "genuine_PRD_unmounted_proof": {
+      "result": "UE2_ORIGINAL_PRD_FIVE_REAL_CONSUMERS_UNKNOWN_MOUNT_FAIL_CLOSED_PASS",
+      "cases": [
+        {
+          "game": 2,
+          "file_id": 149508,
+          "imports": 14,
+          "selected_provider_ids": [],
+          "source_ambiguity_count": 3,
+          "source_ambiguity_packages": [
+            "Engine",
+            "Detail",
+            "Core"
+          ],
+          "outcomes": {
+            "unresolved": 14
+          }
+        },
+        {
+          "game": 4,
+          "file_id": 148919,
+          "imports": 33,
+          "selected_provider_ids": [],
+          "source_ambiguity_count": 6,
+          "source_ambiguity_packages": [
+            "Engine",
+            "UCGeneric",
+            "AWGlobal",
+            "CubeMaps",
+            "AlleriaArchitecture",
+            "Core"
+          ],
+          "outcomes": {
+            "unresolved": 33
+          }
+        },
+        {
+          "game": 5,
+          "file_id": 111532,
+          "imports": 27,
+          "selected_provider_ids": [],
+          "source_ambiguity_count": 7,
+          "source_ambiguity_packages": [
+            "Engine",
+            "AbaddonTerrain",
+            "UCGeneric",
+            "SkyRenders",
+            "Core",
+            "EmitterTextures",
+            "SC_Intro"
+          ],
+          "outcomes": {
+            "unresolved": 27
+          }
+        },
+        {
+          "game": 5,
+          "file_id": 159806,
+          "imports": 230,
+          "selected_provider_ids": [],
+          "source_ambiguity_count": 25,
+          "source_ambiguity_packages": [
+            "Civil_Unrest_Tex",
+            "Engine",
+            "MetalShaders",
+            "Hotel",
+            "SwatGearTex",
+            "DNA_tex",
+            "barbershop_tex",
+            "Power_Tex",
+            "Con_Tex",
+            "Hosp",
+            "VIP_Tex",
+            "Cars",
+            "Outdoors_Tex",
+            "RedLibrary_Tex",
+            "Bar_Tex",
+            "Tenement_Tex",
+            "Silence_Tex",
+            "doors_Tex",
+            "train",
+            "Repo_Tex",
+            "bullseye_Tex",
+            "mac_Tex",
+            "Jewel_Tex",
+            "office_Tex",
+            "Engine_res"
+          ],
+          "outcomes": {
+            "unresolved": 230
+          }
+        },
+        {
+          "game": 5,
+          "file_id": 111472,
+          "imports": 9,
+          "selected_provider_ids": [],
+          "source_ambiguity_count": 3,
+          "source_ambiguity_packages": [
+            "Engine",
+            "CubeMaps",
+            "Core"
+          ],
+          "outcomes": {
+            "unresolved": 9
+          }
+        }
+      ],
+      "original_nonUE2_reader_loaded": false,
+      "PRD_DB_writes": 0
+    },
+    "genuine_PRD_unmounted_result_SHA256": "0b6e625d5409ef8bab8a9c1cf84173a22b75d64a588faa0db28cc77ec7e4b5f9",
+    "test_script_SHA256": "3fd4664c8c29803978e4b59c6336c5dc9362ca631d8a20641a46e24e4574f0dc",
+    "original_PRD_byte_files_unchanged": true,
+    "PRD_sql_and_metadata_writes": 0
+  }
 }

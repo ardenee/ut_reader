@@ -9519,8 +9519,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
-      "sha256": "64659bfce95ace0770debc8009166d0d92111f68705736fc0fdde8e22ea7f155",
-      "bytes": 23922,
+      "sha256": "712808fb298fcca462fadd6bdf2efe1c6d887f4e3c4474f665218e3ffad4c73e",
+      "bytes": 24343,
       "engine_hints": [
         "shared"
       ],
@@ -9661,8 +9661,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
-      "sha256": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
-      "bytes": 22295,
+      "sha256": "6b99e31025840be7b4d6aa4c4b06c595db799e4eb6efb8df0deeba28bca0265e",
+      "bytes": 22458,
       "engine_hints": [
         "shared"
       ],

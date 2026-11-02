@@ -95,21 +95,25 @@ final class Uedb5DependencyRebuilder
                 throw new RuntimeException('UEDB5 provider selection contains a non-row value.');
             }
             if ((string)($row['selection_status'] ?? '') === 'source_unresolved') {
-                if ((string)($row['selection_source'] ?? '') !== 'ue1_runtime_mount_context_unavailable'
+                $sourceReason = (string)($row['selection_source'] ?? '');
+                if (!in_array($sourceReason, [
+                        'ue1_runtime_mount_context_unavailable',
+                        'ue2_runtime_mount_context_unavailable',
+                    ], true)
                     || !is_array($row['candidate_file_ids'] ?? null)) {
-                    throw new RuntimeException('Unresolved UE1 physical provider requires explicit missing native mount context.');
+                    throw new RuntimeException('Unresolved classic physical provider requires explicit missing original mount context.');
                 }
                 $candidateIds = (array)$row['candidate_file_ids'];
                 if (!array_is_list($candidateIds)
                     || count($candidateIds) !== count(array_unique($candidateIds))
                     || count(array_filter($candidateIds, static fn($id): bool => !is_int($id) || $id < 1)) > 0) {
-                    throw new RuntimeException('Unresolved UE1 physical provider requires distinct positive indexed candidate IDs.');
+                    throw new RuntimeException('Unresolved classic physical provider requires distinct positive indexed candidate IDs.');
                 }
                 $ambiguous[] = [
                     'package_name' => (string)$row['package_name'],
                     'package_id' => '',
                     'candidate_file_ids' => $candidateIds,
-                    'reason_code' => 'ue1_runtime_mount_context_unavailable',
+                    'reason_code' => $sourceReason,
                 ];
                 continue;
             }
