@@ -738,7 +738,7 @@
         "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php"
       ],
-      "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
+      "dispatch_trace": "SourceSnapshotFactory -> CatalogUE1PackageReader tables -> Uedb5ClassicDependencyResolver or parsed/legacy/cross-game dependency paths -> PdoUe1VerifyImportProjectionResolver -> dependency status",
       "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h",
       "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
       "game_profiles": [
@@ -746,9 +746,9 @@
         "ut99"
       ],
       "source_provenance_constraint": "Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient.",
-      "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
-      "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
-      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "test_purpose": "Wrong metadata-derived dependency class, provider, outer, public/export flag, or missing/resolved classification",
+      "required_fixture": "genuine consumer source-selected UE1 package and provider original header/name/import/export tables, known context",
+      "acceptance_condition": "Actual UnrealDB static import/provider matching produces correct metadata-derived dependency status/export index for known game/source/provider; unresolved on unknown source or ambiguous context; no native object or asset loads",
       "existing_proof_sha_refs": [
         "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json sha256:6f82d1b27890751e491e48454b81e10f332bc6ac7c3c8b5eab71c3b439cc4b71",
         "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json sha256:aef5867f46bc64d8722a33c1ad1ccf8352ebf6522923e20b08d14f56cdebfc9e",
@@ -810,7 +810,9 @@
         "EPIC v1.200 PRE50 PRODUCTION BUG FIXED: source VerifyImport selects native linker from each import ObjectPackage but old UE1 PHP accepted same-name export in unrelated provider. Selected provider identity now must match import original serialized package name before lookup, with case-insensitive source identity.",
         "Verified actual UE1 reader + original-versioned snapshot and normalization + resolver against three disposable authentic v49 wire-format package inputs. Correct provider and casefold resolve SourceIndex0, unrelated provider with identical export table refuses match. Existing original pre50 format verifier 13/13 via TEMP-only path rebasing.",
         "After this fix original native 227k 78, 227i 73, 469f 1202, stock v432 14 comparisons remain exact. No newly run original compiled v49 native executable; source-exact branch only and overall VerifyImport BLOCKED.",
-        "Two old archived class-hack fixture rows pair TestPkg with unrelated UnrealShare; that obsolete old test does not override the source-proven UE1 provider root guard. Archived immutable tests unchanged."
+        "Two old archived class-hack fixture rows pair TestPkg with unrelated UnrealShare; that obsolete old test does not override the source-proven UE1 provider root guard. Archived immutable tests unchanged.",
+        "SCOPE REVISED: Actual UnrealDB behavior is table-only import/export metadata to provider/dependency outcome. Engine mesh, LodMesh, textures, sounds and UObject materialization are not UnrealDB operations or reasons to retain this blocker.",
+        "Four real table-projection callers traced: Uedb5ClassicDependencyResolver, CatalogParsedPackageMetadataSnapshotBuilder, PdoGameDependencyCrossExamineQuery, PdoDependencyResolver; source-specific UE1 gate controls use. Dependency publishing and website are separate contracts."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -823,7 +825,16 @@
       "native_original_stock_v432_evidence": "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json",
       "native_wrong_provider_correction_evidence": "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json",
       "original_2012_c227i_native_import_evidence": "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json",
-      "v120_pre50_provider_identity_correction_evidence": "tests/evidence/ue1/ue1-v120-pre50-provider-package-identity-fix-20261102.json"
+      "v120_pre50_provider_identity_correction_evidence": "tests/evidence/ue1/ue1-v120-pre50-provider-package-identity-fix-20261102.json",
+      "out_of_scope_native_runtime_behaviors": [
+        "UObject/CDO instantiation",
+        "Mesh/LodMesh/texture/sound payload loading",
+        "rendering/animation/physics/gameplay",
+        "engine-only transient runtime object lifecycle",
+        "unexecuted engine fallback branches"
+      ],
+      "metadata_scope_evidence": "tests/evidence/ue1/ue1-actual-table-only-dependency-scope-20261102.json",
+      "scope_revised_at": "2026-11-02"
     },
     {
       "key": "ue1-mount-provider",
@@ -1148,7 +1159,7 @@
       "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module.",
       "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
-      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "acceptance_condition": "Correct source-specific import/provider metadata and dependency status for actual UnrealDB table/registry path, with honest unresolved handling; no native asset loading",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
       "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
@@ -1160,7 +1171,9 @@
           "line": 132,
           "call_site": "PdoUe2VerifyImportProjectionResolver::resolveInMemoryOutcome("
         }
-      ]
+      ],
+      "out_of_scope_native_payload_loading": true,
+      "scope_revised_at": "2026-11-02"
     },
     {
       "key": "ue2-mount-provider",
@@ -1406,7 +1419,7 @@
       "source_provenance_constraint": "UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay.",
       "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
-      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "acceptance_condition": "Correct source-specific import/provider metadata and dependency status for actual UnrealDB table/registry path, with honest unresolved handling; no native asset loading",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
       "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
@@ -1418,7 +1431,9 @@
           "line": 148,
           "call_site": "PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome("
         }
-      ]
+      ],
+      "out_of_scope_native_payload_loading": true,
+      "scope_revised_at": "2026-11-02"
     },
     {
       "key": "ue3-mount-provider",
@@ -1658,7 +1673,7 @@
       "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
       "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
-      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "acceptance_condition": "Correct source-specific import/provider metadata and dependency status for actual UnrealDB table/registry path, with honest unresolved handling; no native asset loading",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
       "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
@@ -1670,7 +1685,9 @@
           "line": 163,
           "call_site": "PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome("
         }
-      ]
+      ],
+      "out_of_scope_native_payload_loading": true,
+      "scope_revised_at": "2026-11-02"
     },
     {
       "key": "ue4-mount-provider",
@@ -1913,7 +1930,7 @@
       "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
       "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
-      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "acceptance_condition": "Correct source-specific import/provider metadata and dependency status for actual UnrealDB table/registry path, with honest unresolved handling; no native asset loading",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
       "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
@@ -1925,7 +1942,9 @@
           "line": 257,
           "call_site": "Uedb5Ue5ZenDependencyResolver::resolve("
         }
-      ]
+      ],
+      "out_of_scope_native_payload_loading": true,
+      "scope_revised_at": "2026-11-02"
     },
     {
       "key": "ue5-mount-provider",

@@ -1,0 +1,46 @@
+{
+  "date": "2026-11-02",
+  "type": "implementation-scope correction, not a new test",
+  "contract": "ue1-verify-import",
+  "result": "Actual UnrealDB metadata-only dependency call graph, no native asset materialization",
+  "executed_paths": [
+    "Uedb5SourceSnapshotFactory -> UE1 owned reader -> package summary/names/imports/exports",
+    "Uedb5ClassicDependencyResolver::resolve -> source-authorized PdoUe1VerifyImportProjectionResolver::resolveInMemoryOutcome -> dependency status/export index",
+    "CatalogParsedPackageMetadataSnapshotBuilder -> same UE1-only static dependency projection",
+    "PdoDependencyResolver -> same source-authorized dependency projection",
+    "PdoGameDependencyCrossExamineQuery -> same UE1-only static import/provider comparison",
+    "Uedb5 dependency publisher / website: independent existing persist and presentation contracts, no native object loads"
+  ],
+  "metadata_read": [
+    "package summary/version/flags",
+    "names",
+    "import class/name/outer/object_package",
+    "export class/name/outer/public flags",
+    "physical package provider source/version",
+    "known mount order",
+    "dependency status/export index"
+  ],
+  "never_required_for_reader_certification": [
+    "mesh or LodMesh object deserialization",
+    "texture or sound payload loading",
+    "UObject instantiation/CDO",
+    "rendering/animation/physics/gameplay runtime execution",
+    "entire original engine loader function behavior unrelated to these actual metadata fields"
+  ],
+  "qualification": "Names such as Mesh and LodMesh can occur as ordinary import/export class strings; table-only class matching can matter to dependency edges, but the engine asset payload is not loaded and no asset-loading tests are authorized.",
+  "new_ue1_acceptance": "Verify source-selected real UE1 package table import/provider comparisons, correct exported object indices and safe classifications for known source/mount contexts; retain unresolved for unknown or ambiguous provenance. SQL publisher and website each have their own existing contracts.",
+  "status_retained": "BLOCKED until acceptance is demonstrated on the narrowed actual production call-chain",
+  "new_tests": 0,
+  "native_runs": 0,
+  "production_sql_writes": 0,
+  "production_code_SHA256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "d09baea2367aa71339dc94221265329ffeb8a9fd1d92e5b60a501d0b10f7ca54",
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "0ada396d58af1382695b069a7c65ea1917f28784a1de56ef0eedc871595da8c2",
+    "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "75c4cc57a922b1db3fc89861dbdbf74e2e773b253009846d7922e14089a7ae2a",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
+    "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
+    "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb"
+  }
+}
