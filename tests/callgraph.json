@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1022,
-  "edges_count": 3604,
+  "nodes": 1024,
+  "edges_count": 3609,
   "edge_types": {
-    "use": 1229,
-    "new": 949,
-    "static_or_expression": 1426
+    "use": 1231,
+    "new": 951,
+    "static_or_expression": 1427
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -3063,6 +3063,36 @@
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidationService.php",
       "syntax": "use",
       "line": 11
+    },
+    {
+      "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "new",
+      "line": 13
+    },
+    {
+      "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "static_or_expression",
+      "line": 15
+    },
+    {
+      "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "use",
+      "line": 9
+    },
+    {
+      "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+      "syntax": "new",
+      "line": 14
+    },
+    {
+      "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+      "syntax": "use",
+      "line": 10
     },
     {
       "from": "catalog/blacklisted.php",

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1022,
+  "total_files": 1024,
   "roles": {
     "CONTAINER": 88,
     "DATABASE": 119,
@@ -14,7 +14,7 @@
     "LINKER": 26,
     "NAME": 4,
     "OBJECT": 66,
-    "OPERATIONS": 17,
+    "OPERATIONS": 19,
     "OUTPUT": 138,
     "SOURCE": 8,
     "TABLE": 5,
@@ -22,7 +22,7 @@
   },
   "engine_hints": {
     "shared": 868,
-    "ue1": 91,
+    "ue1": 93,
     "ue2": 11,
     "ue3": 4,
     "ue4": 12,
@@ -1645,6 +1645,20 @@
       "class": null
     },
     {
+      "path": "catalog/bin/apply-ue1-epic-policy-cutover.ps1",
+      "sha256": "ecc9880ca833f284ef485e94e23261f704a45afb12e16669f0aa9a44d4427f50",
+      "bytes": 4533,
+      "engine_hints": [
+        "ue1"
+      ],
+      "path_roles": [
+        "OPERATIONS"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
       "path": "catalog/bin/backfill-download-geoip-country.php",
       "sha256": "1c897ce0d156acbff90f5ff1c7f8d1734851a5d84b3e0fe537ee02b99d69aa8a",
       "bytes": 7761,
@@ -2392,6 +2406,20 @@
       ],
       "path_roles": [
         "DATABASE"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
+      "path": "catalog/bin/verify-ue1-epic-policy-cutover.php",
+      "sha256": "d7be0de3f62a9451c758f4e09af4d41ed38bf057f074eb6cbb720212dc83998c",
+      "bytes": 4512,
+      "engine_hints": [
+        "ue1"
+      ],
+      "path_roles": [
+        "OPERATIONS"
       ],
       "review_priority": "RELATED",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
