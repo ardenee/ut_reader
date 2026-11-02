@@ -575,7 +575,8 @@
       "required_fixture": "real_file_engine_game_version_and_selected_reader",
       "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
       "existing_proof_sha_refs": [
-        "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8"
+        "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8",
+        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "REUSE_PRIOR_PROOF_ONLY; NO_NATIVE_OR_DB_REPLAY",
@@ -599,7 +600,8 @@
         "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
       },
       "review_findings": [
-        "PRD database game IDs 3/12 and real source-profile factory dispatch confirmed through 4 original-file reparses. No original native runtime claim."
+        "PRD database game IDs 3/12 and real source-profile factory dispatch confirmed through 4 original-file reparses. No original native runtime claim.",
+        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact."
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -638,7 +640,8 @@
       "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
       "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
       "existing_proof_sha_refs": [
-        "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8"
+        "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8",
+        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "REUSE_PRIOR_GENUINE_TABLE_PROOF_ONLY; NO_REEXECUTION",
@@ -663,7 +666,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b"
       },
       "review_findings": [
-        "4/4 genuine PRD original files, SHA pinned, match every summary, name, import and export row in currently stored UEDB5 snapshots; native Epic original loaded values not retested."
+        "4/4 genuine PRD original files, SHA pinned, match every summary, name, import and export row in currently stored UEDB5 snapshots; native Epic original loaded values not retested.",
+        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -698,7 +702,8 @@
       "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
       "existing_proof_sha_refs": [
         "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json sha256:6f82d1b27890751e491e48454b81e10f332bc6ac7c3c8b5eab71c3b439cc4b71",
-        "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json sha256:aef5867f46bc64d8722a33c1ad1ccf8352ebf6522923e20b08d14f56cdebfc9e"
+        "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json sha256:aef5867f46bc64d8722a33c1ad1ccf8352ebf6522923e20b08d14f56cdebfc9e",
+        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
@@ -721,7 +726,8 @@
         "The production snapshot policy for both genuine compiler-generated version-69 fixtures is source_partial. Actual Uedb5ClassicDependencyResolver correctly returns unresolved (implementation unavailable) rather than inheriting v1.400 source semantics for v432 or 469f based on version alone.",
         "Real PRD counts: UT99 6246 source-exact eligible version 60–68 and 68024 v69 partial; UnrealGold 1 early v54 source-exact eligible, 8714 v60–68 partial, 2070 v69 partial; 36 other UE1 files. Source-exact eligible does not mean native-verified imports.",
         "The only verified pre60 UnrealGold corpus file is #1246569 DMVilla2.unr v54, 104 imports. Existing published v13 dependency outcomes include 39 resolved, but without original runtime mount proof are not certified.",
-        "All 85091 PRD UE1 migration statuses use historical dependency policy v13; these persisted values predate UE1 fail-closed mount correction. Original source-specific v69 native VerifyImport and actual arbitrary PRD runtime provenance remain unproven."
+        "All 85091 PRD UE1 migration statuses use historical dependency policy v13; these persisted values predate UE1 fail-closed mount correction. Original source-specific v69 native VerifyImport and actual arbitrary PRD runtime provenance remain unproven.",
+        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",

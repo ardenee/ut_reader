@@ -1,0 +1,149 @@
+{
+  "date": "2026-11-02",
+  "scope": "UE1 engine-reader source gates and Unreal/UT99 game overlays; NO dependency database resync or previously accepted native method reruns",
+  "original_local_source_sha256": {
+    "unreal_120_Core_version": "0c4a881bd409a40d397afcc877920fb34ec2dffb5a370090a11248b45feab033",
+    "unreal_120_Linker": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+    "ut99_400_Core_version": "e81ec92c03f0f8996d1a347f84f669196ea9135147ea1fe8d0bbc1e79bffc3be",
+    "ut99_432_Core_version": "ffec6ffb6416c9af3d925f52533a86574040f2bc46328e7f9834afc77850bf24",
+    "ut99_432_Linker": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+    "unreal_227_Core_version": "9190a63a420acaf6eb626c6711c83f8d3913c05b2b6141d8c8f8d3eed7a2d759",
+    "unreal_227_Linker": "8d6d35d95c0427c8e30ef94198e2214da41a0b90b39453667980d2316ec2d02e"
+  },
+  "current_production_sha256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "d09baea2367aa71339dc94221265329ffeb8a9fd1d92e5b60a501d0b10f7ca54",
+    "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "26dcb4a4726783bbd175c64368ae402607e546c35ddc40b0e22414c2c4b5c8c3",
+    "catalog/bin/repair-uedb5-4j-source-policies.php": "cf8bec0015d4cc03c3ec4edf05875b736e4332cafa3579bc260abf6e2640d83b",
+    "tests/tools/verify_reader_silo_real_paths.php": "b258abd32e9721123a4cfc994ef9b42bc35099e8516f4b30567954902747df0a"
+  },
+  "source_gates": [
+    {
+      "game": "unrealgold",
+      "package_versions": "34..59",
+      "source": "Unreal v1.200 supports 34..61",
+      "policy": "ue1-unreal-v120-loadable-v34-59",
+      "verify_import": "v120 source profile retained"
+    },
+    {
+      "game": "unrealgold",
+      "package_versions": "60..61 licensee 0",
+      "source": "Unreal v1.200 accepts through 61",
+      "policy": "ue1-unreal-v120-format-v60-61-game-revision-partial",
+      "verify_import": "unknown game revision, not promoted"
+    },
+    {
+      "game": "unrealgold",
+      "package_versions": "62..68",
+      "source": "Unreal v224-era incomplete",
+      "policy": "ue1-unreal-v224-v62-68-public-source-partial",
+      "verify_import": "unknown"
+    },
+    {
+      "game": "unrealgold",
+      "package_versions": "69 licensee 0",
+      "source": "shared version does not prove 227 game",
+      "policy": "ue1-unreal-v69-game-revision-unattributed-partial",
+      "verify_import": "unknown"
+    },
+    {
+      "game": "unrealgold",
+      "package_versions": "69 licensee 227",
+      "source": "Unreal v227 headers, 227k original Core native archive evidence",
+      "policy": "ue1-unreal-v227-v69-licensee227-public-source-partial",
+      "verify_import": "unproven full runtime"
+    },
+    {
+      "game": "ut99",
+      "package_versions": "60..68 licensee 0",
+      "source": "UT99 v400 retail loader",
+      "policy": "ue1-ut99-retail-v1400-1999-11-30",
+      "verify_import": "v1400 source profile retained"
+    },
+    {
+      "game": "ut99",
+      "package_versions": "69 licensee 0",
+      "source": "UT99 v432 distribution Core advertises ENGINE_VERSION 430 and PACKAGE_FILE_VERSION 69",
+      "policy": "ue1-ut99-v430-public-source-partial",
+      "verify_import": "unknown full v432 runtime"
+    },
+    {
+      "game": "ut99",
+      "package_versions": "60..69 nonzero licensee",
+      "source": "not proven stock retail or 432 serializer provenance",
+      "policy": "ue1-ut99-v60-69-nonzero-licensee-source-unattributed",
+      "verify_import": "unknown"
+    }
+  ],
+  "game_overlay_fix": "Original 227k-only RF_HasArchtype extra int32 read now requires explicit Unreal game-aware profile, not just any UE1 v69 licensee>=227. UT99 v432 inline FObjectExport serializer has no ArchetypeIndex.",
+  "single_authority": "Both snapshot builder and source-policy repair CLI call the same Unreal or UT99 policyForVersion function.",
+  "actual_PRD_orig_file_identity_and_sections": [
+    {
+      "file_id": 110902,
+      "game": 12,
+      "version": 61,
+      "licensee": 0,
+      "sha256": "50edfe60fcf99c61f369cf8100079351bd75eb0a23febc77aa891142086dbbc0",
+      "tables_exact": true
+    },
+    {
+      "file_id": 111043,
+      "game": 12,
+      "version": 60,
+      "licensee": 0,
+      "sha256": "0cf6c643fb0fcf9e5f29fff596b9945cfe0c84750a2e1cd3e6a725f4f1e7de7b",
+      "tables_exact": true
+    },
+    {
+      "file_id": 113265,
+      "game": 3,
+      "version": 69,
+      "licensee": 0,
+      "sha256": "8d8abc29adf6a2c2cd96b66f8c34e14b712818553cae470da22dc58f8e830d4b",
+      "tables_exact": true
+    },
+    {
+      "file_id": 1254874,
+      "game": 3,
+      "version": 69,
+      "licensee": 227,
+      "sha256": "3f413ea26b986b9816613315adaa58e949677a14e9af0617bfacae5af5dfdd40",
+      "tables_exact": true
+    },
+    {
+      "file_id": 1245067,
+      "game": 12,
+      "version": 69,
+      "licensee": 227,
+      "sha256": "8738a6e8de2fc79ae05a389796033cf8118928291e0bb0928a44e088df8db6e3",
+      "tables_exact": true
+    },
+    {
+      "file_id": 149421,
+      "game": 12,
+      "version": 69,
+      "licensee": 0,
+      "sha256": "d52d709cc9e890867ebd27d8b16098a877b8275b99c8d1d78c83d862d8a8c440",
+      "tables_exact": true
+    }
+  ],
+  "actual_PRD_unreal_60_61_counts": {
+    "version60_licensee0": 38,
+    "version61_licensee0": 1325
+  },
+  "actual_PRD_UT99_nonzero_licensee_sample_counts": {
+    "v68_lic7": 2,
+    "v69_lic63": 7,
+    "v69_lic127": 8,
+    "v69_lic227": 52
+  },
+  "accepted_original_native_evidence_reused_not_reexecuted": [
+    "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261102-G3-T079-final-current-source-G3-plus-G5-one-time-review.json"
+  ],
+  "regression": "Existing four original file reader-silo regression PASS with historic source policy normalized only for Unreal v61; current decoded table content and historical source proof never modified. Six PRD real byte-identity/summary/name/import/export comparisons exact; changed metadata source_policy intentionally differs from old stored UEDB5.",
+  "limitations": [
+    "Source-policy labels prove provenance boundary, not arbitrary runtime loaded-value outcomes.",
+    "Original 1996 Unreal Resource and Unrealfile formats need independent original-format readers after current UE1 package reader certification.",
+    "No old source-policy DB rows were rewritten; resync must wait until other reader paths close."
+  ]
+}

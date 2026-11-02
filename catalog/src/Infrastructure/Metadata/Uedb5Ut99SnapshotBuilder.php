@@ -18,7 +18,21 @@ final class Uedb5Ut99SnapshotBuilder
     public const POLICY_RETAIL = 'ue1-ut99-retail-v1400-1999-11-30';
     public const POLICY_SUPPLEMENTAL = 'ue1-ut99-v430-public-source-partial';
     public const POLICY_V69 = self::POLICY_SUPPLEMENTAL;
+    // The v432 Core distribution advertises ENGINE_VERSION=430. The
+    // v430 source label refers to those actual headers, not a v400 reader.
+    public const POLICY_NONZERO_LICENSEE_UNATTRIBUTED = 'ue1-ut99-v60-69-nonzero-licensee-source-unattributed';
     public const POLICY_FORWARD_COMPAT = 'ue1-ut99-post-v69-profile-admitted-unresolved';
+
+    public static function policyForVersion(int $version, int $licensee): string
+    {
+        if ($version > 69) {
+            return self::POLICY_FORWARD_COMPAT;
+        }
+        if ($licensee !== 0) {
+            return self::POLICY_NONZERO_LICENSEE_UNATTRIBUTED;
+        }
+        return $version <= 68 ? self::POLICY_RETAIL : self::POLICY_SUPPLEMENTAL;
+    }
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(CatalogUE1PackageReader $reader, array $file): array
@@ -47,10 +61,7 @@ final class Uedb5Ut99SnapshotBuilder
                 'original_name' => (string)($file['original_name'] ?? ''),
             ],
             'package_family' => self::PACKAGE_FAMILY,
-            'source_policy' => $version > 69
-                ? self::POLICY_FORWARD_COMPAT
-                : (($version <= 68 && (int)($header['licenseeVersion'] ?? 0) === 0)
-                    ? self::POLICY_RETAIL : self::POLICY_SUPPLEMENTAL),
+            'source_policy' => self::policyForVersion($version, (int)($header['licenseeVersion'] ?? 0)),
             'section_schemas' => self::sectionSchemas(),
             'sections' => [
                 'summary' => [self::summaryRow($header)],

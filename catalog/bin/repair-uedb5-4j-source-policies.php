@@ -34,8 +34,8 @@ if($gid<1)throw new RuntimeException("Game not found: $slug");
 
 $expected=static function(string$slug,int$v,int$lic):string{
  return match($slug){
-  'unrealgold'=>$v>69?Uedb5UnrealSnapshotBuilder::POLICY_POST_V69_UNRESOLVED:($v<60?Uedb5UnrealSnapshotBuilder::POLICY_V120_EARLY:($v<=68?Uedb5UnrealSnapshotBuilder::POLICY_V224_PARTIAL:Uedb5UnrealSnapshotBuilder::POLICY_V227_PARTIAL)),
-  'ut99'=>$v>69?Uedb5Ut99SnapshotBuilder::POLICY_FORWARD_COMPAT:(($v<=68&&$lic===0)?Uedb5Ut99SnapshotBuilder::POLICY_RETAIL:Uedb5Ut99SnapshotBuilder::POLICY_SUPPLEMENTAL),
+  'unrealgold'=>Uedb5UnrealSnapshotBuilder::policyForVersion($v,$lic),
+  'ut99'=>Uedb5Ut99SnapshotBuilder::policyForVersion($v,$lic),
   'unreal2'=>($v>=60&&$v<=69)?Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000:($v>126?Uedb5Unreal2SnapshotBuilder::POLICY_POST_V126_UNRESOLVED:Uedb5Unreal2SnapshotBuilder::POLICY_V126_GENERIC),
   'ut2003'=>$v>120?Uedb5Ut2003SnapshotBuilder::POLICY_POST_V120_UNRESOLVED:Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY,
  };

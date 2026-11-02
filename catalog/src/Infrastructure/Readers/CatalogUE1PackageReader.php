@@ -297,6 +297,7 @@ final class CatalogUE1PackageReader
                 //  operator for PackageIndex and ArchetypeIndex. Never
                 //  apply this 227-specific flag layout to UT99 archives.
                 $v227ArchetypeProfile = $this->engineKey === 'UE1'
+                    && $this->unrealV227SummarySemantics
                     && $version === 69
                     && (int)($this->header['licenseeVersion']??0) >= 227;
                 $archetypeIndex = $v227ArchetypeProfile
@@ -382,8 +383,8 @@ final class CatalogUE1PackageReader
             }
             // The compiled 227k ExportMap operator reads this extra signed
             // INT only for RF_HasArchtype under LicenseeVer >= 227.
-            if ($this->engineKey === 'UE1' && $version === 69
-                && (int)($this->header['licenseeVersion']??0) >= 227
+            if ($this->engineKey === 'UE1' && $this->unrealV227SummarySemantics
+                && $version === 69 && (int)($this->header['licenseeVersion']??0) >= 227
                 && ((int)$export['objectFlags'] & 0x00000100) !== 0) {
                 $this->validateUE1SignedReference(
                     (int)$export['archetypeIndex'], 'ArchetypeIndex', $i, $imports, $exports
