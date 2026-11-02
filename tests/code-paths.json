@@ -9491,8 +9491,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
-      "sha256": "2fd17fec384914d0cac3dce0244f445c46f428d7125f32ca9f228be2fc0832b9",
-      "bytes": 22335,
+      "sha256": "440f19de2b3a2d3860c7f9d59b65cc6248b8dd98747c6d73c0f00312f975676d",
+      "bytes": 24055,
       "engine_hints": [
         "shared"
       ],
@@ -9633,8 +9633,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
-      "sha256": "cfd10f008b6651db60f3f3037bd0b391fd5a4bbd0add0b3844fff4e6314cb874",
-      "bytes": 20786,
+      "sha256": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
+      "bytes": 22295,
       "engine_hints": [
         "shared"
       ],
@@ -9648,8 +9648,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-      "sha256": "fa8bd1531e4a5a83fc1a67719be63fd5120bd1ebe0e4af78fc0d92f8ecd0724d",
-      "bytes": 24079,
+      "sha256": "ae4dd2bc202e975ae09a07e38b9629f5cdcb0f8dd118415f76ea1e43b885172c",
+      "bytes": 24462,
       "engine_hints": [
         "shared"
       ],

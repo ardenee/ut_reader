@@ -1,0 +1,162 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-mount-provider",
+  "purpose": "Never replace original UE1 loaded-linker or installed Paths selection with catalogue candidate count",
+  "original_epic_anchor": "L:/Source/Games/Unreal/Unreal [v1.200] [1998-05-19]/Core/Src/UnObj.cpp FObjectManager::GetPackageLinker",
+  "original_epic_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+  "previous_original_native_proof": {
+    "file": "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261101-G3-T076-FULL-original-five-engine-provider-selection-acceptance.json",
+    "sha256": "424d9474c05a11ad1a0a63483b7dad917cd8453761dc26ae65de7da0fbb25341",
+    "original_families": [
+      "C98 1998",
+      "UT99 v432",
+      "UT99 469f",
+      "C227i",
+      "C227k"
+    ],
+    "new_original_native_sessions": 0
+  },
+  "new_source_sha256": {
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "440f19de2b3a2d3860c7f9d59b65cc6248b8dd98747c6d73c0f00312f975676d",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "ae4dd2bc202e975ae09a07e38b9629f5cdcb0f8dd118415f76ea1e43b885172c",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "d8635b5de5e7d3d5a74643b1a7105e61508d138bf3c4ed14de735ff5406e38db"
+  },
+  "temporary_verifiers": [
+    {
+      "path": "C:/Temp/UnrealDB/UE1/path-audit/verify_missing_native_mount_context.php",
+      "sha256": "fb7372670f7612a4efdef8c012b6db7febf20ea4c1fc6ad20a12d712998ad4ad"
+    },
+    {
+      "path": "C:/Temp/UnrealDB/UE1/path-audit/cross_engine_provider_regression.php",
+      "sha256": "7f9b482ef9b5ee67e21f4c5c7b5c3983582128a099320e8c9af2e19d4c4cece3"
+    },
+    {
+      "path": "C:/Temp/UnrealDB/UE1/path-audit/prd_ue1_provider_dryrun.php",
+      "sha256": "1743554e8ffa484e6e24c7cd85681c9b018e07827d8eb4105102f321fa611ac4"
+    }
+  ],
+  "read_only_source": "PRD original files and MySQL 8.4.11 session TRANSACTION READ ONLY; no SQL or file mutations",
+  "genuine_prd_source_cases": [
+    {
+      "file_id": 1245067,
+      "game": 12,
+      "imports": 165,
+      "required_packages": 19,
+      "one_catalog_candidate_packages": 17,
+      "multiple_catalog_candidate_packages": 2,
+      "runtime_mount_unresolved_edges": 92,
+      "published_before_fix": {
+        "package_only": 17,
+        "common": 73,
+        "unresolved": 75
+      }
+    },
+    {
+      "file_id": 1254874,
+      "game": 3,
+      "imports": 264,
+      "required_packages": 14,
+      "one_candidate_packages": 5,
+      "zero_candidate_packages": 1,
+      "multi_candidate_packages": 8,
+      "runtime_mount_unresolved_edges": 209,
+      "published_before_fix": {
+        "missing": 101,
+        "package_only": 5,
+        "common": 55,
+        "unresolved": 103
+      }
+    },
+    {
+      "file_id": 113265,
+      "game": 3,
+      "imports": 7,
+      "required_packages": 0
+    },
+    {
+      "file_id": 110902,
+      "game": 12,
+      "imports": 4,
+      "required_packages": 0
+    },
+    {
+      "file_id": 113263,
+      "game": 3,
+      "imports": 13,
+      "required_packages": 1,
+      "runtime_mount_unresolved_edges": 8
+    }
+  ],
+  "read_only_real_prd_assertions": 343,
+  "cross_engine_real_prd_regressions": [
+    {
+      "game": 2,
+      "file_id": 111139,
+      "existing_states": {
+        "selected": 3,
+        "ambiguous": 2
+      }
+    },
+    {
+      "game": 4,
+      "file_id": 148919,
+      "existing_states": {
+        "ambiguous": 4
+      }
+    },
+    {
+      "game": 5,
+      "file_id": 111460,
+      "existing_states": {}
+    },
+    {
+      "game": 6,
+      "file_id": 112300,
+      "existing_states": {}
+    },
+    {
+      "game": 7,
+      "file_id": 113529,
+      "existing_states": {
+        "ambiguous": 1
+      }
+    }
+  ],
+  "result": "With unknown original UE1 mount order the selector retains zero/one/multiple real candidates without selecting a physical provider. Shared rebuilder creates source-scoped unresolved results. Known original mounted-order branch not changed.",
+  "scope_limitations": [
+    "Original native T076 source proof reused and not rerun",
+    "No actual live runtime mount list is asserted for PRD assets",
+    "PRD SQL dependency rows remain pre-fix; no republishing or website acceptance asserted"
+  ],
+  "production_real_prd_nonwriting_pass2_dryrun": [
+    {
+      "game": 12,
+      "file_id": 110902,
+      "selected_provider_count": 0,
+      "source_unresolved_provider_count": 0,
+      "apply": false
+    },
+    {
+      "game": 3,
+      "file_id": 113265,
+      "selected_provider_count": 0,
+      "source_unresolved_provider_count": 0,
+      "apply": false
+    },
+    {
+      "game": 12,
+      "file_id": 1245067,
+      "selected_provider_count": 0,
+      "source_unresolved_provider_count": 19,
+      "apply": false
+    },
+    {
+      "game": 3,
+      "file_id": 1254874,
+      "selected_provider_count": 0,
+      "source_unresolved_provider_count": 14,
+      "apply": false
+    }
+  ]
+}

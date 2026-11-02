@@ -27,6 +27,8 @@ UE1 v69 alone cannot identify Unreal v1.227 versus UT99 source profile. Source a
 
 Common downstream candidates: Uedb5ClassicDependencyResolver.php; Uedb5GameDependencyPassService.php; Uedb5DependencyRebuilder.php; PdoUedb5PhysicalProviderSelector.php; Uedb5RuntimeProviderSnapshotLoader.php; PdoUedb5DependencyProjectionPublisher.php; CatalogParsedPackageMetadataSnapshotBuilder.php; PdoDependencyResolver.php. These are identified components but not proof of a complete runtime invocation chain from every entrypoint.
 
+UE1 source-mount audit (2026-11-02): the original GetPackageLinker checks loaded linkers and original ordered Paths. Without an authoritative game-session mount set, zero, one or several indexed PRD providers remain source_unresolved and the UEDB5 dependency rebuilder retains reason ue1_runtime_mount_context_unavailable with real candidate IDs. Explicit source-scoped mount information retains the existing known-order selection. Existing PRD SQL dependency edge and website projections have NOT been republished, so are potentially stale; native source/session outcomes for individual PRD imports remain unverified. See tests/evidence/ue1/prd-readonly-source-mount-20261102.json. Read-only current source checks: 343 genuine UE1 assertions, plus source-status isolation for genuine UE2, UT2003, UT2004, UT3 and UT4 files.
+
 ## Production flow
 
 User upload / source scan → file and source-profile selection → package/container reading → summary, name, import and export tables → serialized properties, native object and script references → staged UEDB5 snapshot → original mount/provider selection → VerifyImport and dependencies → SQL publication → file-examine, missing-dependency and download outputs.

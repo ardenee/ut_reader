@@ -94,6 +94,25 @@ final class Uedb5DependencyRebuilder
             if (!is_array($row)) {
                 throw new RuntimeException('UEDB5 provider selection contains a non-row value.');
             }
+            if ((string)($row['selection_status'] ?? '') === 'source_unresolved') {
+                if ((string)($row['selection_source'] ?? '') !== 'ue1_runtime_mount_context_unavailable'
+                    || !is_array($row['candidate_file_ids'] ?? null)) {
+                    throw new RuntimeException('Unresolved UE1 physical provider requires explicit missing native mount context.');
+                }
+                $candidateIds = (array)$row['candidate_file_ids'];
+                if (!array_is_list($candidateIds)
+                    || count($candidateIds) !== count(array_unique($candidateIds))
+                    || count(array_filter($candidateIds, static fn($id): bool => !is_int($id) || $id < 1)) > 0) {
+                    throw new RuntimeException('Unresolved UE1 physical provider requires distinct positive indexed candidate IDs.');
+                }
+                $ambiguous[] = [
+                    'package_name' => (string)$row['package_name'],
+                    'package_id' => '',
+                    'candidate_file_ids' => $candidateIds,
+                    'reason_code' => 'ue1_runtime_mount_context_unavailable',
+                ];
+                continue;
+            }
             if ((string)($row['selection_status'] ?? 'selected') === 'ambiguous') {
                 $candidateIds = array_values(array_unique(array_map('intval', (array)($row['candidate_file_ids'] ?? []))));
                 if (count($candidateIds) < 2) {
@@ -133,10 +152,13 @@ final class Uedb5DependencyRebuilder
         $exactClassic = self::usesExactClassicPackageKey($consumer);
         $classic = [];
         $zen = [];
+        $reasonByClassic = [];
         foreach ($ambiguousProviders as $ambiguous) {
             $name = (string)($ambiguous['package_name'] ?? '');
             if ($name !== '') {
-                $classic[self::classicPackageLookupKey($name, $exactClassic)] = (array)$ambiguous['candidate_file_ids'];
+                $key = self::classicPackageLookupKey($name, $exactClassic);
+                $classic[$key] = (array)$ambiguous['candidate_file_ids'];
+                $reasonByClassic[$key] = (string)($ambiguous['reason_code'] ?? 'provider_environment_ambiguous');
             }
             $packageId = strtoupper((string)($ambiguous['package_id'] ?? ''));
             if ($packageId !== '') {
@@ -145,9 +167,12 @@ final class Uedb5DependencyRebuilder
         }
         foreach ($rows as &$row) {
             $candidateIds = null;
+            $reason = 'provider_environment_ambiguous';
             $requiredPackage = (array)($row['required_package_identity'] ?? []);
             if (($requiredPackage['kind'] ?? null) === 'package_name') {
-                $candidateIds = $classic[self::classicPackageLookupKey((string)($requiredPackage['value'] ?? ''), $exactClassic)] ?? null;
+                $key = self::classicPackageLookupKey((string)($requiredPackage['value'] ?? ''), $exactClassic);
+                $candidateIds = $classic[$key] ?? null;
+                $reason = $reasonByClassic[$key] ?? $reason;
             }
             $providerLookupPackageId = strtoupper((string)(
                 $row['provider_lookup_package_id'] ?? $row['required_package_id'] ?? ''
@@ -166,10 +191,10 @@ final class Uedb5DependencyRebuilder
                 $row['selected_provider_package_id'] = null;
             }
             $row['selected_provider_object'] = null;
-            $row['reason_code'] = 'provider_environment_ambiguous';
+            $row['reason_code'] = $reason;
             $detail = (array)($row['resolver_detail'] ?? []);
             $detail['status'] = 'unresolved';
-            $detail['reason'] = 'provider_environment_ambiguous';
+            $detail['reason'] = $reason;
             $detail['candidate_file_ids'] = $candidateIds;
             $row['resolver_detail'] = $detail;
         }

@@ -251,12 +251,17 @@ final class Uedb5GameDependencyPassService
             $selectedProviders,
             static fn(array $row): bool => (string)($row['selection_status'] ?? '') === 'ambiguous'
         ));
+        $sourceUnresolvedProviderCount = count(array_filter(
+            $selectedProviders,
+            static fn(array $row): bool => (string)($row['selection_status'] ?? '') === 'source_unresolved'
+        ));
         if (!$apply) {
             $snapshot = $this->reader->snapshot($gameId, $fileId);
             return [
                 'package_family'=>(string)($snapshot['package_family'] ?? ''),
                 'provider_count'=>count($selectedProviderFileIds),
                 'ambiguous_provider_count'=>$ambiguousProviderCount,
+                'source_unresolved_provider_count'=>$sourceUnresolvedProviderCount,
                 'selected_provider_file_ids'=>$selectedProviderFileIds,
             ];
         }
@@ -276,6 +281,7 @@ final class Uedb5GameDependencyPassService
         return [
             'provider_count'=>count($selectedProviderFileIds),
             'ambiguous_provider_count'=>$ambiguousProviderCount,
+            'source_unresolved_provider_count'=>$sourceUnresolvedProviderCount,
             'selected_provider_file_ids'=>$selectedProviderFileIds,
             'dependency_count'=>(int)($rebuilt['dependency_count'] ?? 0),
             'dependency_outcomes'=>(array)($rebuilt['dependency_outcomes'] ?? []),

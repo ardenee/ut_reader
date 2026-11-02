@@ -106,6 +106,12 @@ final class PdoUedb5PhysicalProviderSelector
                 }
             }
             if (($candidates === [] || !$primaryPhysicallyMounted)
+                // UE1's UnrealI -> UnrealShare retry happens only after an
+                // actual failed original loader search. Catalogue absence
+                // without a mounted session cannot prove that failure.
+                && ($orderedMounts !== null || !str_starts_with(
+                    strtolower((string)($consumer['section_schemas']['imports'] ?? '')), 'ue1.'
+                ))
                 && self::usesUnrealIToUnrealSharePackageFallback($consumer)
                 && self::sameFname((string)$packageName, 'UnrealI')) {
                 // The exact audited source profile catches a failed UnrealI package load and
@@ -182,6 +188,29 @@ final class PdoUedb5PhysicalProviderSelector
                         'source_fallback_package_name' => $sourceFallback,
                     ];
                 }
+                continue;
+            }
+            // UE1 GetPackageLinker resolves already-loaded linkers or the
+            // original ordered Paths, never a catalogue row count. Even a
+            // unique indexed provider (or zero indexed providers) cannot
+            // establish what was physically accessible to that game session.
+            // Keep the indexed candidate list as evidence, not as a native
+            // loader decision, when no authoritative mount context exists.
+            if ($orderedMounts === null && str_starts_with(
+                strtolower((string)($consumer['section_schemas']['imports'] ?? '')), 'ue1.'
+            )) {
+                $selected[] = [
+                    'game_id' => $gameId,
+                    'file_id' => null,
+                    'package_name' => (string)$packageName,
+                    'selection_status' => 'source_unresolved',
+                    'selection_source' => 'ue1_runtime_mount_context_unavailable',
+                    'candidate_file_ids' => array_values(array_map(
+                        static fn(array $candidate): int => (int)$candidate['file_id'],
+                        $candidates
+                    )),
+                    'source_fallback_package_name' => $sourceFallback,
+                ];
                 continue;
             }
             // Epic selects one package/linker before VerifyImport inspects exports.
