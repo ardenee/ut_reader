@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-dispatch",
+  "status": "PASS",
+  "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
+  "scope": "Actual original-file source-selection call-chain: UE1 selected game -> source reader -> UEDB5 metadata builder or verified importer or unverified staging. No VerifyImport or database rebuilding.",
+  "original_Epic_source_SHA256": {
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnObjVer.h": "0c4a881bd409a40d397afcc877920fb34ec2dffb5a370090a11248b45feab033",
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnObjVer.h": "9190a63a420acaf6eb626c6711c83f8d3913c05b2b6141d8c8f8d3eed7a2d759",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjVer.h": "ffec6ffb6416c9af3d925f52533a86574040f2bc46328e7f9834afc77850bf24",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0"
+  },
+  "prior_original_five_build_native_source_evidence": {
+    "path": "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261101-G3-T076-FULL-original-five-engine-provider-selection-acceptance.json",
+    "sha256": "424d9474c05a11ad1a0a63483b7dad917cd8453761dc26ae65de7da0fbb25341",
+    "reexecuted_this_batch": false
+  },
+  "current_implementation_SHA256": {
+    "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "d09baea2367aa71339dc94221265329ffeb8a9fd1d92e5b60a501d0b10f7ca54",
+    "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+    "catalog/src/Infrastructure/Readers/CatalogUE1ClassicSourceFamily.php": "39fa250f73aad1cb79b453dc824e6009f1a47ef34465b87ff8bc68b0a622dc43",
+    "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php": "fcdc55fee90ef94c91c650597afea1a3553c3b6b4fa128650f1672ea4c3ed416",
+    "catalog/src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php": "1a9dfd3a863c4d5ac4c9b9bc9ecfafedea8146e00735b8dcae733bbb9670d4b9",
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php": "ba2b546e8b8fdd6a458861e133737353eb04289d43bfcc544cc207b8aa110ad9",
+    "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "26dcb4a4726783bbd175c64368ae402607e546c35ddc40b0e22414c2c4b5c8c3"
+  },
+  "temp_readonly_full_path_test_SHA256": "e30f2fc678dec70edfe7096f44fd0aaec8c620b881ea6a78142e5b106232f5a6",
+  "temp_corrupt_file_rejection_test_SHA256": "97e102b3be78ffb166d75697964d4399c93428304ba30bc4a08b7b805e5b9c49",
+  "real_PRD_original_packages": [
+    {
+      "game": "unrealgold",
+      "id": 1246569,
+      "version": 54,
+      "licensee": 0,
+      "names": 2879,
+      "imports": 104,
+      "exports": 2667,
+      "policy": "ue1-unreal-v120-loadable-v34-59"
+    },
+    {
+      "game": "unrealgold",
+      "id": 110902,
+      "version": 61,
+      "licensee": 0,
+      "names": 36,
+      "imports": 4,
+      "exports": 6,
+      "policy": "ue1-unreal-v120-format-v60-61-game-revision-partial"
+    },
+    {
+      "game": "unrealgold",
+      "id": 1291337,
+      "version": 69,
+      "licensee": 227,
+      "names": 34,
+      "imports": 15,
+      "exports": 2,
+      "policy": "ue1-unreal-v227-v69-licensee227-public-source-partial"
+    },
+    {
+      "game": "ut99",
+      "id": 113265,
+      "version": 69,
+      "licensee": 0,
+      "names": 75,
+      "imports": 7,
+      "exports": 43,
+      "policy": "ue1-ut99-v430-public-source-partial"
+    },
+    {
+      "game": "ut99",
+      "id": 1254875,
+      "version": 69,
+      "licensee": 227,
+      "names": 303,
+      "imports": 5,
+      "exports": 313,
+      "policy": "ue1-ut99-v60-69-nonzero-licensee-source-unattributed"
+    }
+  ],
+  "for_each_original_case_verified": [
+    "Original file size/MD5/SHA1 matches PRD source identity",
+    "UEDB5 factory source_policy exactly matches selected engine/game/version gate",
+    "Verified importer reader_engine and profile_engine UE1",
+    "Verified importer header/name/import/export full arrays identical to original source-selected reader",
+    "Unverified staging header/name/import/export full arrays identical to source-selected reader",
+    "UEDB5 built import/export counts match original header"
+  ],
+  "negative_checks": [
+    "UE1 Unreal/UT99 selected game overrides provisional UE2/UE3 engine hints",
+    "UT2004 legacy UE1-wire adapter remains UE2-owned",
+    "Unreal II UE2 v126 unchanged",
+    "unknown source slug rejected",
+    "unknown game ID rejected",
+    "original 227 .u copy with corrupted header magic 0x12345678 rejected by factory"
+  ],
+  "prd_sql_writes": 0,
+  "prd_package_writes": 0,
+  "native_executable_reexecutions": 0,
+  "boundary": "Dispatch F01/F02 PASS only; UE1 VerifyImport, runtime mount order, dependency SQL, original early Unreal formats, full native payload serializer outcomes are separate contracts."
+}

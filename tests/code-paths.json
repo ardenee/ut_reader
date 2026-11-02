@@ -7710,8 +7710,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
-      "sha256": "2f48ef34c925ccaae7fbe877b1b144a461020673a6e6552201328b6250139e11",
-      "bytes": 14569,
+      "sha256": "fcdc55fee90ef94c91c650597afea1a3553c3b6b4fa128650f1672ea4c3ed416",
+      "bytes": 15064,
       "engine_hints": [
         "shared"
       ],
@@ -11400,8 +11400,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-      "sha256": "dd463dc47713468bae9b84198168d2d1397bc079193aecf90d735b281dd92597",
-      "bytes": 7077,
+      "sha256": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
+      "bytes": 7654,
       "engine_hints": [
         "shared"
       ],
@@ -13623,8 +13623,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php",
-      "sha256": "f828af6fde9c4743ad9b1fd5b2bf7879ba5a507e166e07954c33be8a5fce0b85",
-      "bytes": 23482,
+      "sha256": "1a9dfd3a863c4d5ac4c9b9bc9ecfafedea8146e00735b8dcae733bbb9670d4b9",
+      "bytes": 23985,
       "engine_hints": [
         "shared"
       ],

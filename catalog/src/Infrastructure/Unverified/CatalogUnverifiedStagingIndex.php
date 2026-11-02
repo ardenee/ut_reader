@@ -216,7 +216,14 @@ final class CatalogUnverifiedStagingIndex
         } else {
             $readerClass = \scanner_load_reader_class($this->config, $engine);
         }
-        $reader = new $readerClass($path);
+        // Once a destination game is selected, honor Unreal's original
+        // 227 summary/export gates exactly as the verified import and V5
+        // snapshot factory do. Unknown-game staging remains un-attributed.
+        $reader = $queueGameId > 0 && $engine === 'UE1'
+            && strtolower((string)($game['slug'] ?? '')) === 'unrealgold'
+            && $readerClass === \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader::class
+            ? new $readerClass($path, true)
+            : new $readerClass($path);
         $issues = method_exists($reader, 'validatePackage')
             ? $reader->validatePackage()
             : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);

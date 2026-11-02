@@ -153,7 +153,14 @@ final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorP
             $ue4ReaderOptions = \catalog_ue5_reader_options($this->config, $game, $profile);
             \catalog_ue5_set_next_reader_options($ue4ReaderOptions);
         }
-        $package = new $readerClass($temporaryPath);
+        // Match UEDB5's source-selected Unreal reader: 227 summaries and
+        // RF_HasArchtype decoding must not differ between initial intake
+        // and a later metadata rescan, and must never leak into UT99.
+        $package = $readerEngine === 'UE1'
+            && strtolower((string)($game['slug'] ?? '')) === 'unrealgold'
+            && $readerClass === \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader::class
+            ? new $readerClass($temporaryPath, true)
+            : new $readerClass($temporaryPath);
 
         \scanner_emit_percent($progress, 'scan', 9, 'Validating package');
         $issues = method_exists($package, 'validatePackage')

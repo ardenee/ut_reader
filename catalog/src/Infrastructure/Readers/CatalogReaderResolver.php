@@ -46,6 +46,14 @@ final class CatalogReaderResolver
         $sourceKey = strtolower(trim($sourceKey));
         $profileEngine = strtoupper(trim($profileEngine));
         $classifiedEngine = strtoupper(trim($classifiedEngine));
+        // Original UE1 packages do not become UE2 packages because an older
+        // version-band heuristic calls the archive UE2. The selected game's
+        // loader owns the bytes; only an explicitly supported compatibility
+        // overlay may select a different wire-format reader.
+        if ($profileEngine === 'UE1' && in_array($sourceKey, ['unrealgold', 'ut99'], true)) {
+            return [self::resolve($config, 'UE1', 'Reader not found for package engine',
+                'Reader file loaded for package engine ', ['UE4', 'UE5']), 'UE1'];
+        }
         if ($profileEngine === 'UE2'
             && in_array($sourceKey, ['unreal2', 'ut2003', 'ut2004'], true)) {
             // Earlier versions trigger Epic's interactive OldVersion prompt;
