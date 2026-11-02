@@ -114,6 +114,7 @@ final class PdoUe1VerifyImportProjectionResolver
                 $profile,
                 $imports,
                 $exports,
+                $providerPackageName,
                 $consumerVersion,
                 $providerVersion,
                 $results,
@@ -180,6 +181,7 @@ final class PdoUe1VerifyImportProjectionResolver
         string $profile,
         array $imports,
         array $exports,
+        string $providerPackageName,
         ?int $consumerVersion,
         ?int $providerVersion,
         array &$results,
@@ -218,6 +220,24 @@ final class PdoUe1VerifyImportProjectionResolver
                 unset($resolving[$index]);
                 return $results[$index] = self::result('invalid', 'invalid_root_package_import', false, null);
             }
+            // VerifyImport follows the *selected* package linker, not an
+            // arbitrary provider that happens to export the same object name.
+            // An unrelated imported package root must never authorize its
+            // descendants to resolve against the nominated provider.
+            $rootPackageName = (string)($import['object_name'] ?? '');
+            // Original UT99 v1.400 VerifyImport has a *specific* old-version
+            // UnrealI -> UnrealShare linker fallback. It is not permission
+            // to resolve imports through an unrelated provider in general.
+            $ut99SharewareFallback = $profile === self::PROFILE_UT99_V1400
+                && self::same($rootPackageName, 'UnrealI')
+                && self::same($providerPackageName, 'UnrealShare');
+            if (!self::same($rootPackageName, $providerPackageName)
+                && !$ut99SharewareFallback) {
+                unset($resolving[$index]);
+                return $results[$index] = self::result(
+                    'invalid', 'different_provider_package_root', false, null
+                );
+            }
             $isPackageLinkerImport = true;
         } elseif ($outer < 0) {
             $parentIndex = -$outer - 1;
@@ -226,6 +246,7 @@ final class PdoUe1VerifyImportProjectionResolver
                 $profile,
                 $imports,
                 $exports,
+                $providerPackageName,
                 $consumerVersion,
                 $providerVersion,
                 $results,

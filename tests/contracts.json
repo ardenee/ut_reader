@@ -756,7 +756,8 @@
         "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json sha256:301fbffc9064c8ce97a89b8cdb24a8a6350f0deefe4dad5b1dca191ae4a4e9bb",
         "tests/evidence/ue1/ue1-original-native-227k-469f-verifyimport-method-20261102.json sha256:a6c6ba7102a9d59c4184c1d5d472d4b0a98fcce8876e64269c86fee76ce474d3",
         "tests/evidence/ue1/ue1-original-native-227k-469f-bulk-import-parity-20261102.json sha256:b56b1049a7193b2ab190749269338d6f166bfb963db28476783442bee7a575a6",
-        "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json sha256:dee1d4d51c1719304fa8d86c5123998fc6a55516abb9d9756a5e262011b52e6d"
+        "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json sha256:dee1d4d51c1719304fa8d86c5123998fc6a55516abb9d9756a5e262011b52e6d",
+        "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json sha256:193640f151894eff4f5d1796fa10519e44797e1a88676d18da175e5769f02cc8"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
@@ -771,13 +772,7 @@
       ],
       "reviewed_at": "2026-11-02",
       "current_review_source_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
-        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "0ada396d58af1382695b069a7c65ea1917f28784a1de56ef0eedc871595da8c2",
-        "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
-        "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
-        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
-        "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "32edfffc4083728351981ff93b533922f48940665b7f9faa14480b7e4052f08a"
+        "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "732f4ed3eb059201c162ac12c5a3edb00902740f0690baeee183b2ef24a821b8"
       },
       "review_findings": [
         "On retained original v432 compiled native imported superclass case, source-profile-conditional PHP lookup matches native-selected provider export index 2 in both A and B; engine native CDO sentinels 111/222 are not PHP loaded values.",
@@ -800,7 +795,11 @@
         "ACTUAL STOCK ORIGINAL v432: two disposable isolated v432 original Core.dll runs loaded original v69 G3T076Consumer through separate original compiled A(111)/B(222) provider variants, both with imported superclass SourceIndex 2 and native CDO present.",
         "Native complete 7-entry import maps in each stock-v432 run: 14/14 exact original import identities/outer indices, 4/4 exact native export indices and 10/10 exact no-index outcomes against diagnostic conditional v1400. Two distinct original provider bytes SHA256 pinned; zero mismatches.",
         "Original stock v432 Core.dll 237dbe38... and source headers pinned, original v432 native source order A111/B222 prior evidence reused. No production v69 source-gate promotion from this limited valid native fixture.",
-        "OVERALL VerifyImport still blocked for other original source revisions, original errors/private/fallback and non-export contexts; original file formats and PRD dependencies not touched."
+        "OVERALL VerifyImport still blocked for other original source revisions, original errors/private/fallback and non-export contexts; original file formats and PRD dependencies not touched.",
+        "ACTUAL NATIVE PRODUCTION DEFECT FIXED: original stock v432 compiled consumer import #2 wrong parent Core vs original G3T076Dupe throws in native loader, while old PHP wrongly returned resolved index2 from G3T076Dupe. UE1-owned resolver now checks selected provider identity recursively and refuses to reuse a matching export from the wrong provider.",
+        "Original v432 private RF_Public-cleared export2 mutated only in disposable provider copy: compiled native load fails, PHP correctly returns private_export without SourceIndex. Both original A/B provider controls remain resolved export index2.",
+        "After actual UE1 resolver correction, real original 227k 78/78, 469f 1202/1202 and stock v432 14/14 provider-present native comparisons exact, no regression. Original UT99 v1400 UnrealI->UnrealShare fallback preserved, old Unreal pre50 path unchanged.",
+        "Original 2012 227i Core DLL has no exported standalone VerifyImport, so remains a separate native source proof requirement. Overall VerifyImport contract still BLOCKED; production SQL and original engine binaries untouched."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -810,7 +809,8 @@
       "source_policy_gate_evidence": "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json",
       "native_revision_method_evidence": "tests/evidence/ue1/ue1-original-native-227k-469f-verifyimport-method-20261102.json",
       "native_bulk_import_evidence": "tests/evidence/ue1/ue1-original-native-227k-469f-bulk-import-parity-20261102.json",
-      "native_original_stock_v432_evidence": "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json"
+      "native_original_stock_v432_evidence": "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json",
+      "native_wrong_provider_correction_evidence": "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json"
     },
     {
       "key": "ue1-mount-provider",

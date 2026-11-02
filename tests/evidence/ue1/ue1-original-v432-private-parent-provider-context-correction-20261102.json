@@ -1,0 +1,79 @@
+{
+  "date": "2026-11-02",
+  "existing_contract": "ue1-verify-import",
+  "status": "BLOCKED (full later native revisions and fallbacks)",
+  "original_native_defect": "Mutating original v432 G3T076Consumer import #2 parent from G3T076Dupe to Core causes original stock v432 native consumer load to throw; before fix conditional v1400 PHP falsely claimed same G3T076Dupe provider export index 2 was resolved.",
+  "UE1_code_fix": "Recursive UE1 source import lookup now checks root package identity against NOMINATED providerPackageName, rejecting descendants of unrelated provider roots. Preserves original UT99 v1.400 one-way UnrealI->UnrealShare source fallback.",
+  "four_native_original_compiled_v432_outcomes": {
+    "A": {
+      "original_provider_SHA256": "150f708e4b7e0815166c061a0429a90ce4768be49ecde340e5be707f67d01fcc",
+      "consumer_SHA256": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "native_stdout_SHA256": "c4aeba105838c6cab8c82b707ecaaa5b2b82cc3eefe516f673383c4436eda317",
+      "native_load_success": true,
+      "source_projected_outcome": "resolved, index 2"
+    },
+    "B": {
+      "original_provider_SHA256": "8afa982acf837c0ffc350d9b04cb9f12c561f07ec206030d9ba5a6205ad934dc",
+      "consumer_SHA256": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "native_stdout_SHA256": "2711100d3cc2dbeee877fffd8d37f0a5f5f389b672eefa50922cf0d8d2923835",
+      "native_load_success": true,
+      "source_projected_outcome": "resolved, index 2"
+    },
+    "PRIVATE": {
+      "original_provider_SHA256": "a041538b1c74254d5eb051ffe3ad4dafc52e2133b5c5f33c50a269c105841950",
+      "consumer_SHA256": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "native_stdout_SHA256": "e962eb133894ef1986c4f42932ba6e96a1b7fb52ec9ec15b8e680d75b3a10c74",
+      "native_load_success": false,
+      "source_projected_outcome": "private_export, no source index"
+    },
+    "BAD-OUTER": {
+      "original_provider_SHA256": "150f708e4b7e0815166c061a0429a90ce4768be49ecde340e5be707f67d01fcc",
+      "consumer_SHA256": "7c19015a48aaf5c371ddf45a50aa6adca60aac7eed57a04e2e28bbdcc5114b0d",
+      "native_stdout_SHA256": "e962eb133894ef1986c4f42932ba6e96a1b7fb52ec9ec15b8e680d75b3a10c74",
+      "native_load_success": false,
+      "source_projected_outcome": "invalid parent_source_linker_unavailable, no source index"
+    }
+  },
+  "private_single_mutation": {
+    "original_provider_export_index": 2,
+    "changed_byte_offset": 528,
+    "RF_Public_cleared": true,
+    "previous_flags": 983044,
+    "new_flags": 983040,
+    "size_unchanged": true
+  },
+  "wrong_parent_single_mutation": {
+    "original_consumer_import_index": 2,
+    "changed_byte_offset": 508,
+    "original_parent": -2,
+    "new_parent": -1,
+    "size_unchanged": true
+  },
+  "original_stock_v432_Core_DLL_SHA256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "original_v1400_source_VerifyImport_SHA256": "810b2b4c86482272d00bd0460561f8d09bb8f7e72ef478a67faa1e53cadcd9a9",
+  "original_v432_source_inline_header_SHA256": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+  "current_UE1_resolver_SHA256": "732f4ed3eb059201c162ac12c5a3edb00902740f0690baeee183b2ef24a821b8",
+  "disposable_native_cpp_verifier_SHA256": "d7d8aa004654695f0df02641f8b95fe8e063efabc32967cbf855394eb4a46323",
+  "disposable_UE1_failure_parity_verifier_SHA256": "46b4389cc0c71324e6b73ec471ee3083dca49d57c6965e18ec8819f23556a35e",
+  "disposable_mutation_scripts_sha256": {
+    "make-v432-private-export-native-fixture.php": "01a18f5615d54a1308eff42a709c790f6c5eb5379438a3010b1d162b68fa4393",
+    "make-v432-bad-parent-fixture.php": "c6041dd9a952d2ea6162fd4f14e98550ac96c62cf80d0c8359c18118fe82d637"
+  },
+  "existing_native_positive_regression_after_fix": {
+    "Unreal_227k": "78/78 original provider-present imports exact",
+    "UT99_469f": "1202/1202 original provider-present imports exact",
+    "UT99_v432": "14/14 original provider-present imports exact",
+    "mismatches": 0
+  },
+  "source_special_cases": "Original UT99 v1400 shared-version UnrealI-to-UnrealShare root fallback remains allowed; unrelated TestPkg to UnrealShare refused; early Unreal v49 object_package path unchanged.",
+  "original_Unreal_227i_Core_SHA256": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+  "227i_original_direct_VerifyImport_export": "not exported from 2012 Core.dll; requires actual original loader instrumentation, cannot be inferred from 227k",
+  "limits": [
+    "Mutated stock v432 native load errors confirm failing package load but full original native VerifyImport error call-stack on those cases has not been captured.",
+    "Not complete proof of original private/loader fallback across every UE1 revision and selected mount context.",
+    "No native behaviour source profiles promoted for unverified v69 revisions."
+  ],
+  "PRD_database_writes": 0,
+  "original_unmodified_package_writes": 0,
+  "new_test_case_ids": 0
+}
