@@ -1,3 +1,5 @@
+> **Current testing authority (2026-11-02):** Use [tests/README.md](tests/README.md) and its single [UE1–UE5 contract register](tests/contracts.json), not the previous G3/G5 journals. All prior test scripts, reports and logs are preserved verbatim in [the historical archive](archive/testing-legacy-2026-11-02/README.md). Old instructions and results in the repository and specifications describe historical source revisions, not new mandatory test runs.
+
 # UnrealDB
 
 > **Current status:** [Current project status](docs/current-project-status.md) records the seven-game UEDB5 production checkpoint. [UE5.8.3 certification status](catalog/compliance/UE583-CERTIFICATION-STATUS.md) tracks the separate Epic-source, real-file and workflow audit (not yet certified).

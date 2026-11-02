@@ -21,4 +21,4 @@ Analyzer targets: SHA-pinned C:\Temp\UnrealDB\O06\Native-UCC\System\Core.dll and
 Quick run:
   & 'C:\Temp\UnrealDB\O06\tools\rea-ghidra.ps1' inspect 'C:\Temp\UnrealDB\O06\Native-UCC\System\Engine.dll' --provider ghidra --json
 
-See catalog/compliance/TOOLS-REA-SETUP.md for provenance and setup.
+See archive/testing-legacy-2026-11-02/catalog/compliance/TOOLS-REA-SETUP.md for provenance and setup.

@@ -1,20 +1,20 @@
 ---
 name: unrealdb-epic-parity
-description: Source-first UnrealDB parser development, UE1 O06 audit, compact checkpointed verification, resumable evidence and DEV-to-PRD source-parity deployment.
+description: Epic-source-selected UnrealDB file/archive, dependency and end-to-end catalogue parity; one fixed cross-engine contract register and non-repeating evidence.
 license: MIT
-compatibility: Windows PowerShell 5.1+, PHP 8.5, Python 3, git and Desktop Commander on game-amd DEV.
+compatibility: Windows PowerShell, PHP 8.5, Python, Git and Desktop Commander.
 ---
 
-# UnrealDB Epic source parity
+# UnrealDB Epic source parity — one contract, one proof, stop
 
-1. **Resume, don't replay.** Read the live checkpoint, last O06 event records and `git status` before choosing work. Do not repeat a known completed test unless its transitive inputs changed or it is an explicit milestone gate.
-2. **Specify the contract.** Identify one Epic engine/version/function, exact source path, structural read/write effects, and gaps against the actual production reader. Record contract and next step **before modifying code** via `python catalog/bin/update-ue1-o06-checkpoint.py --activate ...`.
-3. **Source authority.** Use build-selected Epic C++ including version boundaries, inherited serializers, `FArchive` operations and linker maps. Graphify and ripgrep locate code; only Epic source and authentic engine/oracle evidence establish behavior. Keep source SHA and specimen provenance.
-4. **Reuse first.** Prefer an existing shared reader/helper. Preserve malformed-input validation. A new serializer requires source assertions, positive and negative bytes and a genuine/compiled comparison where possible; unverified source family or memory effects stay explicitly unverified.
-5. **Tiered tests.** Run `catalog/bin/run-ue1-o06-scoped.ps1 -Contract <name> -Tier focus` while editing; `-Tier affected` once stable; `-Tier gate` only at formal milestone acceptance. Add or update an explicit entry in `catalog/compliance/UE1-O06-TEST-PLAN.json` when introducing a contract.
-6. **Immediately durable evidence.** Existing `run-ue1-o06-tests.ps1` writes append-only STARTED/PASS/FAIL events and per-test hashes; the live checkpoint updates automatically on each state transition. Update stage/next-step after the actual implementation and verification step, rather than waiting for chat end. On timeout the next run picks up at the first incomplete event.
-7. **Close or keep OPEN.** Verify code passes its focus and affected tests, independently inspect source effects, and mark unresolved genuinely unknown behavior PARTIAL. Update `UE1-O06-SERIALIZATION.md`, `UE1-O06-OPEN-CONTRACTS.md` or their contract entry when **meaningful semantics** change, not to duplicate each identical PASS event.
-8. **Release.** Commit/push only verified tracked changes; transfer only permitted changed files and compare SHA-256 on PRD. No PRD PHP tests. Leave `H:\UE5-583-runtime-probe` and `F:\UE5-583-versevm-probe` untouched.
-9. **Stop verified work.** If the source contract, regression evidence and deployment pass, record the checkpoint and move to the next OPEN contract. Don't rerun expensive same-hash corpus tests simply to fill a chat response.
+1. Read AGENTS.md, tests/README.md, tests/contracts.json and tests/ARCHITECTURE.md. Archived catalog/compliance files are historical, NOT current status. Never interpret old acceptance group notes as a new work queue.
+2. Select exactly one necessary engine/contract row. Trace real product call path and Epic selected source, including engine base, game overlay, FArchive branches, linker/mount order, and persisted database result. Do not accept static file-name tags as reachability.
+3. Reuse accepted original/native source proofs from archive/testing-legacy-2026-11-02 by SHA and transitive code identity; never rerun a matching source/proof.
+4. If evidence is missing, require explicit user-facing risk, genuine fixture, exact original-engine expected output, UnrealDB actual output, and exact stopping assertion **before** a bounded new test. Avoid partial proofs and nested subtests.
+5. Modify the smallest existing production module only when a real mismatch exists; do not duplicate readers. Respect unknown source/physical mount order: UNKNOWN is not MISSING.
+6. One terminal result per applicable contract in tests/contracts.json: PASS, FAIL, BLOCKED or source-proven SOURCE_NA. Preserve accepted proof hashes; no repeated status counters.
+7. DEV-only verification and protected PRD source deployment; compare SHA-256, protect config, storage, Git. Never write to Epic source or use PRD as test runner.
+8. Keep temporary probes in C:\Temp, retain minimal unique accepted evidence under tests/evidence and clean disposable builds *only after review*. F:\UE5-583-versevm-probe and H:\UE5-583-runtime-probe untouched unless explicitly approved.
+9. Once acceptance criteria are satisfied, STOP. Do not invent another test because a source function/tool exists.
 
-This skill is a workflow, not an oracle. Only full Epic-compliant observed file behavior permits acceptance.
+Ponytail reuse, investigate-first on ambiguous failures, and verify-and-stop at acceptance remain applicable. REA and Ghidra are useful read-only compiled source oracles; extracted pseudocode is evidence, not Epic's original C++.

@@ -221,13 +221,13 @@ For v68+ Unreal snapshots using v227 summary semantics:
 
 Section 4A adds/extends regression gates:
 
-- `catalog/bin/verify-ue1-pre50-import-layout.php`
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-ue1-pre50-import-layout.php`
   - pre-v50 import ObjectPackage branch;
   - pre-v50 export PackageIndex omission;
   - export alignment;
   - nonzero negative SerialSize still consumes SerialOffset;
   - UEDB5 import/export schema boundaries.
-- `catalog/bin/verify-unreal-v227-summary-contract.php`
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-unreal-v227-summary-contract.php`
   - serialized generation count 65 becomes effective 64;
   - serialized negative generation count becomes effective 0;
   - both values survive UEDB5 projection.

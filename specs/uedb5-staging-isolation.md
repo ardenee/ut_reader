@@ -54,9 +54,9 @@ A successfully staged V5 file is registered separately in `ue_uedb5_files`. `Pdo
 
 ## Verification
 
-`catalog/bin/verify-uedb5-staging-isolation-contract.php` verifies the code boundary: only `ue_uedb5_*` write targets are allowed, dynamic staging DML is guarded, and V4/V5 paths remain distinct.
+`archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-staging-isolation-contract.php` verifies the code boundary: only `ue_uedb5_*` write targets are allowed, dynamic staging DML is guarded, and V4/V5 paths remain distinct.
 
-`catalog/bin/verify-uedb5-staging-coexistence.php` is a read-only live audit. During migration it verifies that:
+`archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-staging-coexistence.php` is a read-only live audit. During migration it verifies that:
 
 - no verified live `ue_file_metadata` row has been switched to format 5;
 - every staged `ue_uedb5_files` row still has a live format-4 registration;

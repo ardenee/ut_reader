@@ -64,7 +64,7 @@ Never merge divergent engine forks into a generic UE1/UE2/UE3/UE4/UE5 specificat
 - `ue4-4.27.2/verifyimport/source-path-*.mmd`: readable Mermaid diagrams.
 - `ue4-4.27.2/verifyimport/source-path.drawio`: **editable** multi-page
   diagrams.net/draw.io document (can be exported to Visio from diagrams.net).
-- `catalog/compliance/UE427-P07-SOURCE-STEP-CHECKLIST.csv`: separate
+- `archive/testing-legacy-2026-11-02/catalog/compliance/UE427-P07-SOURCE-STEP-CHECKLIST.csv`: separate
   source-to-UnrealDB mapping. This is not part of the Epic-only reference.
 
 Regenerate the pilot directly on DEV with:
@@ -98,7 +98,7 @@ powershell -ExecutionPolicy Bypass -File catalog/bin/build-epic-ue427-package-ha
 ```
 
 The separate source-to-UnrealDB implementation checklist is in
-`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv`. It never becomes
+`archive/testing-legacy-2026-11-02/catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv`. It never becomes
 an input for Epic reference document generation.
 
 ## Future per-release handbook format

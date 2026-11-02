@@ -26,3 +26,5 @@ lzo2.dll
 
 # Installed browser archive decoder binary (verified by installer).
 /catalog/assets/vendor/7z-wasm/7zz.wasm
+
+tests/tools/__pycache__/

@@ -364,7 +364,7 @@ The format-5 container and production-capable isolated V5 file components are im
 - `Uedb5MetadataReader` reads the canonical `.uedb5` path from explicit game/file identity, verifies the entire container before caching its manifest, verifies every touched block again, supports paging/sparse positions/full snapshot reconstruction, and never falls back to UEDB4;
 - `Uedb5MetadataSnapshotWriter` builds and verifies a temporary V5 file, then replaces the canonical `.uedb5` path with a same-filesystem rename; it does not write `ue_file_metadata` or any SQL projection;
 - `Uedb5DependencyRebuilder` reads only V5 snapshots, requires explicitly selected physical provider files, dispatches to the applicable source-family resolver, replaces the `dependency_results` section and writes it back through the V5 writer; classic resolver diagnostics are normalized to the frozen five-state outcome contract;
-- `catalog/bin/verify-uedb5-production-reader-writer.php` and `catalog/bin/verify-uedb5-dependency-rebuilder.php` verify the production-capable V5 components and prove that matching `.uedb4` files are not touched;
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-production-reader-writer.php` and `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-dependency-rebuilder.php` verify the production-capable V5 components and prove that matching `.uedb4` files are not touched;
 - production `BlockedCompressedMetadataContainer` / `BlockedCompressedMetadataReader` remain format 4 only and continue to use `.uedb4` until the migration/cutover is ready.
 
 The Step 3 components are production-capable file primitives, not production publication. They deliberately have no PDO dependency, no V5 registration lookup, no V5 SQL projection writer and no `try V5, else V4` path. UT99 source reparse and base V5 projection publication are implemented; remaining game builders, dependency second-pass publication, catalogue cutover and V4 retirement remain later implementation sections.
@@ -450,7 +450,7 @@ Classic UE5 5.8.3 source-shaped persistence is implemented for offline/staging U
 - version-gated import/export members carry explicit presence state; when a source version did not serialize a member, UEDB5 records it as absent/null rather than fabricating a serialized zero/false value;
 - UE5 classic `ObjectFlags` are stored canonically as 16 hex digits while explicitly recording `object_flags_serialized_width_bits=32` and RF_Load-mask semantics, so the common representation cannot be mistaken for UE3 QWORD serialization;
 - soft package references remain a separate section and retain every serialized FName row, including a serialized None entry if one exists;
-- `catalog/bin/verify-uedb5-ue5-classic-persistence.php` verifies full `.uedb5` round-trip preservation, including the filtered-editor-only serialized/effective `PackageName` distinction and serialized-zero versus assumed version identity for unversioned packages.
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-ue5-classic-persistence.php` verifies full `.uedb5` round-trip preservation, including the filtered-editor-only serialized/effective `PackageName` distinction and serialized-zero versus assumed version identity for unversioned packages.
 
 The persistence layer itself does not publish UEDB5 SQL registrations or switch production readers. Classic UE5 `VerifyImportInner` source-parity resolution is implemented separately below; isolated Zen/IoStore staging is implemented below; production cutover remains pending.
 
@@ -465,7 +465,7 @@ The deterministic file-backed portion of UE5 5.8.3 `FLinkerLoad::VerifyImportInn
 - requested class-package/name mismatch on the matched export likewise remains a resolved candidate with deferred class verification, matching `ImportsToVerifyOnCreate`;
 - UE5 `RF_Public` is tested as `0x00000001`; the three source graph exceptions `ImportIsInAnyExport`, `AnyExportIsInImport`, and `AnyExportShareOuterWithImport` can permit an otherwise-private export;
 - The current staging resolver preserves `bImportOptional` as metadata but does not use it as a classic VerifyImport outcome because the audited UE5 5.8.3 linker does not consult it there. Unavailable live-runtime branches are labeled `runtime_only` and normalized by the canonical dependency-results writer to `unresolved` plus runtime-derived classification while retaining detailed reason/provenance.
-- `catalog/bin/verify-uedb5-ue5-classic-dependency-resolution.php` verifies these rules, including that `RF_HasDynamicImports` does not cause synthetic serialized import rows.
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-ue5-classic-dependency-resolution.php` verifies these rules, including that `RF_HasDynamicImports` does not cause synthetic serialized import rows.
 
 This resolver is deliberately not wired into production `PdoDependencyResolver` / `CompactDependencyRebuilder`; those still consume UEDB4 metadata and must remain unchanged until the UEDB5 migration/publication cutover.
 

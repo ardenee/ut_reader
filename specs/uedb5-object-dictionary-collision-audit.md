@@ -8,7 +8,7 @@
 
 ## Measured production sample
 
-On 2026-10-13, the bounded `catalog/bin/audit-uedb5-object-dictionary-identity.php` command ran on PRD. It selected 10,000 `ue_uedb5_object_candidates` rows from fourteen indexed file IDs and joined the distinct object-name hash/length identities to the current `ue_uedb5_search_keys` dictionary. Its session-local temporary tables were dropped.
+On 2026-10-13, the bounded `archive/testing-legacy-2026-11-02/catalog/bin/audit-uedb5-object-dictionary-identity.php` command ran on PRD. It selected 10,000 `ue_uedb5_object_candidates` rows from fourteen indexed file IDs and joined the distinct object-name hash/length identities to the current `ue_uedb5_search_keys` dictionary. Its session-local temporary tables were dropped.
 
 | Measure | Value |
 |---|---:|

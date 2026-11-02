@@ -20,7 +20,7 @@ Step 10 remains the operational completion target while migration is in progress
 - invalid UEDB5 = 0;
 - all V5 projections and dependency results are complete.
 
-Step 11 turns those conditions into a strict read-only cutover gate implemented by `catalog/bin/verify-uedb5-cutover-ready.php`.
+Step 11 turns those conditions into a strict read-only cutover gate implemented by `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-cutover-ready.php`.
 
 ## Atomic-cutover boundary
 

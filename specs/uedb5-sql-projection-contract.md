@@ -9,7 +9,7 @@ This document freezes the database boundary for UEDB5. It exists specifically to
 
 The authoritative source-shaped record is the `.uedb5` file. SQL is an accelerator, catalogue relationship store, and materialized-summary layer only.
 
-The machine-readable companion is `catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php`. `catalog/bin/verify-uedb5-sql-projection-contract.php` prevents the baseline contract from silently growing source-shaped columns.
+The machine-readable companion is `catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php`. `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-sql-projection-contract.php` prevents the baseline contract from silently growing source-shaped columns.
 
 ## Governing rule
 

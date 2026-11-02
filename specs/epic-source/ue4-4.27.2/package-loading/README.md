@@ -59,7 +59,7 @@ modifying it.
 
 ## Production comparison (separate)
 
-`catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **401**
+`archive/testing-legacy-2026-11-02/catalog/compliance/UE427-LOADER-EPIC-STEP-MAPPING.csv` contains **401**
 source-indexed items across the expanded trace. The increased number reflects
 source-defined branches newly enumerated, not an invented work backlog. Each is
 `NOT_CHECKED` until inspected against actual UnrealDB production PHP; individually implemented branches are marked separately and do not imply whole-path acceptance.

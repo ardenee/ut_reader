@@ -114,10 +114,10 @@ The production V5-only cutover and 235,239-file migration are complete. Do not r
 
 Current bounded, non-destructive PRD checks (using `C:\php8.5\php.exe`):
 
-- `catalog/bin/verify-uedb5-post-cutover-bounded.php` — registered/validated verified-file coverage, legacy table absence, runtime fallback checks, and two container hash samples per game.
-- `catalog/bin/verify-uedb5-compact-schema-live.php` — authoritative compact tables, indexes, and foreign keys through `information_schema` without candidate row scans.
-- `catalog/bin/verify-uedb5-isolated-recovery.php` — temporary-file healthy/missing/truncated/corrupted/restored container cases.
-- `catalog/bin/verify-compact-metadata-repair-contract.php` — source-level queued-repair and affected-dependency contract.
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-post-cutover-bounded.php` — registered/validated verified-file coverage, legacy table absence, runtime fallback checks, and two container hash samples per game.
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-compact-schema-live.php` — authoritative compact tables, indexes, and foreign keys through `information_schema` without candidate row scans.
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-isolated-recovery.php` — temporary-file healthy/missing/truncated/corrupted/restored container cases.
+- `archive/testing-legacy-2026-11-02/catalog/bin/verify-compact-metadata-repair-contract.php` — source-level queued-repair and affected-dependency contract.
 - **Retired 2026-10-22:** the old seven-game `verify-uedb5-compact-v2-publisher.php` script was removed after the V5 cutover because its pinned live registrations are unavailable in the current DEV/PRD test database; it was not called by production or the automated test harness. It did **not** prove the V5 registration table obsolete. Current `ue_uedb5_files` and the active compact publisher are retained. Source, isolated schema and publisher-flow coverage remain in `verify-uedb5-base-projection-contract.php`, `verify-uedb5-compact-candidate-source-contract.php` and `verify-uedb5-compact-schema-temp.php` (all PASS on DEV). The original script is recoverable in Git history at `eba5e915`.
 
 The former backfill planners, launchers, and surrogate benchmark scripts were retired after deletion of their source candidate tables. Passing these checks does not establish exhaustive original-byte/source parity or end-to-end queued repair execution; those require separate controlled integration fixtures. Production storage and database must not be intentionally corrupted for testing.

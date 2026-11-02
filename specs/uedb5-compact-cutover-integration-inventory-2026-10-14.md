@@ -10,7 +10,7 @@
 
 The compact backfill rehearsal passed exact full-row candidate parity across **60 files in seven games** (30 UT4 and five files each for six other games). Results: 5,924 name candidates and 4,492 object candidates, no differences reported. The session-only backfill executor is `catalog/bin/rehearse-uedb5-compact-backfill-batch.php`.
 
-The durable progress SQL is proposed in `catalog/sql/uedb5-compact-backfill-progress.sql`; session-only regression `catalog/bin/verify-uedb5-compact-progress-contract.php` passed 4/4 checks (commit, replay, rollback, monotonic cursor). None of these statements has been applied as permanent DDL.
+The durable progress SQL is proposed in `catalog/sql/uedb5-compact-backfill-progress.sql`; session-only regression `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-compact-progress-contract.php` passed 4/4 checks (commit, replay, rollback, monotonic cursor). None of these statements has been applied as permanent DDL.
 
 ## Exact runtime dependencies from current PRD audit
 

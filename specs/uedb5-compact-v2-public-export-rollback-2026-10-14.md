@@ -13,13 +13,13 @@ The production projection builder returns a binary 8-byte `public_export_hash` o
 
 ## Controlled source-backed fixtures
 
-`catalog/bin/verify-uedb5-compact-v2-public-export-fixtures.php` injects known non-null valid public hashes into **in-memory copies** of seven real V5 source snapshots, keeping original object identities. It derives canonical V5 candidate rows and compares a legacy-shaped temporary table with the compact v2 lookup adapter.
+`archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-compact-v2-public-export-fixtures.php` injects known non-null valid public hashes into **in-memory copies** of seven real V5 source snapshots, keeping original object identities. It derives canonical V5 candidate rows and compares a legacy-shaped temporary table with the compact v2 lookup adapter.
 
 Result: **7/7 games, 14/14 query comparisons, 24 matching export rows, zero mismatches**. Duplicate hashes and index ordering are covered. These are controlled fixtures, not a direct comparison with populated production public-export rows.
 
 ## Failure atomicity
 
-`catalog/bin/verify-uedb5-compact-v2-rollback-fault.php` deliberately adds a rejecting CHECK constraint to the temporary compact objects table. Publishing must fail after earlier dictionary and name inserts. It verifies that the publisher's own transaction is rolled back and **all three temporary tables remain empty**.
+`archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-compact-v2-rollback-fault.php` deliberately adds a rejecting CHECK constraint to the temporary compact objects table. Publishing must fail after earlier dictionary and name inserts. It verifies that the publisher's own transaction is rolled back and **all three temporary tables remain empty**.
 
 Result: **7/7 games**, no surviving partial rows, no errors.
 

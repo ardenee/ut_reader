@@ -1,3 +1,5 @@
+> **Archived historic verification commands:** older links to verification PHP/PowerShell/Python refer to read-only original evidence under archive/testing-legacy-2026-11-02. To reproduce them, check out commit eb3065b2 in a disposable worktree. Current live tests and acceptance decisions: [tests/](../tests/README.md).
+
 # UnrealDB Official Format Specifications
 
 > **Current status:** [Current project status](../docs/current-project-status.md) records the authoritative 15 October 2026 V5 production checkpoint.
@@ -77,7 +79,7 @@ Current conformance work must use the local source mirrors below. Historical Git
 - [x] UEDB5 staging isolation contract — `uedb5-staging-isolation.md` (historical Step 7; V5 write-table isolation guard remains useful, but V4 coexistence has ended)
 - [x] UEDB5 migration validation contract — `uedb5-migration-validation.md` (Step 8 durable pending/staged/validated/failed state, fresh-source reparse validation, exact projection agreement, resumable batches)
 - [x] UEDB5 game-level parity audit - `uedb5-game-parity-audit.md` (historical Step 9 parity design; current production is V5-only, with bounded seven-game lifecycle evidence)
-- [x] UEDB5 cutover readiness gate - `uedb5-cutover-readiness.md` (historical Step 11 cutover plan; current bounded post-cutover verifier is `catalog/bin/verify-uedb5-post-cutover-bounded.php`)
+- [x] UEDB5 cutover readiness gate - `uedb5-cutover-readiness.md` (historical Step 11 cutover plan; current bounded post-cutover verifier is `archive/testing-legacy-2026-11-02/catalog/bin/verify-uedb5-post-cutover-bounded.php`)
 - [x] UEDB5 source-audit requirements — `uedb5-metadata-requirements.md` (historical migration implementation record; all seven production games have validated V5 registrations and isolated lifecycle coverage; live UE5 Zen/IoStore ingestion remains a separate coverage limit)
 
 ### Redirect/archive/mod formats
