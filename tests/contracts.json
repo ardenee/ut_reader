@@ -646,15 +646,16 @@
         "F05",
         "F06"
       ],
-      "status": "REUSE_ACCEPTED_EVIDENCE",
-      "code_path_evidence": "PRODUCTION_READONLY_PRD_ORIGINAL_FILES_AND_STORED_METADATA_OBSERVED; EPIC_NATIVE_RUNTIME_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "F03_F06_ORIGINAL_EPIC_SOURCE_INLINE_SERIALIZER_AND_PRD_REAL_BYTE_35K_FULL_ROW_SHA_IDENTITY_PLUS_INDEPENDENT_CURSOR_EXACT_ALL_OFFSETS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php",
         "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php",
-        "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
+        "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
       "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h",
@@ -669,12 +670,20 @@
       "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
       "existing_proof_sha_refs": [
         "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8",
-        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2"
+        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2",
+        "tests/evidence/ue1/ue1-tables-original-source-byte-parity-20261102.json sha256:d8d74ff6b8e3aba0974ccc67bc97ec51e641e3d8c6e5795239d0dd87fcb1a7f7"
       ],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "REUSE_PRIOR_GENUINE_TABLE_PROOF_ONLY; NO_REEXECUTION",
-      "result_evidence": "tests/evidence/reader-silo-all-engines-20261102.json",
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "PASS: Original inline Epic v1.200/v432 source layouts + retained source-based earlier evidence; 10 genuine PRD packages compared every current/frozen UEDB5 source table row (35257/35257), independently decoded all 17700 names, 818 imports, 16729 exports with exact raw offsets, flags and values. Original bytes source SHA/MD5/SHA1 checked. No native executable reruns or PRD SQL writes.",
+      "result_evidence": "tests/evidence/ue1/ue1-tables-original-source-byte-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "d09baea2367aa71339dc94221265329ffeb8a9fd1d92e5b60a501d0b10f7ca54",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b",
+        "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "26dcb4a4726783bbd175c64368ae402607e546c35ddc40b0e22414c2c4b5c8c3"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
@@ -689,13 +698,20 @@
       ],
       "reviewed_at": "2026-11-02",
       "current_review_source_sha256": {
-        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "d09baea2367aa71339dc94221265329ffeb8a9fd1d92e5b60a501d0b10f7ca54",
         "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
-        "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b"
+        "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b",
+        "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "26dcb4a4726783bbd175c64368ae402607e546c35ddc40b0e22414c2c4b5c8c3"
       },
       "review_findings": [
         "4/4 genuine PRD original files, SHA pinned, match every summary, name, import and export row in currently stored UEDB5 snapshots; native Epic original loaded values not retested.",
-        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact."
+        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact.",
+        "PASS: 10 genuine original PRD files across Unreal v54/v60/v61/v69 and UT99 v68/v69. Exact full UEDB5 summary/name/import/export stored vs fresh current source-selected tables: 35257 of 35257 rows, zero mismatches.",
+        "Independent Python original-byte source-shaped cursor checks all 17700 name/flags/offsets, 818 import index/outer/offset records, 16729 export index/flags/archetype/serial/offset records; 560719 encoded table bytes independently decoded, zero mismatches.",
+        "Seven old source_policy metadata labels differ because of previously corrected source-provenance gates, while bytes/row values stay identical. No stale dependency match claimed as truth; resync deferred until reader certification.",
+        "This PASS is strictly F03/F04/F05/F06 table serializers, not native runtime VerifyImport/loaded value or early incompatible resource/unrealfile admission."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",

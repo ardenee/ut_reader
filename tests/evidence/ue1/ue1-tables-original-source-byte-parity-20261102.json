@@ -1,0 +1,82 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-tables",
+  "result": "PASS",
+  "actual_acceptance": "Source-selected summary/name/import/export decoded row identities, source-field values and original byte offsets",
+  "scope": "Full source-selected original bytes through Uedb5SourceSnapshotFactory and current UE1 reader/builders. No runtime VerifyImport, dependency SQL publication, or games original-source packages earlier than tested corpus.",
+  "original_source_header_sha256": {
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Inc\\UnObjVer.h": "0c4a881bd409a40d397afcc877920fb34ec2dffb5a370090a11248b45feab033",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjVer.h": "ffec6ffb6416c9af3d925f52533a86574040f2bc46328e7f9834afc77850bf24",
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnLinker.h": "8d6d35d95c0427c8e30ef94198e2214da41a0b90b39453667980d2316ec2d02e"
+  },
+  "actual_production_code_sha256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "d09baea2367aa71339dc94221265329ffeb8a9fd1d92e5b60a501d0b10f7ca54",
+    "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b",
+    "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "26dcb4a4726783bbd175c64368ae402607e546c35ddc40b0e22414c2c4b5c8c3"
+  },
+  "accepted_earlier_evidence_sha256": {
+    "tests/evidence/reader-isolation-20261102.json": "6205ccd261fefa231a339f14845fd5728f435cd30b7cede49763069da64882d7",
+    "tests/evidence/reader-silo-all-engines-20261102.json": "3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8",
+    "tests/evidence/ue1/prd-readonly-source-tables-20261102.json": "acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737",
+    "tests/evidence/ue1/source-version-game-overlays-20261102.json": "c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2"
+  },
+  "temporary_original_PRD_PHP_read_only_verifier_SHA256": "d6b38c573ee1388755122668cf851f071ad59a5fcb7643af53288ec46399ee97",
+  "temporary_independent_python_byte_cursor_SHA256": "079f11c21b2bf8e270158c6e71ec7b577751f0167ef5fc94edfe9b3754b65ffa",
+  "temporary_full_original_byte_table_report_SHA256": "077b9e8ae7cf958d958b34ea76919e8506f83702552b8e7ebd706e010e5b737a",
+  "real_original_PRD_file_ids": [
+    1246569,
+    111043,
+    110902,
+    149421,
+    1245067,
+    1291337,
+    113265,
+    1254874,
+    1254875,
+    113256
+  ],
+  "original_PRD_MD5_SHA1_size_checks": 10,
+  "original_SHA256_independent_checks": 10,
+  "PRD_existing_uedb5_vs_fresh_source_parser_exact_rows": {
+    "summary": 10,
+    "names": 17700,
+    "imports": 818,
+    "exports": 16729,
+    "total": 35257,
+    "mismatches": 0
+  },
+  "independent_source_shaped_binary_cursor": {
+    "implementation": "Independent Python raw bytes cursor; not PHP UE1BinaryStream",
+    "tested_entries": {
+      "names": 17700,
+      "imports": 818,
+      "exports": 16729
+    },
+    "each_serialized_offset_exact": true,
+    "each_name_ANSI_or_FString_and_flags_exact": true,
+    "each_import_FName_index_and_legacy_outer_exact": true,
+    "each_export_class_super_outer_name_flags_archetype_size_serial_offset_exact": true,
+    "serialized_summary_fields_by_original_UE1_header": 103,
+    "independently_decoded_table_bytes": 560719,
+    "source_version_branches": [
+      "Unreal v54 heritage",
+      "Unreal v60 heritage",
+      "Unreal v61 heritage",
+      "Unreal v69 with/without licensee 227",
+      "UT99 v68 Guid/generations",
+      "UT99 v69 licensee 0 and licensee 227"
+    ],
+    "mismatches": 0
+  },
+  "old_PRD_source_policy_values_diff_from_current": 7,
+  "important_stale_label_note": "Stored source_policy differs for 7 original files owing to previously corrected game-version attribution; table rows still EXACT and old dependency rows are not accepted as runtime truth. No resync performed.",
+  "game_source_native_bodies_reexecuted": 0,
+  "PRD_database_writes": 0,
+  "PRD_files_modified": 0,
+  "boundary": "PASS for operation F03-F06 source-serialized package table decoding; not a PASS for runtime imported object load or dependency publish. Early original Unreal resource and Unrealfile are separate format admission work."
+}
