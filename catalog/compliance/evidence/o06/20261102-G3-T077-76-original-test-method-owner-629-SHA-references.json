@@ -1,0 +1,3124 @@
+{
+  "schema": "UE1-G3-T077-independent-original-native-source-owner-immutable-SHA-join-v1",
+  "date": "2026-11-02",
+  "frozen_owner": "T077",
+  "upstream_fixed_original_test_count": 76,
+  "upstream_statuses": {
+    "PASS": 75,
+    "SOURCE_NA": 1,
+    "BLOCKED": 0,
+    "FAIL": 0
+  },
+  "original_legacy_evidence_SHA_references_visited": 629,
+  "legacy_sha_verified_matching_pins": 626,
+  "historical_original_source_revision_only_3_transitive_pins": 3,
+  "transitive_source_revision_scope": {
+    "old_commit": "17b143aa",
+    "new_commit": "53455a26",
+    "historical_original_worktree_sha256": "5a4739d636f5916235f76f1503996033c166b7633b29e565c5ffa7f2d57d39be",
+    "current_worktree_sha256": "6d37cc4bf3499cf62294abd1fba9125cd60c46c82b9cbc77aceccac330d0d686",
+    "only_git_source_revision_delta_added_lines": 17,
+    "source_only_guard": "$ut99_469f && $version>69 in arrayproperty property-byte-LOAD, not POINTER/ANY/BUTTON SerializeItem or network NetSerializeItem/Should",
+    "affected_prior_T032_T033_T049_method_semantics": false,
+    "new_469f_v70_source_delta_accepted_by_frozen_T073": true,
+    "retains_old_sha_history_without_repining": true
+  },
+  "five_aggregate_frozen_original_compiled_gates_historical_T065_T072_T073_T074_T075_sha_verified": true,
+  "original_native_tests_relaunched": 0,
+  "no_unexplained_evidence_mismatch": true,
+  "T050_explicit_source_proven_exclusion_with_T057_same_method": "T050 Core.u stock impossible mixed FName+UObject single script, real C98 Engine.u T057 passed",
+  "T077_pass_frozen_original_method_owner_evidence": true,
+  "not_whole_G5_or_PRD_release": true,
+  "per_original_test_proof": {
+    "T001": {
+      "source_requirement": "Each captured field and physical archive boundary matches source-selected UnrealDB; source memory/byte count is not mistaken for on-disk count.",
+      "state": "PASS",
+      "source_build": "UT99 v432",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T002": {
+      "source_requirement": "Both targets match stored compact references after original native resolution, or a source-defined null/unreachable exception is documented.",
+      "state": "PASS",
+      "source_build": "UT99 v432",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-direct-structs.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-native-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T001-T002-v432-78-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T003": {
+      "source_requirement": "Decoder matches native length and deterministic bytes; relocated UObject/FName words masked by type, not declared equal.",
+      "state": "PASS",
+      "source_build": "UT99 v432",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T004": {
+      "source_requirement": "Either source/compiled proven unreachability with explicit exclusion, or all observable direct loaded fields match UnrealDB.",
+      "state": "PASS",
+      "source_build": "UT99 469f",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T004-469f-original-native-registry.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T004-469f-original-native-registry.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T004-469f-original-native-registry-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T004-469f-46-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T004-469f-46-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T005": {
+      "source_requirement": "Each direct native field, zero/nonzero script and declared length matches 227k-selected decoder.",
+      "state": "PASS",
+      "source_build": "Unreal 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T006": {
+      "source_requirement": "Every mandatory pointer identity matches reader; true runtime nulls reported separately from nonzero archived refs.",
+      "state": "PASS",
+      "source_build": "Unreal 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T007": {
+      "source_requirement": "Match source-defined null-after-load vs archived non-null and actual Children/Super target; no false claim of pointer materialization.",
+      "state": "PASS",
+      "source_build": "Unreal C98 May17",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-ORIGINAL-LINKER-POINTERS.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-ORIGINAL-LINKER-POINTERS.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-34-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T007-C98-34-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T008": {
+      "source_requirement": "Native-writer bytes prove inherited SAVE for each distinct method implementation, or one exact missing-version proof is identified.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / 469f / 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-original-1998-native-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028T092148309Z-e776196c-DEV-verify-ue1-o06-g3-04-c98-original-1998-native-save-load.php.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-V432-original-native-save.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028T015743761Z-ea2d9132-DEV-verify-ue1-o06-g3-04-v432-original-native-save-load.php.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-469f-function-state-original-saved.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028T014206920Z-0166292d-DEV-verify-ue1-o06-g3-04-469f-original-native-save-load.php.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G304FunctionStateFixture.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T233743125Z-810c2ff6-DEV-verify-ue1-o06-g3-04-c227k-original-native-save-malformed.php.txt",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T009": {
+      "source_requirement": "Exact error/loaded rejection and failing cursor agree with corresponding original compiled method; no guessed stricter rules.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t009-three-original-native-malformed.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-three-original-native-six-negative-91pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-C98-Children-original-compiled-Tell.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-C98-ScriptSize-original-compiled-Tell.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-Children-Tell.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-ScriptSize-Tell.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-v432-original-native-Tell-impl.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-Children-Tell.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-ScriptSize-Tell.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-Children-console.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T009-227k-original-native-ScriptSize-console.log",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T010": {
+      "source_requirement": "Reader consumes exact archive bytes and matches loaded script length; never compares relocated addresses as literal archived bytes.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t010-current-script-sizes.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T010-current-reader-original-script-sizes.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-03-C98-MAY1998-100-ORIGINAL-NATIVE-96-SCRIPTS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-ORIGINAL-UsTRUCT-REAL-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-ORIGINAL-UStruct-CDB-COMMAND.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-SCRIPT-RECORD-PARSER.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-UStruct-96-SCRIPTS-NATIVE-VALUES.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-UStruct-ORIGINAL-DISASSEMBLY-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-UStruct-DISASM-COMMAND.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T184627555Z-2f411f41-DEV-verify-ue1-o06-g3-03-c98-may1998-100-original-native-96-scripts.php.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-03-C227I-237-ORIGINAL-NATIVE-223-SCRIPTS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-UStruct-REAL-LOADED-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-UStruct-REAL-LOADED-COMMAND.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-COMMAND.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-223-CDB-PARSER.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-223-ORIGINAL-NATIVE-VALUES.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T182530828Z-11e0d1b7-DEV-verify-ue1-o06-g3-03-c227i-237-original-native-structs-223-scripts.php.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-script-load.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-original-native-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-direct-structs.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-native-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T005-T006-227k-87-DEV-PASS.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T011": {
+      "source_requirement": "Original loader reaches target serializer without Bad expr token or constructor failure; legacy saved fields are consumed, resulting parameter triplet equals UnrealDB computed Children layout.",
+      "state": "PASS",
+      "source_build": "UT99 v432 (or compiled 469f equivalent)",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t011-original-v432-legacy-4-native-compiled.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-four-loaded-v60-v63-80pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-T065-original-stock-v432-60-64-native-success-boundary-manifest.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version60-console.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version60-engine.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version61-console.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version61-engine.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version62-console.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version62-engine.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version63-console.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T011-original-stock-v432-legacy-version63-engine.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T065-original-stock-v432-version64-nonlegacy-boundary.log",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T012": {
+      "source_requirement": "Byte order, source-version branch and loaded class flags/refs match C98 reader for real exports.",
+      "state": "PASS",
+      "source_build": "C98 May17",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t012-original-c98-uclass.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T012-C98-original-Core-UClass-54pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T012-C98-Core-original-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T012-C98-Core-original-native.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T013": {
+      "source_requirement": "Every source-applicable archived field and loaded scalar/reference matches v432 reader and valid class hierarchy.",
+      "state": "PASS",
+      "source_build": "UT99 v432",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t013-original-v432-core-engine.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T013-original-v432-Core7-Engine88-207pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T013-v432-Core-seven-source-archive.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-v432-original-Core-all-class-flags-within.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-v432-inherited-original-core-fields.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-v432-remaining-original-core-fields.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-v432-dependency-original-core-fields.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-v432-archive-cursor-original-core-fields.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UCLASS-WHOLE-NATIVE-SCRIPT.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T014": {
+      "source_requirement": "Any actual 469f-only UClass field/branch is represented; unchanged inherited fields proved equivalent without duplicate full loads.",
+      "state": "PASS",
+      "source_build": "UT99 469f",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t014-original-469f-uclass-live.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-Engine-UClass-loaded-values.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-native-uclass-probe.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-UClass-856pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T015": {
+      "source_requirement": "Reader selects 227i vs 227k metadata correctly; any compiled difference is source-gated, no unproved inheritance.",
+      "state": "PASS",
+      "source_build": "Unreal 227i and 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-native-shared-c227-class-array.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-original-227i227k-C227-class-phase-1633pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-postload-original-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-postload-original-native.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-UCLASS-227i-original-Core-all-class-flags-within.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-Core-original-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-Engine-original-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T015-C227k-archive-class-source.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T016": {
+      "source_requirement": "Loaded default value and super/override outcome match source-selected original, not merely static bytes.",
+      "state": "PASS",
+      "source_build": "C98",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t016-original-c98-native-default-inheritance.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-breakpoint.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-G3C98Defaults.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-parent.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-child.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-package-load.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-defaults-33pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T017": {
+      "source_requirement": "UnrealDB resolved inherited/overridden value matches stock original; 469f delta either proven or excluded by identical compiled path.",
+      "state": "PASS",
+      "source_build": "UT99 v432/469f",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-probe.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-v432-469f-actor-source.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-UClass-856pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T018": {
+      "source_requirement": "Reader applies correct 227i/227k class default/within/config and reports true unsupported branches.",
+      "state": "PASS",
+      "source_build": "C227i/227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t018-original-2012-2026-native-cdo.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-original-2012-2026-native-CDO-90pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227i-native-G3Bulk-default-export.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227i-native-G3Bulk-default.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227k-native-G3Bulk-default-export.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T018-C227k-native-G3Bulk-default.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T018-original-C227i-Engine-UC-native-export-FAILED.log",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T019": {
+      "source_requirement": "Correct native loaded value, exclusion/precedence and source version for each behavior; absent source feature marked supported N/A.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t019-original-three-era-native-loaded-default-matrix.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-four-era-127pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C98-v432-C227i-C227k-controlled-native-matrix.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C98-1998-905-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C98-1998-906-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-555-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-666-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-original-CPP-observer.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-UT99-v432-original-CPP-compile.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-777-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-888-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-777-exported-default.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-native-C227i-2012-888-exported-default.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-999-native-loaded-debugger.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-999-native-original-class-export.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-999-native-debugger-commands.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-1000-native-loaded-debugger.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-1000-native-original-class-export.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-1000-native-debugger-commands.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-2012-target-1003-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-2012-target-1003-class-default.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-C227i-2012-target-1003-debugger.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-227k-config-localized-111.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T019-original-227k-config-localized-222.log",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T020": {
+      "source_requirement": "Correct original rejection or source-permitted null, accurate method cursor and no invented defaults.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t020-original-three-class-errors.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-original-three-32pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-v432-bad-within.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-v432-bad-within-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-c227k-bad-within.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T020-c227k-bad-within-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-import63.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-export63.u",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T021": {
+      "source_requirement": "Exact signed/unsigned decoded values and 1/4-byte consumption match original; unchanged implementations may share one proven oracle.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T022": {
+      "source_requirement": "Exactly four bytes consumed, sign/bit pattern preserved with no lossy source-unrequested normalization.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-direct-FLOAT.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-V432-original-FSTRING.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-T022-T023-T026-original-54pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T023": {
+      "source_requirement": "Both true/false and indexed bit selection match native declared field storage, not inferred byte bool.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-direct-FLOAT.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-V432-original-FSTRING.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-T022-T023-T026-original-54pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T024": {
+      "source_requirement": "Nonzero native name text/index resolves exactly; None remains genuine null sentinel.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T025": {
+      "source_requirement": "Exact array length, character termination and resulting runtime string match original compiled source-selected behavior.",
+      "state": "PASS",
+      "source_build": "C98 / v432",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-fixed-unicode-two-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UTF16-direct-original-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C98-fixed-string-original-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-T025-T027-original-48pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T026": {
+      "source_requirement": "Correct count, terminal NUL behavior, exact archive end and no unbounded read.",
+      "state": "PASS",
+      "source_build": "v432 / 469f / C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-three-scalar-string-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227i-original-compiler.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-C227k-original-direct-FLOAT.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-V432-original-FSTRING.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-SCALAR-T022-T023-T026-original-54pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T027": {
+      "source_requirement": "Matches original code unit count and archive cursor, without gratuitous UTF conversion.",
+      "state": "PASS",
+      "source_build": "C227i/k where source permits",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-fixed-unicode-two-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UNICODE-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C227k-UTF16-direct-original-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-C98-fixed-string-original-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-V432-legacy-converted-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-STR-BULK-T025-T027-original-48pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T028": {
+      "source_requirement": "Reader errors only where original does and reports same failing archive position.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t028-original-native-fstring-error-parity.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-V432-original-EOF.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-V432-original-EOF.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadNul.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadCount.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadNul.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-C227k-original-BadCount.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-T028-original-native-40pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T029": {
+      "source_requirement": "Type5 tag, name identity and exact byte consumption match; no placeholder NAME_None.",
+      "state": "PASS",
+      "source_build": "Unreal 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-STRUCT6-REJECT.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-T029-T031-original-native-57pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T030": {
+      "source_requirement": "Reader matches original 227k declared struct shape, count and real loaded member; mock allocator failure is NOT success.",
+      "state": "PASS",
+      "source_build": "Unreal 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b04-t030-original-native-Any-struct-Vector.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-2026-REAL-AnyStruct-SavePackage.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-2026-UCC-original-Any-declarations.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-SetStruct-SAVE.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-independent-RELOAD.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-SetStruct-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-C227k-native-independent-RELOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B04-T030-original-2026-39pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T031": {
+      "source_requirement": "Correct object identity, tag7, saved object reference and cursor; null type7 proof reused.",
+      "state": "PASS",
+      "source_build": "Unreal 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b04-t029-t031-original-native-Any-linker.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassDefaultSchemaReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-NAME5-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-OBJECT7-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-original-2026-STRUCT6-REJECT.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B04-ANY-T029-T031-original-native-57pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T032": {
+      "source_requirement": "No cross-build guessed data: correct 469f pointer 4-byte vs 227k no-data behavior; new value cases only for unverified branches.",
+      "state": "PASS",
+      "source_build": "UT99 469f vs C227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/UE1-O06-G3-08-469F-VS-227K-POINTER-BUTTON-ANY-RUNTIME-SEMANTICS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-Pointer-Button-Any-RUNTIME-METHODS-CDB.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-T99-469F-Pointer-4-BYTE-RUNTIME-METHODS-CDB.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-C227K-Pointer-Button-Any-RUNTIME-CDB-SCRIPT.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-08-T99-469F-Pointer-RUNTIME-CDB-SCRIPT.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+          "status": "EXACT_HISTORIC_SOURCE_REVISION_ONE_NARROW_469F_V70_BRANCH"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T162644568Z-e469751b-DEV-verify-ue1-o06-g3-08-469f-227k-native-pointer-button-any-ops.php.txt",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T033": {
+      "source_requirement": "Original native strings exactly 'Move point to viewport' and 'Go to point', matching archive content; full class load must reach Caption.",
+      "state": "PASS",
+      "source_build": "Unreal 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t033-original-227k-two-native-button-captions.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-two-native-button-captions-31pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-two-UButtonProperty-native-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-UButtonProperty-Serialize-disassembly.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-UButtonProperty-native-break.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T033-original-227k-scriptedai-dumpint-CDB.stdout.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+          "status": "EXACT_HISTORIC_SOURCE_REVISION_ONE_NARROW_469F_V70_BRANCH"
+        }
+      ]
+    },
+    "T034": {
+      "source_requirement": "Exact member offsets, value bytes and inheritance match original compiled C98.",
+      "state": "PASS",
+      "source_build": "C98",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-c98-t034-and-scalars.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-compiler-G3C98Bulk.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-loaded-values.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-CDB.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-successful-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-T019-T021-T024-T034-T041-T062-T063-25pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T035": {
+      "source_requirement": "Reader resolves real import and source-sized value exactly; 469f only differs where original compiled does.",
+      "state": "PASS",
+      "source_build": "v432 / 469f",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t035-original-v432-469f-imported-color.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T035-original-v432-469f-Core-Color-33pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-DEFAULTS-NATIVE-608.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g5-uclass-defaults-native-608.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T036": {
+      "source_requirement": "Exact 227-specific member offsets, array dimensions and loaded bytes, or source-proven absent class.",
+      "state": "PASS",
+      "source_build": "C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-original-C227k-95pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-probe.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T037": {
+      "source_requirement": "UnrealDB matches original nested length and string value and fails closed on unsupported stock allocation.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-BAD-STRING.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-arrayZero-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-three-original-55pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T038": {
+      "source_requirement": "Member order and both native loaded values match; any undefined uninitialized FString buffer excluded with source reason.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-BAD-STRING.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-arrayZero-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-three-original-55pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T039": {
+      "source_requirement": "Reader does not collapse inherited member layout, actual offsets and values match original.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t036-t039-original-c227k-nested-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-original-C227k-95pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T036-T039-C227k-original-nested-struct-probe.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T040": {
+      "source_requirement": "Same native failure/method cursor and no false loaded nested field; exclude stock undefined behavior.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b05-three-original-nested.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-STRUCT-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-V432-original-BAD-STRING.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-C227k-original-BAD-NAME.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-arrayZero-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B05-NEST-three-original-55pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T041": {
+      "source_requirement": "Count, element order, exact bytes and loaded values match; no duplicate tests for same inherited code.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T042": {
+      "source_requirement": "Every nonnull reference target matches native linker, null stays null; exact read count.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-bulk-four-original-primitives-arrays.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227i-original-2012-compiled-class.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE-object.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C227k-original-2026-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-saved.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-V432-original-native-array-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-C98-original-native-T024-FName-memory.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-BULK-T021-T024-T041-T042-original-81pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T043": {
+      "source_requirement": "Two native values and serialized footprint match, with true stock allocator failures excluded explicitly.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b06-t043-t044-original-native-struct-strings.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227i-original-compiler.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-original-85pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T044": {
+      "source_requirement": "Matches source versions without rewriting absent or uninitialized strings.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b06-t043-t044-original-native-struct-strings.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227i-original-compiler.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-C227k-original-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-AGG-original-85pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T045": {
+      "source_requirement": "Exactly two values of source ElementSize decoded; no dynamic count or extra bytes invented.",
+      "state": "PASS",
+      "source_build": "C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b06-t045-t046-original-fixed-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227i-original-compiled.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-T045-T046-original-52pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T046": {
+      "source_requirement": "Serialized bytes and native loaded array values equal source-specific fixed semantics.",
+      "state": "PASS",
+      "source_build": "C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b06-t045-t046-original-fixed-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227i-original-compiled.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-SerializeItem.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-T045-T046-original-52pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T047": {
+      "source_requirement": "Reader consumes exactly original no-data bytes and never invents entries; nonempty case either proven or source-excluded.",
+      "state": "PASS",
+      "source_build": "C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t047-original-three-map-native.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructArrayValueReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-MAP-original-C227i-native-2012-disasm.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-MAP-original-C227i-2012-export-RVA.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-V432-original-T047-partial-MAP.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B06-FIXED-C227k-original-T047-partial-MAP.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-MAP-T047-original-37pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T048": {
+      "source_requirement": "Same method-specific error and failing cursor; bounded decoder must not fabricate elements.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t048-original-array-errors.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountThree.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountHuge.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountThree.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountHuge.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-v432-original-Count31-EOF.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-T048-original-39pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T049": {
+      "source_requirement": "Original returned boolean/serialized bytes match reader source gate; unsupported net branch explicitly excluded.",
+      "state": "PASS",
+      "source_build": "C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t049-original-2012-vtable-abi-complete.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicPropertyNativeReader.php",
+          "status": "EXACT_HISTORIC_SOURCE_REVISION_ONE_NARROW_469F_V70_BRANCH"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T049-original-v432-NET.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T049-C227k-original-24-NetSerialize-8-real-int-arrays.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T049-C227k-ArrayProperty-original-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T049-2012-ABI-vtable-38pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T050": {
+      "source_requirement": "Known byte positions match; relocatable Name/Object words compare by resolved target not literal ASLR address.",
+      "state": "SOURCE_NA",
+      "source_build": "C98",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t050-original-c98-core-source-na.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T050-original-C98-Core-zero-mixed-T057-source-na-9pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-MAY17-100-UStruct-96-SCRIPTS-NATIVE-VALUES.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-original-native-three-families-112pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T051": {
+      "source_requirement": "Existing original native source proof covers branch+size or precise missing opcode identified without replay.",
+      "state": "PASS",
+      "source_build": "UT99 v432",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t051-v432-native-script-flow.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T052": {
+      "source_requirement": "Every real delta implemented/covered; byte-for-byte identity proof accepted if truly no delta.",
+      "state": "PASS",
+      "source_build": "UT99 469f",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t052-original-v432-469f-compiled-opcodes.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-original-v432-v469f-compiled-57-opcode-dispatch.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-original-2-compiled-CoreDLL-full-57-switch-compare.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-original-469f-real-Engine-u-dispatch-corpus.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-original-469f-shipped-Core-7handler-script-native.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-original-469f-shipped-Core-script-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-new-original-469f-real-runtime-current-native-comparison.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-current-original-469f-selected-reader.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-G3-T052-original-469f-shipped-Core-script-build.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T052-original-v432-469f-1115pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T053": {
+      "source_requirement": "Typed relocation targets and actual compiled in-memory bytes match current reader; size/offset match source.",
+      "state": "PASS",
+      "source_build": "C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t053-original-2012-2026-two-native-mixed-script.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-UCC-G3Script227.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-UCC-mixed-three-functions.uc",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-UCC-compile.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2026-loaded-three-functions-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-2012-native-cdb-loaded.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-real-native-three-way-parity.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B07-T053-original-two-compiled-engines-62pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T054": {
+      "source_requirement": "Exactly source-defined physical byte cursor and in-memory Script.Num, including compact-reference widening.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t054-stock-original-script-size.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T054-original-Pawn314-zero-16pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T054-v432-Pawn-original-native-memory.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T055": {
+      "source_requirement": "Reject only original-invalid token and report exact consumed cursor.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027T210831632Z-5ff1e421-DEV-verify-ue1-o06-g3-03-c98-original-invalid-expr-token.php.txt",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-ORIGINAL-BAD-EXPR10-CURSOR-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C98-ORIGINAL-BAD-EXPR10-CURSOR-COMMAND.cmd",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T056": {
+      "source_requirement": "Source-defined behavior documented and UnrealDB emits matching compatibility/error status, never claims valid 469f Function load.",
+      "state": "PASS",
+      "source_build": "C98-to-469f legacy overlap",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t056-cross-era-endcode.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T056-original-native-and-current-reader.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T056-469f-original-cross-era-badexpr15.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-original-1998-native-SAVE.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T057": {
+      "source_requirement": "Reader matches typed recursion, consumes exact bytes, and handles unknown reference without invented values.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t057-original-native-recursive.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-original-native-three-families-112pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-loaded-native-30.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T057-C98-original-Engine-Grab-source-discovery.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-237-223-ORIGINAL-NATIVE-VALUES.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261027-G3-03-C227I-223-SCRIPT-MEMORY-REAL-CDB.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStructNativeReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicNativeObjectReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t051-v432-native-script-flow.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-original-v432-control-flow-native-compare.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T051-v432-original-scriptall-source.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T003-v432-31-DEV-PASS.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicScriptArchiveReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T058": {
+      "source_requirement": "UnrealDB stops on actual NAME_None terminator, returns original loaded value and exact bytes.",
+      "state": "PASS",
+      "source_build": "C98",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t058-original-c98-tag-terminal.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Pos.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-native-FArchive-Pos.cmd",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-compiler-G3C98Defaults.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T016-C98-original-native-CDO-memory.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-T058-C98-original-tag-terminal-27pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T059": {
+      "source_requirement": "Original tag order, type alias, payload and last cursor match; 469f only separately where source delta.",
+      "state": "PASS",
+      "source_build": "UT99 v432 / 469f",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t017-t059-original-469f-actor-defaults.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-v432-two-closures-902pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-defaults.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-469f-three-actor-native-probe.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T017-T059-original-v432-469f-actor-source.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T014-original-469f-UClass-856pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T060": {
+      "source_requirement": "Correct 227 selected tag codec; genuine loaded value matches; no tag-family shortcuts.",
+      "state": "PASS",
+      "source_build": "C227i/k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO-probe.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T061": {
+      "source_requirement": "Reader preserves inherited/default field according to original, not inventing serialized zero.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t060-t061-original-c227k-cdo.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-original-C227k-six-CDO-902pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T060-T061-C227k-original-Engine-6-CDO-probe.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T062": {
+      "source_requirement": "Only original source permits override; resulting runtime value/priority equal original compiled engine.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b08-t062-t063-original-config-transient.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227i-original-config-transient.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-SavePackage.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-111.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-222.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T062-T063-original-native-66pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T063": {
+      "source_requirement": "Correct transient omission/reset and source-defined archived field count.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-b08-t062-t063-original-config-transient.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227i-original-config-transient.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-SavePackage.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-SAVE.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-native-LOAD.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-111.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-227k-original-LOCALIZED-222.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T062-T063-original-native-66pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T064": {
+      "source_requirement": "Original native failure/recovery and exact failing archive offset match; no fabricated defaults.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t064-original-c98-tag-failures.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t064-three-original-native-tags.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-three-original-native-40pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-type15-unknown.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-type15-unknown-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-array123-bounds.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-array123-bounds-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-missing-terminator-knownname.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-C98-original-missing-terminator-knownname-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-type15.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-type15-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-type15-same-package-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-array21.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-array21-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-missing-terminator-knownname.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T064-v432-missing-terminator-knownname-native.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-TagType.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-TagType.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-ArrayIndex.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-ArrayIndex.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-Terminator.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-B08-T064-original-C227k-Terminator.log",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T065": {
+      "source_requirement": "Exact branch-selected archive fields and cursor; same numeric v69 from different families must not substitute source.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261102-G3-T065-final-genuine-v35-native-C98-v55to58-source-and-UT99-C227-boundary.json",
+          "sha256": "255ee44376eb84551f67c764d746f5527b03ff38a8b5774fd56283f3c29bee32",
+          "bytes": 11719,
+          "sha_result": "SHA_EXACT_METADATA_LENGTH_STALE"
+        }
+      ]
+    },
+    "T066": {
+      "source_requirement": "Reader throws at original moment with identical cursor and source native error class.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t066-original-v432-EOF-before-vs-mid-field.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-v432-original-native-before-FName-EOF.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-v432-preload-early-rejection.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T066-original-v432-19pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T067": {
+      "source_requirement": "A single cross-engine check confirms BEFORE/AFTER read guards, false loaded values suppressed.",
+      "state": "PASS",
+      "source_build": "C98 / 469f / 227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-badnet-original-numeric.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-short-original-native-numeric.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-C98-state-short-original-numeric.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-04-469f-badnet-real-native-farchive-tell.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-04-469f-original-malformed-physical-tell.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-04-c227k-actual-malformed-tell.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-g3-04-c227k-wrapped-boundary-actual-tell.log",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T068": {
+      "source_requirement": "Same source-valid negative handling and same source-invalid error; no arbitrary extra policy.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t068-original-three-source-counts.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-three-original-49pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-3.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-3-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-63.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-dependencies-count-63-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-packageimports-count-63.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T068-c98-packageimports-count-63-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T048-T068-original-v432-native-count38pass.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountHuge.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261030-G3-COUNT-C227k-original-CountThree.log",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T069": {
+      "source_requirement": "Same null/throw rule and failing archive cursor; no misleading resolved name.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t069-three-original-native-linker-errors.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicClassMetadataReader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-G3C98Defaults-761.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B09-T069-C98-original-name-invalid63.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-import63.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-super-invalid-export63.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-BadName63-physical374-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-BadImport63-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B08-T069-C98-original-compiled-BadExport63-Editor.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-batch-T069-v432-227k-original-name-18pass-PARTIAL.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T069-original-v432-malformed-FName.stdout.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261028-G3-T069-original-227k-malformed-FName.stdout.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-B09-T069-original-three-compiled-51pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T070": {
+      "source_requirement": "Reader honors original FArchive physical read and serialization size check in correct source order.",
+      "state": "PASS",
+      "source_build": "C98 / v432 / C227",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t070-original-v432-physical-boundary.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T065-historical-pre-source-fix-C98-reader.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G5-T99-UOBJECT-DIRECT-STR-PHYSICAL-EOF.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable-one-byte.u",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T070-v432-original-native-physical-readable.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261029-G3-T070-original-v432-19pass.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T071": {
+      "source_requirement": "No unowned mandatory error branch; explicit excluded native undefined behavior and no duplicate test case.",
+      "state": "PASS",
+      "source_build": "ALL",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t071-original-64-source-error-version-owner.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T071-original-64-frozen-errors-version-owner-reconciliation.json",
+          "status": "EXACT"
+        }
+      ]
+    },
+    "T072": {
+      "source_requirement": "100% of required observable fields matched or each unobservable direct type has an explicit documented exclusion.",
+      "state": "PASS",
+      "source_build": "C98",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-T075-original-C98-1998-Core-Engine-compiled-full-cohort-manifest.json",
+          "sha256": "67fa2fd734f7e75cfd442c73704ed164e2cef82c88d7a7d3c70d4eae959a4981",
+          "bytes": 11636,
+          "sha_result": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/UE1-O06-G3-06-FULL-CLOSURE-MATRIX.json",
+          "sha256": "0ca68f5b936930d288ddde7885277d106969ef9da56d1dc5b4e089f556e48871",
+          "bytes": 6727,
+          "sha_result": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T072-1998-Engine-31-Const-Enum-final-closure.json",
+          "sha256": "d08fc9926fc6c388a8c8f3cabce040a0da7f3265211d5e1697e03d5ce80b6556",
+          "bytes": 5412,
+          "sha_result": "SHA_EXACT_METADATA_LENGTH_STALE"
+        }
+      ]
+    },
+    "T073": {
+      "source_requirement": "Zero unexplained source-applicable method/type gaps and no false 469f-v432 equivalence.",
+      "state": "PASS",
+      "source_build": "UT99 v432 / 469f",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T073-final-original-v432-469f-complete-source-method-parity.json",
+          "sha256": "39d89389de23b2e06c5aa0e098eadd67ad71ce3590db51ca27d676a1a3103c61",
+          "bytes": 10858,
+          "sha_result": "SHA_EXACT_METADATA_LENGTH_STALE"
+        }
+      ]
+    },
+    "T074": {
+      "source_requirement": "Zero missing mandatory C227 method oracle; 227i and 227k build deltas explicitly separated.",
+      "state": "PASS",
+      "source_build": "C227i / C227k",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
+          "sha256": "c9277273f7b2abf185848e46a6bc823997270b540d00a9b5f7917bef0a0690a4",
+          "bytes": 7083,
+          "sha_result": "SHA_EXACT_METADATA_LENGTH_STALE"
+        }
+      ]
+    },
+    "T075": {
+      "source_requirement": "No value presented as actual runtime pointer unless native observed; exact source-backed sizes and identities.",
+      "state": "PASS",
+      "source_build": "ALL",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T075-original-UT99-6153-pointer-and-8707-runtime-linked-element-closure.json",
+          "sha256": "adad5e83a683368489628babeda78fdb0790223b8bf9ba0dfaccd77462891dc5",
+          "bytes": 13432,
+          "sha_result": "SHA_EXACT_METADATA_LENGTH_STALE"
+        }
+      ]
+    },
+    "T076": {
+      "source_requirement": "Reader source-selected provider precedence and references equal original native loaded values; missing provider reported accurately.",
+      "state": "PASS",
+      "source_build": "ALL",
+      "verified_native_and_source_evidence": [
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T076-original-stock-8-native-real-duplicate-import-source-acceptance.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261031-G3-T073-T075-T076-five-shipped-20-original-native-acceptance-verified.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-native20-actual-classic-runtime-mount-selector-acceptance.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-five-original-builds-native-physical-provider-full-closure-verification.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-six-real-original-C227i-C227k-duplicate-mount-and-missing.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-C98-five-native-physical-mount-precedence-and-missing.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t076-actual-original-native20-classic-mount-context.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t076-five-original-source-builds-native-mount.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-provider-regression-pre-linked-source.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-pre-cached-linker-fix-source-snapshot.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-FULL-original-five-engine-provider-selection-acceptance.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-uedb5-physical-provider-selector.php",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/bin/verify-ue1-o06-g3-t076-original-v432-two-loaded-linker-shadow-native.py",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-original-v432-two-real-loaded-linker-overrides-path-source-proof.json",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-v432-actual-ULinkerLoad-precedence-after-source-path-swap.cpp",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-already-linked-priority-native-compiler.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-existing-linker-system_first.log",
+          "status": "EXACT"
+        },
+        {
+          "path": "catalog/compliance/evidence/o06/20261101-G3-T076-real-v432-cached-linker-priority-G3-T076-original-v432-existing-linker-texture_first.log",
+          "status": "EXACT"
+        }
+      ]
+    }
+  }
+}
