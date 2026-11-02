@@ -1,0 +1,58 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-verify-import",
+  "status": "BLOCKED",
+  "scope": "Original native 227k and UT99 469f Core VerifyImport with real Engine.u package loads, breakpoint import index 1 before and after original function return. No original files or database changed.",
+  "original_builds": {
+    "227k": {
+      "original_Core_DLL_SHA256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+      "original_Engine_U_SHA256": "a1e2378d78851b155af7408d7c576c919e334fcff35d347a560776d14b58563e",
+      "original_Core_U_SHA256": "28ab495d012200003686df0322b61b24ba9a99e5b178b92a635d76853e8acc1c",
+      "native_CDB_live_log_SHA256": "58a34164e6e5ef187a782f348a0fbe90cff0a9cd047a647276d54013e4f3959d",
+      "native_CDB_static_disassembly_SHA256": "dfed6da6a82c82be3fe2ab45986801d76d21efaadee73453dbbb642df20c400d",
+      "original_VerifyImport_export_RVA": "0x61A80",
+      "original_import_index": 1,
+      "import_identity": "Core.Class Function",
+      "source_linker_before": "null",
+      "source_linker_after": "non-null",
+      "source_index_before": -1,
+      "source_index_after": -1,
+      "original_package_load": "success",
+      "UnrealDB_conditional_old_profile": "runtime_only; source_linker true; no export index",
+      "production_v69_outcome": "unresolved; original revision implementation not yet certified"
+    },
+    "469f": {
+      "original_Core_DLL_SHA256": "80ac3341f9826e227146d4ce3ecb34fa7f4ebd0fba4986e9b1478b07086c57d2",
+      "original_Engine_U_SHA256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b",
+      "original_Core_U_SHA256": "7b2d4962cb82dda81d522361ee9a1008605e35ba0aacbccd0d53d3b9854b73e0",
+      "native_CDB_live_log_SHA256": "2d5d1116ee9775abd17358046e2e25175a364f6af80ac87d6017e77af722d7e2",
+      "native_CDB_static_disassembly_SHA256": "74f0c1eee34a9e2253fde3d0de83ce738b57e24157a5997302417934763bfb44",
+      "original_VerifyImport_export_RVA": "0x660D0",
+      "original_import_index": 1,
+      "import_identity": "Core.Class Function",
+      "source_linker_before": "null",
+      "source_linker_after": "non-null",
+      "source_index_before": -1,
+      "source_index_after": -1,
+      "original_package_load": "success",
+      "UnrealDB_conditional_old_profile": "runtime_only; source_linker true; no export index",
+      "production_v69_outcome": "unresolved; original revision implementation not yet certified"
+    }
+  },
+  "original_native_entrypoints": {
+    "227k": "?VerifyImport@ULinkerLoad@@QAEXH@Z RVA 0x61A80",
+    "469f": "?VerifyImport@ULinkerLoad@@QAEXH@Z RVA 0x660D0"
+  },
+  "binary_method_difference": [
+    "227k VerifyImport contains calls to an internal address labeled by CDB as FindExportIndex+0x1c0. This address is not the exported FindExportIndex entry; no stronger claim of identity is made.",
+    "469f VerifyImport directly calls exported GetExportClassName and GetExportClassPackage and additional native fallback methods.",
+    "Original native loader for each game sets SourceLinker but not SourceIndex on real Core.Class Function, which cannot be declared resolved solely from package presence.",
+    "Current old-source-profile conditional PHP projection returns runtime_only with no export index for this exact import on each original build."
+  ],
+  "current_projection_source_SHA256": "32edfffc4083728351981ff93b533922f48940665b7f9faa14480b7e4052f08a",
+  "temporary_php_original_package_compare_SHA256": "cc83f47459a76d046e9ad7c0495b6c39ffbf00774cbe61b403c6052b19203fba",
+  "old_v432_native_evidence_reused": "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json",
+  "no_PRD_database_writes": true,
+  "no_original_package_writes": true,
+  "remaining_native_proof": "Need complete original linker outcomes for source-selected class, outer, visibility, provider mount and replacement branches across 227k, v432 and 469f. Two single-import results do not certify all v69 VerifyImport behaviour."
+}

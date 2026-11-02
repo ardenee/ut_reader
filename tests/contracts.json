@@ -753,7 +753,8 @@
         "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json sha256:6f82d1b27890751e491e48454b81e10f332bc6ac7c3c8b5eab71c3b439cc4b71",
         "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json sha256:aef5867f46bc64d8722a33c1ad1ccf8352ebf6522923e20b08d14f56cdebfc9e",
         "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2",
-        "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json sha256:301fbffc9064c8ce97a89b8cdb24a8a6350f0deefe4dad5b1dca191ae4a4e9bb"
+        "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json sha256:301fbffc9064c8ce97a89b8cdb24a8a6350f0deefe4dad5b1dca191ae4a4e9bb",
+        "tests/evidence/ue1/ue1-original-native-227k-469f-verifyimport-method-20261102.json sha256:a6c6ba7102a9d59c4184c1d5d472d4b0a98fcce8876e64269c86fee76ce474d3"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
@@ -786,14 +787,18 @@
         "PRODUCTION DEFECT FIXED: one UE1-only source-revision VerifyImport gate replaces four inconsistent implementation copies across UEDB5 Pass2, local parsed snapshot, cross-game examiner and legacy SQL projection. All four now refuse a v1400/v120 guess on other source revisions.",
         "Real test: 21 version/game/licensee combinations checked across all four caller gates; eight genuine PRD source package snapshots with verified original MD5 checked, including v54 Unreal and v68 UT99 source-exact positives and v60/61/v69 variants safely blocked. Every fake source-policy label rejected.",
         "UT99 snapshot POLICY_RETAIL was too broad for packages below v60; corrected to explicit source-unattributed, with no attempt to reinterpret archive bytes as v1400 runtime behavior.",
-        "Native original v432 two-provider imported superclass evidence remains limited to export index 2 in A and B; no general original native v432/v469f/v227 VerifyImport parity or original loader state proven, so overall contract remains BLOCKED."
+        "Native original v432 two-provider imported superclass evidence remains limited to export index 2 in A and B; no general original native v432/v469f/v227 VerifyImport parity or original loader state proven, so overall contract remains BLOCKED.",
+        "ACTUAL NATIVE 227k Core.dll VerifyImport RVA 0x61A80 and 469f Core.dll RVA 0x660D0 called by real Engine.u loader. Both package loads succeeded with original Core.dll/Engine.u hashes pinned.",
+        "Original Engine.u import #1 Core.Class Function: native SourceLinker changed NULL->non-NULL while SourceIndex remained -1 on both original 227k and 469f methods; diagnostic old-profile PHP agrees runtime_only with no export index.",
+        "Native 227k and 469f method bodies differ and the near-export CDB internal address annotation is not proof of a true FindExportIndex function call. Full original v69 import parity not yet established; this existing contract remains BLOCKED."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
       "production_prd_readonly_access": "verified MySQL 8.4.11 192.168.0.55:3306; PHP file access via //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage",
       "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737",
       "source_policy_gate_only_verified": true,
-      "source_policy_gate_evidence": "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json"
+      "source_policy_gate_evidence": "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json",
+      "native_revision_method_evidence": "tests/evidence/ue1/ue1-original-native-227k-469f-verifyimport-method-20261102.json"
     },
     {
       "key": "ue1-mount-provider",
