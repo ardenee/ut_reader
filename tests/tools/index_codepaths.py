@@ -30,7 +30,8 @@ def tracked_files():
  raw=subprocess.run(['git','ls-files','-z'],cwd=ROOT,capture_output=True,check=True).stdout
  paths=raw.decode('utf8','replace').split('\0')
  return sorted(ROOT/path for path in paths if path and
-  ((path.startswith('catalog/bin/') and path.endswith(('.php','.py','.ps1'))) or
+  ((path.startswith(('UE4/','UE5/')) and path.endswith('.php')) or
+   (path.startswith('catalog/bin/') and path.endswith(('.php','.py','.ps1'))) or
    (path.startswith('catalog/') and
     not path.startswith(('catalog/bin/','catalog/compliance/','catalog/tools/','catalog/storage/','catalog/vendor/')) and
     path.endswith(('.php','.js','.ts','.mjs','.sql')))))

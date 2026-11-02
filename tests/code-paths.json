@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1012,
+  "total_files": 1015,
   "roles": {
     "CONTAINER": 88,
     "DATABASE": 119,
@@ -16,16 +16,16 @@
     "OBJECT": 66,
     "OPERATIONS": 17,
     "OUTPUT": 138,
-    "SOURCE": 6,
+    "SOURCE": 7,
     "TABLE": 5,
-    "UI": 158
+    "UI": 160
   },
   "engine_hints": {
-    "shared": 868,
+    "shared": 870,
     "ue1": 87,
     "ue2": 6,
     "ue3": 4,
-    "ue4": 11,
+    "ue4": 12,
     "ue5": 38
   },
   "paths": [
@@ -14348,6 +14348,48 @@
       "review_priority": "ENTRYPOINT",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": null
+    },
+    {
+      "path": "UE4/EpicUE427VersionConstants.php",
+      "sha256": "35a024bf348bb520535830b933255301ae5c2a87172793708125de3264a3289c",
+      "bytes": 3078,
+      "engine_hints": [
+        "ue4"
+      ],
+      "path_roles": [
+        "SOURCE"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
+      "path": "UE4/UnrealPackageReader.php",
+      "sha256": "479f3aeffac7e8b8d3765371a69bcf538e2c396a61633164ab3578c194271c08",
+      "bytes": 71228,
+      "engine_hints": [
+        "shared"
+      ],
+      "path_roles": [
+        "UI"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "UE4BinaryReader"
+    },
+    {
+      "path": "UE5/UnrealPackageReader.php",
+      "sha256": "039d19bffbe09dc0c53bc8d9ddd2aada6a6daafc8ef8c276fb5b7aaeb70319a0",
+      "bytes": 50208,
+      "engine_hints": [
+        "shared"
+      ],
+      "path_roles": [
+        "UI"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "UE5BinaryReader"
     }
   ]
 }

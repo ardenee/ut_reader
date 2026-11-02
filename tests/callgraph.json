@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1012,
-  "edges_count": 3573,
+  "nodes": 1015,
+  "edges_count": 3580,
   "edge_types": {
     "use": 1222,
     "new": 942,
-    "static_or_expression": 1409
+    "static_or_expression": 1416
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -16,6 +16,48 @@
     "properties": 1
   },
   "edges": [
+    {
+      "from": "UE4/UnrealPackageReader.php",
+      "to": "catalog/class-remap.php",
+      "syntax": "static_or_expression",
+      "line": 317
+    },
+    {
+      "from": "UE4/UnrealPackageReader.php",
+      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
+      "syntax": "static_or_expression",
+      "line": 1414
+    },
+    {
+      "from": "UE4/UnrealPackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileBitArrayReader.php",
+      "syntax": "static_or_expression",
+      "line": 329
+    },
+    {
+      "from": "UE4/UnrealPackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileExternalSchemaResolver.php",
+      "syntax": "static_or_expression",
+      "line": 1205
+    },
+    {
+      "from": "UE5/UnrealPackageReader.php",
+      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
+      "syntax": "static_or_expression",
+      "line": 952
+    },
+    {
+      "from": "UE5/UnrealPackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileExternalSchemaResolver.php",
+      "syntax": "static_or_expression",
+      "line": 934
+    },
+    {
+      "from": "UE5/UnrealPackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 878
+    },
     {
       "from": "catalog/access-event.php",
       "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
