@@ -200,15 +200,18 @@ final class PdoUedb5PhysicalProviderSelector
                     || str_starts_with($classicSchema, 'ue1.ut2004.compat.'));
             $ue1Source = in_array($gameId, [3, 12], true)
                 && str_starts_with($classicSchema, 'ue1.');
-            if ($orderedMounts === null && ($ue1Source || $ue2Source)) {
+            $ue3Source = $gameId === 6 && str_starts_with($classicSchema, 'ue3.ut3.');
+            if ($orderedMounts === null && ($ue1Source || $ue2Source || $ue3Source)) {
                 $selected[] = [
                     'game_id' => $gameId,
                     'file_id' => null,
                     'package_name' => (string)$packageName,
                     'selection_status' => 'source_unresolved',
-                    'selection_source' => $ue2Source
-                        ? 'ue2_runtime_mount_context_unavailable'
-                        : 'ue1_runtime_mount_context_unavailable',
+                    'selection_source' => $ue3Source
+                        ? 'ue3_runtime_mount_context_unavailable'
+                        : ($ue2Source
+                            ? 'ue2_runtime_mount_context_unavailable'
+                            : 'ue1_runtime_mount_context_unavailable'),
                     'candidate_file_ids' => array_values(array_map(
                         static fn(array $candidate): int => (int)$candidate['file_id'],
                         $candidates

@@ -1,0 +1,262 @@
+{
+  "date": "2026-11-02",
+  "engine": "ue3",
+  "status": "PASS on six existing executed metadata operation contracts",
+  "epic_Jan2008_UE3_UnLinker_original_path": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [01-00-2008]\\epic.jan2008\\UnrealEngine3\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+  "epic_Jan2008_UE3_UnLinker_SHA256": "e19f04113b7634656af145f8c7bc363e9492a19b819b007328d2a3036407e603",
+  "corpus": "UT3 game6, all 6722 genuine verified files version512 licensee0; seven original files fully decoded independently; no unsupported branch invented",
+  "reader_table_independent_byte_evidence": {
+    "result": "ORIGINAL_UT3_UE3_V512_INDEPENDENT_BYTE_LEVEL_ALL_NAMES_IMPORTS_EXPORTS_PASS",
+    "source": "Independent Python binary cursor/struct decoding physical original package summary, FString, FName and all table fields; directly compared with live UnrealDB UEDB5 snapshots for SHA256-matched original PRD packages",
+    "cases": [
+      {
+        "file_id": 149701,
+        "original_sha256": "9761e936c609479356c89bfbe9d0ff22f9d2893e4b32029416b0922fae082214",
+        "name_rows": 5974,
+        "import_rows": 3134,
+        "export_rows": 4031,
+        "complete_binary_matches": true
+      },
+      {
+        "file_id": 112339,
+        "original_sha256": "144f38e75e3be47eb2d332b8bd798b3cb584573e8777be361e4275f3d5d29647",
+        "name_rows": 5974,
+        "import_rows": 3134,
+        "export_rows": 4031,
+        "complete_binary_matches": true
+      },
+      {
+        "file_id": 1270627,
+        "original_sha256": "6c6e2e7cdb8d7a3c99bb5032ef52b96154943ae823388a4248a0501a6c8a1663",
+        "name_rows": 4671,
+        "import_rows": 2578,
+        "export_rows": 4810,
+        "complete_binary_matches": true
+      },
+      {
+        "file_id": 1270942,
+        "original_sha256": "d12151ab34c4d12488c2289823b6588047e4d475379871cede192e18bb0d98f1",
+        "name_rows": 4589,
+        "import_rows": 2527,
+        "export_rows": 4718,
+        "complete_binary_matches": true
+      },
+      {
+        "file_id": 1274646,
+        "original_sha256": "e67857b85bd805e90f525cfdf0d3cac3c4069afa14f176cd83e9a35524f893ee",
+        "name_rows": 4407,
+        "import_rows": 2458,
+        "export_rows": 3887,
+        "complete_binary_matches": true
+      },
+      {
+        "file_id": 1292076,
+        "original_sha256": "cc1e241c137c01fa998147a3ddb87877d4a613bb92b1a886db929ad0f085f014",
+        "name_rows": 7142,
+        "import_rows": 2312,
+        "export_rows": 9898,
+        "complete_binary_matches": true
+      },
+      {
+        "file_id": 1275854,
+        "original_sha256": "efb98d9185a885661ce3bc8c1412b7edcb271b01b599570b8add713eed170c63",
+        "name_rows": 2836,
+        "import_rows": 1761,
+        "export_rows": 3260,
+        "complete_binary_matches": true
+      }
+    ],
+    "full_record_counts": {
+      "names": 35593,
+      "imports": 17904,
+      "exports": 34635
+    },
+    "mismatches": 0,
+    "PRD_SQL_writes": 0
+  },
+  "raw_row_counts": {
+    "names": 35593,
+    "imports": 17904,
+    "exports": 34635
+  },
+  "raw_field_or_offset_mismatches": 0,
+  "source_root_provider_defect": "UE3 VerifyImportInner obtains a linker from Core.Package root. Previous in-memory UE3 resolver accepted any valid-looking root even when selecting a different provider. Corrected both live PDO-backed and in-memory source projection; genuine provider UTGameContent file149701 correct root succeeds, wrong root invalid with no SourceIndex.",
+  "source_mount_provider_defect": "A unique PRD indexed candidate does not prove that it is mounted in the original runtime. UE3 game6 selection now fails closed when authoritative mount context unavailable.",
+  "actual_PRD_unmounted_UE3_consumer_results": {
+    "result": "UE3_REAL_ORIGINAL_PRD_UT3_V512_PHYSICAL_MOUNT_NO_CONTEXT_FAIL_CLOSED_PASS",
+    "cases": [
+      {
+        "id": 149701,
+        "original_sha256": "9761e936c609479356c89bfbe9d0ff22f9d2893e4b32029416b0922fae082214",
+        "original_imports": 3134,
+        "unselected_source_packages": 93,
+        "outcomes": {
+          "unresolved": 3134
+        }
+      },
+      {
+        "id": 112339,
+        "original_sha256": "144f38e75e3be47eb2d332b8bd798b3cb584573e8777be361e4275f3d5d29647",
+        "original_imports": 3134,
+        "unselected_source_packages": 93,
+        "outcomes": {
+          "unresolved": 3134
+        }
+      },
+      {
+        "id": 1270627,
+        "original_sha256": "6c6e2e7cdb8d7a3c99bb5032ef52b96154943ae823388a4248a0501a6c8a1663",
+        "original_imports": 2578,
+        "unselected_source_packages": 75,
+        "outcomes": {
+          "unresolved": 2578
+        }
+      },
+      {
+        "id": 1270942,
+        "original_sha256": "d12151ab34c4d12488c2289823b6588047e4d475379871cede192e18bb0d98f1",
+        "original_imports": 2527,
+        "unselected_source_packages": 73,
+        "outcomes": {
+          "unresolved": 2527
+        }
+      },
+      {
+        "id": 1274646,
+        "original_sha256": "e67857b85bd805e90f525cfdf0d3cac3c4069afa14f176cd83e9a35524f893ee",
+        "original_imports": 2458,
+        "unselected_source_packages": 72,
+        "outcomes": {
+          "unresolved": 2458
+        }
+      },
+      {
+        "id": 1292076,
+        "original_sha256": "cc1e241c137c01fa998147a3ddb87877d4a613bb92b1a886db929ad0f085f014",
+        "original_imports": 2312,
+        "unselected_source_packages": 67,
+        "outcomes": {
+          "unresolved": 2312
+        }
+      },
+      {
+        "id": 1275854,
+        "original_sha256": "efb98d9185a885661ce3bc8c1412b7edcb271b01b599570b8add713eed170c63",
+        "original_imports": 1761,
+        "unselected_source_packages": 34,
+        "outcomes": {
+          "unresolved": 1761
+        }
+      }
+    ],
+    "total_imports": 17904,
+    "source_authorized_native_mounts_observed": 0,
+    "PRD_SQL_writes": 0
+  },
+  "source_order_conditional_original_duplicate_physical_candidates": {
+    "result": "UE3_REAL_ORIGINAL_UT3_DUPLICATE_PROVIDERS_ORDER_AND_UNAUTHENTICATED_MOUNTS_PASS",
+    "original_consumer": 149701,
+    "duplicate_package_name": "Engine",
+    "real_original_verified_provider_file_ids": [
+      149683,
+      112308
+    ],
+    "supplied_order_a_b_selected": 149683,
+    "supplied_order_b_a_selected": 112308,
+    "untrusted_order_status": "source_unresolved",
+    "wrong_consumer_evidence": "REJECTED",
+    "limit": "Both orders are supplied test inputs over real original PRD files; no claim they were the actual native runtime search order",
+    "PRD_SQL_writes": 0
+  },
+  "physical_order_limit": "Two input orders use genuine original PRD provider file IDs but are user-supplied test mount contexts, not an observed native UE3 runtime session.",
+  "isolated_original_UT3_SQL_publisher_without_authoritative_mount": {
+    "result": "UE3_REAL_ORIGINAL_PRD_UT3_DEPENDENCY_PUBLISH_SQL_WEBSITE_PASS",
+    "cases": [
+      {
+        "file_id": 149701,
+        "original_import_rows": 3134,
+        "published_edges": 3134,
+        "package_summaries": 93,
+        "no_mount_outcomes": {
+          "unresolved": 3134
+        },
+        "real_production_pass2_dryrun": true
+      },
+      {
+        "file_id": 1270627,
+        "original_import_rows": 2578,
+        "published_edges": 2578,
+        "package_summaries": 75,
+        "no_mount_outcomes": {
+          "unresolved": 2578
+        },
+        "real_production_pass2_dryrun": true
+      },
+      {
+        "file_id": 1275854,
+        "original_import_rows": 1761,
+        "published_edges": 1761,
+        "package_summaries": 34,
+        "no_mount_outcomes": {
+          "unresolved": 1761
+        },
+        "real_production_pass2_dryrun": true
+      }
+    ],
+    "total_original_import_edges": 7473,
+    "website_missing_totals": {
+      "missing_objects": 0,
+      "missing_packages": 0,
+      "files_with_missing": 0
+    },
+    "sql_transaction_rollback_equal": true,
+    "PRD_MySQL_writes": 0
+  },
+  "source_conditional_actual_original_Engine_file149683_provider_SQL_and_website": {
+    "result": "UE3_ORIGINAL_UT3_CONDITIONAL_SELECTED_PHYSICAL_PROVIDER_PUBLISH_AND_WEBSITE_PASS",
+    "original_consumer_id": 149701,
+    "original_provider_file_id": 149683,
+    "original_3134_import_outcomes": {
+      "resolved": 376,
+      "unresolved": 2757,
+      "package_only": 1
+    },
+    "published_SQL_edges": 3134,
+    "published_SQL_package_rows": 93,
+    "website_requires_correct_provider_id": 149683,
+    "website_required_by_correct_consumer_id": 149701,
+    "obsolete_policy_and_wrong_payload_filter_both_link_directions": true,
+    "qualification": "Provider Engine 149683 is an explicitly supplied source-version-matched original physical file, not observed native session mount order",
+    "PRD_MySQL_writes": 0
+  },
+  "positive_provider_limit": "Engine file149683 was explicitly supplied by a test, not inferred as mounted from the live PRD catalogue.",
+  "source_profiles": "Only original UT3 v512 licensee0 source selection; no engine-only Mesh/Sound/Texture/UObject instantiation.",
+  "changed_source_SHA256": {
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "6b3c8394185b9b78f25e55cb55710a76a5268516d46229a52ae0976bb14310d6",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "2c5e65b803c4e96bd974ef8f384460739ddce76afff300c9b4fe91aa40645b70",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3346d6f51afd3bbf6cb7ce6514ad3c2f3abb7f5582515a468ce944f06adf1deb",
+    "catalog/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php": "2402232ea7605b91cd6bb06f0c000673ccd359b1fe21aff3ed4cc45cb114f08e"
+  },
+  "temp_source_test_drivers_SHA256": {
+    "export_ue3_original_ut3_tables.php": "761c6d57212dc8269a8f322b4dcaea9a8e246c86f5e8af7b1e498f27b241233a",
+    "verify_ue3_independent_original_binary_tables.py": "02e615c3270a33da824bd9d739f2a55033c7bd83461811777995f2c655fd1607",
+    "verify_ue3_original_prd_provider_mounts.php": "254c905bee712dcc31444d186c7155fa716e4222a1489ecbe82185755691fc23",
+    "verify_ue3_prd_isolated_publisher_website.php": "9b6038daa3073f1118b460c1680cd4419fd9c772f97258d7ab07cc3df31786b1",
+    "verify_ue3_prd_original_provider_root_live.php": "7c6297a74559856eb4a18b37626ec5aa81a60a88131d09c14e41ca404fc6272d",
+    "verify_ue3_original_duplicate_source_mount_order.php": "75f87c0b32ebc92d5f47abc8fac10586195a8fec5b8e1d88abe629aa4d8b8fcc",
+    "verify_ue3_original_static_engine_provider_matches.php": "9f4a25fd199ec2030ccbf616df84e62adfe15fe849582f43d5434aac7539b6c5",
+    "verify_ue3_original_provider_publish_website_positive.php": "f5e076735c0df5f4800f548cd59a10c87a77ec597f247fc21ef497896458f181"
+  },
+  "test_result_SHA256": {
+    "manifest.json": "ab61f879e128c6b8ed06f3aaa75f8d365cbdc768b7e0e1dc815ee960129a9290",
+    "ue3-independent-original-all-table-records.json": "306b5b14e724c602ec7f6ffa7c9e1262a6ed5af2f1d25e2f512cd8285e627a47",
+    "ue3-live-selector-original-no-mount.json": "ea2804b262631c62441682621fcc9044bc448bfe30e300c8209b32e2ba0f19fc",
+    "ue3-source-real-publisher-website.json": "833289756cf1bca0b2824034b72cd12b651f29d106fb8d0a6ac8c5bb78fdab84",
+    "ue3-source-provider-website-positive.json": "328428578f4ca02e19b92e4ef33be029dae4411f10c960d41a627c16f57e899b",
+    "ue3-physical-provider-source-order.json": "3f9db6c10356fa0bb48b58777d1e7e3c4d7b0d5d3af0e43dbfbe95b7dead28de"
+  },
+  "live_PRD_sql_writes": 0,
+  "live_PRD_uedb5_writes": 0,
+  "new_fixed_test_cases": 0,
+  "production_dependency_rollout": "NOT APPLIED; user explicitly defers all imports and database updates until UE1–UE5 readers finished."
+}

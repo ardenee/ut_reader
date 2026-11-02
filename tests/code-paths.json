@@ -9519,8 +9519,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
-      "sha256": "712808fb298fcca462fadd6bdf2efe1c6d887f4e3c4474f665218e3ffad4c73e",
-      "bytes": 24343,
+      "sha256": "6b3c8394185b9b78f25e55cb55710a76a5268516d46229a52ae0976bb14310d6",
+      "bytes": 24560,
       "engine_hints": [
         "shared"
       ],
@@ -9575,8 +9575,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
-      "sha256": "fc1d19b81ebdaeb84e40da8701bce99ab24b84e083a4033cc278014c197c1c31",
-      "bytes": 49791,
+      "sha256": "2c5e65b803c4e96bd974ef8f384460739ddce76afff300c9b4fe91aa40645b70",
+      "bytes": 50024,
       "engine_hints": [
         "ue1"
       ],
@@ -9661,8 +9661,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
-      "sha256": "6b99e31025840be7b4d6aa4c4b06c595db799e4eb6efb8df0deeba28bca0265e",
-      "bytes": 22458,
+      "sha256": "3346d6f51afd3bbf6cb7ce6514ad3c2f3abb7f5582515a468ce944f06adf1deb",
+      "bytes": 22524,
       "engine_hints": [
         "shared"
       ],
@@ -11370,8 +11370,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php",
-      "sha256": "0db3f8a4dfbaa3d73b2273787cab5d7a20f917a44daa974400da8e50974c7870",
-      "bytes": 33026,
+      "sha256": "2402232ea7605b91cd6bb06f0c000673ccd359b1fe21aff3ed4cc45cb114f08e",
+      "bytes": 34969,
       "engine_hints": [
         "ue3"
       ],

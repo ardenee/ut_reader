@@ -99,6 +99,7 @@ final class Uedb5DependencyRebuilder
                 if (!in_array($sourceReason, [
                         'ue1_runtime_mount_context_unavailable',
                         'ue2_runtime_mount_context_unavailable',
+                        'ue3_runtime_mount_context_unavailable',
                     ], true)
                     || !is_array($row['candidate_file_ids'] ?? null)) {
                     throw new RuntimeException('Unresolved classic physical provider requires explicit missing original mount context.');

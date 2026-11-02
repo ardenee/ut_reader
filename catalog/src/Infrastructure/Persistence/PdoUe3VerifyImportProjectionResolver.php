@@ -50,13 +50,18 @@ final class PdoUe3VerifyImportProjectionResolver
         if ($targets === []) { return []; }
         $needed = self::importClosure($imports, $targets);
         $objectNames = self::objectNamesForImports($imports, $needed);
+        $selectedProviderName = null;
         $candidates = self::loadUedb5Candidates(
             $db,
             $providerFileId,
             $objectNames,
-            self::storageRoot($storageRoot)
+            self::storageRoot($storageRoot),
+            $selectedProviderName
         );
-        $outcomes = self::resolveTargetOutcomes($imports, $candidates, $targets, $consumerExports);
+        $outcomes = self::restrictProviderRootOutcomes(
+            $imports, self::resolveTargetOutcomes($imports, $candidates, $targets, $consumerExports),
+            (string)$selectedProviderName
+        );
 
         $fallbackTargets = [];
         foreach ($targets as $importIndex) {
@@ -80,11 +85,10 @@ final class PdoUe3VerifyImportProjectionResolver
             self::storageRoot($storageRoot)
         );
         if ($fallback === []) { return $outcomes; }
-        return self::resolveTargetOutcomes(
+        return self::restrictProviderRootOutcomes(
             $imports,
-            self::mergeCandidates($candidates, $fallback),
-            $targets,
-            $consumerExports
+            self::resolveTargetOutcomes($imports, self::mergeCandidates($candidates, $fallback), $targets, $consumerExports),
+            (string)$selectedProviderName
         );
     }
 
@@ -144,11 +148,10 @@ final class PdoUe3VerifyImportProjectionResolver
             usort($rows, static fn(array $a,array $b):int => (int)$b['export_index'] <=> (int)$a['export_index']);
         }
         unset($rows);
-        return self::resolveTargetOutcomes(
+        return self::restrictProviderRootOutcomes(
             $imports,
-            $candidates,
-            array_map('intval', array_keys($imports)),
-            $consumerExports
+            self::resolveTargetOutcomes($imports, $candidates, array_map('intval', array_keys($imports)), $consumerExports),
+            $providerPackageName
         );
     }
 
@@ -186,13 +189,17 @@ final class PdoUe3VerifyImportProjectionResolver
 
         $needed = self::importClosure($imports, $targets);
         $objectNames = self::objectNamesForImports($imports, $needed);
+        $selectedProviderName = null;
         $candidates = self::loadUedb5Candidates(
             $db,
             $providerFileId,
             $objectNames,
-            self::storageRoot($storageRoot)
+            self::storageRoot($storageRoot),
+            $selectedProviderName
         );
-        $matches = self::resolveTargetImports($imports, $candidates, $targets);
+        $matches = self::restrictProviderRootMatches(
+            $imports, self::resolveTargetImports($imports, $candidates, $targets), (string)$selectedProviderName
+        );
 
         $unresolved = [];
         foreach ($targets as $importIndex) {
@@ -219,7 +226,10 @@ final class PdoUe3VerifyImportProjectionResolver
         if ($fallback === []) {
             return $matches;
         }
-        return self::resolveTargetImports($imports, self::mergeCandidates($candidates, $fallback), $targets);
+        return self::restrictProviderRootMatches(
+            $imports, self::resolveTargetImports($imports, self::mergeCandidates($candidates, $fallback), $targets),
+            (string)$selectedProviderName
+        );
     }
 
     /**
@@ -585,12 +595,16 @@ final class PdoUe3VerifyImportProjectionResolver
         PDO $db,
         int $providerFileId,
         array $objectNames,
-        string $storageRoot
+        string $storageRoot,
+        ?string &$selectedProviderPackageName = null
     ): array {
+        $snapshot = (new Uedb5RuntimeProviderSnapshotLoader($db, $storageRoot))->load($providerFileId);
+        // A root-only source lookup has no export-name candidates, but still
+        // needs the *actual* selected provider package for VerifyImport.
+        $selectedProviderPackageName = (string)(((array)($snapshot['file'] ?? []))['package_name'] ?? '');
         if ($objectNames === []) {
             return [];
         }
-        $snapshot = (new Uedb5RuntimeProviderSnapshotLoader($db, $storageRoot))->load($providerFileId);
         $providerImports = self::indexedImports((array)($snapshot['imports'] ?? []));
         $providerImports = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactIdentityEnricher::ue3FixupImportMap(
             $providerImports
@@ -607,6 +621,7 @@ final class PdoUe3VerifyImportProjectionResolver
         $file = (array)($snapshot['file'] ?? []);
         $summary = (array)($snapshot['summary'] ?? []);
         $providerPackageName = (string)($file['package_name'] ?? '');
+        $selectedProviderPackageName = $providerPackageName;
         $providerPackageVersion = array_key_exists('package_version',$summary)
             ? (int)$summary['package_version']
             : (isset($file['package_version']) ? (int)$file['package_version'] : null);
@@ -739,6 +754,48 @@ final class PdoUe3VerifyImportProjectionResolver
             $first[$key] = $merged;
         }
         return $first;
+    }
+
+    /** The original UE3 GetPackageLinker resolves the root package before examining exports. */
+    private static function importMatchesSelectedProviderRoot(array $imports,int $index,string $provider): bool
+    {
+        $seen=[];
+        while(isset($imports[$index])&&!isset($seen[$index])){
+            $seen[$index]=true;
+            $row=$imports[$index];
+            $outer=(int)($row['outer_index']??0);
+            if($outer>0){
+                // Cooked import->export outer remains undecidable from source-only provider tables.
+                return true;
+            }
+            if($outer===0){
+                return self::key((string)($row['class_package']??''))===self::key('Core')
+                    &&self::key((string)($row['class_name']??''))===self::key('Package')
+                    &&self::key((string)($row['object_name']??''))===self::key($provider);
+            }
+            $index=-$outer-1;
+        }
+        return false;
+    }
+
+    private static function restrictProviderRootOutcomes(array $imports,array $outcomes,string $provider): array
+    {
+        foreach($outcomes as $index=>$outcome){
+            if(!self::importMatchesSelectedProviderRoot($imports,(int)$index,$provider)){
+                $outcomes[$index]=self::outcome('invalid','different_provider_package_root',false,null);
+            }
+        }
+        return $outcomes;
+    }
+
+    private static function restrictProviderRootMatches(array $imports,array $matches,string $provider): array
+    {
+        foreach(array_keys($matches) as $index){
+            if(!self::importMatchesSelectedProviderRoot($imports,(int)$index,$provider)){
+                unset($matches[$index]);
+            }
+        }
+        return $matches;
     }
 
     private static function identityKey(string $objectName, string $className, string $classPackage): string
