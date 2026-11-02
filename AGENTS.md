@@ -30,6 +30,7 @@ Temporary work: C:\Temp\UnrealDB\<engine>\<contract>\<run>. Unique durable new p
 - DEV game-amd (192.168.0.51): C:\Users\arden\source\repos\ut_reader. Docker available, not needed for file parity.
 - PRD Lelly-pc (192.168.0.55): C:\Apache24\htdocs\unrealdb; from DEV Z:\Apache24\htdocs\unrealdb.
 - Never overwrite catalog/config.php, catalog/storage, .git, or .github when synchronizing.
+- DEV does not host the production UnrealDB database or file corpus. Query PRD MySQL at 192.168.0.55:3306 in read-only transactions and read original package storage via UNC //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage from DEV PHP (mapped Z: only works for PowerShell). Never save PRD credentials or copy private corpus into Git. Parity tests must not write to PRD database or original files.
 - Local engine and game source: L:\Source\Engine\UE1..UE5 and L:\Source\Games. No uploads of private Epic source to third-party services.
 - Valid production jobs, migrations, repairs and workers remain in catalog/bin. Old verification-only scripts are in archive.
 

@@ -1,0 +1,116 @@
+{
+  "date": "2026-11-02",
+  "scope": "PRD original verified UE1 bytes -> DEV source-selected UE1 factory -> existing PRD UEDB5 table-only differential",
+  "database": "PRD MySQL 8.4.11 TCP from DEV; PDO session TRANSACTION READ ONLY and rollback",
+  "files": "PRD original files read via UNC; no copied or edited corpus",
+  "test_script": "C:/Temp/UnrealDB/UE1/path-audit/prd_ue1_snapshot_differential.php",
+  "original_native_engine_executions": 0,
+  "PRD_sql_writes": 0,
+  "PRD_file_writes": 0,
+  "production_reader_source_sha256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+    "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "dcee9fc9429ddb4b96be0f7454711f1504cc032feaf705c03c9563da9f2055d0",
+    "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "b64dabf8dd2b2c19d6b0d083457e7e7a7b27e0e0caebdd2410af5ee18bc552ab"
+  },
+  "samples": [
+    {
+      "file_id": 110902,
+      "game_id": 12,
+      "version": 61,
+      "licensee": 0,
+      "sha256": "50edfe60fcf99c61f369cf8100079351bd75eb0a23febc77aa891142086dbbc0",
+      "source_file_size_md5_sha1_match_db": true,
+      "source_family_policy_exact_match": true,
+      "fresh_reader_vs_stored_exact_all_rows": {
+        "summary": 1,
+        "names": 36,
+        "imports": 4,
+        "exports": 6
+      },
+      "stored_dependency_edge_counts_by_outcome_code": {
+        "3": 4
+      }
+    },
+    {
+      "file_id": 113265,
+      "game_id": 3,
+      "version": 69,
+      "licensee": 0,
+      "sha256": "8d8abc29adf6a2c2cd96b66f8c34e14b712818553cae470da22dc58f8e830d4b",
+      "source_file_size_md5_sha1_match_db": true,
+      "source_family_policy_exact_match": true,
+      "fresh_reader_vs_stored_exact_all_rows": {
+        "summary": 1,
+        "names": 75,
+        "imports": 7,
+        "exports": 43
+      },
+      "stored_dependency_edge_counts_by_outcome_code": {
+        "3": 7
+      }
+    },
+    {
+      "file_id": 1245067,
+      "game_id": 12,
+      "version": 69,
+      "licensee": 227,
+      "sha256": "8738a6e8de2fc79ae05a389796033cf8118928291e0bb0928a44e088df8db6e3",
+      "source_file_size_md5_sha1_match_db": true,
+      "source_family_policy_exact_match": true,
+      "fresh_reader_vs_stored_exact_all_rows": {
+        "summary": 1,
+        "names": 784,
+        "imports": 165,
+        "exports": 466
+      },
+      "stored_dependency_edge_counts_by_outcome_code": {
+        "2": 17,
+        "3": 73,
+        "4": 75
+      }
+    },
+    {
+      "file_id": 1254874,
+      "game_id": 3,
+      "version": 69,
+      "licensee": 227,
+      "sha256": "3f413ea26b986b9816613315adaa58e949677a14e9af0617bfacae5af5dfdd40",
+      "source_file_size_md5_sha1_match_db": true,
+      "source_family_policy_exact_match": true,
+      "fresh_reader_vs_stored_exact_all_rows": {
+        "summary": 1,
+        "names": 2710,
+        "imports": 264,
+        "exports": 2617
+      },
+      "stored_dependency_edge_counts_by_outcome_code": {
+        "0": 101,
+        "2": 5,
+        "3": 55,
+        "4": 103
+      }
+    }
+  ],
+  "real_dependency_service_apply_false_probes": [
+    {
+      "file_id": 110902,
+      "game_id": 12,
+      "physical_providers_selected": 0,
+      "ambiguous_physical_providers": 0
+    },
+    {
+      "file_id": 113265,
+      "game_id": 3,
+      "physical_providers_selected": 0,
+      "ambiguous_physical_providers": 0
+    }
+  ],
+  "limitations": [
+    "Native Epic ULinkerLoad::VerifyImport outcomes not executed for these four files",
+    "Player runtime physical package mount order and already-loaded linker set unavailable",
+    "Read-only table comparison is not a database publication write test or native game runtime validation"
+  ]
+}

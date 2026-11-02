@@ -1,5 +1,7 @@
 # Fixed test workflow for UE1, UE2, UE3, UE4, UE5
 
+**PRD holds the original production database and file corpus.** DEV does not. Use SELECT-only/READ-ONLY transactions on PRD MySQL 8.4.11 over 192.168.0.55:3306, and read PRD original package and UEDB5 files via UNC //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage from the DEV PHP CLI. The Z: PowerShell mapping does not work in PHP CLI for those files. Do not write PRD SQL or mutate original files during parity tests. Change code on DEV; deploy only verified changes. No original files or credentials in Git.
+
 1. Select a single behaviour/engine row from contracts.json. Trace its real web, job, service, reader and persistence call chain. Do not use static filename guesses as verified reachability.
 2. Find the exact selected Epic engine and game/source revision functions and archive branches, including version and licensee, and record what UnrealDB exposes. Separate serialized bytes from runtime-only memory effects.
 3. Consult the accepted 2026 legacy evidence. If the current code and source-selected behaviour are already demonstrated, cite that proof and STOP. Do not rerun it.
