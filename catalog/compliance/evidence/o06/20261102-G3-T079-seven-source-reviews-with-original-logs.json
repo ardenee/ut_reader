@@ -1,0 +1,161 @@
+{
+  "type": "T079-one-time-post-G3-source-profile-independent-closure-check",
+  "source_g5_eight_distinct_methods": 8,
+  "original_native_engine_reruns": 0,
+  "results": [
+    {
+      "script": "verify-ue1-o06-g5-t99-uobject-independent-full.php",
+      "exit": 0,
+      "script_sha256": "fff81a5e2c9637aab52f8d0966a831bcdae37bc06c53349f8156efd640a92703",
+      "full_original_native_source_snapshot_not_rerun": true,
+      "structured_status": {
+        "ok": true,
+        "passed": 98,
+        "checks": 98
+      },
+      "last_stdout_lines": [
+        "    \"prior_stock_native_real_loaded_objects_SHA_reused\": 308,",
+        "    \"prior_stock_native_saved_values_SHA_reused\": 926,",
+        "    \"prior_stock_native_tag_errors_SHA_reused\": 4,",
+        "    \"native_engine_processes_spawned_by_final_reviewer\": 0,",
+        "    \"other_UE1_game_families_accepted\": false,",
+        "    \"all_unseen_source_legal_UClass_variants_inferred\": false",
+        "}"
+      ],
+      "log_path": "catalog/compliance/evidence/o06/20261102-G3-T079-original-current-source-review-verify-ue1-o06-g5-t99-uobject-independent-full.php.json",
+      "log_sha256": "d9dd12080118c597bf08c339f0c16a3f85508d92bc17b76057bba1b036489463"
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-uclass-independent-full.php",
+      "exit": 0,
+      "script_sha256": "19a34be81f809470f6e8286272fba4b4d367550ab9810f8c116b8452f801fce7",
+      "full_original_native_source_snapshot_not_rerun": true,
+      "structured_status": {
+        "ok": true,
+        "passed": 1342,
+        "checks": 1342
+      },
+      "last_stdout_lines": [
+        "    \"original_saved_class_defaults\": 608,",
+        "    \"native_scripted_classes_compared\": 16,",
+        "    \"loaded_script_known_bytes\": 989,",
+        "    \"loaded_Script_pointer_and_FName_fixups\": 130,",
+        "    \"stock_native_executions_in_acceptance_verifier\": 0,",
+        "    \"all_UE1_game_families_FULL\": false",
+        "}"
+      ],
+      "log_path": "catalog/compliance/evidence/o06/20261102-G3-T079-original-current-source-review-verify-ue1-o06-g5-t99-uclass-independent-full.php.json",
+      "log_sha256": "84c9f4ddc683568ebfab982c44ea083aeb18db3094418c4209b99e54f5e8375f"
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-textbuffer-independent-full.php",
+      "exit": 1,
+      "script_sha256": "d570bf7d9691194744957ce1afc5395f72f0edc5b5255405654f9a84c0047159",
+      "full_original_native_source_snapshot_not_rerun": true,
+      "structured_status": {
+        "ok": false,
+        "passed": 300,
+        "checks": 302
+      },
+      "last_stdout_lines": [
+        "        \"inherited_and_version_variant_semantics\": \"VERIFIED\",",
+        "        \"current_acceptance_tests\": \"VERIFIED\",",
+        "        \"independent_full_method_review\": \"VERIFIED\"",
+        "    },",
+        "    \"generic_T99_UObject\": \"BLOCKED_INDEPENDENTLY\",",
+        "    \"compiled_native_reruns\": 0",
+        "}"
+      ],
+      "log_path": "catalog/compliance/evidence/o06/20261102-G3-T079-original-current-source-review-verify-ue1-o06-g5-t99-textbuffer-independent-full.php.json",
+      "log_sha256": "1dd53d3d9c499aca12c4c5c7742924c0155bebe821aab72fd7ab9a6dd7b3f396"
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-font-independent-full.php",
+      "exit": 1,
+      "script_sha256": "6535ebfb69370b27332273e705b99d623c1601446cdd506aff18ed4c54a0b91d",
+      "full_original_native_source_snapshot_not_rerun": true,
+      "structured_status": {
+        "ok": false,
+        "passed": 183,
+        "checks": 185
+      },
+      "last_stdout_lines": [
+        "        \"current_acceptance_tests\": \"VERIFIED\",",
+        "        \"independent_full_method_review\": \"VERIFIED\"",
+        "    },",
+        "    \"review\": \"BLOCKED\",",
+        "    \"general_T99_UObject\": \"BLOCKED_INDEPENDENTLY\",",
+        "    \"repeated_prior_font_native_CDB_runs\": 0",
+        "}"
+      ],
+      "log_path": "catalog/compliance/evidence/o06/20261102-G3-T079-original-current-source-review-verify-ue1-o06-g5-t99-font-independent-full.php.json",
+      "log_sha256": "ae780bd87b2f5dd8559f83ce9628c88f386cccc7673917454f737fe6ac86b8ae"
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-skeletal-independent-full.php",
+      "exit": 0,
+      "script_sha256": "814b99eded79ee3a8c64b02f67f5cf3b92b6a1dbf1871d1783bbd9b67c28218d",
+      "full_original_native_source_snapshot_not_rerun": true,
+      "structured_status": {
+        "ok": true,
+        "passed": 55,
+        "checks": 55
+      },
+      "last_stdout_lines": [
+        "    \"source_invalid_loaded_values_not_fabricated\": true,",
+        "    \"reused_original_compiled_skeletal_array_bytes\": 282956,",
+        "    \"reused_original_native_objects\": 5,",
+        "    \"reused_actual_compiled_malformed_reference_cursor\": 412679,",
+        "    \"native_engine_invocations_by_verifier\": 0,",
+        "    \"generic_UObject_method_full\": \"NOT_CLAIMED\"",
+        "}"
+      ],
+      "log_path": "catalog/compliance/evidence/o06/20261102-G3-T079-original-current-source-review-verify-ue1-o06-g5-t99-skeletal-independent-full.php.json",
+      "log_sha256": "7f885f2b4fb5287d7671b954117733f051c50bf27d3fa17ecb3cab6427182f5f"
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-animation-independent-full.php",
+      "exit": 0,
+      "script_sha256": "355768cdb2b373750d1854a450ceda8c3ebd54468eea2bbf1371cf2535f371e3",
+      "full_original_native_source_snapshot_not_rerun": true,
+      "structured_status": {
+        "ok": true,
+        "passed": 90,
+        "checks": 90
+      },
+      "last_stdout_lines": [
+        "    \"native_matched_numeric_array_bytes\": 540836,",
+        "    \"distinct_native_malformed_outcomes\": 8,",
+        "    \"compiled_exact_native_error_cursors\": 6,",
+        "    \"native_engine_reruns_this_review\": 0,",
+        "    \"general_T99_UObject_full\": \"NOT_CLAIMED\",",
+        "    \"limitations\": \"UT99 v432 package-loading subclass serializer only; generic UObject all-class and C98/C227, saving/transaction archives excluded\"",
+        "}"
+      ],
+      "log_path": "catalog/compliance/evidence/o06/20261102-G3-T079-original-current-source-review-verify-ue1-o06-g5-t99-animation-independent-full.php.json",
+      "log_sha256": "0c497eb5a97fa383b5792dca85a60b6a8bcae2cb0fc85378bff4daaeb705c3f6"
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-audio-independent-full-method-review.php",
+      "exit": 1,
+      "script_sha256": "1f690a429988d9a7cc7742c6a6e72dc7e727ecec7f74197a9cd3b2b11e86a9b0",
+      "full_original_native_source_snapshot_not_rerun": true,
+      "structured_status": {
+        "ok": false,
+        "passed": 61,
+        "checks": 63
+      },
+      "last_stdout_lines": [
+        "    \"native_loaded_Music\": 2,",
+        "    \"native_byte_values_matched\": 1216472,",
+        "    \"native_negative_distinct_cases\": 5,",
+        "    \"source_inherited_validated_objects\": 11,",
+        "    \"native_engine_replays_this_test\": 0,",
+        "    \"general_T99_UObject_FULL\": \"BLOCKED_INDEPENDENTLY\"",
+        "}"
+      ],
+      "log_path": "catalog/compliance/evidence/o06/20261102-G3-T079-original-current-source-review-verify-ue1-o06-g5-t99-audio-independent-full-method-review.php.json",
+      "log_sha256": "6feb6fd6252e8c4077e9efc3723d5516285f51a0d8e98b34e847366227af6d61"
+    }
+  ]
+}

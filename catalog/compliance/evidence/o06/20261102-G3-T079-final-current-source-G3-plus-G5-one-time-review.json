@@ -1,0 +1,184 @@
+{
+  "schema": "UE1-G3-T079-one-final-no-original-native-replay-whole-current-source-acceptance-v1",
+  "date": "2026-11-02",
+  "frozen_owner": "T079",
+  "T079_one_time_frozen_current_source_PASS": true,
+  "all_77_prior_original_method_test_owners_terminal": true,
+  "source_profile_original_G3_gate_01_15": {
+    "G3-01": "ACCEPTED",
+    "G3-02": "ACCEPTED",
+    "G3-06": "ACCEPTED",
+    "G3-07": "ACCEPTED",
+    "G3-09": "ACCEPTED",
+    "G3-03": "ACCEPTED",
+    "G3-04": "ACCEPTED",
+    "G3-05": "ACCEPTED",
+    "G3-08": "ACCEPTED",
+    "G3-10": "ACCEPTED",
+    "G3-11": "ACCEPTED",
+    "G3-12": "ACCEPTED",
+    "G3-13": "ACCEPTED",
+    "G3-14": "ACCEPTED",
+    "G3-15": "ACCEPTED"
+  },
+  "T050_source_na_narrow_true_native_method_elsewhere": true,
+  "T077_629_source_native_SHA_join_sha256": "2aa7ff22dea63e0183e2dd765d0a179b672393bec938f9d0c9a41add9d1d8fe9",
+  "G5_eight_original_source_profile_full_methods_at_historical_revisions": {
+    "T99:UObject::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UOBJECT-SELECTED-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "b1e352cde8dca52b1cb9b23531c0f085f22d2f2f3f18745318978ff77bdb533d"
+    },
+    "T99:UClass::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UCLASS-ENGINE-V69-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "772b85769a1773ab80bdfe2be278846e3d1c2977a5fd28eb2fef8e9df0049f7e"
+    },
+    "T99:UTextBuffer::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UTEXTBUFFER-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "4695cb15ad662296475072f3c37812bd0fa2be44988d36359d6f76506fff0caf"
+    },
+    "T99:UFont::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UFONT-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "2999984a2e430c07c646078d57581254dc75ebb88c39552f2dd4b29e43d7f8c5"
+    },
+    "T99:USkeletalMesh::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-USKELETALMESH-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "c0492753b992f0e7a7480675c4a5602963611abee07dd1dd59eb9afe6280f018"
+    },
+    "T99:UAnimation::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UANIMATION-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "663a697eedcc7677b6ec7fef292a073b07f94d5553a98a23899d092780be4b7b"
+    },
+    "T99:USound::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-USOUND-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "db21279b36be9743d3c8032f2e785792fe58dfdcbd8ae90104a8e3f71c869ee5"
+    },
+    "T99:UMusic::Serialize": {
+      "status": "ORIGINAL_SEALED_FULL_SEVEN_GATES",
+      "source_profile": "T99: UT99 v432 method restricted",
+      "closure_artifact": "catalog/compliance/UE1-O06-G5-UMUSIC-SOURCE-PROFILE-FULL-ACCEPTANCE.json",
+      "sha256": "65b43d41defacc754b9105ffe1d579a2300755f6bf5e0fa0afab9ba47fbb02f4"
+    }
+  },
+  "original_G5_old_source_fingerprint": "75afeda9e2cc466df5dcddbdb5027f1519dabe6c0cc478f31600c834a46eee27",
+  "actual_current_SOURCE_fingerprint_recalculated_over_original_528_source_inputs": "4f89db2be5aa14254e94773a8a6ad6b0f627e9a322a6f03fa44dac41e52d2caa",
+  "historic_pin_source_change_allowed_only_as_transitive_G3_sha_owned_reconciliation": {
+    "CatalogUE1ClassicNativeObjectReader.php": {
+      "historic_version_git_commit": "24fdf6d30",
+      "historic_lf_sha256": "dacc000ce7a2bbf2f1df725de49289398d3ef1b3a842eff7c188060a4797724a",
+      "historic_crlf_sha256": "0d96ebb02f3d1731024d848248dcd11b1472e44102a08e94cc7ccd5b9c4c835a",
+      "current_reader_sha256": "afca90b65cfb192d23e5d0aaa0f449acb651c85548fb81ccac25bce3a9963714",
+      "current_git_semantic_line_diff_ops": 13,
+      "intervening_changes_accepted_under_frozen_original_G3_method_owners": true
+    },
+    "CatalogUE1ClassicTaggedPropertyReader.php": {
+      "historic_version_git_commit": "dff8840a7",
+      "historic_lf_sha256": "559e72ad5dbfab748cda95ab583b297d4ec54d89f369e4472cacd8c70c74f39d",
+      "historic_crlf_sha256": "b9837eea314c3b309fe5794558bb603c7393e5b74e8aa0d9e652151a32f2c9af",
+      "current_reader_sha256": "7fefdfc3b82d08c0daea8203f615992782daa1574ac587d85f0468c1ac57f7b8",
+      "current_git_semantic_line_diff_ops": 38,
+      "intervening_changes_accepted_under_frozen_original_G3_method_owners": true
+    },
+    "CatalogUE1ClassicV432NativeDeltaReader.php": {
+      "historic_version_git_commit": "4c0428dc8",
+      "historic_lf_sha256": "0407964cacf9107ca973f5bb429186a0ec84ca9ee3b6ce21201faa6e49dead38",
+      "historic_crlf_sha256": "1a1b5ddf9c80fb644b301edcbac349445224cacea345808ef86806f69ba651cf",
+      "current_reader_sha256": "106e21ec32a38d0cd17f7742d1736e20d5909404c4964d2904f8be966f8696d6",
+      "current_git_semantic_line_diff_ops": 4,
+      "intervening_changes_accepted_under_frozen_original_G3_method_owners": true
+    }
+  },
+  "current_7_source_only_reviewers": [
+    {
+      "script": "verify-ue1-o06-g5-t99-uobject-independent-full.php",
+      "script_sha256": "fff81a5e2c9637aab52f8d0966a831bcdae37bc06c53349f8156efd640a92703",
+      "captured_output_sha256": "d9dd12080118c597bf08c339f0c16a3f85508d92bc17b76057bba1b036489463",
+      "current_source_non_hash_assertions_matched": 98,
+      "original_historical_only_sha_assertions": [],
+      "non_source_value_or_archive_mismatches": 0,
+      "true_source_native_engine_reruns": 0
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-uclass-independent-full.php",
+      "script_sha256": "19a34be81f809470f6e8286272fba4b4d367550ab9810f8c116b8452f801fce7",
+      "captured_output_sha256": "84c9f4ddc683568ebfab982c44ea083aeb18db3094418c4209b99e54f5e8375f",
+      "current_source_non_hash_assertions_matched": 1342,
+      "original_historical_only_sha_assertions": [],
+      "non_source_value_or_archive_mismatches": 0,
+      "true_source_native_engine_reruns": 0
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-textbuffer-independent-full.php",
+      "script_sha256": "d570bf7d9691194744957ce1afc5395f72f0edc5b5255405654f9a84c0047159",
+      "captured_output_sha256": "1dd53d3d9c499aca12c4c5c7742924c0155bebe821aab72fd7ab9a6dd7b3f396",
+      "current_source_non_hash_assertions_matched": 300,
+      "original_historical_only_sha_assertions": [
+        "sha_production_native_object_reader",
+        "sha_production_tagged_object_reader"
+      ],
+      "non_source_value_or_archive_mismatches": 0,
+      "true_source_native_engine_reruns": 0
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-font-independent-full.php",
+      "script_sha256": "6535ebfb69370b27332273e705b99d623c1601446cdd506aff18ed4c54a0b91d",
+      "captured_output_sha256": "ae780bd87b2f5dd8559f83ce9628c88f386cccc7673917454f737fe6ac86b8ae",
+      "current_source_non_hash_assertions_matched": 183,
+      "original_historical_only_sha_assertions": [
+        "source_binary_SHA_production_UE1_native_reader",
+        "source_binary_SHA_production_UT99_v432_Font_delta"
+      ],
+      "non_source_value_or_archive_mismatches": 0,
+      "true_source_native_engine_reruns": 0
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-skeletal-independent-full.php",
+      "script_sha256": "814b99eded79ee3a8c64b02f67f5cf3b92b6a1dbf1871d1783bbd9b67c28218d",
+      "captured_output_sha256": "7f885f2b4fb5287d7671b954117733f051c50bf27d3fa17ecb3cab6427182f5f",
+      "current_source_non_hash_assertions_matched": 55,
+      "original_historical_only_sha_assertions": [],
+      "non_source_value_or_archive_mismatches": 0,
+      "true_source_native_engine_reruns": 0
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-animation-independent-full.php",
+      "script_sha256": "355768cdb2b373750d1854a450ceda8c3ebd54468eea2bbf1371cf2535f371e3",
+      "captured_output_sha256": "0c497eb5a97fa383b5792dca85a60b6a8bcae2cb0fc85378bff4daaeb705c3f6",
+      "current_source_non_hash_assertions_matched": 90,
+      "original_historical_only_sha_assertions": [],
+      "non_source_value_or_archive_mismatches": 0,
+      "true_source_native_engine_reruns": 0
+    },
+    {
+      "script": "verify-ue1-o06-g5-t99-audio-independent-full-method-review.php",
+      "script_sha256": "1f690a429988d9a7cc7742c6a6e72dc7e727ecec7f74197a9cd3b2b11e86a9b0",
+      "captured_output_sha256": "6feb6fd6252e8c4077e9efc3723d5516285f51a0d8e98b34e847366227af6d61",
+      "current_source_non_hash_assertions_matched": 61,
+      "original_historical_only_sha_assertions": [
+        "verified_SHA_source_UE1_native_audio_reader",
+        "verified_SHA_source_UE1_object_reader"
+      ],
+      "non_source_value_or_archive_mismatches": 0,
+      "true_source_native_engine_reruns": 0
+    }
+  ],
+  "current_G5_current_source_non_SHA_byte_value_archive_and_native_evidence_checks_MATCHED": 2129,
+  "six_historical_sha_only_checks_reconciled_to_git_source_revisions": 6,
+  "G5_original_native_runtime_oracle_replays_in_final_acceptance": 0,
+  "no_genuine_native_field_or_archive_cursor_mismatches": true,
+  "not_a_blanket_claim_that_all_UE1_versions_or_external_game_packages_loaded": true,
+  "protected_production_not_touched": true
+}

@@ -1,0 +1,30 @@
+{
+    "ok": false,
+    "checks": 63,
+    "passed": 61,
+    "failed": [
+        "verified_SHA_source_UE1_object_reader",
+        "verified_SHA_source_UE1_native_audio_reader"
+    ],
+    "source_profile": "UT99-v432",
+    "method_decisions": {
+        "T99:USound::Serialize": "FAILED",
+        "T99:UMusic::Serialize": "FAILED"
+    },
+    "seven_gates": {
+        "pinned_source_and_dispatch": "VERIFIED",
+        "complete_native_field_values_and_references": "VERIFIED",
+        "archive_bytes_and_consumption": "VERIFIED",
+        "malformed_input_error_semantics": "VERIFIED",
+        "inherited_and_version_variant_semantics": "VERIFIED",
+        "current_acceptance_tests": "VERIFIED",
+        "independent_full_method_review": "VERIFIED"
+    },
+    "native_loaded_Sound": 9,
+    "native_loaded_Music": 2,
+    "native_byte_values_matched": 1216472,
+    "native_negative_distinct_cases": 5,
+    "source_inherited_validated_objects": 11,
+    "native_engine_replays_this_test": 0,
+    "general_T99_UObject_FULL": "BLOCKED_INDEPENDENTLY"
+}

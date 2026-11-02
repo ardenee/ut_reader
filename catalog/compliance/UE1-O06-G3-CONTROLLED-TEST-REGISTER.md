@@ -1,3 +1,29 @@
+## Current 2026-11-02 frozen G3 group acceptance decisions (historical 2026-10-28 text below)
+
+Source of terminal decisions: immutable T001–T080 execution register, the original SHA-pinned T077 independent all-method join, and one-time T079 current-source source/native G5 cross-profile review. The table below **supersedes the original 2026-10-28 planning/open statuses**, which remain below as history. It does not add or rerun any tests.
+
+| Frozen G3 group | Current decision | Immutable source |
+|---|---|---|
+| G3-01 | **ACCEPTED** | sealed source-lineage 87 original acceptance |
+| G3-02 | **ACCEPTED** | sealed Epic Core serializer inventory 1318 |
+| G3-03 | **ACCEPTED** | T001–T010 original UField/UStruct |
+| G3-04 | **ACCEPTED** | T011 source-gated Function/State |
+| G3-05 | **ACCEPTED** | T012–T020 UClass/actual defaults |
+| G3-06 | **ACCEPTED** | preaccepted UEnum/UConst 56 |
+| G3-07 | **ACCEPTED** | preaccepted original UProperty metadata 2991 |
+| G3-08 | **ACCEPTED** | T021–T033 original scalar/Any/Button |
+| G3-09 | **ACCEPTED** | preaccepted original object/class metadata 222 |
+| G3-10 | **ACCEPTED** | T034–T040 native struct members |
+| G3-11 | **ACCEPTED** | T041–T049 original dynamic/fixed/map |
+| G3-12 | **ACCEPTED** | T050–T057 bytecode, T050 exact fixture SOURCE_NA |
+| G3-13 | **ACCEPTED** | T058–T064 original tagged property |
+| G3-14 | **ACCEPTED** | T065–T071 original archive/version boundary |
+| G3-15 | **ACCEPTED** | T072–T077 original compiled/source/native full owner evidence |
+| G3-16 | **RELEASE PENDING** | T079 one-time combined PASS; T078/T080 PRD protected release/manifest remain |
+
+The G5 original UT99-v432 eight selected serializer methods each had an earlier source-fingerprint FULL at Oct26. The later original G3 code changes were independently current-source reviewed once: 2129/2129 substantive native/archive assertions PASSED; six old SHA-only mismatches remain historical pinned source versions rather than silently repinning them. See catalog/compliance/evidence/o06/20261102-G3-T079-final-current-source-G3-plus-G5-one-time-review.json.
+
+---
 # UE1 O06 G3 — acceptance group / closure register (16 groups)
 
 **IMPORTANT: This is NOT the individual test list.** The actual executable, finite **80-test T001–T080 backlog** is [UE1-O06-G3-EXECUTION-TEST-BACKLOG.md](UE1-O06-G3-EXECUTION-TEST-BACKLOG.md), with editable status JSON [here](UE1-O06-G3-EXECUTION-TEST-BACKLOG.json). Original source/version, exact stimulus, PASS expectation and evidence are listed **per test** there. This document retains only aggregate G3-XX acceptance decisions and the historical 52 planning criteria. Discovered tests append at the BOTTOM of the new backlog as S001, S002, ... and are handled after T001–T080. Do not keep treating G3-01..G3-16 as individual tests.

@@ -6506,7 +6506,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "T077 final 76-source-method original SHA matrix is PASS; assess one exact G3 release decision including currently BLOCKED T079/T080. Cannot call all mandatory rows terminal until decision/deployment dependency reconciled. Independent G5 source fingerprint/release safety must be checked before PRD.",
+      "blocking_reason": "One-time whole-G3/G5 T079 current source acceptance PASS; current T080 protected deployment not yet completed. Final exact test register cannot have zero BLOCKED until original-safe protected PRD sync and SHA verification T080; release decision will be terminal after independent deployment proof.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -6514,6 +6514,11 @@
         "path": "catalog/compliance/evidence/o06/20261102-G3-T077-76-original-test-method-owner-629-SHA-references.json",
         "sha256": "2aa7ff22dea63e0183e2dd765d0a179b672393bec938f9d0c9a41add9d1d8fe9",
         "bytes": 125602
+      },
+      "upstream_T079_one_time_original_current_source_G3_plus_G5_full_gate": {
+        "path": "catalog/compliance/evidence/o06/20261102-G3-T079-final-current-source-G3-plus-G5-one-time-review.json",
+        "bytes": 9982,
+        "sha256": "716fb434420e44ef0c513d4ce8a4f202ec82599187b8b3ba1444019a5504de36"
       }
     },
     {
@@ -6526,13 +6531,19 @@
       "pass_criterion": "All mandatory assert counts PASS, no source-branch gaps, no native test replay merely to farm passes.",
       "evidence": "Single independent G3 verifier composed of accepted immutable proof artifacts",
       "reuse": "Execute only after T001... backlog terminal.",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Run ONE final combined gate covering complete source/version, actual original loaded-value method family and malformed evidence. PASS ONLY WHEN: All mandatory assert counts PASS, no source-branch gaps, no native test replay merely to farm passes. ORACLE: Single independent G3 verifier composed of accepted immutable proof artifacts. Reuse before any new execution: Execute only after T001... backlog terminal.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "result": "ONE FINAL original-source/native G3/G5 combined read-only method-acceptance PASS. 77 prior frozen T001-T077 original source/native tests terminal 76 PASS, T050 exact specimen SOURCE_NA (covered T057); 15 frozen G3 source groups 01..15 reconciled, all current core ABI/version/malformed method proof SHA accepted T077 629 prior references. Original G5 T99 v432 eight FULL seven-gate method closure artifacts each SHA exact. Distinct current post-G3 source fingerprint 4f89db2b and previous Oct26 G5 fingerprint 75afeda9 NOT falsely equivalent. Seven grouped current-code independent PHP reviewers made 2,129 non-source-hash native-value, original archive, error/consumer check assertions PASS; four reviewers 100% PASS, three 2 historic source SHA-only checks each (6 total), traced directly to unchanged Git old native/tagged/v432 delta original code revisions and to current G3 original compiled/source accepted changes; no nonhash or native value mismatch. Existing old G5 fingerprints preserved without repinning or fabricated current FULL method decision, current source profile explicitly covered by the one-time T079 combined attestation. ZERO native engine replay. PRD release remains dependent on final T078/T080 protected deployment. Full SHA manifest: catalog/compliance/evidence/o06/20261102-G3-T079-final-current-source-G3-plus-G5-one-time-review.json",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-02T04:50:44+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "PASS_ONE_TIME_INDEPENDENT_G3_77_ORIGINAL_METHODS_G5_8_FULL_CURRENT_SOURCE_2129_CHECKS_6_HISTORIC_SHA_SCOPED",
+      "source_necessary_components_still_open": [],
+      "final_2026_11_02_T079_one_time_source_native_and_current_G5_parity": {
+        "path": "catalog/compliance/evidence/o06/20261102-G3-T079-final-current-source-G3-plus-G5-one-time-review.json",
+        "bytes": 9982,
+        "sha256": "716fb434420e44ef0c513d4ce8a4f202ec82599187b8b3ba1444019a5504de36"
+      }
     },
     {
       "id": "T080",
@@ -6550,7 +6561,12 @@
       "blocking_reason": "Original compiled oracle/fixture not yet fully proven for this *specific* test. REQUIRED: Commit/push final source/documentation and selectively deploy; SHA compare every changed file excluding config/storage. PASS ONLY WHEN: GitHub main and DEV clean, PRD changed files identical SHA, no protected config/storage copied. ORACLE: Git and SHA256 PRD deployment log + final project status. Reuse before any new execution: No PRD deployment until one-time release gate PASS.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
-      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF"
+      "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
+      "upstream_T079_one_time_G3_source_G5_current_full_GATE": {
+        "path": "catalog/compliance/evidence/o06/20261102-G3-T079-final-current-source-G3-plus-G5-one-time-review.json",
+        "bytes": 9982,
+        "sha256": "716fb434420e44ef0c513d4ce8a4f202ec82599187b8b3ba1444019a5504de36"
+      }
     }
   ],
   "appendix": [],
@@ -6580,14 +6596,13 @@
   },
   "overall_summary_2026_11_02": {
     "total_frozen": 80,
-    "PASS": 76,
+    "PASS": 77,
     "SOURCE_NA": 1,
-    "BLOCKED": 3,
+    "BLOCKED": 2,
     "FAIL": 0,
-    "new_full_pass": "T077",
+    "new_full_pass": "T079",
     "remaining_blocked_ids": [
       "T078",
-      "T079",
       "T080"
     ]
   }
