@@ -696,10 +696,13 @@
       "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
       "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
-      "existing_proof_sha_refs": [],
+      "existing_proof_sha_refs": [
+        "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json sha256:6f82d1b27890751e491e48454b81e10f332bc6ac7c3c8b5eab71c3b439cc4b71",
+        "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json sha256:aef5867f46bc64d8722a33c1ad1ccf8352ebf6522923e20b08d14f56cdebfc9e"
+      ],
       "runtime_call_chain_verified": false,
-      "test_authorization": "BLOCKED_ORIGINAL_EPIC_NATIVE_RUNTIME_REFERENCE_OR_UNTESTED_WRITING_PATH; PRD_READ_ONLY_ACCESS_VERIFIED",
-      "result_evidence": null,
+      "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
+      "result_evidence": "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json",
       "affected_code_sha256": null,
       "php_source_sites": [
         {
@@ -714,7 +717,11 @@
         "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
       },
       "review_findings": [
-        "Read-only PRD imports and provider candidates now accessible. Exact game-source native VerifyImport comparison requires mounted original loader context; do not infer from stored table matches."
+        "On retained original v432 compiled native imported superclass case, source-profile-conditional PHP lookup matches native-selected provider export index 2 in both A and B; engine native CDO sentinels 111/222 are not PHP loaded values.",
+        "The production snapshot policy for both genuine compiler-generated version-69 fixtures is source_partial. Actual Uedb5ClassicDependencyResolver correctly returns unresolved (implementation unavailable) rather than inheriting v1.400 source semantics for v432 or 469f based on version alone.",
+        "Real PRD counts: UT99 6246 source-exact eligible version 60–68 and 68024 v69 partial; UnrealGold 1 early v54 source-exact eligible, 8714 v60–68 partial, 2070 v69 partial; 36 other UE1 files. Source-exact eligible does not mean native-verified imports.",
+        "The only verified pre60 UnrealGold corpus file is #1246569 DMVilla2.unr v54, 104 imports. Existing published v13 dependency outcomes include 39 resolved, but without original runtime mount proof are not certified.",
+        "All 85091 PRD UE1 migration statuses use historical dependency policy v13; these persisted values predate UE1 fail-closed mount correction. Original source-specific v69 native VerifyImport and actual arbitrary PRD runtime provenance remain unproven."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -840,7 +847,8 @@
       },
       "review_findings": [
         "PRD source rows and stored per-import dependency outcomes inspected read-only for 4 real files. Actual SQL publication writes and original Epic native VerifyImport verdicts not compared.",
-        "Corrected UE1 runtime-mount unknown cases cause pre-fix PRD stored outcomes to be potentially stale. No PRD database write or republish was performed."
+        "Corrected UE1 runtime-mount unknown cases cause pre-fix PRD stored outcomes to be potentially stale. No PRD database write or republish was performed.",
+        "Read-only PRD inventory on 2026-11-02 confirms 85091 UE1 dependency-policy=v13 rows; a future source-correct republish needs UE1-scoped policy invalidation without regressing UE2–UE5, and cannot be treated as completed by this audit."
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -899,7 +907,8 @@
       },
       "review_findings": [
         "PRD database, stored edges and original file corpus are accessible; native expected dependency outcome and website result equivalence still unverified.",
-        "Read-only original consumer checks show old PRD SQL dependency outcomes for some files predate UE1 native-mount uncertainty correction; UI parity remains blocked."
+        "Read-only original consumer checks show old PRD SQL dependency outcomes for some files predate UE1 native-mount uncertainty correction; UI parity remains blocked.",
+        "Pre-fix UE1 dependency v13 status covers 85091 PRD verified files; stale cached SQL cannot be used as an Epic native oracle even if website renders it correctly."
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",

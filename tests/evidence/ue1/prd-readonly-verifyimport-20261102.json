@@ -1,0 +1,105 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-verify-import",
+  "finding": "Partial native-backed one-import v432 source-index match. Source selection intentionally refuses to infer v432/469f from common package version 69; source exact VerifyImport for PRD v69 remains blocked.",
+  "frozen_original_compiled_native_evidence": {
+    "path": "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json",
+    "sha256": "6f82d1b27890751e491e48454b81e10f332bc6ac7c3c8b5eab71c3b439cc4b71",
+    "original_Core_DLL_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+    "original_native_true_import_provider_A_sentinel": 111,
+    "original_native_true_import_provider_B_sentinel": 222,
+    "original_native_no_provider": "exception",
+    "original_native_reexecutions_this_batch": 0
+  },
+  "original_compiled_fixture_SHA256": {
+    "consumer": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+    "provider_A": "150f708e4b7e0815166c061a0429a90ce4768be49ecde340e5be707f67d01fcc",
+    "provider_B": "8afa982acf837c0ffc350d9b04cb9f12c561f07ec206030d9ba5a6205ad934dc"
+  },
+  "dev_temporary_verifiers": {
+    "native_v432_import_differential.php": "cb52eea13d66f0927817c9bbdacf413dee448b4981ba49e0c0f5f32333a06a38",
+    "verify_native_v432_gate.php": "d0526f5a842ee007a7ac566c1e6db20f688475e4ac9be9f4c433cc829554489f",
+    "prd_profile_coverage.php": "e54190debc2ace340aec489a6625b14ece47b50bb19dffc46a0973740d07c18f",
+    "prd_early_source_fixture.php": "c914e0d66b8691569e7db87a15959e58340e09deefb6db0de0a0e0aeaa475862"
+  },
+  "current_php_reader_source_sha256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "dcee9fc9429ddb4b96be0f7454711f1504cc032feaf705c03c9563da9f2055d0",
+    "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "b64dabf8dd2b2c19d6b0d083457e7e7a7b27e0e0caebdd2410af5ee18bc552ab",
+    "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "32edfffc4083728351981ff93b533922f48940665b7f9faa14480b7e4052f08a",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "d8635b5de5e7d3d5a74643b1a7105e61508d138bf3c4ed14de735ff5406e38db"
+  },
+  "native_compiled_v432_cases": [
+    {
+      "provider": "A",
+      "native_superclass_loaded": true,
+      "native_class_sentinel": 111,
+      "php_legacy_profile_conditional_direct_match_export_index": 2,
+      "php_current_policy_v69": "ue1-ut99-v430-public-source-partial",
+      "production_verdict": "unresolved",
+      "production_reason": "ue1_verify_import_source_implementation_unavailable"
+    },
+    {
+      "provider": "B",
+      "native_superclass_loaded": true,
+      "native_class_sentinel": 222,
+      "php_legacy_profile_conditional_direct_match_export_index": 2,
+      "php_current_policy_v69": "ue1-ut99-v430-public-source-partial",
+      "production_verdict": "unresolved",
+      "production_reason": "ue1_verify_import_source_implementation_unavailable"
+    }
+  ],
+  "php_conditional_native_fixture_details": {
+    "consumer_version": 69,
+    "consumer_imports": 7,
+    "imported_superclass_import_index": 2,
+    "provider_export_index": 2,
+    "other_consumer_imports_native_fallback_undetermined": 4
+  },
+  "read_only_PRD_verified_file_source_profile_bands": {
+    "UT99_game_3": {
+      "v69_partial": 68024,
+      "v60_to_v68_v1400_eligible": 6246,
+      "other": 33,
+      "total": 74303
+    },
+    "UnrealGold_game_12": {
+      "v69_partial": 2070,
+      "v60_to_v68_partial": 8714,
+      "v34_to_v59_v120_eligible": 1,
+      "other": 3,
+      "total": 10788
+    },
+    "source_exact_eligible_file_count": 6247,
+    "all_UE1_verified_file_count": 85091,
+    "source_exact_eligible_is_not_full_native_outcome_proof": true
+  },
+  "one_original_pre60_PRD_UE1_case": {
+    "file_id": 1246569,
+    "original_name": "DMVilla2.unr",
+    "game": 12,
+    "package_version": 54,
+    "licensee": 0,
+    "import_count": 104,
+    "export_count": 2667,
+    "source_policy": "ue1-unreal-v120-loadable-v34-59",
+    "existing_published_dependency_counts": {
+      "resolved": 39,
+      "package_only": 11,
+      "common": 49,
+      "unresolved": 5
+    },
+    "note": "Pre-existing SQL results are not a proof of actual native mount or source-selected import outcomes"
+  },
+  "all_PRD_UE1_migration_status_policies": {
+    "uedb5-dependency-pass-v13": 85091
+  },
+  "limitations": [
+    "Current production V5 source-policy routing will not activate v1400 VerifyImport for v69, because variant provenance is not established by package version. This is intentionally conservative.",
+    "Original 4 native v432 loaded sessions and native presence results reused from preexisting immutable proof; not reexecuted.",
+    "A PHP Class import export index match does not mean PHP loaded the native CDO sentinel or runtime object.",
+    "No native C98 loaded-value differential run for the sole PRD v54 map.",
+    "No PRD SQL modifications, code changes, or original file mutations in this VerifyImport batch.",
+    "The dependency-policy/website stale row risk must be handled before republishing or claiming UI parity."
+  ]
+}
