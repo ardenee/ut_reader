@@ -497,24 +497,9 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
         return Uedb5Ue1VerifyImportSourceProfile::fromGameVersion($gameId, $packageVersion, $licenseeVersion);
     }
 
-    private static function ue2VerifyImportProfile(int $gameId, ?int $packageVersion): ?string
+    private static function ue2VerifyImportProfile(int $gameId, ?int $packageVersion, int $licenseeVersion): ?string
     {
-        if ($packageVersion === null || $packageVersion <= 0) { return null; }
-        try {
-            $sourceKey = Uedb5GameSourceRegistry::sourceKey($gameId);
-        } catch (\Throwable) {
-            return null;
-        }
-        if ($sourceKey === 'unreal2' && $packageVersion >= 60 && $packageVersion <= 69) {
-            return \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportProjectionResolver::PROFILE_UNREAL2_V69_2000;
-        }
-        if ($sourceKey === 'ut2003' && $packageVersion >= 60 && $packageVersion <= 120) {
-            return \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportProjectionResolver::PROFILE_UT2003_V2107;
-        }
-        if ($sourceKey === 'ut2004' && $packageVersion >= 60 && $packageVersion <= 129) {
-            return \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe2VerifyImportProjectionResolver::PROFILE_UT2004_V129;
-        }
-        return null;
+        return Uedb5Ue2VerifyImportSourceProfile::fromGameVersion($gameId, $packageVersion, $licenseeVersion);
     }
 
     /**
@@ -553,7 +538,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             ? self::ue1VerifyImportProfile($gameId, $packageVersion, $licenseeVersion)
             : null;
         $ue2Profile = $ue2VerifyImport
-            ? self::ue2VerifyImportProfile($gameId, $packageVersion)
+            ? self::ue2VerifyImportProfile($gameId, $packageVersion, $licenseeVersion)
             : null;
         $ue3Engine = $engineKey === 'UE3';
         $ue3Profile = $ue3Engine

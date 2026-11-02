@@ -17,7 +17,7 @@ final class Uedb5Unreal2SnapshotBuilder
         $version = (int)($reader->getHeader()['version'] ?? -1);
         return Uedb5UE2TableSnapshotBuilder::build($reader, $file, [
             'label' => 'Unreal II',
-            'policy' => ($version >= 60 && $version <= 69)
+            'policy' => ($version === 69 && (int)($reader->getHeader()['licenseeVersion'] ?? -1) === 0)
                 ? self::POLICY_V69_2000
                 : ($version > 126 ? self::POLICY_POST_V126_UNRESOLVED : self::POLICY_V126_GENERIC),
             'schema_prefix' => 'ue2.unreal2',

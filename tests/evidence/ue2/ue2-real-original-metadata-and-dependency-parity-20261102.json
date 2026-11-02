@@ -1,0 +1,444 @@
+{
+  "date": "2026-11-02",
+  "engine": "ue2",
+  "verification_scope": "Only UnrealDB actually executed header/name/import/export tables, source and game version gates, static provider/import dependencies, UEDB5 SQL projection, website read-model. No native asset payload loading.",
+  "existing_contracts_pass": [
+    "ue2-dispatch",
+    "ue2-tables",
+    "ue2-verify-import",
+    "ue2-mount-provider",
+    "ue2-dependency-publish",
+    "ue2-website-dependency",
+    "ue2-ut2004-legacy-ue1"
+  ],
+  "full_code_SHA256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php": "730bb5965d80f63938b2a8b09fdda3ef0a54acf29d43a67da355e53a99361d02",
+    "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php": "4237b88a7292077507038ae2d71f78e63a4200d13d5ba2140ff2d951381355c0",
+    "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php": "2a491e2ca50533299e4f470ffd00de8acaf0ca99a5ba739ae7f50ebe229a965f",
+    "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php": "4f95bbdcdf157bce4213d7721a23bd272a3faa7d675d23485886f0ff214b6212",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE2LegacyCompatibilityTableSnapshotBuilder.php": "f3c3e60ba2803b2ded1a6848d3ceb9db5bc1df694af41c73c3cffb4ea1d48d87",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php": "2f3bc819595144cf69e5542bd43be960d7ad54cba819aec05122ef7fa1709d87",
+    "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php": "9bd64830964351da7d54dbabe373185afea104838b22843648d1c0c93f6bde80",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "fc1d19b81ebdaeb84e40da8701bce99ab24b84e083a4033cc278014c197c1c31",
+    "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php": "f78dba1e6b21f4cb43e782fb87b6800461a04063272b58e1d86d5a3376c0814e",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php": "40cb5676b268676ffef97fb39481f8ed5ff0dfe386e82791b1595537bdaacca8",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php": "016b64743ec44abb57704677953baba753776640caed7535130ac07eadbe9c94",
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "64659bfce95ace0770debc8009166d0d92111f68705736fc0fdde8e22ea7f155",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
+    "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
+    "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "b30cbd8cc2391535d675c1e09f03c2074aa1db3a4c3b9df7569d289e106b95d8",
+    "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "73aab3067d7b7e176e756e9918a3d782149cde63400a199f21032fded0ac168a",
+    "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
+    "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+    "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
+  },
+  "original_Epic_source_SHA256": {
+    "unreal2_2000_12_09": "bf306975bab6819ef50b23e4b6b3ece44c1d5001295a935e45b7180d0dc8994f",
+    "ut2003_v2107": "41df04b157a79219e37a9ac48e1f292ba352642c28b6cea2a1bd753576f53fee",
+    "ut2004_v3369": "127927aef72aba2f405f9756069b2992c2c5bd2d42ca768d5913fcb60996d0a5",
+    "ut2004_v129": "171b005d96292a420b64d746ae1669e35e6ac6c953d700a7688bf5cf560fc22f"
+  },
+  "source_profile_authorized_exact_revisions": {
+    "Unreal II v69 licensee0": "ue2-unreal2-2000-v69",
+    "UT2003 v120 licensee28": "ue2-ut2003-v2107",
+    "UT2004 v128 licensee29": "ue2-ut2004-ut2004src-v129",
+    "UT2004 v129 licensee27": "ue2-ut2004-ut2004src-v129"
+  },
+  "source_gate_behavior": "Four real UE2 VerifyImport callers now resolve through one UE2-owned source-profile helper. Only exact original version+licensee combinations are authorized; source-incompatible earlier/later packages retain table parsing but no fabricated VerifyImport matches. Source schema/policy must also match when a UEDB5 snapshot exists.",
+  "source_router": "UE2 owns Unreal II, UT2003, UT2004; UT2004 v99 original UE1-wire package is read through UE2-only legacy compatibility parser. Real v99 file111472 SHA256 pinned and validated with no UE1PackageReader class loaded; UE2 v128 standard uses UE2 reader; pre-v60 interactive OldVersion prompt cannot be assumed.",
+  "raw_original_metadata_differential": {
+    "original_files": 10,
+    "all_names": 1152,
+    "all_imports": 333,
+    "all_exports": 648,
+    "all_original_serialized_offset_and_value_mismatches": 0,
+    "original_source_file_sha256": {
+      "149508": "3f456b6b0a2065244e39221a97e4776cfa2ee8e00dea855a72d1beabb491aebf",
+      "149492": "42c79438778910108f46a40db91f0d1cb177555075da516031d2e46f00a7d837",
+      "149470": "b4f487b6377387478afd04d123edf7a7b4fb4c8cbb88e200604a8f6aa1deb64e",
+      "148919": "56a3fbb1697d6156c9f3cfb18facc05980546e30206514068fa675d68313155d",
+      "148926": "9bb1b90fbdba0d660b7d99deefe73c2fc46b0fa8c41b26a064bbe1707e1f2277",
+      "111532": "558ada46b13e0f62a66c057d697c4760e7a04bd1b507c8987c4177482f4da2b9",
+      "159806": "bec11c51c01ecb2d387aa64d89e84b1972e2012045c4b04e84231cdd05fa5b06",
+      "111461": "04f292545b011359b071d781da35b531bfa22cb5afeceb395bb6e248d9680c62",
+      "111472": "e0dfb7e1e2dba766f22f478f7dcd336630ec94ae6f0c19ffbd0cbf177d27000b",
+      "167246": "d239c34dbead02bd7eedf53fd96a8cc8a9bce82d5d45f2e6c206f579410258ce"
+    },
+    "raw_original_independent_decoder_evidence_SHA256": "d3d0a442768b5f5f6920460d3c82e54baabc0f652839230568c00f7beac6f6a0",
+    "raw_original_decoder_sha256": "f7b03b4d3c14606bfd279ed42282a6c4e5d71ef82c707f03ee8ad69033db5658",
+    "note": "Independent Python decoder inspected complete raw original bytes and compared all table rows, offsets, flags and serial sizes against actual UE2 reader snapshots."
+  },
+  "ue2_real_source_dispatched_original_files": 12,
+  "verify_import_source_policy_and_physical_provider_corrected": {
+    "original_source_root": "Epic UE2 GetPackageLinker(CreatePackage(NULL,*Import.ObjectName)) determines physical provider; UE2-only metadata resolver previously matched exports under unrelated package roots and was corrected. Root-provenance rejected for each three source-profile families; matching root retained correct export index. Unreal II 2000-12-09 one-way UnrealI->UnrealShare package retry preserved ONLY after evidenced original mount search in provider selection.",
+    "genuine_prd_physical_provider_evidence": [
+      {
+        "game": 2,
+        "file_id": 149508,
+        "imports": 14,
+        "selected_provider_ids": [
+          149492
+        ],
+        "source_ambiguity_count": 2,
+        "source_ambiguity_packages": [
+          "Engine",
+          "Core"
+        ],
+        "outcomes": {
+          "unresolved": 5,
+          "package_only": 1,
+          "resolved": 8
+        }
+      },
+      {
+        "game": 4,
+        "file_id": 148919,
+        "imports": 33,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 6,
+        "source_ambiguity_packages": [
+          "Engine",
+          "UCGeneric",
+          "AWGlobal",
+          "CubeMaps",
+          "AlleriaArchitecture",
+          "Core"
+        ],
+        "outcomes": {
+          "unresolved": 33
+        }
+      },
+      {
+        "game": 5,
+        "file_id": 111532,
+        "imports": 27,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 7,
+        "source_ambiguity_packages": [
+          "Engine",
+          "AbaddonTerrain",
+          "UCGeneric",
+          "SkyRenders",
+          "Core",
+          "EmitterTextures",
+          "SC_Intro"
+        ],
+        "outcomes": {
+          "unresolved": 27
+        }
+      },
+      {
+        "game": 5,
+        "file_id": 159806,
+        "imports": 230,
+        "selected_provider_ids": [
+          159807,
+          150180
+        ],
+        "source_ambiguity_count": 2,
+        "source_ambiguity_packages": [
+          "Engine",
+          "train"
+        ],
+        "outcomes": {
+          "package_only": 2,
+          "unresolved": 78,
+          "resolved": 150
+        }
+      },
+      {
+        "game": 5,
+        "file_id": 111472,
+        "imports": 9,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 3,
+        "source_ambiguity_packages": [
+          "Engine",
+          "CubeMaps",
+          "Core"
+        ],
+        "outcomes": {
+          "unresolved": 9
+        }
+      }
+    ],
+    "real_UE2_original_resolved_static_export_count": 158,
+    "real_selected_unresolved_ambiguous_roots_remain_unresolved": true
+  },
+  "mount_provider": {
+    "genuine_original_PRD_real_candidate_cases": [
+      {
+        "game": 2,
+        "file_id": 149508,
+        "imports": 14,
+        "selected_provider_ids": [
+          149492
+        ],
+        "source_ambiguity_count": 2,
+        "source_ambiguity_packages": [
+          "Engine",
+          "Core"
+        ],
+        "outcomes": {
+          "unresolved": 5,
+          "package_only": 1,
+          "resolved": 8
+        }
+      },
+      {
+        "game": 4,
+        "file_id": 148919,
+        "imports": 33,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 6,
+        "source_ambiguity_packages": [
+          "Engine",
+          "UCGeneric",
+          "AWGlobal",
+          "CubeMaps",
+          "AlleriaArchitecture",
+          "Core"
+        ],
+        "outcomes": {
+          "unresolved": 33
+        }
+      },
+      {
+        "game": 5,
+        "file_id": 111532,
+        "imports": 27,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 7,
+        "source_ambiguity_packages": [
+          "Engine",
+          "AbaddonTerrain",
+          "UCGeneric",
+          "SkyRenders",
+          "Core",
+          "EmitterTextures",
+          "SC_Intro"
+        ],
+        "outcomes": {
+          "unresolved": 27
+        }
+      },
+      {
+        "game": 5,
+        "file_id": 159806,
+        "imports": 230,
+        "selected_provider_ids": [
+          159807,
+          150180
+        ],
+        "source_ambiguity_count": 2,
+        "source_ambiguity_packages": [
+          "Engine",
+          "train"
+        ],
+        "outcomes": {
+          "package_only": 2,
+          "unresolved": 78,
+          "resolved": 150
+        }
+      },
+      {
+        "game": 5,
+        "file_id": 111472,
+        "imports": 9,
+        "selected_provider_ids": [],
+        "source_ambiguity_count": 3,
+        "source_ambiguity_packages": [
+          "Engine",
+          "CubeMaps",
+          "Core"
+        ],
+        "outcomes": {
+          "unresolved": 9
+        }
+      }
+    ],
+    "source_mount_priority_fixture": {
+      "result": "UE2_ORIGINAL_TWO_PHYSICAL_DUPLICATE_PROVIDER_ORDER_AND_UNKNOWN_FAIL_CLOSED_PASS",
+      "real_PRD_original_consumer_id": 111532,
+      "original_duplicate_Engine_provider_ids": [
+        1214436,
+        1214407,
+        140294,
+        140225,
+        111843
+      ],
+      "test_scoped_order_a_b_selected": 1214436,
+      "test_scoped_order_b_a_selected": 1214407,
+      "runtime_context_unavailable": "ambiguous",
+      "source_game_consumer_mismatch": "REJECTED",
+      "evidence_kind": "Scenario verifies code respects explicit source-ordered mount IDs from two real verified provider candidates; no claim that either is the observed actual runtime order",
+      "PRD_DB_writes": 0
+    },
+    "limit": "Explicit two-provider mount-order reversal uses genuine original PRD duplicate provider rows but a simulated *input* source order, not a captured original UE2 native runtime mount. Unknown order returned ambiguous, and wrong game/consumer context was rejected. No claim of native path discovery."
+  },
+  "publisher": {
+    "no_authoritative_mount_originals": [
+      {
+        "game_id": 2,
+        "original_file_id": 149508,
+        "version": 69,
+        "licensee": 0,
+        "source_policy": "ue2-unreal2-2000-12-09-package-v69",
+        "original_sha256": "3f456b6b0a2065244e39221a97e4776cfa2ee8e00dea855a72d1beabb491aebf",
+        "import_rows": 14,
+        "static_no_mount_outcomes": {
+          "unresolved": 14
+        },
+        "SQL_edges": 14,
+        "SQL_package_summaries": 3,
+        "website_read_missing_totals": {
+          "missing_objects": 0,
+          "missing_packages": 0,
+          "files_with_missing": 0
+        },
+        "actual_production_pass2_provider_count": 1,
+        "actual_production_pass2_ambiguous_count": 0,
+        "actual_production_pass2_source_unresolved_count": 0
+      },
+      {
+        "game_id": 4,
+        "original_file_id": 148919,
+        "version": 120,
+        "licensee": 28,
+        "source_policy": "ue2-ut2003-v2107-package-v120",
+        "original_sha256": "56a3fbb1697d6156c9f3cfb18facc05980546e30206514068fa675d68313155d",
+        "import_rows": 33,
+        "static_no_mount_outcomes": {
+          "unresolved": 33
+        },
+        "SQL_edges": 33,
+        "SQL_package_summaries": 6,
+        "website_read_missing_totals": {
+          "missing_objects": 0,
+          "missing_packages": 0,
+          "files_with_missing": 0
+        },
+        "actual_production_pass2_provider_count": 0,
+        "actual_production_pass2_ambiguous_count": 4,
+        "actual_production_pass2_source_unresolved_count": 0
+      },
+      {
+        "game_id": 5,
+        "original_file_id": 111532,
+        "version": 128,
+        "licensee": 29,
+        "source_policy": "ue2-ut2004-v3369-package-v128",
+        "original_sha256": "558ada46b13e0f62a66c057d697c4760e7a04bd1b507c8987c4177482f4da2b9",
+        "import_rows": 27,
+        "static_no_mount_outcomes": {
+          "unresolved": 27
+        },
+        "SQL_edges": 27,
+        "SQL_package_summaries": 7,
+        "website_read_missing_totals": {
+          "missing_objects": 0,
+          "missing_packages": 0,
+          "files_with_missing": 0
+        },
+        "actual_production_pass2_provider_count": 0,
+        "actual_production_pass2_ambiguous_count": 5,
+        "actual_production_pass2_source_unresolved_count": 0
+      },
+      {
+        "game_id": 5,
+        "original_file_id": 159806,
+        "version": 129,
+        "licensee": 27,
+        "source_policy": "ue2-ut2004-ut2004src-v129-64bit",
+        "original_sha256": "bec11c51c01ecb2d387aa64d89e84b1972e2012045c4b04e84231cdd05fa5b06",
+        "import_rows": 230,
+        "static_no_mount_outcomes": {
+          "unresolved": 230
+        },
+        "SQL_edges": 230,
+        "SQL_package_summaries": 25,
+        "website_read_missing_totals": {
+          "missing_objects": 0,
+          "missing_packages": 0,
+          "files_with_missing": 0
+        },
+        "actual_production_pass2_provider_count": 2,
+        "actual_production_pass2_ambiguous_count": 1,
+        "actual_production_pass2_source_unresolved_count": 0
+      },
+      {
+        "game_id": 5,
+        "original_file_id": 111472,
+        "version": 99,
+        "licensee": 0,
+        "source_policy": "ue1-ut2004-legacy-texture-profile-compatible",
+        "original_sha256": "e0dfb7e1e2dba766f22f478f7dcd336630ec94ae6f0c19ffbd0cbf177d27000b",
+        "import_rows": 9,
+        "static_no_mount_outcomes": {
+          "unresolved": 9
+        },
+        "SQL_edges": 9,
+        "SQL_package_summaries": 3,
+        "website_read_missing_totals": {
+          "missing_objects": 0,
+          "missing_packages": 0,
+          "files_with_missing": 0
+        },
+        "actual_production_pass2_provider_count": 0,
+        "actual_production_pass2_ambiguous_count": 0,
+        "actual_production_pass2_source_unresolved_count": 1
+      }
+    ],
+    "isolated_SQL_no_selected_provider_edges": 313,
+    "selected_original_provider_SQL_edges": 244,
+    "selected_original_provider_outcomes": [
+      {
+        "outcome": 1,
+        "c": 158
+      },
+      {
+        "outcome": 2,
+        "c": 3
+      },
+      {
+        "outcome": 4,
+        "c": 83
+      }
+    ],
+    "atomic_rollback": true,
+    "PRD_database_writes": 0,
+    "evidence_SHA256": "3ea6bf7ef9eff9d4f05c5c3db8fda4925b264cbf04be20e70e266dd60c84d17d"
+  },
+  "website": {
+    "actual_original_provider_requires_and_required_by": {
+      "149508": [
+        149492
+      ],
+      "159806": [
+        150180,
+        159807
+      ]
+    },
+    "current_policy_current_selected_source_positive": true,
+    "stale_policy_and_wrong_payload_filtered": true,
+    "isolated_website_no_selected_source_missing_objects": 0,
+    "isolated_website_no_selected_source_missing_packages": 0,
+    "positive_evidence_SHA256": "f105a2fe08060afb21a12c89d84d4e17e11ccdd16f79d8b5c70480791f7c8219",
+    "no_authenticated_UI_browser_run": true
+  },
+  "source_rule_unreali_unrealshare": "Original Unreal II v69 fallback is a linker retry after a native UnrealI package lookup failure, never a general license to infer missing/resolve. UE2 static source root projection preserves only specific UnrealI->UnrealShare profile while selector requires explicit mount evidence; UT2003/UT2004 cannot borrow alias.",
+  "synthetic_source_validation_sha256": {
+    "verify_ue2_unreali_source_context_fallback.php": "337850d867350b49fb47beb9b9886842c29fe90272d9a768596d98b72e3c13cd",
+    "verify_ue2_silo_original_legacy.php": "c45fa058f7a7541e73c5c167af4b7787a95c66a21e78c7f5c7094694602edf87",
+    "verify_ue2_real_duplicate_authoritative_mount_context.php": "7459e0aa28652ccf1ac24b85837078ee4699319297107fe85a5d5a209c852f8a"
+  },
+  "production_cutover_status": "NOT_APPLIED. UE2 actual catalog SQL and on-disk UEDB5 are untouched. Existing shared v13 published edges may need republication after ALL UE readers are certified, as directed by user; new UE2 reader conclusions do not certify old PRD data.",
+  "new_test_case_ids": 0,
+  "PRD_SQL_writes": 0,
+  "PRD_uedb5_writes": 0
+}

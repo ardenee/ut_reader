@@ -1067,8 +1067,8 @@
         "F01",
         "F02"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -1088,10 +1088,15 @@
       "required_fixture": "real_file_engine_game_version_and_selected_reader",
       "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
+      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
+        "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php": "730bb5965d80f63938b2a8b09fdda3ef0a54acf29d43a67da355e53a99361d02",
+        "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php": "2a491e2ca50533299e4f470ffd00de8acaf0ca99a5ba739ae7f50ebe229a965f"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
@@ -1103,6 +1108,14 @@
           "line": 46,
           "call_site": "if (in_array($engineKey,"
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "review_findings": [
+        "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
+        "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
+        "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
+        "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified."
       ]
     },
     {
@@ -1115,8 +1128,8 @@
         "F05",
         "F06"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
@@ -1139,10 +1152,18 @@
       "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
       "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
+      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+        "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php": "730bb5965d80f63938b2a8b09fdda3ef0a54acf29d43a67da355e53a99361d02",
+        "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php": "f78dba1e6b21f4cb43e782fb87b6800461a04063272b58e1d86d5a3376c0814e",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php": "40cb5676b268676ffef97fb39481f8ed5ff0dfe386e82791b1595537bdaacca8",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php": "016b64743ec44abb57704677953baba753776640caed7535130ac07eadbe9c94",
+        "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php": "2a491e2ca50533299e4f470ffd00de8acaf0ca99a5ba739ae7f50ebe229a965f",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php": "4f95bbdcdf157bce4213d7721a23bd272a3faa7d675d23485886f0ff214b6212"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
@@ -1159,6 +1180,14 @@
           "line": 160,
           "call_site": "Uedb5Ut2004SnapshotBuilder::build("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "review_findings": [
+        "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
+        "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
+        "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
+        "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified."
       ]
     },
     {
@@ -1170,8 +1199,8 @@
         "F13",
         "F14"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
@@ -1189,10 +1218,13 @@
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
       "acceptance_condition": "Correct source-specific import/provider metadata and dependency status for actual UnrealDB table/registry path, with honest unresolved handling; no native asset loading",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
+      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php": "9bd64830964351da7d54dbabe373185afea104838b22843648d1c0c93f6bde80",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "fc1d19b81ebdaeb84e40da8701bce99ab24b84e083a4033cc278014c197c1c31"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -1201,7 +1233,15 @@
         }
       ],
       "out_of_scope_native_payload_loading": true,
-      "scope_revised_at": "2026-11-02"
+      "scope_revised_at": "2026-11-02",
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "review_findings": [
+        "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
+        "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
+        "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
+        "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified."
+      ]
     },
     {
       "key": "ue2-mount-provider",
@@ -1211,8 +1251,8 @@
         "F11",
         "F15"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
@@ -1230,10 +1270,13 @@
       "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
       "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
+      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "64659bfce95ace0770debc8009166d0d92111f68705736fc0fdde8e22ea7f155"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
@@ -1245,6 +1288,14 @@
           "line": 25,
           "call_site": "public function select("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "review_findings": [
+        "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
+        "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
+        "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
+        "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified."
       ]
     },
     {
@@ -1256,8 +1307,8 @@
         "F18",
         "F19"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -1276,10 +1327,14 @@
       "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
       "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
+      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "b3606ab6904f8d745fc70e635384f5675134aeef8d1e20b7fc2a3769c4df5a41",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
@@ -1291,6 +1346,14 @@
           "line": 268,
           "call_site": "$this->publisher->publish("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "review_findings": [
+        "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
+        "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
+        "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
+        "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified."
       ]
     },
     {
@@ -1301,8 +1364,8 @@
         "F17",
         "F22"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -1323,10 +1386,16 @@
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
+      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
+        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
+        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
+      },
       "php_source_sites": [
         {
           "file": "catalog/game-missing.php",
@@ -1338,6 +1407,14 @@
           "line": 30,
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "review_findings": [
+        "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
+        "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
+        "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
+        "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified."
       ]
     },
     {
@@ -2117,8 +2194,8 @@
         "F04",
         "F06"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -2136,16 +2213,29 @@
       "required_fixture": "genuine_UT2004_legacy_UE1_package_and_nonlegacy_UE2_package",
       "acceptance_condition": "UE2-owned legacy parser uses original source profile, no UE1 module loaded, generated compatibility snapshot unchanged",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
+      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
+        "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php": "4237b88a7292077507038ae2d71f78e63a4200d13d5ba2140ff2d951381355c0",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE2LegacyCompatibilityTableSnapshotBuilder.php": "f3c3e60ba2803b2ded1a6848d3ceb9db5bc1df694af41c73c3cffb4ea1d48d87"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
           "line": 114,
           "call_site": "$sourceKey === 'ut2004'"
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "review_findings": [
+        "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
+        "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
+        "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
+        "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified."
       ]
     },
     {

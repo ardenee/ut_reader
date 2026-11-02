@@ -60,14 +60,14 @@ final class PdoUe2VerifyImportProjectionResolver
 
         $results=[];$resolving=[];
         foreach(array_keys($imports)as$index){
-            self::resolveOne($profile,$imports,$exports,(int)$index,$results,$resolving);
+            self::resolveOne($profile,$imports,$exports,$providerPackageName,(int)$index,$results,$resolving);
         }
         ksort($results,SORT_NUMERIC);
         return $results;
     }
 
     /** @param array<int,array<string,mixed>> $imports @param array<int,array<string,mixed>> $exports */
-    private static function resolveOne(string $profile,array $imports,array $exports,int $index,array &$results,array &$resolving): array
+    private static function resolveOne(string $profile,array $imports,array $exports,string $providerPackageName,int $index,array &$results,array &$resolving): array
     {
         if(isset($results[$index]))return $results[$index];
         if(isset($resolving[$index]))return $results[$index]=self::result('invalid','import_parent_cycle',false,null);
@@ -86,10 +86,23 @@ final class PdoUe2VerifyImportProjectionResolver
                 unset($resolving[$index]);
                 return $results[$index]=self::result('invalid','root_import_is_not_core_package',false,null);
             }
+            // Epic UE2 calls GetPackageLinker(CreatePackage(NULL, Import.ObjectName)).
+            // A different physical provider cannot satisfy this root or its descendants.
+            $rootPackage=(string)($import['object_name']??'');
+            // Unreal II 2000-12-09 has one explicit OLD-version retry:
+            // after UnrealI fails to load, GetPackageLinker retries UnrealShare.
+            // No other cross-provider root match is authorized.
+            $unrealiShareFallback=$profile===self::PROFILE_UNREAL2_V69_2000
+                &&self::same($rootPackage,'UnrealI')
+                &&self::same($providerPackageName,'UnrealShare');
+            if(!self::same($rootPackage,$providerPackageName)&&!$unrealiShareFallback){
+                unset($resolving[$index]);
+                return $results[$index]=self::result('invalid','different_provider_package_root',false,null);
+            }
             $sourceLinker=true;$isPackageLinkerImport=true;
         }elseif($outer<0){
             $parentIndex=-$outer-1;
-            $parent=self::resolveOne($profile,$imports,$exports,$parentIndex,$results,$resolving);
+            $parent=self::resolveOne($profile,$imports,$exports,$providerPackageName,$parentIndex,$results,$resolving);
             $sourceLinker=!empty($parent['source_linker']);
             if(!$sourceLinker){
                 unset($resolving[$index]);

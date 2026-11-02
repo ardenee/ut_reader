@@ -106,12 +106,10 @@ final class PdoUedb5PhysicalProviderSelector
                 }
             }
             if (($candidates === [] || !$primaryPhysicallyMounted)
-                // UE1's UnrealI -> UnrealShare retry happens only after an
-                // actual failed original loader search. Catalogue absence
-                // without a mounted session cannot prove that failure.
-                && ($orderedMounts !== null || !str_starts_with(
-                    strtolower((string)($consumer['section_schemas']['imports'] ?? '')), 'ue1.'
-                ))
+                // Unreal II and UE1's UnrealI -> UnrealShare retry happens only
+                // after a failed original engine package search. Catalogue
+                // absence alone cannot establish that runtime failure.
+                && $orderedMounts !== null
                 && self::usesUnrealIToUnrealSharePackageFallback($consumer)
                 && self::sameFname((string)$packageName, 'UnrealI')) {
                 // The exact audited source profile catches a failed UnrealI package load and

@@ -341,7 +341,7 @@ final class PdoGameDependencyCrossExamineQuery
                     );
                 }
             } elseif ($targetEngine === 'UE2') {
-                $profile = $this->ue2VerifyImportProfile($targetGameId, $consumerVersion);
+                $profile = $this->ue2VerifyImportProfile($targetGameId, $consumerVersion, $consumerLicensee);
                 if ($profile !== null) {
                     $outcomes = PdoUe2VerifyImportProjectionResolver::resolveInMemoryOutcome(
                         $profile,
@@ -527,21 +527,9 @@ final class PdoGameDependencyCrossExamineQuery
         );
     }
 
-    private function ue2VerifyImportProfile(int $gameId, int $packageVersion): ?string
+    private function ue2VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string
     {
-        if ($packageVersion <= 0) { return null; }
-        try { $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId); }
-        catch (\Throwable) { return null; }
-        if ($sourceKey === 'unreal2' && $packageVersion >= 60 && $packageVersion <= 69) {
-            return PdoUe2VerifyImportProjectionResolver::PROFILE_UNREAL2_V69_2000;
-        }
-        if ($sourceKey === 'ut2003' && $packageVersion >= 60 && $packageVersion <= 120) {
-            return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2003_V2107;
-        }
-        if ($sourceKey === 'ut2004' && $packageVersion >= 60 && $packageVersion <= 129) {
-            return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2004_V129;
-        }
-        return null;
+        return \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue2VerifyImportSourceProfile::fromGameVersion($gameId, $packageVersion, $licenseeVersion);
     }
 
     /** @return array{version:int,licensee:int} */

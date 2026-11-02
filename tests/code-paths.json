@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1024,
+  "total_files": 1025,
   "roles": {
     "CONTAINER": 88,
     "DATABASE": 119,
@@ -11,19 +11,19 @@
     "GENERAL": 152,
     "INGEST": 72,
     "JOBS": 218,
-    "LINKER": 26,
+    "LINKER": 27,
     "NAME": 4,
     "OBJECT": 66,
     "OPERATIONS": 19,
     "OUTPUT": 138,
-    "SOURCE": 8,
+    "SOURCE": 9,
     "TABLE": 5,
     "UI": 160
   },
   "engine_hints": {
     "shared": 868,
     "ue1": 93,
-    "ue2": 11,
+    "ue2": 12,
     "ue3": 4,
     "ue4": 12,
     "ue5": 38
@@ -9348,8 +9348,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php",
-      "sha256": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
-      "bytes": 50703,
+      "sha256": "b30cbd8cc2391535d675c1e09f03c2074aa1db3a4c3b9df7569d289e106b95d8",
+      "bytes": 49929,
       "engine_hints": [
         "shared"
       ],
@@ -9519,8 +9519,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
-      "sha256": "440f19de2b3a2d3860c7f9d59b65cc6248b8dd98747c6d73c0f00312f975676d",
-      "bytes": 24055,
+      "sha256": "64659bfce95ace0770debc8009166d0d92111f68705736fc0fdde8e22ea7f155",
+      "bytes": 23922,
       "engine_hints": [
         "shared"
       ],
@@ -9575,8 +9575,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
-      "sha256": "2c567a423f28eb684e7acd04e6438d234cad2eb79e8e32c162e0b4c2c78513da",
-      "bytes": 50544,
+      "sha256": "fc1d19b81ebdaeb84e40da8701bce99ab24b84e083a4033cc278014c197c1c31",
+      "bytes": 49791,
       "engine_hints": [
         "ue1"
       ],
@@ -10041,6 +10041,21 @@
       "class": "Uedb5UE2TableSnapshotBuilder"
     },
     {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "sha256": "2f3bc819595144cf69e5542bd43be960d7ad54cba819aec05122ef7fa1709d87",
+      "bytes": 2827,
+      "engine_hints": [
+        "ue2"
+      ],
+      "path_roles": [
+        "LINKER",
+        "SOURCE"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "Uedb5Ue2VerifyImportSourceProfile"
+    },
+    {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5CityHash64.php",
       "sha256": "e24521d1e1cc1406c139863d392314e7736aa3d7aacba561b39f774afc6b21fb",
       "bytes": 9481,
@@ -10157,8 +10172,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
-      "sha256": "4e5975ccf727371a4a5481c5b6dc6acd3ca64219b6fe6fd51891ca2598e9a748",
-      "bytes": 1069,
+      "sha256": "f78dba1e6b21f4cb43e782fb87b6800461a04063272b58e1d86d5a3376c0814e",
+      "bytes": 1088,
       "engine_hints": [
         "ue2"
       ],
@@ -10199,8 +10214,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
-      "sha256": "861885a4af2ffd942a2f11db90a3cf9f746a6b0484d2b9a37b2922aa20b43f95",
-      "bytes": 879,
+      "sha256": "40cb5676b268676ffef97fb39481f8ed5ff0dfe386e82791b1595537bdaacca8",
+      "bytes": 1114,
       "engine_hints": [
         "ue2"
       ],
@@ -10213,8 +10228,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
-      "sha256": "2f4f004a2e82ac43897055ed609b187d3aede05f0fcd419bbd4f48c80089611e",
-      "bytes": 1017,
+      "sha256": "016b64743ec44abb57704677953baba753776640caed7535130ac07eadbe9c94",
+      "bytes": 1317,
       "engine_hints": [
         "ue2"
       ],
@@ -10855,8 +10870,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php",
-      "sha256": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
-      "bytes": 54722,
+      "sha256": "73aab3067d7b7e176e756e9918a3d782149cde63400a199f21032fded0ac168a",
+      "bytes": 53066,
       "engine_hints": [
         "shared"
       ],
@@ -11339,8 +11354,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
-      "sha256": "9f47e034eb9257b69010c8dabff4ec774749bd8702ba71c44cc9520a6b97e876",
-      "bytes": 12752,
+      "sha256": "9bd64830964351da7d54dbabe373185afea104838b22843648d1c0c93f6bde80",
+      "bytes": 13745,
       "engine_hints": [
         "ue2"
       ],
@@ -13694,8 +13709,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
-      "sha256": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
-      "bytes": 27695,
+      "sha256": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
+      "bytes": 27117,
       "engine_hints": [
         "shared"
       ],

@@ -229,10 +229,14 @@ final class Uedb5ClassicDependencyResolver
             // v68): the original mount/search order is separate evidence
             // from the package version and the stored catalogue candidates.
             // Never turn an unknown mount into a false missing SQL edge.
-            if ($engine === 'ue1' && !is_array($provider)) {
-                $reason = $ue1Profile === null
-                    ? 'ue1_verify_import_source_implementation_unavailable'
-                    : 'ue1_runtime_mount_provider_unselected';
+            if (in_array($engine, ['ue1','ue2'], true) && !is_array($provider)) {
+                $reason = $engine === 'ue1'
+                    ? ($ue1Profile === null
+                        ? 'ue1_verify_import_source_implementation_unavailable'
+                        : 'ue1_runtime_mount_provider_unselected')
+                    : ($ue2Profile === null
+                        ? 'ue2_verify_import_source_implementation_unavailable'
+                        : 'ue2_runtime_mount_provider_unselected');
                 $resolved[(int)$importIndex] = self::result(
                     'unresolved', $root, null, null, $reason,
                     $engine, 'runtime_derived'
@@ -854,26 +858,7 @@ final class Uedb5ClassicDependencyResolver
 
     private static function ue2VerifyImportProfile(array $snapshot): ?string
     {
-        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
-        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
-        if (str_starts_with($schema, 'ue2.unreal2.')
-            && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000)) {
-            return PdoUe2VerifyImportProjectionResolver::PROFILE_UNREAL2_V69_2000;
-        }
-        if (str_starts_with($schema, 'ue2.ut2003.')
-            && $policy === strtolower(Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY)) {
-            return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2003_V2107;
-        }
-        $version = self::packageVersion($snapshot);
-        if (str_starts_with($schema, 'ue2.ut2004.')
-            && $version >= 60 && $version <= 129
-            && in_array($policy, [
-                strtolower(Uedb5Ut2004SnapshotBuilder::POLICY_V128),
-                strtolower(Uedb5Ut2004SnapshotBuilder::POLICY_V129),
-            ], true)) {
-            return PdoUe2VerifyImportProjectionResolver::PROFILE_UT2004_V129;
-        }
-        return null;
+        return Uedb5Ue2VerifyImportSourceProfile::fromSnapshot($snapshot);
     }
 
     /**

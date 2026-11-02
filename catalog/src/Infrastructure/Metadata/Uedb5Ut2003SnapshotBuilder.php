@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2PackageReader;
 final class Uedb5Ut2003SnapshotBuilder
 {
     public const SOURCE_POLICY = 'ue2-ut2003-v2107-package-v120';
+    public const POLICY_PRE_V120_SOURCE_UNATTRIBUTED = 'ue2-ut2003-pre-v120-source-unattributed';
     public const POLICY_POST_V120_UNRESOLVED = 'ue2-ut2003-post-v120-profile-admitted-unresolved';
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
@@ -16,7 +17,9 @@ final class Uedb5Ut2003SnapshotBuilder
         $version = (int)($reader->getHeader()['version'] ?? -1);
         return Uedb5UE2TableSnapshotBuilder::build($reader, $file, [
             'label' => 'UT2003',
-            'policy' => $version > 120 ? self::POLICY_POST_V120_UNRESOLVED : self::SOURCE_POLICY,
+            'policy' => $version === 120 && (int)($reader->getHeader()['licenseeVersion'] ?? -1) === 28
+                ? self::SOURCE_POLICY
+                : ($version > 120 ? self::POLICY_POST_V120_UNRESOLVED : self::POLICY_PRE_V120_SOURCE_UNATTRIBUTED),
             'schema_prefix' => 'ue2.ut2003',
         ]);
     }

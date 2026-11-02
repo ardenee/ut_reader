@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1024,
-  "edges_count": 3609,
+  "nodes": 1025,
+  "edges_count": 3616,
   "edge_types": {
-    "use": 1231,
+    "use": 1232,
     "new": 951,
-    "static_or_expression": 1427
+    "static_or_expression": 1433
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -15228,9 +15228,15 @@
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "syntax": "static_or_expression",
+      "line": 502
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 664
+      "line": 649
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php",
@@ -15512,7 +15518,7 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/class-remap.php",
       "syntax": "static_or_expression",
-      "line": 402
+      "line": 400
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15524,7 +15530,7 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 437
+      "line": 435
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15542,19 +15548,19 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicVerifyImportResolver.php",
       "syntax": "static_or_expression",
-      "line": 434
+      "line": 432
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 343
+      "line": 341
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 447
+      "line": 445
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15566,7 +15572,7 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 445
+      "line": 443
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15578,7 +15584,7 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
       "syntax": "static_or_expression",
-      "line": 340
+      "line": 338
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15662,7 +15668,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 590
+      "line": 594
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -15674,43 +15680,43 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogLegacyNameMapPreprocessor.php",
       "syntax": "static_or_expression",
-      "line": 685
+      "line": 689
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php",
       "syntax": "static_or_expression",
-      "line": 822
+      "line": 826
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
-      "to": "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
       "syntax": "static_or_expression",
-      "line": 860
+      "line": 861
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 794
+      "line": 798
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 801
+      "line": 805
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 730
+      "line": 734
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 846
+      "line": 850
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -16631,6 +16637,42 @@
       "line": 12
     },
     {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
+      "syntax": "static_or_expression",
+      "line": 46
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
+      "syntax": "static_or_expression",
+      "line": 48
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
+      "syntax": "static_or_expression",
+      "line": 51
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
+      "syntax": "static_or_expression",
+      "line": 19
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
+      "syntax": "use",
+      "line": 7
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue2VerifyImportSourceProfile.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 5
+    },
+    {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5CityHash64.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
@@ -16790,7 +16832,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 17
+      "line": 18
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
@@ -16808,7 +16850,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 18
+      "line": 19
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
@@ -17558,7 +17600,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php",
       "to": "catalog/lib/CatalogDependencyDiagnostics.php",
       "syntax": "static_or_expression",
-      "line": 1015
+      "line": 1004
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php",
