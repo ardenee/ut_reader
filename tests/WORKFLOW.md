@@ -17,4 +17,4 @@ Performance is measured by mandatory *unverified behaviour remaining*, defects c
 
 ## Reader architecture
 
-Separate concrete entrypoints for UE1, UE2, UE3, UE4 and UE5 are mandatory. Shared low-level byte primitives may be reused only when Epic source proves identical semantics; the common UE1/UE2 legacy parser remains a staged-refactor boundary, not finished engine isolation. Change-impact should report both affected engines for edits to that file. Use python tests/tools/impact.py --path <changed source> to identify affected operation cases.
+The UE1, UE2, UE3, UE4 and UE5 implementations now own separate concrete package parsers. UE1 and UE2 share bounded byte IO and a minimal table method interface, NOT package-summary or table parsing. Common UEDB5 dependencies and provider resolution remain shared. Edits to shared IO and interface must flag both UE1/UE2. Use python tests/tools/impact.py --path <changed source> to identify affected operation cases.

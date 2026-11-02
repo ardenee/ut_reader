@@ -94,6 +94,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogRetainedArchiveMemberSourceRestorer.php',
             $this->catalogRoot . '/src/Infrastructure/Readers/CatalogLegacyPackageReader.php',
+            $this->catalogRoot . '/src/Infrastructure/Readers/CatalogPackageTableReader.php',
             $this->catalogRoot . '/src/Infrastructure/Readers/CatalogUE1PackageReader.php',
             $this->catalogRoot . '/src/Infrastructure/Readers/CatalogUE2PackageReader.php',
             $this->catalogRoot . '/lib/GameProfiles.php',

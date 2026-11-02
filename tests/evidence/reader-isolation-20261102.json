@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "purpose": "Source-only engine-parser isolation refactor; exclude any new Epic native acceptance or database verification claims",
+  "original_git_commit": "d825ff21",
+  "comparison_outcome": "PASS FOUR EXACT PRE/POST CLASSIC PACKAGE TABLE AND UEDB5 BRIDGE SHAS",
+  "original_inputs_hash_verified": true,
+  "engine_package_reader_parsers_independent": true,
+  "shared_bounded_binary_io_only": true,
+  "pre_post_genuine_files": {
+    "Unreal_1998_v61": {
+      "engine": "ue1",
+      "file_sha256": "198ea3d832875767932c9539fb2fedbea357b4cb670ed41d77f74f213ea74576",
+      "version": 61,
+      "names": 34,
+      "imports": 3,
+      "exports": 16,
+      "reader_shape_sha256": "058e1a299af8921b340a50c4cdf9f112ed0d75a1f2aab48f3563c146e7d99140",
+      "uedb5_snapshot_sha256": "ab11da4d5628cff9ab99c512371ffcc9ad4dda2b83b3c0959d3f52a061832ca1",
+      "uedb5_snapshot_error": ""
+    },
+    "UT99_v432": {
+      "engine": "ue1",
+      "file_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "version": 69,
+      "names": 3345,
+      "imports": 60,
+      "exports": 5370,
+      "reader_shape_sha256": "3d14718435030b0f92b2f5226f303e75b020ec54e77134a0b456c4eb94a3eb51",
+      "uedb5_snapshot_sha256": "b0e3913c883dc4825cd568e17046024d831a7d0099832f9ca8b2fafd1ef80037",
+      "uedb5_snapshot_error": ""
+    },
+    "UT99_469f": {
+      "engine": "ue1",
+      "file_sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b",
+      "version": 69,
+      "names": 3702,
+      "imports": 63,
+      "exports": 5740,
+      "reader_shape_sha256": "0fe25cf4cb732642891056d869c6ef78113f5452a1875d2bdc08ae6135e568e6",
+      "uedb5_snapshot_sha256": "286cd41052ac33cf0f3eef1cc57ffe19910cc11ff82a7fc8178b775858189088",
+      "uedb5_snapshot_error": ""
+    },
+    "UE2_Runtime_v126": {
+      "engine": "ue2",
+      "file_sha256": "779492bc0ee2bdd170217705715534352a671b569440dbd90a407ecb74cf8937",
+      "version": 126,
+      "names": 5475,
+      "imports": 85,
+      "exports": 8727,
+      "reader_shape_sha256": "043eb3c43141c2720f671614745d169fd4bccc96359bd6d15a341dc436d0f6a0",
+      "uedb5_snapshot_sha256": "029361c4360692c8aaf941a7c430ce9636f8b50a60968bd6576ec23db6efe9cb",
+      "uedb5_snapshot_error": ""
+    }
+  },
+  "genuine_game_specific_parser_proof": {
+    "unreal_v61": {
+      "file_sha256": "198ea3d832875767932c9539fb2fedbea357b4cb670ed41d77f74f213ea74576",
+      "engine": "UE1",
+      "game": "unreal",
+      "package_version": 61,
+      "name_count": 34,
+      "import_count": 3,
+      "export_count": 16,
+      "decoded_tables_sha256": "2cbf4a63c983ecb6ff4744e5128a75ac39e32269810ebfdf3d03cba40aeedfd8",
+      "game_specific_uedb5_snapshot_sha256": "d101d68ddbb25acb9bdd4bfc41dbac676e86c9ae1b3d6cbff1e0d338c85258f6",
+      "source_policy": "ue1-unreal-v224-v60-68-public-source-partial"
+    },
+    "ut99_v432": {
+      "file_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "engine": "UE1",
+      "game": "ut99",
+      "package_version": 69,
+      "name_count": 3345,
+      "import_count": 60,
+      "export_count": 5370,
+      "decoded_tables_sha256": "5586952494ec9c97347b33a0764e928f45935d819c61a9923f58f560e3f0f83d",
+      "game_specific_uedb5_snapshot_sha256": "417b14dec9c2e683b093b9c4d70b7dad933ae0d38e0732f159d1cb2d6f55b0ae",
+      "source_policy": "ue1-ut99-v430-public-source-partial"
+    },
+    "ut99_469f": {
+      "file_sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b",
+      "engine": "UE1",
+      "game": "ut99",
+      "package_version": 69,
+      "name_count": 3702,
+      "import_count": 63,
+      "export_count": 5740,
+      "decoded_tables_sha256": "45a31c75da90026e961167a79f939b56536ec26a4231d0b0d3c056ffcf29bc3d",
+      "game_specific_uedb5_snapshot_sha256": "8c2ad900be3f975d5ed289979d5bac170da514dad91f3b4963450b83f82ef9b0",
+      "source_policy": "ue1-ut99-v430-public-source-partial"
+    },
+    "ue2_v126": {
+      "file_sha256": "779492bc0ee2bdd170217705715534352a671b569440dbd90a407ecb74cf8937",
+      "engine": "UE2",
+      "game": "unreal2",
+      "package_version": 126,
+      "name_count": 5475,
+      "import_count": 85,
+      "export_count": 8727,
+      "decoded_tables_sha256": "1755ccbe5cd88243d4ca510d04564c25fcb49b6570acf15a779dbbabd9f59337",
+      "game_specific_uedb5_snapshot_sha256": "d65558990bcb431d3facfe5bb9bdea6268492a8418b9bd48f5def662c970fdeb",
+      "source_policy": "ue2-warfare-v126-serialization"
+    }
+  },
+  "selected_source_hashes": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "28ed364ec905a318d6661c304efe5ec7998b5d46485e773335368e19856133b9",
+    "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php": "186ba380e7ace4c7391ce72279961989037b7d258d217276cacbab53337d1aee",
+    "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php": "afbfed9eb61814c64496a1647a76b9340b55c597a0d7bd31de12f642a651aa84",
+    "catalog/src/Infrastructure/Readers/CatalogPackageTableReader.php": "2102d2fa3a7995bebd2b9495c1c74b82cc3f9bb0a112c05cb8d90e9a8f7cc018",
+    "catalog/src/Infrastructure/Metadata/Uedb5LegacySnapshotBuilder.php": "85c0a286c70d043f649b953c842c87c407c64a8aa3b4f568b8c7b19f6f250275"
+  },
+  "original_engine_loaded_value_comparison_performed": false,
+  "sql_database_writes_performed": false,
+  "note": "Four real packages from UE1 1998/UT99 432/UT99 469f/UE2 Runtime 126. Original engine acceptance belongs to archived frozen separate certification. This record validates refactor equivalence and source-shaped snapshot paths only."
+}

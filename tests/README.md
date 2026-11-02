@@ -12,7 +12,7 @@ The objective is to make UnrealDB's **observable file handling** match the corre
 - [LEGACY-ACCEPTANCE.md](LEGACY-ACCEPTANCE.md): closed historical programmes whose evidence is still available.
 - [tools/index_codepaths.py](tools/index_codepaths.py): read-only codepath index builder.
 - [tools/impact.py](tools/impact.py): change-impact map from product files to affected UE1–UE5 operation cases; shared code flags multiple engines.
-- [tools/check_reader_routes.php](tools/check_reader_routes.php): focused five-engine PHP dispatcher ownership regression, not native engine parity.
+- [evidence/reader-isolation-20261102.json](evidence/reader-isolation-20261102.json): one accepted exact before/after four-genuine-package, source-shaped snapshot comparison for independent UE1/UE2 parser split. No original native parity or PRD acceptance asserted.\n- [tools/verify_reader_silo_real_paths.php](tools/verify_reader_silo_real_paths.php): read-only regression on actual game-specific Unreal, UT99, Unreal II snapshot builders, run only after a parser change.\n- [tools/check_reader_routes.php](tools/check_reader_routes.php): focused five-engine PHP dispatcher ownership regression, not native engine parity.
 - [tools/check.py](tools/check.py): no-engine-run schema, source-path and archived-SHA validator.
 
 All historic test scripts, results and notes are under [archive/testing-legacy-2026-11-02](../archive/testing-legacy-2026-11-02/README.md); old dashboards and journals no longer determine current status.

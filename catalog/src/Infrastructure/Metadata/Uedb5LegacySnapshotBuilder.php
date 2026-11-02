@@ -8,7 +8,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Readers\CatalogLegacyPackageReaderBase;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogPackageTableReader;
 
 final class Uedb5LegacySnapshotBuilder
 {
@@ -18,7 +18,7 @@ final class Uedb5LegacySnapshotBuilder
      * @return array<string,mixed>
      */
     public static function build(
-        CatalogLegacyPackageReaderBase $reader,
+        CatalogPackageTableReader $reader,
         array $file,
         array $contract
     ): array {

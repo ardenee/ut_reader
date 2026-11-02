@@ -23,9 +23,18 @@ foreach($routes as $engine=>$expected){
 }
 $ue1='UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogUE1PackageReader';
 $ue2='UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogUE2PackageReader';
-if(!is_subclass_of($ue1,'UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogLegacyPackageReaderBase')
-||!is_subclass_of($ue2,'UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogLegacyPackageReaderBase')){
+if(!is_subclass_of($ue1,'UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogPackageTableReader')
+||!is_subclass_of($ue2,'UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogPackageTableReader')){
  throw new RuntimeException('Shared bounded legacy core no longer present');
 }
 if(!is_file($root.'/catalog/parsers/UE3CatalogReader.php'))throw new RuntimeException('UE3 parser dispatch wrapper missing');
+foreach ([$ue1,$ue2] as $engineClass) {
+ $reflection = new ReflectionClass($engineClass);
+ if ($reflection->getParentClass() !== false) throw new RuntimeException('Engine reader inherits a shared parser: '.$engineClass);
+ foreach (['parse','readNames','readImports','readExports'] as $method) {
+  $owner = (new ReflectionMethod($engineClass, $method))->getDeclaringClass()->getName();
+  if ($owner !== $engineClass) throw new RuntimeException('Shared parser method found: '.$method.' declared by '.$owner);
+ }
+}
+echo "UE1_UE2_SILO_CHECK_PASS; independent parsing methods, shared byte IO and table interface only\n";
 echo "ROUTING_SCOPE_ONLY_5_OF_5_PASS; native byte/VerifyImport parity NOT asserted\n";

@@ -267,10 +267,39 @@ final class CatalogUnverifiedMetadataRepairService
         }
 
         $jobQueueName = (new CatalogBucketBatchQueue($this->db, $this->config))->queueName();
-        $version = substr(hash_file(
-            'sha256',
-            dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Readers' . DIRECTORY_SEPARATOR . 'CatalogLegacyPackageReader.php'
-        ) ?: hash('sha256', 'unverified-revalidate'), 0, 16);
+        // Include the independently owned parser for this game. A UE1-only
+        // parser correction must produce a new retry key without changing the
+        // UE2 (or other engine) revalidation identity. UT2004 is explicitly
+        // dual-family: some source-authorized older packages use UE1.
+        $readerRoot = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'Readers';
+        $engineReaders = match ($queueGameId) {
+            3, 12 => [$readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE1PackageReader.php'],
+            2, 4 => [$readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2PackageReader.php'],
+            5 => [$readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE1PackageReader.php',
+                  $readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2PackageReader.php'],
+            6 => [dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'parsers' . DIRECTORY_SEPARATOR . 'EpicUE3PackageReader.php'],
+            7 => [dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'UE4' . DIRECTORY_SEPARATOR . 'UnrealPackageReader.php'],
+            default => [
+                $readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE1PackageReader.php',
+                $readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2PackageReader.php',
+                dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'parsers' . DIRECTORY_SEPARATOR . 'EpicUE3PackageReader.php',
+                dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'UE4' . DIRECTORY_SEPARATOR . 'UnrealPackageReader.php',
+                dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'UE5' . DIRECTORY_SEPARATOR . 'UnrealPackageReader.php',
+            ],
+        };
+        $sharedBinaryReader = $readerRoot . DIRECTORY_SEPARATOR . 'CatalogLegacyPackageReader.php';
+        if (in_array($queueGameId, [0, 2, 3, 4, 5, 12], true)) {
+            $engineReaders[] = $sharedBinaryReader;
+        }
+        $readerHashes = [];
+        foreach ($engineReaders as $readerFile) {
+            $sourceHash = is_file($readerFile) ? hash_file('sha256', $readerFile) : false;
+            if ($sourceHash === false) {
+                throw new \RuntimeException('Cannot fingerprint parser source for unverified revalidation: ' . $readerFile);
+            }
+            $readerHashes[] = $sourceHash;
+        }
+        $version = substr(hash('sha256', implode(':', $readerHashes)), 0, 16);
         $dedupeKey = 'unverified-revalidate:' . $fileId . ':' . $version;
 
         $jobId = (new PdoJobQueue($this->db))->enqueue(

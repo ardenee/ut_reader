@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1017,
-  "edges_count": 3591,
+  "nodes": 1018,
+  "edges_count": 3596,
   "edge_types": {
     "use": 1229,
-    "new": 946,
-    "static_or_expression": 1416
+    "new": 948,
+    "static_or_expression": 1419
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -18137,24 +18137,6 @@
       "line": 24
     },
     {
-      "from": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-      "to": "catalog/class-remap.php",
-      "syntax": "static_or_expression",
-      "line": 621
-    },
-    {
-      "from": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
-      "syntax": "static_or_expression",
-      "line": 785
-    },
-    {
-      "from": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileExternalSchemaResolver.php",
-      "syntax": "static_or_expression",
-      "line": 730
-    },
-    {
       "from": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicArrayValueReader.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicCompactIndexReader.php",
       "syntax": "static_or_expression",
@@ -19043,6 +19025,54 @@
       "line": 30
     },
     {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+      "to": "catalog/class-remap.php",
+      "syntax": "static_or_expression",
+      "line": 366
+    },
+    {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
+      "syntax": "static_or_expression",
+      "line": 530
+    },
+    {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
+      "syntax": "new",
+      "line": 48
+    },
+    {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileExternalSchemaResolver.php",
+      "syntax": "static_or_expression",
+      "line": 475
+    },
+    {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+      "to": "catalog/class-remap.php",
+      "syntax": "static_or_expression",
+      "line": 366
+    },
+    {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
+      "syntax": "static_or_expression",
+      "line": 530
+    },
+    {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
+      "syntax": "new",
+      "line": 48
+    },
+    {
+      "from": "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileExternalSchemaResolver.php",
+      "syntax": "static_or_expression",
+      "line": 475
+    },
+    {
       "from": "catalog/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php",
       "to": "catalog/src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php",
       "syntax": "static_or_expression",
@@ -19922,7 +19952,7 @@
       "from": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 278
+      "line": 307
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php",
@@ -19946,7 +19976,7 @@
       "from": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 276
+      "line": 305
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php",
