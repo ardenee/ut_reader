@@ -2,11 +2,11 @@
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
   "nodes": 1025,
-  "edges_count": 3616,
+  "edges_count": 3619,
   "edge_types": {
     "use": 1232,
-    "new": 951,
-    "static_or_expression": 1433
+    "new": 952,
+    "static_or_expression": 1435
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -16244,19 +16244,31 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5ProviderKeyPublisher.php",
       "syntax": "new",
-      "line": 375
+      "line": 459
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
       "syntax": "static_or_expression",
-      "line": 430
+      "line": 514
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
       "syntax": "static_or_expression",
-      "line": 123
+      "line": 126
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "new",
+      "line": 197
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "static_or_expression",
+      "line": 202
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
@@ -16286,13 +16298,19 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionBuilder.php",
       "syntax": "static_or_expression",
-      "line": 373
+      "line": 457
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+      "syntax": "static_or_expression",
+      "line": 211
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 171
+      "line": 255
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
@@ -16304,7 +16322,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
       "syntax": "static_or_expression",
-      "line": 206
+      "line": 121
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
@@ -16736,13 +16754,13 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
       "syntax": "static_or_expression",
-      "line": 856
+      "line": 868
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
       "syntax": "static_or_expression",
-      "line": 240
+      "line": 252
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
@@ -16754,7 +16772,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileStackReader.php",
       "syntax": "static_or_expression",
-      "line": 819
+      "line": 831
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",

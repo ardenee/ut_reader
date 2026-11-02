@@ -1,0 +1,242 @@
+{
+  "date": "2026-11-02",
+  "engine": "ue5",
+  "implemented_scope": "Epic UE5.8.3 classic package header/name/import/export/dependencies and Zen IoStore TOC/container/package-store/dependency source paths actually used by UnrealDB. Native UObject, media payload rendering/execution and other non-reader areas excluded.",
+  "status": "SEVEN_FIXED_IMPLEMENTATION_CODE_PATH_CONTRACTS_PASS_IN_ACCEPTED_5_8_3_SCOPE",
+  "existing_operation_contracts": [
+    "ue5-dispatch",
+    "ue5-tables",
+    "ue5-verify-import",
+    "ue5-mount-provider",
+    "ue5-dependency-publish",
+    "ue5-website-dependency",
+    "ue5-iostore-ingest"
+  ],
+  "earliest_vs_latest_source_comparison": {
+    "first_release": "5.0.0-release",
+    "commit_5_0_0": "05ce24e3038cb1994a7c71d4d0058dbdb112f52b",
+    "latest_release": "5.8.3",
+    "latest_commit": "396c9f059903aed5fec78ecd3d437a40c6415368",
+    "source_differential_SHA256": "f27bdf125193efd3ec7a3d9db5e1df36c1f0bcd4612c777a134266dacde097d0",
+    "unsupported_early_format_warning": "5.0.0 source compared but no native 5.0.0 package file was independently decoded in this batch. The 5.8.3 Zen/classic source policy must not silently admit the 5.0.0 Zen layout."
+  },
+  "prior_UE583_accepted_native_evidence_sha256": {
+    "UE583-SCOPED-CERTIFICATION-DECISION-20261019.md": "cbce5c0236fac725c02ee596d4b39d5f4a7d3b2b5558cf09695733f37f93c37b",
+    "UE583-CERTIFICATION-STATUS.md": "8ae7977c637821506723e68a4ef03d2fa7ec976112e09dab6d3251a760011341",
+    "UE583-EPIC-IOSTORE-CONTENT-DIFFERENTIAL-20261019.md": "8e8c7ba761c5c2c4b02392dfb39f1692654b0b64e738879f29b51b6e6e6b9f71",
+    "UE583-EPIC-NATIVE-ZEN-NAMES-20261019.md": "c17843e31420eb853435f054a5041973df388e1d33416b8c604785c7ec862392",
+    "UE583-EPIC-NATIVE-ZEN-HEADER-FIELDS-20261019.md": "e815d98060cfee9402f7351471b9453e5993fa90a40afb97bd2cce67534bf0a3",
+    "UE583-P02-EPIC-NATIVE-DEPENDS-IDENTITIES-20261019.md": "5d4abdab67bb6416f0c2387f8136f02779af01c36d5cadbdfabb849adcbd31ed",
+    "UE583-EPIC-NATIVE-TOC-FIELDS-20261019.md": "7a952cd543c0f7eb846599a3be468074732346235d7ecf19b1cc235d6b9231ec",
+    "UE583-D033-ZEN-DEPENDENCY-COUNT.md": "86d51c310b9298e9b7369bb904b6960484314b3216a8b4af60bf254ddd3e79cd"
+  },
+  "prior_native_scope": "Epic source-backed 5.8.3 scope accepted 19 Oct 2026: 140 classic summaries, 140 native classic tables, 9069 original dependency indices, 100 native Zen package headers, original 27240 IoStore package names and 27240 decoded source bytes, 360091 original native TOC fields, 16/16 historical workflow paths, isolated real 27240 Zen V5 dependencies and source SHA native comparison; not repeated here.",
+  "new_original_Satisfactory_PRD_readonly": {
+    "result": "UE5_583_GENUINE_SATISFACTORY_PRD_UTOC_READONLY_ZEN_HEADER_AND_DEPENDENCY_PASS",
+    "original_UTOC_SHA256": "63e4f0e322276684718563e13619474c8cf5981b29e15e502620a4373e351ab5",
+    "TOC_version": 8,
+    "TOC_chunks": 27241,
+    "sample_original_member_count": 7,
+    "members": [
+      {
+        "TOC_index": 50,
+        "package_id": "FCCBEBA8823DAA3A",
+        "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+        "imported_package_id_count": 0,
+        "object_import_count": 3,
+        "cell_import_count": 0,
+        "dependency_bundle_entries": 0,
+        "runtime_unknown_source_status_counts": {
+          "unresolved": 3
+        }
+      },
+      {
+        "TOC_index": 51,
+        "package_id": "9484897E45B1C352",
+        "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+        "imported_package_id_count": 0,
+        "object_import_count": 3,
+        "cell_import_count": 0,
+        "dependency_bundle_entries": 0,
+        "runtime_unknown_source_status_counts": {
+          "unresolved": 3
+        }
+      },
+      {
+        "TOC_index": 52,
+        "package_id": "D8CF19338903C56F",
+        "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+        "imported_package_id_count": 0,
+        "object_import_count": 3,
+        "cell_import_count": 0,
+        "dependency_bundle_entries": 0,
+        "runtime_unknown_source_status_counts": {
+          "unresolved": 3
+        }
+      },
+      {
+        "TOC_index": 53,
+        "package_id": "13616274F41D838E",
+        "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+        "imported_package_id_count": 8,
+        "object_import_count": 36,
+        "cell_import_count": 0,
+        "dependency_bundle_entries": 62,
+        "runtime_unknown_source_status_counts": {
+          "unresolved": 50,
+          "resolved": 48
+        }
+      },
+      {
+        "TOC_index": 75,
+        "package_id": "A6CDA3E3B9F0EB3F",
+        "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+        "imported_package_id_count": 0,
+        "object_import_count": 3,
+        "cell_import_count": 0,
+        "dependency_bundle_entries": 0,
+        "runtime_unknown_source_status_counts": {
+          "unresolved": 3
+        }
+      },
+      {
+        "TOC_index": 100,
+        "package_id": "B4167F469C730F56",
+        "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+        "imported_package_id_count": 0,
+        "object_import_count": 3,
+        "cell_import_count": 0,
+        "dependency_bundle_entries": 0,
+        "runtime_unknown_source_status_counts": {
+          "unresolved": 3
+        }
+      },
+      {
+        "TOC_index": 150,
+        "package_id": "419C416C782E46BE",
+        "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+        "imported_package_id_count": 5,
+        "object_import_count": 13,
+        "cell_import_count": 0,
+        "dependency_bundle_entries": 5,
+        "runtime_unknown_source_status_counts": {
+          "unresolved": 18
+        }
+      }
+    ],
+    "PRD_SQL_writes": 0,
+    "PRD_storage_writes": 0
+  },
+  "original_zen_sha256": "63e4f0e322276684718563e13619474c8cf5981b29e15e502620a4373e351ab5",
+  "new_original_classic_UE583_assets": [
+    {
+      "name": "DefaultAnimBoneCompressionSettings.uasset",
+      "sha256": "63d668fd08dca8259e6872304d367eff25cd1ba9c8107ba7c08b06d2eac8f91a",
+      "ue4": 522,
+      "ue5": 1018,
+      "names": 36,
+      "imports": 5,
+      "exports": 12
+    },
+    {
+      "name": "DefaultAnimCurveCompressionSettings.uasset",
+      "sha256": "04a32be5a87b682a7c247a2aefd9a45beb6a588843e9c560f0a16023db51bf19",
+      "ue4": 522,
+      "ue5": 1018,
+      "names": 13,
+      "imports": 3,
+      "exports": 2
+    },
+    {
+      "name": "DefaultVariableFrameStrippingSettings.uasset",
+      "sha256": "3d38f6c13fed358551482860bc3b063db26919c3bd417d9c38e009252850bd2a",
+      "ue4": 522,
+      "ue5": 1018,
+      "names": 9,
+      "imports": 2,
+      "exports": 1
+    }
+  ],
+  "satisfactory_game14_source_routing": {
+    "game_id": 14,
+    "engine_key": "UE5",
+    "source_key": "ue5",
+    "storage_key": "satisfactory",
+    "actual_original_classic_reader_family": "classic-linkerload",
+    "real_PRD_imported_IoStore_containers": 0,
+    "real_PRD_imported_IoStore_packages": 0,
+    "real_PRD_UE5_staged_files": 0,
+    "preflight_ready": false
+  },
+  "UE5_source_fixes": [
+    "Game14 Satisfactory now registered as UE5 source engine but retains game-specific storage slug. Other games/engines unchanged.",
+    "Fresh validation of a staged Zen source now authenticates the dedicated iostore-members/<tocsha>/<packageId>.zenpkg original file and re-decodes its verified retained IoStore main chunk and package store metadata, instead of wrongly searching games/<source>/verified and applying UE5 classic reader.",
+    "Soft Zen package references with no authoritative mounted package-store identity no longer become false missing; with an authenticated store they keep source-derived states. Same fail-closed rule in optional/editor segment."
+  ],
+  "real_original_zen_retained_reparse": {
+    "original_package_id": "FCCBEBA8823DAA3A",
+    "original_package_SHA256": "67972ff1f3ee2fe1b643abbad195a53a01447202b7780362fdde522e233e3649",
+    "package_TOC_index": 50,
+    "source_counts": {
+      "names": 14,
+      "imports": 3,
+      "exports": 1
+    },
+    "tampered_path_MD5_TOC_rejected": true,
+    "actual_original_TOC_reconstruction": true,
+    "sql_disposable_only": true
+  },
+  "real_original_Satisfactory_zen_soft_fallback": {
+    "source_package_id": "13616274F41D838E",
+    "actual_second_original_package_id": "FCCBEBA8823DAA3A",
+    "without_mounted_source_regular_soft": "unresolved",
+    "without_mounted_source_optional_soft": "unresolved",
+    "source_original_load_order_local_edges": 48,
+    "external_unresolved_no_native_mount": 50,
+    "synthetic_thing_added": "soft identity tested by injecting one existing genuine container member ID into parsed original source snapshot; does not assert the original cooked snapshot contained that soft reference."
+  },
+  "UE5_Zen_SQL_and_website_real_source": {
+    "result": "UE5_583_GENUINE_PRD_SATISFACTORY_ZEN_GAME14_SOURCE_PASS2_SQL_WEBSITE_READONLY_PASS",
+    "live_game14_profile_source_key": "ue5",
+    "PRD_UE5_actual_staged_files": 0,
+    "live_PRD_preflight_ready": false,
+    "genuine_package_id": "13616274F41D838E",
+    "source_dependency_count": 98,
+    "source_outcomes": {
+      "unresolved": 50,
+      "resolved": 48
+    },
+    "isolated_SQL_published_dependency_edges": 98,
+    "isolated_SQL_packages": 8,
+    "website_no_false_missing": {
+      "missing_objects": 0,
+      "missing_packages": 0,
+      "files_with_missing": 0
+    },
+    "transaction_rollback_exact": true,
+    "PRD_DB_writes": 0,
+    "PRD_storage_writes": 0
+  },
+  "website_and_production_limit": "Current PRD has UE5 game14 profile but zero registered IoStore containers/packages, intentionally no production import. Website query/source policy validated on real original Zen metadata in disposable SQLite, not a claim PRD has current published UE5 rows.",
+  "source_readonly_scripts_SHA256": {
+    "verify_satisfactory_zen_original_prd_readonly.php": "5abd241b0979343ef9725878b98d265c36449d9087e37140e57e8b13f5bd1e09",
+    "verify_ue5_original_zen_source_validator_disposable_sql.php": "9896979931fdf331f5b76e6a26eb3369659f4ef1c025ea947749453fab802b39",
+    "verify_original_zen_soft_context_gate.php": "e1e4d35aad770e66033a452fbc683d6da17bace3168261dbaa310f839680db81",
+    "verify_ue5_original_zen_sql_website_readonly.php": "1c39eb4ac727b643f0ce4c6c0c4ffbf1d6176232a830b67e47dca5eba33b4eaf",
+    "verify_ue5_classic_original_assets_current.php": "cda4348283cdf204f39fc1fb3d18db4424048debdd84906d2da297f4409d5cd0",
+    "verify_ue5_game14_original_classic_factory.php": "bf343eaf6f741bf54709fd809106b4698237f44157b1e0025c588fbe08228bee"
+  },
+  "live_original_readonly_json_SHA256": {
+    "satisfactory-original-toc-zen-source-readonly-20261102.json": "7bb6ea08336718882e4d5e466cc800fe5c7bd2980dcdc5e88499ca094f00f7de",
+    "ue5-original-zen-isolated-sql-website-20261102.json": "64d14e01daf856ee0e48e5ee016ee1c696fee78801f0a71b9f0740573fda5eba"
+  },
+  "changed_code_SHA256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php": "ffbbfdd775edf11dd7a1b7dcd390df111effb6f9ca28acfbc6d64fa3858fa63a",
+    "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php": "f2b8b3aa6f5f840b2a68e233d23f095b841bf867d75e430b9901e6ba9ed11b00",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php": "dfac94480074033cb6be9a0cb1a5870592631af10f23587ac9fb9f3609de1ef1"
+  },
+  "epic_583_PackageStore_source_SHA256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9",
+  "PRD_database_writes": 0,
+  "PRD_original_source_changes": 0,
+  "new_test_operation_ids": 0
+}

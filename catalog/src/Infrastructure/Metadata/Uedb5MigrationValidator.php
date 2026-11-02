@@ -77,7 +77,7 @@ final class Uedb5MigrationValidator
     private function context(int $fileId): array
     {
         $statement = $this->db->prepare(
-            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.stored_name,f.file_size,f.md5,f.sha1,'
+            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.stored_name,f.relative_path,f.file_size,f.md5,f.sha1,'
             . 'f.package_version,f.licensee_version,f.name_count,f.import_count,f.export_count,f.scan_status,'
             . 'g.slug,v.format_version,v.codec,v.compressed_size,v.uncompressed_size,v.payload_sha256,v.block_count,'
             . 'v.package_family,v.source_policy,v.package_name AS staged_package_name,v.section_counts_json,'
@@ -118,6 +118,9 @@ final class Uedb5MigrationValidator
     /** @param array<string,mixed> $context @return array<string,mixed> */
     private function validateSourceBytes(array $context): array
     {
+        if ((string)($context['package_family'] ?? '') === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
+            return $this->validateZenRetainedSourceBytes($context);
+        }
         $gameId = (int)$context['game_id'];
         $path = $this->storageRoot . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR
             . Uedb5GameSourceRegistry::storageKey($gameId) . DIRECTORY_SEPARATOR . 'verified' . DIRECTORY_SEPARATOR
@@ -130,6 +133,87 @@ final class Uedb5MigrationValidator
         $this->require(is_string($md5) && hash_equals(strtolower((string)$context['md5']), strtolower($md5)), 'source_md5_mismatch', 'Original source MD5 changed.');
         $this->require(is_string($sha1) && hash_equals(strtolower((string)$context['sha1']), strtolower($sha1)), 'source_sha1_mismatch', 'Original source SHA1 changed.');
         return $this->sourceSnapshots->buildForGameId($gameId, $path, $context);
+    }
+
+    /**
+     * An indexed Zen package's original bytes live under games/<slug>/iostore-members,
+     * and the authoritative package-store entry lives in the retained .utoc.
+     * Re-parse both; NEVER reinterpret .zenpkg as an ordinary UE5 classic .uasset.
+     * No database or source file mutation is performed by this validation route.
+     *
+     * @param array<string,mixed> $context
+     * @return array<string,mixed>
+     */
+    private function validateZenRetainedSourceBytes(array $context): array
+    {
+        $gameId = (int)$context['game_id'];
+        $fileId = (int)$context['id'];
+        $slug = (string)($context['slug'] ?? '');
+        $relative = str_replace(chr(92), '/', (string)($context['relative_path'] ?? ''));
+        $stored = (string)($context['stored_name'] ?? '');
+        $prefix = 'storage/games/' . $slug . '/iostore-members/';
+        $this->require(preg_match('/^[a-zA-Z0-9_-]+$/D', $slug) === 1
+            && str_starts_with($relative, $prefix)
+            && preg_match('~^' . preg_quote($prefix, '~') . '[0-9a-f]{64}/[0-9A-Fa-f]{16}[.]zenpkg$~D', $relative) === 1
+            && basename($relative) === $stored,
+            'zen_source_path_invalid', 'Zen source must be the retained member within its own game slug.');
+        $root = realpath($this->storageRoot);
+        $this->require(is_string($root), 'zen_storage_root_missing', 'Zen original storage root is unavailable.');
+        $canonicalRoot = rtrim(str_replace(chr(92), '/', $root), '/');
+        $memberPath = realpath($canonicalRoot . '/' . substr($relative, strlen('storage/')));
+        $this->require(is_string($memberPath) && is_file($memberPath) && !is_link($memberPath)
+            && str_starts_with(strtolower(str_replace(chr(92), '/', $memberPath)), strtolower($canonicalRoot) . '/'),
+            'zen_source_file_missing', 'The retained Zen member source path is inaccessible or escapes storage.');
+        $size = filesize($memberPath);
+        $this->require($size !== false && (int)$size === (int)$context['file_size']
+            && hash_equals(strtolower((string)$context['md5']), strtolower((string)md5_file($memberPath)))
+            && hash_equals(strtolower((string)$context['sha1']), strtolower((string)sha1_file($memberPath))),
+            'zen_source_hash_mismatch', 'The retained Zen member differs from its verified catalog source identity.');
+
+        $stmt = $this->db->prepare(
+            'SELECT m.toc_index,HEX(m.package_id) package_id,m.chunk_index,c.utoc_relative_path,c.utoc_sha256,c.game_id '
+            . 'FROM ue_iostore_packages m JOIN ue_iostore_containers c ON c.id=m.container_id '
+            . 'WHERE m.file_id=? AND c.game_id=? AND c.status="ready" LIMIT 2'
+        );
+        $stmt->execute([$fileId, $gameId]);
+        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->require(count($rows) === 1 && (int)$rows[0]['chunk_index'] === 0,
+            'zen_retained_member_identity', 'A verified Zen member needs exactly one ready original main IoStore entry.');
+        $row = $rows[0];
+        $id = strtoupper((string)$row['package_id']);
+        $this->require(preg_match('/^[0-9A-F]{16}$/D', $id) === 1
+            && strcasecmp($stored, $id . '.zenpkg') === 0,
+            'zen_package_id_mismatch', 'Retained Zen package ID is not the original source file identity.');
+        $tocRelative = str_replace(chr(92), '/', (string)$row['utoc_relative_path']);
+        $tocPrefix = 'games/' . $slug . '/iostore/';
+        $this->require(str_starts_with($tocRelative, $tocPrefix)
+            && preg_match('~^' . preg_quote($tocPrefix, '~') . '[0-9a-f]{64}/[a-zA-Z0-9_.-]+[.]utoc$~D', $tocRelative) === 1,
+            'zen_toc_path_invalid', 'Retained Zen package-store TOC must stay within the correct game.');
+        $tocPath = realpath($canonicalRoot . '/' . $tocRelative);
+        $this->require(is_string($tocPath) && is_file($tocPath) && !is_link($tocPath)
+            && str_starts_with(strtolower(str_replace(chr(92), '/', $tocPath)), strtolower($canonicalRoot) . '/'),
+            'zen_toc_file_missing', 'The authoritative retained IoStore TOC is missing or outside storage.');
+        $oodle = getenv('UNREALDB_OODLE_LIBRARY');
+        $toc = new Uedb5IoStoreTocReader($tocPath, null, $oodle !== false && $oodle !== '' ? $oodle : null);
+        $this->require(hash_equals(strtolower((string)$row['utoc_sha256']), strtolower($toc->tocSha256())),
+            'zen_original_toc_sha_mismatch', 'Original Zen TOC changed from the indexed authoritative source.');
+        $chunk = $toc->chunks()[(int)$row['toc_index']] ?? null;
+        $this->require(is_array($chunk)
+            && (int)($chunk['chunk_type'] ?? -1) === Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA
+            && (int)($chunk['chunk_index'] ?? -1) === 0
+            && (string)($chunk['package_id'] ?? '') === $id,
+            'zen_original_chunk_mismatch', 'Zen source member no longer matches its original TOC entry.');
+        $decoded = $toc->readChunk((int)$row['toc_index']);
+        $this->require(strlen($decoded) === (int)$size
+            && hash_equals(hash('sha256', $decoded), (string)hash_file('sha256', $memberPath)),
+            'zen_original_chunk_hash_mismatch', 'Retained original source bytes differ from their authoritative Zen IoStore chunk.');
+
+        return Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc, $id, [
+            'id' => $fileId,
+            'game_id' => $gameId,
+            'package_name' => '',
+            'original_name' => (string)$context['original_name'],
+        ]);
     }
 
     /** @param array<string,mixed> $staged @param array<string,mixed> $source */

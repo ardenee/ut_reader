@@ -56,6 +56,12 @@ final class Uedb5Ue5ZenDependencyResolver
             $soft = (array)$soft;
             $packageId = self::u64((string)($soft['package_id'] ?? ''), 'soft package FPackageId');
             $provider = $providers[self::mapKey($packageId)] ?? null;
+            // A catalogue absence is NOT Epic FPackageStore Missing. A soft
+            // package lookup requires authenticated mounted backend evidence.
+            $storeKnown = $packageStoreContext['authoritative']
+                && $packageStoreContext['identity_authoritative'];
+            $outcome = !$storeKnown ? 'unresolved'
+                : ($provider === null ? 'missing' : 'package_only');
             $rows[] = self::row(
                 'SoftPackageReference',
                 'soft_package_references',
@@ -63,10 +69,11 @@ final class Uedb5Ue5ZenDependencyResolver
                 'soft',
                 $packageId,
                 null,
-                $provider === null ? 'missing' : 'package_only',
-                $provider,
+                $outcome,
+                $storeKnown ? $provider : null,
                 null,
-                $provider === null ? 'soft_package_provider_missing' : 'soft_package_provider_known'
+                !$storeKnown ? 'soft_package_store_mount_context_required'
+                    : ($provider === null ? 'soft_package_provider_missing' : 'soft_package_provider_known')
             );
         }
 
@@ -119,10 +126,15 @@ final class Uedb5Ue5ZenDependencyResolver
                     );
                 } else {
                     $provider = $providers[self::mapKey($packageId)] ?? null;
+                    $storeKnown = $packageStoreContext['authoritative']
+                        && $packageStoreContext['identity_authoritative'];
                     $rows[] = self::row(
                         'SoftPackageReference', 'optional_segment_soft_package_references', (int)$index, 'optional',
-                        $packageId, null, $provider === null ? 'missing' : 'package_only', $provider, null,
-                        $provider === null ? 'soft_package_provider_missing' : 'soft_package_provider_known'
+                        $packageId, null,
+                        !$storeKnown ? 'unresolved' : ($provider === null ? 'missing' : 'package_only'),
+                        $storeKnown ? $provider : null, null,
+                        !$storeKnown ? 'soft_package_store_mount_context_required'
+                            : ($provider === null ? 'soft_package_provider_missing' : 'soft_package_provider_known')
                     );
                 }
             }

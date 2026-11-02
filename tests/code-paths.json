@@ -9704,8 +9704,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
-      "sha256": "ba2b546e8b8fdd6a458861e133737353eb04289d43bfcc544cc207b8aa110ad9",
-      "bytes": 935,
+      "sha256": "ffbbfdd775edf11dd7a1b7dcd390df111effb6f9ca28acfbc6d64fa3858fa63a",
+      "bytes": 1284,
       "engine_hints": [
         "shared"
       ],
@@ -9844,8 +9844,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
-      "sha256": "ec5374803e5e611b831dd2bcf63f22ea9b523ea2b1512b7da25d764b458432c3",
-      "bytes": 37154,
+      "sha256": "f2b8b3aa6f5f840b2a68e233d23f095b841bf867d75e430b9901e6ba9ed11b00",
+      "bytes": 42287,
       "engine_hints": [
         "shared"
       ],
@@ -10143,8 +10143,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-      "sha256": "d2eb027f822dd93df23d5b5807aaf9fa3911de9b185a4d61adb9cbc79d3435ff",
-      "bytes": 48469,
+      "sha256": "dfac94480074033cb6be9a0cb1a5870592631af10f23587ac9fb9f3609de1ef1",
+      "bytes": 49280,
       "engine_hints": [
         "ue5"
       ],
