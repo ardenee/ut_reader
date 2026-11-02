@@ -2,11 +2,11 @@
 
 **Generated automatically after every DEV test STARTED/PASS/FAIL.** This is operational status, not evidence of full Epic parity.
 
-- **Contract:** `G3-T065-historical-final-technical`
-- **Stage:** G3-74PASS-1NA-5BLOCKED-T074-FROZEN_CLOSED
-- **Last completed action:** T074 frozen original 2012 Core 237 methods plus C227i 1559+4268 Engine, C227k 1116 Core and 2408+6316 Engine method parity source-native now closed; 2012-C227i 33 compiled Core serializer types vs 2026-C227k 37, original source owner contracts matched. Ten additional 2012 physical export instances are NOT claimed directly native loaded and do not add distinct original compiled method types, so no unapproved per-instance new tests.
-- **Resume at:** T065 ONLY remaining technical blocked: original 1998 C98 v34/35 historical physical archive property cursor and same-game source version boundaries. Reuse existing 61 physical originals and source-native Class FArchive proofs; do not repeat sealed version gates. T077-T080 remain sequential final release after T065. PRD untouched.
-- **Active changed at:** 2026-11-01T22:20:31+00:00
+- **Contract:** `G3-T077-one-final-evidence-matrix`
+- **Stage:** G3-75PASS-1NA-4BLOCKED-T065_ORIGINAL_C98_HISTORIC_FULL_CLOSED
+- **Last completed action:** Original 1998 compiled C98 real DProj.utx v35 physical load after Core+Engine and ten genuine UObjectProperty::SerializeItem ver35 callbacks, 59/59 actual compact ref/next-tag bytes and genuine physical archive SHA, 8/8 original native linked Core UClass v55/56/57/58 source-selected saving archive complete with exact cursor, original 11 C98/v432 source guards and prior original v432 v60..64, 469f and C227 method families reused. T065 frozen PASS; T001-T076 now terminal. PRD untouched.
+- **Resume at:** T077 ONE independent deduplicated original source/native whole-G3 evidence owner matrix, no rerun; T078-T080 one controlled final release decision and (only if whole acceptance) protected PRD sync. Do not import old files until UE1 G5 completed.
+- **Active changed at:** 2026-11-02T04:31:21+00:00
 - **Latest DEV test states:** PASS 209; FAIL 1; STARTED 0
 - **Acceptance:** O06 IMPLEMENTING / NOT ACCEPTED; test coverage is not compiled-engine proof.
 

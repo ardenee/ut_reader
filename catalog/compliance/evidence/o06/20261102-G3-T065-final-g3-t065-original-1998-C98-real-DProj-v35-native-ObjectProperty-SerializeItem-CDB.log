@@ -1,0 +1,183 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.000 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\G3-T065-C98-original-target-v35-only-debugbreak.exe L:\Source\Engine\UE1\Source\Unreal\Textures\DProj.utx
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00c70000 00c77000   image00c70000
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 69730000 6974d000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+(7080.6034): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=d3c60000 edx=00000000 esi=012f5e70 edi=00f6e000
+eip=775ad248 esp=010ff724 ebp=010ff750 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+775ad248 cc              int     3
+0:000> g
+G3_T065_C98_REAL_ORIGINAL_DLL_LOADER_ENTER
+ModLoad: 10100000 101ab000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll
+ModLoad: 76ce0000 76ed3000   C:\WINDOWS\SysWOW64\USER32.dll
+ModLoad: 75e00000 75e1c000   C:\WINDOWS\SysWOW64\win32u.dll
+ModLoad: 763f0000 76412000   C:\WINDOWS\SysWOW64\GDI32.dll
+ModLoad: 75e30000 75f1a000   C:\WINDOWS\SysWOW64\gdi32full.dll
+ModLoad: 76420000 764a5000   C:\WINDOWS\SysWOW64\msvcp_win.dll
+ModLoad: 74f20000 75594000   C:\WINDOWS\SysWOW64\SHELL32.dll
+ModLoad: 755a0000 756f5000   C:\WINDOWS\SysWOW64\ole32.dll
+ModLoad: 75700000 75998000   C:\WINDOWS\SysWOW64\combase.dll
+ModLoad: 76830000 768ec000   C:\WINDOWS\SysWOW64\RPCRT4.dll
+ModLoad: 75b40000 75c07000   C:\WINDOWS\SysWOW64\MSVCRT.dll
+ModLoad: 76350000 76375000   C:\WINDOWS\SysWOW64\IMM32.DLL
+ModLoad: 10300000 1046e000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Engine.dll
+G3_T065_C98_ORIGINAL_NATIVE_ENGINE_DLL_PRELOAD=10300000 error=126
+G3_T065_C98_GENUINE_ABI core=10100000 init=101011B8 LoadPackage=101019DD GObj=10174F38 GTempPlatform=101A09D0 GSystem=10184FBC
+G3_T065_C98_GENUINE_ABI_INIT_START original Core.appInit
+G3_T065_C98_GENUINE_ABI_INIT_SUCCESS actual GObj.Init completed
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_CORE_ENTER path=C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.u
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_CORE_RESULT=030C2FC0
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_ENGINE_ENTER path=C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Engine.u
+G3_T072_C98_ORIGINAL_NATIVE_LINKER_LOAD_ENGINE_RESULT=030C2B90
+(7080.6034): Break instruction exception - code 80000003 (first chance)
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\G3-T065-C98-original-target-v35-only-debugbreak.exe
+eax=0000003f ebx=00f6e000 ecx=010ffaf0 edx=00d30000 esi=012fb228 edi=012fd1a0
+eip=76741b82 esp=010ffb68 ebp=010ffbf8 iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+KERNELBASE!wil::details::DebugBreak+0x2:
+76741b82 cc              int     3
+0:000> .echo T065_NATIVE_AFTER_ORIGINAL_C98_CORE_ENGINE_BEFORE_AUTHENTIC_PHYSICAL_V35
+T065_NATIVE_AFTER_ORIGINAL_C98_CORE_ENGINE_BEFORE_AUTHENTIC_PHYSICAL_V35
+0:000> bp Core!UObjectProperty::SerializeItem ".if (poi(poi(@esp+4)+4)==0x23) { .echo T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM; dd poi(@esp+4) L12; dd @ecx+0x10 L7; } ; gc"
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll
+0:000> g
+T065_NEW_ORIGINAL_1998_AFTER_CORE_ENGINE_REAL_FILE_START=L:\Source\Engine\UE1\Source\Unreal\Textures\DProj.utx
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316a7f8  030e1d30 00000d67 10459938 60070004
+0316a808  0000037f 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316bf90  030e1d30 00000798 10459ad8 60070004
+0316bfa0  00000a91 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316a7f8  030e1d30 00000d67 10459938 60070004
+0316a808  0000037f 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316bf90  030e1d30 00000798 10459ad8 60070004
+0316bfa0  00000a91 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316a7f8  030e1d30 00000d67 10459938 60070004
+0316a808  0000037f 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316bf90  030e1d30 00000798 10459ad8 60070004
+0316bfa0  00000a91 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316a7f8  030e1d30 00000d67 10459938 60070004
+0316a808  0000037f 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316bf90  030e1d30 00000798 10459ad8 60070004
+0316bfa0  00000a91 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316a7f8  030e1d30 00000d67 10459938 60070004
+0316a808  0000037f 101a1650 00000000
+T065_NATIVE_REAL_PHYSICAL_v35_OBJECTPROPERTY_SERIALIZE_ITEM
+032612c0  1014cb88 00000023 00000001 00000000
+032612d0  00000000 00000000 00000001 00000001
+032612e0  00000001 535c3a4c 6372756f 6e455c65
+032612f0  656e6967 3145555c 756f535c 5c656372
+03261300  65726e55 545c6c61
+0316bf90  030e1d30 00000798 10459ad8 60070004
+0316bfa0  00000a91 101a1650 00000000
+T065_NEW_ORIGINAL_1998_AFTER_CORE_ENGINE_REAL_FILE_RESULT=032611B8 source=L:\Source\Engine\UE1\Source\Unreal\Textures\DProj.utx
+ModLoad: 74e60000 74e75000   C:\WINDOWS\SysWOW64\kernel.appcore.dll
+(7080.6034): Access violation - code c0000005 (first chance)
+First chance exceptions are reported before any exception handling.
+This exception may be expected and handled.
+eax=feeefefa ebx=00000000 ecx=7ffffffe edx=7fffffff esi=feeefefa edi=010ff884
+eip=75bbee84 esp=010ff574 ebp=010ff804 iopl=0         nv up ei pl nz na po nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00010202
+MSVCRT!_output_l+0x884:
+75bbee84 803800          cmp     byte ptr [eax],0           ds:002b:feeefefa=??
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'

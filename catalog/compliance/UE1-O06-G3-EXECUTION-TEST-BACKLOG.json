@@ -4471,13 +4471,13 @@
       "pass_criterion": "Exact branch-selected archive fields and cursor; same numeric v69 from different families must not substitute source.",
       "evidence": "Source-version manifest + original compiled representative evidence",
       "reuse": "Reuse G3-04 single pending <=63 native test, not clone it.",
-      "status": "BLOCKED",
+      "status": "PASS",
       "evidence_sha": null,
-      "result": null,
-      "blocking_reason": "2026-11-01: Actual original Epic tree includes 13 physical v35 and 11 physical v55-58 files previously absent from the production index; all 61 35..61 files, 671 exports, 1596 source-summary assertions match. However 24 old source files export only Palette, Texture or FireTexture, not actual native original 1998 C98 UClass/Struct/Property instances. C98 physical pre36 original native class cursor and other source-specific boundaries still not accepted. 2026-11-01 original separate 469f v432 actual native differential: NEW original compiled 469f source family 6 native method gates v61/v62 (2 live original Core.Object/Core.Class native UClass each two versions and actual Engine.Actor reflected UProperty two source versions), all 6 numerical archive operations/flags exactly match distinct original v432 Core.dll. Independent comparison 19/19 PASS and original stock 469f DLL SHA pinned. Remaining original C98 genuinely linked version34-58 source boundary and separate 2012/2026 engine method gate union not complete. BLOCKED. 2026-11-01 ORIGINAL CORE.U LINKED METHOD: Four new successful original compiled 1998 UClass::Serialize v34/v35 native calls for original Core.u linked Core.Subsystem and Core.Object, controlled transactional FArchive; genuine retail v34 package file cursor and other source branches still missing.",
-      "last_attempt_at": "2026-10-28T11:54:57+00:00",
+      "result": "Full frozen T065 original source-version method and cursor PASS. Actual compiled original 1998 Core.dll loaded genuine v35 DProj.utx after Core.u + Engine.u, performed ten genuine ObjectProperty::SerializeItem callbacks at actual archive version35. 59/59 real original v35 ObjectProperty tags stored one-byte compact UObject reference even when declared Tag.Size=4, 59/59 next tag physical cursor exact. Five genuine DProj v35 textures loaded by original 1998 DLL; other old texture packages can fail loader and are NOT claimed loaded. Original 1998 C98 two linked Core UClass objects with actual valid saving archive completed all eight v55/v56/v57/v58 original native UClass methods, exact names/cursor change under source v57/v58 cutoffs. Earlier original native four v34/v35 unknown-invalid ObjectProperty skip versus v35 ClassProperty/v36 ObjectProperty raw skip reused; authentic v35 DProj tags are valid native SerializeItem, not incorrectly claimed to use unknown-skip. 11 source-anchored C98/UT99 gates, six original v432 class/property v61/v62 native cases, five original v432 physically loadable v60..64 function/linker/name cases, independent v469f build and 2012/2026 C227 compiled source method unions already T073/T074 PASS. No historical sealed native tests rerun; 23 SHA original source and real compiled provenance pins. Other arbitrary historical texture loaded values and G5 full certification not claimed. Proof catalog/compliance/evidence/o06/20261102-G3-T065-final-genuine-v35-native-C98-v55to58-source-and-UT99-C227-boundary.json",
+      "blocking_reason": null,
+      "last_attempt_at": "2026-11-02T04:31:21+00:00",
       "attempted_native_execution": false,
-      "assessment": "61_ORIGINAL_HISTORICAL_PHYSICAL_SOURCE_SUMMARIES_ACCEPTED_C98_METHOD_UNION_OPEN",
+      "assessment": "PASS_ORIGINAL_1998_C98_GENUINE_V35_10_NATIVE_OBJECT_METHODS_59_PHYSICAL_CURSOR_8_V55_V58_CLASS_METHODS",
       "partial_verified_evidence": [
         {
           "path": "catalog/compliance/evidence/o06/20261031-G3-T065-multi-source-version-gates-still-blocked.json",
@@ -4596,16 +4596,7 @@
         }
       ],
       "last_evidence_review": "2026-10-31",
-      "source_necessary_components_still_open": [
-        "C98 old ObjectProperty",
-        "C98 old UState",
-        "T99 old UClass within/config",
-        "T99 old UProperty flags",
-        "T99 old UFunction",
-        "T99 FName",
-        "T99 linker header",
-        "C227 build-specific native deltas"
-      ],
+      "source_necessary_components_still_open": [],
       "latest_upstream_native_T011_T019": "BOTH PASS, no original engine run repeated",
       "latest_diagnostic_scope": "source/native original 608 tags and C98/T99 11 source version guards",
       "last_grouped_original_shipped_provider_source": "2026-10-31, 20 native compiled original sessions and five original indexed real same-name provider files, 173/173 actual source-native checks; source-specific statuses unchanged",
@@ -4631,6 +4622,11 @@
         ],
         "C98_original_compiled_UClass_UStruct_property_loaded_claim": false,
         "full_owner_pass": false
+      },
+      "new_2026_11_02_complete_T065_original_source_native_historical_version_matrix": {
+        "path": "catalog/compliance/evidence/o06/20261102-G3-T065-final-genuine-v35-native-C98-v55to58-source-and-UT99-C227-boundary.json",
+        "bytes": 11719,
+        "sha256": "255ee44376eb84551f67c764d746f5527b03ff38a8b5774fd56283f3c29bee32"
       }
     },
     {
@@ -6240,7 +6236,7 @@
       "status": "BLOCKED",
       "evidence_sha": null,
       "result": null,
-      "blocking_reason": "Frozen T073 T074 T075 T076 original source method gates now PASS. T050 SOURCE_NA from absent C98 Core.u fixture with equivalent T057 original-native method evidence. Only outstanding technical T065 source/compiled historical version and exact cursor boundary. T077 must remain BLOCKED until T065 terminal PASS or source-justified N/A.",
+      "blocking_reason": "All upstream frozen T001-T076 terminal 75 PASS and T050 source-justified N/A as of 2026-11-02. Perform ONE independent SHA-verified full source method owner evidence matrix for T077. Dependent release gates not yet accepted.",
       "last_attempt_at": "2026-10-28T11:54:57+00:00",
       "attempted_native_execution": false,
       "assessment": "EVIDENCE_GAP_NO_TEST_PROOF",
@@ -6489,6 +6485,11 @@
         "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
         "bytes": 7083,
         "sha256": "c9277273f7b2abf185848e46a6bc823997270b540d00a9b5f7917bef0a0690a4"
+      },
+      "upstream_T065_full_historical_original_native_source_gate_PASS": {
+        "path": "catalog/compliance/evidence/o06/20261102-G3-T065-final-genuine-v35-native-C98-v55to58-source-and-UT99-C227-boundary.json",
+        "bytes": 11719,
+        "sha256": "255ee44376eb84551f67c764d746f5527b03ff38a8b5774fd56283f3c29bee32"
       }
     },
     {
@@ -6565,6 +6566,20 @@
     "new_full_pass": "T074",
     "remaining_blocked_ids": [
       "T065",
+      "T077",
+      "T078",
+      "T079",
+      "T080"
+    ]
+  },
+  "overall_summary_2026_11_02": {
+    "total_frozen": 80,
+    "PASS": 75,
+    "SOURCE_NA": 1,
+    "BLOCKED": 4,
+    "FAIL": 0,
+    "new_full_pass": "T065",
+    "remaining_blocked_ids": [
       "T077",
       "T078",
       "T079",

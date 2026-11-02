@@ -1,0 +1,89 @@
+{
+  "original_1998_C98_DLL_SHA256": "9e2dbefe1d203da3c98dddef04e8ced66b6a346954fa395e35ef714a68e9eb92",
+  "original_real_C98_compiled_exit": 3221226505,
+  "genuine_file_count": 13,
+  "source_physical_each_sha256_unchanged": true,
+  "actual_native_results": [
+    {
+      "filename": "DProj.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": true,
+      "native_actual_return_pointer": "02A25420"
+    },
+    {
+      "filename": "DProj1.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": true,
+      "native_actual_return_pointer": "02A251F0"
+    },
+    {
+      "filename": "DProj2.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": true,
+      "native_actual_return_pointer": "02A25618"
+    },
+    {
+      "filename": "DProj3.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": true,
+      "native_actual_return_pointer": "02A25228"
+    },
+    {
+      "filename": "DProj4.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": true,
+      "native_actual_return_pointer": "02A25538"
+    },
+    {
+      "filename": "FireEffect14.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": false,
+      "native_actual_return_pointer": "00000000"
+    },
+    {
+      "filename": "FireEffect15.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": false,
+      "native_actual_return_pointer": "00000000"
+    },
+    {
+      "filename": "FireEffect16.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": false,
+      "native_actual_return_pointer": "00000000"
+    },
+    {
+      "filename": "FireEffect17.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": false,
+      "native_actual_return_pointer": "00000000"
+    },
+    {
+      "filename": "FireEffect19.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": false,
+      "native_actual_return_pointer": "00000000"
+    },
+    {
+      "filename": "SmokeEffect1.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": false,
+      "native_actual_return_pointer": "00000000"
+    },
+    {
+      "filename": "SmokeEffect2.utx",
+      "version": 35,
+      "original_C98_native_package_LoadPackage_nonnull": false,
+      "native_actual_return_pointer": "00000000"
+    },
+    {
+      "filename": "STrooper.utx",
+      "version": 55,
+      "original_C98_native_package_LoadPackage_nonnull": true,
+      "native_actual_return_pointer": "02A252D0"
+    }
+  ],
+  "native_real_file_LoadPackage_success_count": 6,
+  "source_native_system_files_unchanged": true,
+  "raw_original_native_log_sha256": "aad96d6b9fe7818f1883bae946c0e42f9ee62e9ab36083e6e051f663411ad703"
+}

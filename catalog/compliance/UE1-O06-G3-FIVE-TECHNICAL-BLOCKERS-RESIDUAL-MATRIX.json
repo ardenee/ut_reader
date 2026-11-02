@@ -2,19 +2,21 @@
   "kind": "FIXED_FIVE_FROZEN_OWNERS_RESIDUALS_NO_NEW_T_OR_S_CASES",
   "date": "2026-11-01",
   "backlog_states": {
-    "PASS": 74,
+    "PASS": 75,
     "SOURCE_NA": 1,
-    "BLOCKED": 5
+    "BLOCKED": 4
   },
   "owners": [
     {
       "id": "T065",
-      "status": "BLOCKED",
-      "unproven": [
-        "C98 original compiled physical pre36 UClass/old ObjectProperty exact native cursor; original 1998 synthetic v34/35 transaction not enough",
-        "All applicable UT99 and C227 version method gates not already sealed"
-      ],
-      "next_focused_original_oracle": "Next: obtain genuine original C98 physical compiled class/old ObjectProperty or source-justified exclusion"
+      "status": "PASS",
+      "unproven": [],
+      "next_focused_original_oracle": "NONE within the frozen C98/UT99/C227 version and source cursor matrix; no blanket native texture loaded-value claims.",
+      "new_original_2026_11_02_retail_v35_and_v55_58_full_historical_PASS": {
+        "path": "catalog/compliance/evidence/o06/20261102-G3-T065-final-genuine-v35-native-C98-v55to58-source-and-UT99-C227-boundary.json",
+        "bytes": 11719,
+        "sha256": "255ee44376eb84551f67c764d746f5527b03ff38a8b5774fd56283f3c29bee32"
+      }
     },
     {
       "id": "T072",
@@ -261,5 +263,17 @@
     "path": "catalog/compliance/evidence/o06/20261101-G3-T074-final-original-C227i-C227k-frozen-method-criterion.json",
     "bytes": 7083,
     "sha256": "c9277273f7b2abf185848e46a6bc823997270b540d00a9b5f7917bef0a0690a4"
+  },
+  "frozen_original_five_technical_owner_statuses_2026_11_02": {
+    "T065": "PASS",
+    "T072": "PASS",
+    "T073": "PASS",
+    "T074": "PASS",
+    "T075": "PASS"
+  },
+  "new_2026_11_02_full_T065_PASS_original_historical_native": {
+    "path": "catalog/compliance/evidence/o06/20261102-G3-T065-final-genuine-v35-native-C98-v55to58-source-and-UT99-C227-boundary.json",
+    "bytes": 11719,
+    "sha256": "255ee44376eb84551f67c764d746f5527b03ff38a8b5774fd56283f3c29bee32"
   }
 }

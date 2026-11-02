@@ -1,0 +1,949 @@
+
+************* Preparing the environment for Debugger Extensions Gallery repositories **************
+   ExtensionRepository : Implicit
+   UseExperimentalFeatureForNugetShare : true
+   AllowNugetExeUpdate : true
+   NonInteractiveNuget : true
+   AllowNugetMSCredentialProviderInstall : true
+   AllowParallelInitializationOfLocalRepositories : true
+   EnableRedirectToChakraJsProvider : false
+
+   -- Configuring repositories
+      ----> Repository : LocalInstalled, Enabled: true
+      ----> Repository : UserExtensions, Enabled: true
+
+>>>>>>>>>>>>> Preparing the environment for Debugger Extensions Gallery repositories completed, duration 0.000 seconds
+
+************* Waiting for Debugger Extensions Gallery to Initialize **************
+
+>>>>>>>>>>>>> Waiting for Debugger Extensions Gallery to Initialize completed, duration 0.187 seconds
+   ----> Repository : UserExtensions, Enabled: true, Packages count: 0
+   ----> Repository : LocalInstalled, Enabled: true, Packages count: 29
+
+Microsoft (R) Windows Debugger Version 10.0.28000.2957 X86
+Copyright (c) Microsoft Corporation. All rights reserved.
+
+CommandLine: C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\G3-T065-C98-original-target-v35-only-debugbreak.exe L:\Source\Engine\UE1\Source\Unreal\Textures\DProj.utx
+
+************* Path validation summary **************
+Response                         Time (ms)     Location
+Deferred                                       srv*
+Symbol search path is: srv*
+Executable search path is: 
+ModLoad: 00c70000 00c77000   image00c70000
+ModLoad: 77490000 77654000   ntdll.dll
+ModLoad: 76130000 76220000   C:\WINDOWS\SysWOW64\KERNEL32.DLL
+ModLoad: 76540000 7681e000   C:\WINDOWS\SysWOW64\KERNELBASE.dll
+ModLoad: 728e0000 7298f000   C:\WINDOWS\SysWOW64\apphelp.dll
+ModLoad: 76a30000 76b40000   C:\WINDOWS\SysWOW64\ucrtbase.dll
+ModLoad: 69730000 6974d000   C:\WINDOWS\SysWOW64\VCRUNTIME140.dll
+(7bd8.8b54): Break instruction exception - code 80000003 (first chance)
+eax=00000000 ebx=00000000 ecx=a8860000 edx=00000000 esi=014a5e70 edi=00f2e000
+eip=775ad248 esp=010ff3a4 ebp=010ff3d0 iopl=0         nv up ei pl zr na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+ntdll!LdrpDoDebuggerBreak+0x2b:
+775ad248 cc              int     3
+0:000> sxe ld:Core.dll
+0:000> g
+G3_T065_C98_REAL_ORIGINAL_DLL_LOADER_ENTER
+ModLoad: 10100000 101ab000   C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll
+eax=00000000 ebx=010ff0c8 ecx=00000000 edx=00000000 esi=014bfbb8 edi=014bfbd0
+eip=775085dc esp=010ff044 ebp=010ff0c0 iopl=0         nv up ei pl nz na pe nc
+cs=0023  ss=002b  ds=002b  es=002b  fs=0053  gs=002b             efl=00000206
+ntdll!NtMapViewOfSection+0xc:
+775085dc c22800          ret     28h
+0:000> x Core!*SerializeTaggedProperties*
+*** WARNING: Unable to verify checksum for C:\Temp\UnrealDB\O06\Native-C98-1998-G304\System\Core.dll
+10101a41          Core!UStruct::SerializeTaggedProperties (<no parameter info>)
+0:000> uf Core!UStruct::SerializeTaggedProperties
+Core!UStruct::SerializeTaggedProperties:
+10101a41 e9badf0000      jmp     Core!UObject::ConditionalDestroy+0xd4a7 (1010fa00)
+
+Core!UObject::ConditionalDestroy+0xd4a7:
+1010fa00 55              push    ebp
+1010fa01 8bec            mov     ebp,esp
+1010fa03 6aff            push    0FFFFFFFFh
+1010fa05 68f06b1410      push    offset Core!UObject::ConditionalDestroy+0x44697 (10146bf0)
+1010fa0a 64a100000000    mov     eax,dword ptr fs:[00000000h]
+1010fa10 50              push    eax
+1010fa11 64892500000000  mov     dword ptr fs:[0],esp
+1010fa18 51              push    ecx
+1010fa19 83ec6c          sub     esp,6Ch
+1010fa1c 53              push    ebx
+1010fa1d 8b5d08          mov     ebx,dword ptr [ebp+8]
+1010fa20 56              push    esi
+1010fa21 57              push    edi
+1010fa22 8b4308          mov     eax,dword ptr [ebx+8]
+1010fa25 33f6            xor     esi,esi
+1010fa27 8bf9            mov     edi,ecx
+1010fa29 3bc6            cmp     eax,esi
+1010fa2b 8965f0          mov     dword ptr [ebp-10h],esp
+1010fa2e 897de8          mov     dword ptr [ebp-18h],edi
+1010fa31 8975e4          mov     dword ptr [ebp-1Ch],esi
+1010fa34 c745ecffffffff  mov     dword ptr [ebp-14h],0FFFFFFFFh
+1010fa3b 8975fc          mov     dword ptr [ebp-4],esi
+1010fa3e 7530            jne     Core!UObject::ConditionalDestroy+0xd517 (1010fa70)
+
+Core!UObject::ConditionalDestroy+0xd4e7:
+1010fa40 39730c          cmp     dword ptr [ebx+0Ch],esi
+1010fa43 752b            jne     Core!UObject::ConditionalDestroy+0xd517 (1010fa70)
+
+Core!UObject::ConditionalDestroy+0xd4ec:
+1010fa45 56              push    esi
+1010fa46 683cba1610      push    offset Core!GPackage+0x8c (1016ba3c)
+1010fa4b 6834ba1610      push    offset Core!GPackage+0x84 (1016ba34)
+1010fa50 e8f11affff      call    Core!LocalizeError (10101546)
+1010fa55 83c40c          add     esp,0Ch
+1010fa58 6878010000      push    178h
+1010fa5d 68acc11610      push    offset Core!UConst::StaticClass+0x184 (1016c1ac)
+1010fa62 6884c11610      push    offset Core!UConst::StaticClass+0x15c (1016c184)
+1010fa67 50              push    eax
+1010fa68 e8fd19ffff      call    Core!appErrorf (1010146a)
+1010fa6d 83c410          add     esp,10h
+
+Core!UObject::ConditionalDestroy+0xd517:
+1010fa70 8b4510          mov     eax,dword ptr [ebp+10h]
+1010fa73 8975dc          mov     dword ptr [ebp-24h],esi
+1010fa76 3bc6            cmp     eax,esi
+1010fa78 8975e0          mov     dword ptr [ebp-20h],esi
+1010fa7b 7416            je      Core!UObject::ConditionalDestroy+0xd53a (1010fa93)
+
+Core!UObject::ConditionalDestroy+0xd524:
+1010fa7d 8b88b4000000    mov     ecx,dword ptr [eax+0B4h]
+1010fa83 3bce            cmp     ecx,esi
+1010fa85 740c            je      Core!UObject::ConditionalDestroy+0xd53a (1010fa93)
+
+Core!UObject::ConditionalDestroy+0xd52e:
+1010fa87 8b80b0000000    mov     eax,dword ptr [eax+0B0h]
+1010fa8d 894de0          mov     dword ptr [ebp-20h],ecx
+1010fa90 8945dc          mov     dword ptr [ebp-24h],eax
+
+Core!UObject::ConditionalDestroy+0xd53a:
+1010fa93 397308          cmp     dword ptr [ebx+8],esi
+1010fa96 0f84b2030000    je      Core!UObject::ConditionalDestroy+0xd8f5 (1010fe4e)
+
+Core!UObject::ConditionalDestroy+0xd543:
+1010fa9c 8975d8          mov     dword ptr [ebp-28h],esi
+1010fa9f c645fc01        mov     byte ptr [ebp-4],1
+
+Core!UObject::ConditionalDestroy+0xd54a:
+1010faa3 8b5508          mov     edx,dword ptr [ebp+8]
+1010faa6 8d4db0          lea     ecx,[ebp-50h]
+1010faa9 51              push    ecx
+1010faaa 52              push    edx
+1010faab e8061effff      call    Core!UObject::execByteToBool+0x5 (101018b6)
+1010fab0 8b45b4          mov     eax,dword ptr [ebp-4Ch]
+1010fab3 83c408          add     esp,8
+1010fab6 85c0            test    eax,eax
+1010fab8 0f84f6060000    je      Core!UObject::ConditionalDestroy+0xdc5b (101101b4)
+
+Core!UObject::ConditionalDestroy+0xd565:
+1010fabe 8945e4          mov     dword ptr [ebp-1Ch],eax
+1010fac1 8a45b0          mov     al,byte ptr [ebp-50h]
+1010fac4 3c0a            cmp     al,0Ah
+1010fac6 7572            jne     Core!UObject::ConditionalDestroy+0xd5e1 (1010fb3a)
+
+Core!UObject::ConditionalDestroy+0xd56f:
+1010fac8 8b45b8          mov     eax,dword ptr [ebp-48h]
+1010facb 8b0d10f91810    mov     ecx,dword ptr [Core!FName::Names (1018f910)]
+1010fad1 6878c11610      push    offset Core!UConst::StaticClass+0x150 (1016c178)
+1010fad6 8b1481          mov     edx,dword ptr [ecx+eax*4]
+1010fad9 83c20c          add     edx,0Ch
+1010fadc 52              push    edx
+1010fadd e8d620ffff      call    Core!appStricmp (10101bb8)
+1010fae2 83c408          add     esp,8
+1010fae5 85c0            test    eax,eax
+1010fae7 7515            jne     Core!UObject::ConditionalDestroy+0xd5a5 (1010fafe)
+
+Core!UObject::ConditionalDestroy+0xd590:
+1010fae9 6a01            push    1
+1010faeb 686cc11610      push    offset Core!UConst::StaticClass+0x144 (1016c16c)
+1010faf0 8d4ddc          lea     ecx,[ebp-24h]
+1010faf3 e86e22ffff      call    Core!FName::FName (10101d66)
+1010faf8 8b45dc          mov     eax,dword ptr [ebp-24h]
+1010fafb 8945b8          mov     dword ptr [ebp-48h],eax
+
+Core!UObject::ConditionalDestroy+0xd5a5:
+1010fafe 807db00a        cmp     byte ptr [ebp-50h],0Ah
+1010fb02 7536            jne     Core!UObject::ConditionalDestroy+0xd5e1 (1010fb3a)
+
+Core!UObject::ConditionalDestroy+0xd5ab:
+1010fb04 8b0d10f91810    mov     ecx,dword ptr [Core!FName::Names (1018f910)]
+1010fb0a 8b55b8          mov     edx,dword ptr [ebp-48h]
+1010fb0d 6864c11610      push    offset Core!UConst::StaticClass+0x13c (1016c164)
+1010fb12 8b0491          mov     eax,dword ptr [ecx+edx*4]
+1010fb15 83c00c          add     eax,0Ch
+1010fb18 50              push    eax
+1010fb19 e89a20ffff      call    Core!appStricmp (10101bb8)
+1010fb1e 83c408          add     esp,8
+1010fb21 85c0            test    eax,eax
+1010fb23 7515            jne     Core!UObject::ConditionalDestroy+0xd5e1 (1010fb3a)
+
+Core!UObject::ConditionalDestroy+0xd5cc:
+1010fb25 6a01            push    1
+1010fb27 6854c11610      push    offset Core!UConst::StaticClass+0x12c (1016c154)
+1010fb2c 8d4de0          lea     ecx,[ebp-20h]
+1010fb2f e83222ffff      call    Core!FName::FName (10101d66)
+1010fb34 8b4de0          mov     ecx,dword ptr [ebp-20h]
+1010fb37 894db8          mov     dword ptr [ebp-48h],ecx
+
+Core!UObject::ConditionalDestroy+0xd5e1:
+1010fb3a 85ff            test    edi,edi
+1010fb3c 897dc4          mov     dword ptr [ebp-3Ch],edi
+1010fb3f 7405            je      Core!UObject::ConditionalDestroy+0xd5ed (1010fb46)
+
+Core!UObject::ConditionalDestroy+0xd5e8:
+1010fb41 8b4738          mov     eax,dword ptr [edi+38h]
+1010fb44 eb02            jmp     Core!UObject::ConditionalDestroy+0xd5ef (1010fb48)
+
+Core!UObject::ConditionalDestroy+0xd5ed:
+1010fb46 33c0            xor     eax,eax
+
+Core!UObject::ConditionalDestroy+0xd5ef:
+1010fb48 8d4dc4          lea     ecx,[ebp-3Ch]
+1010fb4b 8945c8          mov     dword ptr [ebp-38h],eax
+1010fb4e e89527ffff      call    Core!UObject::execSubtractSubtract_Int+0x5 (101022e8)
+1010fb53 8b4dc8          mov     ecx,dword ptr [ebp-38h]
+1010fb56 85c9            test    ecx,ecx
+1010fb58 7413            je      Core!UObject::ConditionalDestroy+0xd614 (1010fb6d)
+
+Core!UObject::ConditionalDestroy+0xd601:
+1010fb5a 8b5120          mov     edx,dword ptr [ecx+20h]
+1010fb5d 8b45b4          mov     eax,dword ptr [ebp-4Ch]
+1010fb60 3bd0            cmp     edx,eax
+1010fb62 7405            je      Core!UObject::ConditionalDestroy+0xd610 (1010fb69)
+
+Core!UObject::ConditionalDestroy+0xd60b:
+1010fb64 8b412c          mov     eax,dword ptr [ecx+2Ch]
+1010fb67 ebdf            jmp     Core!UObject::ConditionalDestroy+0xd5ef (1010fb48)
+
+Core!UObject::ConditionalDestroy+0xd610:
+1010fb69 85c9            test    ecx,ecx
+1010fb6b 7523            jne     Core!UObject::ConditionalDestroy+0xd637 (1010fb90)
+
+Core!UObject::ConditionalDestroy+0xd614:
+1010fb6d 8b4f20          mov     ecx,dword ptr [edi+20h]
+1010fb70 a110f91810      mov     eax,dword ptr [Core!FName::Names (1018f910)]
+1010fb75 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fb78 8b4db4          mov     ecx,dword ptr [ebp-4Ch]
+1010fb7b 83c20c          add     edx,0Ch
+1010fb7e 52              push    edx
+1010fb7f 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fb82 83c20c          add     edx,0Ch
+1010fb85 52              push    edx
+1010fb86 6830c11610      push    offset Core!UConst::StaticClass+0x108 (1016c130)
+1010fb8b e9f8010000      jmp     Core!UObject::ConditionalDestroy+0xd82f (1010fd88)
+
+Core!UObject::ConditionalDestroy+0xd637:
+1010fb90 8b11            mov     edx,dword ptr [ecx]
+1010fb92 ff9290000000    call    dword ptr [edx+90h]
+1010fb98 8a5db0          mov     bl,byte ptr [ebp-50h]
+1010fb9b 3ad8            cmp     bl,al
+1010fb9d 7458            je      Core!UObject::ConditionalDestroy+0xd69e (1010fbf7)
+
+Core!UObject::ConditionalDestroy+0xd646:
+1010fb9f 8b45e8          mov     eax,dword ptr [ebp-18h]
+1010fba2 8b55b4          mov     edx,dword ptr [ebp-4Ch]
+1010fba5 8b4820          mov     ecx,dword ptr [eax+20h]
+1010fba8 a110f91810      mov     eax,dword ptr [Core!FName::Names (1018f910)]
+1010fbad 8b3488          mov     esi,dword ptr [eax+ecx*4]
+1010fbb0 8b4dc8          mov     ecx,dword ptr [ebp-38h]
+1010fbb3 8b3c90          mov     edi,dword ptr [eax+edx*4]
+1010fbb6 83c60c          add     esi,0Ch
+1010fbb9 8b01            mov     eax,dword ptr [ecx]
+1010fbbb 83c70c          add     edi,0Ch
+1010fbbe ff9090000000    call    dword ptr [eax+90h]
+1010fbc4 8b4db0          mov     ecx,dword ptr [ebp-50h]
+1010fbc7 8b15bc4f1810    mov     edx,dword ptr [Core!GSystem (10184fbc)]
+1010fbcd 25ff000000      and     eax,0FFh
+1010fbd2 81e1ff000000    and     ecx,0FFh
+1010fbd8 50              push    eax
+1010fbd9 51              push    ecx
+1010fbda 56              push    esi
+1010fbdb 57              push    edi
+1010fbdc 68f8c01610      push    offset Core!UConst::StaticClass+0xd0 (1016c0f8)
+1010fbe1 68ff020000      push    2FFh
+1010fbe6 52              push    edx
+1010fbe7 e8911effff      call    Core!FOutputDevice::Logf (10101a7d)
+1010fbec 8b7de8          mov     edi,dword ptr [ebp-18h]
+1010fbef 83c41c          add     esp,1Ch
+1010fbf2 e9a4010000      jmp     Core!UObject::ConditionalDestroy+0xd842 (1010fd9b)
+
+Core!UObject::ConditionalDestroy+0xd69e:
+1010fbf7 8b4dc8          mov     ecx,dword ptr [ebp-38h]
+1010fbfa 8b55c0          mov     edx,dword ptr [ebp-40h]
+1010fbfd 8b4134          mov     eax,dword ptr [ecx+34h]
+1010fc00 3bd0            cmp     edx,eax
+1010fc02 7c25            jl      Core!UObject::ConditionalDestroy+0xd6d0 (1010fc29)
+
+Core!UObject::ConditionalDestroy+0xd6ab:
+1010fc04 8b4f20          mov     ecx,dword ptr [edi+20h]
+1010fc07 50              push    eax
+1010fc08 a110f91810      mov     eax,dword ptr [Core!FName::Names (1018f910)]
+1010fc0d 52              push    edx
+1010fc0e 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fc11 8b4db4          mov     ecx,dword ptr [ebp-4Ch]
+1010fc14 83c20c          add     edx,0Ch
+1010fc17 52              push    edx
+1010fc18 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fc1b 83c20c          add     edx,0Ch
+1010fc1e 52              push    edx
+1010fc1f 68d0c01610      push    offset Core!UConst::StaticClass+0xa8 (1016c0d0)
+1010fc24 e924010000      jmp     Core!UObject::ConditionalDestroy+0xd7f4 (1010fd4d)
+
+Core!UObject::ConditionalDestroy+0xd6d0:
+1010fc29 80fb0a          cmp     bl,0Ah
+1010fc2c 0f8530010000    jne     Core!UObject::ConditionalDestroy+0xd809 (1010fd62)
+
+Core!UObject::ConditionalDestroy+0xd6d9:
+1010fc32 85c9            test    ecx,ecx
+1010fc34 8bf1            mov     esi,ecx
+1010fc36 742a            je      Core!UObject::ConditionalDestroy+0xd709 (1010fc62)
+
+Core!UObject::ConditionalDestroy+0xd6df:
+1010fc38 8b4124          mov     eax,dword ptr [ecx+24h]
+1010fc3b 8b1544491710    mov     edx,dword ptr [Core!UStructProperty::StaticClass (10174944)]
+
+Core!UObject::ConditionalDestroy+0xd6e8:
+1010fc41 85c0            test    eax,eax
+1010fc43 7410            je      Core!UObject::ConditionalDestroy+0xd6fc (1010fc55)
+
+Core!UObject::ConditionalDestroy+0xd6ec:
+1010fc45 3bc2            cmp     eax,edx
+1010fc47 7507            jne     Core!UObject::ConditionalDestroy+0xd6f7 (1010fc50)
+
+Core!UObject::ConditionalDestroy+0xd6f0:
+1010fc49 b801000000      mov     eax,1
+1010fc4e eb0c            jmp     Core!UObject::ConditionalDestroy+0xd703 (1010fc5c)
+
+Core!UObject::ConditionalDestroy+0xd6f7:
+1010fc50 8b4028          mov     eax,dword ptr [eax+28h]
+1010fc53 ebec            jmp     Core!UObject::ConditionalDestroy+0xd6e8 (1010fc41)
+
+Core!UObject::ConditionalDestroy+0xd6fc:
+1010fc55 33c0            xor     eax,eax
+1010fc57 85d2            test    edx,edx
+1010fc59 0f94c0          sete    al
+
+Core!UObject::ConditionalDestroy+0xd703:
+1010fc5c 85c0            test    eax,eax
+1010fc5e 7549            jne     Core!UObject::ConditionalDestroy+0xd750 (1010fca9)
+
+Core!UObject::ConditionalDestroy+0xd707:
+1010fc60 eb06            jmp     Core!UObject::ConditionalDestroy+0xd70f (1010fc68)
+
+Core!UObject::ConditionalDestroy+0xd709:
+1010fc62 8b1544491710    mov     edx,dword ptr [Core!UStructProperty::StaticClass (10174944)]
+
+Core!UObject::ConditionalDestroy+0xd70f:
+1010fc68 85f6            test    esi,esi
+1010fc6a 7411            je      Core!UObject::ConditionalDestroy+0xd724 (1010fc7d)
+
+Core!UObject::ConditionalDestroy+0xd713:
+1010fc6c 6a00            push    0
+1010fc6e 8bce            mov     ecx,esi
+1010fc70 e84d1fffff      call    Core!UObject::GetFullName (10101bc2)
+1010fc75 8b1544491710    mov     edx,dword ptr [Core!UStructProperty::StaticClass (10174944)]
+1010fc7b eb05            jmp     Core!UObject::ConditionalDestroy+0xd729 (1010fc82)
+
+Core!UObject::ConditionalDestroy+0xd724:
+1010fc7d b888bb1610      mov     eax,offset Core!`string'+0x30 (1016bb88)
+
+Core!UObject::ConditionalDestroy+0xd729:
+1010fc82 8b4a20          mov     ecx,dword ptr [edx+20h]
+1010fc85 8b1510f91810    mov     edx,dword ptr [Core!FName::Names (1018f910)]
+1010fc8b 8b0c8a          mov     ecx,dword ptr [edx+ecx*4]
+1010fc8e 83c10c          add     ecx,0Ch
+1010fc91 51              push    ecx
+1010fc92 50              push    eax
+1010fc93 686cbb1610      push    offset Core!`string'+0x14 (1016bb6c)
+1010fc98 e8cd17ffff      call    Core!appErrorf (1010146a)
+1010fc9d 8b4dc8          mov     ecx,dword ptr [ebp-38h]
+1010fca0 8b1544491710    mov     edx,dword ptr [Core!UStructProperty::StaticClass (10174944)]
+1010fca6 83c40c          add     esp,0Ch
+
+Core!UObject::ConditionalDestroy+0xd750:
+1010fca9 8b4648          mov     eax,dword ptr [esi+48h]
+1010fcac 8b75b8          mov     esi,dword ptr [ebp-48h]
+1010fcaf 3b7020          cmp     esi,dword ptr [eax+20h]
+1010fcb2 0f84aa000000    je      Core!UObject::ConditionalDestroy+0xd809 (1010fd62)
+
+Core!UObject::ConditionalDestroy+0xd75f:
+1010fcb8 85c9            test    ecx,ecx
+1010fcba 8bf1            mov     esi,ecx
+1010fcbc 7422            je      Core!UObject::ConditionalDestroy+0xd787 (1010fce0)
+
+Core!UObject::ConditionalDestroy+0xd765:
+1010fcbe 8b4924          mov     ecx,dword ptr [ecx+24h]
+
+Core!UObject::ConditionalDestroy+0xd768:
+1010fcc1 85c9            test    ecx,ecx
+1010fcc3 7410            je      Core!UObject::ConditionalDestroy+0xd77c (1010fcd5)
+
+Core!UObject::ConditionalDestroy+0xd76c:
+1010fcc5 3bca            cmp     ecx,edx
+1010fcc7 7507            jne     Core!UObject::ConditionalDestroy+0xd777 (1010fcd0)
+
+Core!UObject::ConditionalDestroy+0xd770:
+1010fcc9 b801000000      mov     eax,1
+1010fcce eb0c            jmp     Core!UObject::ConditionalDestroy+0xd783 (1010fcdc)
+
+Core!UObject::ConditionalDestroy+0xd777:
+1010fcd0 8b4928          mov     ecx,dword ptr [ecx+28h]
+1010fcd3 ebec            jmp     Core!UObject::ConditionalDestroy+0xd768 (1010fcc1)
+
+Core!UObject::ConditionalDestroy+0xd77c:
+1010fcd5 33c0            xor     eax,eax
+1010fcd7 85d2            test    edx,edx
+1010fcd9 0f94c0          sete    al
+
+Core!UObject::ConditionalDestroy+0xd783:
+1010fcdc 85c0            test    eax,eax
+1010fcde 7538            jne     Core!UObject::ConditionalDestroy+0xd7bf (1010fd18)
+
+Core!UObject::ConditionalDestroy+0xd787:
+1010fce0 85f6            test    esi,esi
+1010fce2 7411            je      Core!UObject::ConditionalDestroy+0xd79c (1010fcf5)
+
+Core!UObject::ConditionalDestroy+0xd78b:
+1010fce4 6a00            push    0
+1010fce6 8bce            mov     ecx,esi
+1010fce8 e8d51effff      call    Core!UObject::GetFullName (10101bc2)
+1010fced 8b1544491710    mov     edx,dword ptr [Core!UStructProperty::StaticClass (10174944)]
+1010fcf3 eb05            jmp     Core!UObject::ConditionalDestroy+0xd7a1 (1010fcfa)
+
+Core!UObject::ConditionalDestroy+0xd79c:
+1010fcf5 b888bb1610      mov     eax,offset Core!`string'+0x30 (1016bb88)
+
+Core!UObject::ConditionalDestroy+0xd7a1:
+1010fcfa 8b4a20          mov     ecx,dword ptr [edx+20h]
+1010fcfd 8b1510f91810    mov     edx,dword ptr [Core!FName::Names (1018f910)]
+1010fd03 8b0c8a          mov     ecx,dword ptr [edx+ecx*4]
+1010fd06 83c10c          add     ecx,0Ch
+1010fd09 51              push    ecx
+1010fd0a 50              push    eax
+1010fd0b 686cbb1610      push    offset Core!`string'+0x14 (1016bb6c)
+1010fd10 e85517ffff      call    Core!appErrorf (1010146a)
+1010fd15 83c40c          add     esp,0Ch
+
+Core!UObject::ConditionalDestroy+0xd7bf:
+1010fd18 8b5648          mov     edx,dword ptr [esi+48h]
+1010fd1b a110f91810      mov     eax,dword ptr [Core!FName::Names (1018f910)]
+1010fd20 8b4a20          mov     ecx,dword ptr [edx+20h]
+1010fd23 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fd26 8b4db8          mov     ecx,dword ptr [ebp-48h]
+1010fd29 83c20c          add     edx,0Ch
+1010fd2c 52              push    edx
+1010fd2d 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fd30 8b4f20          mov     ecx,dword ptr [edi+20h]
+1010fd33 83c20c          add     edx,0Ch
+1010fd36 52              push    edx
+1010fd37 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fd3a 8b4db4          mov     ecx,dword ptr [ebp-4Ch]
+1010fd3d 83c20c          add     edx,0Ch
+1010fd40 52              push    edx
+1010fd41 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fd44 83c20c          add     edx,0Ch
+1010fd47 52              push    edx
+1010fd48 6898c01610      push    offset Core!UConst::StaticClass+0x70 (1016c098)
+
+Core!UObject::ConditionalDestroy+0xd7f4:
+1010fd4d a1bc4f1810      mov     eax,dword ptr [Core!GSystem (10184fbc)]
+1010fd52 68ff020000      push    2FFh
+1010fd57 50              push    eax
+1010fd58 e8201dffff      call    Core!FOutputDevice::Logf (10101a7d)
+1010fd5d 83c41c          add     esp,1Ch
+1010fd60 eb39            jmp     Core!UObject::ConditionalDestroy+0xd842 (1010fd9b)
+
+Core!UObject::ConditionalDestroy+0xd809:
+1010fd62 8b4138          mov     eax,dword ptr [ecx+38h]
+1010fd65 f6c430          test    ah,30h
+1010fd68 7469            je      Core!UObject::ConditionalDestroy+0xd87a (1010fdd3)
+
+Core!UObject::ConditionalDestroy+0xd811:
+1010fd6a 8b4f20          mov     ecx,dword ptr [edi+20h]
+1010fd6d a110f91810      mov     eax,dword ptr [Core!FName::Names (1018f910)]
+1010fd72 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fd75 8b4db4          mov     ecx,dword ptr [ebp-4Ch]
+1010fd78 83c20c          add     edx,0Ch
+1010fd7b 52              push    edx
+1010fd7c 8b1488          mov     edx,dword ptr [eax+ecx*4]
+1010fd7f 83c20c          add     edx,0Ch
+1010fd82 52              push    edx
+1010fd83 686cc01610      push    offset Core!UConst::StaticClass+0x44 (1016c06c)
+
+Core!UObject::ConditionalDestroy+0xd82f:
+1010fd88 a1bc4f1810      mov     eax,dword ptr [Core!GSystem (10184fbc)]
+1010fd8d 68ff020000      push    2FFh
+1010fd92 50              push    eax
+1010fd93 e8e51cffff      call    Core!FOutputDevice::Logf (10101a7d)
+1010fd98 83c414          add     esp,14h
+
+Core!UObject::ConditionalDestroy+0xd842:
+1010fd9b 8b4d08          mov     ecx,dword ptr [ebp+8]
+1010fd9e 83790424        cmp     dword ptr [ecx+4],24h
+1010fda2 7d14            jge     Core!UObject::ConditionalDestroy+0xd85f (1010fdb8)
+
+Core!UObject::ConditionalDestroy+0xd84b:
+1010fda4 807db005        cmp     byte ptr [ebp-50h],5
+1010fda8 750e            jne     Core!UObject::ConditionalDestroy+0xd85f (1010fdb8)
+
+Core!UObject::ConditionalDestroy+0xd851:
+1010fdaa 8b11            mov     edx,dword ptr [ecx]
+1010fdac 8d45d4          lea     eax,[ebp-2Ch]
+1010fdaf 50              push    eax
+1010fdb0 ff5204          call    dword ptr [edx+4]
+1010fdb3 e9ebfcffff      jmp     Core!UObject::ConditionalDestroy+0xd54a (1010faa3)
+
+Core!UObject::ConditionalDestroy+0xd85f:
+1010fdb8 33f6            xor     esi,esi
+
+Core!UObject::ConditionalDestroy+0xd861:
+1010fdba 3b75bc          cmp     esi,dword ptr [ebp-44h]
+1010fdbd 0f8de0fcffff    jge     Core!UObject::ConditionalDestroy+0xd54a (1010faa3)
+
+Core!UObject::ConditionalDestroy+0xd86a:
+1010fdc3 8b4d08          mov     ecx,dword ptr [ebp+8]
+1010fdc6 8d4510          lea     eax,[ebp+10h]
+1010fdc9 6a01            push    1
+1010fdcb 50              push    eax
+1010fdcc 8b11            mov     edx,dword ptr [ecx]
+1010fdce ff12            call    dword ptr [edx]
+1010fdd0 46              inc     esi
+1010fdd1 ebe7            jmp     Core!UObject::ConditionalDestroy+0xd861 (1010fdba)
+
+Core!UObject::ConditionalDestroy+0xd87a:
+1010fdd3 8b11            mov     edx,dword ptr [ecx]
+1010fdd5 8bf1            mov     esi,ecx
+1010fdd7 8bf9            mov     edi,ecx
+1010fdd9 ff5270          call    dword ptr [edx+70h]
+1010fddc 8b4dc0          mov     ecx,dword ptr [ebp-40h]
+1010fddf 8b5e44          mov     ebx,dword ptr [esi+44h]
+1010fde2 0fafc8          imul    ecx,eax
+1010fde5 8b750c          mov     esi,dword ptr [ebp+0Ch]
+1010fde8 8b5508          mov     edx,dword ptr [ebp+8]
+1010fdeb 03cb            add     ecx,ebx
+1010fded 03ce            add     ecx,esi
+1010fdef 51              push    ecx
+1010fdf0 57              push    edi
+1010fdf1 52              push    edx
+1010fdf2 8d4db0          lea     ecx,[ebp-50h]
+1010fdf5 e8db23ffff      call    Core!FDependency::operator=+0x5 (101021d5)
+1010fdfa 8b7de8          mov     edi,dword ptr [ebp-18h]
+1010fdfd e9a1fcffff      jmp     Core!UObject::ConditionalDestroy+0xd54a (1010faa3)
+
+Core!UObject::ConditionalDestroy+0xd8f5:
+1010fe4e 8bdf            mov     ebx,edi
+1010fe50 3bfe            cmp     edi,esi
+1010fe52 c645fc03        mov     byte ptr [ebp-4],3
+1010fe56 895dc4          mov     dword ptr [ebp-3Ch],ebx
+1010fe59 7405            je      Core!UObject::ConditionalDestroy+0xd907 (1010fe60)
+
+Core!UObject::ConditionalDestroy+0xd902:
+1010fe5b 8b7738          mov     esi,dword ptr [edi+38h]
+1010fe5e eb02            jmp     Core!UObject::ConditionalDestroy+0xd909 (1010fe62)
+
+Core!UObject::ConditionalDestroy+0xd907:
+1010fe60 33f6            xor     esi,esi
+
+Core!UObject::ConditionalDestroy+0xd909:
+1010fe62 85db            test    ebx,ebx
+1010fe64 742f            je      Core!UObject::ConditionalDestroy+0xd93c (1010fe95)
+
+Core!UObject::ConditionalDestroy+0xd90d:
+1010fe66 85f6            test    esi,esi
+1010fe68 7416            je      Core!UObject::ConditionalDestroy+0xd927 (1010fe80)
+
+Core!UObject::ConditionalDestroy+0xd911:
+1010fe6a a120491710      mov     eax,dword ptr [Core!UProperty::StaticClass (10174920)]
+1010fe6f 8bce            mov     ecx,esi
+1010fe71 50              push    eax
+1010fe72 e8121fffff      call    Core!UObject::IsA (10101d89)
+1010fe77 85c0            test    eax,eax
+1010fe79 751a            jne     Core!UObject::ConditionalDestroy+0xd93c (1010fe95)
+
+Core!UObject::ConditionalDestroy+0xd922:
+1010fe7b 8b762c          mov     esi,dword ptr [esi+2Ch]
+1010fe7e ebe6            jmp     Core!UObject::ConditionalDestroy+0xd90d (1010fe66)
+
+Core!UObject::ConditionalDestroy+0xd927:
+1010fe80 8b13            mov     edx,dword ptr [ebx]
+1010fe82 8bcb            mov     ecx,ebx
+1010fe84 ff5268          call    dword ptr [edx+68h]
+1010fe87 8bd8            mov     ebx,eax
+1010fe89 85db            test    ebx,ebx
+1010fe8b 895dc4          mov     dword ptr [ebp-3Ch],ebx
+1010fe8e 7405            je      Core!UObject::ConditionalDestroy+0xd93c (1010fe95)
+
+Core!UObject::ConditionalDestroy+0xd937:
+1010fe90 8b7338          mov     esi,dword ptr [ebx+38h]
+1010fe93 ebcd            jmp     Core!UObject::ConditionalDestroy+0xd909 (1010fe62)
+
+Core!UObject::ConditionalDestroy+0xd93c:
+1010fe95 85f6            test    esi,esi
+1010fe97 0f845b020000    je      Core!UObject::ConditionalDestroy+0xdb9f (101100f8)
+
+Core!UObject::ConditionalDestroy+0xd944:
+1010fe9d 8b4638          mov     eax,dword ptr [esi+38h]
+1010fea0 f6c430          test    ah,30h
+1010fea3 0f850d020000    jne     Core!UObject::ConditionalDestroy+0xdb5d (101100b6)
+
+Core!UObject::ConditionalDestroy+0xd950:
+1010fea9 8b4620          mov     eax,dword ptr [esi+20h]
+1010feac c745ec00000000  mov     dword ptr [ebp-14h],0
+1010feb3 8945e4          mov     dword ptr [ebp-1Ch],eax
+
+Core!UObject::ConditionalDestroy+0xd95d:
+1010feb6 8b4dec          mov     ecx,dword ptr [ebp-14h]
+1010feb9 8b4634          mov     eax,dword ptr [esi+34h]
+1010febc 3bc8            cmp     ecx,eax
+1010febe 0f8df2010000    jge     Core!UObject::ConditionalDestroy+0xdb5d (101100b6)
+
+Core!UObject::ConditionalDestroy+0xd96b:
+1010fec4 8b16            mov     edx,dword ptr [esi]
+1010fec6 8bce            mov     ecx,esi
+1010fec8 ff5270          call    dword ptr [edx+70h]
+1010fecb 8b5dec          mov     ebx,dword ptr [ebp-14h]
+1010fece 8bce            mov     ecx,esi
+1010fed0 0fafd8          imul    ebx,eax
+1010fed3 8b4644          mov     eax,dword ptr [esi+44h]
+1010fed6 03d8            add     ebx,eax
+1010fed8 8b06            mov     eax,dword ptr [esi]
+1010feda ff5070          call    dword ptr [eax+70h]
+1010fedd 8b7de0          mov     edi,dword ptr [ebp-20h]
+1010fee0 8d0c03          lea     ecx,[ebx+eax]
+1010fee3 8b45dc          mov     eax,dword ptr [ebp-24h]
+1010fee6 33d2            xor     edx,edx
+1010fee8 3bcf            cmp     ecx,edi
+1010feea 8bce            mov     ecx,esi
+1010feec 0f9fc2          setg    dl
+1010feef 4a              dec     edx
+1010fef0 23d0            and     edx,eax
+1010fef2 8b06            mov     eax,dword ptr [esi]
+1010fef4 8bfa            mov     edi,edx
+1010fef6 ff5070          call    dword ptr [eax+70h]
+1010fef9 8b4dec          mov     ecx,dword ptr [ebp-14h]
+1010fefc 8b5644          mov     edx,dword ptr [esi+44h]
+1010feff 0fafc8          imul    ecx,eax
+1010ff02 03ca            add     ecx,edx
+1010ff04 85ff            test    edi,edi
+1010ff06 7405            je      Core!UObject::ConditionalDestroy+0xd9b4 (1010ff0d)
+
+Core!UObject::ConditionalDestroy+0xd9af:
+1010ff08 8d040f          lea     eax,[edi+ecx]
+1010ff0b eb02            jmp     Core!UObject::ConditionalDestroy+0xd9b6 (1010ff0f)
+
+Core!UObject::ConditionalDestroy+0xd9b4:
+1010ff0d 33c0            xor     eax,eax
+
+Core!UObject::ConditionalDestroy+0xd9b6:
+1010ff0f 8b7d0c          mov     edi,dword ptr [ebp+0Ch]
+1010ff12 8b16            mov     edx,dword ptr [esi]
+1010ff14 03cf            add     ecx,edi
+1010ff16 50              push    eax
+1010ff17 51              push    ecx
+1010ff18 8bce            mov     ecx,esi
+1010ff1a ff5264          call    dword ptr [edx+64h]
+1010ff1d 85c0            test    eax,eax
+1010ff1f 0f8582010000    jne     Core!UObject::ConditionalDestroy+0xdb4e (101100a7)
+
+Core!UObject::ConditionalDestroy+0xd9cc:
+1010ff25 8b06            mov     eax,dword ptr [esi]
+1010ff27 8bce            mov     ecx,esi
+1010ff29 03fb            add     edi,ebx
+1010ff2b ff9090000000    call    dword ptr [eax+90h]
+1010ff31 8845b0          mov     byte ptr [ebp-50h],al
+1010ff34 8b16            mov     edx,dword ptr [esi]
+1010ff36 8bce            mov     ecx,esi
+1010ff38 ff9290000000    call    dword ptr [edx+90h]
+1010ff3e 8b4dec          mov     ecx,dword ptr [ebp-14h]
+1010ff41 8845b1          mov     byte ptr [ebp-4Fh],al
+1010ff44 8b4620          mov     eax,dword ptr [esi+20h]
+1010ff47 33d2            xor     edx,edx
+1010ff49 3bf2            cmp     esi,edx
+1010ff4b 8945b4          mov     dword ptr [ebp-4Ch],eax
+1010ff4e 8955b8          mov     dword ptr [ebp-48h],edx
+1010ff51 8955bc          mov     dword ptr [ebp-44h],edx
+1010ff54 894dc0          mov     dword ptr [ebp-40h],ecx
+1010ff57 742c            je      Core!UObject::ConditionalDestroy+0xda2c (1010ff85)
+
+Core!UObject::ConditionalDestroy+0xda00:
+1010ff59 8b4624          mov     eax,dword ptr [esi+24h]
+1010ff5c 8b0d44491710    mov     ecx,dword ptr [Core!UStructProperty::StaticClass (10174944)]
+
+Core!UObject::ConditionalDestroy+0xda09:
+1010ff62 3bc2            cmp     eax,edx
+1010ff64 7410            je      Core!UObject::ConditionalDestroy+0xda1d (1010ff76)
+
+Core!UObject::ConditionalDestroy+0xda0d:
+1010ff66 3bc1            cmp     eax,ecx
+1010ff68 7507            jne     Core!UObject::ConditionalDestroy+0xda18 (1010ff71)
+
+Core!UObject::ConditionalDestroy+0xda11:
+1010ff6a b801000000      mov     eax,1
+1010ff6f eb0c            jmp     Core!UObject::ConditionalDestroy+0xda24 (1010ff7d)
+
+Core!UObject::ConditionalDestroy+0xda18:
+1010ff71 8b4028          mov     eax,dword ptr [eax+28h]
+1010ff74 ebec            jmp     Core!UObject::ConditionalDestroy+0xda09 (1010ff62)
+
+Core!UObject::ConditionalDestroy+0xda1d:
+1010ff76 33c0            xor     eax,eax
+1010ff78 3bca            cmp     ecx,edx
+1010ff7a 0f94c0          sete    al
+
+Core!UObject::ConditionalDestroy+0xda24:
+1010ff7d 3bc2            cmp     eax,edx
+1010ff7f 7404            je      Core!UObject::ConditionalDestroy+0xda2c (1010ff85)
+
+Core!UObject::ConditionalDestroy+0xda28:
+1010ff81 8bc6            mov     eax,esi
+1010ff83 eb02            jmp     Core!UObject::ConditionalDestroy+0xda2e (1010ff87)
+
+Core!UObject::ConditionalDestroy+0xda2c:
+1010ff85 33c0            xor     eax,eax
+
+Core!UObject::ConditionalDestroy+0xda2e:
+1010ff87 3bc2            cmp     eax,edx
+1010ff89 7409            je      Core!UObject::ConditionalDestroy+0xda3b (1010ff94)
+
+Core!UObject::ConditionalDestroy+0xda32:
+1010ff8b 8b4048          mov     eax,dword ptr [eax+48h]
+1010ff8e 8b4820          mov     ecx,dword ptr [eax+20h]
+1010ff91 894db8          mov     dword ptr [ebp-48h],ecx
+
+Core!UObject::ConditionalDestroy+0xda3b:
+1010ff94 b801000000      mov     eax,1
+1010ff99 89558c          mov     dword ptr [ebp-74h],edx
+1010ff9c 89459c          mov     dword ptr [ebp-64h],eax
+1010ff9f 8945a0          mov     dword ptr [ebp-60h],eax
+1010ffa2 8945a4          mov     dword ptr [ebp-5Ch],eax
+1010ffa5 894590          mov     dword ptr [ebp-70h],eax
+1010ffa8 895594          mov     dword ptr [ebp-6Ch],edx
+1010ffab 895598          mov     dword ptr [ebp-68h],edx
+1010ffae 8955a8          mov     dword ptr [ebp-58h],edx
+1010ffb1 8b5508          mov     edx,dword ptr [ebp+8]
+1010ffb4 57              push    edi
+1010ffb5 8d4584          lea     eax,[ebp-7Ch]
+1010ffb8 56              push    esi
+1010ffb9 50              push    eax
+1010ffba 8d4db0          lea     ecx,[ebp-50h]
+1010ffbd c745883d000000  mov     dword ptr [ebp-78h],3Dh
+1010ffc4 8955ac          mov     dword ptr [ebp-54h],edx
+1010ffc7 c74584b8b51410  mov     dword ptr [ebp-7Ch],offset Core!UTextBufferFactory::`vftable'+0x478 (1014b5b8)
+1010ffce e80222ffff      call    Core!FDependency::operator=+0x5 (101021d5)
+1010ffd3 8b4da8          mov     ecx,dword ptr [ebp-58h]
+1010ffd6 83f901          cmp     ecx,1
+1010ffd9 894dbc          mov     dword ptr [ebp-44h],ecx
+1010ffdc 7504            jne     Core!UObject::ConditionalDestroy+0xda89 (1010ffe2)
+
+Core!UObject::ConditionalDestroy+0xda85:
+1010ffde 33c0            xor     eax,eax
+1010ffe0 eb50            jmp     Core!UObject::ConditionalDestroy+0xdad9 (10110032)
+
+Core!UObject::ConditionalDestroy+0xda89:
+1010ffe2 83f902          cmp     ecx,2
+1010ffe5 7507            jne     Core!UObject::ConditionalDestroy+0xda95 (1010ffee)
+
+Core!UObject::ConditionalDestroy+0xda8e:
+1010ffe7 b810000000      mov     eax,10h
+1010ffec eb44            jmp     Core!UObject::ConditionalDestroy+0xdad9 (10110032)
+
+Core!UObject::ConditionalDestroy+0xda95:
+1010ffee 83f904          cmp     ecx,4
+1010fff1 7507            jne     Core!UObject::ConditionalDestroy+0xdaa1 (1010fffa)
+
+Core!UObject::ConditionalDestroy+0xda9a:
+1010fff3 b820000000      mov     eax,20h
+1010fff8 eb38            jmp     Core!UObject::ConditionalDestroy+0xdad9 (10110032)
+
+Core!UObject::ConditionalDestroy+0xdaa1:
+1010fffa 83f90c          cmp     ecx,0Ch
+1010fffd 7507            jne     Core!UObject::ConditionalDestroy+0xdaad (10110006)
+
+Core!UObject::ConditionalDestroy+0xdaa6:
+1010ffff b830000000      mov     eax,30h
+10110004 eb2c            jmp     Core!UObject::ConditionalDestroy+0xdad9 (10110032)
+
+Core!UObject::ConditionalDestroy+0xdaad:
+10110006 83f910          cmp     ecx,10h
+10110009 7507            jne     Core!UObject::ConditionalDestroy+0xdab9 (10110012)
+
+Core!UObject::ConditionalDestroy+0xdab2:
+1011000b b840000000      mov     eax,40h
+10110010 eb20            jmp     Core!UObject::ConditionalDestroy+0xdad9 (10110032)
+
+Core!UObject::ConditionalDestroy+0xdab9:
+10110012 81f9ff000000    cmp     ecx,0FFh
+10110018 7f07            jg      Core!UObject::ConditionalDestroy+0xdac8 (10110021)
+
+Core!UObject::ConditionalDestroy+0xdac1:
+1011001a b850000000      mov     eax,50h
+1011001f eb11            jmp     Core!UObject::ConditionalDestroy+0xdad9 (10110032)
+
+Core!UObject::ConditionalDestroy+0xdac8:
+10110021 33c0            xor     eax,eax
+10110023 81f900000100    cmp     ecx,10000h
+10110029 0f9fc0          setg    al
+1011002c 48              dec     eax
+1011002d 24f0            and     al,0F0h
+1011002f 83c070          add     eax,70h
+
+Core!UObject::ConditionalDestroy+0xdad9:
+10110032 8a4db1          mov     cl,byte ptr [ebp-4Fh]
+10110035 0ac8            or      cl,al
+10110037 85f6            test    esi,esi
+10110039 884db1          mov     byte ptr [ebp-4Fh],cl
+1011003c 742c            je      Core!UObject::ConditionalDestroy+0xdb11 (1011006a)
+
+Core!UObject::ConditionalDestroy+0xdae5:
+1011003e 8b4624          mov     eax,dword ptr [esi+24h]
+10110041 8b0d2c491710    mov     ecx,dword ptr [Core!UBoolProperty::StaticClass (1017492c)]
+
+Core!UObject::ConditionalDestroy+0xdaee:
+10110047 85c0            test    eax,eax
+10110049 7410            je      Core!UObject::ConditionalDestroy+0xdb02 (1011005b)
+
+Core!UObject::ConditionalDestroy+0xdaf2:
+1011004b 3bc1            cmp     eax,ecx
+1011004d 7507            jne     Core!UObject::ConditionalDestroy+0xdafd (10110056)
+
+Core!UObject::ConditionalDestroy+0xdaf6:
+1011004f b801000000      mov     eax,1
+10110054 eb0c            jmp     Core!UObject::ConditionalDestroy+0xdb09 (10110062)
+
+Core!UObject::ConditionalDestroy+0xdafd:
+10110056 8b4028          mov     eax,dword ptr [eax+28h]
+10110059 ebec            jmp     Core!UObject::ConditionalDestroy+0xdaee (10110047)
+
+Core!UObject::ConditionalDestroy+0xdb02:
+1011005b 33c0            xor     eax,eax
+1011005d 85c9            test    ecx,ecx
+1011005f 0f94c0          sete    al
+
+Core!UObject::ConditionalDestroy+0xdb09:
+10110062 85c0            test    eax,eax
+10110064 7404            je      Core!UObject::ConditionalDestroy+0xdb11 (1011006a)
+
+Core!UObject::ConditionalDestroy+0xdb0d:
+10110066 8bc6            mov     eax,esi
+10110068 eb02            jmp     Core!UObject::ConditionalDestroy+0xdb13 (1011006c)
+
+Core!UObject::ConditionalDestroy+0xdb11:
+1011006a 33c0            xor     eax,eax
+
+Core!UObject::ConditionalDestroy+0xdb13:
+1011006c 8b4dc0          mov     ecx,dword ptr [ebp-40h]
+1011006f 85c9            test    ecx,ecx
+10110071 750d            jne     Core!UObject::ConditionalDestroy+0xdb27 (10110080)
+
+Core!UObject::ConditionalDestroy+0xdb1a:
+10110073 85c0            test    eax,eax
+10110075 740d            je      Core!UObject::ConditionalDestroy+0xdb2b (10110084)
+
+Core!UObject::ConditionalDestroy+0xdb1e:
+10110077 8b4848          mov     ecx,dword ptr [eax+48h]
+1011007a 8b07            mov     eax,dword ptr [edi]
+1011007c 85c8            test    eax,ecx
+1011007e 7404            je      Core!UObject::ConditionalDestroy+0xdb2b (10110084)
+
+Core!UObject::ConditionalDestroy+0xdb27:
+10110080 804db180        or      byte ptr [ebp-4Fh],80h
+
+Core!UObject::ConditionalDestroy+0xdb2b:
+10110084 8b4508          mov     eax,dword ptr [ebp+8]
+10110087 8d55b0          lea     edx,[ebp-50h]
+1011008a 52              push    edx
+1011008b 50              push    eax
+1011008c e82518ffff      call    Core!UObject::execByteToBool+0x5 (101018b6)
+10110091 8b4d0c          mov     ecx,dword ptr [ebp+0Ch]
+10110094 8b5508          mov     edx,dword ptr [ebp+8]
+10110097 83c408          add     esp,8
+1011009a 03d9            add     ebx,ecx
+1011009c 8d4db0          lea     ecx,[ebp-50h]
+1011009f 53              push    ebx
+101100a0 56              push    esi
+101100a1 52              push    edx
+101100a2 e82e21ffff      call    Core!FDependency::operator=+0x5 (101021d5)
+
+Core!UObject::ConditionalDestroy+0xdb4e:
+101100a7 8b45ec          mov     eax,dword ptr [ebp-14h]
+101100aa 8b5dc4          mov     ebx,dword ptr [ebp-3Ch]
+101100ad 40              inc     eax
+101100ae 8945ec          mov     dword ptr [ebp-14h],eax
+101100b1 e900feffff      jmp     Core!UObject::ConditionalDestroy+0xd95d (1010feb6)
+
+Core!UObject::ConditionalDestroy+0xdb5d:
+101100b6 8b762c          mov     esi,dword ptr [esi+2Ch]
+
+Core!UObject::ConditionalDestroy+0xdb60:
+101100b9 85db            test    ebx,ebx
+101100bb 0f84d4fdffff    je      Core!UObject::ConditionalDestroy+0xd93c (1010fe95)
+
+Core!UObject::ConditionalDestroy+0xdb68:
+101100c1 85f6            test    esi,esi
+101100c3 741a            je      Core!UObject::ConditionalDestroy+0xdb86 (101100df)
+
+Core!UObject::ConditionalDestroy+0xdb6c:
+101100c5 a120491710      mov     eax,dword ptr [Core!UProperty::StaticClass (10174920)]
+101100ca 8bce            mov     ecx,esi
+101100cc 50              push    eax
+101100cd e8b71cffff      call    Core!UObject::IsA (10101d89)
+101100d2 85c0            test    eax,eax
+101100d4 0f85bbfdffff    jne     Core!UObject::ConditionalDestroy+0xd93c (1010fe95)
+
+Core!UObject::ConditionalDestroy+0xdb81:
+101100da 8b762c          mov     esi,dword ptr [esi+2Ch]
+101100dd ebe2            jmp     Core!UObject::ConditionalDestroy+0xdb68 (101100c1)
+
+Core!UObject::ConditionalDestroy+0xdb86:
+101100df 8b13            mov     edx,dword ptr [ebx]
+101100e1 8bcb            mov     ecx,ebx
+101100e3 ff5268          call    dword ptr [edx+68h]
+101100e6 8bd8            mov     ebx,eax
+101100e8 85db            test    ebx,ebx
+101100ea 895dc4          mov     dword ptr [ebp-3Ch],ebx
+101100ed 0f84a2fdffff    je      Core!UObject::ConditionalDestroy+0xd93c (1010fe95)
+
+Core!UObject::ConditionalDestroy+0xdb9a:
+101100f3 8b7338          mov     esi,dword ptr [ebx+38h]
+101100f6 ebc1            jmp     Core!UObject::ConditionalDestroy+0xdb60 (101100b9)
+
+Core!UObject::ConditionalDestroy+0xdb9f:
+101100f8 8b4d08          mov     ecx,dword ptr [ebp+8]
+101100fb 8d5510          lea     edx,[ebp+10h]
+101100fe 52              push    edx
+101100ff c7451000000000  mov     dword ptr [ebp+10h],0
+10110106 8b01            mov     eax,dword ptr [ecx]
+10110108 ff5008          call    dword ptr [eax+8]
+1011010b 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+1011010e 64890d00000000  mov     dword ptr fs:[0],ecx
+10110115 5f              pop     edi
+10110116 5e              pop     esi
+10110117 5b              pop     ebx
+10110118 8be5            mov     esp,ebp
+1011011a 5d              pop     ebp
+1011011b c20c00          ret     0Ch
+
+Core!UObject::ConditionalDestroy+0xdc5b:
+101101b4 8b4df4          mov     ecx,dword ptr [ebp-0Ch]
+101101b7 5f              pop     edi
+101101b8 5e              pop     esi
+101101b9 64890d00000000  mov     dword ptr fs:[0],ecx
+101101c0 5b              pop     ebx
+101101c1 8be5            mov     esp,ebp
+101101c3 5d              pop     ebp
+101101c4 c20c00          ret     0Ch
+0:000> q
+quit:
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\atlmfc.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\concurrency.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\cpp_rest.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\ObjectiveC.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\stl.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Data.Json.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Geolocation.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Devices.Sensors.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\Windows.Media.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\windows.natvis'
+NatVis script unloaded from 'C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\Visualizers\winrt.natvis'
