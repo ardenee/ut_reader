@@ -13,18 +13,28 @@ contracts=load('tests/contracts.json')
 catalog={c['id']:c for c in contracts['contracts']}
 ensure(len(catalog)==len(contracts['contracts'])==24,'24 fixed behaviour categories')
 rows=contracts['engine_contracts']
-ensure(len(rows)==len({r['key'] for r in rows})==115,'115 unique engine contracts')
+ensure(len(rows)==len({r['key'] for r in rows})==32,'32 unique source-observed application paths')
 status=collections.Counter(x['status'] for x in rows)
 allowed=set(contracts['outcomes'])
 for x in rows:
- c=catalog[x['contract_id']]
- ensure(x['key']==x['engine']+'-'+x['contract_id'],'contract ID/name match')
- ensure(x['engine'] in c['engines'] and x['status'] in allowed,'applicable engine and allowed state')
+ ensure(x['key']==x['engine']+'-'+x['operation'].replace('_','-'),'engine operation ID must be unique')
+ ensure(x['engine'] in ('ue1','ue2','ue3','ue4','ue5') and x['status'] in allowed,
+       'real engine and accepted test state')
+ ensure(bool(x['test_purpose']) and bool(x['acceptance_condition']) and bool(x['required_fixture']),
+       'no test without user risk, expected result and genuine fixture')
+ ensure(x['actual_unrealdb_paths'] and x['epic_source_anchor_file'],
+       'every test needs a real UnrealDB path and original source candidate')
+ ensure(Path(x['epic_source_anchor_file']).is_file(),'Epic original source file absent '+x['key'])
+ for f in x['actual_unrealdb_paths']:
+  ensure((ROOT/f).is_file(),'test refers to nonexistent UnrealDB code '+x['key']+': '+f)
+ for id in x['contract_ids']:
+  ensure(id in catalog and x['engine'] in catalog[id]['engines'],
+         'behaviour not valid for chosen engine '+x['key']+': '+id)
  if x['status']=='PASS':
-  ensure(x['epic_source_files'] and x['unrealdb_code_paths'] and x['acceptance_proof'] and x['last_verified_product_sha256'],
-    'PASS requires exact Epic source / current implementation / original proof')
+  ensure(x['runtime_call_chain_verified'] and x['result_evidence'] and x['affected_code_sha256'],
+         'PASS requires runtime call-chain proof and original native/source result')
  if x['status']=='SOURCE_NA':
-  ensure(x['acceptance_proof'] and x['epic_source_files'],'SOURCE_NA requires source proof')
+  ensure(x['result_evidence'] is not None,'SOURCE_NA requires explicit source proof')
 old=load('archive/testing-legacy-2026-11-02/manifest.json')
 ensure(old['original_file_count']==len(old['files'])==3632,'frozen file count mismatch')
 index={}
@@ -56,6 +66,6 @@ for edge in callgraph['edges']:
  ensure(edge['from'] in existing and edge['to'] in existing, 'static edge path not in current code inventory')
 print(json.dumps({'integrity':'PASS','original_archive_files_exact_SHA_and_Git_blob':len(old['files']),
  'legacy_original_stored_bytes':archive_bytes,'current_engine_behaviour_categories':len(catalog),
- 'applicable_engine_contracts':len(contracts['engine_contracts']),'contract_states':dict(status),
+ 'actual_implemented_engine_operation_cases':len(contracts['engine_contracts']),'contract_states':dict(status),
  'current_production_PHP_and_operational_paths_SHA_verified':len(rows),
  'original_native_engine_tests_executed':0},indent=2))

@@ -34,7 +34,6 @@ def git_info():
 def gather():
     c = read("contracts.json")
     paths = read("code-paths.json")
-    definitions = {x["id"]: x for x in c["contracts"]}
     rows = c["engine_contracts"]
     counts = Counter(x["status"] for x in rows)
     engines = []
@@ -45,10 +44,10 @@ def gather():
                         "total": len(subset), "unreviewed": sum(x["status"] == "NOT_REVIEWED" for x in subset)})
     contracts = []
     for x in rows:
-        a = definitions[x["contract_id"]]
         contracts.append({"id": x["key"], "status": x["status"], "branch": x["engine"],
-                          "reader": ", ".join(a["code_path_roles"]), "remaining": a["user_risk"],
-                          "purpose": a["purpose"], "source": None, "source_line": None,
+                          "reader": ", ".join(p.split("/")[-1] for p in x["actual_unrealdb_paths"][:3]),
+                          "remaining": x["test_purpose"], "purpose": x["acceptance_condition"],
+                          "source": x["epic_source_anchor_file"], "source_line": None,
                           "test": None})
     return {"ok": True, "read_only": True, "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "engine": "UE1–UE5", "operation": "FILE PARITY", "accepted": all(g["status"] == "ACCEPTED" for g in engines),

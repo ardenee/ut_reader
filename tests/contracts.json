@@ -1,6 +1,6 @@
 {
-  "schema_version": 1,
-  "authority": "Single cross-engine source-to-product behavioural parity register",
+  "schema_version": 2,
+  "authority": "Source/implementation-derived UE1-UE5 operation paths; exactly one live register",
   "outcomes": [
     "NOT_REVIEWED",
     "REUSE_ACCEPTED_EVIDENCE",
@@ -15,11 +15,6 @@
     "no_pass_from_synthetic_only": true,
     "source_and_game_provenance_mandatory": true,
     "never_interpret_unknown_mount_order_as_missing": true
-  },
-  "historical_acceptance": {
-    "ue1_G3": "79 PASS, 1 SOURCE_NA, 0 BLOCKED on a closed 80-test frozen scope, retained in archive; does not close all F01-F24",
-    "ue4_427": "original UE4 acceptance previously completed; contract mapping required",
-    "ue5_583": "original Zen/IoStore native differential previously completed; contract mapping required"
   },
   "contracts": [
     {
@@ -553,1844 +548,1426 @@
   ],
   "engine_contracts": [
     {
-      "key": "ue1-F01",
+      "key": "ue1-dispatch",
       "engine": "ue1",
-      "contract_id": "F01",
+      "operation": "dispatch",
+      "contract_ids": [
+        "F01",
+        "F02"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "game_profiles": [
+        "unrealgold",
+        "ut99"
+      ],
+      "source_provenance_constraint": "Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient.",
+      "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
+      "required_fixture": "real_file_engine_game_version_and_selected_reader",
+      "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 123,
+          "call_site": "CatalogReaderResolver::resolve("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+          "line": 47,
+          "call_site": "if (in_array($engineKey,"
+        }
+      ]
     },
     {
-      "key": "ue2-F01",
-      "engine": "ue2",
-      "contract_id": "F01",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F01",
-      "engine": "ue3",
-      "contract_id": "F01",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F01",
-      "engine": "ue4",
-      "contract_id": "F01",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F01",
-      "engine": "ue5",
-      "contract_id": "F01",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F02",
+      "key": "ue1-tables",
       "engine": "ue1",
-      "contract_id": "F02",
+      "operation": "tables",
+      "contract_ids": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "game_profiles": [
+        "unrealgold",
+        "ut99"
+      ],
+      "source_provenance_constraint": "Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient.",
+      "test_purpose": "Wrong name/import/export IDs created from package tables",
+      "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
+      "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 147,
+          "call_site": "Uedb5UnrealSnapshotBuilder::build("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 144,
+          "call_site": "Uedb5Ut99SnapshotBuilder::build("
+        }
+      ]
     },
     {
-      "key": "ue2-F02",
-      "engine": "ue2",
-      "contract_id": "F02",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F02",
-      "engine": "ue3",
-      "contract_id": "F02",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F02",
-      "engine": "ue4",
-      "contract_id": "F02",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F02",
-      "engine": "ue5",
-      "contract_id": "F02",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F03",
+      "key": "ue1-verify-import",
       "engine": "ue1",
-      "contract_id": "F03",
+      "operation": "verify_import",
+      "contract_ids": [
+        "F12",
+        "F13",
+        "F14"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
+      ],
+      "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "game_profiles": [
+        "unrealgold",
+        "ut99"
+      ],
+      "source_provenance_constraint": "Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient.",
+      "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
+      "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
+      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+          "line": 116,
+          "call_site": "PdoUe1VerifyImportProjectionResolver::resolveInMemoryOutcome("
+        }
+      ]
     },
     {
-      "key": "ue2-F03",
-      "engine": "ue2",
-      "contract_id": "F03",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F03",
-      "engine": "ue3",
-      "contract_id": "F03",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F03",
-      "engine": "ue4",
-      "contract_id": "F03",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F03",
-      "engine": "ue5",
-      "contract_id": "F03",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F04",
+      "key": "ue1-mount-provider",
       "engine": "ue1",
-      "contract_id": "F04",
+      "operation": "mount_provider",
+      "contract_ids": [
+        "F11",
+        "F15"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> PdoUedb5PhysicalProviderSelector::select",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "game_profiles": [
+        "unrealgold",
+        "ut99"
+      ],
+      "source_provenance_constraint": "Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient.",
+      "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
+      "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
+      "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 245,
+          "call_site": "$this->selector->select("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "line": 25,
+          "call_site": "public function select("
+        }
+      ]
     },
     {
-      "key": "ue2-F04",
-      "engine": "ue2",
-      "contract_id": "F04",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F04",
-      "engine": "ue3",
-      "contract_id": "F04",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F04",
-      "engine": "ue4",
-      "contract_id": "F04",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F04",
-      "engine": "ue5",
-      "contract_id": "F04",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F05",
+      "key": "ue1-dependency-publish",
       "engine": "ue1",
-      "contract_id": "F05",
+      "operation": "dependency_publish",
+      "contract_ids": [
+        "F16",
+        "F18",
+        "F19"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> Uedb5DependencyRebuilder::rebuild -> PdoUedb5DependencyProjectionPublisher",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "game_profiles": [
+        "unrealgold",
+        "ut99"
+      ],
+      "source_provenance_constraint": "Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient.",
+      "test_purpose": "Correct decoded package but wrong SQL dependency edge/status/count",
+      "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
+      "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 264,
+          "call_site": "$this->rebuilder->rebuild("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 268,
+          "call_site": "$this->publisher->publish("
+        }
+      ]
     },
     {
-      "key": "ue2-F05",
-      "engine": "ue2",
-      "contract_id": "F05",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F05",
-      "engine": "ue3",
-      "contract_id": "F05",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F05",
-      "engine": "ue4",
-      "contract_id": "F05",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F05",
-      "engine": "ue5",
-      "contract_id": "F05",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F06",
+      "key": "ue1-website-dependency",
       "engine": "ue1",
-      "contract_id": "F06",
+      "operation": "website_dependency",
+      "contract_ids": [
+        "F17",
+        "F22"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+        "catalog/file-examine-dependencies.php",
+        "catalog/game-missing.php",
+        "catalog/dependency-cross-examine.php"
+      ],
+      "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "game_profiles": [
+        "unrealgold",
+        "ut99"
+      ],
+      "source_provenance_constraint": "Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient.",
+      "test_purpose": "UI reports missing or resolved dependency incorrectly",
+      "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
+      "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/game-missing.php",
+          "line": 116,
+          "call_site": "new PdoGameMissingDependencyQuery("
+        },
+        {
+          "file": "catalog/dependency-cross-examine.php",
+          "line": 30,
+          "call_site": "new PdoGameDependencyCrossExamineQuery("
+        }
+      ]
     },
     {
-      "key": "ue2-F06",
+      "key": "ue2-dispatch",
       "engine": "ue2",
-      "contract_id": "F06",
+      "operation": "dispatch",
+      "contract_ids": [
+        "F01",
+        "F02"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
+      "game_profiles": [
+        "unreal2",
+        "ut2003",
+        "ut2004"
+      ],
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
+      "required_fixture": "real_file_engine_game_version_and_selected_reader",
+      "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 123,
+          "call_site": "CatalogReaderResolver::resolve("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+          "line": 47,
+          "call_site": "if (in_array($engineKey,"
+        }
+      ]
     },
     {
-      "key": "ue3-F06",
-      "engine": "ue3",
-      "contract_id": "F06",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F06",
-      "engine": "ue4",
-      "contract_id": "F06",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F06",
-      "engine": "ue5",
-      "contract_id": "F06",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F07",
-      "engine": "ue1",
-      "contract_id": "F07",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F07",
+      "key": "ue2-tables",
       "engine": "ue2",
-      "contract_id": "F07",
+      "operation": "tables",
+      "contract_ids": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5LegacySnapshotBuilder.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
+      "game_profiles": [
+        "unreal2",
+        "ut2003",
+        "ut2004"
+      ],
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "test_purpose": "Wrong name/import/export IDs created from package tables",
+      "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
+      "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 150,
+          "call_site": "Uedb5Unreal2SnapshotBuilder::build("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 153,
+          "call_site": "Uedb5Ut2003SnapshotBuilder::build("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 156,
+          "call_site": "Uedb5Ut2004SnapshotBuilder::build("
+        }
+      ]
     },
     {
-      "key": "ue3-F07",
-      "engine": "ue3",
-      "contract_id": "F07",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F07",
-      "engine": "ue4",
-      "contract_id": "F07",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F07",
-      "engine": "ue5",
-      "contract_id": "F07",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F08",
-      "engine": "ue1",
-      "contract_id": "F08",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F08",
+      "key": "ue2-verify-import",
       "engine": "ue2",
-      "contract_id": "F08",
+      "operation": "verify_import",
+      "contract_ids": [
+        "F12",
+        "F13",
+        "F14"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
+      ],
+      "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
+      "game_profiles": [
+        "unreal2",
+        "ut2003",
+        "ut2004"
+      ],
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
+      "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
+      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+          "line": 132,
+          "call_site": "PdoUe2VerifyImportProjectionResolver::resolveInMemoryOutcome("
+        }
+      ]
     },
     {
-      "key": "ue3-F08",
-      "engine": "ue3",
-      "contract_id": "F08",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F08",
-      "engine": "ue4",
-      "contract_id": "F08",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F08",
-      "engine": "ue5",
-      "contract_id": "F08",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F09",
-      "engine": "ue1",
-      "contract_id": "F09",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F09",
+      "key": "ue2-mount-provider",
       "engine": "ue2",
-      "contract_id": "F09",
+      "operation": "mount_provider",
+      "contract_ids": [
+        "F11",
+        "F15"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> PdoUedb5PhysicalProviderSelector::select",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
+      "game_profiles": [
+        "unreal2",
+        "ut2003",
+        "ut2004"
+      ],
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
+      "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
+      "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 245,
+          "call_site": "$this->selector->select("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "line": 25,
+          "call_site": "public function select("
+        }
+      ]
     },
     {
-      "key": "ue3-F09",
-      "engine": "ue3",
-      "contract_id": "F09",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F09",
-      "engine": "ue4",
-      "contract_id": "F09",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F09",
-      "engine": "ue5",
-      "contract_id": "F09",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F10",
-      "engine": "ue1",
-      "contract_id": "F10",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F10",
+      "key": "ue2-dependency-publish",
       "engine": "ue2",
-      "contract_id": "F10",
+      "operation": "dependency_publish",
+      "contract_ids": [
+        "F16",
+        "F18",
+        "F19"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> Uedb5DependencyRebuilder::rebuild -> PdoUedb5DependencyProjectionPublisher",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
+      "game_profiles": [
+        "unreal2",
+        "ut2003",
+        "ut2004"
+      ],
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "test_purpose": "Correct decoded package but wrong SQL dependency edge/status/count",
+      "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
+      "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 264,
+          "call_site": "$this->rebuilder->rebuild("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 268,
+          "call_site": "$this->publisher->publish("
+        }
+      ]
     },
     {
-      "key": "ue3-F10",
-      "engine": "ue3",
-      "contract_id": "F10",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F10",
-      "engine": "ue4",
-      "contract_id": "F10",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F10",
-      "engine": "ue5",
-      "contract_id": "F10",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F11",
-      "engine": "ue1",
-      "contract_id": "F11",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F11",
+      "key": "ue2-website-dependency",
       "engine": "ue2",
-      "contract_id": "F11",
+      "operation": "website_dependency",
+      "contract_ids": [
+        "F17",
+        "F22"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+        "catalog/file-examine-dependencies.php",
+        "catalog/game-missing.php",
+        "catalog/dependency-cross-examine.php"
+      ],
+      "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
+      "game_profiles": [
+        "unreal2",
+        "ut2003",
+        "ut2004"
+      ],
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "test_purpose": "UI reports missing or resolved dependency incorrectly",
+      "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
+      "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/game-missing.php",
+          "line": 116,
+          "call_site": "new PdoGameMissingDependencyQuery("
+        },
+        {
+          "file": "catalog/dependency-cross-examine.php",
+          "line": 30,
+          "call_site": "new PdoGameDependencyCrossExamineQuery("
+        }
+      ]
     },
     {
-      "key": "ue3-F11",
+      "key": "ue3-dispatch",
       "engine": "ue3",
-      "contract_id": "F11",
+      "operation": "dispatch",
+      "contract_ids": [
+        "F01",
+        "F02"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "catalog/parsers/EpicUE3PackageReader.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE3\\Unreal Engine 3 (10897)\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::FindExistingLinkerForPackage",
+      "game_profiles": [
+        "ut3"
+      ],
+      "source_provenance_constraint": "UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay.",
+      "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
+      "required_fixture": "real_file_engine_game_version_and_selected_reader",
+      "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 123,
+          "call_site": "CatalogReaderResolver::resolve("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+          "line": 47,
+          "call_site": "if (in_array($engineKey,"
+        }
+      ]
     },
     {
-      "key": "ue4-F11",
+      "key": "ue3-tables",
+      "engine": "ue3",
+      "operation": "tables",
+      "contract_ids": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/parsers/EpicUE3PackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE3\\Unreal Engine 3 (10897)\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::FindExistingLinkerForPackage",
+      "game_profiles": [
+        "ut3"
+      ],
+      "source_provenance_constraint": "UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay.",
+      "test_purpose": "Wrong name/import/export IDs created from package tables",
+      "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
+      "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 165,
+          "call_site": "Uedb5Ut3SnapshotBuilder::build("
+        }
+      ]
+    },
+    {
+      "key": "ue3-verify-import",
+      "engine": "ue3",
+      "operation": "verify_import",
+      "contract_ids": [
+        "F12",
+        "F13",
+        "F14"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
+      ],
+      "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE3\\Unreal Engine 3 (10897)\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::FindExistingLinkerForPackage",
+      "game_profiles": [
+        "ut3"
+      ],
+      "source_provenance_constraint": "UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay.",
+      "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
+      "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
+      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+          "line": 148,
+          "call_site": "PdoUe3VerifyImportProjectionResolver::resolveInMemoryOutcome("
+        }
+      ]
+    },
+    {
+      "key": "ue3-mount-provider",
+      "engine": "ue3",
+      "operation": "mount_provider",
+      "contract_ids": [
+        "F11",
+        "F15"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> PdoUedb5PhysicalProviderSelector::select",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE3\\Unreal Engine 3 (10897)\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::FindExistingLinkerForPackage",
+      "game_profiles": [
+        "ut3"
+      ],
+      "source_provenance_constraint": "UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay.",
+      "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
+      "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
+      "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 245,
+          "call_site": "$this->selector->select("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "line": 25,
+          "call_site": "public function select("
+        }
+      ]
+    },
+    {
+      "key": "ue3-dependency-publish",
+      "engine": "ue3",
+      "operation": "dependency_publish",
+      "contract_ids": [
+        "F16",
+        "F18",
+        "F19"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> Uedb5DependencyRebuilder::rebuild -> PdoUedb5DependencyProjectionPublisher",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE3\\Unreal Engine 3 (10897)\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::FindExistingLinkerForPackage",
+      "game_profiles": [
+        "ut3"
+      ],
+      "source_provenance_constraint": "UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay.",
+      "test_purpose": "Correct decoded package but wrong SQL dependency edge/status/count",
+      "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
+      "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 264,
+          "call_site": "$this->rebuilder->rebuild("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 268,
+          "call_site": "$this->publisher->publish("
+        }
+      ]
+    },
+    {
+      "key": "ue3-website-dependency",
+      "engine": "ue3",
+      "operation": "website_dependency",
+      "contract_ids": [
+        "F17",
+        "F22"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+        "catalog/file-examine-dependencies.php",
+        "catalog/game-missing.php",
+        "catalog/dependency-cross-examine.php"
+      ],
+      "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE3\\Unreal Engine 3 (10897)\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "ULinkerLoad::FindExistingLinkerForPackage",
+      "game_profiles": [
+        "ut3"
+      ],
+      "source_provenance_constraint": "UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay.",
+      "test_purpose": "UI reports missing or resolved dependency incorrectly",
+      "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
+      "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/game-missing.php",
+          "line": 116,
+          "call_site": "new PdoGameMissingDependencyQuery("
+        },
+        {
+          "file": "catalog/dependency-cross-examine.php",
+          "line": 30,
+          "call_site": "new PdoGameDependencyCrossExamineQuery("
+        }
+      ]
+    },
+    {
+      "key": "ue4-dispatch",
       "engine": "ue4",
-      "contract_id": "F11",
+      "operation": "dispatch",
+      "contract_ids": [
+        "F01",
+        "F02"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "UE4/UnrealPackageReader.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_symbol_to_verify": "FLinkerLoad",
+      "game_profiles": [
+        "ut4"
+      ],
+      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
+      "required_fixture": "real_file_engine_game_version_and_selected_reader",
+      "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 123,
+          "call_site": "CatalogReaderResolver::resolve("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+          "line": 47,
+          "call_site": "if (in_array($engineKey,"
+        }
+      ]
     },
     {
-      "key": "ue5-F11",
+      "key": "ue4-tables",
+      "engine": "ue4",
+      "operation": "tables",
+      "contract_ids": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "UE4/UnrealPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_symbol_to_verify": "FLinkerLoad",
+      "game_profiles": [
+        "ut4"
+      ],
+      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "test_purpose": "Wrong name/import/export IDs created from package tables",
+      "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
+      "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 168,
+          "call_site": "Uedb5Ut4SnapshotBuilder::build("
+        }
+      ]
+    },
+    {
+      "key": "ue4-verify-import",
+      "engine": "ue4",
+      "operation": "verify_import",
+      "contract_ids": [
+        "F12",
+        "F13",
+        "F14"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
+      ],
+      "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_symbol_to_verify": "FLinkerLoad",
+      "game_profiles": [
+        "ut4"
+      ],
+      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
+      "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
+      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+          "line": 163,
+          "call_site": "PdoUe4VerifyImportProjectionResolver::resolveInMemoryOutcome("
+        }
+      ]
+    },
+    {
+      "key": "ue4-mount-provider",
+      "engine": "ue4",
+      "operation": "mount_provider",
+      "contract_ids": [
+        "F11",
+        "F15"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> PdoUedb5PhysicalProviderSelector::select",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_symbol_to_verify": "FLinkerLoad",
+      "game_profiles": [
+        "ut4"
+      ],
+      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
+      "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
+      "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 245,
+          "call_site": "$this->selector->select("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "line": 25,
+          "call_site": "public function select("
+        }
+      ]
+    },
+    {
+      "key": "ue4-dependency-publish",
+      "engine": "ue4",
+      "operation": "dependency_publish",
+      "contract_ids": [
+        "F16",
+        "F18",
+        "F19"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
+      ],
+      "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> Uedb5DependencyRebuilder::rebuild -> PdoUedb5DependencyProjectionPublisher",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_symbol_to_verify": "FLinkerLoad",
+      "game_profiles": [
+        "ut4"
+      ],
+      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "test_purpose": "Correct decoded package but wrong SQL dependency edge/status/count",
+      "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
+      "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 264,
+          "call_site": "$this->rebuilder->rebuild("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 268,
+          "call_site": "$this->publisher->publish("
+        }
+      ]
+    },
+    {
+      "key": "ue4-website-dependency",
+      "engine": "ue4",
+      "operation": "website_dependency",
+      "contract_ids": [
+        "F17",
+        "F22"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+        "catalog/file-examine-dependencies.php",
+        "catalog/game-missing.php",
+        "catalog/dependency-cross-examine.php"
+      ],
+      "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_symbol_to_verify": "FLinkerLoad",
+      "game_profiles": [
+        "ut4"
+      ],
+      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "test_purpose": "UI reports missing or resolved dependency incorrectly",
+      "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
+      "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/game-missing.php",
+          "line": 116,
+          "call_site": "new PdoGameMissingDependencyQuery("
+        },
+        {
+          "file": "catalog/dependency-cross-examine.php",
+          "line": 30,
+          "call_site": "new PdoGameDependencyCrossExamineQuery("
+        }
+      ]
+    },
+    {
+      "key": "ue5-dispatch",
       "engine": "ue5",
-      "contract_id": "F11",
+      "operation": "dispatch",
+      "contract_ids": [
+        "F01",
+        "F02"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "UE5/UnrealPackageReader.php"
+      ],
+      "dispatch_trace": "CatalogReaderResolver::resolve(UE5) scanner/header route; Zen IoStore is separate",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "epic_symbol_to_verify": "PackageStore",
+      "game_profiles": [
+        "ue5-iostore",
+        "ue5-classic-reader"
+      ],
+      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
+      "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
+      "required_fixture": "real_file_engine_game_version_and_selected_reader",
+      "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 123,
+          "call_site": "CatalogReaderResolver::resolve("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+          "line": 47,
+          "call_site": "if (in_array($engineKey,"
+        }
+      ]
     },
     {
-      "key": "ue1-F12",
-      "engine": "ue1",
-      "contract_id": "F12",
+      "key": "ue5-tables",
+      "engine": "ue5",
+      "operation": "tables",
+      "contract_ids": [
+        "F03",
+        "F04",
+        "F05",
+        "F06"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+        "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php"
+      ],
+      "dispatch_trace": "CatalogZenIoStorePackagePublisher -> Uedb5Ue5ZenIoStoreSnapshotBuilder",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "epic_symbol_to_verify": "PackageStore",
+      "game_profiles": [
+        "ue5-iostore",
+        "ue5-classic-reader"
+      ],
+      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
+      "test_purpose": "Wrong name/import/export IDs created from package tables",
+      "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
+      "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+          "line": 88,
+          "call_site": "Uedb5Ue5ZenIoStoreSnapshotBuilder::build("
+        }
+      ]
     },
     {
-      "key": "ue2-F12",
+      "key": "ue5-verify-import",
+      "engine": "ue5",
+      "operation": "verify_import",
+      "contract_ids": [
+        "F12",
+        "F13",
+        "F14"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php"
+      ],
+      "dispatch_trace": "Uedb5DependencyRebuilder::rebuildZen -> Uedb5Ue5ZenDependencyResolver::resolve",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "epic_symbol_to_verify": "PackageStore",
+      "game_profiles": [
+        "ue5-iostore",
+        "ue5-classic-reader"
+      ],
+      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
+      "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
+      "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
+      "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+          "line": 257,
+          "call_site": "Uedb5Ue5ZenDependencyResolver::resolve("
+        }
+      ]
+    },
+    {
+      "key": "ue5-mount-provider",
+      "engine": "ue5",
+      "operation": "mount_provider",
+      "contract_ids": [
+        "F11",
+        "F15"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
+      ],
+      "dispatch_trace": "UE5 Zen selected source policy; do not infer UE5 classic game id",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "epic_symbol_to_verify": "PackageStore",
+      "game_profiles": [
+        "ue5-iostore",
+        "ue5-classic-reader"
+      ],
+      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
+      "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
+      "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
+      "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 245,
+          "call_site": "$this->selector->select("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+          "line": 25,
+          "call_site": "public function select("
+        }
+      ]
+    },
+    {
+      "key": "ue5-dependency-publish",
+      "engine": "ue5",
+      "operation": "dependency_publish",
+      "contract_ids": [
+        "F16",
+        "F18",
+        "F19"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
+      ],
+      "dispatch_trace": "UE5 Zen selected source policy; do not infer UE5 classic game id",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "epic_symbol_to_verify": "PackageStore",
+      "game_profiles": [
+        "ue5-iostore",
+        "ue5-classic-reader"
+      ],
+      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
+      "test_purpose": "Correct decoded package but wrong SQL dependency edge/status/count",
+      "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
+      "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 264,
+          "call_site": "$this->rebuilder->rebuild("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+          "line": 268,
+          "call_site": "$this->publisher->publish("
+        }
+      ]
+    },
+    {
+      "key": "ue5-website-dependency",
+      "engine": "ue5",
+      "operation": "website_dependency",
+      "contract_ids": [
+        "F17",
+        "F22"
+      ],
+      "status": "NOT_REVIEWED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+        "catalog/file-examine-dependencies.php",
+        "catalog/game-missing.php",
+        "catalog/dependency-cross-examine.php"
+      ],
+      "dispatch_trace": "UE5 Zen selected source policy; do not infer UE5 classic game id",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "epic_symbol_to_verify": "PackageStore",
+      "game_profiles": [
+        "ue5-iostore",
+        "ue5-classic-reader"
+      ],
+      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route. UI must reflect Zen published dependency status for a real UE5 game profile; not an inferred UE5 classic game ID.",
+      "test_purpose": "UI reports missing or resolved dependency incorrectly",
+      "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
+      "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/game-missing.php",
+          "line": 116,
+          "call_site": "new PdoGameMissingDependencyQuery("
+        },
+        {
+          "file": "catalog/dependency-cross-examine.php",
+          "line": 30,
+          "call_site": "new PdoGameDependencyCrossExamineQuery("
+        }
+      ]
+    },
+    {
+      "key": "ue2-ut2004-legacy-ue1",
       "engine": "ue2",
-      "contract_id": "F12",
+      "operation": "ut2004_legacy_ue1",
+      "contract_ids": [
+        "F02",
+        "F04",
+        "F06"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5LegacySnapshotBuilder.php"
+      ],
+      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey when ut2004 v<100 and profile compatibility reader_engine UE1",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "epic_symbol_to_verify": "FPackageFileSummary",
+      "game_profiles": [
+        "ut2004"
+      ],
+      "source_provenance_constraint": "Only profile authorised legacy textures, never unconditional fallback",
+      "test_purpose": "UT2004 legacy genuine texture erroneously assigned UE2 reader or vice versa",
+      "required_fixture": "genuine_UT2004_legacy_UE1_package_and_nonlegacy_UE2_package",
+      "acceptance_condition": "Class is UE1 only when gp_profile_version_decision explicitly authorises it; otherwise UE2 or rejected",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+          "line": 114,
+          "call_site": "$sourceKey === 'ut2004'"
+        }
+      ]
     },
     {
-      "key": "ue3-F12",
-      "engine": "ue3",
-      "contract_id": "F12",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F12",
-      "engine": "ue4",
-      "contract_id": "F12",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F12",
+      "key": "ue5-iostore-ingest",
       "engine": "ue5",
-      "contract_id": "F12",
+      "operation": "iostore_ingest",
+      "contract_ids": [
+        "F07",
+        "F23"
+      ],
       "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F13",
-      "engine": "ue1",
-      "contract_id": "F13",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F13",
-      "engine": "ue2",
-      "contract_id": "F13",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F13",
-      "engine": "ue3",
-      "contract_id": "F13",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F13",
-      "engine": "ue4",
-      "contract_id": "F13",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F13",
-      "engine": "ue5",
-      "contract_id": "F13",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F14",
-      "engine": "ue1",
-      "contract_id": "F14",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F14",
-      "engine": "ue2",
-      "contract_id": "F14",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F14",
-      "engine": "ue3",
-      "contract_id": "F14",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F14",
-      "engine": "ue4",
-      "contract_id": "F14",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F14",
-      "engine": "ue5",
-      "contract_id": "F14",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F15",
-      "engine": "ue1",
-      "contract_id": "F15",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F15",
-      "engine": "ue2",
-      "contract_id": "F15",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F15",
-      "engine": "ue3",
-      "contract_id": "F15",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F15",
-      "engine": "ue4",
-      "contract_id": "F15",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F15",
-      "engine": "ue5",
-      "contract_id": "F15",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F16",
-      "engine": "ue1",
-      "contract_id": "F16",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F16",
-      "engine": "ue2",
-      "contract_id": "F16",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F16",
-      "engine": "ue3",
-      "contract_id": "F16",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F16",
-      "engine": "ue4",
-      "contract_id": "F16",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F16",
-      "engine": "ue5",
-      "contract_id": "F16",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F17",
-      "engine": "ue1",
-      "contract_id": "F17",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F17",
-      "engine": "ue2",
-      "contract_id": "F17",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F17",
-      "engine": "ue3",
-      "contract_id": "F17",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F17",
-      "engine": "ue4",
-      "contract_id": "F17",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F17",
-      "engine": "ue5",
-      "contract_id": "F17",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F18",
-      "engine": "ue1",
-      "contract_id": "F18",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F18",
-      "engine": "ue2",
-      "contract_id": "F18",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F18",
-      "engine": "ue3",
-      "contract_id": "F18",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F18",
-      "engine": "ue4",
-      "contract_id": "F18",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F18",
-      "engine": "ue5",
-      "contract_id": "F18",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F19",
-      "engine": "ue1",
-      "contract_id": "F19",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F19",
-      "engine": "ue2",
-      "contract_id": "F19",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F19",
-      "engine": "ue3",
-      "contract_id": "F19",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F19",
-      "engine": "ue4",
-      "contract_id": "F19",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F19",
-      "engine": "ue5",
-      "contract_id": "F19",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F20",
-      "engine": "ue1",
-      "contract_id": "F20",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F20",
-      "engine": "ue2",
-      "contract_id": "F20",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F20",
-      "engine": "ue3",
-      "contract_id": "F20",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F20",
-      "engine": "ue4",
-      "contract_id": "F20",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F20",
-      "engine": "ue5",
-      "contract_id": "F20",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F21",
-      "engine": "ue1",
-      "contract_id": "F21",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F21",
-      "engine": "ue2",
-      "contract_id": "F21",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F21",
-      "engine": "ue3",
-      "contract_id": "F21",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F21",
-      "engine": "ue4",
-      "contract_id": "F21",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F21",
-      "engine": "ue5",
-      "contract_id": "F21",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue1-F22",
-      "engine": "ue1",
-      "contract_id": "F22",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue2-F22",
-      "engine": "ue2",
-      "contract_id": "F22",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F22",
-      "engine": "ue3",
-      "contract_id": "F22",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F22",
-      "engine": "ue4",
-      "contract_id": "F22",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F22",
-      "engine": "ue5",
-      "contract_id": "F22",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F23",
-      "engine": "ue4",
-      "contract_id": "F23",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F23",
-      "engine": "ue5",
-      "contract_id": "F23",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue3-F24",
-      "engine": "ue3",
-      "contract_id": "F24",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue4-F24",
-      "engine": "ue4",
-      "contract_id": "F24",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
-    },
-    {
-      "key": "ue5-F24",
-      "engine": "ue5",
-      "contract_id": "F24",
-      "status": "NOT_REVIEWED",
-      "epic_source_files": [],
-      "unrealdb_code_paths": [],
-      "reason_to_test": "Required production behaviour; check existing accepted source proof before authorising one test",
-      "existing_evidence_refs": [],
-      "observed_mismatch": null,
-      "method": "UNDECIDED_UNTIL_EPIC_SOURCE_TRACE",
-      "fixture": null,
-      "acceptance_proof": null,
-      "last_verified_product_sha256": null,
-      "test_case_count": 0
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "actual_unrealdb_paths": [
+        "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+        "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerStorage.php",
+        "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
+        "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+        "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+        "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php"
+      ],
+      "dispatch_trace": "CatalogIoStoreImportJobHandler::handle -> CatalogIoStoreContainerStorage::import -> INDEX_IOSTORE_PACKAGE_NAMES -> PUBLISH_IOSTORE_PACKAGES -> CatalogZenIoStorePackagePublisher::publish -> Uedb5Ue5ZenIoStoreSnapshotBuilder::build",
+      "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "epic_symbol_to_verify": "PackageStore",
+      "game_profiles": [
+        "ue5-iostore"
+      ],
+      "source_provenance_constraint": "Use correct Zen chunk and mounted store context, not UE5 classic .uasset header",
+      "test_purpose": "Genuine UE5 .utoc/.ucas retained correctly but name indexing or later package publish uses wrong chunk, package ID or mounted-store context",
+      "required_fixture": "genuine_UE5_583_IoStore_container_and_original_native_accepted_extract",
+      "acceptance_condition": "Exact original chunk identity/decoded header/cooked exports and published dependencies",
+      "existing_proof_sha_refs": [],
+      "runtime_call_chain_verified": false,
+      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "result_evidence": null,
+      "affected_code_sha256": null,
+      "php_source_sites": [
+        {
+          "file": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+          "line": 61,
+          "call_site": "CatalogIoStoreContainerStorage("
+        },
+        {
+          "file": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+          "line": 74,
+          "call_site": "JobType::INDEX_IOSTORE_PACKAGE_NAMES"
+        },
+        {
+          "file": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+          "line": 77,
+          "call_site": "JobType::PUBLISH_IOSTORE_PACKAGES"
+        },
+        {
+          "file": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+          "line": 88,
+          "call_site": "Uedb5Ue5ZenIoStoreSnapshotBuilder::build("
+        }
+      ]
     }
-  ]
+  ],
+  "historical_scope_only": {
+    "ue1_G3": "79 PASS, 1 SOURCE_NA, 0 BLOCKED on a closed 80-test frozen scope, retained in archive; does not close all F01-F24",
+    "ue4_427": "original UE4 acceptance previously completed; contract mapping required",
+    "ue5_583": "original Zen/IoStore native differential previously completed; contract mapping required"
+  },
+  "contracts_are_risk_categories_not_test_cases": true,
+  "current_execution_policy": "These are the only proposed test purposes. No test may execute without real runtime call chain, selected Epic source line, and original genuine oracle.",
+  "reader_architecture": {
+    "ue1": "CatalogUE1PackageReader.php entry class, shared bounded CatalogLegacyPackageReaderBase implementation, UE1-specific native and tagged property readers",
+    "ue2": "CatalogUE2PackageReader.php entry class, shared bounded CatalogLegacyPackageReaderBase implementation, UE2 source-selected metadata policies",
+    "ue3": "EpicUE3PackageReader.php class, UE3CatalogReader.php loader wrapper",
+    "ue4": "UE4/UnrealPackageReader.php UnrealPackageReader4",
+    "ue5": "UE5/UnrealPackageReader.php UnrealPackageReader5 plus separate Zen/IoStore reader and package store",
+    "change_impact": "Any edit to shared CatalogLegacyPackageReader.php affects BOTH UE1 and UE2; keep shared byte primitives only where identical. Code or source changes must trigger affected route cases, not every engine test."
+  }
 }

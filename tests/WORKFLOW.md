@@ -14,3 +14,7 @@ A discovered behaviour outside the 24 frozen contracts requires an explicit user
 Transient tests: C:\Temp\UnrealDB\<engine>\<contract>\<run>. Canonical accepted proofs: tests/evidence/<engine>/<contract>. Never create new copies of complete engine source or massive cooked fixtures without a specific indispensable oracle and cleanup rule.
 
 Performance is measured by mandatory *unverified behaviour remaining*, defects corrected and production parity—not the quantity of tests or log files.
+
+## Reader architecture
+
+Separate concrete entrypoints for UE1, UE2, UE3, UE4 and UE5 are mandatory. Shared low-level byte primitives may be reused only when Epic source proves identical semantics; the common UE1/UE2 legacy parser remains a staged-refactor boundary, not finished engine isolation. Change-impact should report both affected engines for edits to that file. Use python tests/tools/impact.py --path <changed source> to identify affected operation cases.

@@ -16,11 +16,11 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 /**
  * Maps a detected engine generation to the reader used by catalog inventory.
  *
- * UE1 and UE2 use one canonical memory-bounded parser implementation:
- * CatalogLegacyPackageReader.php. "Legacy" here means the UE1/UE2 serialized
- * package family, not a deprecated/alternate reader. Every catalog path should
- * resolve UE1/UE2 through this class resolver rather than instantiate another
- * package parser directly.
+ * UE1 and UE2 have separate canonical reader entry points:
+ * CatalogUE1PackageReader.php and CatalogUE2PackageReader.php. They share
+ * bounded byte primitives in CatalogLegacyPackageReader.php while their
+ * source-specific archive behaviours are separated progressively behind
+ * these engine entrypoints. No profile may silently fall back to the other.
  *
  * UE3 uses the strict Epic catalog parser. UE4 and UE5 use their dedicated
  * configured engine readers; UE5 must never alias the UE4 reader because its
@@ -45,11 +45,14 @@ final class CatalogReaderResolver
         }
 
         if (in_array($engineKey, ['UE1', 'UE2'], true)) {
-            $streamingReader = realpath(__DIR__ . '/CatalogLegacyPackageReader.php');
-            if ($streamingReader === false || !is_file($streamingReader)) {
-                throw new \RuntimeException($notFoundMessagePrefix . ' ' . $engineKey . ': CatalogLegacyPackageReader.php');
+            $readerFilename = $engineKey === 'UE1'
+                ? 'CatalogUE1PackageReader.php'
+                : 'CatalogUE2PackageReader.php';
+            $readerFile = realpath(__DIR__ . '/' . $readerFilename);
+            if ($readerFile === false || !is_file($readerFile)) {
+                throw new \RuntimeException($notFoundMessagePrefix . ' ' . $engineKey . ': ' . $readerFilename);
             }
-            require_once $streamingReader;
+            require_once $readerFile;
             $className = $engineKey === 'UE1'
                 ? __NAMESPACE__ . '\\CatalogUE1PackageReader'
                 : __NAMESPACE__ . '\\CatalogUE2PackageReader';

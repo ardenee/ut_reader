@@ -22,9 +22,9 @@ use Throwable;
  *
  * "Legacy" describes the UE1/UE2 serialized package family. This is not a
  * fallback or second-choice reader: CatalogReaderResolver routes all catalog
- * UE1/UE2 parsing through this implementation. CatalogUE1PackageReader and
- * CatalogUE2PackageReader are only thin engine-key wrappers over this shared
- * parser core.
+ * UE1/UE2 parsing through this shared core. Concrete readers are declared
+ * separately in CatalogUE1PackageReader.php and CatalogUE2PackageReader.php.
+ * Source-specific branches in this base remain a tracked split/refactor risk.
  */
 final class CatalogLegacyBinaryStream
 {
@@ -811,21 +811,5 @@ abstract class CatalogLegacyPackageReaderBase
     public function readPropertiesForExport(int $exportIndex): array
     {
         return [];
-    }
-}
-
-final class CatalogUE1PackageReader extends CatalogLegacyPackageReaderBase
-{
-    public function __construct(string $path, bool $unrealV227SummarySemantics = false)
-    {
-        parent::__construct($path, 'UE1', $unrealV227SummarySemantics);
-    }
-}
-
-final class CatalogUE2PackageReader extends CatalogLegacyPackageReaderBase
-{
-    public function __construct(string $path)
-    {
-        parent::__construct($path, 'UE2');
     }
 }

@@ -7,7 +7,7 @@ Epic source is authoritative at L:\Source (UE1–UE5), with applicable game sour
 
 ## Current testing authority (2026-11-02 reset)
 - **tests/README.md** — only current workflow authority.
-- **tests/contracts.json** — 24 fixed required behaviour categories; 115 applicable engine/contract entries. A single status per row. NOT_REVIEWED is a planning state for the new end-to-end contract, not rejection of prior accepted proofs.
+- **tests/contracts.json** — 24 risk categories (not tests), 32 concrete implementation-path cases with one status per case. NOT_REVIEWED is a planning state for the new end-to-end contract, not rejection of prior accepted proofs.
 - **tests/code-paths.json** — all tracked production PHP/web/operational paths and hashes, candidate mapping only; trace actual calls before accepting.
 - **tests/ARCHITECTURE.md** — operational pipeline, dependency and persistence boundaries.
 - **tests/WORKFLOW.md** — single evidence result / no rerun rule.

@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1015,
+  "total_files": 1017,
   "roles": {
     "CONTAINER": 88,
     "DATABASE": 119,
     "DEPENDENCY": 59,
     "ERROR": 34,
     "FILE": 7,
-    "GENERAL": 146,
+    "GENERAL": 148,
     "INGEST": 72,
     "JOBS": 218,
     "LINKER": 25,
@@ -22,8 +22,8 @@
   },
   "engine_hints": {
     "shared": 870,
-    "ue1": 87,
-    "ue2": 6,
+    "ue1": 88,
+    "ue2": 7,
     "ue3": 4,
     "ue4": 12,
     "ue5": 38
@@ -8825,8 +8825,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php",
-      "sha256": "eec295d7af0e3db06965e2072eff4cac68bc36b567449bb3533b4070839ca93c",
-      "bytes": 14280,
+      "sha256": "060952a57e043ab549bd528f95ad189bc994435bba810cce06012c51694679e4",
+      "bytes": 14466,
       "engine_hints": [
         "shared"
       ],
@@ -11372,8 +11372,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-      "sha256": "9ef04ca52dcc11c9a9c5c47841adc029935365e2270a4fb54d246f03f2bceadc",
-      "bytes": 33393,
+      "sha256": "d3f1b7d517eaf764478bbc305dbe4ae215c8ac22cc339a3d7a0ed24b1cec53db",
+      "bytes": 33837,
       "engine_hints": [
         "shared"
       ],
@@ -11386,8 +11386,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-      "sha256": "f39a3575417f2cfa2771866267680ffc8efde7fdba0bf2cfc6be793b948037ca",
-      "bytes": 5122,
+      "sha256": "bea508f72d9d8ac08f5a11e78c0c583a46c50d9a16631ebfc7c59e7228b7780d",
+      "bytes": 5262,
       "engine_hints": [
         "shared"
       ],
@@ -11396,7 +11396,7 @@
       ],
       "review_priority": "RELATED",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
-      "class": "resolver"
+      "class": "CatalogReaderResolver"
     },
     {
       "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
@@ -12477,6 +12477,34 @@
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "CatalogUE1OriginalUnrealfileTextureHeaderReader"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+      "sha256": "3927e3530b243aeb9481b6fb59a31ad968191cae8fcfae8b644c84287782330d",
+      "bytes": 529,
+      "engine_hints": [
+        "ue1"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogUE1PackageReader"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+      "sha256": "037a2b598a0abc540fb414a54d49c82419c5adc44150fe2de441deb6a7ce2cc9",
+      "bytes": 456,
+      "engine_hints": [
+        "ue2"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogUE2PackageReader"
     },
     {
       "path": "catalog/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php",

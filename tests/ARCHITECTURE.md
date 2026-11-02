@@ -43,3 +43,9 @@ User upload / source scan → file and source-profile selection → package/cont
 An Unreal v1.227 and UT99 v432 file can share package version 69 but need different source profiles. Duplicate physical classic packages are selected by original loader search order and already-loaded linkers; upload order is not authoritative. A package absent from a database is not proof that a particular running game would consider it missing. Misread name, class, outer or export identity can produce a false missing dependency even when the bytes decode without error. Correctness includes final UEDB5 edges and user-facing results, not only package parser output.
 
 Use Epic code under L:\Source as source of truth, engine base plus proven game-specific override. See specs/engine-game-source-precedence.md. Any unsupported provenance must remain explicit UNKNOWN/AMBIGUOUS instead of selecting a different game revision.
+
+## Reader separation and cross-engine change impact
+
+Each engine has a canonical reader class in its own file. UE1 and UE2 now have physically separate engine entrypoint classes but still share the old memory-bounded parser base (CatalogLegacyPackageReader.php); the shared byte logic is not falsely described as independent yet. Do not duplicate 800 lines of engine parsing without tracing the source differences. A change in this shared base affects both UE1 and UE2; engine-specific CatalogUE1Classic readers and Uedb5Ut99 builders affect UE1; UE2 policy builders affect Unreal II, UT2003 and UT2004.
+
+Run python tests/tools/impact.py --path catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php to get affected existing operation cases, before authorising focused regressions. Versioned Epic source overlays must be attached to the applicable case rather than silently changing a different game.

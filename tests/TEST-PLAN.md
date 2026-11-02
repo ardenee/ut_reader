@@ -1,53 +1,56 @@
-# Required UnrealDB file-parity behaviours — UE1 through UE5
+# Tests derived from UnrealDB operations that exist in production code
 
-> Auto-generated from [contracts.json](contracts.json). Edit the single JSON register, not this table.
+> Generated from [contracts.json](contracts.json). 24 generic behaviour types are risk labels, not tests. Only these 32 path/engine cases have concrete existing implementation paths. No native test has been authorised or run as a result of this plan.
 
-Each row describes **what** must agree with the selected Epic source, **why** users care, and **what result ends verification**. It does not authorise tests in advance. First map existing native/source evidence and trace actual code paths. The applicable engine cells are current *planning states*, not summaries of old G3/G5 evidence.
+NOT_REVIEWED means the real production call and applicable Epic game-source version must be traced before any new differential run. Existing original proof is reused first.
 
-| ID | UnrealDB behaviour | Failure affecting users | Epic-equivalent stopping condition | Applicable engines |
-|---|---|---|---|---|
-| F01 | File intake and type identification | wrong reader, false acceptance | Package magic, known signatures, platform and envelope; no filename-only format inference | UE1, UE2, UE3, UE4, UE5 |
-| F02 | Engine/game/build provenance | wrong game format for same version | Epic source-selected lineage; ambiguity must be preserved | UE1, UE2, UE3, UE4, UE5 |
-| F03 | Archive byte primitives | offset drift and corrupt identities | Exact boundary bytes and cursor at field after value | UE1, UE2, UE3, UE4, UE5 |
-| F04 | File header and package summary | wrong sizes and offsets | Source-gated headers and exact section offsets | UE1, UE2, UE3, UE4, UE5 |
-| F05 | Name map and FName identity | missing objects through name mismatch | Native FName / NameMap identity equivalence | UE1, UE2, UE3, UE4, UE5 |
-| F06 | Import/export table and object indices | wrong provider or outer identity | Every reference resolves to same raw table index and object path | UE1, UE2, UE3, UE4, UE5 |
-| F07 | Archive compression, crypto and container payload | silent payload corruption | Byte-identical uncompressed package payload, offset and failure behaviour | UE1, UE2, UE3, UE4, UE5 |
-| F08 | Serialized class, struct and property fields | missing fields or false dependencies | Relevant persisted members and next archive cursor equal Epic | UE1, UE2, UE3, UE4, UE5 |
-| F09 | Script bytecode and serialized references | missing genuine references or invented edges | Exact token spans, referenced FNames/objects and errors | UE1, UE2, UE3, UE4, UE5 |
-| F10 | Export payload and bulk resources | incorrect metadata and unreadable download | Offsets, lengths and exposed typed values match Epic | UE1, UE2, UE3, UE4, UE5 |
-| F11 | Mounted package/container ordering | wrong physical duplicate picked | Same chosen provider under fully known context; otherwise explicit unknown | UE1, UE2, UE3, UE4, UE5 |
-| F12 | Package name and required dependency extraction | missing or fabricated package dependencies | Exact required package keys and qualifying import rows | UE1, UE2, UE3, UE4, UE5 |
-| F13 | Object identity, outer chain and VerifyImport | false matches or missed references | Same resolved object ID/path or justified source unresolved result | UE1, UE2, UE3, UE4, UE5 |
-| F14 | Redirects, remaps, common/native packages | incorrect missing/common statuses | Exact source-aware identity rewrite and result | UE1, UE2, UE3, UE4, UE5 |
-| F15 | Duplicate providers and conflicting packages | wrong downloaded or linked package | Same loader precedence and no DB ordering fallback | UE1, UE2, UE3, UE4, UE5 |
-| F16 | Dependency edge construction | missing edges and false matches | Exact edge set, statuses and reason codes from source-known context | UE1, UE2, UE3, UE4, UE5 |
-| F17 | Dependency transitive closure and retry | incorrect missing-count or infinite retry | Deterministic graph transitions on provider appearance/removal | UE1, UE2, UE3, UE4, UE5 |
-| F18 | UEDB5 staging and catalog metadata | wrong persisted catalog records | Decoded snapshot equals persisted candidate identity and counts | UE1, UE2, UE3, UE4, UE5 |
-| F19 | MySQL publication and reindex | stale/duplicated indexes | Atomic result consistency and idempotence on changed providers | UE1, UE2, UE3, UE4, UE5 |
-| F20 | Invalid, truncated and unsupported input | invented accepted data or offset-overread | Source-backed error state, no partial success/DB pollution | UE1, UE2, UE3, UE4, UE5 |
-| F21 | Download, generated files and output integrity | corrupted files provided to users | SHA-identical original or source-valid regenerated package when supported | UE1, UE2, UE3, UE4, UE5 |
-| F22 | User-facing examine/search/coverage result | misleading user claiming package works | UI matches authoritative database rows and distinction between evidence and runtime | UE1, UE2, UE3, UE4, UE5 |
-| F23 | UE4/UE5 cooked package store and IoStore | wrong cooked package or missing dependencies | Source-selected IoStore/Zen package store mapping and byte-exact payload | UE4, UE5 |
-| F24 | Pak/archive ordering and file identity | duplicate or wrong entry selected | Engine-selected entry and original decompressed bytes | UE3, UE4, UE5 |
+| Engine / real operation | UnrealDB path (actual) | Original source anchor | Why verify? | Exact stopping condition | State |
+|---|---|---|---|---|---|
+| ue1-dispatch | Uedb5SourceSnapshotFactory.php, CatalogReaderResolver.php, CatalogUE1PackageReader.php, CatalogLegacyPackageReader.php | UnObj.cpp | Wrong source reader selected for a genuine file or engine/game | Correct reader class and source-profile decision; reject unsupported family | NOT_REVIEWED |
+| ue1-tables | Uedb5SourceSnapshotFactory.php, CatalogUE1PackageReader.php, Uedb5UnrealSnapshotBuilder.php, Uedb5Ut99SnapshotBuilder.php, CatalogLegacyPackageReader.php, CatalogUE1ClassicTaggedPropertyReader.php | UnObj.cpp | Wrong name/import/export IDs created from package tables | Same source-selected header/name/import/export rows and exact byte offsets | NOT_REVIEWED |
+| ue1-verify-import | PdoUe1VerifyImportProjectionResolver.php, Uedb5ClassicDependencyResolver.php | UnObj.cpp | Valid object falsely missing or wrong class/outer accepted | Same original linker VerifyImport outcome on source-selected import | NOT_REVIEWED |
+| ue1-mount-provider | Uedb5GameDependencyPassService.php, PdoUedb5PhysicalProviderSelector.php | UnObj.cpp | Duplicate physical package chosen by upload order instead of engine mount priority | Same physical package for known mount context; explicit unresolved for unknown order | NOT_REVIEWED |
+| ue1-dependency-publish | Uedb5GameDependencyPassService.php, Uedb5DependencyRebuilder.php, PdoUedb5DependencyProjectionPublisher.php | UnObj.cpp | Correct decoded package but wrong SQL dependency edge/status/count | UEDB5 published edges and counts equal verified original reference outcomes | NOT_REVIEWED |
+| ue1-website-dependency | PdoGameMissingDependencyQuery.php, PdoGameDependencyCrossExamineQuery.php, file-examine-dependencies.php, game-missing.php, dependency-cross-examine.php | UnObj.cpp | UI reports missing or resolved dependency incorrectly | Query result and UI status equal stored authoritative edge/outcome | NOT_REVIEWED |
+| ue2-dispatch | Uedb5SourceSnapshotFactory.php, CatalogReaderResolver.php, CatalogUE2PackageReader.php, CatalogLegacyPackageReader.php | UnLinker.cpp | Wrong source reader selected for a genuine file or engine/game | Correct reader class and source-profile decision; reject unsupported family | NOT_REVIEWED |
+| ue2-tables | Uedb5SourceSnapshotFactory.php, CatalogUE2PackageReader.php, Uedb5Unreal2SnapshotBuilder.php, Uedb5Ut2003SnapshotBuilder.php, Uedb5Ut2004SnapshotBuilder.php, CatalogLegacyPackageReader.php, Uedb5LegacySnapshotBuilder.php | UnLinker.cpp | Wrong name/import/export IDs created from package tables | Same source-selected header/name/import/export rows and exact byte offsets | NOT_REVIEWED |
+| ue2-verify-import | PdoUe2VerifyImportProjectionResolver.php, Uedb5ClassicDependencyResolver.php | UnLinker.cpp | Valid object falsely missing or wrong class/outer accepted | Same original linker VerifyImport outcome on source-selected import | NOT_REVIEWED |
+| ue2-mount-provider | Uedb5GameDependencyPassService.php, PdoUedb5PhysicalProviderSelector.php | UnLinker.cpp | Duplicate physical package chosen by upload order instead of engine mount priority | Same physical package for known mount context; explicit unresolved for unknown order | NOT_REVIEWED |
+| ue2-dependency-publish | Uedb5GameDependencyPassService.php, Uedb5DependencyRebuilder.php, PdoUedb5DependencyProjectionPublisher.php | UnLinker.cpp | Correct decoded package but wrong SQL dependency edge/status/count | UEDB5 published edges and counts equal verified original reference outcomes | NOT_REVIEWED |
+| ue2-website-dependency | PdoGameMissingDependencyQuery.php, PdoGameDependencyCrossExamineQuery.php, file-examine-dependencies.php, game-missing.php, dependency-cross-examine.php | UnLinker.cpp | UI reports missing or resolved dependency incorrectly | Query result and UI status equal stored authoritative edge/outcome | NOT_REVIEWED |
+| ue3-dispatch | Uedb5SourceSnapshotFactory.php, CatalogReaderResolver.php, EpicUE3PackageReader.php | UnLinker.cpp | Wrong source reader selected for a genuine file or engine/game | Correct reader class and source-profile decision; reject unsupported family | NOT_REVIEWED |
+| ue3-tables | Uedb5SourceSnapshotFactory.php, EpicUE3PackageReader.php, Uedb5Ut3SnapshotBuilder.php | UnLinker.cpp | Wrong name/import/export IDs created from package tables | Same source-selected header/name/import/export rows and exact byte offsets | NOT_REVIEWED |
+| ue3-verify-import | PdoUe3VerifyImportProjectionResolver.php, Uedb5ClassicDependencyResolver.php | UnLinker.cpp | Valid object falsely missing or wrong class/outer accepted | Same original linker VerifyImport outcome on source-selected import | NOT_REVIEWED |
+| ue3-mount-provider | Uedb5GameDependencyPassService.php, PdoUedb5PhysicalProviderSelector.php | UnLinker.cpp | Duplicate physical package chosen by upload order instead of engine mount priority | Same physical package for known mount context; explicit unresolved for unknown order | NOT_REVIEWED |
+| ue3-dependency-publish | Uedb5GameDependencyPassService.php, Uedb5DependencyRebuilder.php, PdoUedb5DependencyProjectionPublisher.php | UnLinker.cpp | Correct decoded package but wrong SQL dependency edge/status/count | UEDB5 published edges and counts equal verified original reference outcomes | NOT_REVIEWED |
+| ue3-website-dependency | PdoGameMissingDependencyQuery.php, PdoGameDependencyCrossExamineQuery.php, file-examine-dependencies.php, game-missing.php, dependency-cross-examine.php | UnLinker.cpp | UI reports missing or resolved dependency incorrectly | Query result and UI status equal stored authoritative edge/outcome | NOT_REVIEWED |
+| ue4-dispatch | Uedb5SourceSnapshotFactory.php, CatalogReaderResolver.php, UnrealPackageReader.php | LinkerLoad.cpp | Wrong source reader selected for a genuine file or engine/game | Correct reader class and source-profile decision; reject unsupported family | NOT_REVIEWED |
+| ue4-tables | Uedb5SourceSnapshotFactory.php, UnrealPackageReader.php, Uedb5Ut4SnapshotBuilder.php | LinkerLoad.cpp | Wrong name/import/export IDs created from package tables | Same source-selected header/name/import/export rows and exact byte offsets | NOT_REVIEWED |
+| ue4-verify-import | PdoUe4VerifyImportProjectionResolver.php, Uedb5ClassicDependencyResolver.php | LinkerLoad.cpp | Valid object falsely missing or wrong class/outer accepted | Same original linker VerifyImport outcome on source-selected import | NOT_REVIEWED |
+| ue4-mount-provider | Uedb5GameDependencyPassService.php, PdoUedb5PhysicalProviderSelector.php | LinkerLoad.cpp | Duplicate physical package chosen by upload order instead of engine mount priority | Same physical package for known mount context; explicit unresolved for unknown order | NOT_REVIEWED |
+| ue4-dependency-publish | Uedb5GameDependencyPassService.php, Uedb5DependencyRebuilder.php, PdoUedb5DependencyProjectionPublisher.php | LinkerLoad.cpp | Correct decoded package but wrong SQL dependency edge/status/count | UEDB5 published edges and counts equal verified original reference outcomes | NOT_REVIEWED |
+| ue4-website-dependency | PdoGameMissingDependencyQuery.php, PdoGameDependencyCrossExamineQuery.php, file-examine-dependencies.php, game-missing.php, dependency-cross-examine.php | LinkerLoad.cpp | UI reports missing or resolved dependency incorrectly | Query result and UI status equal stored authoritative edge/outcome | NOT_REVIEWED |
+| ue5-dispatch | CatalogReaderResolver.php, UnrealPackageReader.php | PackageStore.cpp | Wrong source reader selected for a genuine file or engine/game | Correct reader class and source-profile decision; reject unsupported family | NOT_REVIEWED |
+| ue5-tables | Uedb5IoStoreTocReader.php, Uedb5ZenPackageReader.php, Uedb5Ue5ZenIoStoreSnapshotBuilder.php, CatalogZenIoStorePackagePublisher.php | PackageStore.cpp | Wrong name/import/export IDs created from package tables | Same source-selected header/name/import/export rows and exact byte offsets | NOT_REVIEWED |
+| ue5-verify-import | Uedb5Ue5ZenDependencyResolver.php, Uedb5DependencyRebuilder.php | PackageStore.cpp | Valid object falsely missing or wrong class/outer accepted | Same original linker VerifyImport outcome on source-selected import | NOT_REVIEWED |
+| ue5-mount-provider | Uedb5GameDependencyPassService.php, PdoUedb5PhysicalProviderSelector.php | PackageStore.cpp | Duplicate physical package chosen by upload order instead of engine mount priority | Same physical package for known mount context; explicit unresolved for unknown order | NOT_REVIEWED |
+| ue5-dependency-publish | Uedb5GameDependencyPassService.php, Uedb5DependencyRebuilder.php, PdoUedb5DependencyProjectionPublisher.php | PackageStore.cpp | Correct decoded package but wrong SQL dependency edge/status/count | UEDB5 published edges and counts equal verified original reference outcomes | NOT_REVIEWED |
+| ue5-website-dependency | PdoGameMissingDependencyQuery.php, PdoGameDependencyCrossExamineQuery.php, file-examine-dependencies.php, game-missing.php, dependency-cross-examine.php | PackageStore.cpp | UI reports missing or resolved dependency incorrectly | Query result and UI status equal stored authoritative edge/outcome | NOT_REVIEWED |
+| ue2-ut2004-legacy-ue1 | Uedb5SourceSnapshotFactory.php, CatalogReaderResolver.php, CatalogUE1PackageReader.php, Uedb5LegacySnapshotBuilder.php | UnLinker.cpp | UT2004 legacy genuine texture erroneously assigned UE2 reader or vice versa | Class is UE1 only when gp_profile_version_decision explicitly authorises it; otherwise UE2 or rejected | NOT_REVIEWED |
+| ue5-iostore-ingest | CatalogIoStoreImportJobHandler.php, CatalogIoStoreContainerStorage.php, CatalogIoStoreNameIndexJobHandler.php, CatalogIoStoreMemberPublishJobHandler.php, CatalogZenIoStorePackagePublisher.php, Uedb5IoStoreTocReader.php, Uedb5ZenPackageReader.php, Uedb5Ue5ZenIoStoreSnapshotBuilder.php, CatalogIoStoreIndexedPackageReader.php | PackageStore.cpp | Genuine UE5 .utoc/.ucas retained correctly but name indexing or later package publish uses wrong chunk, package ID or mounted-store context | Exact original chunk identity/decoded header/cooked exports and published dependencies | NOT_REVIEWED |
 
-## Mandatory evidence fields for one accepted engine/contract result
+## Engine version/source selection — mandatory first step
 
-1. Engine and game revision including container and loader provenance.
-2. Exact Epic function and source SHA or authentic compiled-oracle SHA, with version/branch used.
-3. The real UnrealDB reader/provider/persistence/website call chain and current code SHA.
-4. Genuine file(s), required preexisting mount context, expected source output and actual UEDB5/visible output.
-5. Exact field/reference/edge comparison plus error/unknown semantics.
-6. PASS / FAIL / BLOCKED / SOURCE_NA with reason and one SHA-pinned final accepted record.
+| Engine | Reader owner | Game-specific exceptions |
+|---|---|---|
+| UE1 | CatalogLegacyPackageReader.php (see ARCHITECTURE.md for real reader class) | Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient. |
+| UE2 | CatalogLegacyPackageReader.php (see ARCHITECTURE.md for real reader class) | Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision. |
+| UE3 | EpicUE3PackageReader.php (see ARCHITECTURE.md for real reader class) | UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay. |
+| UE4 | UnrealPackageReader.php (see ARCHITECTURE.md for real reader class) | UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory. |
+| UE5 | UnrealPackageReader.php (see ARCHITECTURE.md for real reader class) | UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route. |
 
-## Order of investigation (not a new test queue)
+## Stop rules
 
-**First:** UE1 package identity and end-to-end dependencies (F02, F05–F06, F11–F19, F22), since wrong providers and falsely missing dependencies affect users immediately. Reuse the frozen original 80-test and G5 acceptance before authorising any new original-engine run.
+Before any new executable differential: identify the real entrypoint -> reader -> snapshot -> provider -> persisted edge -> user page; record the exact Epic function and game revision; map old accepted evidence SHA; specify a genuine file and expected original result. If the previous evidence is applicable, do not run a new test.
 
-**Then:** remaining UE1 visible archive/extraction, errors and file-download paths (F01, F03–F10, F20–F21). Only actual unverified file effects remain open.
-
-**Next:** UE2/UE2.5 and UE3, based on their own Epic/game source and different linker, import and archive branches. Do not borrow UE1 results by default.
-
-**Finally:** UE4 and UE5 end-to-end database/provider/UX coverage, reusing the already accepted UE4.27.2 and UE5.8.3 original package/Zen/IoStore differentials rather than rerunning them.
-
-Never expand the catalogue or add a test because the method happens to exist. A new required contract requires an observable UnrealDB user-facing failure not already represented above and explicit approval.
+After acceptance, update the corresponding engine+operation row only. A new test must detect a specific realistic false missing dependency, wrong provider, damaged payload or incorrect database/UI outcome. Do not test a function merely because it exists.
