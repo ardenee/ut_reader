@@ -494,19 +494,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
 
     private static function ue1VerifyImportProfile(int $gameId, ?int $packageVersion, int $licenseeVersion): ?string
     {
-        if ($packageVersion === null || $packageVersion <= 0 || $licenseeVersion !== 0) { return null; }
-        try {
-            $sourceKey = Uedb5GameSourceRegistry::sourceKey($gameId);
-        } catch (\Throwable) {
-            return null;
-        }
-        if ($sourceKey === 'ut99' && $packageVersion <= 68) {
-            return \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400;
-        }
-        if ($sourceKey === 'unrealgold' && $packageVersion < 60) {
-            return \UnrealDb\Catalog\Infrastructure\Persistence\PdoUe1VerifyImportProjectionResolver::PROFILE_UNREAL_V120;
-        }
-        return null;
+        return Uedb5Ue1VerifyImportSourceProfile::fromGameVersion($gameId, $packageVersion, $licenseeVersion);
     }
 
     private static function ue2VerifyImportProfile(int $gameId, ?int $packageVersion): ?string

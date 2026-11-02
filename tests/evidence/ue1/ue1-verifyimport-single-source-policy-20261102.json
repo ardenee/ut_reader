@@ -1,0 +1,70 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-verify-import",
+  "contract_status": "BLOCKED (native parity across late UE1 game revisions not established)",
+  "batch_result": "FIXED four diverging production source-revision eligibility gates, original v1.200 and retail v1.400 source-revision rules now one UE1-only owner; no v69 native approximation",
+  "real_user_risk": "Wrong class or outer may be promoted as resolved by applying outdated v1400 VerifyImport to genuine UT99 v69/foreign-licensee or pre-v60 packages. Four callers disagreed on source eligibility.",
+  "production_call_sites": [
+    "Uedb5ClassicDependencyResolver::ue1VerifyImportProfile -> Uedb5Ue1VerifyImportSourceProfile::fromSnapshot",
+    "CatalogParsedPackageMetadataSnapshotBuilder::ue1VerifyImportProfile -> fromGameVersion",
+    "PdoGameDependencyCrossExamineQuery::ue1VerifyImportProfile -> fromGameVersion",
+    "PdoDependencyResolver::ue1VerifyImportProfile -> fromGameVersion"
+  ],
+  "source_boundaries": {
+    "UnrealGold v34-59 licensee0": "ue1-unreal-v120",
+    "UT99 v60-68 licensee0": "ue1-ut99-v1400",
+    "UnrealGold v60-69 all": "unattributed native VerifyImport",
+    "UT99 pre60 all": "unattributed native VerifyImport; previous v1400 policy was too broad",
+    "UT99 v69 all": "unattributed native VerifyImport",
+    "either game nonzero licensee": "unattributed unless separate original game-specific native proof"
+  },
+  "original_Epic_source_SHA256": {
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnLinker.h": "810b2b4c86482272d00bd0460561f8d09bb8f7e72ef478a67faa1e53cadcd9a9",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnLinker.h": "8d6d35d95c0427c8e30ef94198e2214da41a0b90b39453667980d2316ec2d02e"
+  },
+  "current_source_SHA256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "0ada396d58af1382695b069a7c65ea1917f28784a1de56ef0eedc871595da8c2",
+    "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
+    "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
+    "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "32edfffc4083728351981ff93b533922f48940665b7f9faa14480b7e4052f08a"
+  },
+  "temporary_test_file_SHA256": "4be381fe5b9535de51aff362d2b0d89c9c7c7d73d022ecf5fbba58da554c6869",
+  "test_results": {
+    "version_licensee_source_gate_cases": 21,
+    "original_PRD_byte_MD5_verified_snapshot_cases": 8,
+    "production_UE1_profile_callers_consistent": 4,
+    "tampered_source_policy_rejected_for_each_original": 8,
+    "no_UE2_UE3_UE4_UE5_reader_changed": true,
+    "PRD_database_writes": 0
+  },
+  "real_original_PRD_file_ids": [
+    1246569,
+    111043,
+    110902,
+    1245067,
+    113256,
+    113265,
+    1254874,
+    1254875
+  ],
+  "retained_original_native_v432_provider_differential": {
+    "native_variant_A_sentinel": 111,
+    "native_variant_B_sentinel": 222,
+    "native_imported_superclass_export_index": 2,
+    "PHP conditional v1400 index": 2,
+    "production_v69_outcome": "unresolved, ue1_verify_import_source_implementation_unavailable",
+    "note": "Conditional diagnostic emulation is NOT authorized to resolve v69 on production; no new native session executed"
+  },
+  "reader_regressions": "Current genuine Unreal v61, UT99 v432, UT99 469f and UE2 v126 original source package-reader source snapshot regression PASS",
+  "remaining_native_blockers": [
+    "Native original v432/469f and v227i/k VerifyImport implementation and version-specific class/outer/public/runtime fallbacks are not proven equivalent to old v1400/v120 source bodies",
+    "Actual runtime mounted order and already-loaded linker context cannot be recovered from existing dependency database.",
+    "No PRD dependency migration/republication until full UE1 reader ready."
+  ],
+  "acceptance_criterion_not_achieved": "Same original native linker VerifyImport outcomes on all source-selected revisions and original mounted provider contexts. This is intentionally still BLOCKED; other completed UE1 dispatch/tables/mount-provider contracts unaffected."
+}

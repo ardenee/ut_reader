@@ -803,17 +803,7 @@ final class Uedb5ClassicDependencyResolver
 
     private static function ue1VerifyImportProfile(array $snapshot): ?string
     {
-        $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
-        $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
-        if (str_starts_with($schema, 'ue1.unreal.')
-            && $policy === strtolower(Uedb5UnrealSnapshotBuilder::POLICY_V120_EARLY)) {
-            return PdoUe1VerifyImportProjectionResolver::PROFILE_UNREAL_V120;
-        }
-        if (str_starts_with($schema, 'ue1.ut99.')
-            && $policy === strtolower(Uedb5Ut99SnapshotBuilder::POLICY_RETAIL)) {
-            return PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400;
-        }
-        return null;
+        return Uedb5Ue1VerifyImportSourceProfile::fromSnapshot($snapshot);
     }
 
     private static function ue3VerifyImportProfile(array $snapshot): ?string

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1021,
+  "total_files": 1022,
   "roles": {
     "CONTAINER": 88,
     "DATABASE": 119,
@@ -11,18 +11,18 @@
     "GENERAL": 152,
     "INGEST": 72,
     "JOBS": 218,
-    "LINKER": 25,
+    "LINKER": 26,
     "NAME": 4,
     "OBJECT": 66,
     "OPERATIONS": 17,
     "OUTPUT": 138,
-    "SOURCE": 7,
+    "SOURCE": 8,
     "TABLE": 5,
     "UI": 160
   },
   "engine_hints": {
     "shared": 868,
-    "ue1": 90,
+    "ue1": 91,
     "ue2": 11,
     "ue3": 4,
     "ue4": 12,
@@ -9320,8 +9320,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php",
-      "sha256": "3330c935890403b1e4c8db76ea76f42305c37bbc7fea08eb88c3a96fcde60ae9",
-      "bytes": 52299,
+      "sha256": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
+      "bytes": 50703,
       "engine_hints": [
         "shared"
       ],
@@ -9547,8 +9547,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
-      "sha256": "d8635b5de5e7d3d5a74643b1a7105e61508d138bf3c4ed14de735ff5406e38db",
-      "bytes": 51276,
+      "sha256": "0ada396d58af1382695b069a7c65ea1917f28784a1de56ef0eedc871595da8c2",
+      "bytes": 49617,
       "engine_hints": [
         "ue1"
       ],
@@ -9970,6 +9970,21 @@
       "class": "Uedb5UE1TableSnapshotBuilder"
     },
     {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php",
+      "sha256": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
+      "bytes": 2807,
+      "engine_hints": [
+        "ue1"
+      ],
+      "path_roles": [
+        "LINKER",
+        "SOURCE"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "Uedb5Ue1VerifyImportSourceProfile"
+    },
+    {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5UE2LegacyCompatibilityTableSnapshotBuilder.php",
       "sha256": "f3c3e60ba2803b2ded1a6848d3ceb9db5bc1df694af41c73c3cffb4ea1d48d87",
       "bytes": 10502,
@@ -10212,8 +10227,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php",
-      "sha256": "26dcb4a4726783bbd175c64368ae402607e546c35ddc40b0e22414c2c4b5c8c3",
-      "bytes": 10044,
+      "sha256": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
+      "bytes": 10170,
       "engine_hints": [
         "ue1"
       ],
@@ -10812,8 +10827,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php",
-      "sha256": "fac6690c3ad09c2191f79710e48daea7514c7f1b4c624cf873f805e792da7e6a",
-      "bytes": 55171,
+      "sha256": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
+      "bytes": 54722,
       "engine_hints": [
         "shared"
       ],
@@ -13651,8 +13666,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
-      "sha256": "d2ff554939261587352f86d481fd9c01d3a2e8c0f367545624d8c2aad259a9d6",
-      "bytes": 28082,
+      "sha256": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
+      "bytes": 27695,
       "engine_hints": [
         "shared"
       ],

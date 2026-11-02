@@ -839,18 +839,9 @@ final class PdoDependencyResolver
 
     private static function ue1VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string
     {
-        try {
-            $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId);
-        } catch (\Throwable) {
-            return null;
-        }
-        if ($sourceKey === 'ut99' && $packageVersion > 0 && $packageVersion <= 68 && $licenseeVersion === 0) {
-            return PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400;
-        }
-        if ($sourceKey === 'unrealgold' && $packageVersion > 0 && $packageVersion < 60 && $licenseeVersion === 0) {
-            return PdoUe1VerifyImportProjectionResolver::PROFILE_UNREAL_V120;
-        }
-        return null;
+        return \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue1VerifyImportSourceProfile::fromGameVersion(
+            $gameId, $packageVersion, $licenseeVersion
+        );
     }
 
     private static function ue3VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string

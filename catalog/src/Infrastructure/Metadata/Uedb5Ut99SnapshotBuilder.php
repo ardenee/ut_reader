@@ -21,10 +21,16 @@ final class Uedb5Ut99SnapshotBuilder
     // The v432 Core distribution advertises ENGINE_VERSION=430. The
     // v430 source label refers to those actual headers, not a v400 reader.
     public const POLICY_NONZERO_LICENSEE_UNATTRIBUTED = 'ue1-ut99-v60-69-nonzero-licensee-source-unattributed';
+    public const POLICY_PRE_V60_SOURCE_UNATTRIBUTED = 'ue1-ut99-pre-v60-source-unattributed';
     public const POLICY_FORWARD_COMPAT = 'ue1-ut99-post-v69-profile-admitted-unresolved';
 
     public static function policyForVersion(int $version, int $licensee): string
     {
+        if ($version < 60) {
+            // Old package bytes can be read without proving which later UT99
+            // executable loaded them. Do not promote v1.400 VerifyImport.
+            return self::POLICY_PRE_V60_SOURCE_UNATTRIBUTED;
+        }
         if ($version > 69) {
             return self::POLICY_FORWARD_COMPAT;
         }

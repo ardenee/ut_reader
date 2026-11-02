@@ -522,16 +522,9 @@ final class PdoGameDependencyCrossExamineQuery
 
     private function ue1VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string
     {
-        if ($packageVersion <= 0 || $licenseeVersion !== 0) { return null; }
-        try { $sourceKey = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameSourceRegistry::sourceKey($gameId); }
-        catch (\Throwable) { return null; }
-        if ($sourceKey === 'ut99' && $packageVersion <= 68) {
-            return PdoUe1VerifyImportProjectionResolver::PROFILE_UT99_V1400;
-        }
-        if ($sourceKey === 'unrealgold' && $packageVersion < 60) {
-            return PdoUe1VerifyImportProjectionResolver::PROFILE_UNREAL_V120;
-        }
-        return null;
+        return \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5Ue1VerifyImportSourceProfile::fromGameVersion(
+            $gameId, $packageVersion, $licenseeVersion
+        );
     }
 
     private function ue2VerifyImportProfile(int $gameId, int $packageVersion): ?string

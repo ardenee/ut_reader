@@ -731,7 +731,12 @@
       "code_path_evidence": "PRODUCTION_READONLY_PRD_ORIGINAL_FILES_AND_STORED_METADATA_OBSERVED; EPIC_NATIVE_RUNTIME_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php",
-        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php",
+        "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+        "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php"
       ],
       "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
       "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h",
@@ -747,7 +752,8 @@
       "existing_proof_sha_refs": [
         "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json sha256:6f82d1b27890751e491e48454b81e10f332bc6ac7c3c8b5eab71c3b439cc4b71",
         "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json sha256:aef5867f46bc64d8722a33c1ad1ccf8352ebf6522923e20b08d14f56cdebfc9e",
-        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2"
+        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2",
+        "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json sha256:301fbffc9064c8ce97a89b8cdb24a8a6350f0deefe4dad5b1dca191ae4a4e9bb"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
@@ -762,8 +768,13 @@
       ],
       "reviewed_at": "2026-11-02",
       "current_review_source_sha256": {
-        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
-        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "0ada396d58af1382695b069a7c65ea1917f28784a1de56ef0eedc871595da8c2",
+        "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
+        "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
+        "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "32edfffc4083728351981ff93b533922f48940665b7f9faa14480b7e4052f08a"
       },
       "review_findings": [
         "On retained original v432 compiled native imported superclass case, source-profile-conditional PHP lookup matches native-selected provider export index 2 in both A and B; engine native CDO sentinels 111/222 are not PHP loaded values.",
@@ -771,12 +782,18 @@
         "Real PRD counts: UT99 6246 source-exact eligible version 60–68 and 68024 v69 partial; UnrealGold 1 early v54 source-exact eligible, 8714 v60–68 partial, 2070 v69 partial; 36 other UE1 files. Source-exact eligible does not mean native-verified imports.",
         "The only verified pre60 UnrealGold corpus file is #1246569 DMVilla2.unr v54, 104 imports. Existing published v13 dependency outcomes include 39 resolved, but without original runtime mount proof are not certified.",
         "All 85091 PRD UE1 migration statuses use historical dependency policy v13; these persisted values predate UE1 fail-closed mount correction. Original source-specific v69 native VerifyImport and actual arbitrary PRD runtime provenance remain unproven.",
-        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact."
+        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact.",
+        "PRODUCTION DEFECT FIXED: one UE1-only source-revision VerifyImport gate replaces four inconsistent implementation copies across UEDB5 Pass2, local parsed snapshot, cross-game examiner and legacy SQL projection. All four now refuse a v1400/v120 guess on other source revisions.",
+        "Real test: 21 version/game/licensee combinations checked across all four caller gates; eight genuine PRD source package snapshots with verified original MD5 checked, including v54 Unreal and v68 UT99 source-exact positives and v60/61/v69 variants safely blocked. Every fake source-policy label rejected.",
+        "UT99 snapshot POLICY_RETAIL was too broad for packages below v60; corrected to explicit source-unattributed, with no attempt to reinterpret archive bytes as v1400 runtime behavior.",
+        "Native original v432 two-provider imported superclass evidence remains limited to export index 2 in A and B; no general original native v432/v469f/v227 VerifyImport parity or original loader state proven, so overall contract remains BLOCKED."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
       "production_prd_readonly_access": "verified MySQL 8.4.11 192.168.0.55:3306; PHP file access via //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage",
-      "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737"
+      "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737",
+      "source_policy_gate_only_verified": true,
+      "source_policy_gate_evidence": "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json"
     },
     {
       "key": "ue1-mount-provider",
