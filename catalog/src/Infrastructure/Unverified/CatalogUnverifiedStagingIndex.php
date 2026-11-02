@@ -192,7 +192,30 @@ final class CatalogUnverifiedStagingIndex
             }
         }
 
-        $readerClass = \scanner_load_reader_class($this->config, $engine);
+        // Promotion must use the destination game's loader, not the legacy
+        // package-version engine hint. This also keeps UE2 independent of UE1.
+        if ($queueGameId > 0) {
+            $game = \catalog_one($this->db, 'SELECT slug FROM ue_games WHERE id=?', [$queueGameId]) ?: [];
+            $profile = \gp_profile_for_game($this->db, $queueGameId) ?: [];
+            // Match verified import's profile-selected reader, not just the
+            // version-derived provisional header hint.
+            $classifiedEngine = $engine;
+            if ($profile !== []) {
+                $classification = \gp_classify_file($this->db, $queueGameId, $path, $name);
+                if (!empty($classification['header_ok'])) {
+                    $classifiedEngine = strtoupper((string)($classification['reader_engine'] ?? $engine));
+                }
+            }
+            [$readerClass, $engine] = \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolveForGame(
+                $this->config,
+                (string)($game['slug'] ?? ''),
+                (string)($profile['engine_key'] ?? ''),
+                $classifiedEngine,
+                isset($identity['version']) ? (int)$identity['version'] : null
+            );
+        } else {
+            $readerClass = \scanner_load_reader_class($this->config, $engine);
+        }
         $reader = new $readerClass($path);
         $issues = method_exists($reader, 'validatePackage')
             ? $reader->validatePackage()

@@ -28,6 +28,42 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 final class CatalogReaderResolver
 {
     /**
+     * Select the selected game's loader, not the heuristic engine hint of a
+     * legacy package. Epic's UE2 loaders can read version-60+ UE1 wire files.
+     * UT2004 has a separate, UE2-owned compatibility parser for the profile's
+     * explicitly UE1-selected pre-v100 format; no UE1 parser is imported.
+     *
+     * @param array<string,mixed> $config
+     * @return array{0:string,1:string} [reader class, owning engine]
+     */
+    public static function resolveForGame(
+        array $config,
+        string $sourceKey,
+        string $profileEngine,
+        string $classifiedEngine,
+        ?int $version
+    ): array {
+        $sourceKey = strtolower(trim($sourceKey));
+        $profileEngine = strtoupper(trim($profileEngine));
+        $classifiedEngine = strtoupper(trim($classifiedEngine));
+        if ($profileEngine === 'UE2'
+            && in_array($sourceKey, ['unreal2', 'ut2003', 'ut2004'], true)) {
+            // Earlier versions trigger Epic's interactive OldVersion prompt;
+            // noninteractive cataloguing cannot assume the user accepted it.
+            if ($version === null || $version < 60) {
+                throw new \RuntimeException('UE2 source loader cannot automatically admit package versions below 60.');
+            }
+            if ($sourceKey === 'ut2004' && $classifiedEngine === 'UE1' && $version < 100) {
+                return [__NAMESPACE__ . '\\CatalogUE2LegacyCompatibilityPackageReader', 'UE2'];
+            }
+            return [self::resolve($config, 'UE2', 'Reader not found for package engine',
+                'Reader file loaded for package engine ', ['UE4', 'UE5']), 'UE2'];
+        }
+        return [self::resolve($config, $classifiedEngine, 'Reader not found for package engine',
+            'Reader file loaded for package engine ', ['UE4', 'UE5']), $classifiedEngine];
+    }
+
+    /**
      * @param array<string, mixed> $config
      * @param list<string> $versionedReaderEngines
      */

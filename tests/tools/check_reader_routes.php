@@ -33,6 +33,30 @@ foreach ([$ue1,$ue2,$ue2compat] as $owner) {
   throw new RuntimeException('Old cross-engine source dependency in '.$owner);
 }
 
+// Cross-generation compatibility belongs to the destination game's engine.
+foreach ([
+ ['ut2004','UE2','UE1',61,$ue2compat,'UE2'],
+ ['unreal2','UE2','UE1',61,$ue2,'UE2'],
+ ['ut2003','UE2','UE1',69,$ue2,'UE2'],
+ ['ut2004','UE2','UE2',128,$ue2,'UE2'],
+ ['ut99','UE1','UE1',69,$ue1,'UE1'],
+] as [$source,$profile,$classified,$version,$expectedClass,$expectedEngine]) {
+ [$actualClass,$actualEngine] = CatalogReaderResolver::resolveForGame(
+  $cfg,$source,$profile,$classified,$version
+ );
+ if ($actualClass!==$expectedClass || $actualEngine!==$expectedEngine) {
+  throw new RuntimeException('Game-owned cross-version dispatch mismatch for '.$source.' v'.$version);
+ }
+}
+echo "UE2_GAME_OWNER_ROUTE_5_OF_5_PASS\n";
+try {
+ CatalogReaderResolver::resolveForGame($cfg,'unreal2','UE2','UE1',54);
+ throw new RuntimeException('UE2 silently selected a foreign reader for a sub-v60 file');
+} catch (RuntimeException $e) {
+ if (!str_contains($e->getMessage(), 'below 60')) throw $e;
+}
+echo "UE2_UNCONFIRMED_PRE_V60_NOT_BORROWED_PASS\n";
+
 if(!is_file($root.'/catalog/parsers/UE3CatalogReader.php'))throw new RuntimeException('UE3 parser dispatch wrapper missing');
 foreach ([$ue1,$ue2,$ue2compat] as $engineClass) {
  $reflection = new ReflectionClass($engineClass);

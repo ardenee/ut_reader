@@ -135,8 +135,16 @@ final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorP
             throw new RuntimeException('Could not hash file');
         }
 
+        // Legacy package versions are only a provisional engine hint. For a
+        // selected UE2 game, use its own loader even for UE1-format assets.
+        [$readerClass, $readerEngine] = \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolveForGame(
+            $this->config,
+            (string)($game['slug'] ?? ''),
+            $profileEngine,
+            $readerEngine,
+            isset($classification['package_version']) ? (int)$classification['package_version'] : null
+        );
         \scanner_emit_percent($progress, 'scan', 7, 'Opening ' . $readerEngine . ' reader');
-        $readerClass = \scanner_load_reader_class($this->config, $readerEngine);
         $ue4ReaderOptions = [];
         if ($readerEngine === 'UE4') {
             $ue4ReaderOptions = \catalog_ue4_reader_options($this->config, $game, $profile);
