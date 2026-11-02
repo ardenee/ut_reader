@@ -1,0 +1,84 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-verify-import",
+  "overall_status": "BLOCKED; direct native proof covered original 2012 227i normal import map and two negative package-load cases, not all original engine revisions/branches",
+  "original_executable": "2012 Unreal 227i UCC.exe linked with its original 2012 Core.dll, using isolated untouched original Engine.u and Core.u in C:/Temp/UnrealDB/UE1/path-audit/Native-C227i-Run/System",
+  "original_sources_file_sha256": {
+    "2012_original_Core.dll": "287b5eb68c3a098b11eca55c84f7f9d5e29db51c7ec49475099b871044881897",
+    "2012_original_UCC.exe": "69813336c9fd278f30939abde10477a37c5da951b2be8ca0c394b5bfd5cd6672",
+    "2012_original_Core.u": "24b945c0042ac3e410df4486cdc6272123a9376e4b42b92a7971f51b2b00e7ee",
+    "2012_original_Engine.u": "931ffb4ddf3b9b608cbfd49bc6d5f86ddbcbe9e9148ac8c7769d6ac3b13d4ac7",
+    "isolated_wrong_parent_Engine.u": "8ce1bf36e7bb0fd35195143f6f19aa46342908f6b3233a5cd47cf8a10171c4e7",
+    "isolated_private_Core.u": "b0e76a3ab0678e1212c096e9c5e47cabff34143b4c4a182668b1e683e75f8bf1"
+  },
+  "original_v227_inline_source_sha256": "8d6d35d95c0427c8e30ef94198e2214da41a0b90b39453667980d2316ec2d02e",
+  "original_native_loaded_linker_summary": {
+    "package": "Engine.u",
+    "version": 69,
+    "licensee": 0,
+    "name_count": 3999,
+    "import_count": 73,
+    "export_count": 6140,
+    "source": "CDB original Core.dll GetPackageLinker return memory header, matched original actual package binary parser and all 73 FObjectImport 28-byte records"
+  },
+  "first_linker_return": {
+    "total_live_native_imports": 73,
+    "native_source_linker_nonnull": 14,
+    "native_SourceIndex_resolved": 4,
+    "native_SourceIndex_unindexed": 69,
+    "all_native_root_parent_indices_equal_source_original": true,
+    "all_four_native_resolved_indices_match_diagnostic_v120": true
+  },
+  "appPreExit_original_native_linker": {
+    "total_imports": 73,
+    "original_native_source_linker_nonnull": 73,
+    "native_resolved_source_indices": 36,
+    "native_unindexed": 37,
+    "exact_conditional_old_v120_source_index_matches": 73,
+    "native_parent_indices_matched_parser": 73,
+    "source_index_disagreements": 0,
+    "important": "v120 is a conditional diagnostic comparison only, not source authority for v69 2012 227i"
+  },
+  "two_disposable_original_native_negative_cases": {
+    "wrong_parent": {
+      "mutation": "Original Engine.u import #2 Core.Class Object outer index -1 (Core root import0) changed to -15 (Engine root import14), single int32 at file offset 1215952",
+      "mutated_Engine_SHA256": "8ce1bf36e7bb0fd35195143f6f19aa46342908f6b3233a5cd47cf8a10171c4e7",
+      "native_result": "Original UCC ExportPackage commandlet not found (exit code 0); unchanged original in SAME cloned runtime successfully exported Engine classes",
+      "PHP_conditional_old_profile_result": "invalid parent_source_linker_unavailable; SourceIndex null"
+    },
+    "private_export": {
+      "mutation": "Original Core.u export #2 Object public RF_Public bit 0x4 cleared, DWORD at file offset 66356, flags 68091908 -> 68091904",
+      "mutated_Core_SHA256": "b0e76a3ab0678e1212c096e9c5e47cabff34143b4c4a182668b1e683e75f8bf1",
+      "native_result": "Original UCC ExportPackage commandlet not found (exit code 0); restoring original Core.u in SAME cloned runtime successfully exported Engine classes",
+      "PHP_conditional_old_profile_result": "private_export, candidate index2, SourceIndex null"
+    },
+    "caution": "Original engine commandlet initialization failure confirms execution differs between byte-identical control and one-field mutation; it is not yet a captured exact native VerifyImport exception frame."
+  },
+  "native_original_CDB_output_SHA256": {
+    "native-original-227i-Engine-73-import-map.txt": "908546be449e13453469712c413a6ba0db91b9b34bd99eb611eca0013847c20a",
+    "native-227i-Engine-at-preexit-import-map.txt": "07d04c0277230784afd1a8959744055ccb3810bfacdbdf7e0f7372365656ff1d",
+    "original-native-227i-exportpackage-engine.txt": "4b88c27d0006a80554a3d38a02875d3b25e83d1a88dbf40ee00db863cacda41d",
+    "native-original-227i-wrong-parent-UCC.txt": "fc6cf57833354e781cd8173f2f153f25f1e269c9b2f44a5bb3f17b2107212f11",
+    "native-original-227i-cloned-control-UCC.txt": "4b88c27d0006a80554a3d38a02875d3b25e83d1a88dbf40ee00db863cacda41d",
+    "native-original-227i-private-CoreObject-UCC.txt": "fc6cf57833354e781cd8173f2f153f25f1e269c9b2f44a5bb3f17b2107212f11",
+    "native-original-227i-private-clone-unchanged-control.txt": "4b88c27d0006a80554a3d38a02875d3b25e83d1a88dbf40ee00db863cacda41d"
+  },
+  "independent_native_memory_decoder_SHA256": {
+    "analyze_native_227i_import_memory.py": "6309fd9d7b084b7decb96f9f62e0d06ad15c1d655edf9b57e1717930d804ad9b",
+    "analyze_native_227i_preexit_import_memory.py": "3bb74577ad4a6f88b84790341a69b99fe4aacc69fc6b10fd91f3579cf702f16d",
+    "native-227i-2012-import-map-parsed.json": "4f851b69682c8dcf644f374ae93e033a594358bf89834a673db56c5386e24f27",
+    "native-227i-2012-preexit-import-map-parsed.json": "ef3c85ccf8119ecb8dfc4f0092463cd3d0080621594a970766caef2abd120ef9"
+  },
+  "source_projection_disposable_verifiers_sha256": {
+    "extract-2012-original-import-evidence.php": "a58021f60b6b353ea60f4a5c09e2945dc07af72d381689ab1e12d5c1eea9c02b",
+    "verify_original_227i_bad_parent_projection.php": "0e04380e620132ef38dbd628430f13d99d0ee3b5718adc1868f9d86270e925bb",
+    "verify_2012_227i_private_wrongparent.php": "ff7aa4f24422bc9004b95578c6cb8925b17daa422c1cb6f32cace6c79015367f",
+    "make-original-227i-wrongparent.php": "21f78d4a45d31d8367c5715137931cc84a55c8d928a38b4ee99afe8188a0c21d",
+    "make-227i-original-Core-Object-private.php": "70531ccb6f8c4961770e6a5d3b7569070a7cb8e6b66ff68b0214a293ee41407a"
+  },
+  "currently_corrected_ue1_source_SHA256": "732f4ed3eb059201c162ac12c5a3edb00902740f0690baeee183b2ef24a821b8",
+  "original_canonical_engine_data_modified": false,
+  "PRD_SQL_writes": 0,
+  "new_test_case_ids": 0,
+  "remaining_contract_limits": "Complete source-profile attribution from particular PRD package to original game runtime and fallback/error behaviour across v432, 227i/k, 469f and early Unreal are not wholly established. Direct 227i native import map is now proven for original Engine.u only. Fail-closed v69 production behavior remains."
+}

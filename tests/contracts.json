@@ -757,7 +757,8 @@
         "tests/evidence/ue1/ue1-original-native-227k-469f-verifyimport-method-20261102.json sha256:a6c6ba7102a9d59c4184c1d5d472d4b0a98fcce8876e64269c86fee76ce474d3",
         "tests/evidence/ue1/ue1-original-native-227k-469f-bulk-import-parity-20261102.json sha256:b56b1049a7193b2ab190749269338d6f166bfb963db28476783442bee7a575a6",
         "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json sha256:dee1d4d51c1719304fa8d86c5123998fc6a55516abb9d9756a5e262011b52e6d",
-        "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json sha256:193640f151894eff4f5d1796fa10519e44797e1a88676d18da175e5769f02cc8"
+        "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json sha256:193640f151894eff4f5d1796fa10519e44797e1a88676d18da175e5769f02cc8",
+        "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json sha256:d4beabbd9f1198ac63659646c668b60646b4d730362cb8ad43346b1dcfb08c63"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
@@ -799,7 +800,12 @@
         "ACTUAL NATIVE PRODUCTION DEFECT FIXED: original stock v432 compiled consumer import #2 wrong parent Core vs original G3T076Dupe throws in native loader, while old PHP wrongly returned resolved index2 from G3T076Dupe. UE1-owned resolver now checks selected provider identity recursively and refuses to reuse a matching export from the wrong provider.",
         "Original v432 private RF_Public-cleared export2 mutated only in disposable provider copy: compiled native load fails, PHP correctly returns private_export without SourceIndex. Both original A/B provider controls remain resolved export index2.",
         "After actual UE1 resolver correction, real original 227k 78/78, 469f 1202/1202 and stock v432 14/14 provider-present native comparisons exact, no regression. Original UT99 v1400 UnrealI->UnrealShare fallback preserved, old Unreal pre50 path unchanged.",
-        "Original 2012 227i Core DLL has no exported standalone VerifyImport, so remains a separate native source proof requirement. Overall VerifyImport contract still BLOCKED; production SQL and original engine binaries untouched."
+        "Original 2012 227i Core DLL has no exported standalone VerifyImport, so remains a separate native source proof requirement. Overall VerifyImport contract still BLOCKED; production SQL and original engine binaries untouched.",
+        "ORIGINAL 2012 UNREAL 227i NATIVE PROVEN: using isolated native UCC/Core.dll and CDB GetPackageLinker+appPreExit, original Engine.u v69 has native 3999 names/73 imports/6140 exports. Native 73/73 original FObjectImport outer indices match UE1 parser; at appPreExit all 73 have SourceLinker, 36 SourceIndex>=0 exactly match old-v120 conditional diagnostic, and 37 SourceIndex=-1 also exactly match (0 discrepancies).",
+        "227i old DLL does not export VerifyImport; original loader was verified via genuine native GetPackageLinker/ULinkerLoad pointer and 73 in-memory FObjectImport 28-byte entries, not assumed from 227k implementation.",
+        "2012 original 227i UCC single-field negative fixture: Engine.u import2 parent Core->Engine causes ExportPackage commandlet unavailable; identical cloned runtime with original Engine.u successfully exports classes. Conditional PHP correctly returns invalid parent, no SourceIndex.",
+        "2012 original 227i UCC single-field negative fixture: Core.u Object export2 RF_Public removed causes ExportPackage commandlet unavailable; same cloned runtime with original Core.u succeeds. Conditional PHP returns private_export. Exact native VerifyImport exception stack not captured, so no stronger exception claim.",
+        "Original 2012 227i package bytes, compiled Core.dll/UCC.exe, CDB native memory logs and all disposable mutated files SHA256 pinned. Source-selected v69 policy remains fail-closed; overall VerifyImport still BLOCKED pending untested native fallback and runtime attribution branches."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -810,7 +816,8 @@
       "native_revision_method_evidence": "tests/evidence/ue1/ue1-original-native-227k-469f-verifyimport-method-20261102.json",
       "native_bulk_import_evidence": "tests/evidence/ue1/ue1-original-native-227k-469f-bulk-import-parity-20261102.json",
       "native_original_stock_v432_evidence": "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json",
-      "native_wrong_provider_correction_evidence": "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json"
+      "native_wrong_provider_correction_evidence": "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json",
+      "original_2012_c227i_native_import_evidence": "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json"
     },
     {
       "key": "ue1-mount-provider",
