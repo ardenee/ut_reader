@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1018,
+  "total_files": 1021,
   "roles": {
     "CONTAINER": 88,
     "DATABASE": 119,
     "DEPENDENCY": 59,
     "ERROR": 34,
     "FILE": 7,
-    "GENERAL": 149,
+    "GENERAL": 152,
     "INGEST": 72,
     "JOBS": 218,
     "LINKER": 25,
@@ -21,9 +21,9 @@
     "UI": 160
   },
   "engine_hints": {
-    "shared": 871,
-    "ue1": 88,
-    "ue2": 7,
+    "shared": 868,
+    "ue1": 90,
+    "ue2": 11,
     "ue3": 4,
     "ue4": 12,
     "ue5": 38
@@ -1420,8 +1420,8 @@
     },
     {
       "path": "catalog/assets/public-upload.js",
-      "sha256": "77568588dd952a9a35eea36c990aeade60ef7f6eacb4ee8669135654fdac8fea",
-      "bytes": 64835,
+      "sha256": "e86ddfa370e2276bc6298ba5ca2465b5ec1123884984695807de749ad854be2a",
+      "bytes": 64849,
       "engine_hints": [
         "shared"
       ],
@@ -8825,8 +8825,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php",
-      "sha256": "62ac854ad71c485a6c8c0c52b6bc4e372dfb6349697cc53719bad6e39f328a56",
-      "bytes": 14561,
+      "sha256": "95561d48fd436692799a24e337803b3288b3f8aa017b98d198a09318136085bc",
+      "bytes": 14982,
       "engine_hints": [
         "shared"
       ],
@@ -9731,20 +9731,6 @@
       "class": "Uedb5IoStoreTocReader"
     },
     {
-      "path": "catalog/src/Infrastructure/Metadata/Uedb5LegacySnapshotBuilder.php",
-      "sha256": "85c0a286c70d043f649b953c842c87c407c64a8aa3b4f568b8c7b19f6f250275",
-      "bytes": 10431,
-      "engine_hints": [
-        "shared"
-      ],
-      "path_roles": [
-        "GENERAL"
-      ],
-      "review_priority": "RELATED",
-      "trace_status": "UNTRACED_STATIC_CANDIDATE",
-      "class": "Uedb5LegacySnapshotBuilder"
-    },
-    {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5MetadataContainer.php",
       "sha256": "498462d42b63f7bc4962aacfec5ed2c98430bdc7d6a97951e5b0042624b49cdc",
       "bytes": 25471,
@@ -9915,8 +9901,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-      "sha256": "7ca552137228b8405a38867debb46e9a779f12ed2c919dc7536faa94778f084c",
-      "bytes": 13355,
+      "sha256": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+      "bytes": 14004,
       "engine_hints": [
         "shared"
       ],
@@ -9968,6 +9954,48 @@
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "Uedb5StagingIsolationContract"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php",
+      "sha256": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b",
+      "bytes": 10427,
+      "engine_hints": [
+        "ue1"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "Uedb5UE1TableSnapshotBuilder"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5UE2LegacyCompatibilityTableSnapshotBuilder.php",
+      "sha256": "f3c3e60ba2803b2ded1a6848d3ceb9db5bc1df694af41c73c3cffb4ea1d48d87",
+      "bytes": 10502,
+      "engine_hints": [
+        "ue2"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "Uedb5UE2LegacyCompatibilityTableSnapshotBuilder"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php",
+      "sha256": "4f95bbdcdf157bce4213d7721a23bd272a3faa7d675d23485886f0ff214b6212",
+      "bytes": 10427,
+      "engine_hints": [
+        "ue2"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "Uedb5UE2TableSnapshotBuilder"
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5CityHash64.php",
@@ -10086,8 +10114,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
-      "sha256": "ee21e5e89aaa679feeb0d2108c0843b84f7e28097889de8d3f6d62778fa1215d",
-      "bytes": 1067,
+      "sha256": "4e5975ccf727371a4a5481c5b6dc6acd3ca64219b6fe6fd51891ca2598e9a748",
+      "bytes": 1069,
       "engine_hints": [
         "ue2"
       ],
@@ -10100,8 +10128,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php",
-      "sha256": "6091619c427b81cfebc2d40cf64c98ac1ff835b3027dc61dcfb6f43a38dfd41e",
-      "bytes": 1196,
+      "sha256": "b64dabf8dd2b2c19d6b0d083457e7e7a7b27e0e0caebdd2410af5ee18bc552ab",
+      "bytes": 1227,
       "engine_hints": [
         "shared"
       ],
@@ -10128,8 +10156,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
-      "sha256": "11cccf74f749b81ab676c791fc2da6303fda4afe099f8892cc3c9d8e20e865f9",
-      "bytes": 854,
+      "sha256": "861885a4af2ffd942a2f11db90a3cf9f746a6b0484d2b9a37b2922aa20b43f95",
+      "bytes": 879,
       "engine_hints": [
         "ue2"
       ],
@@ -10142,8 +10170,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
-      "sha256": "c646b725ae2089ba651e4211c6069f9ef5d4e09599d336de2402c4d35e970438",
-      "bytes": 989,
+      "sha256": "2f4f004a2e82ac43897055ed609b187d3aede05f0fcd419bbd4f48c80089611e",
+      "bytes": 1017,
       "engine_hints": [
         "ue2"
       ],
@@ -11371,37 +11399,9 @@
       "class": "SchemaInspector"
     },
     {
-      "path": "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-      "sha256": "40edf411b1e61afc3480da76f2529d736332085ecae6d8876e3dc0dff39274c9",
-      "bytes": 8983,
-      "engine_hints": [
-        "shared"
-      ],
-      "path_roles": [
-        "GENERAL"
-      ],
-      "review_priority": "RELATED",
-      "trace_status": "UNTRACED_STATIC_CANDIDATE",
-      "class": "CatalogLegacyBinaryStream"
-    },
-    {
-      "path": "catalog/src/Infrastructure/Readers/CatalogPackageTableReader.php",
-      "sha256": "2102d2fa3a7995bebd2b9495c1c74b82cc3f9bb0a112c05cb8d90e9a8f7cc018",
-      "bytes": 440,
-      "engine_hints": [
-        "shared"
-      ],
-      "path_roles": [
-        "GENERAL"
-      ],
-      "review_priority": "RELATED",
-      "trace_status": "UNTRACED_STATIC_CANDIDATE",
-      "class": null
-    },
-    {
       "path": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-      "sha256": "aa9885f847de35fd8671ba7e71ecc3984f8754bac7aa95a6b10200f35d11021c",
-      "bytes": 5217,
+      "sha256": "7594bce5b3137aac612dbbc2c19975bfcbbfc361afe9d1ebc3846de4d3cb5e27",
+      "bytes": 5188,
       "engine_hints": [
         "shared"
       ],
@@ -11411,6 +11411,20 @@
       "review_priority": "RELATED",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "CatalogReaderResolver"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php",
+      "sha256": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+      "bytes": 8884,
+      "engine_hints": [
+        "ue1"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogUE1BinaryStream"
     },
     {
       "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicAnyPropertyValueReader.php",
@@ -12494,8 +12508,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
-      "sha256": "28ed364ec905a318d6661c304efe5ec7998b5d46485e773335368e19856133b9",
-      "bytes": 24876,
+      "sha256": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+      "bytes": 24762,
       "engine_hints": [
         "ue1"
       ],
@@ -12507,9 +12521,37 @@
       "class": "CatalogUE1PackageReader"
     },
     {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php",
+      "sha256": "2a491e2ca50533299e4f470ffd00de8acaf0ca99a5ba739ae7f50ebe229a965f",
+      "bytes": 8884,
+      "engine_hints": [
+        "ue2"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogUE2BinaryStream"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php",
+      "sha256": "4237b88a7292077507038ae2d71f78e63a4200d13d5ba2140ff2d951381355c0",
+      "bytes": 24821,
+      "engine_hints": [
+        "ue2"
+      ],
+      "path_roles": [
+        "GENERAL"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogUE2LegacyCompatibilityPackageReader"
+    },
+    {
       "path": "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
-      "sha256": "186ba380e7ace4c7391ce72279961989037b7d258d217276cacbab53337d1aee",
-      "bytes": 24812,
+      "sha256": "730bb5965d80f63938b2a8b09fdda3ef0a54acf29d43a67da355e53a99361d02",
+      "bytes": 24698,
       "engine_hints": [
         "ue2"
       ],
@@ -13454,8 +13496,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php",
-      "sha256": "c9b5e3e90f56729900236250ace6852ec78748cffebddef3572a25f6f66ab34c",
-      "bytes": 17454,
+      "sha256": "becda9771b46ac6d0cca5dda03c00fdf60db06470f9ab4a02ab466534b0dc017",
+      "bytes": 18291,
       "engine_hints": [
         "shared"
       ],

@@ -1,16 +1,16 @@
 <?php
 /**
- * Shared source-shaped serializer for the UE1/UE2 classic package table layout.
- * Game wrappers remain responsible for source-policy and supported-version boundaries.
+ * UE1-specific source-shaped serializer for this engine package table layout.
+ * Game wrappers keep the game-specific source-policy and supported-version boundaries.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
 use RuntimeException;
-use UnrealDb\Catalog\Infrastructure\Readers\CatalogPackageTableReader;
+use UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader;
 
-final class Uedb5LegacySnapshotBuilder
+final class Uedb5UE1TableSnapshotBuilder
 {
     /**
      * @param array<string,mixed> $file
@@ -18,7 +18,7 @@ final class Uedb5LegacySnapshotBuilder
      * @return array<string,mixed>
      */
     public static function build(
-        CatalogPackageTableReader $reader,
+        CatalogUE1PackageReader $reader,
         array $file,
         array $contract
     ): array {

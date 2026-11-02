@@ -691,7 +691,7 @@
             const littleEndian = leMagic;
             const packed = view.getUint32(4, littleEndian);
             const version = packed & 0xffff;
-            // Mirror CatalogLegacyPackageReader exactly: versions below 68 have
+            // Mirror the engine-specific classic reader archive rules: versions below 68 have
             // HeritageCount/HeritageOffset before FGuid; version 68+ does not.
             // UE3+ uses a different summary and is deliberately left to server parsing.
             if (version < 1 || version >= 200) return '';

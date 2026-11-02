@@ -8,8 +8,8 @@ Catalog source snapshot factory: catalog/src/Infrastructure/Metadata/Uedb5Source
 
 | Engine | Canonical reader | Snapshot family | Import verification |
 |---|---|---|---|
-| UE1 | catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php (CatalogUE1PackageReader) | Uedb5UnrealSnapshotBuilder.php and Uedb5Ut99SnapshotBuilder.php | PdoUe1VerifyImportProjectionResolver.php |
-| UE2 | catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php (CatalogUE2PackageReader) | Uedb5Unreal2SnapshotBuilder.php, Uedb5Ut2003SnapshotBuilder.php, Uedb5Ut2004SnapshotBuilder.php | PdoUe2VerifyImportProjectionResolver.php |
+| UE1 | catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php | Uedb5UnrealSnapshotBuilder.php and Uedb5Ut99SnapshotBuilder.php | PdoUe1VerifyImportProjectionResolver.php |
+| UE2 | catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php | Uedb5Unreal2SnapshotBuilder.php, Uedb5Ut2003SnapshotBuilder.php, Uedb5Ut2004SnapshotBuilder.php | PdoUe2VerifyImportProjectionResolver.php |
 | UE3 | catalog/parsers/UE3CatalogReader.php (CatalogUE3PackageReader), with EpicUE3PackageReader.php | Uedb5Ut3SnapshotBuilder.php | PdoUe3VerifyImportProjectionResolver.php |
 | UE4 | UE4/UnrealPackageReader.php (UnrealPackageReader4 configured reader) | Uedb5Ut4SnapshotBuilder.php | PdoUe4VerifyImportProjectionResolver.php |
 | UE5 classic | UE5/UnrealPackageReader.php (UnrealPackageReader5) | Uedb5Ue5ClassicSnapshotBuilder.php | Uedb5Ue5ClassicVerifyImportResolver.php as source-selected |
@@ -28,7 +28,7 @@ User upload / source scan → file and source-profile selection → package/cont
 | Boundary | Key existing UnrealDB paths | Contracts |
 |---|---|---|
 | User intake | catalog/public-upload.php, profiled-upload.php, source-scan.php and Application services | F01,F02,F18 |
-| Reader selection | catalog/src/Infrastructure/Readers/CatalogReaderResolver.php, CatalogLegacyPackageReader.php, CatalogUE1ClassicSourceFamily.php | F01–F06 |
+| Reader selection | catalog/src/Infrastructure/Readers/CatalogReaderResolver.php, CatalogReaderResolver.php, CatalogUE1ClassicSourceFamily.php | F01–F06 |
 | Classic source/serialization | CatalogUE1ClassicGameSourceOverlay.php, CatalogUE1ClassicTaggedPropertyReader.php, CatalogUE1ClassicNativeObjectReader.php, CatalogUE1ClassicScriptArchiveReader.php | F02–F10 |
 | IoStore/Zen/Pak | Infrastructure/Metadata/Uedb5ZenPackageReader.php, Uedb5IoStoreTocReader.php, Uedb5ZenMountedStoreContextBuilder.php, catalog/iostore-* and pak-* | F03–F07,F23,F24 |
 | Import verification | Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php, PdoUe2VerifyImportProjectionResolver.php, PdoUe3VerifyImportProjectionResolver.php, PdoUe4VerifyImportProjectionResolver.php | F12–F15 |
@@ -46,6 +46,6 @@ Use Epic code under L:\Source as source of truth, engine base plus proven game-s
 
 ## Reader separation and cross-engine change impact
 
-UE1 through UE5 now have independent concrete parsers. UE1 and UE2 each own their full package-summary/name/import/export parser in CatalogUE1PackageReader.php and CatalogUE2PackageReader.php, not merely entrypoints. They share only CatalogLegacyBinaryStream (low-level byte IO in CatalogLegacyPackageReader.php) and the CatalogPackageTableReader interface. Exact original package decoding and UEDB5 snapshot digests were compared before and after splitting the source on four real UE1/UE2 packages. Shared low-level IO and downstream dependency/persistence services remain cross-engine impact boundaries.
+UE1 through UE5 now have independent concrete parsers. UE1 and UE2 each own their full package-summary/name/import/export parser, bounded byte streams and table snapshot serializers; they do not share engine-specific reader modules. Exact original package decoding and UEDB5 snapshot digests were compared before and after splitting the source on four real UE1/UE2 packages. Only generic catalog job, persistence and dependency services remain cross-engine impact boundaries.
 
-Run python tests/tools/impact.py --path catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php to get affected existing operation cases, before authorising focused regressions. Versioned Epic source overlays must be attached to the applicable case rather than silently changing a different game.
+Run python tests/tools/impact.py --path catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php to get affected existing operation cases, before authorising focused regressions. Versioned Epic source overlays must be attached to the applicable case rather than silently changing a different game.

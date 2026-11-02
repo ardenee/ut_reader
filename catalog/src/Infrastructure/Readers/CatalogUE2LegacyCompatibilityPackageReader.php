@@ -1,0 +1,559 @@
+<?php
+/** UT2004 UE2-owned legacy UE1-wire-format parser. Contains its own table/summary/archive rules; only byte IO within the UE2 engine family is reused. */
+declare(strict_types=1);
+namespace UnrealDb\Catalog\Infrastructure\Readers;
+use RuntimeException;
+use Throwable;
+
+require_once __DIR__ . '/CatalogUE2BinaryStream.php';
+
+final class CatalogUE2LegacyCompatibilityPackageReader
+{
+    private string $path;
+    private string $engineKey;
+    /** @var array<string,mixed> */
+    private array $header = [];
+    /** @var list<array<string,mixed>> */
+    private array $names = [];
+    /** @var list<array<string,mixed>> */
+    private array $imports = [];
+    /** @var list<array<string,mixed>> */
+    private array $exports = [];
+    /** @var list<string> */
+    private array $issues = [];
+    private bool $unrealV227SummarySemantics;
+
+    public function __construct(string $path, bool $unrealV227SummarySemantics = false)
+    {
+        $this->path = $path;
+        $this->engineKey = 'UE1';
+        $this->unrealV227SummarySemantics = $unrealV227SummarySemantics;
+        try {
+            $this->parse();
+        } catch (Throwable $error) {
+            $message = trim($error->getMessage());
+            $this->issues[] = get_class($error) . ': '
+                . ($message !== '' ? $message : 'Legacy package parsing failed.')
+                . ' File: ' . str_replace('\\', '/', $error->getFile()) . ':' . $error->getLine();
+            $this->header = $this->blankHeader();
+            $this->names = [];
+            $this->imports = [];
+            $this->exports = [];
+        }
+    }
+
+    private function parse(): void
+    {
+        $reader = new CatalogUE2BinaryStream($this->path);
+        $tag = $reader->u32();
+        // Epic UE1 linkers admit only PACKAGE_FILE_TAG (0x9E2A83C1).
+        // The shared UE2 reader also admits the Killing Floor-specific tag,
+        // but that UE2 exception must not leak into UE1 package loading.
+        if (($this->engineKey === 'UE1'
+                && $tag !== \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::STANDARD)
+            || !\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
+            throw new RuntimeException(sprintf('Bad package tag 0x%08X.', $tag));
+        }
+        $packed = $reader->u32();
+        $version = $packed & 0xffff;
+        $licensee = ($packed >> 16) & 0xffff;
+        $flags = $reader->u32();
+
+        $this->header = $this->blankHeader();
+        $this->header['signature'] = $tag;
+        $this->header['tag'] = $tag;
+        $this->header['packedVersion'] = $packed;
+        $this->header['version'] = $version;
+        $this->header['licensee'] = $licensee;
+        $this->header['licenseeVersion'] = $licensee;
+        $this->header['pkgFlags'] = $flags;
+        $this->header['packageFlags'] = $flags;
+        $this->header['nameCount'] = $reader->i32();
+        $this->header['nameOffset'] = $reader->i32();
+        $this->header['exportCount'] = $reader->i32();
+        $this->header['exportOffset'] = $reader->i32();
+        $this->header['importCount'] = $reader->i32();
+        $this->header['importOffset'] = $reader->i32();
+
+        $this->validateTable('Names', (int)$this->header['nameCount'], (int)$this->header['nameOffset'], $reader->size());
+        $this->validateTable('Exports', (int)$this->header['exportCount'], (int)$this->header['exportOffset'], $reader->size());
+        $this->validateTable('Imports', (int)$this->header['importCount'], (int)$this->header['importOffset'], $reader->size());
+
+        if ($version < 68) {
+            $this->header['heritageCount'] = $reader->i32();
+            $this->header['heritageOffset'] = $reader->i32();
+
+            // Epic UE1/UE2 FPackageFileSummary loading: legacy packages keep
+            // their GUID history in the heritage table, not inline in the
+            // summary. Save the summary position, seek to HeritageOffset,
+            // deserialize HeritageCount GUIDs into Sum.Guid (leaving the last
+            // GUID as the package GUID), then restore the saved position.
+            $saved = $reader->tell();
+            $heritageCount = (int)$this->header['heritageCount'];
+            $heritageOffset = (int)$this->header['heritageOffset'];
+            if ($heritageCount < 0) {
+                throw new RuntimeException('Invalid legacy package heritage count: ' . $heritageCount);
+            }
+            if ($heritageCount > 0) {
+                if ($heritageOffset < 0 || $heritageOffset > $reader->size()
+                    || $heritageCount > intdiv($reader->size() - $heritageOffset, 16)) {
+                    throw new RuntimeException(
+                        'Invalid legacy package heritage table: count=' . $heritageCount
+                        . ' offset=' . $heritageOffset . ' size=' . $reader->size()
+                    );
+                }
+                $reader->seek($heritageOffset);
+                for ($index = 0; $index < $heritageCount; $index++) {
+                    $this->readGuid($reader);
+                }
+                $reader->seek($saved);
+            }
+
+            $this->header['generations'] = [[
+                'e' => (int)$this->header['exportCount'],
+                'n' => (int)$this->header['nameCount'],
+                'exportCount' => (int)$this->header['exportCount'],
+                'nameCount' => (int)$this->header['nameCount'],
+            ]];
+        } else {
+            $this->readGuid($reader);
+            $serializedGenerationCount = $reader->i32();
+            if ($this->unrealV227SummarySemantics) {
+                // Unreal v227 FPackageFileSummary clamps the serialized count
+                // to [0,64] before allocating/deserializing generation records.
+                $generationCount = max(0, min($serializedGenerationCount, 64));
+            } else {
+                if ($serializedGenerationCount < 0
+                    || $serializedGenerationCount > intdiv($reader->remaining(), 8)) {
+                    throw new RuntimeException(
+                        'Invalid legacy package generation count: ' . $serializedGenerationCount
+                        . ' remaining=' . $reader->remaining()
+                    );
+                }
+                $generationCount = $serializedGenerationCount;
+            }
+            $this->header['genCount'] = $serializedGenerationCount;
+            $this->header['effectiveGenCount'] = $generationCount;
+            for ($index = 0; $index < $generationCount; $index++) {
+                $exports = $reader->i32();
+                $names = $reader->i32();
+                $this->header['generations'][] = [
+                    'e' => $exports,
+                    'n' => $names,
+                    'exportCount' => $exports,
+                    'nameCount' => $names,
+                ];
+            }
+        }
+
+        $this->readNames($version);
+        $this->readImports($version);
+        $this->readExports($version);
+        if ($this->engineKey === 'UE1') {
+            $this->validateUE1ObjectReferences($version, $reader->size());
+        }
+    }
+
+    private function readGuid(CatalogUE2BinaryStream $reader): void
+    {
+        $parts = [$reader->u32(), $reader->u32(), $reader->u32(), $reader->u32()];
+        $this->header['guidArray'] = $parts;
+        $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X', $parts[0], $parts[1], $parts[2], $parts[3]);
+        $this->header['guidDwords'] = $this->header['guid'];
+        $this->header['guidRaw'] = strtoupper(bin2hex(pack('V4', $parts[0], $parts[1], $parts[2], $parts[3])));
+    }
+
+    private function readNames(int $version): void
+    {
+        $reader = new CatalogUE2BinaryStream($this->path);
+        $reader->seek((int)$this->header['nameOffset']);
+        $count = (int)$this->header['nameCount'];
+        for ($index = 0; $index < $count; $index++) {
+            $entryOffset = $reader->tell();
+            try {
+                $name = $version < 64
+                    ? $reader->cstring($this->engineKey === 'UE1')
+                    : $reader->fstring($version, $this->engineKey === 'UE1');
+                $flags = $reader->u32();
+            } catch (Throwable $error) {
+                throw new RuntimeException(
+                    'Name table entry parse failed'
+                    . ': index=' . $index
+                    . ', entry_offset=' . $entryOffset
+                    . ', current_offset=' . $reader->tell()
+                    . ', table_offset=' . (int)$this->header['nameOffset']
+                    . ', table_count=' . $count
+                    . ', package_size=' . $reader->size()
+                    . ', entry_head_hex=' . $reader->peekHex($entryOffset, 32)
+                    . '. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
+            $this->names[] = [
+                'index' => $index,
+                'offset' => $entryOffset,
+                'name' => $name,
+                'text' => $name,
+                'flags' => $flags,
+                'objectFlags' => $flags,
+            ];
+        }
+    }
+
+    private function readImports(int $version): void
+    {
+        $reader = new CatalogUE2BinaryStream($this->path);
+        $reader->seek((int)$this->header['importOffset']);
+        $count = (int)$this->header['importCount'];
+        for ($index = 0; $index < $count; $index++) {
+            $entryOffset = $reader->tell();
+            try {
+                $classPackage = $reader->packageIndex($version);
+                $className = $reader->packageIndex($version);
+                if ($this->engineKey === 'UE1' && $version < 50) {
+                    // Unreal v1.200 FObjectImport::operator<< serializes the old
+                    // _ObjectPackage FName here. PackageIndex is not serialized
+                    // before version 50 and is initialized to zero on load.
+                    $objectPackage = $reader->packageIndex($version);
+                    $outer = 0;
+                } else {
+                    $objectPackage = null;
+                    $outer = $reader->i32();
+                }
+                $objectName = $reader->packageIndex($version);
+            } catch (Throwable $error) {
+                throw new RuntimeException(
+                    'Import table entry parse failed'
+                    . ': index=' . $index
+                    . ', entry_offset=' . $entryOffset
+                    . ', current_offset=' . $reader->tell()
+                    . ', table_offset=' . (int)$this->header['importOffset']
+                    . ', table_count=' . $count
+                    . ', package_size=' . $reader->size()
+                    . ', entry_head_hex=' . $reader->peekHex($entryOffset, 32)
+                    . '. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
+            // Epic ULinkerLoad::operator<<(FName&) aborts when the serialized
+            // NameMap index is invalid. Never turn a broken UE1 object identity
+            // into an empty name that downstream cataloguing could accept.
+            $classPackageText = $this->sourceNameByIndex($classPackage, 'Import.ClassPackage');
+            $classNameText = $this->sourceNameByIndex($className, 'Import.ClassName');
+            $objectPackageText = $objectPackage !== null
+                ? $this->sourceNameByIndex($objectPackage, 'Import.ObjectPackage') : null;
+            $objectNameText = $this->sourceNameByIndex($objectName, 'Import.ObjectName');
+            $this->imports[] = [
+                'index' => $index,
+                'offset' => $entryOffset,
+                'classPackage' => $classPackage,
+                'className' => $className,
+                'outerIndex' => $outer,
+                'outer' => $outer,
+                'objectPackage' => $objectPackage,
+                'objectPackageText' => $objectPackageText,
+                'objectName' => $objectName,
+                'classPackageText' => $classPackageText,
+                'classNameText' => $classNameText,
+                'objectNameText' => $objectNameText,
+                'ClassPackage' => ['index' => $classPackage, 'number' => 0, 'text' => $classPackageText],
+                'ClassName' => ['index' => $className, 'number' => 0, 'text' => $classNameText],
+                'OuterIndex' => $outer,
+                'ObjectPackage' => $objectPackage !== null
+                    ? ['index' => $objectPackage, 'number' => 0, 'text' => (string)$objectPackageText]
+                    : null,
+                'ObjectName' => ['index' => $objectName, 'number' => 0, 'text' => $objectNameText],
+            ];
+        }
+    }
+
+    private function readExports(int $version): void
+    {
+        $reader = new CatalogUE2BinaryStream($this->path);
+        $reader->seek((int)$this->header['exportOffset']);
+        $count = (int)$this->header['exportCount'];
+        for ($index = 0; $index < $count; $index++) {
+            $entryOffset = $reader->tell();
+            try {
+                $class = $reader->packageIndex($version);
+                $super = $reader->packageIndex($version);
+                // Unreal v1.200 does not serialize FObjectExport.PackageIndex
+                // before package version 50; loading initializes it to zero.
+                $outer = $this->engineKey === 'UE1' && $version < 50
+                    ? 0
+                    : $reader->i32();
+                $objectName = $reader->packageIndex($version);
+                $flags = $reader->u32();
+                // Authentic OldUnreal 227k Core.dll SHA256 c391cade...
+                // FArchive << FObjectExport (x86 0x1005DA20):
+                //  ClassIndex (compact), SuperIndex (compact), PackageIndex
+                //  (signed 32-bit), ObjectName (FName), ObjectFlags (DWORD),
+                //  then WHEN RF_HasArchtype and Ar.LicenseeVer() >= 227:
+                //  ArchetypeIndex (signed 32-bit), followed by compact
+                //  SerialSize and compact SerialOffset when size != 0.
+                //  Ghidra confirms the identical native int32 archive
+                //  operator for PackageIndex and ArchetypeIndex. Never
+                //  apply this 227-specific flag layout to UT99 archives.
+                $v227ArchetypeProfile = $this->engineKey === 'UE1'
+                    && $version === 69
+                    && (int)($this->header['licenseeVersion']??0) >= 227;
+                $archetypeIndex = $v227ArchetypeProfile
+                    && ($flags & 0x00000100) !== 0
+                    ? $reader->i32() : 0;
+                $serialSize = $reader->packageIndex($version);
+                // Unreal v1.200 UE1, Unreal II v69 and generic UE2/Warfare
+                // v126 all test truthiness: any non-zero serialized size is
+                // followed by a compact SerialOffset.
+                $serialOffset = $serialSize !== 0 ? $reader->packageIndex($version) : 0;
+            } catch (Throwable $error) {
+                throw new RuntimeException(
+                    'Export table entry parse failed'
+                    . ': index=' . $index
+                    . ', entry_offset=' . $entryOffset
+                    . ', current_offset=' . $reader->tell()
+                    . ', table_offset=' . (int)$this->header['exportOffset']
+                    . ', table_count=' . $count
+                    . ', package_size=' . $reader->size()
+                    . ', entry_head_hex=' . $reader->peekHex($entryOffset, 32)
+                    . '. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
+            $this->exports[] = [
+                'index' => $index,
+                'offset' => $entryOffset,
+                'classIndex' => $class,
+                'class' => $class,
+                'superIndex' => $super,
+                'super' => $super,
+                'packageIndex' => $outer,
+                'outerIndex' => $outer,
+                'outer' => $outer,
+                'objectName' => $objectName,
+                'nameIndex' => $objectName,
+                'nameNumber' => 0,
+                'objectNameText' => $this->sourceNameByIndex($objectName, 'Export.ObjectName'),
+                'objectFlags' => $flags,
+                'serialSize' => $serialSize,
+                'serialOffset' => $serialOffset,
+                'archetype' => $archetypeIndex,
+                'archetypeIndex' => $archetypeIndex,
+                'components' => [],
+                'componentMap' => [],
+                'exportFlags' => 0,
+            ];
+        }
+    }
+
+    /**
+     * Source-defined signed package index: >0 is a one-based ExportMap slot;
+     * <0 is a minus-one-based ImportMap slot; zero is NULL/root.
+     * Epic UT99 v400 ULinkerLoad::IndexToObject fails on invalid indices;
+     * Unreal v1.200 GenerateExportInfo also directly dereferences ClassIndex.
+     * Package versions <50 do not serialize import/export PackageIndex.
+     */
+    private function validateUE1ObjectReferences(int $version, int $fileSize): void
+    {
+        $imports = count($this->imports);
+        $exports = count($this->exports);
+        foreach ($this->imports as $i => $import) {
+            if ($version >= 50) {
+                $parent = (int)$import['outerIndex'];
+                // Import.PackageIndex is either the root package (zero),
+                // or another import. Epic VerifyImport asserts it is <0.
+                if ($parent > 0 || $parent < -$imports) {
+                    throw new RuntimeException('Invalid UE1 Import[' . $i
+                        . '] PackageIndex reference ' . $parent
+                        . ' (expected 0 or -1..-' . $imports . ').');
+                }
+            }
+        }
+        foreach ($this->exports as $i => $export) {
+            foreach (['ClassIndex' => 'classIndex', 'SuperIndex' => 'superIndex'] as $field => $key) {
+                $this->validateUE1SignedReference((int)$export[$key], $field, $i, $imports, $exports);
+            }
+            if ($version >= 50) {
+                $this->validateUE1SignedReference(
+                    (int)$export['outerIndex'], 'PackageIndex', $i, $imports, $exports
+                );
+            }
+            // The compiled 227k ExportMap operator reads this extra signed
+            // INT only for RF_HasArchtype under LicenseeVer >= 227.
+            if ($this->engineKey === 'UE1' && $version === 69
+                && (int)($this->header['licenseeVersion']??0) >= 227
+                && ((int)$export['objectFlags'] & 0x00000100) !== 0) {
+                $this->validateUE1SignedReference(
+                    (int)$export['archetypeIndex'], 'ArchetypeIndex', $i, $imports, $exports
+                );
+            }
+            // Native Preload seeks SerialOffset and reads SerialSize bytes.
+            // Check positive lengths without changing the original compact
+            // signed values: legacy source still serializes offsets for ANY
+            // non-zero size, including a negative value.
+            $serialSize = (int)$export['serialSize'];
+            $serialOffset = (int)$export['serialOffset'];
+            if ($serialSize > 0 && ($serialOffset < 0 || $serialOffset > $fileSize
+                || $serialSize > $fileSize - $serialOffset)) {
+                throw new RuntimeException('Invalid UE1 Export[' . $i
+                    . '] serial data range (offset=' . $serialOffset
+                    . ', size=' . $serialSize . ', file=' . $fileSize . ').');
+            }
+        }
+    }
+
+    private function validateUE1SignedReference(
+        int $index, string $field, int $exportIndex, int $importCount, int $exportCount
+    ): void {
+        if ($index > $exportCount || $index < -$importCount) {
+            throw new RuntimeException('Invalid UE1 Export[' . $exportIndex . '] '
+                . $field . ' reference ' . $index . ' (exports 1..'
+                . $exportCount . ', imports -1..-' . $importCount . ').');
+        }
+    }
+
+    private function validateTable(string $label, int $count, int $offset, int $fileSize): void
+    {
+        if ($count < 0) {
+            throw new RuntimeException('Invalid ' . $label . ' table count: ' . $count);
+        }
+        if ($offset < 0 || $offset > $fileSize || ($count > 0 && $offset === $fileSize)) {
+            throw new RuntimeException('Invalid ' . $label . ' table offset: ' . $offset . '/' . $fileSize);
+        }
+    }
+
+    /** @return array<string,mixed> */
+    private function blankHeader(): array
+    {
+        return [
+            'signature' => 0,
+            'tag' => 0,
+            'version' => 0,
+            'licensee' => 0,
+            'licenseeVersion' => 0,
+            'pkgFlags' => 0,
+            'packageFlags' => 0,
+            'nameCount' => 0,
+            'nameOffset' => 0,
+            'exportCount' => 0,
+            'exportOffset' => 0,
+            'importCount' => 0,
+            'importOffset' => 0,
+            'heritageCount' => 0,
+            'heritageOffset' => 0,
+            'dependsOffset' => 0,
+            'guid' => '',
+            'guidRaw' => '',
+            'guidDwords' => '',
+            'generations' => [],
+            'chunks' => [],
+            'compressedChunks' => [],
+            'compressed' => false,
+            'compressionFlags' => 0,
+            'cFlags' => 0,
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    public function getHeader(): array
+    {
+        return $this->header;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function getNames(): array
+    {
+        return $this->names;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function getImports(): array
+    {
+        return $this->imports;
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function getExports(): array
+    {
+        return $this->exports;
+    }
+
+    /** @return list<string> */
+    public function getDebugErrors(): array
+    {
+        return $this->issues;
+    }
+
+    /** @return list<string> */
+    public function validatePackage(): array
+    {
+        return $this->issues;
+    }
+
+    /** @return array<string,mixed> */
+    public function getCompressionInfo(): array
+    {
+        return ['isCompressed' => false, 'flags' => 0, 'chunks' => [], 'totalCompressed' => 0, 'totalUncompressed' => 0];
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function getRawHeaderFields(): array
+    {
+        return [];
+    }
+
+    public function getFileSize(): string
+    {
+        $size = filesize($this->path);
+        return $size === false ? '' : number_format((int)$size) . ' bytes';
+    }
+
+    /** Validate UE1's original strict ULinkerLoad FName index contract. */
+    private function sourceNameByIndex(int $index, string $field): string
+    {
+        if ($this->engineKey === 'UE1' && !array_key_exists($index, $this->names)) {
+            throw new RuntimeException('Invalid UE1 ' . $field . ' name index '
+                . $index . '/' . count($this->names) . ' (Epic NameMap::IsValidIndex).');
+        }
+        return $this->nameByIndex($index);
+    }
+
+    public function nameByIndex(int $index, int $number = 0): string
+    {
+        if ($index < 0 || !isset($this->names[$index])) {
+            return '';
+        }
+        $name = (string)($this->names[$index]['name'] ?? '');
+        return $number !== 0 && $name !== '' ? $name . '_' . $number : $name;
+    }
+
+    public function displayNameFromRef(int $reference): string
+    {
+        if ($reference === 0) {
+            return '';
+        }
+        if ($reference > 0) {
+            $row = $this->exports[$reference - 1] ?? null;
+            return is_array($row) ? (string)($row['objectNameText'] ?? '') : '';
+        }
+        $row = $this->imports[-$reference - 1] ?? null;
+        return is_array($row) ? (string)($row['objectNameText'] ?? '') : '';
+    }
+
+    public function getExportProperties(int $exportIndex): array
+    {
+        return [];
+    }
+
+    public function getExportProperty(int $exportIndex, string $name, mixed $default = null): mixed
+    {
+        return $default;
+    }
+
+    public function readPropertiesForExport(int $exportIndex): array
+    {
+        return [];
+    }
+}

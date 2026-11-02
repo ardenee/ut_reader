@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Low-level bounded binary archive stream, shared only where byte semantics match.
+ * Purpose: Private low-level byte stream for UE2 archive parsing.
  * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
  *      entry points.
  * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
@@ -18,10 +18,9 @@ use RuntimeException;
 use Throwable;
 
 /**
- * Shared bounded byte stream primitive; does not parse package tables or
- * select UE1 or UE2 source/version. Each engine owns its complete parser.
+ * Bounded UE2 archive stream owned by this engine. No other engine imports it.
  */
-final class CatalogLegacyBinaryStream
+final class CatalogUE2BinaryStream
 {
     /** @var resource */
     private $handle;

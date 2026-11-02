@@ -23,12 +23,18 @@ foreach($routes as $engine=>$expected){
 }
 $ue1='UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogUE1PackageReader';
 $ue2='UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogUE2PackageReader';
-if(!is_subclass_of($ue1,'UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogPackageTableReader')
-||!is_subclass_of($ue2,'UnrealDb\\Catalog\\Infrastructure\\Readers\\CatalogPackageTableReader')){
- throw new RuntimeException('Shared bounded legacy core no longer present');
+$ue2compat='UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2LegacyCompatibilityPackageReader';
+$ue1stream='UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1BinaryStream';
+$ue2stream='UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2BinaryStream';
+if (!class_exists($ue2compat) || !class_exists($ue1stream) || !class_exists($ue2stream)) throw new RuntimeException('Per-engine reader or private byte stream missing');
+foreach ([$ue1,$ue2,$ue2compat] as $owner) {
+ $text=file_get_contents((new ReflectionClass($owner))->getFileName());
+ if (str_contains($text,'CatalogLegacyBinaryStream') || str_contains($text,'CatalogPackageTableReader'))
+  throw new RuntimeException('Old cross-engine source dependency in '.$owner);
 }
+
 if(!is_file($root.'/catalog/parsers/UE3CatalogReader.php'))throw new RuntimeException('UE3 parser dispatch wrapper missing');
-foreach ([$ue1,$ue2] as $engineClass) {
+foreach ([$ue1,$ue2,$ue2compat] as $engineClass) {
  $reflection = new ReflectionClass($engineClass);
  if ($reflection->getParentClass() !== false) throw new RuntimeException('Engine reader inherits a shared parser: '.$engineClass);
  foreach (['parse','readNames','readImports','readExports'] as $method) {
@@ -36,5 +42,5 @@ foreach ([$ue1,$ue2] as $engineClass) {
   if ($owner !== $engineClass) throw new RuntimeException('Shared parser method found: '.$method.' declared by '.$owner);
  }
 }
-echo "UE1_UE2_SILO_CHECK_PASS; independent parsing methods, shared byte IO and table interface only\n";
+echo "UE1_UE2_SILO_CHECK_PASS; independent parsing methods and private per-engine byte streams\n";
 echo "ROUTING_SCOPE_ONLY_5_OF_5_PASS; native byte/VerifyImport parity NOT asserted\n";

@@ -275,7 +275,7 @@ final class CatalogUnverifiedMetadataRepairService
         $engineReaders = match ($queueGameId) {
             3, 12 => [$readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE1PackageReader.php'],
             2, 4 => [$readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2PackageReader.php'],
-            5 => [$readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE1PackageReader.php',
+            5 => [$readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2LegacyCompatibilityPackageReader.php',
                   $readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2PackageReader.php'],
             6 => [dirname(__DIR__, 3) . DIRECTORY_SEPARATOR . 'parsers' . DIRECTORY_SEPARATOR . 'EpicUE3PackageReader.php'],
             7 => [dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'UE4' . DIRECTORY_SEPARATOR . 'UnrealPackageReader.php'],
@@ -287,14 +287,29 @@ final class CatalogUnverifiedMetadataRepairService
                 dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'UE5' . DIRECTORY_SEPARATOR . 'UnrealPackageReader.php',
             ],
         };
-        $sharedBinaryReader = $readerRoot . DIRECTORY_SEPARATOR . 'CatalogLegacyPackageReader.php';
-        if (in_array($queueGameId, [0, 2, 3, 4, 5, 12], true)) {
-            $engineReaders[] = $sharedBinaryReader;
+        $streamForEngine = [
+            2 => 'CatalogUE2BinaryStream.php',
+            3 => 'CatalogUE1BinaryStream.php',
+            4 => 'CatalogUE2BinaryStream.php',
+            12 => 'CatalogUE1BinaryStream.php',
+        ];
+        if (isset($streamForEngine[$queueGameId])) {
+            $engineReaders[] = $readerRoot . DIRECTORY_SEPARATOR . $streamForEngine[$queueGameId];
+        } elseif ($queueGameId === 5) {
+            $engineReaders[] = $readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2BinaryStream.php';
+        } elseif ($queueGameId === 0) {
+            $engineReaders[] = $readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE1BinaryStream.php';
+            $engineReaders[] = $readerRoot . DIRECTORY_SEPARATOR . 'CatalogUE2BinaryStream.php';
         }
         $readerHashes = [];
         foreach ($engineReaders as $readerFile) {
             $sourceHash = is_file($readerFile) ? hash_file('sha256', $readerFile) : false;
             if ($sourceHash === false) {
+                if ($queueGameId === 0 && !is_file($readerFile)) {
+                    // An unknown-engine file must not fail merely because an
+                    // optional, unrelated engine module is not installed.
+                    continue;
+                }
                 throw new \RuntimeException('Cannot fingerprint parser source for unverified revalidation: ' . $readerFile);
             }
             $readerHashes[] = $sourceHash;

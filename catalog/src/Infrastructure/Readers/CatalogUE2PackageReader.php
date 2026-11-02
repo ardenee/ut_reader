@@ -5,10 +5,9 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 use RuntimeException;
 use Throwable;
 
-require_once __DIR__ . '/CatalogLegacyPackageReader.php';
-require_once __DIR__ . '/CatalogPackageTableReader.php';
+require_once __DIR__ . '/CatalogUE2BinaryStream.php';
 
-final class CatalogUE2PackageReader implements CatalogPackageTableReader
+final class CatalogUE2PackageReader
 {
     private string $path;
     private string $engineKey;
@@ -45,7 +44,7 @@ final class CatalogUE2PackageReader implements CatalogPackageTableReader
 
     private function parse(): void
     {
-        $reader = new CatalogLegacyBinaryStream($this->path);
+        $reader = new CatalogUE2BinaryStream($this->path);
         $tag = $reader->u32();
         // Epic UE1 linkers admit only PACKAGE_FILE_TAG (0x9E2A83C1).
         // The shared UE2 reader also admits the Killing Floor-specific tag,
@@ -155,7 +154,7 @@ final class CatalogUE2PackageReader implements CatalogPackageTableReader
         }
     }
 
-    private function readGuid(CatalogLegacyBinaryStream $reader): void
+    private function readGuid(CatalogUE2BinaryStream $reader): void
     {
         $parts = [$reader->u32(), $reader->u32(), $reader->u32(), $reader->u32()];
         $this->header['guidArray'] = $parts;
@@ -166,7 +165,7 @@ final class CatalogUE2PackageReader implements CatalogPackageTableReader
 
     private function readNames(int $version): void
     {
-        $reader = new CatalogLegacyBinaryStream($this->path);
+        $reader = new CatalogUE2BinaryStream($this->path);
         $reader->seek((int)$this->header['nameOffset']);
         $count = (int)$this->header['nameCount'];
         for ($index = 0; $index < $count; $index++) {
@@ -204,7 +203,7 @@ final class CatalogUE2PackageReader implements CatalogPackageTableReader
 
     private function readImports(int $version): void
     {
-        $reader = new CatalogLegacyBinaryStream($this->path);
+        $reader = new CatalogUE2BinaryStream($this->path);
         $reader->seek((int)$this->header['importOffset']);
         $count = (int)$this->header['importCount'];
         for ($index = 0; $index < $count; $index++) {
@@ -272,7 +271,7 @@ final class CatalogUE2PackageReader implements CatalogPackageTableReader
 
     private function readExports(int $version): void
     {
-        $reader = new CatalogLegacyBinaryStream($this->path);
+        $reader = new CatalogUE2BinaryStream($this->path);
         $reader->seek((int)$this->header['exportOffset']);
         $count = (int)$this->header['exportCount'];
         for ($index = 0; $index < $count; $index++) {

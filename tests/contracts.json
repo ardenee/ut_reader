@@ -561,8 +561,7 @@
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
-        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-        "catalog/src/Infrastructure/Readers/CatalogPackageTableReader.php"
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
       "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
@@ -583,7 +582,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 123,
+          "line": 127,
           "call_site": "CatalogReaderResolver::resolve("
         },
         {
@@ -610,9 +609,8 @@
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php",
-        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-        "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php",
-        "catalog/src/Infrastructure/Readers/CatalogPackageTableReader.php"
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
       "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
@@ -633,12 +631,12 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 147,
+          "line": 151,
           "call_site": "Uedb5UnrealSnapshotBuilder::build("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 144,
+          "line": 148,
           "call_site": "Uedb5Ut99SnapshotBuilder::build("
         }
       ]
@@ -830,8 +828,7 @@
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
         "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
-        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-        "catalog/src/Infrastructure/Readers/CatalogPackageTableReader.php"
+        "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
@@ -853,7 +850,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 123,
+          "line": 127,
           "call_site": "CatalogReaderResolver::resolve("
         },
         {
@@ -881,9 +878,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ut2003SnapshotBuilder.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ut2004SnapshotBuilder.php",
-        "catalog/src/Infrastructure/Readers/CatalogLegacyPackageReader.php",
-        "catalog/src/Infrastructure/Metadata/Uedb5LegacySnapshotBuilder.php",
-        "catalog/src/Infrastructure/Readers/CatalogPackageTableReader.php"
+        "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
@@ -905,17 +901,17 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 150,
+          "line": 154,
           "call_site": "Uedb5Unreal2SnapshotBuilder::build("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 153,
+          "line": 157,
           "call_site": "Uedb5Ut2003SnapshotBuilder::build("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 156,
+          "line": 160,
           "call_site": "Uedb5Ut2004SnapshotBuilder::build("
         }
       ]
@@ -1130,7 +1126,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 123,
+          "line": 127,
           "call_site": "CatalogReaderResolver::resolve("
         },
         {
@@ -1175,7 +1171,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 165,
+          "line": 169,
           "call_site": "Uedb5Ut3SnapshotBuilder::build("
         }
       ]
@@ -1382,7 +1378,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 123,
+          "line": 127,
           "call_site": "CatalogReaderResolver::resolve("
         },
         {
@@ -1427,7 +1423,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 168,
+          "line": 172,
           "call_site": "Uedb5Ut4SnapshotBuilder::build("
         }
       ]
@@ -1634,7 +1630,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-          "line": 123,
+          "line": 127,
           "call_site": "CatalogReaderResolver::resolve("
         },
         {
@@ -1873,19 +1869,19 @@
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
-        "catalog/src/Infrastructure/Metadata/Uedb5LegacySnapshotBuilder.php"
+        "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE2LegacyCompatibilityTableSnapshotBuilder.php"
       ],
-      "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey when ut2004 v<100 and profile compatibility reader_engine UE1",
+      "dispatch_trace": "Uedb5SourceSnapshotFactory UT2004 version<100 source-authorized UE1-wire compatibility -> UE2-owned CatalogUE2LegacyCompatibilityPackageReader; does not call UE1 resolver",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
       "epic_symbol_to_verify": "FPackageFileSummary",
       "game_profiles": [
         "ut2004"
       ],
       "source_provenance_constraint": "Only profile authorised legacy textures, never unconditional fallback",
-      "test_purpose": "UT2004 legacy genuine texture erroneously assigned UE2 reader or vice versa",
+      "test_purpose": "Wrong UT2004 legacy texture parse or cross-engine UE1 reader dependency; UE2 must stand independently",
       "required_fixture": "genuine_UT2004_legacy_UE1_package_and_nonlegacy_UE2_package",
-      "acceptance_condition": "Class is UE1 only when gp_profile_version_decision explicitly authorises it; otherwise UE2 or rejected",
+      "acceptance_condition": "UE2-owned legacy parser uses original source profile, no UE1 module loaded, generated compatibility snapshot unchanged",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
       "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
@@ -1967,11 +1963,11 @@
   "contracts_are_risk_categories_not_test_cases": true,
   "current_execution_policy": "These are the only proposed test purposes. No test may execute without real runtime call chain, selected Epic source line, and original genuine oracle.",
   "reader_architecture": {
-    "ue1": "Independent complete CatalogUE1PackageReader.php parser, with UE1-specific native and tagged property readers; shares only bounded byte stream with UE2.",
-    "ue2": "Independent complete CatalogUE2PackageReader.php parser with game-specific snapshot policies; shares only bounded byte stream with UE1.",
+    "ue1": "Own CatalogUE1PackageReader, CatalogUE1BinaryStream and Uedb5UE1TableSnapshotBuilder; no UE2 file dependency.",
+    "ue2": "Own CatalogUE2PackageReader, CatalogUE2BinaryStream and Uedb5UE2TableSnapshotBuilder; own UE2 legacy compatibility reader/snapshot, no UE1 module dependency.",
     "ue3": "EpicUE3PackageReader.php class, UE3CatalogReader.php loader wrapper",
     "ue4": "UE4/UnrealPackageReader.php UnrealPackageReader4",
     "ue5": "UE5/UnrealPackageReader.php UnrealPackageReader5 plus separate Zen/IoStore reader and package store",
-    "change_impact": "Editing only one concrete engine parser affects its engine; shared CatalogLegacyBinaryStream, CatalogPackageTableReader interface, and common UEDB5 dependency/persistence services can affect more than one engine."
+    "change_impact": "Concrete package readers, byte streams and table snapshot serializers are separated by engine; shared catalog application, job scheduler and provider/dependency services still impact all applicable engines."
   }
 }

@@ -15,7 +15,7 @@ final class Uedb5Ut2004SnapshotBuilder
     public static function build(CatalogUE2PackageReader $reader, array $file): array
     {
         $version = (int)($reader->getHeader()['version'] ?? -1);
-        return Uedb5LegacySnapshotBuilder::build($reader, $file, [
+        return Uedb5UE2TableSnapshotBuilder::build($reader, $file, [
             'label' => 'UT2004',
             'policy' => $version > 129
                 ? self::POLICY_POST_V129_UNRESOLVED

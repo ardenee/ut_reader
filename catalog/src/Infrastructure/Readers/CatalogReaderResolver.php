@@ -18,8 +18,8 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
  *
  * UE1 and UE2 have separate canonical reader entry points:
  * CatalogUE1PackageReader.php and CatalogUE2PackageReader.php. They share
- * ONLY bounded byte primitives in CatalogLegacyPackageReader.php;
- * each reader independently owns its parser and version gates. No profile may silently fall back to the other.
+ * no low-level or high-level parser code; each engine owns its byte IO,
+ * parser and version gates. No profile may silently fall back to the other.
  *
  * UE3 uses the strict Epic catalog parser. UE4 and UE5 use their dedicated
  * configured engine readers; UE5 must never alias the UE4 reader because its

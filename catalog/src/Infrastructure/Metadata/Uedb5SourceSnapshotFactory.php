@@ -120,13 +120,17 @@ final class Uedb5SourceSnapshotFactory
                 $readerEngine = 'UE1';
             }
         }
-        $readerClass = CatalogReaderResolver::resolve(
-            $this->config,
-            $readerEngine,
-            'Reader not found for package engine',
-            'Reader file loaded for package engine ',
-            ['UE4','UE5']
-        );
+        // Choose the UE2-owned wire-format compatibility reader BEFORE
+        // resolution: UT2004 must not try to load UE1's reader module at all.
+        $readerClass = $sourceKey === 'ut2004' && $readerEngine === 'UE1'
+            ? \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2LegacyCompatibilityPackageReader::class
+            : CatalogReaderResolver::resolve(
+                $this->config,
+                $readerEngine,
+                'Reader not found for package engine',
+                'Reader file loaded for package engine ',
+                ['UE4','UE5']
+            );
         if ($engineKey === 'UE4' || $engineKey === 'UE5') {
             $this->applyProfile($gameId, $engineKey);
         }
@@ -154,8 +158,8 @@ final class Uedb5SourceSnapshotFactory
                 : throw new RuntimeException('UT2003 did not resolve the canonical UE2 reader.'),
             'ut2004' => $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2PackageReader
                 ? Uedb5Ut2004SnapshotBuilder::build($reader, $file)
-                : ($readerEngine === 'UE1' && $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader
-                    ? Uedb5LegacySnapshotBuilder::build($reader, $file, [
+                : ($readerEngine === 'UE1' && $reader instanceof \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE2LegacyCompatibilityPackageReader
+                    ? Uedb5UE2LegacyCompatibilityTableSnapshotBuilder::build($reader, $file, [
                         'label'=>'UT2004 UE1 compatibility',
                         'policy'=>'ue1-ut2004-legacy-texture-profile-compatible',
                         'schema_prefix'=>'ue1.ut2004.compat',

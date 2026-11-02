@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "purpose": "UE1/UE2 complete per-engine reader and UEDB5 table snapshot silo; other engines unchanged",
+  "original_accepted_previous_reader_isolation_manifest_SHA256": "6205ccd261fefa231a339f14845fd5728f435cd30b7cede49763069da64882d7",
+  "previous_source_version_genuine_fixture_cases": {
+    "Unreal_1998_v61": {
+      "engine": "ue1",
+      "file_sha256": "198ea3d832875767932c9539fb2fedbea357b4cb670ed41d77f74f213ea74576",
+      "version": 61,
+      "names": 34,
+      "imports": 3,
+      "exports": 16,
+      "reader_shape_sha256": "058e1a299af8921b340a50c4cdf9f112ed0d75a1f2aab48f3563c146e7d99140",
+      "uedb5_snapshot_sha256": "ab11da4d5628cff9ab99c512371ffcc9ad4dda2b83b3c0959d3f52a061832ca1",
+      "uedb5_snapshot_error": ""
+    },
+    "UT99_v432": {
+      "engine": "ue1",
+      "file_sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "version": 69,
+      "names": 3345,
+      "imports": 60,
+      "exports": 5370,
+      "reader_shape_sha256": "3d14718435030b0f92b2f5226f303e75b020ec54e77134a0b456c4eb94a3eb51",
+      "uedb5_snapshot_sha256": "b0e3913c883dc4825cd568e17046024d831a7d0099832f9ca8b2fafd1ef80037",
+      "uedb5_snapshot_error": ""
+    },
+    "UT99_469f": {
+      "engine": "ue1",
+      "file_sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b",
+      "version": 69,
+      "names": 3702,
+      "imports": 63,
+      "exports": 5740,
+      "reader_shape_sha256": "0fe25cf4cb732642891056d869c6ef78113f5452a1875d2bdc08ae6135e568e6",
+      "uedb5_snapshot_sha256": "286cd41052ac33cf0f3eef1cc57ffe19910cc11ff82a7fc8178b775858189088",
+      "uedb5_snapshot_error": ""
+    },
+    "UE2_Runtime_v126": {
+      "engine": "ue2",
+      "file_sha256": "779492bc0ee2bdd170217705715534352a671b569440dbd90a407ecb74cf8937",
+      "version": 126,
+      "names": 5475,
+      "imports": 85,
+      "exports": 8727,
+      "reader_shape_sha256": "043eb3c43141c2720f671614745d169fd4bccc96359bd6d15a341dc436d0f6a0",
+      "uedb5_snapshot_sha256": "029361c4360692c8aaf941a7c430ce9636f8b50a60968bd6576ec23db6efe9cb",
+      "uedb5_snapshot_error": ""
+    }
+  },
+  "reader_and_snapshot_sources": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+    "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php": "2a491e2ca50533299e4f470ffd00de8acaf0ca99a5ba739ae7f50ebe229a965f",
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+    "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php": "4237b88a7292077507038ae2d71f78e63a4200d13d5ba2140ff2d951381355c0",
+    "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php": "730bb5965d80f63938b2a8b09fdda3ef0a54acf29d43a67da355e53a99361d02",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE2LegacyCompatibilityTableSnapshotBuilder.php": "f3c3e60ba2803b2ded1a6848d3ceb9db5bc1df694af41c73c3cffb4ea1d48d87",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php": "4f95bbdcdf157bce4213d7721a23bd272a3faa7d675d23485886f0ff214b6212"
+  },
+  "ut2004_legacy_package_independence": "UE2-owned adapter; v61 genuine UE1-wire .utx accepted without loading CatalogUE1PackageReader; same UEDB5 snapshot as original compatibility",
+  "full_original_UE2_ut2004_game_profile_and_production_DB_tested": false,
+  "native_engine_replay_count": 0,
+  "sql_writes": 0
+}

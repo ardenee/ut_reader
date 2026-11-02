@@ -16,7 +16,7 @@ final class Uedb5UnrealSnapshotBuilder
     public static function build(CatalogUE1PackageReader $reader, array $file): array
     {
         $version = (int)($reader->getHeader()['version'] ?? -1);
-        return Uedb5LegacySnapshotBuilder::build($reader, $file, [
+        return Uedb5UE1TableSnapshotBuilder::build($reader, $file, [
             'label' => 'Unreal',
             'policy' => $version > 69
                 ? self::POLICY_POST_V69_UNRESOLVED
