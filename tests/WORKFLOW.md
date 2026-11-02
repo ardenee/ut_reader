@@ -17,4 +17,4 @@ Performance is measured by mandatory *unverified behaviour remaining*, defects c
 
 ## Reader architecture
 
-The UE1, UE2, UE3, UE4 and UE5 implementations now own separate concrete package parsers. UE1 and UE2 share bounded byte IO and a minimal table method interface, NOT package-summary or table parsing. Common UEDB5 dependencies and provider resolution remain shared. Edits to shared IO and interface must flag both UE1/UE2. Use python tests/tools/impact.py --path <changed source> to identify affected operation cases.
+The UE1, UE2, UE3, UE4 and UE5 implementations now own separate concrete package parsers. UE1 and UE2 each own their byte IO, package-summary and table parsing, and UEDB5 table snapshot serializers. No engine-specific reader or byte-stream class is shared. Generic catalog UEDB5 dependencies and provider resolution remain shared; edits to those shared services require explicit cross-engine impact review. Use python tests/tools/impact.py --path <changed source> to identify affected operation cases.

@@ -555,8 +555,8 @@
         "F01",
         "F02"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "REUSE_ACCEPTED_EVIDENCE",
+      "code_path_evidence": "PRODUCTION_SOURCE_CALLSITES_TRACED; DB_EXECUTION_UNAVAILABLE_ON_DEV",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -574,10 +574,12 @@
       "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
       "required_fixture": "real_file_engine_game_version_and_selected_reader",
       "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
-      "existing_proof_sha_refs": [],
+      "existing_proof_sha_refs": [
+        "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8"
+      ],
       "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
+      "test_authorization": "REUSE_PRIOR_PROOF_ONLY; NO_NATIVE_OR_DB_REPLAY",
+      "result_evidence": "tests/evidence/reader-silo-all-engines-20261102.json",
       "affected_code_sha256": null,
       "php_source_sites": [
         {
@@ -590,7 +592,19 @@
           "line": 46,
           "call_site": "if (in_array($engineKey,"
         }
-      ]
+      ],
+      "reviewed_at": "2026-11-02",
+      "current_review_source_sha256": {
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
+      },
+      "review_findings": [
+        "VerifiedFilePublisher::publish -> Uedb5SourceSnapshotFactory::buildForGameId -> CatalogReaderResolver::resolve(UE1) -> CatalogUE1PackageReader; stable sourceKey(3)=ut99 and sourceKey(12)=unrealgold.",
+        "Read-only previously accepted genuine Unreal v61, UT99 v432/v469f byte/table evidence reused. Package v69 alone does not prove UT99 versus Unreal v227 or UT99 v469f runtime provenance.",
+        "Actual UEDB5 DB/source-profile dispatch was not exercised: DEV configured MySQL refused connection. No full end-to-end PASS."
+      ],
+      "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+      "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69"
     },
     {
       "key": "ue1-tables",
@@ -602,8 +616,8 @@
         "F05",
         "F06"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "REUSE_ACCEPTED_EVIDENCE",
+      "code_path_evidence": "PRODUCTION_SOURCE_CALLSITES_TRACED; DB_EXECUTION_UNAVAILABLE_ON_DEV",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
@@ -613,8 +627,8 @@
         "catalog/src/Infrastructure/Readers/CatalogUE1ClassicTaggedPropertyReader.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
-      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
-      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h",
+      "epic_symbol_to_verify": "FPackageFileSummary::operator<< / ULinkerLoad::ULinkerLoad / FObjectImport and FObjectExport serialization",
       "game_profiles": [
         "unrealgold",
         "ut99"
@@ -623,10 +637,12 @@
       "test_purpose": "Wrong name/import/export IDs created from package tables",
       "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
       "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
-      "existing_proof_sha_refs": [],
+      "existing_proof_sha_refs": [
+        "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8"
+      ],
       "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
+      "test_authorization": "REUSE_PRIOR_GENUINE_TABLE_PROOF_ONLY; NO_REEXECUTION",
+      "result_evidence": "tests/evidence/reader-silo-all-engines-20261102.json",
       "affected_code_sha256": null,
       "php_source_sites": [
         {
@@ -639,7 +655,20 @@
           "line": 148,
           "call_site": "Uedb5Ut99SnapshotBuilder::build("
         }
-      ]
+      ],
+      "reviewed_at": "2026-11-02",
+      "current_review_source_sha256": {
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "3650bbcbae573e6a216840928f2cf8e24a53fb331faaf6eb6e46c4c45b8e6f3b"
+      },
+      "review_findings": [
+        "Original Unreal v1.200 Core/Src/UnLinker.h contains inline summary and linker-table loaders; game-built UE1 source overlays are separate.",
+        "Accepted unchanged UE1 reader/stream/table serializer SHA plus genuine v61 and v69 packages preserve table snapshot bytes before/after reader separation.",
+        "This does not prove native Unreal/UT99 exact loaded-name and import/export offsets for every game revision, nor persisted SQL or displayed results."
+      ],
+      "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+      "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69"
     },
     {
       "key": "ue1-verify-import",
@@ -650,15 +679,15 @@
         "F13",
         "F14"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "BLOCKED",
+      "code_path_evidence": "PRODUCTION_SOURCE_CALLSITES_TRACED; DB_EXECUTION_UNAVAILABLE_ON_DEV",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
       ],
       "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
-      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
-      "epic_symbol_to_verify": "FObjectManager::GetPackageLinker",
+      "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h",
+      "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
       "game_profiles": [
         "unrealgold",
         "ut99"
@@ -669,7 +698,7 @@
       "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "test_authorization": "BLOCKED_NO_CURRENT_DEV_DATABASE_OR_SOURCE_SCOPED_PROVIDER",
       "result_evidence": null,
       "affected_code_sha256": null,
       "php_source_sites": [
@@ -678,7 +707,19 @@
           "line": 116,
           "call_site": "PdoUe1VerifyImportProjectionResolver::resolveInMemoryOutcome("
         }
-      ]
+      ],
+      "reviewed_at": "2026-11-02",
+      "current_review_source_sha256": {
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
+      },
+      "review_findings": [
+        "Active path: Uedb5ClassicDependencyResolver::resolve -> PdoUe1VerifyImportProjectionResolver::resolveInMemoryOutcome; exact source implementation is ULinkerLoad::VerifyImport in Unreal Core/Src/UnLinker.h.",
+        "A source-selected genuine consumer/import and original provider selection are required. DEV MySQL endpoint refused connection. No fabricated class/outer or missing verdict.",
+        "DEV MySQL80 service is stopped (automatic startup configured); one elevated Start-Service attempt failed, with no new mysqld start entry in the error log. No production DB was modified."
+      ],
+      "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+      "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69"
     },
     {
       "key": "ue1-mount-provider",
@@ -688,8 +729,8 @@
         "F11",
         "F15"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "BLOCKED",
+      "code_path_evidence": "PRODUCTION_SOURCE_CALLSITES_TRACED; DB_EXECUTION_UNAVAILABLE_ON_DEV",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
@@ -705,9 +746,11 @@
       "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
       "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
       "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
-      "existing_proof_sha_refs": [],
+      "existing_proof_sha_refs": [
+        "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261101-G3-T076-FULL-original-five-engine-provider-selection-acceptance.json sha256:424d9474c05a11ad1a0a63483b7dad917cd8453761dc26ae65de7da0fbb25341"
+      ],
       "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "test_authorization": "BLOCKED_NO_CURRENT_DEV_DB_OR_ORIGINAL_RUNTIME_MOUNT_ORDER",
       "result_evidence": null,
       "affected_code_sha256": null,
       "php_source_sites": [
@@ -721,7 +764,23 @@
           "line": 25,
           "call_site": "public function select("
         }
-      ]
+      ],
+      "reviewed_at": "2026-11-02",
+      "current_review_source_sha256": {
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "2fd17fec384914d0cac3dce0244f445c46f428d7125f32ca9f228be2fc0832b9"
+      },
+      "review_findings": [
+        "Active path: Uedb5GameDependencyPassService::processFile -> PdoUedb5PhysicalProviderSelector::select -> selectClassic; Epic Unreal FObjectManager::GetPackageLinker prefers loaded linkers then appFindPackageFile Paths.",
+        "Pass service resolverOptions currently supplies no classic_runtime_context; selector cannot enter authoritative mounted-file precedence in that production route.",
+        "Single indexed candidate may be selected without confirming original game mount reachability; do not claim runtime resolved from repository presence.",
+        "Prior original native T076 evidence is accepted, but its recorded selector SHA differs from current source; do not reuse as current exact-code PASS.",
+        "Need real original session mount list, consumer ID, verified duplicate candidates, and reachable DEV DB.",
+        "DEV MySQL80 service is stopped (automatic startup configured); one elevated Start-Service attempt failed, with no new mysqld start entry in the error log. No production DB was modified."
+      ],
+      "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+      "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69"
     },
     {
       "key": "ue1-dependency-publish",
@@ -732,8 +791,8 @@
         "F18",
         "F19"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "BLOCKED",
+      "code_path_evidence": "PRODUCTION_SOURCE_CALLSITES_TRACED; DB_EXECUTION_UNAVAILABLE_ON_DEV",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -752,7 +811,7 @@
       "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "test_authorization": "BLOCKED_NO_CURRENT_DEV_DB_AND_ORIGINAL_REFERENCE_OUTCOME",
       "result_evidence": null,
       "affected_code_sha256": null,
       "php_source_sites": [
@@ -766,7 +825,19 @@
           "line": 268,
           "call_site": "$this->publisher->publish("
         }
-      ]
+      ],
+      "reviewed_at": "2026-11-02",
+      "current_review_source_sha256": {
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
+      },
+      "review_findings": [
+        "Active path: VerifiedFilePublisher::publish -> Uedb5GameDependencyPassService::runFile -> provider selector -> Uedb5DependencyRebuilder::rebuild -> PdoUedb5DependencyProjectionPublisher::publish.",
+        "DB-backed published edge/count comparison cannot run because DEV MySQL endpoint refused connection; no claimed persisted parity.",
+        "DEV MySQL80 service is stopped (automatic startup configured); one elevated Start-Service attempt failed, with no new mysqld start entry in the error log. No production DB was modified."
+      ],
+      "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+      "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69"
     },
     {
       "key": "ue1-website-dependency",
@@ -776,8 +847,8 @@
         "F17",
         "F22"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "BLOCKED",
+      "code_path_evidence": "PRODUCTION_SOURCE_CALLSITES_TRACED; DB_EXECUTION_UNAVAILABLE_ON_DEV",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -798,7 +869,7 @@
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
       "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
+      "test_authorization": "BLOCKED_NO_CURRENT_DEV_DB_FOR_STORED_EDGE_AND_VIEW",
       "result_evidence": null,
       "affected_code_sha256": null,
       "php_source_sites": [
@@ -812,7 +883,19 @@
           "line": 30,
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
-      ]
+      ],
+      "reviewed_at": "2026-11-02",
+      "current_review_source_sha256": {
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
+      },
+      "review_findings": [
+        "Named production read paths include game-missing.php/PdoGameMissingDependencyQuery and dependency-cross-examine.php/PdoGameDependencyCrossExamineQuery.",
+        "Cannot compare rendered/query outcomes with authoritative stored UE1 dependency rows while configured DEV DB refuses connection.",
+        "DEV MySQL80 service is stopped (automatic startup configured); one elevated Start-Service attempt failed, with no new mysqld start entry in the error log. No production DB was modified."
+      ],
+      "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
+      "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69"
     },
     {
       "key": "ue2-dispatch",
@@ -838,7 +921,7 @@
         "ut2003",
         "ut2004"
       ],
-      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module.",
       "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
       "required_fixture": "real_file_engine_game_version_and_selected_reader",
       "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
@@ -889,7 +972,7 @@
         "ut2003",
         "ut2004"
       ],
-      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module.",
       "test_purpose": "Wrong name/import/export IDs created from package tables",
       "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
       "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
@@ -939,7 +1022,7 @@
         "ut2003",
         "ut2004"
       ],
-      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module.",
       "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
       "acceptance_condition": "Same original linker VerifyImport outcome on source-selected import",
@@ -978,7 +1061,7 @@
         "ut2003",
         "ut2004"
       ],
-      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module.",
       "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
       "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
       "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
@@ -1024,7 +1107,7 @@
         "ut2003",
         "ut2004"
       ],
-      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module.",
       "test_purpose": "Correct decoded package but wrong SQL dependency edge/status/count",
       "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
       "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
@@ -1071,7 +1154,7 @@
         "ut2003",
         "ut2004"
       ],
-      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides; UT2004 legacy pre-v100 can be routed to UE1 only under explicit compatibility decision.",
+      "source_provenance_constraint": "Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module.",
       "test_purpose": "UI reports missing or resolved dependency incorrectly",
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
