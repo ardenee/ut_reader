@@ -1,0 +1,426 @@
+{
+  "date": "2026-11-02",
+  "engine": "ue4",
+  "contract_scope": "Six original fixed implemented metadata-only UT4 operations: dispatch, tables, verify_import, mount_provider, dependency_publish, website_dependency. No payload loads, no new operations.",
+  "source_evolution": {
+    "revision_authorities": {
+      "4.0.2_first_release": {
+        "source_root": "C:\\Temp\\UnrealDB\\UE4\\source-4.0.2",
+        "source_file_SHA256": {
+          "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h": "51c166c47284b14fac2ff52adeaf4ad25a30f999033bded518b0edb1a2d92052",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp": "81a1c2f32406d345221f8f39ad1b871eb3ca3198c03110f6dbc08da292d8a757",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp": "96757530b25158747d2643216d0ec8ce6fbb9f7ee55122147e185b8821f9ef5c",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp": "9abf77fc041bea0c825c7cf05b03b4d350d75d674d4ced709c8d7cf004aeec5f"
+        }
+      },
+      "UT4_clean_master": {
+        "source_root": "L:\\Source\\Games\\UT4\\UnrealTournament",
+        "source_file_SHA256": {
+          "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h": "5acc8d00b4960c5e3cbe66a06bd8140c23f839a5777e4e0db64934c6d511e83e",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp": "e6b4bd2f16d4b54fc66569b3f7e63995d9892c36314bae196f19d39644a3fa36",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp": "e397b3a6122677adc0df9a8a3143b187da1c79926c58fbeb3a0980e9a70562d4",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp": "0c9c24041a14a6b9f1cd27fe35a88336b5c6179e2a02e91bb883c41f907d40dd"
+        }
+      },
+      "4.27.2_latest": {
+        "source_root": "L:\\Source\\Engine\\UE4\\UE 4.27.2",
+        "source_file_SHA256": {
+          "Engine/Source/Runtime/Core/Public/UObject/ObjectVersion.h": "378c49e3af3542c87c95d7259b81fcb77a98077d438cccfa227b2f90870a000a",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp": "39db1f3e1a48d829e65991259eaefb955680ccf6165d5e31b9db862b02560569",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp": "8ff60dd29d5a0e50eb1222da0d9c5df71e088a1f2641e8512e6f6ce05cba4146",
+          "Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp": "5fb996d0aafb7dc9b2615484976a487e97e1188b42e48229fdba024bc5bc4dd5"
+        }
+      }
+    },
+    "release_package_version_latest": {
+      "UE4_4.0.2": 342,
+      "UT4_clean_master": 511,
+      "UE4_4.27.2": 522
+    },
+    "full_Cplusplus_enumeration_includes_nonstandard_identifiers": true,
+    "UT4_version_boundaries": {
+      "oldest_loadable": 214,
+      "name_hash_fields": 504,
+      "preload_dependencies": 507,
+      "template_export_index": 508,
+      "searchable_names": 510,
+      "64_bit_export_serials": 511,
+      "UE4_27_explicit_non_outer_package_name_not_applicable_to_UT4": 520
+    },
+    "source_authority": "UT4 clean-master cc3df76429 for staged game7. Early UE4.0.2 dd065b230564ca8b572971395207a6413919c7fc and final UE4.27.2 d94b38ae3 serve as independent history and later-version boundaries only, never override UT4 source.",
+    "original_UE4_4_0_2_source_342_package_fixture": "NOT PRESENT in current 9 original PRD sample. First-release source compared for branching, not claimed tested with a source-native v342 fixture."
+  },
+  "independent_original_source_bytes": {
+    "result": "UT4_NINE_GENUINE_ORIGINAL_PACKAGES_INDEPENDENT_NAME_IMPORT_EXPORT_ALL_ROWS_SOURCE_BYTE_EXACT",
+    "original_source": "Actual SHA256-pinned UT4 original package bytes, separately decoded by Python struct cursor; compared all names+optional hashes, full import FName/outer records, export head/class/outer/object/flags/serial size and offset with 32-/64-bit version gate.",
+    "row_totals": {
+      "names": 5146,
+      "imports": 1488,
+      "exports": 7557
+    },
+    "nine_source_version_cases": [
+      {
+        "original_file_id": 1353254,
+        "source_version": 511,
+        "licensee_version": 0,
+        "source_SHA256": "589dbcaeef20da85553b60c4e2a38f1ae7fec1547f9bd39d5584e81db8428709",
+        "names": 1833,
+        "imports": 527,
+        "exports": 3268,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1340389,
+        "source_version": 510,
+        "licensee_version": 0,
+        "source_SHA256": "7b77fc720ae5b65ec0581ced282d41bc2ed054091d69092a71b5358142149adb",
+        "names": 851,
+        "imports": 203,
+        "exports": 729,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1357686,
+        "source_version": 504,
+        "licensee_version": 0,
+        "source_SHA256": "6ed753e1411eff97556ceea31f4b2e12d981c9f049a5acfcc433204d46b276d3",
+        "names": 676,
+        "imports": 208,
+        "exports": 1667,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1355626,
+        "source_version": 493,
+        "licensee_version": 0,
+        "source_SHA256": "4ef83f68a3da5b8e0123ad82307303a7c9e4ddabb0ac5f7648c60610db3af2f7",
+        "names": 557,
+        "imports": 175,
+        "exports": 574,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1336724,
+        "source_version": 452,
+        "licensee_version": 0,
+        "source_SHA256": "87c5987d7f79f35fb7d1cb8728777fce97a1445ed6e4bdd853590b69332ac546",
+        "names": 409,
+        "imports": 129,
+        "exports": 567,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1348048,
+        "source_version": 434,
+        "licensee_version": 0,
+        "source_SHA256": "588fb93b1e3117bedc7bb52c474e7ea5d4c8f3d82931e018b55aa783e3e1d359",
+        "names": 442,
+        "imports": 126,
+        "exports": 589,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1335845,
+        "source_version": 383,
+        "licensee_version": 0,
+        "source_SHA256": "4cf09992bad6dc5e967634c418fceec8a172433adc2e8d624bcd8f8c84fa25a7",
+        "names": 65,
+        "imports": 10,
+        "exports": 4,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1339727,
+        "source_version": 503,
+        "licensee_version": 0,
+        "source_SHA256": "6894e087c6b423bbcc36dd4980d12699e0331ea10d5c40f01fd0d1b9172d4273",
+        "names": 146,
+        "imports": 51,
+        "exports": 38,
+        "serialized_export_offsets_and_width_pass": true
+      },
+      {
+        "original_file_id": 1337770,
+        "source_version": 506,
+        "licensee_version": 0,
+        "source_SHA256": "6bac79231543a17eac9a301b480ff98904b8591ca10ac7366b0233300ab3d057",
+        "names": 167,
+        "imports": 59,
+        "exports": 121,
+        "serialized_export_offsets_and_width_pass": true
+      }
+    ],
+    "mismatches": 0,
+    "PRD_database_writes": 0,
+    "PRD_original_file_writes": 0
+  },
+  "actual_PRD_source_profile_dispatch": "Nine genuine originally verified PRD files, nine version profiles 383/434/452/493/503/504/506/510/511; exact MD5+SHA1+SHA256 and current UEDB5 headers/tables match original file counts, then separate Python decoder matched all complete names/imports/exports and every serialized export offset with no mismatches.",
+  "UE4_source_root_and_no_mount": {
+    "result": "ORIGINAL_UT4_UE4_MULTIVERSION_NO_SOURCE_MOUNT_FAIL_CLOSED_AND_PROVIDER_ROOT_PASS",
+    "cases": [
+      {
+        "original_file_id": 1353254,
+        "original_version": 511,
+        "original_sha256": "589dbcaeef20da85553b60c4e2a38f1ae7fec1547f9bd39d5584e81db8428709",
+        "source_imports": 527,
+        "source_unresolved_provider_roots": 218,
+        "result_counts": {
+          "common": 87,
+          "unresolved": 440
+        }
+      },
+      {
+        "original_file_id": 1340389,
+        "original_version": 510,
+        "original_sha256": "7b77fc720ae5b65ec0581ced282d41bc2ed054091d69092a71b5358142149adb",
+        "source_imports": 203,
+        "source_unresolved_provider_roots": 13,
+        "result_counts": {
+          "unresolved": 28,
+          "common": 175
+        }
+      },
+      {
+        "original_file_id": 1357686,
+        "original_version": 504,
+        "original_sha256": "6ed753e1411eff97556ceea31f4b2e12d981c9f049a5acfcc433204d46b276d3",
+        "source_imports": 208,
+        "source_unresolved_provider_roots": 20,
+        "result_counts": {
+          "unresolved": 43,
+          "common": 165
+        }
+      },
+      {
+        "original_file_id": 1355626,
+        "original_version": 493,
+        "original_sha256": "4ef83f68a3da5b8e0123ad82307303a7c9e4ddabb0ac5f7648c60610db3af2f7",
+        "source_imports": 175,
+        "source_unresolved_provider_roots": 36,
+        "result_counts": {
+          "unresolved": 104,
+          "common": 71
+        }
+      },
+      {
+        "original_file_id": 1336724,
+        "original_version": 452,
+        "original_sha256": "87c5987d7f79f35fb7d1cb8728777fce97a1445ed6e4bdd853590b69332ac546",
+        "source_imports": 129,
+        "source_unresolved_provider_roots": 9,
+        "result_counts": {
+          "common": 109,
+          "unresolved": 20
+        }
+      },
+      {
+        "original_file_id": 1348048,
+        "original_version": 434,
+        "original_sha256": "588fb93b1e3117bedc7bb52c474e7ea5d4c8f3d82931e018b55aa783e3e1d359",
+        "source_imports": 126,
+        "source_unresolved_provider_roots": 8,
+        "result_counts": {
+          "common": 107,
+          "unresolved": 19
+        }
+      },
+      {
+        "original_file_id": 1335845,
+        "original_version": 383,
+        "original_sha256": "4cf09992bad6dc5e967634c418fceec8a172433adc2e8d624bcd8f8c84fa25a7",
+        "source_imports": 10,
+        "source_unresolved_provider_roots": 2,
+        "result_counts": {
+          "common": 6,
+          "unresolved": 4
+        }
+      },
+      {
+        "original_file_id": 1339727,
+        "original_version": 503,
+        "original_sha256": "6894e087c6b423bbcc36dd4980d12699e0331ea10d5c40f01fd0d1b9172d4273",
+        "source_imports": 51,
+        "source_unresolved_provider_roots": 16,
+        "result_counts": {
+          "common": 19,
+          "unresolved": 32
+        }
+      },
+      {
+        "original_file_id": 1337770,
+        "original_version": 506,
+        "original_sha256": "6bac79231543a17eac9a301b480ff98904b8591ca10ac7366b0233300ab3d057",
+        "source_imports": 59,
+        "source_unresolved_provider_roots": 12,
+        "result_counts": {
+          "common": 35,
+          "unresolved": 24
+        }
+      }
+    ],
+    "source_imports": 1488,
+    "actual_native_runtime_mounts_measured": 0,
+    "wrong_provider_root_and_descendants": "INVALID",
+    "matching_real_package_root": "PACKAGE_LINKER",
+    "none_import": "IGNORED",
+    "live_PRD_writes": 0
+  },
+  "source_correction": "UT4 clean-master top Package import binds a physical linker first. UE4 VerifyImport in-memory static projection now rejects descendants and root from another provider; NAME_None retains source-ignored branch. Actual production physical selector no longer promotes a singleton indexed candidate without original runtime mount/source order.",
+  "source_mount_limit": "No original UT4 native runtime mounted search order observed. All 1488 original imports in sampled files classified unresolved or configured common, never fabricated missing/resolved.",
+  "real_production_pass2_dry_run": {
+    "original_file_ids": [
+      1353254,
+      1340389,
+      1357686,
+      1335845
+    ],
+    "verified_game7_files": 64247,
+    "apply": false
+  },
+  "isolated_SQL_publisher_and_website": {
+    "result": "UE4_ORIGINAL_PRD_MULTIVERSION_9_SOURCE_SQL_PUBLISH_AND_WEBSITE_PASS",
+    "original_cases": [
+      {
+        "file_id": 1353254,
+        "version": 511,
+        "original_SHA256": "589dbcaeef20da85553b60c4e2a38f1ae7fec1547f9bd39d5584e81db8428709",
+        "original_imports": 527,
+        "published_edges": 527,
+        "package_summaries": 224,
+        "outcomes": {
+          "common": 87,
+          "unresolved": 440
+        }
+      },
+      {
+        "file_id": 1340389,
+        "version": 510,
+        "original_SHA256": "7b77fc720ae5b65ec0581ced282d41bc2ed054091d69092a71b5358142149adb",
+        "original_imports": 203,
+        "published_edges": 203,
+        "package_summaries": 20,
+        "outcomes": {
+          "unresolved": 28,
+          "common": 175
+        }
+      },
+      {
+        "file_id": 1357686,
+        "version": 504,
+        "original_SHA256": "6ed753e1411eff97556ceea31f4b2e12d981c9f049a5acfcc433204d46b276d3",
+        "original_imports": 208,
+        "published_edges": 208,
+        "package_summaries": 25,
+        "outcomes": {
+          "unresolved": 43,
+          "common": 165
+        }
+      },
+      {
+        "file_id": 1355626,
+        "version": 493,
+        "original_SHA256": "4ef83f68a3da5b8e0123ad82307303a7c9e4ddabb0ac5f7648c60610db3af2f7",
+        "original_imports": 175,
+        "published_edges": 175,
+        "package_summaries": 41,
+        "outcomes": {
+          "unresolved": 104,
+          "common": 71
+        }
+      },
+      {
+        "file_id": 1336724,
+        "version": 452,
+        "original_SHA256": "87c5987d7f79f35fb7d1cb8728777fce97a1445ed6e4bdd853590b69332ac546",
+        "original_imports": 129,
+        "published_edges": 129,
+        "package_summaries": 14,
+        "outcomes": {
+          "common": 109,
+          "unresolved": 20
+        }
+      },
+      {
+        "file_id": 1348048,
+        "version": 434,
+        "original_SHA256": "588fb93b1e3117bedc7bb52c474e7ea5d4c8f3d82931e018b55aa783e3e1d359",
+        "original_imports": 126,
+        "published_edges": 126,
+        "package_summaries": 13,
+        "outcomes": {
+          "common": 107,
+          "unresolved": 19
+        }
+      },
+      {
+        "file_id": 1335845,
+        "version": 383,
+        "original_SHA256": "4cf09992bad6dc5e967634c418fceec8a172433adc2e8d624bcd8f8c84fa25a7",
+        "original_imports": 10,
+        "published_edges": 10,
+        "package_summaries": 4,
+        "outcomes": {
+          "common": 6,
+          "unresolved": 4
+        }
+      },
+      {
+        "file_id": 1339727,
+        "version": 503,
+        "original_SHA256": "6894e087c6b423bbcc36dd4980d12699e0331ea10d5c40f01fd0d1b9172d4273",
+        "original_imports": 51,
+        "published_edges": 51,
+        "package_summaries": 18,
+        "outcomes": {
+          "common": 19,
+          "unresolved": 32
+        }
+      },
+      {
+        "file_id": 1337770,
+        "version": 506,
+        "original_SHA256": "6bac79231543a17eac9a301b480ff98904b8591ca10ac7366b0233300ab3d057",
+        "original_imports": 59,
+        "published_edges": 59,
+        "package_summaries": 15,
+        "outcomes": {
+          "common": 35,
+          "unresolved": 24
+        }
+      }
+    ],
+    "total_imports": 1488,
+    "published_SQL_edges": 1488,
+    "website_missing_totals": {
+      "missing_objects": 0,
+      "missing_packages": 0,
+      "files_with_missing": 0
+    },
+    "SQL_external_transaction_rollback": true,
+    "PRD_SQL_writes": 0,
+    "PRD_UEDB5_writes": 0
+  },
+  "PRD_database_writes": 0,
+  "PRD_metadata_writes": 0,
+  "independent_script_SHA256": "b7129c05a50b96de7df806519f2d186cc9db5fa6c427a3d6158e082bd654fc07",
+  "runtime_verifiers_SHA256": {
+    "verify_ue4_ut4_original_prd_mount_root.php": "bc3f7855f9fa8fb242cce1ec7e59da945d64840f0190e7009a7f5c2693286c9a",
+    "verify_original_ut4_isolated_sql_website.php": "320c635ff4d403d5c1f824e482e66b17c98947bf4da16ccbc75dda5d5f43aecd",
+    "verify_ut4_pass2_production_readonly.php": "9d131a906f56cde6564900add857f8cffc1c8ffae797cf4e1564d5febc5977e7"
+  },
+  "evidence_results_SHA256": {
+    "manifest.json": "5ff0952d463f93a2118b1001edbfd05e815f8f260bc02c7b17db02cf30e4fc04",
+    "ue4-original-independent-tables-all-records.json": "14579c8bfca928d3b2946cf27832d7f45a7c365cd4e21b909120578cd747ee5c",
+    "ue4-original-mount-and-root-evidence.json": "f4172125ff8cbfa5f921805d9da272c686cb889e014d8c77284693b75911bd92",
+    "ue4-source-real-publisher-website.json": "2c72f729a5e69f69c2ee66f896d97d46bcd19467fda144744ee19290a971ee66",
+    "ue4-prd-pass2-production-dryrun.json": "9428a9dd66fe2633b37c1a1f3b4be761f3ad78c0ebc3c726131f190893cb32b7"
+  },
+  "production_code_SHA256": {
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "6474ef2548d4ed32c0fd15117ffd4c1ecf01556b5846ecc1c875cb2990584eb4",
+    "catalog/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php": "81212ea603ce64069b669b3164bb5f8205ccc352d33e4cb74b789e4bf3ee3001"
+  },
+  "production_UE4_SQL_rollout": "DEFERRED by user until all UE1–UE5 readers verified. Code-path parity does not mean old PRD SQL dependency data is rebuilt.",
+  "new_fixed_contract_ids": 0
+}

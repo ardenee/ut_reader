@@ -1,0 +1,294 @@
+{
+  "scope": "Source audit only: actual UnrealDB UE5 classic package summary/name/import/export and Zen/IoStore imported package/hash/payload container reader. No editor-only asset payload methods treated as reader operations.",
+  "source_revisions": {
+    "earliest_actual_release": {
+      "release": "5.0.0-release",
+      "commit": "05ce24e3038cb1994a7c71d4d0058dbdb112f52b",
+      "root": "C:\\Temp\\UnrealDB\\UE5\\source-5.0.0-release"
+    },
+    "latest_local": {
+      "release": "5.8.3",
+      "commit": "396c9f059903aed5fec78ecd3d437a40c6415368",
+      "root": "L:\\Source\\Engine\\UE5\\UE 5.8.3"
+    }
+  },
+  "files": {
+    "classic_import_verification": {
+      "relative": "Engine/Source/Runtime/CoreUObject/Private/UObject/LinkerLoad.cpp",
+      "5.0.0_sha256": "07cf2b9d4eb0db121bec82f4e2d68b30cf0ad90c819b63cf85c49b4d830b8385",
+      "5.8.3_sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
+      "byte_identical": false,
+      "5.0.0_lines": 6312,
+      "5.8.3_lines": 8120,
+      "source_features_5.0.0": {
+        "VerifyImportInner": {
+          "present": true,
+          "first_line": 2884
+        },
+        "GetPackageName": {
+          "present": true,
+          "first_line": 3238
+        },
+        "HasPackageName": {
+          "present": true,
+          "first_line": 1886
+        },
+        "LoadImportPackage": {
+          "present": true,
+          "first_line": 3228
+        },
+        "PKG_NotExternallyReferenceable": {
+          "present": false,
+          "first_line": null
+        }
+      },
+      "source_features_5.8.3": {
+        "VerifyImportInner": {
+          "present": true,
+          "first_line": 3594
+        },
+        "GetPackageName": {
+          "present": true,
+          "first_line": 2402
+        },
+        "HasPackageName": {
+          "present": true,
+          "first_line": 2385
+        },
+        "LoadImportPackage": {
+          "present": true,
+          "first_line": 3985
+        },
+        "PKG_NotExternallyReferenceable": {
+          "present": false,
+          "first_line": null
+        }
+      }
+    },
+    "classic_import_export_wire": {
+      "relative": "Engine/Source/Runtime/CoreUObject/Private/UObject/ObjectResource.cpp",
+      "5.0.0_sha256": "4a1d8f61a4cfb1c5566c0c3557b044ed0b90f36b15da26a8909e737da2b545c5",
+      "5.8.3_sha256": "572fb09a84b99a14e9349fa84fa1a6a76b640e10778e423488092ab863b11206",
+      "byte_identical": false,
+      "5.0.0_lines": 329,
+      "5.8.3_lines": 564,
+      "source_features_5.0.0": {
+        "PackageName": {
+          "present": true,
+          "first_line": 12
+        },
+        "FObjectDataResource": {
+          "present": false,
+          "first_line": null
+        },
+        "IsFilterEditorOnly": {
+          "present": true,
+          "first_line": 312
+        },
+        "FObjectImport": {
+          "present": true,
+          "first_line": 253
+        },
+        "FObjectExport": {
+          "present": true,
+          "first_line": 31
+        }
+      },
+      "source_features_5.8.3": {
+        "PackageName": {
+          "present": true,
+          "first_line": 18
+        },
+        "FObjectDataResource": {
+          "present": true,
+          "first_line": 398
+        },
+        "IsFilterEditorOnly": {
+          "present": true,
+          "first_line": 360
+        },
+        "FObjectImport": {
+          "present": true,
+          "first_line": 306
+        },
+        "FObjectExport": {
+          "present": true,
+          "first_line": 37
+        }
+      }
+    },
+    "classic_package_summary": {
+      "relative": "Engine/Source/Runtime/CoreUObject/Public/UObject/PackageFileSummary.h",
+      "5.0.0_sha256": "67af1bc8a0c5734df68001f679d5cf9139367e9f33c8bdfdec78874ff88233df",
+      "5.8.3_sha256": "38ba3bc134941cc8faa64e8b2bd05f02e797944488bdd03bfb24d465a3fd0dc6",
+      "byte_identical": false,
+      "5.0.0_lines": 328,
+      "5.8.3_lines": 379,
+      "source_features_5.0.0": {
+        "CellImportCount": {
+          "present": false,
+          "first_line": null
+        },
+        "CellExportCount": {
+          "present": false,
+          "first_line": null
+        },
+        "DataResourceOffset": {
+          "present": false,
+          "first_line": null
+        },
+        "PreloadDependencyCount": {
+          "present": true,
+          "first_line": 211
+        },
+        "DependsOffset": {
+          "present": true,
+          "first_line": 127
+        },
+        "ImportCount": {
+          "present": true,
+          "first_line": 117
+        },
+        "ExportCount": {
+          "present": true,
+          "first_line": 20
+        },
+        "CustomVersionContainer": {
+          "present": true,
+          "first_line": 59
+        }
+      },
+      "source_features_5.8.3": {
+        "CellImportCount": {
+          "present": true,
+          "first_line": 163
+        },
+        "CellExportCount": {
+          "present": true,
+          "first_line": 153
+        },
+        "DataResourceOffset": {
+          "present": true,
+          "first_line": 288
+        },
+        "PreloadDependencyCount": {
+          "present": true,
+          "first_line": 268
+        },
+        "DependsOffset": {
+          "present": true,
+          "first_line": 173
+        },
+        "ImportCount": {
+          "present": true,
+          "first_line": 143
+        },
+        "ExportCount": {
+          "present": true,
+          "first_line": 30
+        },
+        "CustomVersionContainer": {
+          "present": true,
+          "first_line": 69
+        }
+      }
+    },
+    "classic_package_summary_serializer": {
+      "relative": "Engine/Source/Runtime/CoreUObject/Private/UObject/PackageFileSummary.cpp",
+      "5.0.0_sha256": "09636f764c565afe3ad9b0b3269260a75db8afc40e2674896bb303317ffe2d11",
+      "5.8.3_sha256": "45ba74addefec3877b18fe0c49a3eb398f24e1c35fe2f547afcecdef3ef12f8c",
+      "byte_identical": false,
+      "5.0.0_lines": 479,
+      "5.8.3_lines": 609
+    },
+    "zen_runtime": {
+      "relative": "Engine/Source/Runtime/CoreUObject/Private/Serialization/AsyncLoading2.cpp",
+      "5.0.0_sha256": "7f33b1b5052b0f1b9ca0fcd96260e7f4ab89ed986fa8ac2161df63d45a210ccc",
+      "5.8.3_sha256": "43ce5d7838d25f5b1a39f3acd5db71e29973c5a0f5f28240ef7602d309d616a9",
+      "byte_identical": false,
+      "5.0.0_lines": 6105,
+      "5.8.3_lines": 13976,
+      "source_features_5.0.0": {
+        "FPackageObjectIndex": {
+          "present": true,
+          "first_line": 141
+        },
+        "FCellExportMapEntry": {
+          "present": false,
+          "first_line": null
+        },
+        "FZenPackageImportedPackageNamesContainer": {
+          "present": false,
+          "first_line": null
+        },
+        "ImportedPackageIds": {
+          "present": true,
+          "first_line": 870
+        },
+        "FindPublicExportObject": {
+          "present": true,
+          "first_line": 576
+        },
+        "FScriptObjectEntry": {
+          "present": true,
+          "first_line": 100
+        },
+        "GenerateImportHashFromVersePath": {
+          "present": false,
+          "first_line": null
+        }
+      },
+      "source_features_5.8.3": {
+        "FPackageObjectIndex": {
+          "present": true,
+          "first_line": 302
+        },
+        "FCellExportMapEntry": {
+          "present": true,
+          "first_line": 279
+        },
+        "FZenPackageImportedPackageNamesContainer": {
+          "present": true,
+          "first_line": 173
+        },
+        "ImportedPackageIds": {
+          "present": true,
+          "first_line": 2794
+        },
+        "FindPublicExportObject": {
+          "present": true,
+          "first_line": 2597
+        },
+        "FScriptObjectEntry": {
+          "present": true,
+          "first_line": 238
+        },
+        "GenerateImportHashFromVersePath": {
+          "present": true,
+          "first_line": 323
+        }
+      }
+    }
+  },
+  "material_boundaries": [
+    {
+      "codepath": "UE5 classic package header",
+      "exact_source_differential": "UE5.8.3 FPackageFileSummary contains CellImportCount, CellExportCount and DataResourceOffset; first 5.0.0 version does not. Gate these metadata offsets on actual source revision, not UE5-family name."
+    },
+    {
+      "codepath": "UE5 classic FObjectImport table",
+      "exact_source_differential": "Both releases have package-name support, but UE5.8.3 ObjectResource.cpp adds cooked/editor filtering for PackageName serialization. FName import metadata cannot be projected as an unconditional identical field layout."
+    },
+    {
+      "codepath": "UE5 Zen global import/package store",
+      "exact_source_differential": "Both use FPackageId/FPackageObjectIndex, imported package IDs and public export hashes. UE5.8.3 adds FCellExportMapEntry and Verse-path import hash handling; do not infer these from 5.0.0."
+    },
+    {
+      "codepath": "UE5 policy selection",
+      "exact_source_differential": "The existing UnrealDB UE5 5.8.3 Zen and classic source policies remain separate. This audit is not authority to apply a 5.8.3 parser to 5.0.0 or certify all versions without genuine early package bytes and source-specific tests."
+    }
+  ],
+  "status": "EARLY_VS_LATE_SOURCE_FILES_PINNED_ONLY",
+  "PRD_database_writes": 0,
+  "PRD_source_modified": false
+}

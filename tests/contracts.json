@@ -770,7 +770,7 @@
       "result_evidence": "tests/evidence/ue1/ue1-original-prd-real-mount-metadata-source-final-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "75c4cc57a922b1db3fc89861dbdbf74e2e773b253009846d7922e14089a7ae2a",
-        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "2c5e65b803c4e96bd974ef8f384460739ddce76afff300c9b4fe91aa40645b70",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "6474ef2548d4ed32c0fd15117ffd4c1ecf01556b5846ecc1c875cb2990584eb4",
         "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
         "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "b30cbd8cc2391535d675c1e09f03c2074aa1db3a4c3b9df7569d289e106b95d8",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
@@ -888,7 +888,7 @@
       "result_evidence": "tests/evidence/ue1/prd-readonly-source-mount-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
-        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "6b3c8394185b9b78f25e55cb55710a76a5268516d46229a52ae0976bb14310d6"
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
         {
@@ -957,7 +957,7 @@
       "result_evidence": "tests/evidence/ue1/ue1-publisher-original-prd-sql-isolated-acceptance-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
-        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3346d6f51afd3bbf6cb7ce6514ad3c2f3abb7f5582515a468ce944f06adf1deb",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
       "php_source_sites": [
@@ -1233,7 +1233,7 @@
       "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php": "9bd64830964351da7d54dbabe373185afea104838b22843648d1c0c93f6bde80",
-        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "2c5e65b803c4e96bd974ef8f384460739ddce76afff300c9b4fe91aa40645b70"
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "6474ef2548d4ed32c0fd15117ffd4c1ecf01556b5846ecc1c875cb2990584eb4"
       },
       "php_source_sites": [
         {
@@ -1287,7 +1287,7 @@
       "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
-        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "6b3c8394185b9b78f25e55cb55710a76a5268516d46229a52ae0976bb14310d6"
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
         {
@@ -1346,7 +1346,7 @@
       "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
-        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3346d6f51afd3bbf6cb7ce6514ad3c2f3abb7f5582515a468ce944f06adf1deb",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
       "php_source_sites": [
@@ -1571,7 +1571,7 @@
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php": "2402232ea7605b91cd6bb06f0c000673ccd359b1fe21aff3ed4cc45cb114f08e",
-        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "2c5e65b803c4e96bd974ef8f384460739ddce76afff300c9b4fe91aa40645b70"
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "6474ef2548d4ed32c0fd15117ffd4c1ecf01556b5846ecc1c875cb2990584eb4"
       },
       "php_source_sites": [
         {
@@ -1620,7 +1620,7 @@
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
-        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "6b3c8394185b9b78f25e55cb55710a76a5268516d46229a52ae0976bb14310d6"
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
         {
@@ -1674,7 +1674,7 @@
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
-        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3346d6f51afd3bbf6cb7ce6514ad3c2f3abb7f5582515a468ce944f06adf1deb",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
       "php_source_sites": [
@@ -1763,28 +1763,32 @@
         "F01",
         "F02"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
         "UE4/UnrealPackageReader.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
-      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
       "epic_symbol_to_verify": "FLinkerLoad",
       "game_profiles": [
         "ut4"
       ],
-      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "source_provenance_constraint": "UT4 clean-master branch source authoritative through v511; UE4 4.0.2 and UE4 4.27.2 are history/differential only.",
       "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
       "required_fixture": "real_file_engine_game_version_and_selected_reader",
       "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
+      "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
+        "UE4/UnrealPackageReader.php": "479f3aeffac7e8b8d3765371a69bcf538e2c396a61633164ab3578c194271c08"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
@@ -1796,6 +1800,13 @@
           "line": 46,
           "call_site": "if (in_array($engineKey,"
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "review_findings": [
+        "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
+        "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
       ]
     },
     {
@@ -1808,34 +1819,45 @@
         "F05",
         "F06"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "UE4/UnrealPackageReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> game selected SnapshotBuilder::build",
-      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
       "epic_symbol_to_verify": "FLinkerLoad",
       "game_profiles": [
         "ut4"
       ],
-      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "source_provenance_constraint": "UT4 clean-master branch source authoritative through v511; UE4 4.0.2 and UE4 4.27.2 are history/differential only.",
       "test_purpose": "Wrong name/import/export IDs created from package tables",
       "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
       "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
+      "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+        "UE4/UnrealPackageReader.php": "479f3aeffac7e8b8d3765371a69bcf538e2c396a61633164ab3578c194271c08",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php": "dd150673b58372b68fc2878a76938aa8661a1dfde5c986004a70596ad8eabd48"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
           "line": 172,
           "call_site": "Uedb5Ut4SnapshotBuilder::build("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "review_findings": [
+        "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
+        "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
       ]
     },
     {
@@ -1847,27 +1869,30 @@
         "F13",
         "F14"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
       ],
       "dispatch_trace": "Uedb5ClassicDependencyResolver::resolve -> PdoUeXVerifyImportProjectionResolver::resolveInMemoryOutcome",
-      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
       "epic_symbol_to_verify": "FLinkerLoad",
       "game_profiles": [
         "ut4"
       ],
-      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "source_provenance_constraint": "UT4 clean-master branch source authoritative through v511; UE4 4.0.2 and UE4 4.27.2 are history/differential only.",
       "test_purpose": "Valid object falsely missing or wrong class/outer accepted",
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
       "acceptance_condition": "Correct source-specific import/provider metadata and dependency status for actual UnrealDB table/registry path, with honest unresolved handling; no native asset loading",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
+      "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php": "81212ea603ce64069b669b3164bb5f8205ccc352d33e4cb74b789e4bf3ee3001",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "6474ef2548d4ed32c0fd15117ffd4c1ecf01556b5846ecc1c875cb2990584eb4"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -1876,7 +1901,14 @@
         }
       ],
       "out_of_scope_native_payload_loading": true,
-      "scope_revised_at": "2026-11-02"
+      "scope_revised_at": "2026-11-02",
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "review_findings": [
+        "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
+        "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
+      ]
     },
     {
       "key": "ue4-mount-provider",
@@ -1886,27 +1918,30 @@
         "F11",
         "F15"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
       ],
       "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> PdoUedb5PhysicalProviderSelector::select",
-      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
       "epic_symbol_to_verify": "FLinkerLoad",
       "game_profiles": [
         "ut4"
       ],
-      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "source_provenance_constraint": "UT4 clean-master branch source authoritative through v511; UE4 4.0.2 and UE4 4.27.2 are history/differential only.",
       "test_purpose": "Duplicate physical package chosen by upload order instead of engine mount priority",
       "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
       "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
+      "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
@@ -1918,6 +1953,13 @@
           "line": 25,
           "call_site": "public function select("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "review_findings": [
+        "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
+        "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
       ]
     },
     {
@@ -1929,28 +1971,32 @@
         "F18",
         "F19"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
       ],
       "dispatch_trace": "Uedb5GameDependencyPassService::processFile -> Uedb5DependencyRebuilder::rebuild -> PdoUedb5DependencyProjectionPublisher",
-      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
       "epic_symbol_to_verify": "FLinkerLoad",
       "game_profiles": [
         "ut4"
       ],
-      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "source_provenance_constraint": "UT4 clean-master branch source authoritative through v511; UE4 4.0.2 and UE4 4.27.2 are history/differential only.",
       "test_purpose": "Correct decoded package but wrong SQL dependency edge/status/count",
       "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
       "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
+      "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
@@ -1962,6 +2008,13 @@
           "line": 268,
           "call_site": "$this->publisher->publish("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "review_findings": [
+        "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
+        "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
       ]
     },
     {
@@ -1972,8 +2025,8 @@
         "F17",
         "F22"
       ],
-      "status": "NOT_REVIEWED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -1982,20 +2035,26 @@
         "catalog/dependency-cross-examine.php"
       ],
       "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
-      "epic_source_anchor_file": "L:\\Source\\Engine\\UE4\\UE 4.27.2\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
       "epic_symbol_to_verify": "FLinkerLoad",
       "game_profiles": [
         "ut4"
       ],
-      "source_provenance_constraint": "UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory.",
+      "source_provenance_constraint": "UT4 clean-master branch source authoritative through v511; UE4 4.0.2 and UE4 4.27.2 are history/differential only.",
       "test_purpose": "UI reports missing or resolved dependency incorrectly",
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "NOT_AUTHORIZED_UNTIL_SOURCE_LINE_AND_GENUINE_ORACLE_VERIFIED",
-      "result_evidence": null,
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
+      "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
+        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
+        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
+      },
       "php_source_sites": [
         {
           "file": "catalog/game-missing.php",
@@ -2007,6 +2066,13 @@
           "line": 30,
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
+      ],
+      "reviewed_at": "2026-11-02",
+      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "review_findings": [
+        "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
+        "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
       ]
     },
     {

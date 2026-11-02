@@ -229,7 +229,7 @@ final class Uedb5ClassicDependencyResolver
             // v68): the original mount/search order is separate evidence
             // from the package version and the stored catalogue candidates.
             // Never turn an unknown mount into a false missing SQL edge.
-            if (in_array($engine, ['ue1','ue2','ue3'], true) && !is_array($provider)) {
+            if (in_array($engine, ['ue1','ue2','ue3','ue4'], true) && !is_array($provider)) {
                 $reason = match ($engine) {
                     'ue1' => $ue1Profile === null
                         ? 'ue1_verify_import_source_implementation_unavailable'
@@ -240,6 +240,9 @@ final class Uedb5ClassicDependencyResolver
                     'ue3' => $ue3Profile === null
                         ? 'ue3_verify_import_source_implementation_unavailable'
                         : 'ue3_runtime_mount_provider_unselected',
+                    'ue4' => $ue4Profile === null
+                        ? 'ue4_verify_import_source_implementation_unavailable'
+                        : 'ue4_runtime_mount_provider_unselected',
                 };
                 $resolved[(int)$importIndex] = self::result(
                     'unresolved', $root, null, null, $reason,

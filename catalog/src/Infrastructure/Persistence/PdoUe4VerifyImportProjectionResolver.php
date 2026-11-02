@@ -247,6 +247,17 @@ final class PdoUe4VerifyImportProjectionResolver
             $redirectors,
             $redirectorAncestry
         );
+        // UT4 clean-master VerifyImport establishes one physical linker from
+        // the top-level Package import. Matching an export in another package
+        // cannot validate the original consumer or any descendant.
+        foreach ($sourceOutcomes as $index => &$sourceOutcome) {
+            if (($sourceOutcome['status'] ?? '') !== 'ignored'
+                && !self::rootMatchesSelectedProvider($imports, (int)$index, $providerPackageName)) {
+                $sourceOutcome = self::sourceOutcome('invalid', 'different_provider_package_root');
+                unset($matches[$index], $redirectors[$index], $redirectorAncestry[$index]);
+            }
+        }
+        unset($sourceOutcome);
 
         return [
             'matches' => $matches,
@@ -254,6 +265,26 @@ final class PdoUe4VerifyImportProjectionResolver
             'redirector_ancestry' => $redirectorAncestry,
             'source_outcomes' => $sourceOutcomes,
         ];
+    }
+
+    /** One UT4 clean-master provider is established by the root Package import. */
+    private static function rootMatchesSelectedProvider(array $imports, int $index, string $provider): bool
+    {
+        $seen = [];
+        while (isset($imports[$index]) && !isset($seen[$index])) {
+            $seen[$index] = true;
+            $import = (array)$imports[$index];
+            $outer = (int)($import['outer_index'] ?? 0);
+            if ($outer === 0) {
+                return self::key((string)($import['class_name'] ?? '')) === self::key('Package')
+                    && self::key((string)($import['object_name'] ?? '')) === self::key($provider);
+            }
+            if ($outer > 0) {
+                return false;
+            }
+            $index = -$outer - 1;
+        }
+        return false;
     }
 
     /**
