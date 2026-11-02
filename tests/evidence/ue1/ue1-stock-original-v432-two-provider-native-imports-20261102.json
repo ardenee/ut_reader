@@ -1,0 +1,176 @@
+{
+  "date": "2026-11-02",
+  "existing_contract": "ue1-verify-import",
+  "status": "BLOCKED",
+  "source_scope": "Original unmodified compiled UT99 v432 Core.dll, original compiled v69 consumer, two independent original compiled provider variants, disposable native loader observer created with original v432 Core/Inc and Core/Lib.",
+  "native_fixtures": [
+    {
+      "original_compiled_provider_variant": "A",
+      "compiled_provider_original_sha256": "150f708e4b7e0815166c061a0429a90ce4768be49ecde340e5be707f67d01fcc",
+      "consumer_original_sha256": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "live_original_core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_native_result": "package and imported class CDO loaded; source index 2",
+      "original_native_import_count": 7,
+      "native_original_import_identity_outer_exact": 7,
+      "native_resolved_export_index_exact_against_diagnostic_old_profile": 2,
+      "native_no_export_index_exact_against_diagnostic_old_profile": 5,
+      "mismatch_count": 0,
+      "native_stdout_sha256": "c4aeba105838c6cab8c82b707ecaaa5b2b82cc3eefe516f673383c4436eda317",
+      "observed_imports": {
+        "0": {
+          "class_package": "Core",
+          "class_name": "Package",
+          "object_name": "Core",
+          "outer": 0,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "1": {
+          "class_package": "Core",
+          "class_name": "Package",
+          "object_name": "G3T076Dupe",
+          "outer": 0,
+          "export_index": -1,
+          "provider": "G3T076Dupe"
+        },
+        "2": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "G3T076DupeActor",
+          "outer": -2,
+          "export_index": 2,
+          "provider": "G3T076Dupe"
+        },
+        "3": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "Class",
+          "outer": -1,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "4": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "TextBuffer",
+          "outer": -1,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "5": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "IntProperty",
+          "outer": -1,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "6": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "Object",
+          "outer": -1,
+          "export_index": 2,
+          "provider": "Core"
+        }
+      }
+    },
+    {
+      "original_compiled_provider_variant": "B",
+      "compiled_provider_original_sha256": "8afa982acf837c0ffc350d9b04cb9f12c561f07ec206030d9ba5a6205ad934dc",
+      "consumer_original_sha256": "ad1470e1ac59f885c9a76482885be97dfca06e7329123a58f2fc58f85fb31a13",
+      "live_original_core_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+      "original_native_result": "package and imported class CDO loaded; source index 2",
+      "original_native_import_count": 7,
+      "native_original_import_identity_outer_exact": 7,
+      "native_resolved_export_index_exact_against_diagnostic_old_profile": 2,
+      "native_no_export_index_exact_against_diagnostic_old_profile": 5,
+      "mismatch_count": 0,
+      "native_stdout_sha256": "2711100d3cc2dbeee877fffd8d37f0a5f5f389b672eefa50922cf0d8d2923835",
+      "observed_imports": {
+        "0": {
+          "class_package": "Core",
+          "class_name": "Package",
+          "object_name": "Core",
+          "outer": 0,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "1": {
+          "class_package": "Core",
+          "class_name": "Package",
+          "object_name": "G3T076Dupe",
+          "outer": 0,
+          "export_index": -1,
+          "provider": "G3T076Dupe"
+        },
+        "2": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "G3T076DupeActor",
+          "outer": -2,
+          "export_index": 2,
+          "provider": "G3T076Dupe"
+        },
+        "3": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "Class",
+          "outer": -1,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "4": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "TextBuffer",
+          "outer": -1,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "5": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "IntProperty",
+          "outer": -1,
+          "export_index": -1,
+          "provider": "Core"
+        },
+        "6": {
+          "class_package": "Core",
+          "class_name": "Class",
+          "object_name": "Object",
+          "outer": -1,
+          "export_index": 2,
+          "provider": "Core"
+        }
+      }
+    }
+  ],
+  "original_compiled_native_Core_binary_sha256": "237dbe38e5dd8c03370626c85cbcbca42f2431e09e175f842944390ede8b8fc8",
+  "original_Epic_v432_header_SHA256": {
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnObjVer.h": "ffec6ffb6416c9af3d925f52533a86574040f2bc46328e7f9834afc77850bf24"
+  },
+  "disposable_native_observer_binary_sha256": "ae9b588e5f48b82379901243bd1baa36e98e0f3637b3e61872d22275e719f80c",
+  "disposable_native_observer_CXX_sha256": "d7d8aa004654695f0df02641f8b95fe8e063efabc32967cbf855394eb4a46323",
+  "disposable_readonly_comparison_script_sha256": "780410f9a844d207edb49aae1ba1343995608d1f6629e16067c3763b1d0719d8",
+  "retained_original_native_provider_sentinal_A111_B222_evidence": {
+    "path": "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261031-G3-T076-stock-v432-8-original-native-direct-and-real-import-provider-partial.json",
+    "sha256": "6f82d1b27890751e491e48454b81e10f332bc6ac7c3c8b5eab71c3b439cc4b71"
+  },
+  "original_source_loader_parity": {
+    "original_runtime_contexts": 2,
+    "live_original_import_map_entries": 14,
+    "native_byte_identity_and_outer_matches": 14,
+    "native_export_index_matches": 4,
+    "no_export_index_matches": 10,
+    "mismatches": 0
+  },
+  "special_case": "Original G3T076ConsumerActor has imported superclass G3T076DupeActor with SourceIndex=2. Two real provider archive variant bytes have different hashes and native memory SourceLinker addresses, demonstrating selected runtime provider context; native CDO existed for both.",
+  "caution": "The diagnostic v1400 resolver is not applied in production to v69. These 14 original v432 outcomes agree with conditional old projection, but do not establish all v432/private/fallback/negative behaviour or the Unreal v227i source revision.",
+  "originals_modified": false,
+  "PRD_database_writes": 0,
+  "engine_implementations_changed": false,
+  "accepted_fixed_test_count": 32
+}
