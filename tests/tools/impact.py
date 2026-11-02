@@ -24,6 +24,16 @@ def main():
    'engines':sorted({x['engine'] for x in hit}),
    'warning':'Direct source-path matches only. Dynamic registration, frontend caller, underlying shared class or service changes require manual call-chain examination.' if not hit else
    'Only the matching current route cases are candidates for regression; first check existing source/native evidence.'}
- print(json.dumps({'changed_source_files':len(changed),'directly_affected_engine_operation_cases':sorted(set(v for x in affected.values() for v in x['cases'])),
-  'cross_engine_code_impact':affected,'original_native_tests_launched':0},indent=2))
+ directly_affected={v for x in affected.values() for v in x['cases']}
+ triggered_categories={cid for row in rows if row['key'] in directly_affected for cid in row['contract_ids']}
+ same_behaviour=[{'case':row['key'],'engine':row['engine'],
+                  'shared_behaviour_ids':sorted(triggered_categories & set(row['contract_ids'])),
+                  'reason':'Same user-facing behaviour family, different engine parser/source; source-code review ONLY'}
+                  for row in rows if row['key'] not in directly_affected
+                  and triggered_categories.intersection(row['contract_ids'])]
+ print(json.dumps({'changed_source_files':len(changed),
+  'directly_affected_engine_operation_cases':sorted(directly_affected),
+  'cross_engine_code_impact':affected,
+  'same_behaviour_other_engine_review_candidates':same_behaviour,
+  'other_engine_tests_automatically_authorized':0,'original_native_tests_launched':0},indent=2))
 if __name__=='__main__':main()
