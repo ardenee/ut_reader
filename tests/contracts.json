@@ -561,7 +561,9 @@
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
-        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php"
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1ClassicSourceFamily.php",
+        "catalog/bin/inspect-unreal-file.php"
       ],
       "dispatch_trace": "Uedb5SourceSnapshotFactory::buildForSourceKey -> CatalogReaderResolver::resolve",
       "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
@@ -576,7 +578,8 @@
       "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
       "existing_proof_sha_refs": [
         "tests/evidence/reader-silo-all-engines-20261102.json sha256:3141215baf753e5e65b6e1440de3891d8fc7315b6e10dd7dfed2d5638d7a25f8",
-        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2"
+        "tests/evidence/ue1/source-version-game-overlays-20261102.json sha256:c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2",
+        "tests/evidence/ue1/ue1-source-loader-provenance-cli-20261102.json sha256:90864a432e4ae6ca48c17b5713e1c3cdfbcc86e87db44971d11098798659b6dc"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "REUSE_PRIOR_PROOF_ONLY; NO_NATIVE_OR_DB_REPLAY",
@@ -601,7 +604,10 @@
       },
       "review_findings": [
         "PRD database game IDs 3/12 and real source-profile factory dispatch confirmed through 4 original-file reparses. No original native runtime claim.",
-        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact."
+        "UE1 version/game overlays now source-scoped: 227k archetype only Unreal-aware path; Unreal v60/61 source-format-compatible but not proven later game VerifyImport; v69 licensee without patch proof kept partial; UT99 432 Core ENGINE_VERSION 430 is not a v400 fallback. Six real PRD original-byte table comparisons exact.",
+        "Source header 69/227 is not a unique game loader identity: 52 authentic UT99-owned files of this version. Both explicit Unreal and UT99 selection verified on real original bytes, missing source remains ambiguous.",
+        "Full CLI now succeeds for original Unreal v227i/v227k and UT99 469f compiled fixtures; preserved build-specific overlay; no raw-header array collision.",
+        "Recursive UE1 inspection includes original package files rather than solely UZ wrappers; production database unchanged."
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",

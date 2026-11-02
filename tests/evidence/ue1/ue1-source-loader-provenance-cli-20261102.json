@@ -1,0 +1,125 @@
+{
+  "date": "2026-11-02",
+  "scope": "UE1 file-source selection and CLI source-reader inspection, not dependency SQL",
+  "Epic_original_source_sha256": {
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnLinker.h": "8d6d35d95c0427c8e30ef94198e2214da41a0b90b39453667980d2316ec2d02e"
+  },
+  "implementation_sha256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1ClassicSourceFamily.php": "39fa250f73aad1cb79b453dc824e6009f1a47ef34465b87ff8bc68b0a622dc43",
+    "catalog/bin/inspect-unreal-file.php": "31d68d4157e0083b1cf2ea037226f8c022a2b220f47b5a4866887e84efdc8357"
+  },
+  "real_PRD_original_packages": [
+    {
+      "game": "UT99",
+      "id": 1254874,
+      "version": 69,
+      "licensee": 227,
+      "sha256": "3f413ea26b986b9816613315adaa58e949677a14e9af0617bfacae5af5dfdd40",
+      "selected": "ut99-v432",
+      "names": 2710,
+      "imports": 264,
+      "exports": 2617
+    },
+    {
+      "game": "Unreal Gold",
+      "id": 1245067,
+      "version": 69,
+      "licensee": 227,
+      "sha256": "8738a6e8de2fc79ae05a389796033cf8118928291e0bb0928a44e088df8db6e3",
+      "selected": "unreal-v227",
+      "names": 784,
+      "imports": 165,
+      "exports": 466
+    },
+    {
+      "game": "UT99",
+      "id": 113265,
+      "version": 69,
+      "licensee": 0,
+      "sha256": "8d8abc29adf6a2c2cd96b66f8c34e14b712818553cae470da22dc58f8e830d4b",
+      "selected": "ut99-v432",
+      "names": 75,
+      "imports": 7,
+      "exports": 43
+    },
+    {
+      "game": "Unreal Gold",
+      "id": 110902,
+      "version": 61,
+      "licensee": 0,
+      "sha256": "50edfe60fcf99c61f369cf8100079351bd75eb0a23febc77aa891142086dbbc0",
+      "selected": "epic-ue1",
+      "names": 36,
+      "imports": 4,
+      "exports": 6
+    },
+    {
+      "game": "UT99",
+      "id": 1254875,
+      "version": 69,
+      "licensee": 227,
+      "sha256": "fc7cc759d24c4b1568c1c2791c41b1c97a28a2d28bbe8fcf36bee753392a05a4",
+      "selected": "ut99-v432",
+      "names": 303,
+      "imports": 5,
+      "exports": 313
+    }
+  ],
+  "cross_game_69_227_corpus": {
+    "UT99_verified_files": 52,
+    "generic_parse_valid": 52,
+    "unreal_writer_parse_valid": 52,
+    "RF_HasArchtype_0x100_export_count": 0,
+    "native_game_load_unproven": true
+  },
+  "ambiguous": "69/227 with no selected original game loader cannot prove Unreal; explicit UT99 and Unreal select their own source overlay",
+  "live_CLI_real_original_package_cases": [
+    {
+      "requested": "unreal-v227i",
+      "full": "OK",
+      "selected": "unreal-v227",
+      "build_overlay": "unreal-v227i",
+      "error": null
+    },
+    {
+      "requested": "unreal-v227k",
+      "full": "OK",
+      "selected": "unreal-v227",
+      "build_overlay": "unreal-v227k",
+      "error": null
+    },
+    {
+      "requested": "ut99-v469f",
+      "full": "OK",
+      "selected": "ut99-v432",
+      "build_overlay": "ut99-v469f",
+      "error": null
+    }
+  ],
+  "CLI_recursive_genuine_original_package_cases": [
+    {
+      "source_name": "original-MMUMetalJumpboots.u",
+      "full": "OK",
+      "selected": "unreal-v227"
+    },
+    {
+      "source_name": "original-MultiSkyZoneInfo.u",
+      "full": "OK",
+      "selected": "unreal-v227"
+    }
+  ],
+  "fixed_CLI_critical_bug": "Raw 64-byte input header was overwritten with parsed array during full UE1 inspection, causing strlen(array) TypeError.",
+  "temp_verifier_sha256": {
+    "verify_live_source_family_misattribution.php": "67e981f106874fa34b0aeb3a95b770e66939927ddeb11e441c6d2870044ea221",
+    "compare_cross_game_227_archive.php": "f8f21c03254adeffda5abe85979eebde7944d27fbbaa1071084917e36c560565"
+  },
+  "previous_native_engine_runs_this_batch": 0,
+  "PRD_MySQL_writes": 0,
+  "legacy_proof_reconciliation": "Old header-only v69/227 as a definitive Unreal loader premise is invalidated by original v432 code and 52 UT99-owned examples. Existing v227i/v227k native object source-method evidence with EXPLICIT source selection remains intact.",
+  "limitations": [
+    "Game owner not proof of original native executable accepting foreign producer packages",
+    "No native runtime import outcome tested",
+    "No metadata resync or old format admission"
+  ]
+}

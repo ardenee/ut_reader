@@ -180,12 +180,15 @@ final class CatalogUE1ClassicSourceFamily
         }
         $version=(int)($header['version']??0);
         $licensee=(int)($header['licenseeVersion']??($header['licensee']??0));
-        if($version===69&&$licensee===227){
-            if($sourceFamily!==null&&$sourceFamily!==self::UNREAL_V227){
-                throw new InvalidArgumentException(
-                    'Header identifies Unreal v1.227 (69/227), conflicting with requested game source');
-            }
-            return self::select($version,self::UNREAL_V227);
+        // FileVersionLicensee is a serializer-producer field, not a
+        // globally unique game identifier. Original UT99 v432 merely
+        // extracts the high 16 bits; the database contains genuine UT99
+        // game-owned packages with 69/227. Never override an explicitly
+        // selected game loader with a guessed Unreal v227 source.
+        // With no selected loader, 69/227 remains ambiguous.
+        if($version===69&&$licensee===227&&$sourceFamily===null){
+            throw new InvalidArgumentException(
+                'UE1 version 69/licensee 227 does not identify the game loader; select original Unreal or UT99 provenance');
         }
         if($sourceFamily===self::UNREAL_V227&&$version===69
             &&$licensee!==0&&$licensee!==227){
@@ -218,9 +221,7 @@ final class CatalogUE1ClassicSourceFamily
                 self::loaderVersionDiagnostic($version,$selected),
             'source_profile_selection_basis'=>$sourceFamily!==null
                 ?'explicit_loader_provenance'
-                :($version===69&&$licenseeVersion===227
-                    ?'confirmed_69_227_unreal_header'
-                    :'sole_version_eligible_profile_not_producer_identity'),
+                :'sole_version_eligible_profile_not_producer_identity',
             'game_identity_inferred_from_version_only'=>false,
             'game_source_revision_chain'=>$v227
                 ?self::UNREAL_GAME_REVISION_CHAIN

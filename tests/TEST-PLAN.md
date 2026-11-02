@@ -6,7 +6,7 @@ NOT_REVIEWED means the real production call and applicable Epic game-source vers
 
 | Engine / real operation | UnrealDB path (actual) | Original source anchor | Why verify? | Exact stopping condition | State |
 |---|---|---|---|---|---|
-| ue1-dispatch | Uedb5SourceSnapshotFactory.php, CatalogReaderResolver.php, CatalogUE1PackageReader.php, CatalogUE1BinaryStream.php | UnObj.cpp | Wrong source reader selected for a genuine file or engine/game | Correct reader class and source-profile decision; reject unsupported family | REUSE_ACCEPTED_EVIDENCE |
+| ue1-dispatch | Uedb5SourceSnapshotFactory.php, CatalogReaderResolver.php, CatalogUE1PackageReader.php, CatalogUE1BinaryStream.php, CatalogUE1ClassicSourceFamily.php, inspect-unreal-file.php | UnObj.cpp | Wrong source reader selected for a genuine file or engine/game | Correct reader class and source-profile decision; reject unsupported family | REUSE_ACCEPTED_EVIDENCE |
 | ue1-tables | Uedb5SourceSnapshotFactory.php, CatalogUE1PackageReader.php, Uedb5UnrealSnapshotBuilder.php, Uedb5Ut99SnapshotBuilder.php, CatalogUE1BinaryStream.php, CatalogUE1ClassicTaggedPropertyReader.php | UnLinker.h | Wrong name/import/export IDs created from package tables | Same source-selected header/name/import/export rows and exact byte offsets | REUSE_ACCEPTED_EVIDENCE |
 | ue1-verify-import | PdoUe1VerifyImportProjectionResolver.php, Uedb5ClassicDependencyResolver.php | UnLinker.h | Valid object falsely missing or wrong class/outer accepted | Same original linker VerifyImport outcome on source-selected import | BLOCKED |
 | ue1-mount-provider | Uedb5GameDependencyPassService.php, PdoUedb5PhysicalProviderSelector.php | UnObj.cpp | Duplicate physical package chosen by upload order instead of engine mount priority | Same physical package for known mount context; explicit unresolved for unknown order | PASS |
@@ -43,7 +43,7 @@ NOT_REVIEWED means the real production call and applicable Epic game-source vers
 
 | Engine | Reader owner | Game-specific exceptions |
 |---|---|---|
-| UE1 | CatalogUE1BinaryStream.php (see ARCHITECTURE.md for real reader class) | Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient. |
+| UE1 | inspect-unreal-file.php (see ARCHITECTURE.md for real reader class) | Unreal v1.200/C98, Unreal 1.227 and UT99 v432/v469f have separate source overlays. Treat shared v69 as insufficient. |
 | UE2 | CatalogUE2BinaryStream.php (see ARCHITECTURE.md for real reader class) | Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module. |
 | UE3 | EpicUE3PackageReader.php (see ARCHITECTURE.md for real reader class) | UT3 retail/UE3 source revision must be selected; base UE3 (10897) is an anchor, not automatically the UT3 overlay. |
 | UE4 | UnrealPackageReader.php (see ARCHITECTURE.md for real reader class) | UT4 uses UE4 parser profile, including unversioned/cooked semantics; explicit source game/build remains mandatory. |

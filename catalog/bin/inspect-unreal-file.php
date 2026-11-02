@@ -239,8 +239,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
             }
         }
 
-        $header = @file_get_contents($parsePath, false, null, 0, 64);
-        if (!is_string($header)) {
+        $rawHeader = @file_get_contents($parsePath, false, null, 0, 64);
+        if (!is_string($rawHeader)) {
             throw new RuntimeException('Could not read decoded Unreal package header.');
         }
 
@@ -261,8 +261,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
             'decoded_bytes' => (int)(filesize($parsePath) ?: 0),
             'records' => $wrapper !== '' ? (int)($decoded['chunks'] ?? 0) : null,
             'decoder' => $wrapper !== '' ? (string)($decoded['decoder'] ?? '') : null,
-            'package_magic' => catalog_redirect_archive_has_package_tag($header),
-            'header_first_64_hex' => strtoupper(bin2hex($header)),
+            'package_magic' => catalog_redirect_archive_has_package_tag($rawHeader),
+            'header_first_64_hex' => strtoupper(bin2hex($rawHeader)),
             'header_parse' => !empty($summary['ok']) ? 'OK' : 'FAILED',
             'package_version' => array_key_exists('version', $summary) ? (int)$summary['version'] : null,
             'licensee_version' => array_key_exists('licensee', $summary) ? (int)$summary['licensee'] : null,
@@ -488,8 +488,8 @@ function inspect_unreal_file(string $inputPath, bool $full = false, ?string $ue1
             }
         }
 
-        if (strlen($header) >= 16) {
-            $bytes = array_values(unpack('C*', substr($header, 0, 16)) ?: []);
+        if (strlen($rawHeader) >= 16) {
+            $bytes = array_values(unpack('C*', substr($rawHeader, 0, 16)) ?: []);
             if (count($bytes) === 16) {
                 $versionHighIsSpace = $bytes[5] === 0x20;
                 $licenseeHighIsSpace = $bytes[7] === 0x20;
@@ -652,7 +652,7 @@ foreach ($arguments as $argument) {
     }
     if (str_starts_with($argument,'--ue1-source=')) {
         $requested=substr($argument,strlen('--ue1-source='));
-        if (!in_array($requested,['epic-ue1','ut99-v432','ut99-v400','unreal-v227'],true)) {
+        if (!in_array($requested,['epic-ue1','ut99-v432','ut99-v400','ut99-v469f','unreal-v227','unreal-v227i','unreal-v227k'],true)) {
             fwrite(STDERR,'Invalid --ue1-source: '.$requested.PHP_EOL);
             exit(2);
         }
@@ -674,7 +674,7 @@ foreach ($arguments as $argument) {
 if ($paths === []) {
     fwrite(
         STDERR,
-        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v432|unreal-v227] [--ue1-original-1997=unreal_1997_may|unreal_1997_july] <file-or-directory> [...]\n"
+        "Usage: php catalog/bin/inspect-unreal-file.php [--json] [--full] [--recursive] [--ue1-source=epic-ue1|ut99-v432|ut99-v469f|unreal-v227|unreal-v227i|unreal-v227k] [--ue1-original-1997=unreal_1997_may|unreal_1997_july] <file-or-directory> [...]\n"
     );
     exit(2);
 }
@@ -694,7 +694,9 @@ foreach ($paths as $path) {
                 continue;
             }
             $candidate = $item->getPathname();
-            if (preg_match('/\\.(?:uz|uz2|uz3)$/i', $candidate) === 1) {
+            // Inspect genuine package files as well as separately compressed redirects.
+            // Container companions (.ucas/.utoc) are not standalone packages.
+            if (preg_match('/\\.(?:u|unr|utx|uax|umx|ukx|usx|upk|udk|uasset|umap|uz|uz2|uz3)$/i', $candidate) === 1) {
                 $expandedPaths[] = $candidate;
             }
         }

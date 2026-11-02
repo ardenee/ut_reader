@@ -1905,8 +1905,8 @@
     },
     {
       "path": "catalog/bin/inspect-unreal-file.php",
-      "sha256": "a5dd63a72f74382ebcd1ff7fbd4d5d25a50f231dd1b560abf0819038785e0b5b",
-      "bytes": 40664,
+      "sha256": "31d68d4157e0083b1cf2ea037226f8c022a2b220f47b5a4866887e84efdc8357",
+      "bytes": 40976,
       "engine_hints": [
         "shared"
       ],
@@ -11765,8 +11765,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicSourceFamily.php",
-      "sha256": "dd52b3c9cdf5e18d83ebe7341b74780e5c96e0fc8ccdf728882da2b05f0c911e",
-      "bytes": 13317,
+      "sha256": "39fa250f73aad1cb79b453dc824e6009f1a47ef34465b87ff8bc68b0a622dc43",
+      "bytes": 13507,
       "engine_hints": [
         "ue1"
       ],
