@@ -214,6 +214,15 @@ final class PdoUe1VerifyImportProjectionResolver
                 unset($resolving[$index]);
                 return $results[$index] = self::result('ignored', 'pre50_object_package_none', false, null);
             }
+            // Original v1.200 VerifyImport (<50) opens the linker using
+            // Import._ObjectPackage directly. It cannot resolve an import
+            // against a different provider merely because an export matches.
+            if (!self::same($objectPackage, $providerPackageName)) {
+                unset($resolving[$index]);
+                return $results[$index] = self::result(
+                    'invalid', 'different_provider_object_package', false, null
+                );
+            }
         } elseif ($outer === 0) {
             if (!self::same((string)($import['class_package'] ?? ''), 'Core')
                 || !self::same((string)($import['class_name'] ?? ''), 'Package')) {

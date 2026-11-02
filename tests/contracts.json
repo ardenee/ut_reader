@@ -758,7 +758,8 @@
         "tests/evidence/ue1/ue1-original-native-227k-469f-bulk-import-parity-20261102.json sha256:b56b1049a7193b2ab190749269338d6f166bfb963db28476783442bee7a575a6",
         "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json sha256:dee1d4d51c1719304fa8d86c5123998fc6a55516abb9d9756a5e262011b52e6d",
         "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json sha256:193640f151894eff4f5d1796fa10519e44797e1a88676d18da175e5769f02cc8",
-        "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json sha256:d4beabbd9f1198ac63659646c668b60646b4d730362cb8ad43346b1dcfb08c63"
+        "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json sha256:d4beabbd9f1198ac63659646c668b60646b4d730362cb8ad43346b1dcfb08c63",
+        "tests/evidence/ue1/ue1-v120-pre50-provider-package-identity-fix-20261102.json sha256:6d739d8137dc36a10a40f79b5125eba7279a160affff0c616a12fb05f0a00316"
       ],
       "runtime_call_chain_verified": false,
       "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
@@ -773,7 +774,7 @@
       ],
       "reviewed_at": "2026-11-02",
       "current_review_source_sha256": {
-        "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "732f4ed3eb059201c162ac12c5a3edb00902740f0690baeee183b2ef24a821b8"
+        "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "75c4cc57a922b1db3fc89861dbdbf74e2e773b253009846d7922e14089a7ae2a"
       },
       "review_findings": [
         "On retained original v432 compiled native imported superclass case, source-profile-conditional PHP lookup matches native-selected provider export index 2 in both A and B; engine native CDO sentinels 111/222 are not PHP loaded values.",
@@ -805,7 +806,11 @@
         "227i old DLL does not export VerifyImport; original loader was verified via genuine native GetPackageLinker/ULinkerLoad pointer and 73 in-memory FObjectImport 28-byte entries, not assumed from 227k implementation.",
         "2012 original 227i UCC single-field negative fixture: Engine.u import2 parent Core->Engine causes ExportPackage commandlet unavailable; identical cloned runtime with original Engine.u successfully exports classes. Conditional PHP correctly returns invalid parent, no SourceIndex.",
         "2012 original 227i UCC single-field negative fixture: Core.u Object export2 RF_Public removed causes ExportPackage commandlet unavailable; same cloned runtime with original Core.u succeeds. Conditional PHP returns private_export. Exact native VerifyImport exception stack not captured, so no stronger exception claim.",
-        "Original 2012 227i package bytes, compiled Core.dll/UCC.exe, CDB native memory logs and all disposable mutated files SHA256 pinned. Source-selected v69 policy remains fail-closed; overall VerifyImport still BLOCKED pending untested native fallback and runtime attribution branches."
+        "Original 2012 227i package bytes, compiled Core.dll/UCC.exe, CDB native memory logs and all disposable mutated files SHA256 pinned. Source-selected v69 policy remains fail-closed; overall VerifyImport still BLOCKED pending untested native fallback and runtime attribution branches.",
+        "EPIC v1.200 PRE50 PRODUCTION BUG FIXED: source VerifyImport selects native linker from each import ObjectPackage but old UE1 PHP accepted same-name export in unrelated provider. Selected provider identity now must match import original serialized package name before lookup, with case-insensitive source identity.",
+        "Verified actual UE1 reader + original-versioned snapshot and normalization + resolver against three disposable authentic v49 wire-format package inputs. Correct provider and casefold resolve SourceIndex0, unrelated provider with identical export table refuses match. Existing original pre50 format verifier 13/13 via TEMP-only path rebasing.",
+        "After this fix original native 227k 78, 227i 73, 469f 1202, stock v432 14 comparisons remain exact. No newly run original compiled v49 native executable; source-exact branch only and overall VerifyImport BLOCKED.",
+        "Two old archived class-hack fixture rows pair TestPkg with unrelated UnrealShare; that obsolete old test does not override the source-proven UE1 provider root guard. Archived immutable tests unchanged."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -817,7 +822,8 @@
       "native_bulk_import_evidence": "tests/evidence/ue1/ue1-original-native-227k-469f-bulk-import-parity-20261102.json",
       "native_original_stock_v432_evidence": "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json",
       "native_wrong_provider_correction_evidence": "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json",
-      "original_2012_c227i_native_import_evidence": "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json"
+      "original_2012_c227i_native_import_evidence": "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json",
+      "v120_pre50_provider_identity_correction_evidence": "tests/evidence/ue1/ue1-v120-pre50-provider-package-identity-fix-20261102.json"
     },
     {
       "key": "ue1-mount-provider",

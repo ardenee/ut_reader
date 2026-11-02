@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-verify-import",
+  "overall_status": "BLOCKED — original v1.200 pre50 path corrected, remaining late-native revision/fallback proofs incomplete",
+  "bug": "Epic v1.200 ULinkerLoad::VerifyImport on versions below 50 uses each import explicit ObjectPackage to call GetPackageLinker. Prior PHP checked only None and then wrongly allowed unrelated provider export.",
+  "UE1_only_fix": "Require providerPackageName equals original import object_package (casefold) before resolving pre50 class imports; unrelated provider returns invalid/different_provider_object_package, no source index.",
+  "original_source_SHA256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+  "current_UE1_code_SHA256": "75c4cc57a922b1db3fc89861dbdbf74e2e773b253009846d7922e14089a7ae2a",
+  "original_immutable_archived_source_fixture_SHA256": "ab52febf7ac9d43c68e4a94dfe74e49f4da0bf5429ce9c0821840c813cacd5f9",
+  "temp_path_rebased_pre50_verifier_SHA256": "8db9fad754ffb889df5620cc57f53b0c9ce11a014cd3e7d7e3d7d592aba47793",
+  "old_pre50_parser_serialization_regression": {
+    "passed": 13,
+    "failed": 0
+  },
+  "original_source_shaped_v49_fixture_verifier_SHA256": "e766c22dc57b2416f66eed80b56a555a2a9fa21976ba60c8974c55d768f11e17",
+  "disposable_source_format_files_sha256": {
+    "consumer": "c53a29a92e5f954ec9862d323c09c1757a38772bfad6b1ca0172c25c135d089d",
+    "provider": "26c83bfbfc4b9963c5dece605bfbc28435ca34924f15c139db833ea0fa8c1682",
+    "wrong_identical_wire": "26c83bfbfc4b9963c5dece605bfbc28435ca34924f15c139db833ea0fa8c1682"
+  },
+  "outcomes": {
+    "correct_provider": {
+      "status": "resolved",
+      "reason": "exact_verify_import_match",
+      "source_linker": true,
+      "source_index": 0,
+      "export_index": 0
+    },
+    "wrong_provider_same_export_bytes": {
+      "status": "invalid",
+      "reason": "different_provider_object_package",
+      "source_linker": false,
+      "source_index": null,
+      "export_index": null
+    },
+    "same_name_different_case": {
+      "status": "resolved",
+      "reason": "exact_verify_import_match",
+      "source_linker": true,
+      "source_index": 0,
+      "export_index": 0
+    }
+  },
+  "old_archived_import_test_note": "Two archived tests fabricated TestPkg root with unrelated UnrealShare provider. They conflict with already-corrected source-proven root validation, so old archive is not reclassified as current acceptance and was not changed.",
+  "accepted_original_native_regressions_rechecked": {
+    "227k": 78,
+    "227i": 73,
+    "v432": 14,
+    "469f": 1202,
+    "disagreements": 0
+  },
+  "compiled_original_v49_executions": 0,
+  "PRD_database_writes": 0,
+  "new_test_ids": 0
+}
