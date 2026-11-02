@@ -727,8 +727,8 @@
         "F13",
         "F14"
       ],
-      "status": "BLOCKED",
-      "code_path_evidence": "PRODUCTION_READONLY_PRD_ORIGINAL_FILES_AND_STORED_METADATA_OBSERVED; EPIC_NATIVE_RUNTIME_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "LIVE_PRD_ORIGINAL_MD5_SHA1_SOURCE_BYTES_AND_READONLY_DB; PRODUCTION_UEDB5_SOURCE_FACTORY_TO_METADATA_DEPENDENCY_RESOLVER; PRIOR_NATIVE_IMPORT_MAP_REUSED",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -761,10 +761,20 @@
         "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json sha256:d4beabbd9f1198ac63659646c668b60646b4d730362cb8ad43346b1dcfb08c63",
         "tests/evidence/ue1/ue1-v120-pre50-provider-package-identity-fix-20261102.json sha256:6d739d8137dc36a10a40f79b5125eba7279a160affff0c616a12fb05f0a00316"
       ],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "PARTIAL_FACET_ACCEPTED: original v432 native imported superclass index 2 matches current conditional PHP result in two original compiled provider variants; full UE1 VerifyImport remains BLOCKED because v69 source revision and native runtime context are unavailable.",
-      "result_evidence": "tests/evidence/ue1/prd-readonly-verifyimport-20261102.json",
-      "affected_code_sha256": null,
+      "runtime_call_chain_verified": true,
+      "test_authorization": "TABLE-ONLY COMPLETE: genuine PRD UT99 v68 consumer and three genuine v68 providers yield 4 exact export indices, 3 package_only and 1 source-unresolved; genuine v69 unsupported sources 27/27 fail closed, no false missing.",
+      "result_evidence": "tests/evidence/ue1/ue1-verifyimport-metadata-real-prd-source-path-pass-20261102.json",
+      "affected_code_sha256": {
+        "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "75c4cc57a922b1db3fc89861dbdbf74e2e773b253009846d7922e14089a7ae2a",
+        "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "d4af3ea65d3bfb217751723ba673a2c8d179b80e338a6f8a4d2298e0d0698dd6",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
+        "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
+        "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
+        "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df"
+      },
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -812,7 +822,10 @@
         "After this fix original native 227k 78, 227i 73, 469f 1202, stock v432 14 comparisons remain exact. No newly run original compiled v49 native executable; source-exact branch only and overall VerifyImport BLOCKED.",
         "Two old archived class-hack fixture rows pair TestPkg with unrelated UnrealShare; that obsolete old test does not override the source-proven UE1 provider root guard. Archived immutable tests unchanged.",
         "SCOPE REVISED: Actual UnrealDB behavior is table-only import/export metadata to provider/dependency outcome. Engine mesh, LodMesh, textures, sounds and UObject materialization are not UnrealDB operations or reasons to retain this blocker.",
-        "Four real table-projection callers traced: Uedb5ClassicDependencyResolver, CatalogParsedPackageMetadataSnapshotBuilder, PdoGameDependencyCrossExamineQuery, PdoDependencyResolver; source-specific UE1 gate controls use. Dependency publishing and website are separate contracts."
+        "Four real table-projection callers traced: Uedb5ClassicDependencyResolver, CatalogParsedPackageMetadataSnapshotBuilder, PdoGameDependencyCrossExamineQuery, PdoDependencyResolver; source-specific UE1 gate controls use. Dependency publishing and website are separate contracts.",
+        "METADATA-ONLY PASS: real PRD verified v68 Belt_fx#113256 with original Core#1214310, Engine#1214312, Fire#1214313 source-selected provider tables returned four exact export indices 214/40/23/42, three package_only, one explicit runtime-unresolved, zero false missing.",
+        "FIXED PRODUCTION FALSE MISSING: source-unsupported v69 PRD objects were classified missing when no provider selected; now 27 original imports in 3 v69 files remain unresolved both with absent and source-incompatible v68 provider context.",
+        "Epic source profiles and existing original native import map evidence retained. This closes only UnrealDB actual static metadata resolver, not SQL publication or website query (those remain separate open contracts)."
       ],
       "epic_source_anchor_sha256": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",

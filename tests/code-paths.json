@@ -9547,8 +9547,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
-      "sha256": "0ada396d58af1382695b069a7c65ea1917f28784a1de56ef0eedc871595da8c2",
-      "bytes": 49617,
+      "sha256": "d4af3ea65d3bfb217751723ba673a2c8d179b80e338a6f8a4d2298e0d0698dd6",
+      "bytes": 50339,
       "engine_hints": [
         "ue1"
       ],

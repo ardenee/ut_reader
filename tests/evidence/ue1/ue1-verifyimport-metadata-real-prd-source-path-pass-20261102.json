@@ -1,0 +1,254 @@
+{
+  "date": "2026-11-02",
+  "contract": "ue1-verify-import",
+  "status": "PASS",
+  "scope": "Only UnrealDB executed metadata import/export/provider matching and dependency classification; not native asset/UObject loads, SQL publisher or website",
+  "acceptance": "Actual source-selected UE1 headers/name/import/export tables -> physical provider ID -> exported index/class/outer/public status; unsupported game/source or mount context returns unresolved without false missing/resolved",
+  "original_PRD_verified_source_files": {
+    "113256": {
+      "id": 113256,
+      "package": "Belt_fx",
+      "version": 68,
+      "licensee": 0,
+      "file_sha256": "9cc2de6f20078ace202b3fbe1f28e3c1dee0232b4228a774494a41e8e822b1d8",
+      "size": 400259,
+      "game": 3
+    },
+    "1214310": {
+      "id": 1214310,
+      "package": "Core",
+      "version": 68,
+      "licensee": 0,
+      "file_sha256": "d02a12a1c71a2c60559f9765fe9662af9a73664fcac420a8b3a19511667f8710",
+      "size": 56044,
+      "game": 3
+    },
+    "1214312": {
+      "id": 1214312,
+      "package": "Engine",
+      "version": 68,
+      "licensee": 0,
+      "file_sha256": "81e321858964d42f594d707bf2e0804c681c63e6493cb78e1c750667e7862f7a",
+      "size": 1115005,
+      "game": 3
+    },
+    "1214313": {
+      "id": 1214313,
+      "package": "Fire",
+      "version": 68,
+      "licensee": 0,
+      "file_sha256": "b1ae996b423d4e7eb2b0a37face5bfe58e21c07d4a0286bb3007c00110f9a8ef",
+      "size": 14926,
+      "game": 3
+    },
+    "113265": {
+      "id": 113265,
+      "package": "credits",
+      "version": 69,
+      "licensee": 0,
+      "file_sha256": "8d8abc29adf6a2c2cd96b66f8c34e14b712818553cae470da22dc58f8e830d4b",
+      "size": 1469606,
+      "game": 3
+    },
+    "1254875": {
+      "id": 1254875,
+      "package": "Kalter_Stein_texture_package",
+      "version": 69,
+      "licensee": 227,
+      "file_sha256": "fc7cc759d24c4b1568c1c2791c41b1c97a28a2d28bbe8fcf36bee753392a05a4",
+      "size": 39894318,
+      "game": 3
+    },
+    "1291337": {
+      "id": 1291337,
+      "package": "MMUMetalJumpboots",
+      "version": 69,
+      "licensee": 227,
+      "file_sha256": "d2108cf385cc87f9bc89249a2f02397b025715d9368b2036c8347c7f6f838311",
+      "size": 1154,
+      "game": 12
+    },
+    "1246569": {
+      "id": 1246569,
+      "package": "DMVilla2",
+      "version": 54,
+      "licensee": 0,
+      "file_sha256": "c9829b551d13dd10ebe315b808c4a4956554a4d85acaf51b6ff050e879dc2fb2",
+      "size": 1158697,
+      "game": 12
+    }
+  },
+  "source_exact_original_UT99_v68_consumer_id": 113256,
+  "source_exact_original_UT99_v68_provider_ids": {
+    "Core": 1214310,
+    "Engine": 1214312,
+    "Fire": 1214313
+  },
+  "live_production_original_v68_8_import_outcomes": [
+    {
+      "index": 0,
+      "object": "Engine",
+      "class": "Package",
+      "outer": 0,
+      "status": "package_only",
+      "reason": "top_level_package_import",
+      "provider_package": "Engine",
+      "export_index": null,
+      "provider_id": 1214312
+    },
+    {
+      "index": 1,
+      "object": "Palette",
+      "class": "Class",
+      "outer": -1,
+      "status": "resolved",
+      "reason": "exact_verify_import_match",
+      "provider_package": "Engine",
+      "export_index": 214,
+      "provider_id": 1214312
+    },
+    {
+      "index": 2,
+      "object": "Fire",
+      "class": "Package",
+      "outer": 0,
+      "status": "package_only",
+      "reason": "top_level_package_import",
+      "provider_package": "Fire",
+      "export_index": null,
+      "provider_id": 1214313
+    },
+    {
+      "index": 3,
+      "object": "FireTexture",
+      "class": "Class",
+      "outer": -3,
+      "status": "resolved",
+      "reason": "exact_verify_import_match",
+      "provider_package": "Fire",
+      "export_index": 40,
+      "provider_id": 1214313
+    },
+    {
+      "index": 4,
+      "object": "Package",
+      "class": "Class",
+      "outer": -7,
+      "status": "unresolved",
+      "reason": "ut99_runtime_native_transient_or_safe_replace",
+      "provider_package": "Core",
+      "export_index": null,
+      "provider_id": 1214310
+    },
+    {
+      "index": 5,
+      "object": "Texture",
+      "class": "Class",
+      "outer": -1,
+      "status": "resolved",
+      "reason": "exact_verify_import_match",
+      "provider_package": "Engine",
+      "export_index": 23,
+      "provider_id": 1214312
+    },
+    {
+      "index": 6,
+      "object": "Core",
+      "class": "Package",
+      "outer": 0,
+      "status": "package_only",
+      "reason": "top_level_package_import",
+      "provider_package": "Core",
+      "export_index": null,
+      "provider_id": 1214310
+    },
+    {
+      "index": 7,
+      "object": "WetTexture",
+      "class": "Class",
+      "outer": -3,
+      "status": "resolved",
+      "reason": "exact_verify_import_match",
+      "provider_package": "Fire",
+      "export_index": 42,
+      "provider_id": 1214313
+    }
+  ],
+  "v68_outcome_counts": {
+    "package_only/top_level_package_import": 3,
+    "resolved/exact_verify_import_match": 4,
+    "unresolved/ut99_runtime_native_transient_or_safe_replace": 1
+  },
+  "source_unknown_genuine_original_v69_safety": [
+    {
+      "id": 113265,
+      "imports": 7,
+      "no_provider_unresolved": 7,
+      "selected_provider_statuses_without_native_revision": {
+        "package_only": 3,
+        "unresolved": 4
+      }
+    },
+    {
+      "id": 1254875,
+      "imports": 5,
+      "no_provider_unresolved": 5,
+      "selected_provider_statuses_without_native_revision": {
+        "package_only": 2,
+        "unresolved": 3
+      }
+    },
+    {
+      "id": 1291337,
+      "imports": 15,
+      "no_provider_unresolved": 15,
+      "selected_provider_statuses_without_native_revision": {
+        "package_only": 1,
+        "unresolved": 14
+      }
+    }
+  ],
+  "explicit_selected_provider_empty_on_source_exact": {
+    "missing": 8
+  },
+  "duplicate_physical_provider_rejected": true,
+  "code_correction": "Uedb5ClassicDependencyResolver no longer classifies missing selected provider as missing when original UE1 source revision is unsupported; genuinely original v69 imports fail closed as source-unavailable unresolved, with or without v68 selected provider list.",
+  "production_runtime_chain": "read-only PRD MySQL + original MD5/SHA1 verified package files -> Uedb5SourceSnapshotFactory::buildForGameId -> source gate -> Uedb5ClassicDependencyResolver::normalizedTables -> resolve -> PdoUe1VerifyImportProjectionResolver",
+  "all_relevant_code_SHA256": {
+    "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php": "75c4cc57a922b1db3fc89861dbdbf74e2e773b253009846d7922e14089a7ae2a",
+    "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "d4af3ea65d3bfb217751723ba673a2c8d179b80e338a6f8a4d2298e0d0698dd6",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
+    "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "1b931284d00e0c74856a63ddc6a09174b5bd5d92c711c30ec43a3e3c7544e157",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "22f542e011b746152cf4f946643955302e6803a41f9bd1e8f32a75a3326ebbbb",
+    "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "882eef2f9f9b0327a889d4b7c434c747159068795126937c218b96aa548aab87",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
+    "catalog/src/Infrastructure/Metadata/Uedb5UnrealSnapshotBuilder.php": "bd579c01dacf7c9f990bdef3f50f8b8359b92b65dd0e849ea356737bb2172195",
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df"
+  },
+  "original_local_Epic_source_SHA256": {
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnLinker.h": "82008da9b50ba09f8268b52d07f8d9e1fc2333ea35b229dcff7c30a521486b1f",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament [v1.400] [1999-11-30]\\Core\\Src\\UnLinker.h": "810b2b4c86482272d00bd0460561f8d09bb8f7e72ef478a67faa1e53cadcd9a9",
+    "L:\\Source\\Games\\UT99\\Unreal Tournament v432\\Core\\Inc\\UnLinker.h": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+    "L:\\Source\\Games\\Unreal\\Unreal [v1.227]\\Core\\Inc\\UnLinker.h": "8d6d35d95c0427c8e30ef94198e2214da41a0b90b39453667980d2316ec2d02e"
+  },
+  "preexisting_native_and_source_evidence_SHA256": {
+    "tests/evidence/ue1/ue1-original-native-227k-469f-bulk-import-parity-20261102.json": "b56b1049a7193b2ab190749269338d6f166bfb963db28476783442bee7a575a6",
+    "tests/evidence/ue1/ue1-original-2012-c227i-native-loader-map-private-parent-20261102.json": "d4beabbd9f1198ac63659646c668b60646b4d730362cb8ad43346b1dcfb08c63",
+    "tests/evidence/ue1/ue1-stock-original-v432-two-provider-native-imports-20261102.json": "dee1d4d51c1719304fa8d86c5123998fc6a55516abb9d9756a5e262011b52e6d",
+    "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json": "301fbffc9064c8ce97a89b8cdb24a8a6350f0deefe4dad5b1dca191ae4a4e9bb",
+    "tests/evidence/ue1/ue1-original-v432-private-parent-provider-context-correction-20261102.json": "193640f151894eff4f5d1796fa10519e44797e1a88676d18da175e5769f02cc8",
+    "tests/evidence/ue1/ue1-v120-pre50-provider-package-identity-fix-20261102.json": "6d739d8137dc36a10a40f79b5125eba7279a160affff0c616a12fb05f0a00316",
+    "tests/evidence/ue1/ue1-actual-table-only-dependency-scope-20261102.json": "578cfd733b136117ea7663a08254886c8e484bebdc359daaa414a9f7c474a8d9"
+  },
+  "live_readonly_batch_driver_SHA256": "e6b6dbb6e39cb0acbc6c342f9705856e91ea237a51fa475854f22632bbb1750d",
+  "original_PRD_metadata_result_SHA256": "e29797c4b61612bf8641eef8b0efd1bc9e84ee74629418272444d81df3941b7a",
+  "four_actual_UE1_source_gate_callers_already_pinned": "tests/evidence/ue1/ue1-verifyimport-single-source-policy-20261102.json",
+  "not_certified_by_this_contract": [
+    "old production dependency SQL publisher",
+    "old production website query and UI",
+    "specific native runtime object materialization"
+  ],
+  "new_test_ids": 0,
+  "PRD_database_writes": 0,
+  "engine_native_loads_this_batch": 0
+}

@@ -223,6 +223,19 @@ final class Uedb5ClassicDependencyResolver
 
             $providerKey = self::key($root);
             $provider = $providers[$providerKey] ?? null;
+            // A missing selected provider is not proof of a missing UE1
+            // dependency when the game's original import-resolution
+            // implementation is not source-authorized. For example, v69
+            // package versions cannot identify their native build/mount
+            // context from the package header alone.
+            if ($engine === 'ue1' && $ue1Profile === null && !is_array($provider)) {
+                $resolved[(int)$importIndex] = self::result(
+                    'unresolved', $root, null, null,
+                    'ue1_verify_import_source_implementation_unavailable',
+                    $engine, 'runtime_derived'
+                );
+                continue;
+            }
             $isPackageImport = empty($import['object_package_present'])
                 && (int)($import['outer_index'] ?? 0) === 0
                 && self::key((string)($import['class_name'] ?? '')) === self::key('Package');
