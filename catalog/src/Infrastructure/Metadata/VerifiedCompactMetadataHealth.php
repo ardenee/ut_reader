@@ -12,6 +12,8 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 /**
  * Verifies authoritative UEDB5 publication health for one verified file.
  */
+final class Uedb5DependencyPublicationStale extends RuntimeException {}
+
 final class VerifiedCompactMetadataHealth
 {
     /**
@@ -30,10 +32,12 @@ final class VerifiedCompactMetadataHealth
 
         try {
             $statement = $db->prepare(
-                'SELECT f.game_id,f.scan_status,f.package_name catalog_package_name,'
+                'SELECT f.game_id,f.scan_status,f.package_name catalog_package_name,UPPER(COALESCE(p.engine_key,"")) engine_key,'
                 . 'v.format_version,v.package_name metadata_package_name,v.payload_sha256,'
                 . 's.dependency_policy,s.dependency_payload_sha256 '
                 . 'FROM ue_files f '
+                . 'LEFT JOIN ue_games g ON g.id=f.game_id '
+                . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
                 . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
                 . 'LEFT JOIN ue_uedb5_migration_status s ON s.file_id=f.id AND s.game_id=f.game_id '
                 . 'WHERE f.id=? LIMIT 1'
@@ -64,9 +68,9 @@ final class VerifiedCompactMetadataHealth
             if (!hash_equals((string)($row['payload_sha256'] ?? ''), $payloadSha)) {
                 throw new RuntimeException('File #' . $fileId . ' UEDB5 registration payload does not match the container.');
             }
-            if ((string)($row['dependency_policy'] ?? '') !== Uedb5GameDependencyPassService::DEPENDENCY_POLICY
+            if ((string)($row['dependency_policy'] ?? '') !== Uedb5GameDependencyPassService::policyForEngine((string)($row['engine_key'] ?? ''))
                 || !hash_equals((string)($row['dependency_payload_sha256'] ?? ''), $payloadSha)) {
-                throw new RuntimeException(
+                throw new Uedb5DependencyPublicationStale(
                     'File #' . $fileId . ' UEDB5 dependency projection is not complete for the current payload/policy.'
                 );
             }
@@ -81,8 +85,12 @@ final class VerifiedCompactMetadataHealth
                 'block_count'=>(int)($result['block_count'] ?? 0),
                 'payload_sha256'=>$payloadSha,
                 'payload_sha256_hex'=>strtoupper(bin2hex($payloadSha)),
-                'dependency_policy'=>Uedb5GameDependencyPassService::DEPENDENCY_POLICY,
+                'dependency_policy'=>Uedb5GameDependencyPassService::policyForEngine((string)($row['engine_key'] ?? '')),
             ];
+        } catch (Uedb5DependencyPublicationStale $error) {
+            // The original file and its parsed UEDB5 payload remain valid.
+            // Old dependency decisions require Pass 2, NOT a metadata repair.
+            throw $error;
         } catch (Throwable $error) {
             VerifiedMetadataPublicationState::failed($db, $fileId, self::errorText($error));
             throw $error;
@@ -94,6 +102,9 @@ final class VerifiedCompactMetadataHealth
     {
         try {
             return self::verify($db, $config, $fileId);
+        } catch (Uedb5DependencyPublicationStale $error) {
+            // Do not enqueue a source-byte repair for a dependency-only policy change.
+            throw $error;
         } catch (Throwable $error) {
             self::queueRepair($db, $config, $fileId, $requestedBy, $error);
             throw $error;

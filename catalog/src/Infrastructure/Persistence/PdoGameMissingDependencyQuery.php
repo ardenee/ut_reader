@@ -42,6 +42,26 @@ final class PdoGameMissingDependencyQuery
         return array_values($names);
     }
 
+    /** Return only exact current policy + payload results; source-unknown is not missing. */
+    public function publicationFreshness(int $gameId, string $engineKey): array
+    {
+        if ($gameId < 1) { return ['verified'=>0,'current'=>0,'stale'=>0]; }
+        $policy = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService::policyForEngine($engineKey);
+        $statement = $this->db->prepare(
+            'SELECT COUNT(*) verified,'
+            . 'COALESCE(SUM(CASE WHEN v.file_id IS NOT NULL AND s.dependency_policy=? '
+            . 'AND s.dependency_payload_sha256=v.payload_sha256 THEN 1 ELSE 0 END),0) current_files '
+            . 'FROM ue_files f '
+            . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
+            . 'LEFT JOIN ue_uedb5_migration_status s ON s.file_id=f.id AND s.game_id=f.game_id '
+            . 'WHERE f.game_id=? AND f.scan_status="verified"'
+        );
+        $statement->execute([$policy,$gameId]);
+        $row=$statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        $verified=(int)($row['verified']??0);$current=(int)($row['current_files']??0);
+        return ['verified'=>$verified,'current'=>$current,'stale'=>max(0,$verified-$current),'expected_policy'=>$policy];
+    }
+
     /** @return array{stale_files:int,stale_rows:int,stale_missing_rows:int,owners:list<array<string,mixed>>} */
     public function projectionHealth(int $gameId, int $limit = 20): array
     {

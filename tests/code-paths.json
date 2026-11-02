@@ -2904,8 +2904,8 @@
     },
     {
       "path": "catalog/file-examine-dependencies.php",
-      "sha256": "ca8347aa72a7459ec698d4cf9358faece147129d7bc5d772a33e89988e68239b",
-      "bytes": 2988,
+      "sha256": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
+      "bytes": 4664,
       "engine_hints": [
         "shared"
       ],
@@ -3142,8 +3142,8 @@
     },
     {
       "path": "catalog/game-missing.php",
-      "sha256": "c7391ebed14a599db71a77ca1b03d17a74fda7e015105fd8a0bb44e915019f1a",
-      "bytes": 29855,
+      "sha256": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+      "bytes": 30937,
       "engine_hints": [
         "shared"
       ],
@@ -9648,8 +9648,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-      "sha256": "ae4dd2bc202e975ae09a07e38b9629f5cdcb0f8dd118415f76ea1e43b885172c",
-      "bytes": 24462,
+      "sha256": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+      "bytes": 26288,
       "engine_hints": [
         "shared"
       ],
@@ -9845,8 +9845,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
-      "sha256": "46534b0670f1d6f76318e7548c58bbca748b8d00c590a1d3280c2b31b618f3ba",
-      "bytes": 22052,
+      "sha256": "9310eebfff0c1be004c16b01f520739be8ce146a93ce99eb40ed8d22bbff4650",
+      "bytes": 23172,
       "engine_hints": [
         "shared"
       ],
@@ -10343,8 +10343,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php",
-      "sha256": "0cc305a96fac488214c83a8ab229b2bee08828650068ab52bc0ac1987bef7224",
-      "bytes": 6636,
+      "sha256": "7b8fb4b5a90efaac1a9313a869552395b3cd2d10412f34ba4e7a79a6e320f8ea",
+      "bytes": 7238,
       "engine_hints": [
         "shared"
       ],
@@ -10353,7 +10353,7 @@
       ],
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
-      "class": "VerifiedCompactMetadataHealth"
+      "class": "Uedb5DependencyPublicationStale"
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php",
@@ -10954,8 +10954,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
-      "sha256": "f51061a8f193c31af7ad03e9555790f316811d04d5d1b736ca58d873aa47866a",
-      "bytes": 17992,
+      "sha256": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+      "bytes": 18873,
       "engine_hints": [
         "shared"
       ],
@@ -13651,8 +13651,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
-      "sha256": "6ff2d23237f15e93811e7ab24c4b5c98dc6e7b6c325cf331b3279bffdda6faac",
-      "bytes": 28211,
+      "sha256": "d2ff554939261587352f86d481fd9c01d3a2e8c0f367545624d8c2aad259a9d6",
+      "bytes": 28082,
       "engine_hints": [
         "shared"
       ],

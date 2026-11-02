@@ -114,9 +114,11 @@ try{
     $selectedPackage=game_missing_text('package',255);$selectedObject=game_missing_text('object',1000);$objectPage=max(1,game_missing_int('object_page',1));$objectLimit=200;$engineKey=strtoupper(trim((string)($game['engine_key']??'')));$evidenceKey=game_missing_text('evidence',64);$evidenceFileId=0;$evidenceImportIndex=-1;if(preg_match('/^(\d+):(\d+)$/',$evidenceKey,$m)===1){$evidenceFileId=(int)$m[1];$evidenceImportIndex=(int)$m[2];}
     if(session_status()===PHP_SESSION_ACTIVE)session_write_close();
     $missingQuery=new PdoGameMissingDependencyQuery($db);$scope=$baseGameOnly?$missingQuery->officialBaseGamePackageNames($gameId):null;
-    $projectionHealth=$isAdmin?$missingQuery->projectionHealth($gameId,20):['stale_files'=>0,'stale_rows'=>0,'stale_missing_rows'=>0,'owners'=>[]];$totals=$missingQuery->totals($gameId,$scope);$packageRows=$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
+    $ue1Publication=$engineKey==='UE1'?$missingQuery->publicationFreshness($gameId,$engineKey):null;
+    $ue1RowsStale=is_array($ue1Publication)&&(int)($ue1Publication['stale']??0)>0;
+    $projectionHealth=$isAdmin?$missingQuery->projectionHealth($gameId,20):['stale_files'=>0,'stale_rows'=>0,'stale_missing_rows'=>0,'owners'=>[]];$totals=$ue1RowsStale?['missing_objects'=>0,'missing_packages'=>0,'files_with_missing'=>0]:$missingQuery->totals($gameId,$scope);$packageRows=$ue1RowsStale?[]:$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
     $objectRows=[];$objectTotal=0;$objectOffset=0;$packageProviders=[];$objectFiles=[];$diagnostic=null;$evidence=null;$sampleEvidence=null;
-    if($selectedPackage!==''&&($scope===null||in_array(strtolower($selectedPackage),array_map('strtolower',$scope),true))){
+    if(!$ue1RowsStale&&$selectedPackage!==''&&($scope===null||in_array(strtolower($selectedPackage),array_map('strtolower',$scope),true))){
         $objectTotal=$missingQuery->objectTotal($gameId,$selectedPackage,$scope,$objectSearch);$objectOffset=($objectPage-1)*$objectLimit;
         $objectRows=$missingQuery->objectRows($gameId,$selectedPackage,$scope,$objectLimit,$objectOffset,$objectSearch);
         $packageProviders=catalog_dependency_provider_candidates($db,$gameId,0,$selectedPackage);
@@ -145,6 +147,13 @@ CSS;
     echo '<label>Dependency type<select name="dependency_type"><option value="all"'.(!$baseGameOnly?' selected':'').'>All missing dependencies</option><option value="base_game"'.($baseGameOnly?' selected':'').'>Official base-game dependencies only</option></select></label>';
     echo '<label>Package search<input name="q" value="'.catalog_h($packageSearch).'" placeholder="package name"></label><button type="submit">Apply filters</button></form></div></section>';
 
+    if($ue1RowsStale){
+        echo '<section class="ui-section"><div class="ui-section__body"><div class="gm-note"><strong>UE1 dependency results require source-correct regeneration.</strong> ';
+        echo number_format((int)$ue1Publication['stale']).' of '.number_format((int)$ue1Publication['verified']).' verified files have an older dependency policy or payload. ';
+        echo 'Previously published missing/resolved counts have been withheld: Epic runtime mount selection cannot be reconstructed from uploaded catalogue order. ';
+        echo 'Use the UE1-scoped dependency Pass 2 with authoritative mount evidence where available; otherwise new results remain explicitly unresolved. ';
+        echo 'UE2–UE5 dependency policy is unchanged.</div></div></section>';
+    }
     if($isAdmin&&(int)($projectionHealth['stale_files']??0)>0){
         $staleFiles=(int)$projectionHealth['stale_files'];$staleRows=(int)$projectionHealth['stale_rows'];$staleMissing=(int)$projectionHealth['stale_missing_rows'];$owners=(array)($projectionHealth['owners']??[]);
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Projection health</h2><p>Admin-only cleanup. Stale package-summary owners are excluded from the missing-dependency counts below.</p></div></div><div class="ui-section__body">';

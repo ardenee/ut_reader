@@ -71,6 +71,14 @@ final class PdoGameDependencyCrossExamineQuery
         $limit = max(10, min(500, $limit));
         $target = $this->targetGame($targetGameId);
         $targetEngine = strtoupper(trim((string)$target['engine_key']));
+        if ($targetEngine === 'UE1') {
+            $freshness = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoGameMissingDependencyQuery($this->db))
+                ->publicationFreshness($targetGameId, $targetEngine);
+            if ((int)$freshness['stale'] > 0) {
+                throw new \RuntimeException('UE1 cross-game dependencies are not current for '
+                    . $freshness['stale'] . ' verified files; source-correct UEDB5 Pass 2 is required.');
+            }
+        }
         $targetEngineGeneration = $this->engineGeneration($targetEngine);
 
         $sourceGames = \catalog_all(

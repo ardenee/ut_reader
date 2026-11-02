@@ -1,0 +1,158 @@
+{
+    "date":  "2026-11-02",
+    "purpose":  "UE1 current source-mount dependency policy, stale-read refusal and SQL publication from original PRD snapshots",
+    "new_production_source_sha256":  {
+                                         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php":  "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+                                         "catalog/src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php":  "7b8fb4b5a90efaac1a9313a869552395b3cd2d10412f34ba4e7a79a6e320f8ea",
+                                         "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php":  "9310eebfff0c1be004c16b01f520739be8ce146a93ce99eb40ed8d22bbff4650",
+                                         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php":  "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+                                         "catalog/game-missing.php":  "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+                                         "catalog/file-examine-dependencies.php":  "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
+                                         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php":  "d2ff554939261587352f86d481fd9c01d3a2e8c0f367545624d8c2aad259a9d6"
+                                     },
+    "temporary_test_sha256":  {
+                                  "verify_prd_policy_freshness.php":  "100b23ee147158333b9ab1e2893f55fa82a98419ac695219e5fce1593de4b227",
+                                  "verify_ue1_source_freshness_reads.php":  "159b0f173ee68ce621d81574126803f57ab3169a72a3c4cf384792e61ebac413",
+                                  "verify_real_prd_ue1_sqlite_publisher.php":  "d4b8a6fd9ab4edb60b7124543eedb5039a91028c4915ad6b3c80e9c746cf3452",
+                                  "verify_native_mount_context_route.php":  "24199e64ba9f15c4e4be8cec76ea3c2a4eff56d1baa908670795ebc56d39b719",
+                                  "verify_direct_web_stale_guards.php":  "502944a29f4ace74547dcd6a3d5d8d73be69f780704bf0b42fc8ac2764ce2123",
+                                  "verify_stale_does_not_corrupt_file_state.php":  "53fec3e523449765e51257439c373e6d38087dae6365b2e332baea0fc2a83e04"
+                              },
+    "PRD_database":  "Read-only MySQL transaction rollback; no PRD database writes or original file changes",
+    "engine_dependency_policies":  {
+                                       "UE1":  "uedb5-dependency-pass-ue1-mount-v14",
+                                       "UE2":  "uedb5-dependency-pass-v13",
+                                       "UE3":  "uedb5-dependency-pass-v13",
+                                       "UE4":  "uedb5-dependency-pass-v13",
+                                       "UE5":  "uedb5-dependency-pass-v13"
+                                   },
+    "PRD_policy_current_and_stale_files":  [
+                                               {
+                                                   "game":  3,
+                                                   "engine":  "UE1",
+                                                   "verified":  74303,
+                                                   "current":  0,
+                                                   "stale":  74303
+                                               },
+                                               {
+                                                   "game":  12,
+                                                   "engine":  "UE1",
+                                                   "verified":  10788,
+                                                   "current":  0,
+                                                   "stale":  10788
+                                               },
+                                               {
+                                                   "game":  2,
+                                                   "engine":  "UE2",
+                                                   "verified":  1217,
+                                                   "current":  1217,
+                                                   "stale":  0
+                                               },
+                                               {
+                                                   "game":  4,
+                                                   "engine":  "UE2",
+                                                   "verified":  5082,
+                                                   "current":  5082,
+                                                   "stale":  0
+                                               },
+                                               {
+                                                   "game":  5,
+                                                   "engine":  "UE3",
+                                                   "verified":  72880,
+                                                   "current":  72880,
+                                                   "stale":  0
+                                               },
+                                               {
+                                                   "game":  6,
+                                                   "engine":  "UE4",
+                                                   "verified":  6722,
+                                                   "current":  6722,
+                                                   "stale":  0
+                                               },
+                                               {
+                                                   "game":  7,
+                                                   "engine":  "UE4",
+                                                   "verified":  64247,
+                                                   "current":  64247,
+                                                   "stale":  0
+                                               }
+                                           ],
+    "PRD_current_file_dependency_reads":  [
+                                              {
+                                                  "game":  3,
+                                                  "file_id":  113265,
+                                                  "result":  "UE1 old policy rejected"
+                                              },
+                                              {
+                                                  "game":  12,
+                                                  "file_id":  1246569,
+                                                  "result":  "UE1 old policy rejected"
+                                              },
+                                              {
+                                                  "game":  2,
+                                                  "file_id":  111139,
+                                                  "rows":  31
+                                              },
+                                              {
+                                                  "game":  5,
+                                                  "file_id":  111460,
+                                                  "rows":  4
+                                              },
+                                              {
+                                                  "game":  6,
+                                                  "file_id":  112300,
+                                                  "rows":  5
+                                              }
+                                          ],
+    "isolated_SQLite_real_PRD_consumer_publication":  [
+                                                          {
+                                                              "game":  12,
+                                                              "file_id":  1245067,
+                                                              "import_rows":  165,
+                                                              "published_edges":  165,
+                                                              "published_packages":  23,
+                                                              "common":  73,
+                                                              "unresolved":  92,
+                                                              "missing":  0,
+                                                              "website_missing":  0
+                                                          },
+                                                          {
+                                                              "game":  3,
+                                                              "file_id":  1254874,
+                                                              "import_rows":  264,
+                                                              "published_edges":  264,
+                                                              "published_packages":  18,
+                                                              "common":  55,
+                                                              "unresolved":  209,
+                                                              "missing":  0,
+                                                              "website_missing":  0
+                                                          },
+                                                          {
+                                                              "game":  3,
+                                                              "file_id":  113263,
+                                                              "import_rows":  13,
+                                                              "published_edges":  13,
+                                                              "published_packages":  3,
+                                                              "common":  5,
+                                                              "unresolved":  8,
+                                                              "missing":  0,
+                                                              "website_missing":  0
+                                                          }
+                                                      ],
+    "native_context_route":  [
+                                 "exact game and consumer accepted",
+                                 "cross-file rejected",
+                                 "cross-game rejected",
+                                 "mismatched consumer rejected"
+                             ],
+    "original_native_sessions_reexecuted":  0,
+    "pending":  [
+                    "Actual PRD MySQL UEDB5 dependency rebuild for 85091 UE1 files not run (PRD read-only constraint)",
+                    "No original source-driven runtime mount oracle for arbitrary uploaded files; those remain unresolved",
+                    "No browser-authenticated UI view after PRD rebuild",
+                    "Unproven version 69 native VerifyImport profiles remain source guarded"
+                ],
+    "proof_scope":  "Verifies production source, read-only PRD file/policy behavior, isolated SQL publisher and missing-query outputs; does not claim completed PRD data republishing.",
+    "direct_web_guard_actual_PRD":  "UE1 file IDs 1245067/1254874 direct links zero; UE2 111139=31; UE3 111460=4; UE4 112300=5; UE1 cross-game target stale policy rejected",
+    "stale_vs_metadata_corruption_PRD":  "Real PRD file IDs 113265 and 1246569 health verify/queueRepair reject stale source dependency without changing metadata status or queueing metadata repair"
+}

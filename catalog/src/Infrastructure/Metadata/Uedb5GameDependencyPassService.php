@@ -11,6 +11,17 @@ use Throwable;
 final class Uedb5GameDependencyPassService
 {
     public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v13';
+    public const UE1_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue1-mount-v14';
+
+    public static function policyForEngine(string $engineKey): string
+    {
+        return strtoupper(trim($engineKey)) === 'UE1' ? self::UE1_DEPENDENCY_POLICY : self::DEPENDENCY_POLICY;
+    }
+
+    private function policyForGame(int $gameId): string
+    {
+        return self::policyForEngine($this->gameEngineKey($gameId));
+    }
 
     private Uedb5MetadataReader $reader;
     private Uedb5DependencyRebuilder $rebuilder;
@@ -75,7 +86,7 @@ final class Uedb5GameDependencyPassService
             . 'WHERE f.game_id=? AND f.scan_status="verified" '
             . 'AND s.dependency_policy=? AND s.dependency_payload_sha256=v.payload_sha256'
         );
-        $completedStatement->execute([$gameId, self::DEPENDENCY_POLICY]);
+        $completedStatement->execute([$gameId, $this->policyForGame($gameId)]);
         $completed = (int)$completedStatement->fetchColumn();
         $invalidStatement = $this->db->prepare(
             'SELECT COUNT(*) FROM ue_files f '
@@ -100,7 +111,7 @@ final class Uedb5GameDependencyPassService
             'invalid_staged_count' => $invalidStaged,
             'dependency_complete_count' => $completed,
             'dependency_remaining_count' => max(0, $staged - $completed),
-            'dependency_policy' => self::DEPENDENCY_POLICY,
+            'dependency_policy' => $this->policyForGame($gameId),
             'pass2_ready' => $ready,
             'uses_uedb4_metadata' => false,
         ];
@@ -242,6 +253,7 @@ final class Uedb5GameDependencyPassService
     /** @param array<string,mixed> $options @return array<string,mixed> */
     private function processFile(int $gameId, int $fileId, bool $apply, array $options): array
     {
+        $options = $this->withClassicNativeMountEvidence($gameId, $fileId, $options);
         $selectedProviders = $this->selector->select($gameId, $fileId, $options);
         $selectedProviderFileIds = array_values(array_map(
             static fn(array $row): int => (int)$row['file_id'],
@@ -276,7 +288,7 @@ final class Uedb5GameDependencyPassService
             $fileId,
             $gameId,
             $payloadSha,
-            self::DEPENDENCY_POLICY
+            $this->policyForGame($gameId)
         );
         return [
             'provider_count'=>count($selectedProviderFileIds),
@@ -289,6 +301,39 @@ final class Uedb5GameDependencyPassService
             'projection'=>$projection,
             'payload_sha256_hex'=>strtoupper(bin2hex($payloadSha)),
         ];
+    }
+
+    /**
+     * Explicit original native session evidence may be supplied for ONE
+     * consumer file. Do not broadcast its mount order to other files/games.
+     * File IDs alone cannot constitute evidence of installed original Paths.
+     *
+     * @param array<string,mixed> $options
+     * @return array<string,mixed>
+     */
+    private function withClassicNativeMountEvidence(int $gameId,int $fileId,array $options): array
+    {
+        $all=$this->config['classic_runtime_context_by_game_and_file'] ?? [];
+        if(!is_array($all))throw new RuntimeException('Classic native contexts must be game/file keyed arrays.');
+        $byGame=$all[$gameId]??$all[(string)$gameId]??[];
+        if(!is_array($byGame))throw new RuntimeException('Classic native contexts for a game must be file keyed.');
+        $context=$byGame[$fileId]??$byGame[(string)$fileId]??null;
+        if($context===null)return $options;
+        if($this->gameEngineKey($gameId)!=='UE1') {
+            throw new RuntimeException('UE1 classic mount evidence cannot be applied to another engine.');
+        }
+        if(!is_array($context)
+            || ($context['game_id']??null)!==$gameId
+            || ($context['consumer_file_id']??null)!==$fileId
+            || ($context['mount_order_authoritative']??null)!==true
+            || !is_string($context['evidence_source']??null)
+            || trim($context['evidence_source'])==='') {
+            throw new RuntimeException('Original UE1 native mount evidence must identify its original source, exact game and consumer.');
+        }
+        // The physical selector independently verifies ordered IDs, loaded
+        // linkers, and same-game verified physical provider identities.
+        $options['classic_runtime_context']=$context;
+        return $options;
     }
 
     /** @return array{common_packages:list<string>} */
@@ -430,7 +475,7 @@ final class Uedb5GameDependencyPassService
         if(!$force){
             $sql .= ' AND (s.dependency_policy IS NULL OR s.dependency_policy<>? '
                 . 'OR s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256)';
-            $args[] = self::DEPENDENCY_POLICY;
+            $args[] = $this->policyForGame($gameId);
         }
         $statement = $this->db->prepare($sql);
         $statement->execute($args);
@@ -455,7 +500,7 @@ final class Uedb5GameDependencyPassService
         if(!$force){
             $sql .= ' AND (s.dependency_policy IS NULL OR s.dependency_policy<>? '
                 . 'OR s.dependency_payload_sha256 IS NULL OR s.dependency_payload_sha256<>v.payload_sha256)';
-            $args[] = self::DEPENDENCY_POLICY;
+            $args[] = $this->policyForGame($gameId);
         }
         $sql .= ' ORDER BY f.id LIMIT ' . max(1, min(5000, $limit));
         $statement = $this->db->prepare($sql);

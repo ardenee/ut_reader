@@ -29,11 +29,35 @@ final class Uedb5ParityV5ReadService
         }
         return $this->snapshotCache[$fileId];
     }
+    /**
+     * A V5 snapshot can still be readable after its dependency resolution
+     * becomes obsolete. Reject only UE1 prior-to-mount-parity projections;
+     * never treat stale stored "missing" or "resolved" as Epic load outcomes.
+     */
+    private function requireCurrentUe1DependencyPolicy(int $gameId,int $fileId,string $sourcePolicy): void
+    {
+        if(!str_starts_with(strtolower($sourcePolicy),'ue1-'))return;
+        $stmt=$this->db->prepare(
+            'SELECT v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256 '
+            . 'FROM ue_uedb5_files v LEFT JOIN ue_uedb5_migration_status s '
+            . 'ON s.file_id=v.file_id AND s.game_id=v.game_id '
+            . 'WHERE v.game_id=? AND v.file_id=? LIMIT 1'
+        );
+        $stmt->execute([$gameId,$fileId]);
+        $row=$stmt->fetch(PDO::FETCH_ASSOC);
+        if(!is_array($row)
+            || (string)($row['dependency_policy']??'')!==Uedb5GameDependencyPassService::UE1_DEPENDENCY_POLICY
+            || !hash_equals((string)($row['payload_sha256']??''),(string)($row['dependency_payload_sha256']??''))) {
+            throw new RuntimeException('UE1 dependency publication is stale: rerun source-correct UEDB5 Pass 2 for file #'.$fileId.'.');
+        }
+    }
+
     /** @return list<array<string,mixed>> */
     public function dependencies(int $gameId,int $fileId):array
     {
         try{
             $manifest=$this->reader->manifest($gameId,$fileId);
+            $this->requireCurrentUe1DependencyPolicy($gameId,$fileId,(string)($manifest['source_policy']??''));
             $counts=(array)($manifest['counts']??[]);
             if(!array_key_exists('dependency_results',$counts))return[];
             $policy=(string)($manifest['source_policy']??'');$rows=[];
@@ -76,6 +100,7 @@ final class Uedb5ParityV5ReadService
         foreach($indexes as $index){$index=(int)$index;if($index>=0)$wanted[$index]=true;}
         if($wanted===[])return[];
         $manifest=$this->reader->manifest($gameId,$fileId);
+        $this->requireCurrentUe1DependencyPolicy($gameId,$fileId,(string)($manifest['source_policy']??''));
         if(!array_key_exists('dependency_results',(array)($manifest['sections']??[])))return[];
         $policy=(string)($manifest['source_policy']??'');$out=[];
         try{

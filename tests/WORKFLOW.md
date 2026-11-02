@@ -20,3 +20,7 @@ Performance is measured by mandatory *unverified behaviour remaining*, defects c
 ## Reader architecture
 
 The UE1, UE2, UE3, UE4 and UE5 implementations now own separate concrete package parsers. UE1 and UE2 each own their byte IO, package-summary and table parsing, and UEDB5 table snapshot serializers. No engine-specific reader or byte-stream class is shared. Generic catalog UEDB5 dependencies and provider resolution remain shared; edits to those shared services require explicit cross-engine impact review. Use python tests/tools/impact.py --path <changed source> to identify affected operation cases.
+
+## UE1 source-correct dependency publication, 2026-11-02
+
+The current UE1 publication marker is uedb5-dependency-pass-ue1-mount-v14. UE2 through UE5 retain uedb5-dependency-pass-v13. The old 85091 UE1 PRD rows are historical, not source-current; current file readers reject old UE1 dependency outcomes and the admin missing-dependency page withholds their stale counts. Original native mount contexts are accepted only in classic_runtime_context_by_game_and_file scoped to the exact game and consumer with an explicit evidence_source. If native mount context is missing, source-selected physical providers remain unresolved. An isolated production SQL publisher run on three genuine PRD consumer snapshots produced 442 accurate dependency edges and no fabricated missing rows. PRD SQL remains read-only, and no mass dependency data rebuild was performed. See tests/evidence/ue1/prd-source-correct-dependency-publication-20261102.json.
