@@ -53,44 +53,70 @@ final class PdoUedb5CompactCandidatePublisher
         $ownsTransaction = !$this->db->inTransaction();
         if ($ownsTransaction) $this->db->beginTransaction();
         try {
-            $insert = $this->db->prepare('INSERT INTO '.$this->dictionary.'
-                (name_key_hash,name_key_length,name_key_fingerprint) VALUES(?,?,?)
-                ON DUPLICATE KEY UPDATE name_id=LAST_INSERT_ID(name_id)');
-            $fetch = $this->db->prepare('SELECT name_id,name_key_hash,name_key_length,name_key_fingerprint
-                FROM '.$this->dictionary.' WHERE name_key_fingerprint=?');
-            // Canonical lock-acquisition order across parallel workers.
-            // The legacy base publisher sorts dictionary fingerprints likewise.
+            // Preserve the canonical fingerprint lock order, but issue one
+            // bounded INSERT IGNORE + SELECT per batch instead of two MySQL
+            // round-trips for every single source-backed name.
             $keys = array_values((array)($projection['search_keys'] ?? []));
             usort($keys, static fn(array $a, array $b): int =>
                 strcmp((string)($a['fingerprint'] ?? ''), (string)($b['fingerprint'] ?? '')));
             $dictionary = [];
-            foreach ($keys as $key) {
-                $hash = (string)($key['hash'] ?? '');
-                $len = (int)($key['length'] ?? -1);
-                $fp = (string)($key['fingerprint'] ?? '');
-                $text = (string)($key['normalized_text'] ?? '');
-                if (strlen($hash) !== 16 || strlen($fp) !== 32 ||
-                    strlen($text) !== $len ||
-                    !hash_equals(md5($text, true), $hash) ||
-                    !hash_equals(hash('sha256', $text, true), $fp)) {
-                    throw new RuntimeException('Invalid source search identity.');
+            foreach (array_chunk($keys, 200) as $batch) {
+                $values = [];
+                $params = [];
+                $fingerprints = [];
+                $identities = [];
+                foreach ($batch as $key) {
+                    $hash = (string)($key['hash'] ?? '');
+                    $len = (int)($key['length'] ?? -1);
+                    $fp = (string)($key['fingerprint'] ?? '');
+                    $text = (string)($key['normalized_text'] ?? '');
+                    if (strlen($hash) !== 16 || strlen($fp) !== 32
+                        || strlen($text) !== $len
+                        || !hash_equals(md5($text, true), $hash)
+                        || !hash_equals(hash('sha256', $text, true), $fp)) {
+                        throw new RuntimeException('Invalid source search identity.');
+                    }
+                    $values[] = '(?,?,?)';
+                    array_push($params, $hash, $len, $fp);
+                    $fingerprints[] = $fp;
+                    $identities[bin2hex($fp)] = [$hash, $len, $text];
                 }
-                $insert->execute([$hash, $len, $fp]);
-                $fetch->execute([$fp]);
-                $entry = $fetch->fetch(PDO::FETCH_ASSOC);
-                if (!is_array($entry) || (int)$entry['name_id'] <= 0 ||
-                    !hash_equals((string)$entry['name_key_hash'], $hash) ||
-                    (int)$entry['name_key_length'] !== $len ||
-                    !hash_equals((string)$entry['name_key_fingerprint'], $fp)) {
-                    throw new RuntimeException('Compact dictionary identity conflict.');
+                // Ignore only the exact unique fingerprint already in the
+                // dictionary. The following SELECT checks every returned
+                // identity, so a hash collision cannot be accepted silently.
+                $this->db->prepare(
+                    'INSERT IGNORE INTO '.$this->dictionary.
+                    ' (name_key_hash,name_key_length,name_key_fingerprint) VALUES '.implode(',', $values)
+                )->execute($params);
+                $stmt = $this->db->prepare(
+                    'SELECT name_id,name_key_hash,name_key_length,name_key_fingerprint FROM '.
+                    $this->dictionary.' WHERE name_key_fingerprint IN ('.
+                    implode(',', array_fill(0, count($fingerprints), '?')).')'
+                );
+                $stmt->execute($fingerprints);
+                $found = [];
+                foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) ?: [] as $entry) {
+                    $hex = bin2hex((string)$entry['name_key_fingerprint']);
+                    $expected = $identities[$hex] ?? null;
+                    if ($expected === null || (int)$entry['name_id'] <= 0
+                        || !hash_equals((string)$entry['name_key_hash'], $expected[0])
+                        || (int)$entry['name_key_length'] !== $expected[1]) {
+                        throw new RuntimeException('Compact dictionary identity conflict.');
+                    }
+                    $found[$hex] = (int)$entry['name_id'];
                 }
-                $dictionary[bin2hex($fp)] = [
-                    'name_id' => (int)$entry['name_id'],
-                    'key_hash' => $hash,
-                    'key_length' => $len,
-                    'key_fingerprint' => $fp,
-                    'normalized_text' => $text,
-                ];
+                if (count($found) !== count($identities)) {
+                    throw new RuntimeException('Compact dictionary identity lookup incomplete.');
+                }
+                foreach ($identities as $hex => $identity) {
+                    $dictionary[$hex] = [
+                        'name_id' => $found[$hex],
+                        'key_hash' => $identity[0],
+                        'key_length' => $identity[1],
+                        'key_fingerprint' => hex2bin($hex),
+                        'normalized_text' => $identity[2],
+                    ];
+                }
             }
             $compact = Uedb5CompactCandidateProjectionBuilder::build(
                 $snapshot, $projection, array_values($dictionary)
@@ -99,16 +125,29 @@ final class PdoUedb5CompactCandidatePublisher
             $deleteObjects = $this->db->prepare('DELETE FROM '.$this->objects.' WHERE file_id=?');
             $deleteNames->execute([$fileId]);
             $deleteObjects->execute([$fileId]);
-            $writeName = $this->db->prepare('INSERT INTO '.$this->names.'
-                (file_id,name_id,first_name_index) VALUES(?,?,?)');
-            foreach ($compact['name_candidates'] as $row) {
-                $writeName->execute([$fileId, $row['name_id'], $row['first_name_index']]);
+            // Keep the same file-scoped delete/insert semantics and primary-key
+            // constraints while reducing large candidate lists to bounded SQL
+            // batches. The transaction remains caller-owned as before.
+            foreach (array_chunk($compact['name_candidates'], 200) as $batch) {
+                $params = [];
+                foreach ($batch as $row) {
+                    array_push($params, $fileId, $row['name_id'], $row['first_name_index']);
+                }
+                $sql = 'INSERT INTO '.$this->names.
+                    ' (file_id,name_id,first_name_index) VALUES '.
+                    implode(',', array_fill(0, count($batch), '(?,?,?)'));
+                $this->db->prepare($sql)->execute($params);
             }
-            $writeObject = $this->db->prepare('INSERT INTO '.$this->objects.'
-                (file_id,object_kind,object_index,name_id,public_export_hash) VALUES(?,?,?,?,?)');
-            foreach ($compact['object_candidates'] as $row) {
-                $writeObject->execute([$fileId, $row['object_kind'], $row['object_index'],
-                    $row['name_id'], $row['public_export_hash']]);
+            foreach (array_chunk($compact['object_candidates'], 200) as $batch) {
+                $params = [];
+                foreach ($batch as $row) {
+                    array_push($params, $fileId, $row['object_kind'], $row['object_index'],
+                        $row['name_id'], $row['public_export_hash']);
+                }
+                $sql = 'INSERT INTO '.$this->objects.
+                    ' (file_id,object_kind,object_index,name_id,public_export_hash) VALUES '.
+                    implode(',', array_fill(0, count($batch), '(?,?,?,?,?)'));
+                $this->db->prepare($sql)->execute($params);
             }
             if ($ownsTransaction) $this->db->commit();
             return ['file_id'=>$fileId,'names'=>count($compact['name_candidates']),

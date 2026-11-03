@@ -124,6 +124,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php',
+            $this->catalogRoot . '/src/Infrastructure/Metadata/PdoUedb5CompactCandidatePublisher.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/Uedb5SqlProjectionBuilder.php',
             $this->catalogRoot . '/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php',
