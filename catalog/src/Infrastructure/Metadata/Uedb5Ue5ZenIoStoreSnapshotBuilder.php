@@ -14,6 +14,14 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
     public const PACKAGE_FAMILY = Uedb5ZenPackageReader::PACKAGE_FAMILY;
     public const SOURCE_POLICY = Uedb5ZenSourcePolicy::UE5_56; // Registered Satisfactory game14 current source
 
+    /**
+     * The authoritative ContainerHeader is immutable for a parsed TOC. Keep its
+     * decoded context and FPackageId lookup only while that TOC instance lives;
+     * WeakMap prevents cross-container reuse and unbounded worker memory.
+     * @var \WeakMap<Uedb5IoStoreTocReader,array<string,mixed>>|null
+     */
+    private static ?\WeakMap $contexts = null;
+
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(Uedb5IoStoreTocReader $toc, string $packageId, array $file): array
     {
@@ -27,17 +35,9 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
         // Select by the registered game's Epic release, not the stripped Zen header.
         $sourcePolicy = Uedb5ZenSourcePolicy::forGameId($gameId);
         $tocHeader = $toc->header();
-        $containerHeaderIndexes = $toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER);
-        if (count($containerHeaderIndexes) !== 1) {
-            throw new RuntimeException('Selected IoStore container must expose exactly one ContainerHeader chunk.');
-        }
-        $containerHeaderIndex = $containerHeaderIndexes[0];
-        $containerHeader = Uedb5IoStoreContainerHeaderReader::parse($toc->readChunk($containerHeaderIndex));
-        if ((string)$containerHeader['container_id'] !== (string)$tocHeader['container_id']) {
-            throw new RuntimeException('IoStore ContainerHeader ContainerId does not match the selected TOC.');
-        }
-
-        [$storeEntry, $storeListIndex, $optionalStoreEntry, $optionalStoreListIndex] = self::findStoreEntries($containerHeader, $packageId);
+        $context = self::contextForToc($toc);
+        $containerHeader = $context['header'];
+        [$storeEntry, $storeListIndex, $optionalStoreEntry, $optionalStoreListIndex] = self::findStoreEntries($context, $packageId);
         $packageChunkIndex = $toc->findPackageChunk($packageId, Uedb5IoStoreTocReader::CHUNK_TYPE_EXPORT_BUNDLE_DATA, 0);
         if ($packageChunkIndex === null) {
             throw new RuntimeException('IoStore TOC has no ExportBundleData chunk for FPackageId ' . $packageId . '.');
@@ -191,30 +191,54 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
         ];
     }
 
-    /** @return array{0:array<string,mixed>,1:int,2:?array<string,mixed>,3:?int} */
-    private static function findStoreEntries(array $containerHeader, string $packageId): array
+    /**
+     * @return array{header:array<string,mixed>,ordinary:array<string,list<int>>,optional:array<string,list<int>>}
+     */
+    private static function contextForToc(Uedb5IoStoreTocReader $toc): array
     {
-        $ordinary = [];
-        foreach ((array)$containerHeader['store_entries'] as $index => $entry) {
-            if ((string)($entry['package_id'] ?? '') === $packageId) {
-                $ordinary[] = [(array)$entry, (int)$index];
-            }
+        self::$contexts ??= new \WeakMap();
+        if (isset(self::$contexts[$toc])) {
+            return self::$contexts[$toc];
         }
+        $indexes = $toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER);
+        if (count($indexes) !== 1) {
+            throw new RuntimeException('Selected IoStore container must expose exactly one ContainerHeader chunk.');
+        }
+        $header = Uedb5IoStoreContainerHeaderReader::parse($toc->readChunk($indexes[0]));
+        if ((string)$header['container_id'] !== (string)$toc->header()['container_id']) {
+            throw new RuntimeException('IoStore ContainerHeader ContainerId does not match the selected TOC.');
+        }
+        $ordinary = [];
+        foreach ($header['store_entries'] as $index => $entry) {
+            $ordinary[(string)$entry['package_id']][] = (int)$index;
+        }
+        $optional = [];
+        foreach ($header['optional_segment_store_entries'] as $index => $entry) {
+            $optional[(string)$entry['package_id']][] = (int)$index;
+        }
+        $context = ['header'=>$header,'ordinary'=>$ordinary,'optional'=>$optional];
+        self::$contexts[$toc] = $context;
+        return $context;
+    }
+
+    /** @return array{0:array<string,mixed>,1:int,2:?array<string,mixed>,3:?int} */
+    private static function findStoreEntries(array $context, string $packageId): array
+    {
+        $ordinary = $context['ordinary'][$packageId] ?? [];
         if (count($ordinary) !== 1) {
             throw new RuntimeException('FPackageId must have exactly one ordinary package-store entry in the selected container context.');
         }
-        $optional = [];
-        foreach ((array)$containerHeader['optional_segment_store_entries'] as $index => $entry) {
-            if ((string)($entry['package_id'] ?? '') === $packageId) {
-                $optional[] = [(array)$entry, (int)$index];
-            }
-        }
+        $optional = $context['optional'][$packageId] ?? [];
         if (count($optional) > 1) {
             throw new RuntimeException('FPackageId has more than one optional-segment package-store entry in the selected container context.');
         }
+        $ordinaryIndex = (int)$ordinary[0];
+        $optionalIndex = isset($optional[0]) ? (int)$optional[0] : null;
+        $header = $context['header'];
         return [
-            $ordinary[0][0], $ordinary[0][1],
-            $optional[0][0] ?? null, $optional[0][1] ?? null,
+            (array)$header['store_entries'][$ordinaryIndex], $ordinaryIndex,
+            $optionalIndex !== null ? (array)$header['optional_segment_store_entries'][$optionalIndex] : null,
+            $optionalIndex,
         ];
     }
 

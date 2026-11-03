@@ -25,7 +25,12 @@ final class Uedb5MigrationValidator
     }
 
     /** @return array<string,mixed> */
-    public function validate(int $fileId, ?array $previouslyVerifiedSourceSnapshot = null, bool $trustStagedSource = false): array
+    public function validate(
+        int $fileId,
+        ?array $previouslyVerifiedSourceSnapshot = null,
+        bool $trustStagedSource = false,
+        ?Uedb5IoStoreTocReader $verifiedZenToc = null
+    ): array
     {
         $context = $this->context($fileId);
         $gameId = (int)$context['game_id'];
@@ -48,7 +53,7 @@ final class Uedb5MigrationValidator
         // A source snapshot supplied by the same-process Pass 1 was already
         // parsed after file-size/MD5/SHA1 verification. All V5/SQL checks below
         // remain mandatory. Normal callers still verify and reparse source.
-        $sourceSnapshot = $previouslyVerifiedSourceSnapshot ?? ($trustStagedSource ? $snapshot : $this->validateSourceBytes($context));
+        $sourceSnapshot = $previouslyVerifiedSourceSnapshot ?? ($trustStagedSource ? $snapshot : $this->validateSourceBytes($context, $verifiedZenToc));
         if (!$trustStagedSource || $previouslyVerifiedSourceSnapshot !== null) {
             $this->validateSourceSnapshot($snapshot, $sourceSnapshot);
         }
@@ -116,10 +121,10 @@ final class Uedb5MigrationValidator
     }
 
     /** @param array<string,mixed> $context @return array<string,mixed> */
-    private function validateSourceBytes(array $context): array
+    private function validateSourceBytes(array $context, ?Uedb5IoStoreTocReader $verifiedZenToc = null): array
     {
         if ((string)($context['package_family'] ?? '') === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
-            return $this->validateZenRetainedSourceBytes($context);
+            return $this->validateZenRetainedSourceBytes($context, $verifiedZenToc);
         }
         $gameId = (int)$context['game_id'];
         $path = $this->storageRoot . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR
@@ -144,7 +149,7 @@ final class Uedb5MigrationValidator
      * @param array<string,mixed> $context
      * @return array<string,mixed>
      */
-    private function validateZenRetainedSourceBytes(array $context): array
+    private function validateZenRetainedSourceBytes(array $context, ?Uedb5IoStoreTocReader $verifiedZenToc = null): array
     {
         $gameId = (int)$context['game_id'];
         $fileId = (int)$context['id'];
@@ -193,8 +198,18 @@ final class Uedb5MigrationValidator
         $this->require(is_string($tocPath) && is_file($tocPath) && !is_link($tocPath)
             && str_starts_with(strtolower(str_replace(chr(92), '/', $tocPath)), strtolower($canonicalRoot) . '/'),
             'zen_toc_file_missing', 'The authoritative retained IoStore TOC is missing or outside storage.');
-        $oodle = getenv('UNREALDB_OODLE_LIBRARY');
-        $toc = new Uedb5IoStoreTocReader($tocPath, null, $oodle !== false && $oodle !== '' ? $oodle : null);
+        if ($verifiedZenToc !== null) {
+            // The worker already read and SHA-verified the identical retained
+            // TOC on this claim. Reuse its parsed tables, not an unverified
+            // caller-supplied snapshot. All source-byte and SQL checks below
+            // still execute, including a fresh comparison of the member bytes.
+            $this->require(realpath($verifiedZenToc->utocPath()) === $tocPath,
+                'zen_original_toc_path_mismatch', 'Shared IoStore TOC is not the retained source path.');
+            $toc = $verifiedZenToc;
+        } else {
+            $oodle = getenv('UNREALDB_OODLE_LIBRARY');
+            $toc = new Uedb5IoStoreTocReader($tocPath, null, $oodle !== false && $oodle !== '' ? $oodle : null);
+        }
         $this->require(hash_equals(strtolower((string)$row['utoc_sha256']), strtolower($toc->tocSha256())),
             'zen_original_toc_sha_mismatch', 'Original Zen TOC changed from the indexed authoritative source.');
         $chunk = $toc->chunks()[(int)$row['toc_index']] ?? null;

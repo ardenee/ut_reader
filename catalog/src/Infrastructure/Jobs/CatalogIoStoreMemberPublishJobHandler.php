@@ -11,7 +11,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreMemberCatalogPublisher;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
 
-/** Publishes at most 10 Zen members per durable claim, with per-container serialization. */
+/** Publishes at most 50 Zen members per durable claim, with per-container serialization. */
 final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
 {
     public function __construct(private readonly PDO $db, private readonly array $config) {}
@@ -50,7 +50,7 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
                 throw new RuntimeException('Retained TOC checksum changed.');
             $rows=$this->db->prepare('SELECT toc_index FROM ue_iostore_packages '
                 .'WHERE container_id=? AND chunk_index=0 AND metadata_status="ready" AND publication_status<>"published" '
-                .'ORDER BY toc_index LIMIT 10');
+                .'ORDER BY toc_index LIMIT 50');
             $rows->execute([$id]);
             $published=0;
             $publisher=new CatalogIoStoreMemberCatalogPublisher($this->db,(string)$this->config['storage_path']);
@@ -67,6 +67,8 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
                .'FROM ue_iostore_packages WHERE container_id=? AND chunk_index=0');
             $counts->execute([$id]);$c=$counts->fetch(PDO::FETCH_ASSOC);
             $state=['stage'=>'publishing_zen_members','container_id'=>$id,
+                'percent'=>(int)$c['total']>0
+                    ? (int)floor(100*(int)$c['published']/(int)$c['total']) : 100,
                 'total'=>(int)$c['total'],'published'=>(int)$c['published'],
                 'remaining'=>(int)$c['remaining'],
                 'awaiting_names'=>(int)$c['awaiting_names'],

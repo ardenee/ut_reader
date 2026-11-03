@@ -74,6 +74,12 @@ final class Uedb5IoStoreTocReader
         return basename($this->utocPath);
     }
 
+    /** Original TOC path used to bind same-process validation to this source. */
+    public function utocPath(): string
+    {
+        return $this->utocPath;
+    }
+
     /** @return array<string,mixed> */
     public function header(): array
     {

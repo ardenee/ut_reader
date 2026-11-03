@@ -98,7 +98,7 @@ final class CatalogZenIoStorePackagePublisher
             $statuses=new PdoUedb5MigrationStatusRepository($this->db);
             $statuses->markStageSucceeded($fileId, $gameId);
             $validation=(new Uedb5MigrationValidator($this->db,['storage_path'=>$this->storageRoot]))
-                ->validate($fileId,$snapshot);
+                ->validate($fileId, null, false, $toc);
             if(!empty($validation['ready'])) {
                 $statuses->markValidated($fileId,(string)$written['payload_sha256'],$validation);
             }else{
