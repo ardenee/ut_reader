@@ -59,6 +59,15 @@ def main() -> None:
     dep_cases = dependency["actual_prd_pass2_read_only_provider_selector_cases"]
     if len(dep_cases) != 5 or any(c["sql_writes"] != 0 for c in dep_cases):
         raise RuntimeError("Incomplete or mutated dependency audit scope")
+    website_path = REPO / "tests/evidence/ue1-ue5-website-dependency-readpath-runtime-trace-20261103.json"
+    website = json.loads(website_path.read_text("utf-8"))
+    if website.get("schema") != "uedb5-five-engine-original-website-readpath-xdebug-v1":
+        raise RuntimeError("Wrong original-file website Xdebug read-path evidence schema")
+    if len(website["trace_cases"]) != 5 or website["total_historical_v13_edges_excluded"] != 51:
+        raise RuntimeError("Unexpected website original-file trace evidence coverage")
+    for filename, expected in website["runtime_source_sha256"].items():
+        if sha256(REPO / filename) != expected:
+            raise RuntimeError(f"Website production read-path source has changed: {filename}")
     service_cases = evidence["real_service_traces"]
     direct_cases = evidence["direct_real_reader_traces"]
     if len(service_cases) != 7 or len(direct_cases) != 6:
@@ -102,6 +111,20 @@ def main() -> None:
         "</td><td><strong>Unbound baseline: 10 'missing' labels are NOT verified missing packages</strong></td>"
         "<td>Standalone actual PHP resolver call, no runtime mount/Pass2</td></tr>"
     )
+    web_rows = []
+    for case in website["trace_cases"]:
+        if (case["source_correct_policy_current"]
+            or case["v14_current_edges_displayable"] != 0
+            or not case["original_detail_read_rejected_stale"]):
+            raise RuntimeError("Website source-read trace unexpectedly exposed stale dependency status")
+        web_rows.append(
+            "<tr><td><strong>" + display(case["engine"]) + "</strong></td>"
+            "<td>" + display(case["original_game"]) + "</td>"
+            "<td>" + display(case["verified_original_file_id"]) + "</td>"
+            "<td>" + display(case["pre_existing_v13_edge_count"]) + "</td>"
+            "<td>" + display(case["v14_current_edges_displayable"]) + "</td>"
+            "<td>Stale publication explicitly rejected by actual PHP read service</td></tr>"
+        )
     source_anchors = evidence["epic_source_anchors_by_role"]
     result = [
         "digraph UEProcess {",
@@ -155,7 +178,7 @@ def main() -> None:
             f' {ident}_n4 -> {ident}_source [style=dashed, label="{source_edge}", color="{source_color}"];'
         )
         result.append(
-            f" {ident}_after [label=\"SQL publish / website\\nNOT EXECUTED in this trace\",style=\"rounded,dashed\",fillcolor=\"white\",color=\"#a2a6ac\"];"
+            f" {ident}_after [label=\"Pass1 SQL publication not run\\nWebsite read tracing is separate\",style=\"rounded,dashed\",fillcolor=\"white\",color=\"#a2a6ac\"];"
         )
         result.append(
             f" {ident}_n4 -> {ident}_after [style=dotted, label=\"not observed\",color=\"#a2a6ac\"];"
@@ -233,6 +256,28 @@ def main() -> None:
         "This batch did not call the writer, rebuild or SQL publisher and it "
         "cannot close the five website dependency contracts. "
         "SHA-pinned evidence: <code>tests/evidence/ue1-ue5-dependency-selector-runtime-trace-20261103.json</code>.</p>",
+        "<h2>Production website dependency read paths — actual Xdebug calls</h2>",
+        "<p>Five original PRD-staged files were traced through the actual SQL freshness "
+        "predicate and current-edge join, plus the production file-info dependency "
+        "read service. <strong>All 51 legacy v13 dependency-edge rows</strong> for these "
+        "files were excluded from current v14 result views, and detail reads "
+        "rejected stale policy explicitly. The session was enforced read-only "
+        "and rolled back. These are actual PHP/SQL read-service calls, "
+        "<strong>not HTTP-rendered browser requests</strong>.</p>",
+        "<div style=\"overflow:auto\"><table><thead><tr>"
+        "<th>Engine</th><th>Original game</th><th>File ID</th>"
+        "<th>Historical v13 edges</th><th>Visible v14 edges</th><th>Detail behavior</th>"
+        "</tr></thead><tbody>",*web_rows,"</tbody></table></div>",
+        "<p><strong>Isolated positive and negative admission check:</strong> "
+        "six correctly published v14 rows across UE1–UE5 (including UE2-owned "
+        "UT2004) were admitted, while 24 v13, payload-mismatched, unpublished "
+        "or unverified rows were rejected. The Uses tab now labels stale "
+        "dependency counts as <em>unverified</em>, not zero. "
+        "PRD game14 still has no verified original file for live website testing.</p>",
+        "<p>Proof: <code>tests/evidence/ue1-ue5-website-dependency-readpath-runtime-trace-20261103.json</code>"
+        " SHA-256 <code>" + sha256(website_path) + "</code>. "
+        "All five website acceptance contracts remain BLOCKED until newly "
+        "source-correct dependency publication and HTTP-rendered mixed outcomes.</p>",
         "<h2>Independent comparisons and exclusions</h2>",
         "<p><strong>UE2 Unreal II v69:</strong> Original file #149508 and the selected 2000-12-09 "
         "linker match earlier accepted original-byte comparisons; this runtime run observed "

@@ -352,7 +352,8 @@ try {
     ];
     echo '<div class="card" id="package-tables"><nav class="examine-tabs">';
     foreach (['names' => 'Names','imports' => 'Imports','exports' => 'Exports','uses' => 'Uses','used-by' => 'Used By'] as $key => $label) {
-        $tabCount = $counts[$key] ?? '';
+        // A stale Uses count is unknown, not a source-verified zero.
+        $tabCount = $key === 'uses' && !$dependencyCurrent ? 'unverified' : ($counts[$key] ?? '');
         echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ($tabCount !== '' ? ' <span>' . $tabCount . '</span>' : '') . '</a>';
     }
     echo '</nav>';
@@ -367,7 +368,12 @@ try {
         $heading = $table === 'uses' ? 'Uses' : 'Used By';
         echo '<h2>' . $heading . '</h2><p class="muted">Package links recorded as package-level or export-level matches.</p>';
         if ($relationshipRows === []) {
-            echo '<p class="muted">No resolved package relationships found.</p></section></div><a class="to-top" href="#top">↑</a>';
+            $emptyText = $table === 'uses' && !$dependencyCurrent
+                ? 'Current Uses results are unavailable until source-correct dependency publication. The visible count is not proof that this package has no dependencies.'
+                : ($table === 'used-by'
+                    ? 'No independently current reverse dependency references are published for this package.'
+                    : 'No resolved package relationships found.');
+            echo '<p class="muted">' . catalog_h($emptyText) . '</p></section></div><a class="to-top" href="#top">↑</a>';
             catalog_foot();
             return;
         }

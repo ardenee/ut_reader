@@ -2988,8 +2988,8 @@
     },
     {
       "path": "catalog/file-examine-paged-core.php",
-      "sha256": "0e3cac0168ad6bb9abf9473d399e6638a06a9bddf9f6c28b48f7c2954ae39a87",
-      "bytes": 27072,
+      "sha256": "476641059b2e2b75825a0f16b5af5571dde182752f55d57e9a1caa8bf9e295c4",
+      "bytes": 27651,
       "engine_hints": [
         "shared"
       ],
