@@ -2225,7 +2225,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
-        "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php"
+        "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php"
       ],
       "dispatch_trace": "CatalogZenIoStorePackagePublisher -> Uedb5Ue5ZenIoStoreSnapshotBuilder",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
@@ -2244,9 +2245,10 @@
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php": "3c186fecf42f7fb947971f289aefc5625cb2d49dd35bbda5b44e5bf74f9a5746",
-        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php": "49f85fcdb6dc7cff28b632f7884a529b849d3a6c1df061dfa4837f0a8ce064ed",
-        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php": "dccb03419fb8e64e143f49d452f02538b2bb98a03d4316e1c4de0d43950ccdc9",
-        "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php": "714c1d8f16cafbb3c89d585b39158478975e1146cd86e004678976eeb8a4b321"
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php": "426ddf2a24624145275d528133e713ae3b5feae52e04eabe4cf87e42f084c7f6",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php": "7b5f082ee593799738cb4dc7852830cb21821c0cd4e04c1d279ba248e5bf90d5",
+        "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php": "714c1d8f16cafbb3c89d585b39158478975e1146cd86e004678976eeb8a4b321",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167"
       },
       "php_source_sites": [
         {
@@ -2263,10 +2265,12 @@
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
         "2026-11-03 original source differential: UE5.0.0 Zen FZenPackageSummary 44 bytes with GraphDataOffset vs 5.8.3 52 bytes with dependency bundle/name offsets; early cooked native binary not independently checked. tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
-        "2026-11-03 CURRENT Satisfactory 1.2 UE5.6.1 source-specific FZenPackageSummary field: Epic 5.6.1 serializes CookedHeaderSize at byte 20; Epic 5.8.3 calls the same wire word _Unused. The actual UE5 reader now preserves a version-neutral raw word. All 27240 current original Zen package headers were structurally parsed, 27240 package names matched Epic 5.8.3 UnrealPak native listing after FName case folding, and one source-pinned original current header (package ID 13616274F41D838E) passed exact raw offset test. No Satisfactory private or modified engine source is required to accept package/header/table parsing: investigate a game-specific serialization change only on a concrete reproducible mismatch. This bounded evidence alone does not validate source-policy-labelled publication, mounted-provider dependency outcomes, or PRD website results. Evidence tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json"
+        "2026-11-03 CURRENT Satisfactory 1.2 UE5.6.1 source-specific FZenPackageSummary field: Epic 5.6.1 serializes CookedHeaderSize at byte 20; Epic 5.8.3 calls the same wire word _Unused. The actual UE5 reader now preserves a version-neutral raw word. All 27240 current original Zen package headers were structurally parsed, 27240 package names matched Epic 5.8.3 UnrealPak native listing after FName case folding, and one source-pinned original current header (package ID 13616274F41D838E) passed exact raw offset test. No Satisfactory private or modified engine source is required to accept package/header/table parsing: investigate a game-specific serialization change only on a concrete reproducible mismatch. This bounded evidence alone does not validate source-policy-labelled publication, mounted-provider dependency outcomes, or PRD website results. Evidence tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
+        "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ],
       "additional_evidence": [
-        "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json"
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ]
     },
     {
@@ -2282,7 +2286,8 @@
       "code_path_evidence": "ACTUAL_REAL_SOURCE_PHP_CONSUMER_PROVIDER_REBUILDER_CALLS; ACTUAL_EPIC_UE5_583_NATIVE_ASSET_REGISTRY_AND_MOUNTED_ASSET_LOAD; NO_NATIVE_PER_IMPORT_LINKER_INDEX",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php"
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php"
       ],
       "dispatch_trace": "Genuine classic .uasset -> UnrealPackageReader5 -> Uedb5Ue5ClassicSnapshotBuilder -> PdoUedb5PhysicalProviderSelector -> Uedb5DependencyRebuilder::rebuild -> Uedb5Ue5ClassicVerifyImportResolver -> original-source outcome. Separate Zen IoStore source path retains original accepted native package-store evidence.",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
@@ -2300,8 +2305,9 @@
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
       "result_evidence": "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php": "dfac94480074033cb6be9a0cb1a5870592631af10f23587ac9fb9f3609de1ef1",
-        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39"
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php": "81c00d33f771ba8887fdcaeba9808fec1c825b4a867e453c8c778d93e5ec8fea",
+        "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167"
       },
       "php_source_sites": [
         {
@@ -2321,13 +2327,15 @@
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
         "2026-11-03 scope correction: genuine UE5.8.3 classic assets and 47480 Xdebug calls verified isolated PHP parser, provider selection, VerifyImport metadata and rebuilder branches. The old singleton candidate selected without a mounted linker; fail-closed DEV fix now source_unresolved. Negative mounted-set branch corrected in DEV. Epic 5.8.3 C++ mount/VerifyImport function anchors source pinned, but NO native execution trace for original classic loaded linker or SQL website publication. Earlier Zen evidence remains valid in its documented scope.",
         "2026-11-03 DEV shared source-path correction and source-correct read gates: isolated original UE5.8.3 classic assets prove unknown mount => source_unresolved and negative mounted set => no exception (fixture only); all five engine v14 policy, source payload SHA, dependency_completed_at and cached timestamp checks exercised in SQLite; read-only PRD v13 examples and 12 actual MySQL EXPLAIN queries checked. Historical v13 missing/resolved links are hidden on tested user-facing read paths. NO PRD SQL writes. Status remains BLOCKED: no v14 production dependency publication permitted, no complete native classic mounted-session differential; do not confuse PHP safety with Epic full parity.",
-        "2026-11-03 SCOPED PASS: original installed Epic UE5.8.3 BaseFlattenMaterial.uasset has 24 actual imports. Epic native AssetRegistry after explicitly indexing EngineMaterials returns EXACTLY five physical package dependencies; all five original source-hash-pinned providers loaded natively as Texture2D. Actual UE5 classic PHP reader, selector and VerifyImport resolver return 5 resolved Texture2D objects, 5 package_only linker imports, 14 honest runtime_only /Script imports, and zero false physical missing. Native package dependency identities and class types independently corroborate the actual code path. This closes the specified real-consumer/source/provider acceptance fixture, NOT all UE5.0..5.8 revisions, duplicates, private/error branches or direct native SourceIndex internal verification."
+        "2026-11-03 SCOPED PASS: original installed Epic UE5.8.3 BaseFlattenMaterial.uasset has 24 actual imports. Epic native AssetRegistry after explicitly indexing EngineMaterials returns EXACTLY five physical package dependencies; all five original source-hash-pinned providers loaded natively as Texture2D. Actual UE5 classic PHP reader, selector and VerifyImport resolver return 5 resolved Texture2D objects, 5 package_only linker imports, 14 honest runtime_only /Script imports, and zero false physical missing. Native package dependency identities and class types independently corroborate the actual code path. This closes the specified real-consumer/source/provider acceptance fixture, NOT all UE5.0..5.8 revisions, duplicates, private/error branches or direct native SourceIndex internal verification.",
+        "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
         "tests/evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json",
         "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json",
-        "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json"
+        "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json",
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ],
       "epic_additional_source_anchors": [
         {
@@ -2445,7 +2453,9 @@
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
-        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php"
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php"
       ],
       "dispatch_trace": "Original classic UE5.8.3 source file -> Uedb5Ue5ClassicSnapshotBuilder -> PdoUedb5PhysicalProviderSelector -> Uedb5DependencyRebuilder -> PdoUedb5DependencyProjectionPublisher::publish -> ue_uedb5_dependency_edges / dependency_packages -> CatalogCompactDependencyReadService::rows, isolated SQL fixture",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
@@ -2465,7 +2475,9 @@
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
-        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
+        "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php": "81c00d33f771ba8887fdcaeba9808fec1c825b4a867e453c8c778d93e5ec8fea"
       },
       "php_source_sites": [
         {
@@ -2489,13 +2501,15 @@
         "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
         "2026-11-03 scope correction: genuine UE5.8.3 classic assets and 47480 Xdebug calls verified isolated PHP parser, provider selection, VerifyImport metadata and rebuilder branches. The old singleton candidate selected without a mounted linker; fail-closed DEV fix now source_unresolved. Negative mounted-set branch corrected in DEV. Epic 5.8.3 C++ mount/VerifyImport function anchors source pinned, but NO native execution trace for original classic loaded linker or SQL website publication. Earlier Zen evidence remains valid in its documented scope.",
         "2026-11-03 DEV shared source-path correction and source-correct read gates: isolated original UE5.8.3 classic assets prove unknown mount => source_unresolved and negative mounted set => no exception (fixture only); all five engine v14 policy, source payload SHA, dependency_completed_at and cached timestamp checks exercised in SQLite; read-only PRD v13 examples and 12 actual MySQL EXPLAIN queries checked. Historical v13 missing/resolved links are hidden on tested user-facing read paths. NO PRD SQL writes. Status remains BLOCKED: no v14 production dependency publication permitted, no complete native classic mounted-session differential; do not confuse PHP safety with Epic full parity.",
-        "2026-11-03 SCOPED PASS: source-hash-verified genuine UE5.8.3 material and ALL five physical imports exactly match Epic native AssetRegistry package graph; native class loading corroborates genuine object-provider existence. Real PHP stage/verify source branch -> projection publisher writes 24/24 distinct source-import edges, 7 package summaries, 0 falsely missing, preserves all 24 through compact website read. Source-current v14 returns 24, v13 returns zero; SQL double-publish idempotent and rollback exact. Only disposable SQLite and C:\\Temp original-file copies were modified. This closes the requested genuine-file and staged-graph SQL publication result, but NOT actual game14 PRD Pass2 regeneration, all version variants or authenticated HTTP website views."
+        "2026-11-03 SCOPED PASS: source-hash-verified genuine UE5.8.3 material and ALL five physical imports exactly match Epic native AssetRegistry package graph; native class loading corroborates genuine object-provider existence. Real PHP stage/verify source branch -> projection publisher writes 24/24 distinct source-import edges, 7 package summaries, 0 falsely missing, preserves all 24 through compact website read. Source-current v14 returns 24, v13 returns zero; SQL double-publish idempotent and rollback exact. Only disposable SQLite and C:\\Temp original-file copies were modified. This closes the requested genuine-file and staged-graph SQL publication result, but NOT actual game14 PRD Pass2 regeneration, all version variants or authenticated HTTP website views.",
+        "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
         "tests/evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json",
         "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json",
-        "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json"
+        "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json",
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ],
       "epic_additional_source_anchors": [
         {
@@ -2589,13 +2603,15 @@
         "2026-11-03 genuine original classic consumer: isolated 24 source-current SQL edges survive publisher and compact site read, five physical packages resolved and zero missing. REMAINS BLOCKED: mixed real missing/ambiguous UI fixture, authenticated production HTTP and game14 published PRD source data not available.",
         "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED.",
         "2026-11-03 zero-input UE5 scope correction: game14 has no verified staged files; the per-game Missing Dependencies page now reports unavailable explicitly, not a demonstrated 0 missing. The five-engine SQL website consumer regression includes this empty-game case and PRD original read-only publicationFreshness(14) returned verified=0/current=0/stale=0. Production V14 and authenticated browser output remain unverified.",
-        "2026-11-03 current Satisfactory 1.2 UE5.6.1 source selection remains a legitimate part of this existing website publication blocker: the current Zen SOURCE_POLICY string says 5.8.3, private Satisfactory engine patch source is NOT required absent original serialization counterevidence; complete provider mount evidence remains unavailable, game14 PRD has zero verified original files, and no current v14 publication/HTTP mixed outcomes exist. 66 of 124234 package-store imports refer outside the single main container; none are automatically missing. Evidence tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json"
+        "2026-11-03 current Satisfactory 1.2 UE5.6.1 source selection remains a legitimate part of this existing website publication blocker: the current Zen SOURCE_POLICY string says 5.8.3, private Satisfactory engine patch source is NOT required absent original serialization counterevidence; complete provider mount evidence remains unavailable, game14 PRD has zero verified original files, and no current v14 publication/HTTP mixed outcomes exist. 66 of 124234 package-store imports refer outside the single main container; none are automatically missing. Evidence tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
+        "2026-11-03 UE5.6.1 source-release dispatch corrected: this is no longer a website-publication blocker. The remaining website acceptance depends on staging original game14 files and publishing real v14 dependencies, then HTTP/mixed outcomes. No private game engine source prerequisite. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
         "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json",
         "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json",
-        "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json"
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ],
       "epic_additional_source_anchors": [
         {
@@ -2689,7 +2705,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
-        "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php"
+        "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php"
       ],
       "dispatch_trace": "CatalogIoStoreImportJobHandler::handle -> CatalogIoStoreContainerStorage::import -> INDEX_IOSTORE_PACKAGE_NAMES -> PUBLISH_IOSTORE_PACKAGES -> CatalogZenIoStorePackagePublisher::publish -> Uedb5Ue5ZenIoStoreSnapshotBuilder::build",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
@@ -2712,9 +2729,10 @@
         "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php": "3f526c52f1099bf291bf200c26067a6a3c2d47e88d37ac0407e378fe942a08cd",
         "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php": "714c1d8f16cafbb3c89d585b39158478975e1146cd86e004678976eeb8a4b321",
         "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php": "3c186fecf42f7fb947971f289aefc5625cb2d49dd35bbda5b44e5bf74f9a5746",
-        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php": "90665000c906630161aa942dd6c771c85c88c41d5e6daf0e68e324d1d331cbd7",
-        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php": "dccb03419fb8e64e143f49d452f02538b2bb98a03d4316e1c4de0d43950ccdc9",
-        "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php": "3bca1aaf71014b507f97c155f464134296707ed8f5ffc3847da16703c3345d45"
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php": "426ddf2a24624145275d528133e713ae3b5feae52e04eabe4cf87e42f084c7f6",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php": "7b5f082ee593799738cb4dc7852830cb21821c0cd4e04c1d279ba248e5bf90d5",
+        "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php": "3bca1aaf71014b507f97c155f464134296707ed8f5ffc3847da16703c3345d45",
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167"
       },
       "php_source_sites": [
         {
@@ -2744,7 +2762,11 @@
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
-        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes."
+        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
+        "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
+      ],
+      "additional_evidence": [
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
       ]
     }
   ],

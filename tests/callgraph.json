@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1026,
-  "edges_count": 3626,
+  "nodes": 1027,
+  "edges_count": 3630,
   "edge_types": {
     "use": 1235,
     "new": 953,
-    "static_or_expression": 1438
+    "static_or_expression": 1442
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -16796,13 +16796,19 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
       "syntax": "static_or_expression",
-      "line": 868
+      "line": 883
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
       "syntax": "static_or_expression",
-      "line": 252
+      "line": 264
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php",
+      "syntax": "static_or_expression",
+      "line": 180
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
@@ -16814,25 +16820,31 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileStackReader.php",
       "syntax": "static_or_expression",
-      "line": 831
+      "line": 846
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
       "syntax": "static_or_expression",
-      "line": 33
+      "line": 35
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "static_or_expression",
-      "line": 28
+      "line": 30
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
       "syntax": "static_or_expression",
       "line": 14
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php",
+      "syntax": "static_or_expression",
+      "line": 15
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
@@ -17030,13 +17042,19 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
       "syntax": "new",
-      "line": 46
+      "line": 48
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
       "syntax": "static_or_expression",
-      "line": 86
+      "line": 88
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php",
+      "syntax": "static_or_expression",
+      "line": 18
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
@@ -17085,6 +17103,12 @@
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
       "line": 3
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 4
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php",

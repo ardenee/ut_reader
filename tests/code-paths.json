@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1026,
+  "total_files": 1027,
   "roles": {
-    "CONTAINER": 88,
+    "CONTAINER": 89,
     "DATABASE": 119,
     "DEPENDENCY": 60,
     "ERROR": 34,
@@ -16,7 +16,7 @@
     "OBJECT": 66,
     "OPERATIONS": 19,
     "OUTPUT": 138,
-    "SOURCE": 9,
+    "SOURCE": 10,
     "TABLE": 5,
     "UI": 160
   },
@@ -26,7 +26,7 @@
     "ue2": 12,
     "ue3": 4,
     "ue4": 12,
-    "ue5": 38
+    "ue5": 39
   },
   "paths": [
     {
@@ -10157,8 +10157,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
-      "sha256": "dfac94480074033cb6be9a0cb1a5870592631af10f23587ac9fb9f3609de1ef1",
-      "bytes": 49280,
+      "sha256": "81c00d33f771ba8887fdcaeba9808fec1c825b4a867e453c8c778d93e5ec8fea",
+      "bytes": 50341,
       "engine_hints": [
         "ue5"
       ],
@@ -10172,8 +10172,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
-      "sha256": "dccb03419fb8e64e143f49d452f02538b2bb98a03d4316e1c4de0d43950ccdc9",
-      "bytes": 17954,
+      "sha256": "7b5f082ee593799738cb4dc7852830cb21821c0cd4e04c1d279ba248e5bf90d5",
+      "bytes": 18172,
       "engine_hints": [
         "ue5"
       ],
@@ -10355,8 +10355,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
-      "sha256": "49f85fcdb6dc7cff28b632f7884a529b849d3a6c1df061dfa4837f0a8ce064ed",
-      "bytes": 34532,
+      "sha256": "426ddf2a24624145275d528133e713ae3b5feae52e04eabe4cf87e42f084c7f6",
+      "bytes": 34685,
       "engine_hints": [
         "ue5"
       ],
@@ -10412,6 +10412,21 @@
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "Uedb5ZenScriptObjectsReader"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php",
+      "sha256": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167",
+      "bytes": 1399,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "SOURCE"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "Uedb5ZenSourcePolicy"
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php",

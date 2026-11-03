@@ -113,10 +113,19 @@ def main() -> None:
         raise RuntimeError("Current original Satisfactory package count changed")
     if current_ue5["original_UE5_TOC_and_Zen"]["casefold_identical_native_package_names"] != 27240:
         raise RuntimeError("Current original Satisfactory native name comparison is incomplete")
-    if current_ue5["code_change"]["sha256"] != sha256(REPO / current_ue5["code_change"]["module"]):
-        raise RuntimeError("Current Satisfactory source-specific PHP reader has changed")
+    source_policy_path = REPO / "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
+    selected_source = json.loads(source_policy_path.read_text("utf-8"))
+    if selected_source.get("schema") != "ue5-current-561-explicit-source-dispatch-corrected-original-runtime-v1":
+        raise RuntimeError("Current UE5.6.1 source-selection proof is missing")
+    if selected_source["prior_all_original_structural_evidence_sha256"] != sha256(current_ue5_path):
+        raise RuntimeError("Prior original current UE5.6.1 structural evidence has changed")
     if current_ue5["code_change"]["test_source_sha256"] != sha256(REPO / current_ue5["code_change"]["original_regression_test"]):
-        raise RuntimeError("Current Satisfactory source-specific regression has changed")
+        raise RuntimeError("Previously accepted original-source offset test has changed")
+    for filename, expected in selected_source["source_file_sha256"].items():
+        if sha256(REPO / filename) != expected:
+            raise RuntimeError("Source-selected current UE5 code changed: " + filename)
+    if sha256(REPO / selected_source["real_original_scope_regression_script"]) != selected_source["regression_script_sha256"]:
+        raise RuntimeError("Current UE5.6.1 release-dispatch regression changed")
     service_cases = evidence["real_service_traces"]
     direct_cases = evidence["direct_real_reader_traces"]
     if len(service_cases) != 7 or len(direct_cases) != 6:
@@ -376,15 +385,19 @@ def main() -> None:
         "either release. <strong>66</strong> imported-package references to "
         "<strong>26</strong> nonlocal FPackageIds are not classified missing "
         "without an authenticated mounted package store.</p>",
-        "<p><strong>Outstanding source-labelled publication:</strong> existing Zen "
-        "SOURCE_POLICY still says 5.8.3 and needs Epic 5.6.1 selection for this build. "
-        "Game-studio private code is NOT a prerequisite for package header/table "
-        "parity unless genuine bytes demonstrate a serialization divergence. "
-        "Authoritative mount context and v14 PRD website publication remain separate "
-        "requirements; no PRD game14 files are published. "
-        "The five existing website blockers remain open. Proof: "
+        "<p><strong>Epic UE5.6.1 source policy is now selected:</strong> registered "
+        "Satisfactory game14 Zen snapshots and dependency rows have the correct "
+        "5.6.1 release labels. One actual original package produced 98 rows, "
+        "with five unsupported/mixed-release negatives rejected and the separate "
+        "5.8.3 direct-reader contract preserved. This closes source-policy "
+        "dispatch, not authoritative mount state or v14 SQL publication. "
+        "No original game14 packages are staged in PRD, and the existing website "
+        "acceptance blockers remain open. Proof: "
         "<code>tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json</code>"
-        " SHA-256 <code>" + sha256(current_ue5_path) + "</code>.</p>",
+        " SHA-256 <code>" + sha256(current_ue5_path) + "</code>; "
+        "corrected release-dispatch proof <code>tests/evidence/ue5/"
+        "ue5-current-satisfactory-561-source-policy-dispatch-20261103.json</code> "
+        "SHA-256 <code>" + sha256(source_policy_path) + "</code>.</p>",
         "<h2>Independent comparisons and exclusions</h2>",
         "<p><strong>UE2 Unreal II v69:</strong> Original file #149508 and the selected 2000-12-09 "
         "linker match earlier accepted original-byte comparisons; this runtime run observed "

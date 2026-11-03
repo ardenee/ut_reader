@@ -1,6 +1,6 @@
 <?php
 /**
- * Resolves deterministic UE5 5.8.3 Zen dependencies from source-shaped UEDB5 staging snapshots.
+ * Resolves source-labelled UE5.6.1 or UE5.8.3 Zen dependencies from source-shaped UEDB5 snapshots.
  * PackageImport identity is FPackageId + PublicExportHash; package names are never a fallback key.
  */
 declare(strict_types=1);
@@ -11,7 +11,8 @@ use RuntimeException;
 
 final class Uedb5Ue5ZenDependencyResolver
 {
-    public const RESOLVER_POLICY = 'ue5-5.8.3-zen-iostore-dependency-v3';
+    public const RESOLVER_POLICY = 'ue5-5.8.3-zen-iostore-dependency-v3'; // Existing UE5.8.3 authority
+    public const RESOLVER_POLICY_56 = 'ue5-5.6.1-zen-iostore-dependency-v3';
     private const OBJECT_REDIRECTOR_SCRIPT_IMPORT_HASH = '1D39669A89BAECB6';
     private const FILTER_NOT_FOR_CLIENT = 1;
     private const FILTER_NOT_FOR_SERVER = 2;
@@ -24,7 +25,8 @@ final class Uedb5Ue5ZenDependencyResolver
     public static function resolve(array $consumer, array $selectedProviders, array $runtimeContext = []): array
     {
         self::assertZenSnapshot($consumer, 'consumer');
-        $providers = self::providers($selectedProviders);
+        $sourcePolicy = (string)$consumer['source_policy'];
+        $providers = self::providers($selectedProviders, $sourcePolicy);
         $packageStoreContext = self::packageStoreContext($consumer, $runtimeContext);
         $rows = [];
 
@@ -172,6 +174,16 @@ final class Uedb5Ue5ZenDependencyResolver
                 }
             }
         }
+        // Every result retains the actual selected Epic release. The row
+        // helper's UE5.8.3 constant remains a historical default, but cannot
+        // mislabel current Satisfactory UE5.6.1 dependencies.
+        $resolverPolicy = $sourcePolicy === Uedb5ZenSourcePolicy::UE5_56
+            ? self::RESOLVER_POLICY_56 : self::RESOLVER_POLICY;
+        foreach ($rows as &$row) {
+            $row['source_policy'] = $sourcePolicy;
+            $row['resolver_policy'] = $resolverPolicy;
+        }
+        unset($row);
         return $rows;
     }
     /**
@@ -267,7 +279,7 @@ final class Uedb5Ue5ZenDependencyResolver
     }
 
     /** @return array<string,array<string,mixed>> */
-    private static function providers(array $selectedProviders): array
+    private static function providers(array $selectedProviders, string $consumerSourcePolicy): array
     {
         $providers = [];
         foreach ($selectedProviders as $selected) {
@@ -276,6 +288,9 @@ final class Uedb5Ue5ZenDependencyResolver
             }
             $snapshot = (array)$selected['snapshot'];
             self::assertZenSnapshot($snapshot, 'provider');
+            if ((string)$snapshot['source_policy'] !== $consumerSourcePolicy) {
+                throw new RuntimeException('Zen provider must have the same selected Epic source release as its consumer.');
+            }
             $summary = (array)(($snapshot['sections']['package_summary'] ?? [])[0] ?? []);
             $packageId = self::u64((string)($summary['package_id'] ?? ''), 'provider FPackageId');
             if ($packageId === '0000000000000000') {
@@ -875,9 +890,10 @@ final class Uedb5Ue5ZenDependencyResolver
         if (($snapshot['package_family'] ?? null) !== Uedb5ZenPackageReader::PACKAGE_FAMILY) {
             throw new RuntimeException('Zen resolver ' . $label . ' snapshot has the wrong package_family.');
         }
-        if (($snapshot['source_policy'] ?? null) !== Uedb5ZenPackageReader::SOURCE_POLICY) {
-            throw new RuntimeException('Zen resolver ' . $label . ' snapshot has the wrong source_policy.');
-        }
+        Uedb5ZenSourcePolicy::assertSupported((string)($snapshot['source_policy'] ?? ''));
+        // Historical UE5.8.3 direct/native snapshots are valid independent
+        // fixtures. Publication must use the registered game-owned builder
+        // which selects 5.6.1 for game14, not this in-memory resolver.
         $sections = $snapshot['sections'] ?? null;
         if (!is_array($sections)) {
             throw new RuntimeException('Zen resolver ' . $label . ' snapshot has no sections.');

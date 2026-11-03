@@ -1,0 +1,70 @@
+{
+  "schema": "ue5-current-561-explicit-source-dispatch-corrected-original-runtime-v1",
+  "date": "2026-11-03",
+  "purpose": "Close erroneous UE5.8.3 source-policy attribution for the correctly selected Epic 5.6.1 source on current Satisfactory IoStore; retain historical 5.8.3 direct source proof separately.",
+  "Epic_561_source_git_ref": "5.6.1-release cef1527368284855f68e631bec945b262bdfb050",
+  "current_original_toc_sha256": "84d30d56ccbd26cfeb1c0319b92d3274b13dff4406facad267aa582217c51696",
+  "current_original_package_id": "13616274F41D838E",
+  "current_original_sample_toc_index": 53,
+  "prior_all_original_structural_evidence_sha256": "507208b4beb4decac9c5c0ab2cd619e9a87204dac218f2e2fafb7290674b1df0",
+  "prior_all_original_packages_parsed": 27240,
+  "prior_all_native_unrealpak_FName_equivalent_names_matched": 27240,
+  "selection_scope": {
+    "Satisfactory_game_id": 14,
+    "selected_source_policy": "ue5-5.6.1-release-cef1527368284855f68e631bec945b262bdfb050",
+    "legacy_direct_583_policy_retained": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+    "current_dependency_resolver_policy": "ue5-5.6.1-zen-iostore-dependency-v3",
+    "legacy_dependency_resolver_policy_retained": "ue5-5.8.3-zen-iostore-dependency-v3",
+    "source_selection": "registered game ID; NOT inferred from absent cooked version",
+    "changes_to_serialized_header_or_tables": 0,
+    "game_studio_private_source_required": false
+  },
+  "verified_actual_original": {
+    "original_FPackageId": "13616274F41D838E",
+    "Zen_cooked_header_field_at_byte_20": 7367,
+    "dependency_rows": 98,
+    "all_dependency_rows_match_561_source_and_resolver_policies": true,
+    "definitive_missing_without_mount_context": 0,
+    "historical_583_direct_parse_and_resolver_still_pass": true
+  },
+  "negative_cases": [
+    "unregistered_game",
+    "unregistered_policy",
+    "mixed_release_provider",
+    "unsupported_consumer",
+    "builder_unknown_game"
+  ],
+  "Xdebug_actual_source_call_trace": {
+    "DEV_only_file": "D:/Temp/UnrealDB/process-tracing/ue5-current-real-resolver-source-policy-20261103.xt",
+    "sha256": "feabfa3030ae2dff45584d4bd3c3847e5a89db08bdbaeeebfe86e3e8fd04160a",
+    "bytes": 488655,
+    "observed_method_calls": {
+      "Uedb5ZenSourcePolicy::forGameId": 1,
+      "Uedb5Ue5ZenDependencyResolver::resolve": 59,
+      "Uedb5Ue5ZenDependencyResolver::resolveImportedPackageId": 8
+    },
+    "notes": "Bounded source-policy and dependency resolver trace after original snapshot creation; no SQL or native runtime execution."
+  },
+  "source_file_sha256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167",
+    "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php": "426ddf2a24624145275d528133e713ae3b5feae52e04eabe4cf87e42f084c7f6",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php": "7b5f082ee593799738cb4dc7852830cb21821c0cd4e04c1d279ba248e5bf90d5",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php": "81c00d33f771ba8887fdcaeba9808fec1c825b4a867e453c8c778d93e5ec8fea"
+  },
+  "real_original_scope_regression_script": "tests/tools/verify_ue5_current_56_source_dispatch.php",
+  "regression_script_sha256": "98bab1e6f2b4382bd471bbfbb46d9d1844ae0e711842b178a12d45510af1e867",
+  "current_release_structural_proof": "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
+  "prior_report_immutable": true,
+  "actual_serialization_source": "Epic 5.6.1-release with original current Satisfactory bytes",
+  "remaining_gates": [
+    "No verified UE5 game14 original packages staged/published in PRD; live v14 website tests are blocked.",
+    "Genuine physical package staging should preserve original IoStore provenance, source 5.6.1 policy, and never fabricate missing dependencies without authoritative provider context."
+  ],
+  "PRD_SQL_writes": 0,
+  "original_file_changes": 0,
+  "new_contract_ids": 0,
+  "acceptance_status_unmodified": {
+    "PASS": 27,
+    "BLOCKED": 5
+  }
+}

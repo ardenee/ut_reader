@@ -1,6 +1,6 @@
 <?php
 /**
- * Builds isolated source-shaped UEDB5 snapshots from UE5 5.8.3 IoStore/Zen containers.
+ * Builds isolated source-shaped UEDB5 snapshots from the registered Epic UE5 release.
  * It does not publish SQL projections or register format 5 in the production runtime.
  */
 declare(strict_types=1);
@@ -12,7 +12,7 @@ use RuntimeException;
 final class Uedb5Ue5ZenIoStoreSnapshotBuilder
 {
     public const PACKAGE_FAMILY = Uedb5ZenPackageReader::PACKAGE_FAMILY;
-    public const SOURCE_POLICY = Uedb5ZenPackageReader::SOURCE_POLICY;
+    public const SOURCE_POLICY = Uedb5ZenSourcePolicy::UE5_56; // Registered Satisfactory game14 current source
 
     /** @param array<string,mixed> $file @return array<string,mixed> */
     public static function build(Uedb5IoStoreTocReader $toc, string $packageId, array $file): array
@@ -24,6 +24,8 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
             throw new RuntimeException('Zen UEDB5 persistence requires positive file and game IDs.');
         }
 
+        // Select by the registered game's Epic release, not the stripped Zen header.
+        $sourcePolicy = Uedb5ZenSourcePolicy::forGameId($gameId);
         $tocHeader = $toc->header();
         $containerHeaderIndexes = $toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_CONTAINER_HEADER);
         if (count($containerHeaderIndexes) !== 1) {
@@ -42,7 +44,7 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
         }
         $chunks = $toc->chunks();
         $chunk = $chunks[$packageChunkIndex];
-        $zen = Uedb5ZenPackageReader::parse($toc->readChunk($packageChunkIndex), $packageId, $storeEntry);
+        $zen = Uedb5ZenPackageReader::parse($toc->readChunk($packageChunkIndex), $packageId, $storeEntry, $sourcePolicy);
         $optionalZen = null;
         $optionalChunkIndex = null;
         $optionalChunk = null;
@@ -53,7 +55,7 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
                 throw new RuntimeException('IoStore package-store entry declares an optional segment but chunk index 1 is absent for FPackageId ' . $packageId . '.');
             }
             $optionalChunk = $toc->chunks()[$optionalChunkIndex];
-            $optionalZen = Uedb5ZenPackageReader::parse($toc->readChunk($optionalChunkIndex), $packageId, $optionalStoreEntry);
+            $optionalZen = Uedb5ZenPackageReader::parse($toc->readChunk($optionalChunkIndex), $packageId, $optionalStoreEntry, $sourcePolicy);
             $optionalSoft = self::softReferencesForPackage($containerHeader, (int)$optionalStoreListIndex, true);
         }
 
@@ -77,7 +79,7 @@ final class Uedb5Ue5ZenIoStoreSnapshotBuilder
                 'original_name' => (string)($file['original_name'] ?? ''),
             ],
             'package_family' => self::PACKAGE_FAMILY,
-            'source_policy' => self::SOURCE_POLICY,
+            'source_policy' => $sourcePolicy,
             'section_schemas' => self::sectionSchemas(),
             'sections' => [
                 'container_provenance' => [[

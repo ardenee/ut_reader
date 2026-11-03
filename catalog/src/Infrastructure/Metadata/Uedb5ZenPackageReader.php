@@ -1,6 +1,6 @@
 <?php
 /**
- * Parses UE5 5.8.3 cooked Zen package headers reconstructed from IoStore ExportBundleData chunks.
+ * Parses cooked Zen package headers using the selected Epic UE5.6.1 or UE5.8.3 source policy.
  *
  * PackageImport identity is paired only with the authoritative ordered ImportedPackages
  * array supplied by the selected FFilePackageStoreEntry.
@@ -14,7 +14,8 @@ use RuntimeException;
 final class Uedb5ZenPackageReader
 {
     public const PACKAGE_FAMILY = 'zen-iostore';
-    public const SOURCE_POLICY = 'ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368';
+    // Preserve the UE5.8.3 direct-reader source contract for earlier native fixtures.
+    public const SOURCE_POLICY = Uedb5ZenSourcePolicy::UE5_58;
 
     public const SUMMARY_SIZE = 52;
     public const CELL_OFFSETS_SIZE = 8;
@@ -29,8 +30,9 @@ final class Uedb5ZenPackageReader
     private const UE5_VERSE_CELLS = 1015;
 
     /** @param array<string,mixed> $storeEntry @return array<string,mixed> */
-    public static function parse(string $bytes, string $packageId, array $storeEntry): array
+    public static function parse(string $bytes, string $packageId, array $storeEntry, string $sourcePolicy = self::SOURCE_POLICY): array
     {
+        Uedb5ZenSourcePolicy::assertSupported($sourcePolicy);
         $packageId = self::u64Hex($packageId, 'Zen package FPackageId');
         if (self::u64Hex((string)($storeEntry['package_id'] ?? ''), 'package-store FPackageId') !== $packageId) {
             throw new RuntimeException('Zen package FPackageId does not match the selected package-store entry.');
@@ -221,7 +223,7 @@ final class Uedb5ZenPackageReader
 
         return [
             'package_family' => self::PACKAGE_FAMILY,
-            'source_policy' => self::SOURCE_POLICY,
+            'source_policy' => $sourcePolicy,
             'package_id' => $packageId,
             'package_name' => $packageName,
             'summary' => $summary,
