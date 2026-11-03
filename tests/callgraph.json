@@ -2,11 +2,11 @@
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
   "nodes": 1026,
-  "edges_count": 3625,
+  "edges_count": 3627,
   "edge_types": {
     "use": 1235,
     "new": 954,
-    "static_or_expression": 1436
+    "static_or_expression": 1438
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -16034,7 +16034,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
       "syntax": "static_or_expression",
-      "line": 534
+      "line": 353
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
@@ -16050,15 +16050,27 @@
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
+      "syntax": "static_or_expression",
+      "line": 365
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+      "syntax": "static_or_expression",
+      "line": 368
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
       "syntax": "static_or_expression",
-      "line": 417
+      "line": 451
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenMountedStoreContextBuilder.php",
       "syntax": "static_or_expression",
-      "line": 421
+      "line": 455
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",

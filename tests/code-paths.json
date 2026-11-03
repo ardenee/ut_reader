@@ -9690,8 +9690,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-      "sha256": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
-      "bytes": 27098,
+      "sha256": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70",
+      "bytes": 28939,
       "engine_hints": [
         "shared"
       ],

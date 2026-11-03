@@ -333,19 +333,53 @@ final class Uedb5GameDependencyPassService
         if(!is_array($byGame))throw new RuntimeException('Classic native contexts for a game must be file keyed.');
         $context=$byGame[$fileId]??$byGame[(string)$fileId]??null;
         if($context===null)return $options;
-        if($this->gameEngineKey($gameId)!=='UE1') {
-            throw new RuntimeException('UE1 classic mount evidence cannot be applied to another engine.');
-        }
         if(!is_array($context)
             || ($context['game_id']??null)!==$gameId
             || ($context['consumer_file_id']??null)!==$fileId
             || ($context['mount_order_authoritative']??null)!==true
             || !is_string($context['evidence_source']??null)
             || trim($context['evidence_source'])==='') {
-            throw new RuntimeException('Original UE1 native mount evidence must identify its original source, exact game and consumer.');
+            throw new RuntimeException(
+                'Original classic native mount evidence must identify its source, exact game and consumer.'
+            );
         }
-        // The physical selector independently verifies ordered IDs, loaded
-        // linkers, and same-game verified physical provider identities.
+        // Runtime mount evidence belongs to a game AND its exact serialization
+        // family. Never apply UE1 wire-format provenance to the UE2-owned
+        // UT2004 compatibility reader, or an editor classic mount to Zen IoStore.
+        $engine=$this->gameEngineKey($gameId);
+        $snapshot=$this->reader->snapshot($gameId,$fileId);
+        $family=(string)($snapshot['package_family']??'');
+        $importSchema=strtolower((string)($snapshot['section_schemas']['imports']??''));
+        $sourceKey=Uedb5GameSourceRegistry::sourceKey($gameId);
+        $valid=match($engine) {
+            'UE1'=>in_array($sourceKey,['ut99','unrealgold'],true)
+                && $family==='classic-linkerload'
+                && str_starts_with($importSchema,'ue1.')
+                && !str_starts_with($importSchema,'ue1.ut2004.compat.'),
+            'UE2'=>in_array($sourceKey,['unreal2','ut2003','ut2004'],true)
+                && $family==='classic-linkerload'
+                && (str_starts_with($importSchema,'ue2.')
+                    || ($sourceKey==='ut2004'
+                        && str_starts_with($importSchema,'ue1.ut2004.compat.'))),
+            'UE3'=>$sourceKey==='ut3'
+                && $family===Uedb5Ut3SnapshotBuilder::PACKAGE_FAMILY
+                && str_starts_with($importSchema,'ue3.ut3.'),
+            'UE4'=>$sourceKey==='ut4'
+                && $family===Uedb5Ut4SnapshotBuilder::PACKAGE_FAMILY
+                && str_starts_with($importSchema,'ue4.ut4.'),
+            'UE5'=>$sourceKey==='ue5'
+                && $family===Uedb5Ue5ClassicSnapshotBuilder::PACKAGE_FAMILY
+                && str_starts_with($importSchema,'ue5.classic.'),
+            default=>false,
+        };
+        if(!$valid) {
+            throw new RuntimeException(
+                'Original classic mount evidence is incompatible with the game engine and staged reader; '
+                . 'Zen IoStore requires separate package-store mount evidence.'
+            );
+        }
+        // The physical selector independently verifies unique positive ordered
+        // IDs, loaded linkers, and same-game verified provider identities.
         $options['classic_runtime_context']=$context;
         return $options;
     }

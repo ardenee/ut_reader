@@ -1,0 +1,260 @@
+{
+  "date": "2026-11-03",
+  "schema": "epic-native-ue5.8.3-mount-v14-dispatch-source-review-20261103",
+  "source_conformance": "Source/implementation checks only; no PRD dependency publication or authenticated website proof",
+  "epic_native_executable": "H:/Epic Games/UE_5.8/Engine/Binaries/Win64/UnrealEditor-Cmd.exe",
+  "epic_native_executable_sha256": "4dbab2739e7afef7ec96cdfe48a63211742209f9a56af0620cf228913d64fb0c",
+  "epic_native_core_uobject_sha256": "a49ab07026df1c2ace9de766c5fefb646da12944a182597cea8d9e6a8d5aa254",
+  "native_test_kind": "actual compiled Epic editor commandlet; actual CDB absolute breakpoints derived from loaded CoreUObject base + verified exported RVAs",
+  "native_process_exit_code": 0,
+  "native_log_sha256": "a906a4750d55ebec2329e6f81d408bc65537a9b41485efe3c10c4e3238c2cf71",
+  "native_commandlet_log_sha256": "42b8d39afc5b1189d4a19780a673283e4d6ec41c9a8c86ce799ddc659c5dadf9",
+  "native_script_sha256": "7b39b731a4060ed665c6da92b72a7f08e4b95979aab2136055f9596d57433262",
+  "native_actual_object_load_results": [
+    {
+      "object_path": "/Engine/EngineMaterials/BaseFlattenMaterial.BaseFlattenMaterial",
+      "loaded": true,
+      "class": "Material",
+      "object": "/Engine/EngineMaterials/BaseFlattenMaterial.BaseFlattenMaterial"
+    },
+    {
+      "object_path": "/Engine/EngineMaterials/BaseFlattenDiffuseMap.BaseFlattenDiffuseMap",
+      "loaded": true,
+      "class": "Texture2D",
+      "object": "/Engine/EngineMaterials/BaseFlattenDiffuseMap.BaseFlattenDiffuseMap"
+    },
+    {
+      "object_path": "/Engine/Animation/DefaultAnimCurveCompressionSettings.DefaultAnimCurveCompressionSettings",
+      "loaded": true,
+      "class": "AnimCurveCompressionSettings",
+      "object": "/Engine/Animation/DefaultAnimCurveCompressionSettings.DefaultAnimCurveCompressionSettings"
+    },
+    {
+      "object_path": "/Engine/EngineMaterials/UnrealDB_AbsentPhysicalMount_01.UnrealDB_AbsentPhysicalMount_01",
+      "loaded": false,
+      "class": null,
+      "object": null
+    }
+  ],
+  "native_exported_function_hit_totals": {
+    "MOUNT": 681,
+    "EXISTING_LINKER": 277,
+    "GETPACKAGE_LINKER": 0,
+    "SEARCH_ON_DISK": 0
+  },
+  "native_startup_function_hits": {
+    "MOUNT": 671,
+    "EXISTING_LINKER": 275
+  },
+  "native_per_load_hit_totals": {
+    "probe:/Engine/EngineMaterials/BaseFlattenMaterial.BaseFlattenMaterial": {
+      "MOUNT": 3,
+      "EXISTING_LINKER": 1
+    },
+    "probe:/Engine/Animation/DefaultAnimCurveCompressionSettings.DefaultAnimCurveCompressionSettings": {
+      "MOUNT": 3,
+      "EXISTING_LINKER": 1
+    },
+    "probe:/Engine/EngineMaterials/UnrealDB_AbsentPhysicalMount_01.UnrealDB_AbsentPhysicalMount_01": {
+      "MOUNT": 4
+    }
+  },
+  "native_breakpoints_unresolved": 0,
+  "native_mounted_order_known": false,
+  "native_verify_import_inner_traced": false,
+  "source_conditional_real_original_pair": {
+    "consumer": {
+      "package": "/Engine/EngineMaterials/BaseFlattenMaterial",
+      "sha256": "07a7072b2bb9cdf7504ecfcddbb0b927800d6d40ad0306ae2e54a259d9a8bc2c",
+      "import_rows": 24
+    },
+    "provider": {
+      "package": "/Engine/EngineMaterials/BaseFlattenDiffuseMap",
+      "sha256": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec",
+      "physical_provider_id_in_isolated_graph": 900102
+    },
+    "source_import_index_12": "top-level UPackage -> package_only under controlled provider",
+    "source_import_index_19": "nested Texture2D -> resolved provider export index 1",
+    "full_runtime_mount_order_claimed": false,
+    "partial_fixture_mount_ids": [
+      900102
+    ],
+    "partial_fixture_other_missing_count": 8,
+    "IMPORTANT": "The mount list contains only the single indexed provider in the disposable two-file graph. It is not a complete Epic runtime mount snapshot, therefore other missing counts are not native-verified."
+  },
+  "genuine_source_conditional_sql_publisher_test": {
+    "test_script_sha256": "b9aeb97aff166f92c045a3419c22d5e620e4f2ec6807d4ffefea3cac219ab17e",
+    "published_edges": 24,
+    "package_rows": 7,
+    "edge_outcomes_equal_exact_source_rows": true,
+    "repeated_publish_idempotent": true,
+    "transaction_rollback_exact": true,
+    "current_v14_published_edge_rows": 24,
+    "stale_policy_exposed_edge_rows": 0,
+    "website_read_service_all_24_rows": true,
+    "website_original_provider_outcomes": {
+      "package_only": 1,
+      "resolved": 1
+    },
+    "site_count_8_missing_rows_are_partial_fixture_not_authoritative_native": true
+  },
+  "actual_PRD_source_only_dispatch_validation": {
+    "method": "read-only MySQL session plus read-only UNC original stored UEDB5 sources; no production metadata writes",
+    "test_script_sha256": "5beb7c41c12e3384c1242b1d4dec5517e2c7bcbad1138fb0bf5487ecc98cf4fc",
+    "engine_game_originals": {
+      "UE2_UnrealII": {
+        "game": 2,
+        "file_id": 111139,
+        "schema": "ue2.unreal2.object-import.v1"
+      },
+      "UE1_UT99": {
+        "game": 3,
+        "file_id": 113253,
+        "schema": "ue1.ut99.object-import.v1"
+      },
+      "UE2_UT2003": {
+        "game": 4,
+        "file_id": 148919,
+        "schema": "ue2.ut2003.object-import.v1"
+      },
+      "UE2_UT2004": {
+        "game": 5,
+        "file_id": 111460,
+        "schema": "ue2.ut2004.object-import.v1"
+      },
+      "UE3_UT3": {
+        "game": 6,
+        "file_id": 112300,
+        "schema": "ue3.ut3.object-import.v1"
+      },
+      "UE4_UT4": {
+        "game": 7,
+        "file_id": 113526,
+        "schema": "ue4.ut4.object-import.v1"
+      },
+      "UE1_UnrealGold": {
+        "game": 12,
+        "file_id": 110902,
+        "schema": "ue1.unreal.object-import.v1"
+      },
+      "UE5_classic_original_asset": {
+        "game": 14,
+        "file_id": 900101,
+        "schema": "ue5.classic.object-import.v1",
+        "is_disposable_not_PRD": true
+      }
+    },
+    "per_game_context_accepted": 8,
+    "wrong_source_file_context_rejected": 7,
+    "UE2_owned_UT2004_v99_original_file_id": 111472,
+    "UE2_owned_UT2004_v99_source_schema": "ue1.ut2004.compat.object-import.v1",
+    "genuine_original_UE5_zen_package_id": "13616274F41D838E",
+    "genuine_Zen_denied_classic_mount_authority": true,
+    "additional_original_compat_zen_script_sha256": "1b6f9f9df9644dd3ef537ad079ee6886c9cb082fa2b8541ed78c54437e3617d0"
+  },
+  "permanent_regression": {
+    "path": "tests/tools/verify_classic_mount_context_dispatch.php",
+    "scope": "synthetic in-memory source-ownership validation only",
+    "test_cases": 12,
+    "accept": 9,
+    "reject": 3,
+    "wrong_file_context_denied": true
+  },
+  "modified_source_sha256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70"
+  },
+  "not_claimed_as_verified": [
+    "Full real native UE5 duplicate file mount order, redirects and loaded linker object graph",
+    "Complete UE5 native VerifyImportInner outcome for all 24 original imports",
+    "Correctness of missing outcomes from incomplete controlled file mount fixture",
+    "Original current-policy source-verified production PRD dependency data publication across UE1-UE5",
+    "Authenticated production website GET UI (automatic access blocked 403)"
+  ],
+  "original_epic_asset_modified": false,
+  "PRD_database_writes": 0,
+  "native_all_original_physical_dependencies": {
+    "result": "PASS_GENUINE_EPIC_ENGINE_VERIFIED_PACKAGE_IMPORT_SCOPE",
+    "original_material": "/Engine/EngineMaterials/BaseFlattenMaterial",
+    "epic_source_import_names": [
+      "/Engine/EngineMaterials/BaseFlattenDiffuseMap",
+      "/Engine/EngineMaterials/BaseFlattenEmissiveMap",
+      "/Engine/EngineMaterials/BaseFlattenGrayscaleMap",
+      "/Engine/EngineMaterials/BaseFlattenLinearColor",
+      "/Engine/EngineMaterials/BaseFlattenNormalMap"
+    ],
+    "complete_original_source_file_shas": {
+      "BaseFlattenMaterial": "07a7072b2bb9cdf7504ecfcddbb0b927800d6d40ad0306ae2e54a259d9a8bc2c",
+      "BaseFlattenDiffuseMap": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec",
+      "BaseFlattenEmissiveMap": "99f43671722204b6f0e26c555a202ea9f14586d90d98b86ab90198fe53ee49b5",
+      "BaseFlattenGrayscaleMap": "7b58aff27d8732cfb1146471e889ef6f46a4b08d3995663ac24a6468c8477d63",
+      "BaseFlattenLinearColor": "d553d6ff9bf7df8e674a0bbc444185857287cada928fb82fa9ddb525d800b6d8",
+      "BaseFlattenNormalMap": "139c33719345199f65c85424dac231aa561bd51396dba4575ad142bfd611d25d"
+    },
+    "original_engine_commandlet_native_loaded_asset_count": 6,
+    "native_classes": {
+      "BaseFlattenMaterial": "Material",
+      "BaseFlattenDiffuseMap": "Texture2D",
+      "BaseFlattenEmissiveMap": "Texture2D",
+      "BaseFlattenGrayscaleMap": "Texture2D",
+      "BaseFlattenLinearColor": "Texture2D",
+      "BaseFlattenNormalMap": "Texture2D"
+    },
+    "native_original_asset_paths": {
+      "BaseFlattenMaterial": "/Engine/EngineMaterials/BaseFlattenMaterial.BaseFlattenMaterial",
+      "BaseFlattenDiffuseMap": "/Engine/EngineMaterials/BaseFlattenDiffuseMap.BaseFlattenDiffuseMap",
+      "BaseFlattenEmissiveMap": "/Engine/EngineMaterials/BaseFlattenEmissiveMap.BaseFlattenEmissiveMap",
+      "BaseFlattenGrayscaleMap": "/Engine/EngineMaterials/BaseFlattenGrayscaleMap.BaseFlattenGrayScaleMap",
+      "BaseFlattenLinearColor": "/Engine/EngineMaterials/BaseFlattenLinearColor.BaseFlattenLinearColor",
+      "BaseFlattenNormalMap": "/Engine/EngineMaterials/BaseFlattenNormalMap.BaseFlattenNormalMap"
+    },
+    "source_original_native_load_result_sha256": "cccace205b3cb74e1e883af76fd9f19b9238e04a5731b7da04de7a9115b0754d",
+    "source_original_native_commandlet_log_sha256": "ee66b844c9b08bc95a0e3b24d067baf71a8b052b5235bffb95858cf6770c00e2",
+    "native_asset_registry_indexed_explicitly": true,
+    "epic_original_asset_registry_source": "actual UE5.8.3 AssetRegistry.get_dependencies after scan_paths_synchronous",
+    "native_registry_result": {
+      "consumer": "/Engine/EngineMaterials/BaseFlattenMaterial",
+      "native_loaded": true,
+      "registry_native_source": "AssetRegistry.get_dependencies original installed Engine",
+      "native_registry_indexed_assets": 1,
+      "native_dependency_count": 5,
+      "native_dependencies": [
+        "/Engine/EngineMaterials/BaseFlattenDiffuseMap",
+        "/Engine/EngineMaterials/BaseFlattenEmissiveMap",
+        "/Engine/EngineMaterials/BaseFlattenGrayscaleMap",
+        "/Engine/EngineMaterials/BaseFlattenLinearColor",
+        "/Engine/EngineMaterials/BaseFlattenNormalMap"
+      ],
+      "native_same_folder_dependencies": [
+        "/Engine/EngineMaterials/BaseFlattenDiffuseMap",
+        "/Engine/EngineMaterials/BaseFlattenEmissiveMap",
+        "/Engine/EngineMaterials/BaseFlattenGrayscaleMap",
+        "/Engine/EngineMaterials/BaseFlattenLinearColor",
+        "/Engine/EngineMaterials/BaseFlattenNormalMap"
+      ]
+    },
+    "native_registry_result_sha256": "76871000f8f0cbb3556a7208fbd7d2e52d40cd2ab147a028c6761c639ea46c43",
+    "native_registry_commandlet_sha256": "64b23fcc8ea4c1ed4dee9118b0a35cc22dcf60db74b1d9f0b2baf2236b7497c3",
+    "native_registry_commandlet_log_sha256": "fcbc8e4b1572c1926a40991b5e91b83e8f36d37ceb47104b4a47d906165a3e41",
+    "actual_UEDB5_source_parser_provider_rebuilder_publisher_website_test_sha256": "990ef43d05e18e06174346d3bd20950104591fe00c97e5136b2addf892b42b5a",
+    "actual_UEDB5_import_rows": 24,
+    "original_physical_import_package_count": 5,
+    "original_physical_import_object_count": 5,
+    "original_physical_import_linker_only_count": 5,
+    "original_script_runtime_unknown_count": 14,
+    "source_current_sql_edges": 24,
+    "sql_published_package_summaries": 7,
+    "current_policy_visible_sql_edges": 24,
+    "stale_policy_visible_sql_edges": 0,
+    "website_dependency_rows": 24,
+    "website_missing_objects": 0,
+    "source_correct_nonexistent_mount_count_claimed": false,
+    "sql_publisher_idempotent_and_rollback": true,
+    "main_limitation": "Native UE5 AssetRegistry provides authoritative package dependencies, not FLinkerLoad per-import SourceIndex. Exact class/name/external provider source rules are source-mapped and verified against native loaded object classes. No duplicate physical mount precedence captured.",
+    "production_database_writes": 0,
+    "original_epic_content_writes": 0,
+    "epic_source_files_sha256": {
+      "LinkerLoad.cpp": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
+      "UObjectGlobals.cpp": "896cd2b6254f7586f08c98890fe61382c1ab16b78cbd3ebd378af23141924696"
+    }
+  }
+}
