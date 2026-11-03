@@ -1,0 +1,148 @@
+{
+  "schema": "UE5-current-Satisfactory-5.6.1-source-selected-original-archive-audit-v1",
+  "date": "2026-11-03",
+  "scope": "Only CURRENT D:/UE5/Paks source; no old Satisfactory archive comparison or import",
+  "original_archive_immutable_sha256": {
+    "FactoryGame-WindowsServer.utoc": "84d30d56ccbd26cfeb1c0319b92d3274b13dff4406facad267aa582217c51696",
+    "FactoryGame-WindowsServer.ucas": "6bbc6414ddc394c12bd725acdbcf73708e9cdfae9cf6b11be506f6630e760834",
+    "FactoryGame-WindowsServer.pak": "710c3e60fa8fd08bbe448060c2d4f69ea1fbae7a08bdc39e569763f67e7138a6",
+    "FactoryGame-WindowsServer.sig": "b1caeef1ec92e129700a25f6ba93d538307bcbd09d5b853be070d30f37b1eb5c",
+    "global.utoc": "0f72c200169b09519ac727d0149ef4f3c35d6234f1326c7efe5ee0bcf04095e6",
+    "global.ucas": "b57553fe214c9db7f854fb23db9cb6eb1c3c84fd714998b882487396373e211c"
+  },
+  "release_source": {
+    "epic_tag": "5.6.1-release",
+    "epic_git_tag_sha": "cef1527368284855f68e631bec945b262bdfb050",
+    "private_local_source_dir": "D:/Temp/UnrealDB/UE5/source-5.6.1/Epic_5.6.1",
+    "retrieval": "Authenticated ardenee/UnrealEngine Epic source fork; source files kept private only",
+    "game_authority": "Satisfactory 1.2 official announcement and Satisfactory modding documentation specify UE5.6.1 with Coffee Stain game-specific engine modifications",
+    "game_source_modifications_verified": false,
+    "source_files_sha256": [
+      {
+        "relative_source_file": "Engine/Source/Runtime/Core/Internal/IO/IoStore.h",
+        "sha256": "c48e17d4f6ac6b746baa066af9858648d6f4fa328f4c1b27ea5afee91ce54c59",
+        "bytes": 8582
+      },
+      {
+        "relative_source_file": "Engine/Source/Runtime/Core/Private/IO/IoContainerHeader.cpp",
+        "sha256": "071c9acb80d90e783ca8946f979af80ee26e6f2832429d81d8e108b26b9cb10f",
+        "bytes": 3101
+      },
+      {
+        "relative_source_file": "Engine/Source/Runtime/Core/Private/IO/IoStore.cpp",
+        "sha256": "0f55282a256ae7cfdee4e20de4362f59197644294888c4dc6cebaf10d92113a7",
+        "bytes": 61299
+      },
+      {
+        "relative_source_file": "Engine/Source/Runtime/Core/Public/IO/IoContainerHeader.h",
+        "sha256": "70128eb6dffd3e691ee55ebfc0ea54cb247ed32620c6343c2168e7dcd6de22de",
+        "bytes": 3491
+      },
+      {
+        "relative_source_file": "Engine/Source/Runtime/CoreUObject/Internal/Serialization/ZenPackageHeader.h",
+        "sha256": "ac5eff420ead81673608d96e34faf7812465e6f07a8d6f8e7420afbe373f32d7",
+        "bytes": 1348
+      },
+      {
+        "relative_source_file": "Engine/Source/Runtime/CoreUObject/Private/Serialization/ZenPackageHeader.cpp",
+        "sha256": "56c06b8fe3e20b3e806cea044ec890166d5cd3fd9c2811b7557af0e9dbae511f",
+        "bytes": 6802
+      },
+      {
+        "relative_source_file": "Engine/Source/Runtime/CoreUObject/Public/Serialization/AsyncLoading2.h",
+        "sha256": "1faa069e2bdad279ff14a17fc1b9ff5f9c1c306656fd002eb0544f2a2291cd64",
+        "bytes": 11638
+      },
+      {
+        "relative_source_file": "Engine/Source/Runtime/PakFile/Private/FilePackageStore.cpp",
+        "sha256": "e761042930821333b6a7cd0bcb43c5cc9c0220fc12386fae3b9fe250367e023d",
+        "bytes": 29232
+      }
+    ],
+    "source_diff_summary": {
+      "reference_version": "5.8.3",
+      "comparison_metadata_sha256": "39899360aa92201fbc4ac4e21daf1f3623fe7b97866208bd95992462f8956401",
+      "FZenPackageSummary_offset_20_UE5_6_1": "CookedHeaderSize",
+      "FZenPackageSummary_offset_20_UE5_8_3": "_Unused",
+      "source_stable_serialized_uint32": true
+    }
+  },
+  "original_UE5_TOC_and_Zen": {
+    "native_UnrealPak_binary_version": "installed Epic UE5.8.3; not UE5.6.1 native runtime authority",
+    "native_toc_entries": 27241,
+    "native_pak_file_entries": 4761,
+    "Zen_packages_structurally_decoded": 27240,
+    "unique_package_names": 27240,
+    "Zen_counts": {
+      "packages": 27240,
+      "total_import_map_rows": 606692,
+      "total_exports": 349819,
+      "total_imported_packages": 124234,
+      "total_name_rows": 1246963,
+      "total_dependency_entries": 1241178,
+      "versioning_info_present": 0,
+      "without_version_info": 27240,
+      "cell_exports": 0,
+      "cell_imports": 0,
+      "script_import_rows": 234662,
+      "package_import_rows": 247796,
+      "null_import_rows": 124234,
+      "serialized_cooked_header_word_nonzero": 27240,
+      "serialized_cooked_header_word_max": 4627859
+    },
+    "casefold_identical_native_package_names": 27240,
+    "exact_case_sensitive_name_matches": 26747,
+    "case_only_name_variations": 493,
+    "native_name_paths_mount_mapping": "Engine=Engine, FactoryGame Content=Game, Interchange/Assets=InterchangeAssets plugin and Interchange/Runtime=Interchange plugin; verified installed .uplugin files",
+    "nonlocal_imported_package_id_refs": 66,
+    "distinct_nonlocal_package_ids": 26,
+    "nonlocal_deps_not_claimed_missing": true,
+    "current_global_ScriptObjects_cooked_debug_count": 54968,
+    "cooked_ScriptObjects_not_runtime_authority": true
+  },
+  "actual_one_original_Xdebug": {
+    "toc_index": 53,
+    "package_id": "13616274F41D838E",
+    "serialized_cooked_header_field": 7367,
+    "dependency_rows": 98,
+    "outcomes_without_mounted_runtime_evidence": {
+      "resolved": 48,
+      "unresolved": 50
+    },
+    "Xdebug_captured_raw_trace_sha256": "477fafce09306616860e294b129ad2b07b80fd7ab979bd96e66eabeb92ccdfd3",
+    "Xdebug_gzip_sha256": "eba9f37caf05928307271c9dfb888b33d7ac0a597695ba0e083ad177f99b68f3",
+    "Xdebug_compressed_bytes": 67440720,
+    "raw_trace_bytes": 1028802996,
+    "repo_original_asset_copied": false
+  },
+  "code_change": {
+    "module": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+    "before_field_name": "unused_cooked_header_size",
+    "after_field_name": "cooked_header_size_or_reserved",
+    "reason": "UE5.6.1 uses CookedHeaderSize at offset20; UE5.8.3 marks same serialized word _Unused. Preserve original raw uint32 without false 5.8 assumptions.",
+    "sha256": "49f85fcdb6dc7cff28b632f7884a529b849d3a6c1df061dfa4837f0a8ce064ed",
+    "original_regression_test": "tests/tools/verify_ue5_current_56_original_summary.php",
+    "test_source_sha256": "4c2bb4bbdaaa99ca68b5439d647b6ab7de9fbff00d8de5f85b5197ea3ea0e8df",
+    "tested_original_index": 53,
+    "expected_word": 7367,
+    "expected_test_status": "PASS"
+  },
+  "remaining_not_certified": [
+    "UnrealDB Zen SOURCE_POLICY string still identifies 5.8.3; source-aware 5.6.1 selection is required before publishing current Satisfactory file metadata.",
+    "Satisfactory Coffee Stain engine patches lack exact native runtime/binary differential; stock 5.6.1 source is base, not proof of game patch parity.",
+    "UnrealPak 5.8.3 native listing and PHP 5.6.1 interpretation are different test authority, not native 5.6.1 engine-level equivalence.",
+    "No source-authenticated mounted package store including all companion/external providers; 66 references outside main cooked container remain unknown, not missing.",
+    "Zero current game14 verified PRD package records; no UEDB5 v14 Pass2 publication, authenticated browser read, or PRD data updates.",
+    "No current package files imported; user offered to import only after UE5 is fixed."
+  ],
+  "new_contract_ids": 0,
+  "existing_acceptance_status": "27 PASS / 5 BLOCKED",
+  "PRD_SQL_writes": 0,
+  "original_archive_writes": 0,
+  "large_raw_details_DEV_only": [
+    "ue5-current-zen-all-original-27240.json",
+    "native-current-FactoryGame-WindowsServer.utoc.log",
+    "ue5-current-native-pak-list.log",
+    "ue5-current-5.6.1-original-snapshot-runtime.xt.gz"
+  ]
+}

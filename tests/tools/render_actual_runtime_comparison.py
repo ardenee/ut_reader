@@ -105,6 +105,18 @@ def main() -> None:
         or zero["actual_PRD_read_only_execution"]["unchanged_source_stale_cases"] != 5
         or zero["target_fixture"]["original_verified_file_count"] != 0):
         raise RuntimeError("Cross-game zero-file proof no longer matches the original PRD scope")
+    current_ue5_path = REPO / "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json"
+    current_ue5 = json.loads(current_ue5_path.read_text("utf-8"))
+    if current_ue5.get("schema") != "UE5-current-Satisfactory-5.6.1-source-selected-original-archive-audit-v1":
+        raise RuntimeError("Current Satisfactory original UE5.6 source evidence was not found")
+    if current_ue5["original_UE5_TOC_and_Zen"]["Zen_packages_structurally_decoded"] != 27240:
+        raise RuntimeError("Current original Satisfactory package count changed")
+    if current_ue5["original_UE5_TOC_and_Zen"]["casefold_identical_native_package_names"] != 27240:
+        raise RuntimeError("Current original Satisfactory native name comparison is incomplete")
+    if current_ue5["code_change"]["sha256"] != sha256(REPO / current_ue5["code_change"]["module"]):
+        raise RuntimeError("Current Satisfactory source-specific PHP reader has changed")
+    if current_ue5["code_change"]["test_source_sha256"] != sha256(REPO / current_ue5["code_change"]["original_regression_test"]):
+        raise RuntimeError("Current Satisfactory source-specific regression has changed")
     service_cases = evidence["real_service_traces"]
     direct_cases = evidence["direct_real_reader_traces"]
     if len(service_cases) != 7 or len(direct_cases) != 6:
@@ -349,6 +361,27 @@ def main() -> None:
         "or new acceptance contract ID. "
         "Proof <code>tests/evidence/ue1-ue5-cross-game-zero-verified-source-guard-20261103.json</code>"
         " · SHA-256 <code>" + sha256(zero_path) + "</code>.</p>",
+        "<h2>Current Satisfactory 1.2: original UE5.6.1 Zen source audit</h2>",
+        "<p>DEV's current <code>D:\\UE5\\Paks</code> source was decoded independently of earlier "
+        "Satisfactory revisions. All <strong>27,240</strong> current original Zen package "
+        "headers and names parsed; <strong>27,240/27,240</strong> names match Epic UnrealPak's "
+        "native listing after FName case folding and verified plugin mount names. "
+        "The companion pak has <strong>4,761</strong> native file entries. "
+        "The global ScriptObjects chunk has <strong>54,968</strong> diagnostic entries, "
+        "which are not a live runtime registry.</p>",
+        "<p>The correctly selected base engine source is Epic <strong>5.6.1-release</strong> "
+        "(separate from installed 5.8.3). Its <code>FZenPackageSummary::CookedHeaderSize</code> "
+        "at byte offset 20 is named <code>_Unused</code> in 5.8.3. "
+        "The PHP reader now preserves the original serialized value without assuming "
+        "either release. <strong>66</strong> imported-package references to "
+        "<strong>26</strong> nonlocal FPackageIds are not classified missing "
+        "without an authenticated mounted package store.</p>",
+        "<p><strong>Not yet import-certified:</strong> existing Zen publication source policy "
+        "still says 5.8.3; Satisfactory's custom 5.6.1 native runtime is not available "
+        "for full game-specific verification. No PRD game14 files are published. "
+        "The five existing website blockers remain open. Proof: "
+        "<code>tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json</code>"
+        " SHA-256 <code>" + sha256(current_ue5_path) + "</code>.</p>",
         "<h2>Independent comparisons and exclusions</h2>",
         "<p><strong>UE2 Unreal II v69:</strong> Original file #149508 and the selected 2000-12-09 "
         "linker match earlier accepted original-byte comparisons; this runtime run observed "

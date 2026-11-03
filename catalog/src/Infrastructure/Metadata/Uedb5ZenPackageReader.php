@@ -260,7 +260,11 @@ final class Uedb5ZenPackageReader
             'header_size' => $headerSize,
             'name' => $name,
             'package_flags' => sprintf('%08X', $reader->u32le()),
-            'unused_cooked_header_size' => $reader->u32le(),
+            // Epic UE5.6.1 FZenPackageSummary calls this CookedHeaderSize;
+            // UE5.8.3 names the same serialized uint32 _Unused. Preserve
+            // the wire value without assigning either release's semantics
+            // when the cooked package omits versioning information.
+            'cooked_header_size_or_reserved' => $reader->u32le(),
             'imported_public_export_hashes_offset' => $reader->i32le(),
             'import_map_offset' => $reader->i32le(),
             'export_map_offset' => $reader->i32le(),

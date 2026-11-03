@@ -10355,8 +10355,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
-      "sha256": "90665000c906630161aa942dd6c771c85c88c41d5e6daf0e68e324d1d331cbd7",
-      "bytes": 34229,
+      "sha256": "49f85fcdb6dc7cff28b632f7884a529b849d3a6c1df061dfa4837f0a8ce064ed",
+      "bytes": 34532,
       "engine_hints": [
         "ue5"
       ],
