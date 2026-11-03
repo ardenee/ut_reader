@@ -36,7 +36,27 @@ def main():
     probable=[r["path"] for r in index if r.get("review_priority")=="ENTRYPOINT" and
               re.search(r"file|pak|iostore|download|upload|source|scan|import|dependency|missing|export|archive|package|unverified|asset",r["path"],re.I)]
     counts=dict(collections.Counter(r["status"] for r in rows))
-    data={"cases":rows,"entrypoints":probable,
+    operation_definitions=json.loads((ROOT/"tests/tools/operation_inventory_definitions.json").read_text("utf-8"))
+    operation_rows=[]
+    engine_cells=0
+    for index,op in enumerate(operation_definitions,1):
+        engine_cells+=len(op["engines"])
+        trace=[]
+        for step in op.get("route_evidence",[]):
+            source_path=ROOT/step["path"]
+            contents=source_path.read_text("utf-8","replace")
+            offset=contents.find(step["anchor"])
+            if offset<0:
+                raise RuntimeError("Operation route anchor not found: "+op["name"]+" / "+step["path"])
+            line=contents.count("\n",0,offset)+1
+            trace.append({"file":step["path"],"line":line,"anchor":step["anchor"]})
+        operation_rows.append({
+            "id":index,"name":op["name"],"group":op["group"],"engines":op["engines"],
+            "area":op["area"],"route":trace,"source_anchors_checked":len(trace)>0,
+            "runtime_verified_in_this_inventory":False
+        })
+    data={"cases":rows,"entrypoints":probable,"operations":operation_rows,
+          "applicable_engine_cells":engine_cells,"static_route_count":sum(x["source_anchors_checked"] for x in operation_rows),
           "source_files_indexed":paths["total_files"],
           "statuses":counts,"categories":contracts["contracts"],
           "runtime_example":"ue5-mount-provider","warning":"Static or historical evidence only unless explicitly shown as Xdebug observed."}
@@ -65,7 +85,12 @@ footer{margin:1rem 0;color:#55657a}
 </header><main><section class="warning"><strong>Coverage is not certification.</strong>
 Function and file links from static analysis are candidates. Actual PHP execution is verified only for the referenced observed trace; Epic runtime mount state was not captured.
 Historical PASS means only that the previously recorded scope passed.</section>
-<section class="grid" id="metrics"></section><p><a href="/unrealdb/graphify-out/process-comparison.html">Open the observed UE5 classic PHP / Epic source process comparison</a></p>
+<section class="grid" id="metrics"></section>
+<details class="card" open><summary>UnrealDB operations mapped from actual source (NOT Epic verification)</summary>
+<p class="sub">The inventory is discovery-only. Every checked route is a possible source path; no new PHP runtime or Epic engine execution is claimed from this view. Five UE engines, with separate UE5 classic and Zen branches.</p>
+<section class="controls"><label>Source engine / format <select id="operation-engine"><option value="">All</option><option value="1">UE1</option><option value="2">UE2</option><option value="3">UE3</option><option value="4">UE4</option><option value="C">UE5 classic</option><option value="Z">UE5 Zen</option></select></label><label>Find operation / file <input id="operation-search" placeholder="import, IoStore, provider"></label></section>
+<p id="operation-count" class="sub"></p><div id="operation-rows"></div></details>
+<p><a href="/unrealdb/graphify-out/process-comparison.html">Open the observed UE5 classic PHP / Epic source process comparison</a></p>
 <section class="controls"><label>Engine <select id="engine"><option value="">All engines</option>
 <option value="ue1">UE1</option><option value="ue2">UE2</option><option value="ue3">UE3</option><option value="ue4">UE4</option><option value="ue5">UE5</option></select></label>
 <label>Status <select id="status"><option value="">All statuses</option><option value="BLOCKED">BLOCKED</option><option value="PASS">PASS, scoped</option></select></label>
@@ -79,9 +104,29 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 document.getElementById('metrics').innerHTML=[
 ['Contract routes',d.cases.length],['Scoped prior PASS',d.statuses.PASS||0],
 ['Reopened / blocked',d.statuses.BLOCKED||0],['Indexed source files',d.source_files_indexed],
-['Potential web entrypoints',d.entrypoints.length]
+['Potential web entrypoints',d.entrypoints.length],
+['Source-mapped operations, NOT verified',d.operations.length],
+['Applicable engine/format cells',d.applicable_engine_cells],
+['Checked static source routes',d.static_route_count]
 ].map(x=>'<div class="metric"><div class="number">'+esc(x[1])+'</div>'+esc(x[0])+'</div>').join('');
 document.getElementById('entrypoints').textContent=d.entrypoints.join('\\n');
+function drawOperations(){
+ const e=document.getElementById('operation-engine').value;
+ const q=document.getElementById('operation-search').value.trim().toLowerCase();
+ const filtered=d.operations.filter(op=>(!e||op.engines.includes(e))
+   &&(!q||JSON.stringify(op).toLowerCase().includes(q)));
+ document.getElementById('operation-count').textContent=
+   filtered.length+' source-mapped operations shown. Static references only; runtime traces and Epic parity are separate.';
+ document.getElementById('operation-rows').innerHTML=filtered.map(op=>{
+   const source=op.route.map(step=>'<a target="_blank" rel="noopener noreferrer" href="https://github.com/ardenee/ut_reader/blob/main/'+encodeURI(step.file)+'#L'+step.line+'">'
+      +esc(step.file.split('/').pop())+':'+step.line+'</a> ('+esc(step.anchor)+')').join(' → ');
+   return '<details class="card"><summary>#'+op.id+' '+esc(op.name)+' <span class="status">SOURCE ONLY</span></summary>'
+     +'<p><strong>Group:</strong> '+esc(op.group)+'; <strong>Area:</strong> '+esc(op.area)+'</p>'
+     +'<p class="code">'+source+'</p><p class="sub">No new original-engine execution or end-to-end parity result asserted.</p></details>';
+ }).join('')||'<p>No matching operation.</p>';
+}
+['operation-engine','operation-search'].forEach(id=>document.getElementById(id).addEventListener('input',drawOperations));
+drawOperations();
 function draw(){
  const engine=document.getElementById('engine').value,status=document.getElementById('status').value;
  const query=document.getElementById('search').value.trim().toLowerCase();

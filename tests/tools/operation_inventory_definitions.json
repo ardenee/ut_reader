@@ -7,7 +7,30 @@
     "entry_hint": "public",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
     "implementation_hint": "class CatalogPublicUploadJobHandler",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/public-upload.php",
+        "anchor": "public-upload.js"
+      },
+      {
+        "path": "catalog/assets/public-upload.js",
+        "anchor": "api/v1/public-upload.php"
+      },
+      {
+        "path": "catalog/api/v1/public-upload.php",
+        "anchor": "JobType::PROCESS_PUBLIC_UPLOAD"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::PROCESS_PUBLIC_UPLOAD =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
+        "anchor": "function handle"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
@@ -17,7 +40,30 @@
     "entry_hint": "profile",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
     "implementation_hint": "class CatalogProfiledUploadBatchJobHandler",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/profiled-upload.php",
+        "anchor": "profiled-upload-jobs"
+      },
+      {
+        "path": "catalog/assets/profiled-upload-jobs-core.js",
+        "anchor": "api/v1/profiled-upload-batch.php"
+      },
+      {
+        "path": "catalog/api/v1/profiled-upload-batch.php",
+        "anchor": "JobType::PROFILED_UPLOAD_BATCH"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::PROFILED_UPLOAD_BATCH =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
+        "anchor": "function handle"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
@@ -27,17 +73,63 @@
     "entry_hint": "bucket",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php",
     "implementation_hint": "class CatalogBucketUploadJobHandler",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/upload-bucket-v2.php",
+        "anchor": "upload-bucket-v2"
+      },
+      {
+        "path": "catalog/assets/upload-bucket-v2-coordinator.js",
+        "anchor": "api/v1/upload-bucket-batch.php"
+      },
+      {
+        "path": "catalog/api/v1/upload-bucket-batch.php",
+        "anchor": "CatalogBucketBatchFinalizer"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php",
+        "anchor": "new CatalogBucketBatchQueue"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogBucketBatchQueue.php",
+        "anchor": "JobType::PROCESS_BUCKET_UPLOAD"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::PROCESS_BUCKET_UPLOAD =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php",
+        "anchor": "function handle"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
-    "name": "Local source directory scan",
+    "name": "Local source scan (synchronous admin route)",
     "engines": "1234C",
     "entry": "catalog/source-scan.php",
-    "entry_hint": "source",
-    "implementation": "catalog/src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php",
-    "implementation_hint": "class CatalogSourceScanJobHandler",
-    "area": "dispatch"
+    "entry_hint": "CatalogSourceScanService",
+    "implementation": "catalog/src/Infrastructure/Source/CatalogSourceScanRunner.php",
+    "implementation_hint": "class CatalogSourceScanRunner",
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/source-scan.php",
+        "anchor": "CatalogSourceScanService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Source/CatalogSourceScanService.php",
+        "anchor": "new CatalogSourceScanRunner"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Source/CatalogSourceScanRunner.php",
+        "anchor": "function run"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
@@ -47,7 +139,18 @@
     "entry_hint": "source",
     "implementation": "catalog/src/Infrastructure/Source/CatalogHttpSourceScanService.php",
     "implementation_hint": "class CatalogHttpSourceScanService",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/http-source-scan.php",
+        "anchor": "new CatalogHttpSourceScanService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Source/CatalogHttpSourceScanService.php",
+        "anchor": "class CatalogHttpSourceScanService"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
@@ -57,27 +160,72 @@
     "entry_hint": "class CatalogArchiveWorkflowJobHandler",
     "implementation": "catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php",
     "implementation_hint": "class CatalogArchiveExtractor",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php",
+        "anchor": "new CatalogArchiveImportJobHandler"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php",
+        "anchor": "new CatalogArchiveExtractor"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php",
+        "anchor": "class CatalogArchiveExtractor"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
-    "name": "Nested archive/member routing",
+    "name": "Enqueue nested archives before package-member routing",
     "engines": "1234CZ",
-    "entry": "catalog/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php",
-    "entry_hint": "class CatalogArchiveMemberContentRoutingJobHandler",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php",
+    "entry_hint": "CatalogNestedArchiveJobEnqueuer",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogNestedArchiveJobEnqueuer.php",
     "implementation_hint": "class CatalogNestedArchiveJobEnqueuer",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php",
+        "anchor": "new CatalogNestedArchiveJobEnqueuer"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogNestedArchiveJobEnqueuer.php",
+        "anchor": "function enqueue"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
-    "name": "Unverified package staging and promotion",
+    "name": "Unverified admin import / staged promotion",
     "engines": "1234C",
-    "entry": "catalog/unverified-files.php",
-    "entry_hint": "unverified",
+    "entry": "catalog/unverified-files-action.php",
+    "entry_hint": "CatalogUnverifiedImporterAdapter",
     "implementation": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php",
     "implementation_hint": "class CatalogUnverifiedPromotion",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/unverified-files-action.php",
+        "anchor": "CatalogUnverifiedImporterAdapter"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedImporterAdapter.php",
+        "anchor": "new CatalogUnverifiedImportService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php",
+        "anchor": "new CatalogUnverifiedPromotion"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php",
+        "anchor": "function promote"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
@@ -87,7 +235,18 @@
     "entry_hint": "gp_classify_file",
     "implementation": "catalog/lib/GameProfiles.php",
     "implementation_hint": "gp_classify_file",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "gp_classify_file"
+      },
+      {
+        "path": "catalog/lib/GameProfiles.php",
+        "anchor": "function gp_classify_file"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
@@ -97,17 +256,39 @@
     "entry_hint": "profileAllowsCatalogRow",
     "implementation": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
     "implementation_hint": "resolveForGame",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "anchor": "CatalogReaderResolver::resolve("
+      },
+      {
+        "path": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "anchor": "function resolve"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
-    "name": "Physical source hash, duplicate and alias identity",
+    "name": "Original source hash and duplicate identity preflight",
     "engines": "1234C",
     "entry": "catalog/src/Infrastructure/Import/CatalogPackageImportService.php",
     "entry_hint": "md5_file",
-    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php",
-    "implementation_hint": "function persist",
-    "area": "dispatch"
+    "implementation": "catalog/src/Infrastructure/Import/CatalogPackageImportService.php",
+    "implementation_hint": "duplicate_md5",
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogPackageImportService.php",
+        "anchor": "md5_file"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogPackageImportService.php",
+        "anchor": "duplicate_md5"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "1 Intake / identity / classification",
@@ -117,7 +298,18 @@
     "entry_hint": "CatalogInvalidPackageException",
     "implementation": "catalog/src/Infrastructure/Import/CatalogLegacyPackageCorruptionDetector.php",
     "implementation_hint": "class CatalogLegacyPackageCorruptionDetector",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "CatalogLegacyPackageCorruptionDetector::detectZeroToSpace"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogLegacyPackageCorruptionDetector.php",
+        "anchor": "function detectZeroToSpace"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
@@ -127,27 +319,60 @@
     "entry_hint": "resolveForGame",
     "implementation": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
     "implementation_hint": "function resolveForGame",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "CatalogReaderResolver::resolveForGame"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "anchor": "function resolveForGame"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "Package summary, versions, raw offsets",
-    "engines": "1234C",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-    "entry_hint": "assertParsedHeaderAllowed",
-    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
-    "implementation_hint": "getHeader",
-    "area": "tables"
-  },
-  {
-    "group": "2 Reader / source tables",
-    "name": "GUID, package flags and signed summary fields",
+    "name": "Read source package summary, versions and bounds",
     "engines": "1234C",
     "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
-    "entry_hint": "packageGuid",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-    "implementation_hint": "getHeader",
-    "area": "tables"
+    "entry_hint": "$package->getHeader",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "implementation_hint": "$header = $package->getHeader",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "$package->getHeader"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "getHeader"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Read package GUID, flags and source summary fields",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "$packageGuid",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "implementation_hint": "$header = $package->getHeader",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "$header = $package->getHeader"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "$packageGuid"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
@@ -157,7 +382,18 @@
     "entry_hint": "getNames",
     "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
     "implementation_hint": "getNames",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "$package->getNames"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+        "anchor": "function getNames"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
@@ -167,7 +403,18 @@
     "entry_hint": "getImports",
     "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
     "implementation_hint": "getImports",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "$package->getImports"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
+        "anchor": "function getImports"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
@@ -177,37 +424,81 @@
     "entry_hint": "getExports",
     "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
     "implementation_hint": "getExports",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "$package->getExports"
+      },
+      {
+        "path": "UE4/UnrealPackageReader.php",
+        "anchor": "function getExports"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "FName index, number and name-reference semantics",
+    "name": "Display serialized FName and object references in table page",
     "engines": "1234C",
-    "entry": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
-    "entry_hint": "nameLookup",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
-    "implementation_hint": "function normalizedTables",
-    "area": "tables"
-  },
-  {
-    "group": "2 Reader / source tables",
-    "name": "Class, outer, super/template, object flags",
-    "engines": "1234C",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
-    "entry_hint": "function exportCoverageRows",
+    "entry": "catalog/file-examine-paged-core.php",
+    "entry_hint": "fetchFilteredPage",
     "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
-    "implementation_hint": "withSerializedObjectPaths",
-    "area": "tables"
+    "implementation_hint": "function fetchFilteredPage",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/file-examine-paged-core.php",
+        "anchor": "PdoPackageTablePageQuery::fetchFilteredPage"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+        "anchor": "function fetchFilteredPage"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "Bounds/structural validation and malformed tables",
+    "name": "Resolve classic class, outer and export-object identity",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+    "entry_hint": "Uedb5ClassicDependencyResolver",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+    "implementation_hint": "function resolve",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "anchor": "Uedb5ClassicDependencyResolver::resolve"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+        "anchor": "function resolve"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Importer reader validation and malformed source rejection",
     "engines": "1234C",
     "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
     "entry_hint": "validatePackage",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-    "implementation_hint": "assertParsedHeaderAllowed",
-    "area": "tables"
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "implementation_hint": "scanner_split_reader_issues",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "validatePackage"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "scanner_split_reader_issues"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
@@ -217,67 +508,236 @@
     "entry_hint": "CatalogUE2LegacyCompatibilityPackageReader",
     "implementation": "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php",
     "implementation_hint": "class CatalogUE2LegacyCompatibilityPackageReader",
-    "area": "ut2004_legacy_ue1"
+    "area": "ut2004_legacy_ue1",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "anchor": "CatalogUE2LegacyCompatibilityPackageReader::class"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php",
+        "anchor": "class CatalogUE2LegacyCompatibilityPackageReader"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "UT3 compression chunks and extra summary data",
+    "name": "UT3 compression fields in source-selected snapshot",
     "engines": "3",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
-    "entry_hint": "compressionRows",
-    "implementation": "catalog/parsers/UE3CatalogReader.php",
-    "implementation_hint": "CatalogUE3PackageReader",
-    "area": "tables"
-  },
-  {
-    "group": "2 Reader / source tables",
-    "name": "UE4/UE5 classic custom and engine versions",
-    "engines": "4C",
     "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-    "entry_hint": "applyProfile",
-    "implementation": "UE4/UnrealPackageReader.php",
-    "implementation_hint": "readCustomVersions",
-    "area": "tables"
+    "entry_hint": "Uedb5Ut3SnapshotBuilder",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
+    "implementation_hint": "compressionRows",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "anchor": "Uedb5Ut3SnapshotBuilder::build"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
+        "anchor": "compressionRows"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "UE4/UE5 classic soft/string asset references",
-    "engines": "4C",
+    "name": "UE4 classic custom/engine version fields",
+    "engines": "4",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "entry_hint": "CatalogReaderResolver::resolve(",
+    "implementation": "UE4/UnrealPackageReader.php",
+    "implementation_hint": "function readCustomVersions",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "anchor": "CatalogReaderResolver::resolve("
+      },
+      {
+        "path": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "anchor": "function resolve"
+      },
+      {
+        "path": "UE4/UnrealPackageReader.php",
+        "anchor": "function readCustomVersions"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE5 classic custom/engine version fields",
+    "engines": "C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "entry_hint": "CatalogReaderResolver::resolve(",
+    "implementation": "UE5/UnrealPackageReader.php",
+    "implementation_hint": "function readCustomVersions",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "anchor": "CatalogReaderResolver::resolve("
+      },
+      {
+        "path": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "anchor": "function resolve"
+      },
+      {
+        "path": "UE5/UnrealPackageReader.php",
+        "anchor": "function readCustomVersions"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4 classic soft/string asset references",
+    "engines": "4",
     "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
     "entry_hint": "getStringAssetReferences",
-    "implementation": "UE5/UnrealPackageReader.php",
-    "implementation_hint": "getStringAssetReferences",
-    "area": "tables"
+    "implementation": "UE4/UnrealPackageReader.php",
+    "implementation_hint": "function getStringAssetReferences",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+        "anchor": "$reader->getStringAssetReferences"
+      },
+      {
+        "path": "UE4/UnrealPackageReader.php",
+        "anchor": "function getStringAssetReferences"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "UE4/UE5 classic DependsMap serialized references",
-    "engines": "4C",
+    "name": "UE5 classic soft/string asset references",
+    "engines": "C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php",
+    "entry_hint": "getStringAssetReferences",
+    "implementation": "UE5/UnrealPackageReader.php",
+    "implementation_hint": "function getStringAssetReferences",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php",
+        "anchor": "$reader->getStringAssetReferences"
+      },
+      {
+        "path": "UE5/UnrealPackageReader.php",
+        "anchor": "function getStringAssetReferences"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4 classic DependsMap serialized references",
+    "engines": "4",
     "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
     "entry_hint": "getDependsMap",
-    "implementation": "UE5/UnrealPackageReader.php",
-    "implementation_hint": "getDependsMap",
-    "area": "tables"
+    "implementation": "UE4/UnrealPackageReader.php",
+    "implementation_hint": "function getDependsMap",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+        "anchor": "$reader->getDependsMap"
+      },
+      {
+        "path": "UE4/UnrealPackageReader.php",
+        "anchor": "function getDependsMap"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "UE4/UE5 classic preload dependency arrays",
-    "engines": "4C",
+    "name": "UE5 classic DependsMap serialized references",
+    "engines": "C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php",
+    "entry_hint": "getDependsMap",
+    "implementation": "UE5/UnrealPackageReader.php",
+    "implementation_hint": "function getDependsMap",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php",
+        "anchor": "$reader->getDependsMap"
+      },
+      {
+        "path": "UE5/UnrealPackageReader.php",
+        "anchor": "function getDependsMap"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4 classic preload dependency arrays",
+    "engines": "4",
     "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
     "entry_hint": "getPreloadDependencies",
-    "implementation": "UE5/UnrealPackageReader.php",
-    "implementation_hint": "getPreloadDependencies",
-    "area": "tables"
+    "implementation": "UE4/UnrealPackageReader.php",
+    "implementation_hint": "function getPreloadDependencies",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+        "anchor": "$reader->getPreloadDependencies"
+      },
+      {
+        "path": "UE4/UnrealPackageReader.php",
+        "anchor": "function getPreloadDependencies"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "2 Reader / source tables",
-    "name": "UE4/UE5 classic mounted long package name/path",
+    "name": "UE5 classic preload dependency arrays",
+    "engines": "C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php",
+    "entry_hint": "getPreloadDependencies",
+    "implementation": "UE5/UnrealPackageReader.php",
+    "implementation_hint": "function getPreloadDependencies",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php",
+        "anchor": "$reader->getPreloadDependencies"
+      },
+      {
+        "path": "UE5/UnrealPackageReader.php",
+        "anchor": "function getPreloadDependencies"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4/UE5 classic mounted long-package name from source path",
     "engines": "4C",
     "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
     "entry_hint": "scanner_ue_package_name_from_source_relative",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-    "implementation_hint": "assertParsedHeaderAllowed",
-    "area": "dispatch"
+    "implementation": "catalog/lib/Scanner/CatalogScannerPath.php",
+    "implementation_hint": "function scanner_ue_package_name_from_source_relative",
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+        "anchor": "scanner_ue_package_name_from_source_relative"
+      },
+      {
+        "path": "catalog/lib/Scanner/CatalogScannerPath.php",
+        "anchor": "function scanner_ue_package_name_from_source_relative"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -287,7 +747,26 @@
     "entry_hint": "pak",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php",
     "implementation_hint": "class CatalogPakImportJobHandler",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/pak-import.php",
+        "anchor": "enqueueStaged"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
+        "anchor": "JobType::IMPORT_STAGED_PAK"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::IMPORT_STAGED_PAK =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php",
+        "anchor": "function handle"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -297,7 +776,18 @@
     "entry_hint": "CatalogPakArchiveStore",
     "implementation": "catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php",
     "implementation_hint": "class CatalogPakArchiveStore",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php",
+        "anchor": "new CatalogPakArchiveStore"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php",
+        "anchor": "class CatalogPakArchiveStore"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -307,7 +797,22 @@
     "entry_hint": "iostore",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
     "implementation_hint": "class CatalogIoStoreImportJobHandler",
-    "area": "iostore_ingest"
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/iostore-import.php",
+        "anchor": "JobType::IMPORT_IOSTORE_CONTAINER"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::IMPORT_IOSTORE_CONTAINER =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+        "anchor": "function handle"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -317,7 +822,22 @@
     "entry_hint": "class CatalogIoStoreImportJobHandler",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
     "implementation_hint": "function chunks",
-    "area": "iostore_ingest"
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+        "anchor": "new CatalogIoStoreContainerStorage"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerStorage.php",
+        "anchor": "new Uedb5IoStoreTocReader"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+        "anchor": "function chunks"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -327,7 +847,18 @@
     "entry_hint": "Uedb5IoStoreTocReader",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
     "implementation_hint": "function readAndDecodeBlock",
-    "area": "iostore_ingest"
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerStorage.php",
+        "anchor": "new Uedb5IoStoreTocReader"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+        "anchor": "function readAndDecodeBlock"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -337,7 +868,18 @@
     "entry_hint": "CHUNK_TYPE_CONTAINER_HEADER",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
     "implementation_hint": "class Uedb5IoStoreContainerHeaderReader",
-    "area": "iostore_ingest"
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+        "anchor": "Uedb5IoStoreContainerHeaderReader::parse"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
+        "anchor": "function parse"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -347,7 +889,18 @@
     "entry_hint": "Uedb5ZenPackageReader",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
     "implementation_hint": "function readExportBundles",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+        "anchor": "Uedb5ZenPackageReader::parse"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "anchor": "function readExportBundles"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -357,37 +910,60 @@
     "entry_hint": "importedPackageRows",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
     "implementation_hint": "function readDependencyEntries",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+        "anchor": "Uedb5ZenPackageReader::parse"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+        "anchor": "function readDependencyEntries"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
-    "name": "UE5 Zen script objects and runtime indexes",
+    "name": "UE5 Zen optional segment / effective mounted-store context",
     "engines": "Z",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
-    "entry_hint": "script",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
-    "implementation_hint": "class Uedb5ZenScriptObjectsReader",
-    "area": "verify_import"
-  },
-  {
-    "group": "3 Engine containers",
-    "name": "UE5 Zen optional segment and redirects",
-    "engines": "Z",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
-    "entry_hint": "optional_segment",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "Uedb5ZenEffectivePackageStoreContextBuilder",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
     "implementation_hint": "class Uedb5ZenEffectivePackageStoreContextBuilder",
-    "area": "mount_provider"
+    "area": "mount_provider",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "anchor": "Uedb5ZenEffectivePackageStoreContextBuilder::build"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
+        "anchor": "function build"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
-    "name": "UE5 IoStore package name indexing and publishing",
+    "name": "Index UE5 IoStore package names by container",
     "engines": "Z",
     "entry": "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
-    "entry_hint": "class CatalogIoStoreNameIndexJobHandler",
-    "implementation": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
-    "implementation_hint": "class CatalogZenIoStorePackagePublisher",
-    "area": "iostore_ingest"
+    "entry_hint": "CatalogIoStorePackageNameIndexer",
+    "implementation": "catalog/src/Infrastructure/Storage/CatalogIoStorePackageNameIndexer.php",
+    "implementation_hint": "class CatalogIoStorePackageNameIndexer",
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
+        "anchor": "new CatalogIoStorePackageNameIndexer"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Storage/CatalogIoStorePackageNameIndexer.php",
+        "anchor": "function indexBatch"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -397,7 +973,18 @@
     "entry_hint": "class CatalogIoStoreBackupJobHandler",
     "implementation": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerBackupService.php",
     "implementation_hint": "class CatalogIoStoreContainerBackupService",
-    "area": "iostore_ingest"
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php",
+        "anchor": "new CatalogIoStoreContainerBackupService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerBackupService.php",
+        "anchor": "class CatalogIoStoreContainerBackupService"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "3 Engine containers",
@@ -407,37 +994,85 @@
     "entry_hint": "CatalogIoStoreIndexedPackageReader",
     "implementation": "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php",
     "implementation_hint": "function extract",
-    "area": "iostore_ingest"
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/iostore-package-download.php",
+        "anchor": "new CatalogIoStoreIndexedPackageReader"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php",
+        "anchor": "function extract"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "4 UEDB5 stage and indexes",
-    "name": "Build canonical engine/game-specific UEDB5 table snapshot",
-    "engines": "1234C",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
-    "entry_hint": "buildForGameId",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php",
-    "implementation_hint": "class Uedb5MetadataSnapshotWriter",
-    "area": "tables"
-  },
-  {
-    "group": "4 UEDB5 stage and indexes",
-    "name": "Stage/re-read versioned physical metadata snapshot",
+    "name": "Write source-selected UEDB5 physical snapshot",
     "engines": "1234C",
     "entry": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
-    "entry_hint": "function publish",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
-    "implementation_hint": "class Uedb5MetadataReader",
-    "area": "dependency_publish"
+    "entry_hint": "Uedb5MetadataSnapshotWriter",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php",
+    "implementation_hint": "class Uedb5MetadataSnapshotWriter",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
+        "anchor": "new Uedb5MetadataSnapshotWriter"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
+        "anchor": "$this->writer->write"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php",
+        "anchor": "function write"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "4 UEDB5 stage and indexes",
-    "name": "Assert original source bytes/identity before publication",
+    "name": "Read staged UEDB5 metadata for dependency Pass 2",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "Uedb5MetadataReader",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+    "implementation_hint": "class Uedb5MetadataReader",
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "anchor": "new Uedb5MetadataReader"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+        "anchor": "function snapshot"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Verify original file size and hash before UEDB5 publication",
     "engines": "1234C",
     "entry": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
     "entry_hint": "assertSourceIdentity",
-    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php",
-    "implementation_hint": "class CatalogVerifiedPackageIdentityRepository",
-    "area": "dispatch"
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
+    "implementation_hint": "private function assertSourceIdentity",
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
+        "anchor": "$this->assertSourceIdentity"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
+        "anchor": "function assertSourceIdentity"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "4 UEDB5 stage and indexes",
@@ -447,37 +1082,81 @@
     "entry_hint": "PdoUedb5ProviderKeyPublisher",
     "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5ProviderKeyPublisher.php",
     "implementation_hint": "class PdoUedb5ProviderKeyPublisher",
-    "area": "mount_provider"
+    "area": "mount_provider",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php",
+        "anchor": "new PdoUedb5ProviderKeyPublisher"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5ProviderKeyPublisher.php",
+        "anchor": "function publish"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "4 UEDB5 stage and indexes",
-    "name": "Compact name candidates and package search index",
+    "name": "Reconcile provider file search index (separate from compact candidates)",
     "engines": "1234CZ",
     "entry": "catalog/src/Infrastructure/Jobs/CatalogSearchIndexJobHandler.php",
-    "entry_hint": "class CatalogSearchIndexJobHandler",
-    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5NameCandidateSynchronizer.php",
-    "implementation_hint": "class PdoUedb5NameCandidateSynchronizer",
-    "area": "tables"
+    "entry_hint": "PdoPackageProviderRepository",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageProviderRepository.php",
+    "implementation_hint": "class PdoPackageProviderRepository",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogSearchIndexJobHandler.php",
+        "anchor": "new PdoPackageProviderRepository"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoPackageProviderRepository.php",
+        "anchor": "function reconcileFile"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "4 UEDB5 stage and indexes",
-    "name": "Compact object candidates and identity cross references",
+    "name": "Publish compact name/object candidate projections",
     "engines": "1234CZ",
     "entry": "catalog/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php",
     "entry_hint": "PdoUedb5CompactCandidatePublisher",
-    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5ObjectCandidateSynchronizer.php",
-    "implementation_hint": "class PdoUedb5ObjectCandidateSynchronizer",
-    "area": "tables"
+    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5CompactCandidatePublisher.php",
+    "implementation_hint": "class PdoUedb5CompactCandidatePublisher",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php",
+        "anchor": "new PdoUedb5CompactCandidatePublisher"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5CompactCandidatePublisher.php",
+        "anchor": "function publish"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "4 UEDB5 stage and indexes",
-    "name": "Validate staging format/source policy and payload epoch",
+    "name": "Reject stale dependency epoch in website file listings",
     "engines": "1234CZ",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-    "entry_hint": "function preflight",
+    "entry": "catalog/game-files.php",
+    "entry_hint": "Uedb5DependencyPublicationScope",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php",
-    "implementation_hint": "class Uedb5DependencyPublicationScope",
-    "area": "dependency_publish"
+    "implementation_hint": "function isGameCurrent",
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/game-files.php",
+        "anchor": "Uedb5DependencyPublicationScope::isGameCurrent"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php",
+        "anchor": "function isGameCurrent"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "4 UEDB5 stage and indexes",
@@ -487,7 +1166,22 @@
     "entry_hint": "CatalogIoStoreMemberCatalogPublisher",
     "implementation": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
     "implementation_hint": "function publish",
-    "area": "iostore_ingest"
+    "area": "iostore_ingest",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+        "anchor": "new CatalogIoStoreMemberCatalogPublisher"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogIoStoreMemberCatalogPublisher.php",
+        "anchor": "new CatalogZenIoStorePackagePublisher"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+        "anchor": "function publish"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -497,7 +1191,18 @@
     "entry_hint": "function rebuild",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
     "implementation_hint": "function normalizedTables",
-    "area": "verify_import"
+    "area": "verify_import",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "anchor": "Uedb5ClassicDependencyResolver::resolve"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+        "anchor": "function resolve"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -507,7 +1212,18 @@
     "entry_hint": "withClassicNativeMountEvidence",
     "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
     "implementation_hint": "class PdoUedb5PhysicalProviderSelector",
-    "area": "mount_provider"
+    "area": "mount_provider",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "anchor": "new PdoUedb5PhysicalProviderSelector"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+        "anchor": "class PdoUedb5PhysicalProviderSelector"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -517,7 +1233,18 @@
     "entry_hint": "withClassicNativeMountEvidence",
     "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
     "implementation_hint": "mount_order_authoritative",
-    "area": "mount_provider"
+    "area": "mount_provider",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "anchor": "withClassicNativeMountEvidence"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+        "anchor": "class PdoUedb5PhysicalProviderSelector"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -527,7 +1254,18 @@
     "entry_hint": "Uedb5ClassicDependencyResolver",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
     "implementation_hint": "function resolve",
-    "area": "verify_import"
+    "area": "verify_import",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "anchor": "Uedb5ClassicDependencyResolver::resolve"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+        "anchor": "function resolve"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -537,7 +1275,18 @@
     "entry_hint": "Uedb5Ue5ZenDependencyResolver",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
     "implementation_hint": "class Uedb5Ue5ZenDependencyResolver",
-    "area": "verify_import"
+    "area": "verify_import",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "anchor": "Uedb5Ue5ZenDependencyResolver::resolve"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+        "anchor": "function resolve"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -547,7 +1296,18 @@
     "entry_hint": "function runFile",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
     "implementation_hint": "function rebuild",
-    "area": "verify_import"
+    "area": "verify_import",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "anchor": "new Uedb5DependencyRebuilder"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+        "anchor": "function rebuild"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -557,17 +1317,39 @@
     "entry_hint": "PdoUedb5DependencyProjectionPublisher",
     "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
     "implementation_hint": "function publish",
-    "area": "dependency_publish"
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "anchor": "new PdoUedb5DependencyProjectionPublisher"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
+        "anchor": "function publish"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
-    "name": "Publish per-package dependency counts and summaries",
+    "name": "Build per-required-package counts from edge outcomes",
     "engines": "1234CZ",
-    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-    "entry_hint": "PdoUedb5DependencyProjectionPublisher",
+    "entry": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
+    "entry_hint": "Uedb5DependencyProjectionBuilder",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
     "implementation_hint": "class Uedb5DependencyProjectionBuilder",
-    "area": "dependency_publish"
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
+        "anchor": "Uedb5DependencyProjectionBuilder::build"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
+        "anchor": "function build"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "5 Provider and dependencies",
@@ -577,7 +1359,18 @@
     "entry_hint": "class CatalogDependencyRefreshJobHandler",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php",
     "implementation_hint": "class CatalogAffectedDependencyRefreshCoordinator",
-    "area": "dependency_publish"
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php",
+        "anchor": "CatalogAffectedDependencyRefreshCoordinator::enqueueIfNeeded"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php",
+        "anchor": "function enqueueIfNeeded"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
@@ -587,17 +1380,43 @@
     "entry_hint": "depFilter",
     "implementation": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
     "implementation_hint": "class PdoGameFileListQuery",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/game-files.php",
+        "anchor": "new PdoGameFileListQuery"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
+        "anchor": "class PdoGameFileListQuery"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "View original package details/source identity/dependencies",
+    "name": "Display file details from current dependency reader",
     "engines": "1234CZ",
     "entry": "catalog/file-info.php",
-    "entry_hint": "file",
+    "entry_hint": "catalog_dependency_rows",
     "implementation": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
     "implementation_hint": "class CatalogCompactDependencyReadService",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/file-info.php",
+        "anchor": "catalog_dependency_rows"
+      },
+      {
+        "path": "catalog/lib/CatalogCompactDependencies.php",
+        "anchor": "new CatalogCompactDependencyReadService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+        "anchor": "function rows"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
@@ -607,17 +1426,39 @@
     "entry_hint": "fetchFilteredPage",
     "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
     "implementation_hint": "function fetchFilteredPage",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/file-examine-paged-core.php",
+        "anchor": "PdoPackageTablePageQuery::fetchFilteredPage"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+        "anchor": "function fetchFilteredPage"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "Cross-link import/export references and name usage",
+    "name": "Cross-link serialized Import/Export table references",
     "engines": "1234CZ",
     "entry": "catalog/file-examine-paged-core.php",
     "entry_hint": "examine_reference",
-    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
-    "implementation_hint": "function nameUsage",
-    "area": "tables"
+    "implementation": "catalog/file-examine-paged-core.php",
+    "implementation_hint": "function examine_reference",
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/file-examine-paged-core.php",
+        "anchor": "examine_reference"
+      },
+      {
+        "path": "catalog/file-examine-paged-core.php",
+        "anchor": "function examine_reference"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
@@ -627,17 +1468,39 @@
     "entry_hint": "fetchPage",
     "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
     "implementation_hint": "function fetchPage",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/file-examine-export.php",
+        "anchor": "PdoPackageTablePageQuery::fetchPage"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+        "anchor": "function fetchPage"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "Show requires/used-by and reverse physical references",
+    "name": "Return freshness-gated requires/required-by relationships",
     "engines": "1234CZ",
     "entry": "catalog/file-examine-dependencies.php",
-    "entry_hint": "requiredBy",
-    "implementation": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
-    "implementation_hint": "function usedByRows",
-    "area": "website_dependency"
+    "entry_hint": "dependency_policy",
+    "implementation": "catalog/file-examine-dependencies.php",
+    "implementation_hint": "stale_dependency_projection",
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/file-examine-dependencies.php",
+        "anchor": "dependency_policy"
+      },
+      {
+        "path": "catalog/file-examine-dependencies.php",
+        "anchor": "stale_dependency_projection"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
@@ -647,7 +1510,18 @@
     "entry_hint": "publicationFreshness",
     "implementation": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
     "implementation_hint": "function publicationFreshness",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/game-missing.php",
+        "anchor": "new PdoGameMissingDependencyQuery"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+        "anchor": "function publicationFreshness"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
@@ -657,7 +1531,18 @@
     "entry_hint": "missing",
     "implementation": "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php",
     "implementation_hint": "class PdoMissingDetailListQuery",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/missing.php",
+        "anchor": "new PdoMissingDetailListQuery"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php",
+        "anchor": "class PdoMissingDetailListQuery"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
@@ -667,67 +1552,156 @@
     "entry_hint": "cross",
     "implementation": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
     "implementation_hint": "class PdoGameDependencyCrossExamineQuery",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/dependency-cross-examine.php",
+        "anchor": "new PdoGameDependencyCrossExamineQuery"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+        "anchor": "class PdoGameDependencyCrossExamineQuery"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "Object coverage, superset and duplicate provider check",
+    "name": "Calculate provider/object coverage for package cache",
     "engines": "1234CZ",
-    "entry": "catalog/package-coverage.php",
-    "entry_hint": "coverage",
-    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php",
-    "implementation_hint": "class PdoPackageObjectCoverageResolver",
-    "area": "website_dependency"
+    "entry": "catalog/src/Infrastructure/Persistence/PdoPackageCoverageCache.php",
+    "entry_hint": "PdoPackageSupersetAnalyzer",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php",
+    "implementation_hint": "class PdoPackageSupersetAnalyzer",
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoPackageCoverageCache.php",
+        "anchor": "PdoPackageSupersetAnalyzer::analyze"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php",
+        "anchor": "function analyze"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "Download original file bytes with range/access handling",
+    "name": "Stream original verified file through download facade",
     "engines": "1234C",
     "entry": "catalog/download.php",
     "entry_hint": "download",
     "implementation": "catalog/src/Infrastructure/Downloads/CatalogDownloadRangeStreamer.php",
     "implementation_hint": "class CatalogDownloadRangeStreamer",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/download.php",
+        "anchor": "catalog_download"
+      },
+      {
+        "path": "catalog/lib/DownloadActivity.php",
+        "anchor": "new CatalogDownloadRangeStreamer"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Downloads/CatalogDownloadRangeStreamer.php",
+        "anchor": "function stream"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "Generate game-specific dependency bundle (ZIP/UMOD/PAK)",
+    "name": "Plan and queue generated dependency bundle",
     "engines": "1234CZ",
-    "entry": "catalog/download-package.php",
-    "entry_hint": "download",
+    "entry": "catalog/generated-package-job.php",
+    "entry_hint": "PdoCatalogPackageExportPlanner",
     "implementation": "catalog/src/Infrastructure/Downloads/PdoCatalogPackageExportPlanner.php",
     "implementation_hint": "class PdoCatalogPackageExportPlanner",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/generated-package-job.php",
+        "anchor": "PdoCatalogPackageExportPlanner"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Downloads/PdoCatalogPackageExportPlanner.php",
+        "anchor": "function plan"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "Unverified game matching, repair and promotion",
+    "name": "Match exact-compatible games for unverified import",
     "engines": "1234C",
-    "entry": "catalog/unverified-files.php",
-    "entry_hint": "unverified",
+    "entry": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php",
+    "entry_hint": "PdoUnverifiedGameMatchQuery",
     "implementation": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",
     "implementation_hint": "class PdoUnverifiedGameMatchQuery",
-    "area": "dispatch"
+    "area": "dispatch",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php",
+        "anchor": "new PdoUnverifiedGameMatchQuery"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",
+        "anchor": "function one"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "6 Website / user outputs",
-    "name": "Federated/cross-game dependency closure and physical copy",
+    "name": "Plan dependency-safe cross-game copy via source-matched package",
     "engines": "1234C",
     "entry": "catalog/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php",
-    "entry_hint": "class CatalogCrossGameCopyBatchJobHandler",
+    "entry_hint": "CatalogCrossGamePackageCopyService",
     "implementation": "catalog/src/Infrastructure/Unverified/CatalogCrossGameDependencyClosurePlanner.php",
     "implementation_hint": "class CatalogCrossGameDependencyClosurePlanner",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php",
+        "anchor": "new CatalogCrossGamePackageCopyService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php",
+        "anchor": "new CatalogCrossGameDependencyClosurePlanner"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Unverified/CatalogCrossGameDependencyClosurePlanner.php",
+        "anchor": "class CatalogCrossGameDependencyClosurePlanner"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "7 Maintenance / resync",
-    "name": "Full per-game/file source synchronization and recheck",
+    "name": "Queue and run full-game synchronization",
     "engines": "1234C",
-    "entry": "catalog/full-sync.php",
-    "entry_hint": "sync",
+    "entry": "catalog/api/v1/full-sync-job.php",
+    "entry_hint": "JobType::FULL_SYNC_GAME",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php",
     "implementation_hint": "class CatalogFullSyncJobHandler",
-    "area": "dependency_publish"
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/api/v1/full-sync-job.php",
+        "anchor": "JobType::FULL_SYNC_GAME"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::FULL_SYNC_GAME =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php",
+        "anchor": "function handle"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "7 Maintenance / resync",
@@ -737,7 +1711,18 @@
     "entry_hint": "Uedb5",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
     "implementation_hint": "class Uedb5GameSourceMigrationService",
-    "area": "tables"
+    "area": "tables",
+    "route_evidence": [
+      {
+        "path": "catalog/bin/migrate-uedb5-game.php",
+        "anchor": "new Uedb5GameSourceMigrationService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "anchor": "class Uedb5GameSourceMigrationService"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "7 Maintenance / resync",
@@ -747,27 +1732,89 @@
     "entry_hint": "Uedb5",
     "implementation": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
     "implementation_hint": "function run",
-    "area": "dependency_publish"
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/bin/migrate-uedb5-dependencies.php",
+        "anchor": "new Uedb5GameDependencyPassService"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+        "anchor": "function run"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "7 Maintenance / resync",
-    "name": "Reconcile source identity, alias and misnamed files",
+    "name": "Repair file/game source identity via maintenance worker",
     "engines": "1234C",
-    "entry": "catalog/source-identity-repair.php",
-    "entry_hint": "source",
-    "implementation": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
-    "implementation_hint": "class CatalogMisnamedFileScanJobHandler",
-    "area": "mount_provider"
+    "entry": "catalog/api/v1/job-action.php",
+    "entry_hint": "JobType::REPAIR_SOURCE_IDENTITY_FILE",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogMaintenanceJobHandler.php",
+    "implementation_hint": "class CatalogMaintenanceJobHandler",
+    "area": "mount_provider",
+    "route_evidence": [
+      {
+        "path": "catalog/api/v1/job-action.php",
+        "anchor": "JobType::REPAIR_SOURCE_IDENTITY_FILE"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::REPAIR_SOURCE_IDENTITY_FILE =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogMaintenanceJobHandler.php",
+        "anchor": "repairSourceIdentityFile"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "7 Maintenance / resync",
-    "name": "Repair and validate compact metadata/provider projections",
+    "name": "Repair compact metadata and check projection health",
     "engines": "1234CZ",
     "entry": "catalog/src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php",
-    "entry_hint": "class CatalogCompactMetadataRepairJobHandler",
-    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
-    "implementation_hint": "class Uedb5MigrationValidator",
-    "area": "dependency_publish"
+    "entry_hint": "VerifiedCompactMetadataHealth",
+    "implementation": "catalog/src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php",
+    "implementation_hint": "function healthy",
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php",
+        "anchor": "VerifiedCompactMetadataHealth::healthy"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php",
+        "anchor": "function healthy"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Scan and flag possibly misnamed verified files",
+    "engines": "1234C",
+    "entry": "catalog/possible-misnamed-files.php",
+    "entry_hint": "JobType::SCAN_POSSIBLE_MISNAMED_FILES",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
+    "implementation_hint": "class CatalogMisnamedFileScanJobHandler",
+    "area": "mount_provider",
+    "route_evidence": [
+      {
+        "path": "catalog/possible-misnamed-files.php",
+        "anchor": "JobType::SCAN_POSSIBLE_MISNAMED_FILES"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+        "anchor": "JobType::SCAN_POSSIBLE_MISNAMED_FILES =>"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
+        "anchor": "function handle"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "7 Maintenance / resync",
@@ -777,16 +1824,38 @@
     "entry_hint": "stats",
     "implementation": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
     "implementation_hint": "class PdoGameCatalogStats",
-    "area": "website_dependency"
+    "area": "website_dependency",
+    "route_evidence": [
+      {
+        "path": "catalog/bin/rebuild-game-catalog-stats.php",
+        "anchor": "new PdoGameCatalogStats"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+        "anchor": "function rebuildGame"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   },
   {
     "group": "7 Maintenance / resync",
-    "name": "Recover queued file jobs and preserve failure provenance",
+    "name": "Manually recover orphaned file-processing jobs",
     "engines": "1234CZ",
-    "entry": "catalog/background-jobs.php",
-    "entry_hint": "jobs",
+    "entry": "catalog/api/v1/job-orphan-recover.php",
+    "entry_hint": "CatalogOrphanedJobRecovery",
     "implementation": "catalog/src/Infrastructure/Jobs/CatalogOrphanedJobRecovery.php",
     "implementation_hint": "class CatalogOrphanedJobRecovery",
-    "area": "dependency_publish"
+    "area": "dependency_publish",
+    "route_evidence": [
+      {
+        "path": "catalog/api/v1/job-orphan-recover.php",
+        "anchor": "new CatalogOrphanedJobRecovery"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Jobs/CatalogOrphanedJobRecovery.php",
+        "anchor": "class CatalogOrphanedJobRecovery"
+      }
+    ],
+    "route_confidence": "SOURCE_ROUTE_PINNED_NOT_EXECUTED"
   }
 ]

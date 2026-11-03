@@ -26,6 +26,9 @@ def line(path, hint):
         raise ValueError('Missing exact source anchor '+repr(hint)+' in '+path)
     if path not in KNOWN:
         raise ValueError('Original source path absent from tests/code-paths.json: '+path)
+    digest=hashlib.sha256(file.read_bytes()).hexdigest()
+    if digest!=KNOWN[path]['sha256']:
+        raise ValueError('Tracked source changed without code-path index refresh: '+path)
     return s.count('\n',0,pos)+1
 def link(path, ln):
     return '[{}:{}](https://github.com/ardenee/ut_reader/blob/main/{}#L{})'.format(
@@ -50,6 +53,12 @@ def validate():
             if e not in dict(ENGINE_MARKERS):raise ValueError('Unexpected engine marker '+e)
         line(row['entry'],row['entry_hint'])
         line(row['implementation'],row['implementation_hint'])
+        evidence=row.get('route_evidence',[])
+        if evidence:
+            if row.get('route_confidence')!='SOURCE_ROUTE_PINNED_NOT_EXECUTED':
+                raise ValueError('Caller route is not identified as static source only: '+row['name'])
+            for node in evidence:
+                line(node['path'],node['anchor'])
         area=row['area']
         if area not in {'dispatch','tables','verify_import','mount_provider','dependency_publish','website_dependency','ut2004_legacy_ue1','iostore_ingest'}:
             raise ValueError('Contract mapping not an existing operation area: '+area)
@@ -63,6 +72,13 @@ def build():
         groups[row['group']].append((i,row))
     total=sum(applies.values())
     reference_counts=Counter(reference_type(row) for row in OPERATIONS)
+    source_routed=sum(bool(row.get('route_evidence')) for row in OPERATIONS)
+    by_dimension={
+        'Engine serialization / provider semantics':sum(row['group'][0] in '235' for row in OPERATIONS),
+        'Catalog metadata projections / visible outcomes':sum(row['group'][0] in '46' for row in OPERATIONS),
+        'Intake / recovery workflow correctness':sum(row['group'][0] in '17' for row in OPERATIONS),
+    }
+    assert sum(by_dimension.values())==len(OPERATIONS)
     plain=[
         '# UnrealDB implementation operation inventory — UE1–UE5',
         '',
@@ -75,7 +91,9 @@ def build():
         '**Progress:** Discovery coverage = {} named operations, {} engine/format-applicable code paths. Engine audit acceptance remains {} PASS / {} BLOCKED across {} *coarser* existing cases. These numbers must not be divided into each other or treated as the percentage of actual Epic-correct operations.'.format(
             len(OPERATIONS),total,statuses['PASS'],statuses['BLOCKED'],len(CONTRACTS)),
         '',
-        '**Static linkage:** {} named source references, {} registered job routes, and {} entrypoint/implementation pairs still requiring a caller trace. None is observed runtime execution.'.format(reference_counts['named reference'],reference_counts['registered job'],reference_counts['needs caller trace']),
+        '**Static linkage:** {} rows now have explicit checked caller-route steps. Of all {} rows, {} have a directly named implementation source reference, {} have an existing worker-factory registration (a job route) and {} have only a loose two-file lexical link. These categories overlap with explicit routes; **none of this is an observed runtime execution or Epic parity test**.'.format(source_routed,len(OPERATIONS),reference_counts['named reference'],reference_counts['registered job'],reference_counts['needs caller trace']),
+        '',
+        '**Review domains:** ' + '; '.join('{} {}'.format(total,label) for label,total in by_dimension.items()) + '. These domains distinguish source-comparable Unreal binary/loader semantics from application-specific persistence, websites and queue reliability; Epic does not implement UnrealDB uploads or MySQL.',
         '',
         '| Engine / branch | Applicable discovered operations |',
         '|---|---:|',
@@ -105,6 +123,27 @@ def build():
         '| UE5 Zen | '+code('catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php')+' | Distinct IoStore TOC and Zen package-ID/PackageStore path |',
         '',
     ])
+    plain.extend([
+        '## Source-anchored operation routes - full current inventory',
+        '',
+        '**{} source-anchored operation routes** have a checked series of entrypoint, job dispatch, service and/or implementation tokens. They are *source-only candidate execution paths*, NOT captured Xdebug calls or live PRD execution. Every linked step is checked against both the literal source and its tracked file SHA-256. The selected representative chain is not an exhaustive callgraph and dynamic dispatch/branch reachability is **not proven** by linked code fragments alone.'.format(source_routed),
+        '',
+        '| Operation | Source-pinned caller chain (entrypoint / worker / implementation) | Evidence class |',
+        '|---|---|---|',
+    ])
+    for number,row in enumerate(OPERATIONS,1):
+        evidence=row.get('route_evidence')
+        if not evidence:
+            continue
+        links=[]
+        for node in evidence:
+            links.append(link(node['path'],line(node['path'],node['anchor'])))
+        plain.append('| {} {} | {} | Static code anchors, **no runtime execution claimed** |'.format(number,row['name'],' → '.join(links)))
+    plain.extend([
+        '',
+        '**Corrections to previous route assumptions:** Public uploads are quarantined and staged unverified, not automatically published. The admin source-scan page uses a synchronous runner distinct from the registered background scan worker. The package-coverage page consumes cached projections separately populated by a coverage analyzer. The file-examine dependency endpoint queries source-current UEDB5 SQL directly, not through the compact dependency facade. File search-index refresh is separate from compact name/object candidate publication; IoStore name indexing is separate from Zen package publication. Source-identity repair and possible-misnamed scanning are distinct queued operations. UE4 and UE5 classic have independent source readers for version, soft reference, DependsMap and preload fields. The cooked Zen ScriptObjects reader has no identified live publication caller and is excluded from this core denominator.',
+        '',
+    ])
     for group,items in groups.items():
         plain += ['## '+group,'',
             '| # | UnrealDB operation | UE1 | UE2 | UE3 | UE4 | UE5 classic | UE5 Zen | Current route → implementing source | Link confidence | Existing contract area |',
@@ -124,13 +163,14 @@ def build():
         '| '+code('CatalogUE1ClassicNativeObjectReader')+', UE1 resource Mesh/Sound/Texture/geometry decoders | Diagnostic '+code('catalog/bin/inspect-unreal-file.php')+' and unverified staging helpers exist; normal verified UEDB5 snapshot builders preserve *summary/name/import/export tables*. Do not impose unrelated native payload tests. |',
         '| UE4 thumbnail/asset-registry payload parser helpers | The UE4 reader parses some additional records, but the source-selected '+code('Uedb5Ut4SnapshotBuilder')+' stores only the sections it explicitly emits. A parser method alone does not establish a published/visible behaviour. |',
         '| Epic renderer, physics, garbage collection and game scripting execution | No matched UnrealDB package/catalogue user-facing operation was identified. |',
+        '| '+code('Uedb5ZenScriptObjectsReader')+' | Only a diagnostic-only cooked ScriptObjects decoder was identified; no live publication caller was found. The Zen package-ID/script import resolver is already counted independently. |',
         '| Website auth, UI theme, admin TOTP, GeoIP, arbitrary telemetry | Generic site functionality, not an Unreal package format operation. |',
         '',
         '## How progress will be measured',
         '',
-        '1. **Discovery:** number of implemented operation families with real source anchors. Complete for the present inspected code set: {} rows. This does not assert dynamic-code completeness.'.format(len(OPERATIONS)),
+        '1. **Discovery:** number of source-identified operation families with real code anchors: {} rows. This is a current inventory baseline, **not** proof that dynamic-code discovery is exhaustive.'.format(len(OPERATIONS)),
         '2. **Applicability:** each ✓ cell is a concrete engine/branch operation to examine, not a separate test case. Current source matrix has {} applicable cells; UE5 is still a single engine.'.format(total),
-        '3. **Audit trace:** for each *chosen* operation, trace the actual entrypoint, original input and selected engine reader through UEDB5 and outputs. Record path-level evidence under the matching existing case in '+code('tests/contracts.json')+'. Never mark a row complete just because its method exists.',
+        '3. **Runtime audit:** checked static source routes are mapped, but no runtime function execution is established by these token chains. Trace real source-selected inputs and the resulting UEDB5/user outputs under the matching existing case in '+code('tests/contracts.json')+'.',
         '4. **Epic differential:** compare only that implemented behaviour to the applicable Epic engine/game source revision and original fixture. Where operations share a verified canonical function or byte semantics, reuse accepted evidence instead of repeating tests.',
         '5. **Outcome:** keep prior scoped acceptance statuses authoritative and change them only with matching new evidence. Add no new standalone PASS scores or parallel acceptance register.',
         '',
@@ -143,7 +183,8 @@ def build():
         'ue5_unique':ue5unique,
         'group_counts':{g:len(v) for g,v in groups.items()},
         'existing_contracts':len(CONTRACTS),'existing_statuses':dict(statuses),
-        'source_linkage':dict(reference_counts)},indent=2))
+        'source_linkage':dict(reference_counts),'explicit_source_routes_checked':source_routed,
+        'review_domains':by_dimension},indent=2))
 
 if __name__=='__main__':
     build()
