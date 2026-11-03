@@ -2932,8 +2932,8 @@
     },
     {
       "path": "catalog/file-examine-dependencies.php",
-      "sha256": "f826883d802a647b4753a5337981e575fb7011c92ee104cb4c9b655d7ef71373",
-      "bytes": 5673,
+      "sha256": "8cf83435f32ba589b97b7396a6885203e4f3a401a456a8314b83ac321639ebc6",
+      "bytes": 3980,
       "engine_hints": [
         "shared"
       ],

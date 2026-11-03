@@ -1,0 +1,131 @@
+{
+  "schema": "uedb5-json-uses-required-by-shared-source-scope-v1",
+  "recorded_on": "2026-11-03",
+  "purpose": "Remove v13 fallback for unsupported source engine in JSON Requires/Required By; reuse shared SQL admission for current file, forward and cross-game reverse queries.",
+  "previous_website_original_read_traces": "tests/evidence/ue1-ue5-website-dependency-readpath-runtime-trace-20261103.json",
+  "previous_website_evidence_SHA256": "efd3cd37d78d9ee894a49ea57578a37bd6c7ce68f29b4ffb4dfaa753485b80a5",
+  "endpoint_before_SHA256_from_previous_evidence": "f826883d802a647b4753a5337981e575fb7011c92ee104cb4c9b655d7ef71373",
+  "endpoint_after_SHA256": "8cf83435f32ba589b97b7396a6885203e4f3a401a456a8314b83ac321639ebc6",
+  "source_and_test_SHA256": {
+    "catalog/file-examine-dependencies.php": "8cf83435f32ba589b97b7396a6885203e4f3a401a456a8314b83ac321639ebc6",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70",
+    "tests/tools/verify_five_engine_website_dependency_freshness.php": "55b971acb74193a097047108fa5afbacde71e68aad2091484dc48463fe8aaf53"
+  },
+  "isolated_SQL_regression": {
+    "result": "PASS",
+    "engine_families": 5,
+    "game_contexts": 6,
+    "fixture_file_rows": 30,
+    "current_published_rows_visible": 6,
+    "stale_or_invalid_rows_hidden": 24,
+    "exact_current_accepted_by_all_three_SQL_gates": true,
+    "policy_version_payload_completed_and_verified_enforced": true,
+    "wrong_SQL_alias_rejected": true,
+    "game_aggregates_correctly_not_current": true,
+    "current_cross_game_reverse_sources": 2,
+    "unsupported_engine_v13_fallback_leaked_before": true,
+    "unsupported_engine_source_hidden_after": true,
+    "unsupported_engine_and_cross_game_extra_fixture_rows": 1,
+    "JSON_endpoint_uses_shared_owner_source_gate": true,
+    "original_native_engine_or_website_HTTP_execution": false,
+    "production_database_writes": 0
+  },
+  "previous_legacy_policy_fallback_defect": "The previous Required By SQL ELSE uedb5-dependency-pass-v13 accepted a verified unsupported-profile source with v13 status as current, even for a current UE1 destination.",
+  "corrected_source_of_truth": "Uedb5DependencyPublicationScope::currentFilePredicate and joinCurrentEdges, including active profile, verified source, payload hash, non-null publication and UE1-UE5 exact current engine policy. Unsupported profiles cannot fall back to legacy v13.",
+  "real_PRD_schema_new_query_shapes_readonly": {
+    "case_count": 6,
+    "engine_generations": [
+      "UE1",
+      "UE2",
+      "UE3",
+      "UE4"
+    ],
+    "original_PRD_file_cases": [
+      {
+        "engine": "UE1",
+        "game": "UT99",
+        "file_id": 1258016,
+        "historical_v13_edges": 12,
+        "exposed_current_policy_requires": 0,
+        "exposed_current_policy_required_by": 0,
+        "current_status": false
+      },
+      {
+        "engine": "UE2",
+        "game": "Unreal II",
+        "file_id": 149508,
+        "historical_v13_edges": 14,
+        "exposed_current_policy_requires": 0,
+        "exposed_current_policy_required_by": 0,
+        "current_status": false
+      },
+      {
+        "engine": "UE2",
+        "game": "UT2004 legacy",
+        "file_id": 111505,
+        "historical_v13_edges": 5,
+        "exposed_current_policy_requires": 0,
+        "exposed_current_policy_required_by": 0,
+        "current_status": false
+      },
+      {
+        "engine": "UE3",
+        "game": "UT3",
+        "file_id": 1275867,
+        "historical_v13_edges": 10,
+        "exposed_current_policy_requires": 0,
+        "exposed_current_policy_required_by": 0,
+        "current_status": false
+      },
+      {
+        "engine": "UE4",
+        "game": "UT4 explicit v383",
+        "file_id": 1335845,
+        "historical_v13_edges": 10,
+        "exposed_current_policy_requires": 0,
+        "exposed_current_policy_required_by": 0,
+        "current_status": false
+      },
+      {
+        "engine": "UE4",
+        "game": "UT4 resolved historical example",
+        "file_id": 1353254,
+        "historical_v13_edges": 527,
+        "exposed_current_policy_requires": 0,
+        "exposed_current_policy_required_by": 0,
+        "current_status": false
+      }
+    ],
+    "historical_edge_rows_withheld": 578,
+    "fresh_requires_returned_total": 0,
+    "fresh_required_by_returned_total": 0,
+    "MySQL_session": "SET SESSION TRANSACTION READ ONLY, BEGIN, ROLLBACK",
+    "PRD_sql_writes": 0,
+    "xdebug_raw_trace_sha256": "ceaa79ada47987b406e8433ee6fe78f08e0d9b8ee1a8db77e96a5e3c3d3abe31",
+    "xdebug_trace_bytes": 11064,
+    "xdebug_trace_local_DEV_only_name": "actual_PRD_refactored_endpoint_sql.xt",
+    "actual_HTTP_route_executed": false
+  },
+  "HTTP_verification_barrier": {
+    "production_HTTP_GET_status": 403,
+    "source": "CatalogPublicAccessGuard knownCrawler policy",
+    "db_query_count_reported_by_HTTP": 0,
+    "security_configuration_changed": false,
+    "automated_guard_bypassed": false,
+    "http_page_HTML_or_JSON_current_outcome_certified": false
+  },
+  "not_tested": [
+    "No real PRD v14 Pass2 publication (all sampled originals still v13).",
+    "No real HTTP status409 / status200 JSON response obtained after normal crawler guard.",
+    "No Epic native mount or VerifyImport behavior rerun.",
+    "No genuine original PRD UE5 game14 staged file.",
+    "No mixed actual original v14 missing/resolved/ambiguous file-endpoint fixture."
+  ],
+  "accepted_contracts_unchanged": {
+    "PASS": 27,
+    "BLOCKED": 5
+  },
+  "new_contract_ids_added": 0,
+  "raw_traces_retained_on_DEV_only": "D:/Temp/UnrealDB/process-tracing/endpoint-shared-source-scope-20261103"
+}

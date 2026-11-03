@@ -1486,14 +1486,18 @@
     "name": "Return freshness-gated requires/required-by relationships",
     "engines": "1234CZ",
     "entry": "catalog/file-examine-dependencies.php",
-    "entry_hint": "dependency_policy",
+    "entry_hint": "currentFilePredicate",
     "implementation": "catalog/file-examine-dependencies.php",
     "implementation_hint": "stale_dependency_projection",
     "area": "website_dependency",
     "route_evidence": [
       {
         "path": "catalog/file-examine-dependencies.php",
-        "anchor": "dependency_policy"
+        "anchor": "joinCurrentEdges"
+      },
+      {
+        "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php",
+        "anchor": "function joinCurrentEdges"
       },
       {
         "path": "catalog/file-examine-dependencies.php",

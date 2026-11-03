@@ -105,6 +105,71 @@ foreach ($games as [$gameId,$engine,$label]) {
         throw new RuntimeException('Game unexpectedly declared fully source-current despite bad files: ' . $label);
     }
 }
+// A current target may have current cross-game reverse dependencies, but
+// neither old-v13 sources nor an unsupported profile can publish a link.
+// The old JSON endpoint's ELSE v13 SQL would admit the unsupported source.
+$foreignGameId = 15;
+$foreignFileId = 1501;
+$targetFileId = 301; // Current UE1/UT99 fixture, requires cross-engine source checks.
+$insert['profile']->execute([$foreignGameId,'UE42',1]);
+$insert['game']->execute([$foreignGameId,$foreignGameId]);
+$insert['file']->execute([$foreignFileId,$foreignGameId,'verified']);
+$foreignSha=hash('sha256','unsupported-v13-owner');
+$insert['v5']->execute([$foreignFileId,$foreignGameId,5,$foreignSha]);
+$insert['policy']->execute([$foreignFileId,$foreignGameId,
+    Pass2::DEPENDENCY_POLICY,$foreignSha,'2026-11-03 12:00:00']);
+foreach ([201,501,302,$foreignFileId] as $sourceFileId) {
+    $insert['edge']->execute([$sourceFileId,$targetFileId]);
+}
+$reverseSql='SELECT e.file_id FROM ue_uedb5_dependency_edges e '
+    . Scope::joinCurrentEdges('e')
+    . ' WHERE e.resolved_file_id=? ORDER BY e.file_id';
+$reverse=$db->prepare($reverseSql);
+$reverse->execute([$targetFileId]);
+$sourceIds=array_map('intval',$reverse->fetchAll(PDO::FETCH_COLUMN));
+if ($sourceIds!==[201,501]) {
+    throw new RuntimeException('Current cross-engine reverse source gate admitted stale or unknown owners: '
+        . json_encode($sourceIds,JSON_THROW_ON_ERROR));
+}
+$unsupportedStmt=$db->prepare('SELECT '.Scope::currentFilePredicate('f')
+    .' FROM ue_files f WHERE f.id=?');
+$unsupportedStmt->execute([$foreignFileId]);
+if ((int)$unsupportedStmt->fetchColumn()!==0) {
+    throw new RuntimeException('Unsupported UE42 source profile was granted a current publication.');
+}
+// Reconstruct the former JSON endpoint's policy CASE to demonstrate why the
+// inherited v13 fallback was unsafe for a cross-game Required By source.
+$oldPolicy='CASE UPPER(pr.engine_key)';
+foreach (['UE1','UE2','UE3','UE4','UE5'] as $engine) {
+    $oldPolicy.=' WHEN '.$db->quote($engine).' THEN '
+        .$db->quote(Pass2::policyForEngine($engine));
+}
+$oldPolicy.=' ELSE '.$db->quote(Pass2::DEPENDENCY_POLICY).' END';
+$legacyReverse=$db->prepare(
+    'SELECT e.file_id FROM ue_uedb5_dependency_edges e '
+    . 'JOIN ue_uedb5_files v ON v.file_id=e.file_id AND v.format_version=5 '
+    . 'JOIN ue_games g ON g.id=v.game_id '
+    . 'JOIN ue_game_profiles pr ON pr.id=g.profile_id AND pr.is_active=1 '
+    . 'JOIN ue_uedb5_migration_status s ON s.file_id=v.file_id AND s.game_id=v.game_id '
+    . 'AND s.dependency_completed_at IS NOT NULL '
+    . 'AND s.dependency_payload_sha256=v.payload_sha256 '
+    . 'AND s.dependency_policy=('.$oldPolicy.') '
+    . 'WHERE e.resolved_file_id=? ORDER BY e.file_id'
+);
+$legacyReverse->execute([$targetFileId]);
+$formerSourceIds=array_map('intval',$legacyReverse->fetchAll(PDO::FETCH_COLUMN));
+if ($formerSourceIds!==[201,501,$foreignFileId]) {
+    throw new RuntimeException('Legacy v13 fallback comparison did not reproduce the source-profile leak: '
+        . json_encode($formerSourceIds,JSON_THROW_ON_ERROR));
+}
+$endpoint=file_get_contents(dirname(__DIR__,2).'/catalog/file-examine-dependencies.php');
+if (!is_string($endpoint)
+    || !str_contains($endpoint, '$scope::currentFilePredicate(\'f\')')
+    || substr_count($endpoint, '$currentEdgeJoin')!==3
+    || str_contains($endpoint, '$enginePolicySql')) {
+    throw new RuntimeException('JSON endpoint did not use the shared exact policy/payload freshness gate.');
+}
+
 $badAliasRejected = false;
 try {
     Scope::joinCurrentEdges('e;DROP TABLE ue_files');
@@ -123,6 +188,11 @@ echo json_encode([
     'policy_version_payload_completed_and_verified_enforced'=>true,
     'wrong_SQL_alias_rejected'=>$badAliasRejected,
     'game_aggregates_correctly_not_current'=>true,
+    'current_cross_game_reverse_sources'=>count($sourceIds),
+    'unsupported_engine_v13_fallback_leaked_before'=>in_array($foreignFileId,$formerSourceIds,true),
+    'unsupported_engine_source_hidden_after'=>!in_array($foreignFileId,$sourceIds,true),
+    'unsupported_engine_and_cross_game_extra_fixture_rows'=>1,
+    'JSON_endpoint_uses_shared_owner_source_gate'=>true,
     'original_native_engine_or_website_HTTP_execution'=>false,
     'production_database_writes'=>0
 ], JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_THROW_ON_ERROR),PHP_EOL;

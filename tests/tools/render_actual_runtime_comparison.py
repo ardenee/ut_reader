@@ -65,9 +65,32 @@ def main() -> None:
         raise RuntimeError("Wrong original-file website Xdebug read-path evidence schema")
     if len(website["trace_cases"]) != 5 or website["total_historical_v13_edges_excluded"] != 51:
         raise RuntimeError("Unexpected website original-file trace evidence coverage")
+    endpoint_proof_path = REPO / "tests/evidence/ue1-ue5-json-endpoint-source-guard-20261103.json"
+    endpoint_proof = json.loads(endpoint_proof_path.read_text("utf-8"))
+    if endpoint_proof.get("schema") != "uedb5-json-uses-required-by-shared-source-scope-v1":
+        raise RuntimeError("Wrong JSON endpoint source-scope correction proof schema")
+    if endpoint_proof["previous_website_evidence_SHA256"] != sha256(website_path):
+        raise RuntimeError("Earlier website Xdebug source proof changed after the correction")
+    endpoint = "catalog/file-examine-dependencies.php"
+    if (endpoint_proof["endpoint_before_SHA256_from_previous_evidence"]
+            != website["runtime_source_sha256"][endpoint]):
+        raise RuntimeError("Original HTTP endpoint source cannot be authenticated")
+    revised_in_follow_on = {
+        endpoint,
+        "tests/tools/verify_five_engine_website_dependency_freshness.php",
+    }
     for filename, expected in website["runtime_source_sha256"].items():
-        if sha256(REPO / filename) != expected:
+        actual = sha256(REPO / filename)
+        if filename in revised_in_follow_on:
+            # Preserve original trace-time hashes unchanged; the new source
+            # refactor and additional regression are separately SHA-pinned.
+            if actual != endpoint_proof["source_and_test_SHA256"][filename]:
+                raise RuntimeError(f"Follow-on endpoint source changed: {filename}")
+        elif actual != expected:
             raise RuntimeError(f"Website production read-path source has changed: {filename}")
+    for filename, expected in endpoint_proof["source_and_test_SHA256"].items():
+        if sha256(REPO / filename) != expected:
+            raise RuntimeError(f"Corrected JSON endpoint/runtime source has changed: {filename}")
     service_cases = evidence["real_service_traces"]
     direct_cases = evidence["direct_real_reader_traces"]
     if len(service_cases) != 7 or len(direct_cases) != 6:
@@ -278,6 +301,24 @@ def main() -> None:
         " SHA-256 <code>" + sha256(website_path) + "</code>. "
         "All five website acceptance contracts remain BLOCKED until newly "
         "source-correct dependency publication and HTTP-rendered mixed outcomes.</p>",
+        "<h2>JSON Uses / Required By: cross-game source guard correction</h2>",
+        "<p>The JSON endpoint's previous source-policy CASE had an unsafe "
+        "<em>ELSE v13</em> fallback for an unsupported referring engine profile. "
+        "An isolated positive/negative regression reproduced the stale reverse "
+        "link and confirmed that the corrected shared gate excludes it, "
+        "while retaining <strong>two</strong> valid current cross-game links. "
+        "The fix uses the same v14 policy/payload admission for the target file, "
+        "Uses and Required By, without changing UE1–UE5 readers.</p>",
+        "<p>The new SQL query shapes were exercised against <strong>six</strong> "
+        "real PRD file records in a read-only transaction, excluding <strong>578</strong> "
+        "historical v13 edges from current relationships. "
+        "Automated HTTP requests received the site's configured crawler-guard "
+        "<strong>403</strong> before database access; that guard was not changed "
+        "or bypassed. Therefore these are executed MySQL statements and "
+        "source-linked Xdebug evidence, <strong>not HTTP-rendering proof</strong>.</p>",
+        "<p>New source-corrected endpoint evidence: "
+        "<code>tests/evidence/ue1-ue5-json-endpoint-source-guard-20261103.json</code>"
+        " SHA-256 <code>" + sha256(endpoint_proof_path) + "</code>.</p>",
         "<h2>Independent comparisons and exclusions</h2>",
         "<p><strong>UE2 Unreal II v69:</strong> Original file #149508 and the selected 2000-12-09 "
         "linker match earlier accepted original-byte comparisons; this runtime run observed "
