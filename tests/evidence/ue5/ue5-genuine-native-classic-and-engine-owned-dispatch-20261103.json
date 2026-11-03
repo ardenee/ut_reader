@@ -256,5 +256,156 @@
       "LinkerLoad.cpp": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
       "UObjectGlobals.cpp": "896cd2b6254f7586f08c98890fe61382c1ab16b78cbd3ebd378af23141924696"
     }
+  },
+  "native_two_genuine_duplicate_physical_mount_differential": {
+    "result": "PASS_TWO_ORIGINAL_FILE_BACKED_PHYSICAL_COPIES_MOUNT_IN_ENGINE_AND_SELECT_IN_REAL_UEDB5_SQL",
+    "engine_binary": "Epic UE5.8.3 unmodified installed UnrealEditor-Cmd with unmodified CoreUObject DLL",
+    "epic_native_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Misc\\PackageName.cpp",
+    "epic_native_source_sha256": "b9bd03bfdbbd0cd78fdb9f12e38a7e4fa789da548e30acf6c94a77d3aecff2a7",
+    "actual_native_exported_symbols": [
+      "FPackageName::RegisterMountPoint",
+      "FPackageName::TryConvertLongPackageNameToFilename"
+    ],
+    "native_source_priority": "FLongPackagePathsSingleton::InsertMountPoint sets new MountOrder and replaces RootPathTree active value",
+    "both_source_files_are_byte_identical_copies_of_genuine_installed_original_asset": true,
+    "original_sha256": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec",
+    "physically_separate_copy_A": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-A/BaseFlattenDiffuseMap.uasset",
+    "physically_separate_copy_B": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-B/BaseFlattenDiffuseMap.uasset",
+    "source_original_consumer": "/Engine/EngineMaterials/BaseFlattenMaterial",
+    "original_native_package_identity_probe": "/UnrealDBDuplicateProbe/BaseFlattenDiffuseMap",
+    "native_identity_scope": "original unmodified native mounted-name to physical-path choice; package source bytes are original, two copies have identical content; no adversarial class payload variation",
+    "native_case_AB": {
+      "original_sha256": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec",
+      "native_source_functions": [
+        "FPackageName::RegisterMountPoint",
+        "FPackageName::TryConvertLongPackageNameToFilename"
+      ],
+      "same_root_with_different_original_source_byte_copies": true,
+      "original_source_asset": "H:/Epic Games/UE_5.8/Engine/Content/EngineMaterials/BaseFlattenDiffuseMap.uasset",
+      "events": [
+        {
+          "step": 1,
+          "new_native_mount": "A",
+          "returned_native_ref_nonnull": true,
+          "try_convert_success": true,
+          "native_selected_physical_path": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-A/BaseFlattenDiffuseMap.uasset",
+          "native_physical_file_exists": true,
+          "native_selected_copy": "A"
+        },
+        {
+          "step": 2,
+          "new_native_mount": "B",
+          "returned_native_ref_nonnull": true,
+          "try_convert_success": true,
+          "native_selected_physical_path": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-B/BaseFlattenDiffuseMap.uasset",
+          "native_physical_file_exists": true,
+          "native_selected_copy": "B"
+        }
+      ]
+    },
+    "native_case_BA": {
+      "original_sha256": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec",
+      "native_source_functions": [
+        "FPackageName::RegisterMountPoint",
+        "FPackageName::TryConvertLongPackageNameToFilename"
+      ],
+      "same_root_with_different_original_source_byte_copies": true,
+      "original_source_asset": "H:/Epic Games/UE_5.8/Engine/Content/EngineMaterials/BaseFlattenDiffuseMap.uasset",
+      "events": [
+        {
+          "step": 1,
+          "new_native_mount": "B",
+          "returned_native_ref_nonnull": true,
+          "try_convert_success": true,
+          "native_selected_physical_path": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-B/BaseFlattenDiffuseMap.uasset",
+          "native_physical_file_exists": true,
+          "native_selected_copy": "B"
+        },
+        {
+          "step": 2,
+          "new_native_mount": "A",
+          "returned_native_ref_nonnull": true,
+          "try_convert_success": true,
+          "native_selected_physical_path": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-A/BaseFlattenDiffuseMap.uasset",
+          "native_physical_file_exists": true,
+          "native_selected_copy": "A"
+        }
+      ]
+    },
+    "native_output_AB_sha256": "ee52d228fc3a25e707c493625ea6ac4c051a86ecb20f8aec6e5ae5d333f3806a",
+    "native_output_BA_sha256": "8d860fb4fb0697d50ebc1aa4dbcb41cce43c79301f2e8044585a9af34ef62060",
+    "native_original_binary_log_AB_sha256": "29d411f6d88bd747e117260054099b7ac202a8fbe4afd1322967f1b5a2b27ce5",
+    "native_original_binary_log_BA_sha256": "18265c37a44b9d1f47dc037aa30d9d138f72b90fe164347912e1a41323fafad1",
+    "native_invocation_script_AB_sha256": "4c137541de307c29cfabb86684f5a1d7362c2b436a31e70989397c8f9be78ec9",
+    "native_invocation_script_BA_sha256": "ad2a9a5cfe65e3177c80a0fa37953f3e49a73aaa5e738d4e988a2fefe3266432",
+    "actual_unrealdb_selector_rebuilder_sql_original_file_differential": {
+      "result": "PASS_EPIC_UE5_NATIVE_DUPLICATE_PHYSICAL_MOUNT_PRECEDENCE_AND_UEDB5_SQL",
+      "native_source_UE5": "5.8.3",
+      "duplicate_original_same_bytes_sha256": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec",
+      "physical_duplicate_file_ids": [
+        900102,
+        900107
+      ],
+      "native_duplicate_cases": 2,
+      "unknown_native_mount_selection_status": "source_unresolved",
+      "unknown_native_mount_candidate_file_ids": [
+        900102,
+        900107
+      ],
+      "scenarios": [
+        {
+          "native_mount_order": "AB",
+          "native_selected_copy": "B",
+          "native_selected_original_physical_path": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-B/BaseFlattenDiffuseMap.uasset",
+          "unrealdb_selected_file_id": 900107,
+          "source_import_indices_and_provider_ids": [
+            {
+              "source_index": 12,
+              "resolved_file_id": 900107
+            },
+            {
+              "source_index": 19,
+              "resolved_file_id": 900107
+            }
+          ],
+          "provider_result_counts": {
+            "package_only": 1,
+            "resolved": 1
+          },
+          "published_dependency_rows": 24,
+          "all_24_original_consumer_imports_retained": true
+        },
+        {
+          "native_mount_order": "BA",
+          "native_selected_copy": "A",
+          "native_selected_original_physical_path": "C:/Temp/UnrealDB/UE5/native-classic-process-audit/native-duplicate-A/BaseFlattenDiffuseMap.uasset",
+          "unrealdb_selected_file_id": 900102,
+          "source_import_indices_and_provider_ids": [
+            {
+              "source_index": 12,
+              "resolved_file_id": 900102
+            },
+            {
+              "source_index": 19,
+              "resolved_file_id": 900102
+            }
+          ],
+          "provider_result_counts": {
+            "package_only": 1,
+            "resolved": 1
+          },
+          "published_dependency_rows": 24,
+          "all_24_original_consumer_imports_retained": true
+        }
+      ],
+      "PRD_DB_writes": 0,
+      "Epic_original_asset_writes": 0
+    },
+    "unrealdb_differential_script_sha256": "e02a52d16e7cdedb3cc40b5e94b337cbdfea96f1f803cb2490f69d427dfe0ebc",
+    "unrealdb_differential_result_sha256": "c3c74b36da3f4093f8a1aac42ae0dff3ea5b30e148d3297405411e5d481bd637",
+    "original_classic_source_unknown_mount_result": "source_unresolved with both physical candidates, never automatic resolution by uniqueness or upload order",
+    "not_proved": "Preloaded linker precedence from fully instrumented FLinkerLoad::VerifyImportInner is not part of this native mount-search contract; two source copies were identical content and path only differed",
+    "PRD_DB_writes": 0,
+    "original_Epic_content_writes": 0
   }
 }
