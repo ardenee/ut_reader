@@ -58,7 +58,7 @@
     }
 
     function selectedEntries(form) {
-        return Array.prototype.slice.call(form.querySelectorAll('.unverified-select:checked')).map(function (box) {
+        return Array.prototype.slice.call(form.querySelectorAll('.unverified-select:checked:not(:disabled)')).map(function (box) {
             var label = (box.getAttribute('aria-label') || '').replace(/^Select\s+/i, '').trim();
             return { token: box.value, name: label || box.value, box: box };
         });
@@ -302,7 +302,7 @@
         actions.insertBefore(label, actions.firstChild);
 
         var selectAll = label.querySelector('input');
-        var boxes = function () { return Array.prototype.slice.call(form.querySelectorAll('.unverified-select')); };
+        var boxes = function () { return Array.prototype.slice.call(form.querySelectorAll('.unverified-select:not(:disabled)')); };
         var sync = function () {
             var current = boxes();
             var checked = current.filter(function (box) { return box.checked; }).length;
@@ -396,7 +396,7 @@
         if (!table) return;
 
         Array.prototype.slice.call(table.querySelectorAll('tbody > tr:not(.uv-note-row)')).forEach(function (row) {
-            if (!row.cells || row.cells.length < 8) return;
+            if (!row.cells || row.cells.length < 8 || row.dataset.iostoreReview === '1') return;
             var fileCell = row.cells[2];
             var databaseCell = row.cells[4];
             var detectedCell = row.cells[5];
@@ -461,6 +461,21 @@
             if ((action === 'move' || action === 'import') && (!target || !target.value)) {
                 window.alert('Choose a target game first.');
                 if (target) target.focus();
+                return;
+            }
+            var hasIoStore = entries.some(function (entry) { return entry.token.indexOf('public-iostore:') === 0; });
+            if (hasIoStore && action !== 'import') {
+                window.alert('IoStore container sets can only use Import selected. Move queue and Delete selected are for indexed loose files.');
+                return;
+            }
+            if (hasIoStore && target && target.value === '-1') {
+                window.alert('Choose one explicit UE5 game for an IoStore container. All exact compatible games is for loose packages only.');
+                target.focus();
+                return;
+            }
+            if (hasIoStore && target && !/^UE5/i.test((target.options[target.selectedIndex] || {}).dataset?.engine || '')) {
+                window.alert('IoStore containers require an active UE5 target game.');
+                target.focus();
                 return;
             }
             if (action === 'delete' && !window.confirm('Delete ' + entries.length + ' selected queued file(s) and their queue notes permanently?')) return;

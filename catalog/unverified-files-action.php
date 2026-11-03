@@ -23,6 +23,8 @@ use UnrealDb\Catalog\Application\Unverified\CatalogUnverifiedActionService;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedActionSourceResolver;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedImporterAdapter;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueMutationService;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicIoStoreReviewService;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 
 function unverified_action_json(array $payload): string
 {
@@ -195,6 +197,35 @@ try {
         $db->exec('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED');
     } catch (Throwable) {
         // Compatible servers may expose only part of this session tuning.
+    }
+
+    if (str_starts_with($token, 'public-iostore:')) {
+        // This is the same Unverified Files action UI. Only its backend dispatch
+        // differs: IoStore is a complete TOC/data family, never a loose package.
+        if ($action !== 'import') {
+            throw new RuntimeException('Public IoStore sets can only be imported from this queue.');
+        }
+        if ($targetGameId < 1) {
+            throw new RuntimeException('Choose one explicit UE5 target game for an IoStore container.');
+        }
+        unverified_action_emit($progress, 'validating_iostore', 10, 'Verifying IoStore container and data partitions');
+        $reviewKey = substr($token, strlen('public-iostore:'));
+        $review = (new CatalogPublicIoStoreReviewService($db, $config))
+            ->approve($reviewKey, $targetGameId, $userId);
+        unverified_action_emit($progress, 'queuing_iostore', 85, 'Starting the existing IoStore import worker');
+        $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $worker = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+        $warning = trim((string)($worker['worker_error'] ?? ''));
+        $message = 'IoStore set approved and queued as container job #' . (int)$review['job_id']
+            . ' for game #' . $targetGameId . '. The existing background workflow retains the container, '
+            . 'indexes its members and publishes eligible packages.'
+            . ($warning !== '' ? ' Worker warning: ' . $warning : '');
+        unverified_action_emit($progress, 'done', 100, $message);
+        unverified_action_reply([
+            'ok' => true, 'action' => 'import', 'original_name' => 'IoStore container',
+            'job_id' => (int)$review['job_id'], 'warning' => $warning !== '' ? $warning : null,
+            'message' => $message,
+        ]);
     }
 
     unverified_action_emit($progress, 'starting', 0, 'Resolving queued file');

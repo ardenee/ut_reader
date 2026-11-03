@@ -189,11 +189,14 @@ try {
     $summary = $model['summary'];
     $publicUploads = is_array($model['public_uploads'] ?? null) ? $model['public_uploads'] : [];
     $publicIoStoreReviews = (new CatalogPublicIoStoreReviewService($db, $config))->pending();
-    $publicIoStoreGames = $publicIoStoreReviews !== []
-        ? catalog_all($db, 'SELECT g.id, g.name FROM ue_games g '
-            . 'JOIN ue_game_profiles p ON p.id=g.profile_id '
-            . 'WHERE p.is_active=1 AND UPPER(p.engine_key) LIKE "UE5%" ORDER BY g.name', [])
-        : [];
+    // Public .utoc/.ucas groups are a single selectable import unit in the same
+    // unverified table; ordinary indexed files retain their existing query.
+    $visibleIoStoreReviews = ($page === 1
+        && in_array($sourceGameId, [0, -1], true)
+        && in_array($extension, ['', 'utoc', 'ucas'], true)
+        && in_array($engine, ['', 'UE5'], true)
+        && $version === '' && $licensee === '')
+        ? $publicIoStoreReviews : [];
     $extensionOptions = $model['extension_options'];
     $engineOptions = $model['engine_options'];
 
@@ -238,52 +241,10 @@ CSS;
 
     echo '<div class="uv-summary">'
         . '<div class="stat"><h2>' . (int)($summary['indexed_count'] ?? 0) . '</h2><p>Indexed unverified files</p></div>'
-        . '<div class="stat"><h2>' . $total . '</h2><p>Matching current filters</p></div>'
+        . '<div class="stat"><h2>' . $total . '</h2><p>Matching indexed files</p></div>'
         . '<div class="stat"><h2>' . (int)($summary['bucket_count'] ?? 0) . '</h2><p>Upload Bucket files</p></div>'
         . '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)($summary['indexed_bytes'] ?? 0))) . '</h2><p>Indexed queue storage</p></div>'
         . '</div>';
-
-    if ($publicIoStoreReviews !== []) {
-        echo '<section id="iostore-public-reviews" class="ui-section"><div class="ui-section__header"><div><h2>IoStore contributions awaiting review</h2>'
-            . '<p>Complete .utoc/.ucas pairs can be approved and imported by an administrator. '
-            . 'These are original container files, not individual unverified package records.</p></div></div>'
-            . '<div class="ui-section__body">';
-        foreach ($publicIoStoreReviews as $review) {
-            $ready = !empty($review['ready']);
-            $name = (string)$review['name'];
-            echo '<div class="card"><h3>' . catalog_h($name) . ' — IoStore container</h3>'
-                . '<p>' . (int)$review['toc_count'] . ' TOC and '
-                . (int)$review['part_count'] . ' UCAS partition(s), '
-                . catalog_h(catalog_bytes((int)$review['total_bytes'])) . ' retained in quarantine.</p>';
-            if (!$ready) {
-                echo '<p class="muted">Awaiting a complete, non-duplicated .utoc/.ucas pair. '
-                    . 'Import is unavailable until all parts are present.</p>';
-            } elseif ($publicIoStoreGames === []) {
-                echo '<p class="muted">No active UE5 target game is available for approval.</p>';
-            } else {
-                echo '<form method="post" action="iostore-import.php" data-ui-loading-form>'
-                    . '<input type="hidden" name="csrf" value="'
-                    . catalog_h(catalog_csrf('iostore-import')) . '">'
-                    . '<input type="hidden" name="action" value="approve_public_iostore">'
-                    . '<input type="hidden" name="review_key" value="'
-                    . catalog_h((string)$review['key']) . '">'
-                    . '<label>Target UE5 game <select name="game_id" required>';
-                foreach ($publicIoStoreGames as $game) {
-                    $id = (int)$game['id'];
-                    echo '<option value="' . $id . '"' . ($id === 14 ? ' selected' : '') . '>'
-                        . catalog_h((string)$game['name']) . '</option>';
-                }
-                echo '</select></label> <button type="submit" class="primary" '
-                    . 'onclick="return confirm('
-                    . '&quot;Approve this complete IoStore pair and queue an import for the selected game?&quot;'
-                    . ')">Approve &amp; queue IoStore import</button></form>'
-                    . '<p class="muted">Approval checks each retained file hash and TOC-declared '
-                    . 'partition before creating the existing IoStore import job.</p>';
-            }
-            echo '</div>';
-        }
-        echo '</div></section>';
-    }
 
     if ($publicUploads !== []) {
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Public contribution status</h2>'
@@ -323,7 +284,7 @@ CSS;
                     ? '<br><a href="file-info.php?id=' . $resultFileId . '">File #' . $resultFileId . '</a>'
                     : '')
                 . ($status === 'container_pending'
-                    ? '<br><a href="#iostore-public-reviews">Review / import IoStore pair</a>'
+                    ? '<br><a href="#unverified-bulk-form">Select its grouped IoStore set in the import table</a>'
                     : '')
                 . '</td>'
                 . '<td class="mono small">' . catalog_h((string)($publicUpload['updated_at'] ?? '')) . '</td></tr>';
@@ -343,7 +304,8 @@ CSS;
         . '<button type="submit" class="secondary">Refresh bucket matches</button></form></div></div></section>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Filters</h2><p>'
-        . $total . ' matching file(s).</p></div></div><div class="ui-section__body">';
+        . $total . ' matching indexed file(s), plus ' . count($visibleIoStoreReviews)
+        . ' public IoStore container set(s) on this page.</p></div></div><div class="ui-section__body">';
     echo '<form class="uv-controls" method="get">';
     echo '<label>Source queue<select name="source_game_id"><option value="0">All queues</option>'
         . '<option value="-1"' . ($sourceGameId === -1 ? ' selected' : '') . '>Upload Bucket</option>';
@@ -394,7 +356,7 @@ CSS;
     echo '<div class="uv-actions"><label>Target game <select name="target_game_id"><option value="">Choose game</option>'
         . '<option value="-1">All exact compatible games</option>';
     foreach ($games as $game) {
-        echo '<option value="' . (int)$game['id'] . '">'
+        echo '<option value="' . (int)$game['id'] . '" data-engine="' . catalog_h((string)($game['engine_key'] ?? '')) . '">'
             . catalog_h((string)$game['name'] . ' / ' . (string)($game['engine_key'] ?? ''))
             . '</option>';
     }
@@ -404,9 +366,12 @@ CSS;
         . '<button name="action" value="delete" class="danger">Delete selected</button>'
         . '<label><input type="checkbox" name="allow_profile_override" value="1"> Allow profile override</label>'
         . '</div>';
-    echo '<p class="uv-evidence-help"><strong>All exact compatible games</strong> imports the first exact compatible match immediately and queues proper copies for every other game where at least one required full object path is exported by this package. Package-name-only suggestions are never auto-imported.</p>';
+    echo '<p class="uv-evidence-help"><strong>All exact compatible games</strong> uses full exported-object matches for loose packages only. '
+        . 'PAK and IoStore containers require one explicit target game. IoStore .utoc/.ucas parts are selected together as one container, '
+        . 'and only complete sets may be imported. <strong>All matching</strong> operates on indexed unverified files, '
+        . 'not public quarantined IoStore contributions.</p>';
 
-    if ($items === []) {
+    if ($items === [] && $visibleIoStoreReviews === []) {
         echo CatalogUi::emptyState(
             'No indexed queued files',
             'No indexed unverified files match the selected filters. Use Index existing queue files for physical files not yet recorded in the database.'
@@ -415,6 +380,36 @@ CSS;
         echo '<div class="table-wrap"><table class="uv-table"><thead><tr>'
             . '<th></th><th>Physical queue</th><th>File</th><th>Identity</th><th>Database</th>'
             . '<th>Detected</th><th>Size</th><th>Dependency evidence</th></tr></thead><tbody>';
+
+        // A complete public IoStore family is one logical import selection, not
+        // one loose package per .utoc/.ucas physical component.
+        foreach ($visibleIoStoreReviews as $review) {
+            $ready = !empty($review['ready']);
+            $name = (string)$review['name'];
+            $partCount = (int)$review['part_count'];
+            $tocCount = (int)$review['toc_count'];
+            $token = 'public-iostore:' . (string)$review['key'];
+            echo '<tr data-iostore-review="1"><td><input class="unverified-select" type="checkbox" name="tokens[]" value="'
+                . catalog_h($token) . '" aria-label="Select IoStore ' . catalog_h($name) . '"'
+                . ($ready ? '' : ' disabled') . '></td>'
+                . '<td><strong>Public upload quarantine</strong><small class="muted">IoStore container family</small></td>'
+                . '<td class="uv-file"><strong>' . catalog_h($name) . '</strong>'
+                . '<small>' . $tocCount . ' .utoc and ' . $partCount . ' .ucas partition(s)</small></td>'
+                . '<td><span class="mono small">TOC: ' . $tocCount . '</span><br>'
+                . '<span class="mono small">Data parts: ' . $partCount . '</span></td>'
+                . '<td><span class="uv-badge ' . ($ready ? 'good' : 'bad') . '">'
+                . ($ready ? 'Pair detected / validation pending' : 'Incomplete / duplicate') . '</span>'
+                . '<small>Original components retained in quarantine</small></td>'
+                . '<td class="mono">UE5 / IoStore</td>'
+                . '<td>' . catalog_h(catalog_bytes((int)$review['total_bytes'])) . '</td>'
+                . '<td>' . ($ready
+                    ? 'Select this set, choose its UE5 game, then use <strong>Import selected</strong>. '
+                        . 'The importer verifies the TOC, all declared partitions and their hashes before '
+                        . 'queuing name indexing and package publication.'
+                    : 'Complete, non-duplicated .utoc/.ucas partitions are required. '
+                        . 'This set cannot be imported yet.')
+                . '</td></tr>';
+        }
 
         foreach ($items as $item) {
             $queueGame = is_array($item['queue_game'] ?? null) ? $item['queue_game'] : [];
