@@ -152,6 +152,40 @@ final class CatalogPublicUploadBatchPreflight
             }
         }
 
+        // Unlike loose packages, IoStore deduplication must be atomic across
+        // the complete TOC/UCAS family. Never skip a matching partition alone.
+        $ioStoreFamilies = [];
+        foreach ($normalized as $index => $item) {
+            if (empty($item['iostore_component'])) continue;
+            $relative = (string)$item['relative_path'];
+            if (preg_match('#^iostore/([a-f0-9]{32})/(.+)$#D', $relative, $match) !== 1) continue;
+            $file = strtolower(basename((string)$item['name']));
+            $ext = strtolower((string)pathinfo($file, PATHINFO_EXTENSION));
+            $stem = substr($file, 0, -strlen($ext) - 1);
+            if ($ext === 'ucas') $stem = preg_replace('/_s[1-9][0-9]*$/', '', $stem) ?? $stem;
+            $folder = strtolower(str_replace('\\', '/', dirname($match[2])));
+            $familyKey = $match[1] . "\0" . $folder . "\0" . $stem;
+            $ioStoreFamilies[$familyKey][] = $index;
+        }
+        $retainedMatcher = new CatalogIoStoreRetainedFamilyMatcher($this->db, $this->config);
+        foreach ($ioStoreFamilies as $indexes) {
+            $parts = array_map(static fn(int $index): array => $normalized[$index], $indexes);
+            $existing = $retainedMatcher->find($parts);
+            if ($existing === null) continue;
+            foreach ($indexes as $index) {
+                $results[$index] = [
+                    'client_id' => $normalized[$index]['client_id'],
+                    'action' => 'skip',
+                    'reason' => 'already_retained_iostore_family',
+                    'game_id' => $existing['game_id'],
+                    'container_id' => $existing['container_id'],
+                    'message' => 'The complete identical IoStore container is already retained for '
+                        . $existing['game_name'] . ' (container #' . $existing['container_id'] . ').',
+                ];
+                unset($normalized[$index]);
+            }
+        }
+
         $expiredReleased = $this->releaseExpiredReservations();
         $invalidByIdentity = $this->invalidIdentityMatches(array_keys($md5s));
         $catalogIdentities = $this->catalogIdentityMatches(array_keys($md5s));

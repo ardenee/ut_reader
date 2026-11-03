@@ -24,7 +24,7 @@ final class CatalogPublicIoStoreReviewService
         $limit = max(2, min(1000, $limit));
         $rows = $this->db->query(
             'SELECT id,original_name,relative_path,quarantine_relative_path,upload_token,'
-            . 'file_size,server_sha1,HEX(submitter_ip) AS submitter_identity '
+            . 'file_size,server_md5,server_sha1,HEX(submitter_ip) AS submitter_identity '
             . 'FROM ue_public_uploads WHERE status="container_pending" '
             . 'AND quarantine_relative_path IS NOT NULL ORDER BY id DESC LIMIT ' . $limit
         )->fetchAll(PDO::FETCH_ASSOC) ?: [];
@@ -62,6 +62,7 @@ final class CatalogPublicIoStoreReviewService
             if ($extension === 'utoc') $groups[$key]['toc_count']++;
             else $groups[$key]['part_count']++;
         }
+        $retainedMatcher = new CatalogIoStoreRetainedFamilyMatcher($this->db, $this->config);
         foreach ($groups as &$group) {
             $names = array_map(
                 static fn(array $part): string => strtolower((string)$part['original_name']),
@@ -71,10 +72,77 @@ final class CatalogPublicIoStoreReviewService
                 && $group['part_count'] > 0
                 && count(array_unique($names)) === count($names);
             $group['component_count'] = count($names);
+            $group['retained'] = $group['ready']
+                ? $retainedMatcher->find($group['components']) : null;
             // Never expose submitter IP or quarantine tokens in review HTML.
         }
         unset($group);
         return array_values($groups);
+    }
+
+    /**
+     * Delete only anonymous quarantined components for a pending IoStore group.
+     * Never delete retained game container records, parts, or Zen members.
+     *
+     * @return array{requested:int,deleted:int,ignored:int}
+     */
+    public function discard(string $key, ?int $adminId): array
+    {
+        if (preg_match('/^[a-f0-9]{64}$/D', $key) !== 1 || ($adminId ?? 0) < 1) {
+            throw new RuntimeException('A valid IoStore contribution and administrator are required.');
+        }
+        $root = rtrim((string)($this->config['storage_path'] ?? ''), '/\\');
+        if ($root === '' || !is_dir($root)) {
+            throw new RuntimeException('Catalogue storage unavailable.');
+        }
+        // Serialize with approve() so a contribution cannot be approved while
+        // its quarantine components are being cancelled and removed.
+        $folder = $root . '/jobs/incoming/iostore/public-review/' . $key;
+        if (!is_dir($folder) && !mkdir($folder, 0700, true) && !is_dir($folder)) {
+            throw new RuntimeException('Could not allocate protected IoStore review storage.');
+        }
+        $lock = fopen($folder . '/.review.lock', 'c+b');
+        if (!is_resource($lock) || !flock($lock, LOCK_EX)) {
+            throw new RuntimeException('Could not lock this IoStore review group.');
+        }
+        try {
+            $found = null;
+            foreach ($this->pending() as $item) {
+                if ($item['key'] === $key) {
+                    $found = $item;
+                    break;
+                }
+            }
+            if ($found === null) {
+                throw new RuntimeException('IoStore contribution has already been processed or removed.');
+            }
+            $ids = [];
+            $this->db->beginTransaction();
+            try {
+                $cancel = $this->db->prepare(
+                    'UPDATE ue_public_uploads SET status="cancelled",active_identity_key=NULL,'
+                    . 'result_message="Administrator deleted pending IoStore contribution",'
+                    . 'updated_at=UTC_TIMESTAMP(6) WHERE id=? AND status="container_pending"'
+                );
+                foreach ($found['components'] as $component) {
+                    $id = (int)$component['id'];
+                    $cancel->execute([$id]);
+                    if ($cancel->rowCount() !== 1) {
+                        throw new RuntimeException('IoStore contribution changed during deletion. Retry after refresh.');
+                    }
+                    $ids[] = $id;
+                }
+                $this->db->commit();
+            } catch (\Throwable $error) {
+                if ($this->db->inTransaction()) $this->db->rollBack();
+                throw $error;
+            }
+            return (new CatalogPublicUploadTransferStore($this->db, $this->config))
+                ->deleteTerminalForAdmin($ids);
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
     }
 
     /**
@@ -115,6 +183,11 @@ final class CatalogPublicIoStoreReviewService
             }
             if (!$found || !$found['ready']) {
                 throw new RuntimeException('Public IoStore contribution is incomplete or no longer pending.');
+            }
+            if (is_array($found['retained'] ?? null)
+                && (int)$found['retained']['game_id'] === $gameId) {
+                throw new RuntimeException('This complete IoStore set is already retained for the selected game. '
+                    . 'Use Delete selected to remove only its redundant quarantine upload.');
             }
             $tocRow = null;
             $manifest = [];

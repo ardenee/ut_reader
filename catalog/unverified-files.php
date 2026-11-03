@@ -189,6 +189,13 @@ try {
     $summary = $model['summary'];
     $publicUploads = is_array($model['public_uploads'] ?? null) ? $model['public_uploads'] : [];
     $publicIoStoreReviews = (new CatalogPublicIoStoreReviewService($db, $config))->pending();
+    $retainedPublicIoStoreByUploadId = [];
+    foreach ($publicIoStoreReviews as $review) {
+        if (!is_array($review['retained'] ?? null)) continue;
+        foreach ($review['components'] as $part) {
+            $retainedPublicIoStoreByUploadId[(int)$part['id']] = $review['retained'];
+        }
+    }
     // Public .utoc/.ucas groups are a single selectable import unit in the same
     // unverified table; ordinary indexed files retain their existing query.
     $visibleIoStoreReviews = ($page === 1
@@ -254,7 +261,7 @@ CSS;
             . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('unverified-files')) . '">'
             . '<input type="hidden" name="action" value="delete_public_uploads">'
             . '<div class="uv-public-actions"><button type="submit" class="danger">Delete selected entries</button>'
-            . '<span class="muted">Duplicate and failed entries can be removed here. Active uploaded/processing entries are protected.</span></div>'
+            . '<span class="muted">Duplicate and failed status entries can be removed here. Pending IoStore .utoc/.ucas sets are deleted together using Delete selected in the grouped queue below.</span></div>'
             . '<div class="table-wrap"><table><thead><tr>'
             . '<th><input type="checkbox" aria-label="Select terminal public contributions" '
             . 'onclick="document.querySelectorAll(\'.public-upload-status-select:not(:disabled)\').forEach(c=>c.checked=this.checked)"></th>'
@@ -269,6 +276,7 @@ CSS;
                 $name = trim((string)($publicUpload['original_name'] ?? ''));
             }
             $badge = $status === 'failed' ? 'bad' : 'neutral';
+            $retainedCopy = $retainedPublicIoStoreByUploadId[(int)$publicUpload['id']] ?? null;
             $deletable = in_array($status, ['duplicate', 'failed', 'cancelled', 'expired', 'rejected'], true);
             echo '<tr><td><input class="public-upload-status-select" type="checkbox" name="public_upload_ids[]" value="'
                 . (int)$publicUpload['id'] . '"' . ($deletable ? '' : ' disabled') . '></td>'
@@ -280,11 +288,16 @@ CSS;
                     ? '<a href="background-jobs.php">Job #' . $jobId . '</a>'
                     : '<span class="muted">Not queued yet</span>') . '</td>'
                 . '<td>' . catalog_h((string)($publicUpload['result_message'] ?? ''))
+                . (is_array($retainedCopy)
+                    ? '<br><strong>Identical retained copy: <a href="iostore-info.php?id=' . (int)$retainedCopy['container_id'] . '">'
+                        . catalog_h((string)$retainedCopy['game_name']) . ' (container #' . (int)$retainedCopy['container_id'] . ')</a></strong>'
+                        . '<br><small>The quarantine upload is separate; delete its grouped pair below to discard only the redundant copy.</small>'
+                    : '')
                 . ($resultFileId > 0
                     ? '<br><a href="file-info.php?id=' . $resultFileId . '">File #' . $resultFileId . '</a>'
                     : '')
                 . ($status === 'container_pending'
-                    ? '<br><a href="#unverified-bulk-form">Select its grouped IoStore set in the import table</a>'
+                    ? '<br><a href="#unverified-bulk-form">Select its grouped IoStore set below to import or delete</a>'
                     : '')
                 . '</td>'
                 . '<td class="mono small">' . catalog_h((string)($publicUpload['updated_at'] ?? '')) . '</td></tr>';
@@ -385,29 +398,35 @@ CSS;
         // one loose package per .utoc/.ucas physical component.
         foreach ($visibleIoStoreReviews as $review) {
             $ready = !empty($review['ready']);
+            $retained = is_array($review['retained'] ?? null) ? $review['retained'] : null;
             $name = (string)$review['name'];
             $partCount = (int)$review['part_count'];
             $tocCount = (int)$review['toc_count'];
             $token = 'public-iostore:' . (string)$review['key'];
-            echo '<tr data-iostore-review="1"><td><input class="unverified-select" type="checkbox" name="tokens[]" value="'
-                . catalog_h($token) . '" aria-label="Select IoStore ' . catalog_h($name) . '"'
-                . ($ready ? '' : ' disabled') . '></td>'
+            echo '<tr data-iostore-review="1" data-iostore-ready="' . ($ready ? '1' : '0') . '"><td>'
+                . '<input class="unverified-select" type="checkbox" name="tokens[]" value="'
+                . catalog_h($token) . '" aria-label="Select IoStore ' . catalog_h($name) . '"></td>'
                 . '<td><strong>Public upload quarantine</strong><small class="muted">IoStore container family</small></td>'
                 . '<td class="uv-file"><strong>' . catalog_h($name) . '</strong>'
                 . '<small>' . $tocCount . ' .utoc and ' . $partCount . ' .ucas partition(s)</small></td>'
                 . '<td><span class="mono small">TOC: ' . $tocCount . '</span><br>'
                 . '<span class="mono small">Data parts: ' . $partCount . '</span></td>'
                 . '<td><span class="uv-badge ' . ($ready ? 'good' : 'bad') . '">'
-                . ($ready ? 'Pair detected / validation pending' : 'Incomplete / duplicate') . '</span>'
-                . '<small>Original components retained in quarantine</small></td>'
+                . ($retained !== null ? 'Already retained' : ($ready ? 'Pair detected / validation pending' : 'Incomplete / duplicate')) . '</span>'
+                . ($retained !== null
+                    ? '<small>Original retained for <a href="iostore-info.php?id=' . (int)$retained['container_id'] . '">'
+                        . catalog_h((string)$retained['game_name']) . ' (container #' . (int)$retained['container_id'] . ')</a></small>'
+                    : '')
+                . '<small>These components are separate public quarantine copies</small></td>'
                 . '<td class="mono">UE5 / IoStore</td>'
                 . '<td>' . catalog_h(catalog_bytes((int)$review['total_bytes'])) . '</td>'
-                . '<td>' . ($ready
-                    ? 'Select this set, choose its UE5 game, then use <strong>Import selected</strong>. '
-                        . 'The importer verifies the TOC, all declared partitions and their hashes before '
-                        . 'queuing name indexing and package publication.'
-                    : 'Complete, non-duplicated .utoc/.ucas partitions are required. '
-                        . 'This set cannot be imported yet.')
+                . '<td>' . ($retained !== null
+                    ? 'An identical complete set is already retained for <strong>' . catalog_h((string)$retained['game_name'])
+                        . '</strong>. Choose <strong>Delete selected</strong> to remove these redundant quarantine uploads only. '
+                        . 'The game container stays intact.'
+                    : ($ready
+                        ? 'Choose a UE5 game and use <strong>Import selected</strong>, or use <strong>Delete selected</strong> to discard this quarantine set.'
+                        : 'This incomplete group cannot be imported; <strong>Delete selected</strong> removes its quarantined components.'))
                 . '</td></tr>';
         }
 

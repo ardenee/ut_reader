@@ -200,10 +200,24 @@ try {
     }
 
     if (str_starts_with($token, 'public-iostore:')) {
-        // This is the same Unverified Files action UI. Only its backend dispatch
-        // differs: IoStore is a complete TOC/data family, never a loose package.
+        // A pending TOC/UCAS family is one logical review and deletion unit.
+        // Deletion removes quarantine only, never the retained game container.
+        $reviewKey = substr($token, strlen('public-iostore:'));
+        if ($action === 'delete') {
+            unverified_action_emit($progress, 'deleting_iostore_quarantine', 20, 'Removing quarantined IoStore contribution');
+            $deleted = (new CatalogPublicIoStoreReviewService($db, $config))
+                ->discard($reviewKey, $userId);
+            if ($deleted['deleted'] !== $deleted['requested']) {
+                throw new RuntimeException('Some IoStore contribution records could not be removed. Refresh the queue.');
+            }
+            $message = 'Deleted ' . $deleted['deleted'] . ' quarantined IoStore component(s). '
+                . 'Any retained game container and its package records were not changed.';
+            unverified_action_emit($progress, 'done', 100, $message);
+            unverified_action_reply(['ok'=>true,'action'=>'delete','original_name'=>'IoStore container',
+                'deleted'=>$deleted['deleted'],'message'=>$message]);
+        }
         if ($action !== 'import') {
-            throw new RuntimeException('Public IoStore sets can only be imported from this queue.');
+            throw new RuntimeException('IoStore contributions cannot be moved as loose queue files.');
         }
         if ($targetGameId < 1) {
             throw new RuntimeException('Choose one explicit UE5 target game for an IoStore container.');

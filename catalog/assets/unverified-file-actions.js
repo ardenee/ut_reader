@@ -464,21 +464,33 @@
                 return;
             }
             var hasIoStore = entries.some(function (entry) { return entry.token.indexOf('public-iostore:') === 0; });
-            if (hasIoStore && action !== 'import') {
-                window.alert('IoStore container sets can only use Import selected. Move queue and Delete selected are for indexed loose files.');
+            if (hasIoStore && action === 'import' && entries.some(function (entry) {
+                var row = entry.box.closest('tr');
+                return row && row.dataset.iostoreReview === '1' && row.dataset.iostoreReady !== '1';
+            })) {
+                window.alert('An incomplete IoStore .utoc/.ucas set cannot be imported. Select Delete to discard it, or upload the missing parts.');
                 return;
             }
-            if (hasIoStore && target && target.value === '-1') {
+            if (hasIoStore && action === 'move') {
+                window.alert('IoStore container sets cannot be moved as loose package files. Use Import selected or Delete selected.');
+                return;
+            }
+            if (hasIoStore && action === 'import' && target && target.value === '-1') {
                 window.alert('Choose one explicit UE5 game for an IoStore container. All exact compatible games is for loose packages only.');
                 target.focus();
                 return;
             }
-            if (hasIoStore && target && !/^UE5/i.test((target.options[target.selectedIndex] || {}).dataset?.engine || '')) {
+            if (hasIoStore && action === 'import' && target && !/^UE5/i.test((target.options[target.selectedIndex] || {}).dataset?.engine || '')) {
                 window.alert('IoStore containers require an active UE5 target game.');
                 target.focus();
                 return;
             }
-            if (action === 'delete' && !window.confirm('Delete ' + entries.length + ' selected queued file(s) and their queue notes permanently?')) return;
+            if (action === 'delete') {
+                var deletionMessage = hasIoStore
+                    ? 'Delete ' + entries.length + ' selected item(s)? Any IoStore .utoc/.ucas pairs will be removed from public-upload quarantine ONLY. Retained game containers and packages will not be deleted.'
+                    : 'Delete ' + entries.length + ' selected queued file(s) and their queue notes permanently?';
+                if (!window.confirm(deletionMessage)) return;
+            }
             runBatch(form, action, entries).catch(function (error) {
                 window.alert(error.message || 'The bulk action could not be started.');
             });
