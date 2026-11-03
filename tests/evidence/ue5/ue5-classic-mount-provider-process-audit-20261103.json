@@ -1,0 +1,86 @@
+{
+  "contract": "ue5-mount-provider",
+  "related_contract": "ue5-dependency-publish",
+  "scope": "UE5 classic original files; isolated PHP provider and rebuilder execution, no native mount session",
+  "outcome": "PARTIAL_VERIFIED_RUNTIME_PHP; NATIVE_ORIGINAL_RUNTIME_UNVERIFIED",
+  "epic_source_anchors": [
+    {
+      "operation": "package-name search",
+      "source": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\UObjectGlobals.cpp",
+      "line": 1822,
+      "source_sha256": "896cd2b6254f7586f08c98890fe61382c1ab16b78cbd3ebd378af23141924696",
+      "text_signature": "FPackageName::SearchForPackageOnDisk("
+    },
+    {
+      "operation": "mounted path conversion",
+      "source": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\UObjectGlobals.cpp",
+      "line": 1833,
+      "source_sha256": "896cd2b6254f7586f08c98890fe61382c1ab16b78cbd3ebd378af23141924696",
+      "text_signature": "FPackagePath::TryFromMountedName("
+    },
+    {
+      "operation": "original VerifyImport",
+      "source": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "line": 3685,
+      "source_sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
+      "text_signature": "FLinkerLoad::VerifyImport("
+    },
+    {
+      "operation": "VerifyImportInner",
+      "source": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "line": 3981,
+      "source_sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
+      "text_signature": "FLinkerLoad::VerifyImportInner("
+    },
+    {
+      "operation": "load verified package",
+      "source": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "line": 4087,
+      "source_sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
+      "text_signature": "Package = LoadPackageInternal("
+    },
+    {
+      "operation": "load source linker",
+      "source": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "line": 4151,
+      "source_sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
+      "text_signature": "Import.SourceLinker = GetPackageLinker("
+    }
+  ],
+  "trace_sha256": "cc6f151e57877450ebc89aed73c8a2c8e45ba90646d299659534b34f603b316a",
+  "trace_events": 47480,
+  "observed_php_stage_calls": {
+    "container": 3421,
+    "parse": 1214,
+    "snapshot": 879,
+    "misc": 62,
+    "provider": 17,
+    "verify": 1308,
+    "rebuild": 347
+  },
+  "original_asset_sha256": {
+    "/Engine/EngineMaterials/BaseFlattenMaterial": "07a7072b2bb9cdf7504ecfcddbb0b927800d6d40ad0306ae2e54a259d9a8bc2c",
+    "/Engine/EngineMaterials/BaseFlattenDiffuseMap": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec"
+  },
+  "observed_selection": {
+    "game_id": 14,
+    "file_id": null,
+    "package_name": "/Engine/EngineMaterials/BaseFlattenDiffuseMap",
+    "selection_status": "source_unresolved",
+    "selection_source": "ue5_runtime_mount_context_unavailable",
+    "candidate_file_ids": [
+      900102
+    ],
+    "source_fallback_package_name": null
+  },
+  "original_dependency_rows": 24,
+  "unresolved_import_rows": 2,
+  "known_empty_mount_exercised_only_in_test": true,
+  "production_db_writes": 0,
+  "epic_original_file_writes": 0,
+  "remaining": "Authenticated native UE5 classic mount/loaded-linker selection and SQL/web outcomes not covered by this PHP trace",
+  "source_product_sha256": {
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "3cc2648bccd36b2f772ee656be72b8857eca29b891982ba2a16d6717e36374c5",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "f6ed565432dfad01365ac4d8d16ddf37dd36a7b81f06e0d12f7caab3bc6c6588"
+  }
+}\n

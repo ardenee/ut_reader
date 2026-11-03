@@ -18,3 +18,20 @@ The objective is to make UnrealDB's **observable file handling** match the corre
 All historic test scripts, results and notes are under [archive/testing-legacy-2026-11-02](../archive/testing-legacy-2026-11-02/README.md); old dashboards and journals no longer determine current status.
 
 A PASS needs applicable Epic source, a genuine/authoritative oracle for the relevant result, current code identity, and exact end-to-end persisted/visible outcome. SOURCE_NA needs evidence that this precise branch cannot apply. Missing load/mount context is UNKNOWN or AMBIGUOUS, never confidently MISSING.
+
+## Local process-level source/runtime comparisons (DEV, 2026-11-03)
+
+Tools installed on game-amd: Graphviz 16.1.0 (`C:\Program Files\Graphviz\bin\dot.exe`), Doxygen 1.18.0 (`C:\Program Files\doxygen\bin\doxygen.exe`) and Xdebug 3.5.3 for PHP 8.5 TS VS17, loaded by an explicit CLI-only `-d zend_extension=...` argument. Neither Apache PHP configuration nor PRD is modified. Commercial SciTools Understand is **not** installed.
+
+The first source-matched process is UE5 classic physical provider selection (case `ue5-mount-provider`). An isolated original-assets PHP script in `C:\Temp\UnrealDB\UE5\verify_ue5_classic_no_mount_original_pair_20261103.php` processed genuine `BaseFlattenMaterial.uasset` and `BaseFlattenDiffuseMap.uasset`. Its Xdebug trace is `C:\Temp\UnrealDB\process-tracing\ue5_original_classic.xt`; the test result is `ue5-run-result.json`. The bounded public audit evidence is `evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json`. The original source is under `L:\Source\Engine\UE5\UE 5.8.3`. Doxygen generated static C++ call-graphs in `C:\Temp\UnrealDB\process-tracing\doxygen-ue5-classic\html`.
+
+To regenerate only the *visualization of retained evidence* (not repeat the test), from the repository root on DEV:
+
+```powershell
+python tests/tools/process_parity_graph.py --trace 'C:\Temp\UnrealDB\process-tracing\ue5_original_classic.xt' --result 'C:\Temp\UnrealDB\process-tracing\ue5-run-result.json' --output 'C:\Users\arden\Graphify\unrealdb\graphify-out\process-comparison.html' --evidence-output 'tests/evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json'
+python tests/tools/render_process_coverage.py --output 'C:\Users\arden\Graphify\unrealdb\graphify-out\process-coverage.html'
+```
+
+On the DEV desktop run `C:\Users\arden\Graphify\Start-Dashboard.ps1` and open `http://127.0.0.1:8765/`. The UE5 comparison and process-coverage links are local-only dashboard pages. All full traces and proprietary Epic Doxygen HTML remain **outside GitHub and PRD**.
+
+**Evidence classes are different:** Graphify/Doxygen represent static possible calls. Xdebug represents functions actually invoked in the isolated UnrealDB PHP scenario. An Epic C++ source anchor is not proof that a compiled Epic runtime traversed that branch. No native UE5 classic mounted-session observation was captured for this case; it remains BLOCKED pending authoritative runtime evidence and completion of SQL/UI consumer verification. Previous native Zen evidence remains valid only for its original scope. The existing contract register has been reopened accordingly; do not create parallel test IDs.

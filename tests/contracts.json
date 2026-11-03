@@ -556,7 +556,7 @@
         "F02"
       ],
       "status": "PASS",
-      "code_path_evidence": "ALL_THREE_ACTUAL_PRODUCTION_READ_PATHS_MATCH_SAME_SOURCE_SELECTED_EPIC_UE1_GAME_READER; REAL_PRD_READONLY_PLUS_RETAINED_NATIVE_SOURCE_EVIDENCE",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -612,7 +612,7 @@
         },
         {
           "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-          "line": 46,
+          "line": 90,
           "call_site": "if (in_array($engineKey,"
         }
       ],
@@ -649,7 +649,7 @@
         "F06"
       ],
       "status": "PASS",
-      "code_path_evidence": "F03_F06_ORIGINAL_EPIC_SOURCE_INLINE_SERIALIZER_AND_PRD_REAL_BYTE_35K_FULL_ROW_SHA_IDENTITY_PLUS_INDEPENDENT_CURSOR_EXACT_ALL_OFFSETS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
@@ -732,7 +732,7 @@
         "F14"
       ],
       "status": "PASS",
-      "code_path_evidence": "LIVE_PRD_ORIGINAL_MD5_SHA1_SOURCE_BYTES_AND_READONLY_DB; PRODUCTION_UEDB5_SOURCE_FACTORY_TO_METADATA_DEPENDENCY_RESOLVER; PRIOR_NATIVE_IMPORT_MAP_REUSED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
@@ -862,7 +862,7 @@
         "F15"
       ],
       "status": "PASS",
-      "code_path_evidence": "PRODUCTION_READONLY_PRD_ORIGINAL_FILES_AND_STORED_METADATA_OBSERVED; EPIC_NATIVE_RUNTIME_UNPROVEN",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
@@ -893,7 +893,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 245,
+          "line": 271,
           "call_site": "$this->selector->select("
         },
         {
@@ -933,7 +933,7 @@
         "F19"
       ],
       "status": "PASS",
-      "code_path_evidence": "REAL_PRD_SOURCE_BYTES_AND_READONLY_PRODUCTION_PASS2_PREFLIGHT; ISOLATED_SQL_PUBLICATION_AND_ACTUAL_WEBSITE_STALE_CURRENT_QUERY_PATH; NO_PRD_SQL_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -964,12 +964,12 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 264,
+          "line": 295,
           "call_site": "$this->rebuilder->rebuild("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 268,
+          "line": 299,
           "call_site": "$this->publisher->publish("
         }
       ],
@@ -1002,14 +1002,20 @@
         "F17",
         "F22"
       ],
-      "status": "PASS",
-      "code_path_evidence": "REAL_PRD_SOURCE_BYTES_AND_READONLY_PRODUCTION_PASS2_PREFLIGHT; ISOLATED_SQL_PUBLICATION_AND_ACTUAL_WEBSITE_STALE_CURRENT_QUERY_PATH; NO_PRD_SQL_WRITES",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
         "catalog/file-examine-dependencies.php",
         "catalog/game-missing.php",
-        "catalog/dependency-cross-examine.php"
+        "catalog/dependency-cross-examine.php",
+        "catalog/file-examine-paged-core.php",
+        "catalog/file-info.php",
+        "catalog/download-info.php",
+        "catalog/api/v1/game-missing-counts.php",
+        "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+        "catalog/src/Infrastructure/Persistence/PdoDashboardStatsQuery.php"
       ],
       "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
       "epic_source_anchor_file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
@@ -1025,7 +1031,7 @@
       "existing_proof_sha_refs": [
         "1325ddb9393400a514691cd0d2b4b94c8bc20a23b1acadc5c2941b7742f1990b3"
       ],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "Production implementation verified on original PRD metadata via disposable SQL publisher/website and actual PRD read-only preflight. PRD 85091-file data rollout separately pending.",
       "result_evidence": "tests/evidence/ue1/ue1-website-original-prd-isolated-current-stale-20261102.json",
       "affected_code_sha256": {
@@ -1047,7 +1053,7 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "current_review_source_sha256": {
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
         "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
@@ -1060,13 +1066,15 @@
         "PASS implemented metadata path: original UE1 source files, actual UEDB5 table dependency resolver, real SQL projection publisher in disposable DB, current/stale/payload website queries, original provider IDs and links, rollback/idempotence.",
         "PRODUCTION DATABASE IS NOT CURRENT: 85091 original UE1 verified files still v13. Both UE1 games read-only Pass2 preflight ready, but no PRD SQL writes occurred. Website currently rejects stale UE1 results correctly; rollout tracked explicitly separate.",
         "UE2 final mount change maintains separate UE1 source-unresolved reason and true UE1 source-specific paths.",
-        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
+        "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified."
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
       "production_prd_readonly_access": "verified MySQL 8.4.11 192.168.0.55:3306; PHP file access via //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage",
       "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737",
-      "production_rollout_status": "PRD_UE1_85091_DEPENDENCY_ROWS_STALE_PASS2_NOT_APPLIED"
+      "production_rollout_status": "PRD_UE1_85091_DEPENDENCY_ROWS_STALE_PASS2_NOT_APPLIED",
+      "historical_review_status": "PASS"
     },
     {
       "key": "ue2-dispatch",
@@ -1077,7 +1085,7 @@
         "F02"
       ],
       "status": "PASS",
-      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -1114,7 +1122,7 @@
         },
         {
           "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-          "line": 46,
+          "line": 90,
           "call_site": "if (in_array($engineKey,"
         }
       ],
@@ -1140,7 +1148,7 @@
         "F06"
       ],
       "status": "PASS",
-      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php",
@@ -1213,7 +1221,7 @@
         "F14"
       ],
       "status": "PASS",
-      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
@@ -1267,7 +1275,7 @@
         "F15"
       ],
       "status": "PASS",
-      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
@@ -1295,7 +1303,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 245,
+          "line": 271,
           "call_site": "$this->selector->select("
         },
         {
@@ -1326,7 +1334,7 @@
         "F19"
       ],
       "status": "PASS",
-      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -1356,12 +1364,12 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 264,
+          "line": 295,
           "call_site": "$this->rebuilder->rebuild("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 268,
+          "line": 299,
           "call_site": "$this->publisher->publish("
         }
       ],
@@ -1385,14 +1393,20 @@
         "F17",
         "F22"
       ],
-      "status": "PASS",
-      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
         "catalog/file-examine-dependencies.php",
         "catalog/game-missing.php",
-        "catalog/dependency-cross-examine.php"
+        "catalog/dependency-cross-examine.php",
+        "catalog/file-examine-paged-core.php",
+        "catalog/file-info.php",
+        "catalog/download-info.php",
+        "catalog/api/v1/game-missing-counts.php",
+        "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+        "catalog/src/Infrastructure/Persistence/PdoDashboardStatsQuery.php"
       ],
       "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
@@ -1407,7 +1421,7 @@
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
       "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
       "affected_code_sha256": {
@@ -1429,7 +1443,7 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
@@ -1438,8 +1452,10 @@
         "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified.",
         "FINAL SOURCE MOUNT GUARD: original UE2 physically installed runtime mount cannot be inferred from one indexed candidate. Five genuine UE2 PRD source consumers, 313 imports, now 313 unresolved without mounted session; zero missing/resolved/package_only or fabricated provider IDs.",
         "Previously reported 158 matched exports were conditional against explicitly supplied real original provider files, NOT evidence of original native mounted runtime search order. No inference of live native Mount Paths.",
-        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
-      ]
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
+        "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified."
+      ],
+      "historical_review_status": "PASS"
     },
     {
       "key": "ue3-dispatch",
@@ -1450,7 +1466,7 @@
         "F02"
       ],
       "status": "PASS",
-      "code_path_evidence": "SHA256_PINNED_UT3_ORIGINAL_BINARY_INDEPENDENT_ALL_TABLE_ROWS; SOURCE_SPECIFIC_PROVIDER_MATCHING; REAL_PHYSICAL_MOUNT_FAIL_CLOSED; ISOLATED_SQL_PUBLISHER_AND_WEBSITE_READS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -1483,7 +1499,7 @@
         },
         {
           "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-          "line": 46,
+          "line": 90,
           "call_site": "if (in_array($engineKey,"
         }
       ],
@@ -1506,7 +1522,7 @@
         "F06"
       ],
       "status": "PASS",
-      "code_path_evidence": "SHA256_PINNED_UT3_ORIGINAL_BINARY_INDEPENDENT_ALL_TABLE_ROWS; SOURCE_SPECIFIC_PROVIDER_MATCHING; REAL_PHYSICAL_MOUNT_FAIL_CLOSED; ISOLATED_SQL_PUBLISHER_AND_WEBSITE_READS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/parsers/EpicUE3PackageReader.php",
@@ -1556,7 +1572,7 @@
         "F14"
       ],
       "status": "PASS",
-      "code_path_evidence": "SHA256_PINNED_UT3_ORIGINAL_BINARY_INDEPENDENT_ALL_TABLE_ROWS; SOURCE_SPECIFIC_PROVIDER_MATCHING; REAL_PHYSICAL_MOUNT_FAIL_CLOSED; ISOLATED_SQL_PUBLISHER_AND_WEBSITE_READS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
@@ -1605,7 +1621,7 @@
         "F15"
       ],
       "status": "PASS",
-      "code_path_evidence": "SHA256_PINNED_UT3_ORIGINAL_BINARY_INDEPENDENT_ALL_TABLE_ROWS; SOURCE_SPECIFIC_PROVIDER_MATCHING; REAL_PHYSICAL_MOUNT_FAIL_CLOSED; ISOLATED_SQL_PUBLISHER_AND_WEBSITE_READS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
@@ -1631,7 +1647,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 245,
+          "line": 271,
           "call_site": "$this->selector->select("
         },
         {
@@ -1659,7 +1675,7 @@
         "F19"
       ],
       "status": "PASS",
-      "code_path_evidence": "SHA256_PINNED_UT3_ORIGINAL_BINARY_INDEPENDENT_ALL_TABLE_ROWS; SOURCE_SPECIFIC_PROVIDER_MATCHING; REAL_PHYSICAL_MOUNT_FAIL_CLOSED; ISOLATED_SQL_PUBLISHER_AND_WEBSITE_READS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -1687,12 +1703,12 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 264,
+          "line": 295,
           "call_site": "$this->rebuilder->rebuild("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 268,
+          "line": 299,
           "call_site": "$this->publisher->publish("
         }
       ],
@@ -1713,14 +1729,20 @@
         "F17",
         "F22"
       ],
-      "status": "PASS",
-      "code_path_evidence": "SHA256_PINNED_UT3_ORIGINAL_BINARY_INDEPENDENT_ALL_TABLE_ROWS; SOURCE_SPECIFIC_PROVIDER_MATCHING; REAL_PHYSICAL_MOUNT_FAIL_CLOSED; ISOLATED_SQL_PUBLISHER_AND_WEBSITE_READS",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
         "catalog/file-examine-dependencies.php",
         "catalog/game-missing.php",
-        "catalog/dependency-cross-examine.php"
+        "catalog/dependency-cross-examine.php",
+        "catalog/file-examine-paged-core.php",
+        "catalog/file-info.php",
+        "catalog/download-info.php",
+        "catalog/api/v1/game-missing-counts.php",
+        "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+        "catalog/src/Infrastructure/Persistence/PdoDashboardStatsQuery.php"
       ],
       "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [01-00-2008]\\epic.jan2008\\UnrealEngine3\\Development\\Src\\Core\\Src\\UnLinker.cpp",
@@ -1733,7 +1755,7 @@
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "Source exact table-only UE3 metadata on original PRD file corpus; no native UObject payload loads, no PRD database publication.",
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
@@ -1755,14 +1777,16 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "production_rollout_status": "PRD_UE3_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_FIX",
       "review_findings": [
         "PASS: Jan-2008 Epic source and seven original UT3 version512 packages, independent complete 35593 names/17904 imports/34635 exports serialized field and offset parity, 0 mismatches.",
         "Fixed UE3 selected-provider root confusion and false physical-mount inference. 17904 original imports with unknown mount now safely unresolved. Real genuine Engine provider conditional matching 376 source export indices.",
         "Source-scoped two real duplicate Engine candidates and reverse test order only; actual runtime mount order not claimed. Isolated SQL 7473 unknown-mount edges, 3134 conditional provider edges, website real Requires/RequiredBy correct and stale/payload exclusions pass; no production DB updates.",
-        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
-      ]
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
+        "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified."
+      ],
+      "historical_review_status": "PASS"
     },
     {
       "key": "ue4-dispatch",
@@ -1773,7 +1797,7 @@
         "F02"
       ],
       "status": "PASS",
-      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -1806,7 +1830,7 @@
         },
         {
           "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-          "line": 46,
+          "line": 90,
           "call_site": "if (in_array($engineKey,"
         }
       ],
@@ -1829,7 +1853,7 @@
         "F06"
       ],
       "status": "PASS",
-      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "UE4/UnrealPackageReader.php",
@@ -1879,7 +1903,7 @@
         "F14"
       ],
       "status": "PASS",
-      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php"
@@ -1928,7 +1952,7 @@
         "F15"
       ],
       "status": "PASS",
-      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
@@ -1954,7 +1978,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 245,
+          "line": 271,
           "call_site": "$this->selector->select("
         },
         {
@@ -1982,7 +2006,7 @@
         "F19"
       ],
       "status": "PASS",
-      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -2010,12 +2034,12 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 264,
+          "line": 295,
           "call_site": "$this->rebuilder->rebuild("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 268,
+          "line": 299,
           "call_site": "$this->publisher->publish("
         }
       ],
@@ -2036,14 +2060,20 @@
         "F17",
         "F22"
       ],
-      "status": "PASS",
-      "code_path_evidence": "EPIC_UE4_FIRST_RELEASE_UT4_CLEANMASTER_LATEST_SOURCE_HASHES; NINE_REAL_ORIGINAL_UT4_PACKAGES_INDEPENDENT_ALL_NAME_IMPORT_EXPORT_RECORDS; REAL_PRD_SELECTOR_UNKNOWN_MOUNT; ISOLATED_SQL_WEBSITE_PASS",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
         "catalog/file-examine-dependencies.php",
         "catalog/game-missing.php",
-        "catalog/dependency-cross-examine.php"
+        "catalog/dependency-cross-examine.php",
+        "catalog/file-examine-paged-core.php",
+        "catalog/file-info.php",
+        "catalog/download-info.php",
+        "catalog/api/v1/game-missing-counts.php",
+        "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+        "catalog/src/Infrastructure/Persistence/PdoDashboardStatsQuery.php"
       ],
       "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
       "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
@@ -2056,7 +2086,7 @@
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
       "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
       "affected_code_sha256": {
@@ -2078,14 +2108,16 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
         "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes.",
-        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
-      ]
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
+        "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified."
+      ],
+      "historical_review_status": "PASS"
     },
     {
       "key": "ue5-dispatch",
@@ -2096,7 +2128,7 @@
         "F02"
       ],
       "status": "PASS",
-      "code_path_evidence": "PREVIOUS_NATIVE_UE5_583_ACCEPTED_18_SOURCE_OPS_16_WORKFLOWS_27240_REAL_ZEN; NEW_UE500_VS_583_EPIC_SOURCE_HASHES; GENUINE_7_ZEN_ORIGINALS_AND_3_CLASSIC_ORIGINALS; GAME14_READONLY_PASS2; GENUINE_ZEN_SOURCE_REVALIDATION_AND_ISOLATED_SQL_WEB; NO_PRD_SQL_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
         "UE5/UnrealPackageReader.php"
@@ -2128,7 +2160,7 @@
         },
         {
           "file": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
-          "line": 46,
+          "line": 90,
           "call_site": "if (in_array($engineKey,"
         }
       ],
@@ -2152,7 +2184,7 @@
         "F06"
       ],
       "status": "PASS",
-      "code_path_evidence": "PREVIOUS_NATIVE_UE5_583_ACCEPTED_18_SOURCE_OPS_16_WORKFLOWS_27240_REAL_ZEN; NEW_UE500_VS_583_EPIC_SOURCE_HASHES; GENUINE_7_ZEN_ORIGINALS_AND_3_CLASSIC_ORIGINALS; GAME14_READONLY_PASS2; GENUINE_ZEN_SOURCE_REVALIDATION_AND_ISOLATED_SQL_WEB; NO_PRD_SQL_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
@@ -2206,8 +2238,8 @@
         "F13",
         "F14"
       ],
-      "status": "PASS",
-      "code_path_evidence": "PREVIOUS_NATIVE_UE5_583_ACCEPTED_18_SOURCE_OPS_16_WORKFLOWS_27240_REAL_ZEN; NEW_UE500_VS_583_EPIC_SOURCE_HASHES; GENUINE_7_ZEN_ORIGINALS_AND_3_CLASSIC_ORIGINALS; GAME14_READONLY_PASS2; GENUINE_ZEN_SOURCE_REVALIDATION_AND_ISOLATED_SQL_WEB; NO_PRD_SQL_WRITES",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php"
@@ -2224,7 +2256,7 @@
       "required_fixture": "real_consumer_with_real_provider_and_original_linker_outcome",
       "acceptance_condition": "Correct source-specific import/provider metadata and dependency status for actual UnrealDB table/registry path, with honest unresolved handling; no native asset loading",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
@@ -2234,19 +2266,24 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
-          "line": 257,
+          "line": 301,
           "call_site": "Uedb5Ue5ZenDependencyResolver::resolve("
         }
       ],
       "out_of_scope_native_payload_loading": true,
       "scope_revised_at": "2026-11-02",
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
-        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes."
+        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
+        "2026-11-03 scope correction: genuine UE5.8.3 classic assets and 47480 Xdebug calls verified isolated PHP parser, provider selection, VerifyImport metadata and rebuilder branches. The old singleton candidate selected without a mounted linker; fail-closed DEV fix now source_unresolved. Negative mounted-set branch corrected in DEV. Epic 5.8.3 C++ mount/VerifyImport function anchors source pinned, but NO native execution trace for original classic loaded linker or SQL website publication. Earlier Zen evidence remains valid in its documented scope."
+      ],
+      "historical_review_status": "PASS",
+      "additional_evidence": [
+        "tests/evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json"
       ]
     },
     {
@@ -2257,8 +2294,8 @@
         "F11",
         "F15"
       ],
-      "status": "PASS",
-      "code_path_evidence": "PREVIOUS_NATIVE_UE5_583_ACCEPTED_18_SOURCE_OPS_16_WORKFLOWS_27240_REAL_ZEN; NEW_UE500_VS_583_EPIC_SOURCE_HASHES; GENUINE_7_ZEN_ORIGINALS_AND_3_CLASSIC_ORIGINALS; GAME14_READONLY_PASS2; GENUINE_ZEN_SOURCE_REVALIDATION_AND_ISOLATED_SQL_WEB; NO_PRD_SQL_WRITES",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php"
@@ -2275,7 +2312,7 @@
       "required_fixture": "two_real_duplicate_providers_and_configured_mount_order",
       "acceptance_condition": "Same physical package for known mount context; explicit unresolved for unknown order",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
@@ -2285,7 +2322,7 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 245,
+          "line": 271,
           "call_site": "$this->selector->select("
         },
         {
@@ -2294,14 +2331,19 @@
           "call_site": "public function select("
         }
       ],
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
-        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
+        "2026-11-03 scope correction: genuine UE5.8.3 classic assets and 47480 Xdebug calls verified isolated PHP parser, provider selection, VerifyImport metadata and rebuilder branches. The old singleton candidate selected without a mounted linker; fail-closed DEV fix now source_unresolved. Negative mounted-set branch corrected in DEV. Epic 5.8.3 C++ mount/VerifyImport function anchors source pinned, but NO native execution trace for original classic loaded linker or SQL website publication. Earlier Zen evidence remains valid in its documented scope."
+      ],
+      "historical_review_status": "PASS",
+      "additional_evidence": [
+        "tests/evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json"
       ]
     },
     {
@@ -2313,8 +2355,8 @@
         "F18",
         "F19"
       ],
-      "status": "PASS",
-      "code_path_evidence": "PREVIOUS_NATIVE_UE5_583_ACCEPTED_18_SOURCE_OPS_16_WORKFLOWS_27240_REAL_ZEN; NEW_UE500_VS_583_EPIC_SOURCE_HASHES; GENUINE_7_ZEN_ORIGINALS_AND_3_CLASSIC_ORIGINALS; GAME14_READONLY_PASS2; GENUINE_ZEN_SOURCE_REVALIDATION_AND_ISOLATED_SQL_WEB; NO_PRD_SQL_WRITES",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -2332,7 +2374,7 @@
       "required_fixture": "genuine_verified_file_and_UEDB5_staged_graph_snapshot",
       "acceptance_condition": "UEDB5 published edges and counts equal verified original reference outcomes",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
@@ -2343,23 +2385,28 @@
       "php_source_sites": [
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 264,
+          "line": 295,
           "call_site": "$this->rebuilder->rebuild("
         },
         {
           "file": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
-          "line": 268,
+          "line": 299,
           "call_site": "$this->publisher->publish("
         }
       ],
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
-        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
+        "2026-11-03 scope correction: genuine UE5.8.3 classic assets and 47480 Xdebug calls verified isolated PHP parser, provider selection, VerifyImport metadata and rebuilder branches. The old singleton candidate selected without a mounted linker; fail-closed DEV fix now source_unresolved. Negative mounted-set branch corrected in DEV. Epic 5.8.3 C++ mount/VerifyImport function anchors source pinned, but NO native execution trace for original classic loaded linker or SQL website publication. Earlier Zen evidence remains valid in its documented scope."
+      ],
+      "historical_review_status": "PASS",
+      "additional_evidence": [
+        "tests/evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json"
       ]
     },
     {
@@ -2370,14 +2417,20 @@
         "F17",
         "F22"
       ],
-      "status": "PASS",
-      "code_path_evidence": "PREVIOUS_NATIVE_UE5_583_ACCEPTED_18_SOURCE_OPS_16_WORKFLOWS_27240_REAL_ZEN; NEW_UE500_VS_583_EPIC_SOURCE_HASHES; GENUINE_7_ZEN_ORIGINALS_AND_3_CLASSIC_ORIGINALS; GAME14_READONLY_PASS2; GENUINE_ZEN_SOURCE_REVALIDATION_AND_ISOLATED_SQL_WEB; NO_PRD_SQL_WRITES",
+      "status": "BLOCKED",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
         "catalog/file-examine-dependencies.php",
         "catalog/game-missing.php",
-        "catalog/dependency-cross-examine.php"
+        "catalog/dependency-cross-examine.php",
+        "catalog/file-examine-paged-core.php",
+        "catalog/file-info.php",
+        "catalog/download-info.php",
+        "catalog/api/v1/game-missing-counts.php",
+        "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+        "catalog/src/Infrastructure/Persistence/PdoDashboardStatsQuery.php"
       ],
       "dispatch_trace": "UE5 Zen selected source policy; do not infer UE5 classic game id",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
@@ -2391,7 +2444,7 @@
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": true,
+      "runtime_call_chain_verified": false,
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
@@ -2413,15 +2466,17 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-02",
+      "reviewed_at": "2026-11-03",
       "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
-        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
-      ]
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
+        "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified."
+      ],
+      "historical_review_status": "PASS"
     },
     {
       "key": "ue2-ut2004-legacy-ue1",
@@ -2433,7 +2488,7 @@
         "F06"
       ],
       "status": "PASS",
-      "code_path_evidence": "ORIGINAL_UE2_PRD_SOURCE_FILES_INDEPENDENT_ALL_TABLE_BYTES_AND_SOURCE_EXACT_UE2_PROFILES; REAL_PROVIDER_SELECTOR; DISPOSABLE_SQL_PUBLISHER_AND_WEBSITE_QUERIES; NO_PRD_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
@@ -2487,7 +2542,7 @@
         "F23"
       ],
       "status": "PASS",
-      "code_path_evidence": "PREVIOUS_NATIVE_UE5_583_ACCEPTED_18_SOURCE_OPS_16_WORKFLOWS_27240_REAL_ZEN; NEW_UE500_VS_583_EPIC_SOURCE_HASHES; GENUINE_7_ZEN_ORIGINALS_AND_3_CLASSIC_ORIGINALS; GAME14_READONLY_PASS2; GENUINE_ZEN_SOURCE_REVALIDATION_AND_ISOLATED_SQL_WEB; NO_PRD_SQL_WRITES",
+      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
         "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerStorage.php",
