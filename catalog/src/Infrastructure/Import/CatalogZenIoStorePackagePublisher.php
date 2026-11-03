@@ -85,20 +85,26 @@ final class CatalogZenIoStorePackagePublisher
         if ($duplicate->fetchColumn() !== false) {
             throw new RuntimeException('FPackageId already registered to another file.');
         }
+        $snapshotStartNs = hrtime(true);
         $snapshot = Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc, $packageId, [
             'id'=>$fileId,'game_id'=>$gameId,'package_name'=>'',
             'original_name'=>$packageId.'.zenpkg',
         ]);
+        $snapshotBuiltNs = hrtime(true);
         $written = (new Uedb5MetadataSnapshotWriter($this->storageRoot))->write($snapshot);
+        $metadataWrittenNs = hrtime(true);
         try {
             $this->db->beginTransaction();
             $registration = $registry->register($gameId, $fileId);
+            $registeredNs = hrtime(true);
             $projection = (new PdoUedb5BaseProjectionPublisher($this->db))
                 ->publish($snapshot, $registration);
+            $projectedNs = hrtime(true);
             $statuses=new PdoUedb5MigrationStatusRepository($this->db);
             $statuses->markStageSucceeded($fileId, $gameId);
             $validation=(new Uedb5MigrationValidator($this->db,['storage_path'=>$this->storageRoot]))
-                ->validate($fileId, null, false, $toc);
+                ->validate($fileId, $snapshot, false, $toc);
+            $validatedNs = hrtime(true);
             if(!empty($validation['ready'])) {
                 $statuses->markValidated($fileId,(string)$written['payload_sha256'],$validation);
             }else{
@@ -110,7 +116,16 @@ final class CatalogZenIoStorePackagePublisher
             @unlink($path);
             throw $e;
         }
+        $committedNs = hrtime(true);
         return ['status'=>'published','file_id'=>$fileId,'package_id'=>$packageId,
+            'timing_ms'=>[
+                'zen_snapshot'=>round(($snapshotBuiltNs-$snapshotStartNs)/1e6,2),
+                'uedb5_write'=>round(($metadataWrittenNs-$snapshotBuiltNs)/1e6,2),
+                'sql_registration'=>round(($registeredNs-$metadataWrittenNs)/1e6,2),
+                'sql_projection'=>round(($projectedNs-$registeredNs)/1e6,2),
+                'validation'=>round(($validatedNs-$projectedNs)/1e6,2),
+                'status_commit'=>round(($committedNs-$validatedNs)/1e6,2),
+            ],
             'package_name'=>$snapshot['file']['package_name'],
             'v5_bytes'=>(int)$written['compressed_size'],
             'candidate_names'=>$projection['name_candidates'],'candidate_objects'=>$projection['object_candidates'],

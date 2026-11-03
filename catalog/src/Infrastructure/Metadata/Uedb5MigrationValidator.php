@@ -53,7 +53,18 @@ final class Uedb5MigrationValidator
         // A source snapshot supplied by the same-process Pass 1 was already
         // parsed after file-size/MD5/SHA1 verification. All V5/SQL checks below
         // remain mandatory. Normal callers still verify and reparse source.
-        $sourceSnapshot = $previouslyVerifiedSourceSnapshot ?? ($trustStagedSource ? $snapshot : $this->validateSourceBytes($context, $verifiedZenToc));
+        // The IoStore publisher has a same-process source snapshot from the
+        // original TOC. Check its physical member and retained TOC identity
+        // before reusing that parse, rather than reparsing the Zen package.
+        if ($previouslyVerifiedSourceSnapshot !== null && !$trustStagedSource
+            && (string)($context['package_family'] ?? '') === Uedb5ZenPackageReader::PACKAGE_FAMILY) {
+            $sourceSnapshot = $this->validateZenRetainedSourceBytes(
+                $context, $verifiedZenToc, $previouslyVerifiedSourceSnapshot
+            );
+        } else {
+            $sourceSnapshot = $previouslyVerifiedSourceSnapshot
+                ?? ($trustStagedSource ? $snapshot : $this->validateSourceBytes($context, $verifiedZenToc));
+        }
         if (!$trustStagedSource || $previouslyVerifiedSourceSnapshot !== null) {
             $this->validateSourceSnapshot($snapshot, $sourceSnapshot);
         }
@@ -143,13 +154,19 @@ final class Uedb5MigrationValidator
     /**
      * An indexed Zen package's original bytes live under games/<slug>/iostore-members,
      * and the authoritative package-store entry lives in the retained .utoc.
-     * Re-parse both; NEVER reinterpret .zenpkg as an ordinary UE5 classic .uasset.
+     * Verify the retained original bytes and authoritative TOC. Reuse a source
+     * snapshot parsed from the same claim only after those physical checks.
+     * NEVER reinterpret .zenpkg as an ordinary UE5 classic .uasset.
      * No database or source file mutation is performed by this validation route.
      *
      * @param array<string,mixed> $context
      * @return array<string,mixed>
      */
-    private function validateZenRetainedSourceBytes(array $context, ?Uedb5IoStoreTocReader $verifiedZenToc = null): array
+    private function validateZenRetainedSourceBytes(
+        array $context,
+        ?Uedb5IoStoreTocReader $verifiedZenToc = null,
+        ?array $sameProcessSourceSnapshot = null
+    ): array
     {
         $gameId = (int)$context['game_id'];
         $fileId = (int)$context['id'];
@@ -223,6 +240,13 @@ final class Uedb5MigrationValidator
             && hash_equals(hash('sha256', $decoded), (string)hash_file('sha256', $memberPath)),
             'zen_original_chunk_hash_mismatch', 'Retained original source bytes differ from their authoritative Zen IoStore chunk.');
 
+        // The same-process source snapshot was parsed from this exact TOC
+        // during publication. Once the original chunk has been re-read and
+        // checked against the physically retained member above, reparsing its
+        // header/tables again provides no additional independent evidence.
+        if ($sameProcessSourceSnapshot !== null) {
+            return $sameProcessSourceSnapshot;
+        }
         return Uedb5Ue5ZenIoStoreSnapshotBuilder::build($toc, $id, [
             'id' => $fileId,
             'game_id' => $gameId,

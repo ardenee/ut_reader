@@ -21,6 +21,7 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
     public function handle(ClaimedJob $job, JobExecutionContext $context):array
     {
         if(!$this->supports($job->type))throw new RuntimeException('Invalid Zen publish job.');
+        $batchStartedNs = hrtime(true);
         $id=(int)($job->payload['container_id']??0);
         if($id<1)throw new RuntimeException('Container ID is required.');
         $lockName='iostore-publish-'.$id;
@@ -46,6 +47,7 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
                 throw new RuntimeException('Retained TOC outside configured storage.');
             $lib=getenv('UNREALDB_OODLE_LIBRARY');
             $toc=new Uedb5IoStoreTocReader($path,null,$lib!==false&&$lib!==''?$lib:null);
+            $tocOpenedNs = hrtime(true);
             if(!hash_equals(strtolower((string)$container['utoc_sha256']),strtolower($toc->tocSha256())))
                 throw new RuntimeException('Retained TOC checksum changed.');
             $rows=$this->db->prepare('SELECT toc_index FROM ue_iostore_packages '
@@ -53,9 +55,22 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
                 .'ORDER BY toc_index LIMIT 50');
             $rows->execute([$id]);
             $published=0;
+            $stageTotalsMs=[];
+            $publicationMs=0.0;
             $publisher=new CatalogIoStoreMemberCatalogPublisher($this->db,(string)$this->config['storage_path']);
             foreach($rows->fetchAll(PDO::FETCH_ASSOC) as $member){
-                $publisher->publish($toc,$id,(int)$member['toc_index']);
+                $memberStartedNs=hrtime(true);
+                $outcome=$publisher->publish($toc,$id,(int)$member['toc_index']);
+                $elapsedMs=(hrtime(true)-$memberStartedNs)/1e6;
+                $publicationMs+=$elapsedMs;
+                $measuredMs=0.0;
+                foreach((array)($outcome['timing_ms']??[]) as $stage=>$ms){
+                    $stageTotalsMs[(string)$stage]=round(($stageTotalsMs[(string)$stage]??0.0)+(float)$ms,2);
+                    $measuredMs+=(float)$ms;
+                }
+                $stageTotalsMs['source_retention_and_identity']=round(
+                    ($stageTotalsMs['source_retention_and_identity']??0.0)+max(0.0,$elapsedMs-$measuredMs),2
+                );
                 $published++;
                 $context->heartbeatIfDue();
             }
@@ -66,14 +81,27 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
                .'SUM(metadata_status="failed") failed_names '
                .'FROM ue_iostore_packages WHERE container_id=? AND chunk_index=0');
             $counts->execute([$id]);$c=$counts->fetch(PDO::FETCH_ASSOC);
+            $slowestStages=$stageTotalsMs;
+            arsort($slowestStages, SORT_NUMERIC);
+            $slowestStage=(string)(array_key_first($slowestStages)??'none');
             $state=['stage'=>'publishing_zen_members','container_id'=>$id,
+                'message'=>'Published '.$published.' Zen packages in '.round($publicationMs/1000,2)
+                    .'s; slowest measured stage: '.$slowestStage.' ('
+                    .round((float)($slowestStages[$slowestStage]??0.0)/1000,2).'s).',
                 'percent'=>(int)$c['total']>0
                     ? (int)floor(100*(int)$c['published']/(int)$c['total']) : 100,
                 'total'=>(int)$c['total'],'published'=>(int)$c['published'],
                 'remaining'=>(int)$c['remaining'],
                 'awaiting_names'=>(int)$c['awaiting_names'],
                 'failed_names'=>(int)$c['failed_names'],
-                'processed_in_batch'=>$published];
+                'processed_in_batch'=>$published,
+                // Timing for this claim only; no per-member logs or SQL writes.
+                'batch_timing_ms'=>[
+                    'batch_wall'=>round((hrtime(true)-$batchStartedNs)/1e6,2),
+                    'toc_open_and_setup'=>round(($tocOpenedNs-$batchStartedNs)/1e6,2),
+                    'member_publication'=>round($publicationMs,2),
+                    'stages'=>$stageTotalsMs,
+                ]];
             $context->checkpoint($state);
             if($state['remaining']>0 || $state['awaiting_names']>0){
                 $context->defer($state['remaining']>0?1:30,$state,false);
