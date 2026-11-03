@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreMemberCatalogPublisher;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
 
@@ -105,6 +106,16 @@ final class CatalogIoStoreMemberPublishJobHandler implements JobHandler
             $context->checkpoint($state);
             if($state['remaining']>0 || $state['awaiting_names']>0){
                 $context->defer($state['remaining']>0?1:30,$state,false);
+            }
+            // Completing package publication must hand off to a bounded
+            // source-backed dependency pass. Do not flood the queue with one
+            // file job per Zen member; this is one resumable game-level unit.
+            if ((int)$state['failed_names'] === 0 && (int)$state['total'] > 0) {
+                $state['dependency_job_id']=(new PdoJobQueue($this->db))->enqueue(
+                    $job->queue, JobType::INDEX_IOSTORE_DEPENDENCIES,
+                    ['container_id'=>$id], 25, null,
+                    'iostore-dependency-'.$id, null, 3
+                );
             }
             return $state+['status'=>$state['failed_names']>0?'completed_with_failures':'bounded_complete'];
         }finally{

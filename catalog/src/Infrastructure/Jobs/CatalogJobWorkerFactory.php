@@ -160,6 +160,7 @@ final class CatalogJobWorkerFactory
             JobType::IMPORT_IOSTORE_CONTAINER => static fn() => new CatalogIoStoreImportJobHandler($db, $trustedImportConfig),
             JobType::INDEX_IOSTORE_PACKAGE_NAMES => static fn() => new CatalogIoStoreNameIndexJobHandler($db, $trustedImportConfig),
             JobType::PUBLISH_IOSTORE_PACKAGES => static fn() => new CatalogIoStoreMemberPublishJobHandler($db, $trustedImportConfig),
+            JobType::INDEX_IOSTORE_DEPENDENCIES => static fn() => new CatalogIoStoreDependencyPassJobHandler($db, $trustedImportConfig),
             JobType::BACKUP_IOSTORE_CONTAINER => static fn() => new CatalogIoStoreBackupJobHandler($db, $trustedImportConfig),
             JobType::RESTORE_IOSTORE_CONTAINER => static fn() => new CatalogIoStoreBackupJobHandler($db, $trustedImportConfig),
             JobType::IMPORT_STAGED_PAK => static fn() => new CatalogPakImportJobHandler($db, $trustedImportConfig),

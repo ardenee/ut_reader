@@ -74,6 +74,7 @@ function game_files_type_from_extension(string $ext): array
         'ugx' => ['gui', 'type-gui'],
         'con' => ['content', 'type-content'],
         'u', 'upk', 'uasset' => ['package', 'type-package'],
+        'zenpkg' => ['Zen / IoStore', 'type-package'],
         default => [$ext !== '' ? $ext : 'unknown', 'type-unknown'],
     };
 }
@@ -90,7 +91,7 @@ function game_files_type_filter_sql(string $type): array
         'particle_effect' => ['upx'],
         'gui' => ['ugx'],
         'content' => ['con'],
-        'package' => ['u', 'upk', 'uasset'],
+        'package' => ['u', 'upk', 'uasset', 'zenpkg'],
     ];
     return $map[$type] ?? [];
 }
@@ -101,6 +102,7 @@ function game_files_status_badge(string $status, int $count): string
         'resolved' => 'success',
         'missing' => 'danger',
         'package_only' => 'warning',
+        'unresolved' => 'warning',
         default => 'neutral',
     };
     return CatalogUi::badge($status . ': ' . $count, $tone);
@@ -435,6 +437,18 @@ try {
         ? 'Files, versions, dependency status and downloads. UE3 UPK package containers are shown separately.'
         : 'Files, versions, dependency status and downloads.';
     echo CatalogUi::pageHeader((string)$game['name'], $description, ['Back to games' => 'games.php']);
+    if ($engineMajor === 5) {
+        $zenFound = catalog_one($db,
+            'SELECT id FROM ue_files WHERE game_id=? AND extension="zenpkg" LIMIT 1', [$gameId]);
+        $runtimeContexts = (array)($config['zen_runtime_context_by_game'] ?? []);
+        $runtimeContext = (array)($runtimeContexts[$gameId] ?? $runtimeContexts[(string)$gameId] ?? []);
+        if ($zenFound && empty($runtimeContext['package_store_context_authoritative'])) {
+            echo '<div class="card"><strong>Zen mounted-store context is not authoritative.</strong> '
+                . 'Unresolved FPackageId dependencies are not classified as missing or resolved. '
+                . 'The dependency pass can extract source-backed requirements, but definitive provider selection needs '
+                . 'original runtime mount and backend evidence.</div>';
+        }
+    }
     if (!$gameDependencyCurrent) {
         echo '<div class="card"><strong>Dependency publication unavailable.</strong> '
             . 'Current missing/resolved classifications are unknown until the engine-specific source publication is complete. '
@@ -498,14 +512,18 @@ try {
 
         foreach ($files as $file) {
             $dependencyBadges = [];
-            foreach (['resolved', 'missing', 'package_only', 'common'] as $key) {
+            foreach (['resolved', 'missing', 'package_only', 'common', 'unresolved'] as $key) {
                 $count = (int)($file[$key . '_count'] ?? 0);
                 if ($count) {
                     $dependencyBadges[] = '<div>' . game_files_status_badge($key, $count) . '</div>';
                 }
             }
+            $isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
+            $zenPackageId = strtoupper((string)($file['zen_package_id'] ?? ''));
             $deps = (int)($file['dependency_projection_current'] ?? 0) !== 1
-                ? '<span class="muted" title="Source-correct dependency publication is not current">unknown — pending recheck</span>'
+                ? ($isZen && (string)($file['v5_stage_status'] ?? '') === 'staged'
+                    ? '<span class="muted" title="Package metadata is published; its engine-specific dependency pass has not completed">Dependencies not evaluated</span>'
+                    : '<span class="muted" title="Source-correct dependency publication is not current">unknown — pending recheck</span>')
                 : ($dependencyBadges !== [] ? '<div class="game-files-dependency-list">' . implode('', $dependencyBadges) . '</div>' : '<span class="muted">none</span>');
             $compressed = (int)($file['is_compressed'] ?? 0) === 1;
             $compression = CatalogUi::badge($compressed ? 'compressed chunks' : 'none', $compressed ? 'warning' : 'success');
@@ -513,16 +531,31 @@ try {
             $id = (int)$file['id'];
             $packageVersion = (int)($file['package_version'] ?? 0);
             $licenseeVersion = (int)($file['licensee_version'] ?? 0);
-            $versionText = $packageVersion . ($licenseeVersion ? ' / ' . $licenseeVersion : '');
+            $versionText = $isZen ? 'Zen / UE5' : ($packageVersion . ($licenseeVersion ? ' / ' . $licenseeVersion : ''));
             $packageName = (string)$file['package_name'];
             $originalName = (string)$file['original_name'];
 
             echo '<tr>';
-            echo '<td class="game-files-primary">'
-                . '<div class="game-files-primary-file"><a class="game-files-file-link" href="file-examine.php?id=' . $id . '" title="Examine file">' . catalog_h($originalName) . '</a></div>'
-                . '<div class="game-files-primary-package mono small"><a class="game-files-package-link" href="file-info.php?id=' . $id . '" title="View package details">' . catalog_h($packageName) . '</a></div>'
-                . '</td>';
-            echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small identity-md5">MD5 ' . catalog_h($file['md5']) . '</span></td>';
+            if ($isZen) {
+                $containerId = (int)($file['zen_container_id'] ?? 0);
+                echo '<td class="game-files-primary">'
+                    . '<div class="game-files-primary-file"><a class="game-files-file-link" href="file-examine.php?id=' . $id . '" title="Examine Zen package">'
+                    . catalog_h($packageName) . '</a></div>'
+                    . '<div class="game-files-primary-package mono small muted">IoStore package member'
+                    . ($containerId > 0 ? ' · <a href="iostore-info.php?id=' . $containerId . '">Container #' . $containerId . '</a>' : '')
+                    . ' · <span title="Internal extracted-member storage format, not a native UE package extension">.zenpkg is internal storage</span></div>'
+                    . '</td>';
+                echo '<td class="identity-cell"><span class="mono small guid-value" title="Unreal Engine 5 Zen package identity, not a package GUID">FPackageId '
+                    . catalog_h($zenPackageId !== '' ? $zenPackageId : 'unavailable')
+                    . '</span><br><small class="muted">No classic package GUID</small>'
+                    . '<br><span class="mono small identity-md5">MD5 ' . catalog_h((string)$file['md5']) . '</span></td>';
+            } else {
+                echo '<td class="game-files-primary">'
+                    . '<div class="game-files-primary-file"><a class="game-files-file-link" href="file-examine.php?id=' . $id . '" title="Examine file">' . catalog_h($originalName) . '</a></div>'
+                    . '<div class="game-files-primary-package mono small"><a class="game-files-package-link" href="file-info.php?id=' . $id . '" title="View package details">' . catalog_h($packageName) . '</a></div>'
+                    . '</td>';
+                echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small identity-md5">MD5 ' . catalog_h($file['md5']) . '</span></td>';
+            }
             echo '<td class="game-files-version">'
                 . '<div class="mono">' . catalog_h($versionText) . '</div>'
                 . '<div class="game-files-version-type"><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></div>'

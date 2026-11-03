@@ -157,12 +157,16 @@ final class PdoGameFileListQuery
             $this->db,
             'SELECT f.id,f.package_name,f.original_name,f.package_guid,f.md5,f.sha1,f.extension,'
             . 'f.package_version,f.licensee_version,f.file_size,f.is_compressed,f.uploaded_at,'
+            . '(SELECT HEX(z.package_id) FROM ue_iostore_packages z WHERE z.file_id=f.id AND z.chunk_index=0 LIMIT 1) zen_package_id,'
+            . '(SELECT z.container_id FROM ue_iostore_packages z WHERE z.file_id=f.id AND z.chunk_index=0 LIMIT 1) zen_container_id,'
+            . '(SELECT m.status FROM ue_uedb5_migration_status m WHERE m.file_id=f.id LIMIT 1) v5_stage_status,'
             . '(CASE WHEN ' . Uedb5DependencyPublicationScope::currentFilePredicate('f')
             . ' THEN 1 ELSE 0 END) dependency_projection_current,'
             . 'COALESCE(SUM(s.resolved_count),0) resolved_count,'
             . 'COALESCE(SUM(s.missing_count),0) missing_count,'
             . 'COALESCE(SUM(s.package_only_count),0) package_only_count,'
-            . 'COALESCE(SUM(s.common_count),0) common_count '
+            . 'COALESCE(SUM(s.common_count),0) common_count,'
+            . 'COALESCE(SUM(s.unresolved_count),0) unresolved_count '
             . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
             . ' AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
             . 'WHERE f.id IN (' . $placeholders . ') GROUP BY f.id',

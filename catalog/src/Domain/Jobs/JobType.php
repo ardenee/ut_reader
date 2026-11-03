@@ -48,6 +48,7 @@ final class JobType
     public const IMPORT_IOSTORE_CONTAINER = 'catalog.import_iostore_container';
     public const INDEX_IOSTORE_PACKAGE_NAMES = 'catalog.index_iostore_package_names';
     public const PUBLISH_IOSTORE_PACKAGES = 'catalog.publish_iostore_packages';
+    public const INDEX_IOSTORE_DEPENDENCIES = 'catalog.index_iostore_dependencies';
     public const BACKUP_IOSTORE_CONTAINER = 'catalog.backup_iostore_container';
     public const RESTORE_IOSTORE_CONTAINER = 'catalog.restore_iostore_container';
     public const IMPORT_STAGED_PAK = 'catalog.import_staged_pak';
@@ -101,6 +102,7 @@ final class JobType
             self::IMPORT_IOSTORE_CONTAINER,
             self::INDEX_IOSTORE_PACKAGE_NAMES,
             self::PUBLISH_IOSTORE_PACKAGES,
+            self::INDEX_IOSTORE_DEPENDENCIES,
             self::BACKUP_IOSTORE_CONTAINER,
             self::RESTORE_IOSTORE_CONTAINER,
             self::IMPORT_STAGED_PAK,
