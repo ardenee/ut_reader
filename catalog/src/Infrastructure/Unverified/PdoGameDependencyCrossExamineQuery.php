@@ -73,6 +73,13 @@ final class PdoGameDependencyCrossExamineQuery
         $targetEngine = strtoupper(trim((string)$target['engine_key']));
         $freshness = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoGameMissingDependencyQuery($this->db))
             ->publicationFreshness($targetGameId, $targetEngine);
+        // An empty verified source corpus is unknown, not evidence of zero
+        // dependencies. In particular, UE5 game14 has no staged originals.
+        if ((int)($freshness['verified'] ?? 0) === 0) {
+            throw new \RuntimeException($targetEngine
+                . ' cross-game dependencies are unavailable: the target game has no verified files. '
+                . 'Verify genuine packages before source-correct UEDB5 Pass 2.');
+        }
         if ((int)$freshness['stale'] > 0) {
             throw new \RuntimeException($targetEngine.' cross-game dependencies are not current for '
                 . $freshness['stale'] . ' verified files; source-correct UEDB5 Pass 2 is required.');

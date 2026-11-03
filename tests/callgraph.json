@@ -20396,13 +20396,13 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/class-remap.php",
       "syntax": "static_or_expression",
-      "line": 144
+      "line": 151
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 292
+      "line": 299
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20414,7 +20414,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataContainer.php",
       "syntax": "static_or_expression",
-      "line": 169
+      "line": 176
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20450,7 +20450,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 331
+      "line": 338
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20462,7 +20462,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 344
+      "line": 351
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20474,7 +20474,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 356
+      "line": 363
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20486,7 +20486,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 374
+      "line": 381
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",

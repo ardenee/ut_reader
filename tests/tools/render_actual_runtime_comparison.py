@@ -91,6 +91,20 @@ def main() -> None:
     for filename, expected in endpoint_proof["source_and_test_SHA256"].items():
         if sha256(REPO / filename) != expected:
             raise RuntimeError(f"Corrected JSON endpoint/runtime source has changed: {filename}")
+    zero_path = REPO / "tests/evidence/ue1-ue5-cross-game-zero-verified-source-guard-20261103.json"
+    zero = json.loads(zero_path.read_text("utf-8"))
+    if zero.get("schema") != "ue1-ue5-cross-game-zero-verified-source-guard-original-prd-xdebug-v1":
+        raise RuntimeError("Incorrect source-corpus cross-game runtime evidence")
+    if (zero["source"]["after_source_sha256"] != sha256(
+        REPO / zero["source"]["file"]
+    ) or zero["isolated_regression"]["source_sha256"] != sha256(
+        REPO / zero["isolated_regression"]["script"]
+    )):
+        raise RuntimeError("Cross-game zero-file runtime proof source code has changed")
+    if (zero["actual_PRD_read_only_execution"]["changed_outcome_cases"] != 1
+        or zero["actual_PRD_read_only_execution"]["unchanged_source_stale_cases"] != 5
+        or zero["target_fixture"]["original_verified_file_count"] != 0):
+        raise RuntimeError("Cross-game zero-file proof no longer matches the original PRD scope")
     service_cases = evidence["real_service_traces"]
     direct_cases = evidence["direct_real_reader_traces"]
     if len(service_cases) != 7 or len(direct_cases) != 6:
@@ -319,6 +333,22 @@ def main() -> None:
         "<p>New source-corrected endpoint evidence: "
         "<code>tests/evidence/ue1-ue5-json-endpoint-source-guard-20261103.json</code>"
         " SHA-256 <code>" + sha256(endpoint_proof_path) + "</code>.</p>",
+        "<h2>Cross-game zero-source correction — original UE5 PRD game</h2>",
+        "<p><strong>Actual verified defect:</strong> PRD game14 (UE5) has "
+        "<strong>zero original verified files</strong>. Previously the cross-game "
+        "read model treated the resulting zero stale-file count as complete and "
+        "returned an empty result, wrongly implying no missing dependencies. "
+        "The corrected model rejects that target as <strong>source unavailable</strong>. "
+        "A live read-only PHP/MySQL replay and Xdebug call trace show exactly one "
+        "changed outcome across six games; the five existing stale game rejections "
+        "are unchanged.</p>",
+        "<p><strong>Isolated positive/negative controls:</strong> no original UE5 "
+        "files is unavailable; UE3 stale v13 remains unavailable; UE1 with one "
+        "verified current v14 publication and zero missing rows legitimately "
+        "returns an empty result. No PRD database writes, new native Epic execution "
+        "or new acceptance contract ID. "
+        "Proof <code>tests/evidence/ue1-ue5-cross-game-zero-verified-source-guard-20261103.json</code>"
+        " · SHA-256 <code>" + sha256(zero_path) + "</code>.</p>",
         "<h2>Independent comparisons and exclusions</h2>",
         "<p><strong>UE2 Unreal II v69:</strong> Original file #149508 and the selected 2000-12-09 "
         "linker match earlier accepted original-byte comparisons; this runtime run observed "

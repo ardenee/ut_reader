@@ -1,0 +1,97 @@
+{
+  "schema": "ue1-ue5-cross-game-zero-verified-source-guard-original-prd-xdebug-v1",
+  "recorded_on": "2026-11-03",
+  "existing_contract_scope": "F17/F22 website dependency consumers (5 existing BLOCKED engine cases); zero new test/contract IDs",
+  "defect": "Cross-game examination accepted zero verified original UE5 game14 files as zero missing dependencies because the only freshness check was stale_files>0.",
+  "security_and_data_access": "PRD MySQL session SET SESSION TRANSACTION READ ONLY, BEGIN, SELECT, ROLLBACK; no PRD SQL writes, no original-file changes",
+  "target_fixture": {
+    "game_id": 14,
+    "engine": "UE5",
+    "original_verified_file_count": 0,
+    "published_v14_dependency_count": 0,
+    "before": "RETURNED rows=0 despite no source corpus",
+    "after": "REJECTED: target game has no verified files",
+    "policy": "uedb5-dependency-pass-ue5-mount-v14"
+  },
+  "unchanged_existing_game_rejections": [
+    {
+      "game_id": 2,
+      "engine": "UE2",
+      "verified_file_count": 1217,
+      "existing_stale_publication_rejection_unchanged": true
+    },
+    {
+      "game_id": 3,
+      "engine": "UE1",
+      "verified_file_count": 74303,
+      "existing_stale_publication_rejection_unchanged": true
+    },
+    {
+      "game_id": 5,
+      "engine": "UE2",
+      "verified_file_count": 72880,
+      "existing_stale_publication_rejection_unchanged": true
+    },
+    {
+      "game_id": 6,
+      "engine": "UE3",
+      "verified_file_count": 6722,
+      "existing_stale_publication_rejection_unchanged": true
+    },
+    {
+      "game_id": 7,
+      "engine": "UE4",
+      "verified_file_count": 64247,
+      "existing_stale_publication_rejection_unchanged": true
+    }
+  ],
+  "source": {
+    "file": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+    "before_source_git_blob_sha256": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
+    "after_source_sha256": "36b5be8e7b8a1cbc0bf1a5d19123d00a1409714fa1a1efbad82a17c1a53296f4",
+    "no_new_Epic_source_heuristics": true
+  },
+  "actual_PRD_read_only_execution": {
+    "cases_tested": 6,
+    "changed_outcome_cases": 1,
+    "unchanged_source_stale_cases": 5,
+    "newly_corrected_UE5_zero_corpus_cases": 1,
+    "actual_PHP_entrypoints_observed": [
+      "PdoGameDependencyCrossExamineQuery->fetch",
+      "PdoGameMissingDependencyQuery->publicationFreshness"
+    ],
+    "Xdebug_version": "3.5.3",
+    "raw_trace_DEV_local_name": "cross-game-UE5-real-current-call.xt",
+    "raw_trace_sha256": "d2754daf545565fbde9b7f0939939dfc5c06bc5abb7ed0428cfd477fb55bd52d",
+    "raw_trace_bytes": 8346,
+    "baseline_before_DEV_local_SHA256": "88d4fab2b85c7fdc5881f50fd414db74504f2566646f5e94fd24f29b5ce3f8ea",
+    "post_fix_DEV_local_SHA256": "f344a766e4baa789cd35816f418cd07d3b74f45b3f6e270f081c68d5e193c20d"
+  },
+  "isolated_regression": {
+    "script": "tests/tools/verify_cross_game_zero_corpus_guard.php",
+    "source_sha256": "7058b5772646f4a270d8b76fbabb792e1644bb3d237b4b190247cea0a3c95418",
+    "expectation": "PASS",
+    "cases": [
+      "UE5 empty original source: unavailable, not verified zero",
+      "UE3 stale v13 source: unavailable, not current",
+      "UE1 genuine current v14 publication with zero missing rows: valid empty result"
+    ],
+    "MySQL_SQLite_compatibility_note": "Isolated SQLite adapter changes the quoted scan_status verified literal to SQL-standard single quoting only in prepared queries, because SQLite mistakes the double-quoted string for a COUNT alias; real PRD runtime trace uses original unmodified MySQL SQL.",
+    "SQL_writes_on_PRD": 0,
+    "new_contract_IDs": 0
+  },
+  "source_match": "No invented UE5 package data or runtime mount context; the fix solely distinguishes zero original verified files from source-correct empty outcomes.",
+  "previous_website_source_read_evidence": {
+    "path": "tests/evidence/ue1-ue5-website-dependency-readpath-runtime-trace-20261103.json",
+    "sha256": "efd3cd37d78d9ee894a49ea57578a37bd6c7ce68f29b4ffb4dfaa753485b80a5"
+  },
+  "limits": [
+    "This is actual PHP/Xdebug + read-only MySQL proof of an empty-source guard, not an authenticated browser-page HTTP trace.",
+    "No UE5 original package exists in PRD game14 for current v14 source-verified dependency publication.",
+    "The five website dependency acceptance contracts remain BLOCKED until genuine mixed-source current v14 publication and native provider evidence are obtained.",
+    "No original Epic native execution or exact Unreal II v110 source revision has been added."
+  ],
+  "production_database_mutations": 0,
+  "original_unreal_file_mutations": 0,
+  "existing_acceptance_27_PASS_5_BLOCKED_unchanged": true
+}
