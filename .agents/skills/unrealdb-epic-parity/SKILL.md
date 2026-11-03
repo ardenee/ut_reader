@@ -14,7 +14,7 @@ compatibility: Windows PowerShell, PHP 8.5, Python, Git and Desktop Commander.
 5. Modify the smallest existing production module only when a real mismatch exists; do not duplicate readers. Respect unknown source/physical mount order: UNKNOWN is not MISSING.
 6. One terminal result per applicable contract in tests/contracts.json: PASS, FAIL, BLOCKED or source-proven SOURCE_NA. Preserve accepted proof hashes; no repeated status counters.
 7. DEV-only verification and protected PRD source deployment; compare SHA-256, protect config, storage, Git. Never write to Epic source or use PRD as test runner.
-8. Keep temporary probes in C:\Temp, retain minimal unique accepted evidence under tests/evidence and clean disposable builds *only after review*. F:\UE5-583-versevm-probe and H:\UE5-583-runtime-probe untouched unless explicitly approved.
+8. Keep all NEW temporary probes in D:\Temp\UnrealDB, retain minimal unique accepted evidence under tests/evidence and clean disposable builds *only after review*. F:\UE5-583-versevm-probe and H:\UE5-583-runtime-probe untouched unless explicitly approved.
 9. Once acceptance criteria are satisfied, STOP. Do not invent another test because a source function/tool exists.
 
 Ponytail reuse, investigate-first on ambiguous failures, and verify-and-stop at acceptance remain applicable. REA and Ghidra are useful read-only compiled source oracles; extracted pseudocode is evidence, not Epic's original C++.

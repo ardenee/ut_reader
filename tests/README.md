@@ -23,7 +23,7 @@ A PASS needs applicable Epic source, a genuine/authoritative oracle for the rele
 
 ## Local process-level source/runtime comparisons (DEV, 2026-11-03)
 
-Tools installed on game-amd: Graphviz 16.1.0 (`C:\Program Files\Graphviz\bin\dot.exe`), Doxygen 1.18.0 (`C:\Program Files\doxygen\bin\doxygen.exe`) and Xdebug 3.5.3 for PHP 8.5 TS VS17, loaded by an explicit CLI-only `-d zend_extension=...` argument. Neither Apache PHP configuration nor PRD is modified. Commercial SciTools Understand is **not** installed.
+Tools installed on game-amd: Graphviz 16.1.0 (`C:\Program Files\Graphviz\bin\dot.exe`), Doxygen 1.18.0 (`C:\Program Files\doxygen\bin\doxygen.exe`) and Xdebug 3.5.3 for PHP 8.5 TS VS17 at `D:\php8.5\ext\php_xdebug-3.5.3-8.5-ts-vs17-x86_64.dll`, opt-in through `D:\Temp\UnrealDB\process-tracing\php-with-xdebug.cmd` or an explicit CLI-only `-d zend_extension=...` argument. Neither Apache PHP configuration nor PRD is modified. Commercial SciTools Understand is **not** installed.
 
 The first source-matched process is UE5 classic physical provider selection (case `ue5-mount-provider`). An isolated original-assets PHP script in `D:\Temp\UnrealDB\UE5\verify_ue5_classic_no_mount_original_pair_20261103.php` processed genuine `BaseFlattenMaterial.uasset` and `BaseFlattenDiffuseMap.uasset`. Its Xdebug trace is `D:\Temp\UnrealDB\process-tracing\ue5_original_classic.xt`; the test result is `ue5-run-result.json`. The bounded public audit evidence is `evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json`. The original source is under `L:\Source\Engine\UE5\UE 5.8.3`. Doxygen generated static C++ call-graphs in `D:\Temp\UnrealDB\process-tracing\doxygen-ue5-classic\html`.
 

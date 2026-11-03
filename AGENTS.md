@@ -27,6 +27,25 @@ Do not create another test register, unrelated "closure" spreadsheets, parallel 
 
 Temporary work: D:\Temp\UnrealDB\<engine>\<contract>\<run>. Unique durable new proof only under tests/evidence/<engine>/<contract>. Limit copied engine builds, instrumented DLLs and cooked projects to a specified necessary oracle and post-acceptance cleanup decision. Never change existing accepted native evidence or original source packages.
 
+## DEV toolchain locations (verified 2026-11-03)
+Version/location snapshot for reproducible auditing, not a claim that future updates do not exist.
+
+| Tool | Verified version | DEV path |
+|---|---|---|
+| REA | 6.8.0 stable | `C:\Users\arden\AppData\Roaming\npm\node_modules\rea-agents`; launcher `C:\Users\arden\AppData\Roaming\npm\rea.cmd` |
+| REA shared skill / Codex MCP | Skill revision 49 (229 tool descriptions); MCP 6.8.0 | `C:\Users\arden\.agents\skills\reverse-engineer-anything`, `C:\Users\arden\.codex\config.toml`. Restart Codex to reload registration. |
+| REA Ghidra provider | 12.1.4 (REA doctor healthy) | `C:\Tools\ghidra_12.1.4_PUBLIC`, and verified wrapper `D:\Temp\UnrealDB\O06\tools\rea-ghidra.ps1`. User GHIDRA_INSTALL_DIR points here. |
+| Standalone Ghidra | 12.2 | `C:\Tools\ghidra_12.2_PUBLIC`. Preserve the 12.1.4 REA provider until newer Ghidra is supported by REA. |
+| Graphify | 0.9.101 | `C:\Users\arden\.local\bin\graphify.exe`, uv-managed; dashboard `C:\Users\arden\Graphify` on localhost port 8765. |
+| Graphviz / Doxygen | 16.1.0 / 1.18.0 | `C:\Program Files\Graphviz\bin\dot.exe`, `C:\Program Files\doxygen\bin\doxygen.exe` |
+| Xdebug / PHP CLI | 3.5.3 / 8.5.12 TS VS17 x64 | DLL `D:\php8.5\ext\php_xdebug-3.5.3-8.5-ts-vs17-x86_64.dll`; opt-in wrapper `D:\Temp\UnrealDB\process-tracing\php-with-xdebug.cmd` (normal PHP/Apache unaffected) |
+| Node.js / npm / uv | 26.13.0 / 12.2.1 / 0.13.7 | Node at `C:\Program Files\nodejs`; uv WinGet-managed |
+| GitHub CLI / Git | 2.103.3 / 2.56.0.windows.4 | `C:\Program Files\GitHub CLI\gh.exe` / standard Git PATH |
+| ctags / fzf / jq / fd / rg | 6.1.0 / 0.74.5 / 1.8.2 / 10.5.0 / 15.2.0 | `C:\Users\arden\AppData\Local\Microsoft\WinGet\Links` |
+| Java for Ghidra | OpenJDK 25.0.5.0.3 (Zulu 25.38.109) | `C:\Tools\zulu25.38.109-ca-jdk25.0.5.0.3-win_x64` (old runtime retained) |
+
+Repository-local Ponytail, Caveman investigate-first/verify-and-stop, UnrealDB Epic Parity and REA compiled-oracle instructions live in `.agents\skills`; these are not globally installed tools. Upstream source clones live at `D:\Temp\UnrealDB\third-party-skills`, and copied skill bodies were compared against current upstream. Only enable optional Caveman or REA analysis providers when their specific workflow is justified.
+
 ## Environments
 - DEV game-amd (192.168.0.51): C:\Users\arden\source\repos\ut_reader. Docker available, not needed for file parity.
 - PRD Lelly-pc (192.168.0.55): C:\Apache24\htdocs\unrealdb; from DEV Z:\Apache24\htdocs\unrealdb.
