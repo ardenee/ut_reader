@@ -2176,7 +2176,7 @@
         "ue5-iostore",
         "ue5-classic-reader"
       ],
-      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
+      "source_provenance_constraint": "UE5 game ID 14 is registered to sourceKey ue5. Classic source-selected .uasset files use the independent UnrealPackageReader5 and Uedb5SourceSnapshotFactory snapshot builder; Zen .utoc/.ucas imports use the distinct IoStore/PackageStore ingestion and publisher path. Do not substitute Zen package results for classic files, and do not infer PRD classic publication from code support alone.",
       "test_purpose": "Wrong source reader selected for a genuine file or engine/game",
       "required_fixture": "real_file_engine_game_version_and_selected_reader",
       "acceptance_condition": "Correct reader class and source-profile decision; reject unsupported family",
@@ -2234,7 +2234,7 @@
         "ue5-iostore",
         "ue5-classic-reader"
       ],
-      "source_provenance_constraint": "UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route.",
+      "source_provenance_constraint": "UE5 game ID 14 is registered to sourceKey ue5. Classic source-selected .uasset files use the independent UnrealPackageReader5 and Uedb5SourceSnapshotFactory snapshot builder; Zen .utoc/.ucas imports use the distinct IoStore/PackageStore ingestion and publisher path. Do not substitute Zen package results for classic files, and do not infer PRD classic publication from code support alone.",
       "test_purpose": "Wrong name/import/export IDs created from package tables",
       "required_fixture": "genuine_file_original_tables_and_unrealdb_snapshot",
       "acceptance_condition": "Same source-selected header/name/import/export rows and exact byte offsets",

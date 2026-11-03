@@ -1,0 +1,792 @@
+[
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Public loose-file upload",
+    "engines": "1234C",
+    "entry": "catalog/public-upload.php",
+    "entry_hint": "public",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
+    "implementation_hint": "class CatalogPublicUploadJobHandler",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Game-profiled upload/batch",
+    "engines": "1234C",
+    "entry": "catalog/profiled-upload.php",
+    "entry_hint": "profile",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
+    "implementation_hint": "class CatalogProfiledUploadBatchJobHandler",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Chunked upload bucket intake",
+    "engines": "1234CZ",
+    "entry": "catalog/upload-bucket-v2.php",
+    "entry_hint": "bucket",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php",
+    "implementation_hint": "class CatalogBucketUploadJobHandler",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Local source directory scan",
+    "engines": "1234C",
+    "entry": "catalog/source-scan.php",
+    "entry_hint": "source",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php",
+    "implementation_hint": "class CatalogSourceScanJobHandler",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "HTTP/remote source scan",
+    "engines": "1234C",
+    "entry": "catalog/http-source-scan.php",
+    "entry_hint": "source",
+    "implementation": "catalog/src/Infrastructure/Source/CatalogHttpSourceScanService.php",
+    "implementation_hint": "class CatalogHttpSourceScanService",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Archive ZIP/RAR/UMOD extraction",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php",
+    "entry_hint": "class CatalogArchiveWorkflowJobHandler",
+    "implementation": "catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php",
+    "implementation_hint": "class CatalogArchiveExtractor",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Nested archive/member routing",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php",
+    "entry_hint": "class CatalogArchiveMemberContentRoutingJobHandler",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogNestedArchiveJobEnqueuer.php",
+    "implementation_hint": "class CatalogNestedArchiveJobEnqueuer",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Unverified package staging and promotion",
+    "engines": "1234C",
+    "entry": "catalog/unverified-files.php",
+    "entry_hint": "unverified",
+    "implementation": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php",
+    "implementation_hint": "class CatalogUnverifiedPromotion",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Signature, extension, file format classification",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "gp_classify_file",
+    "implementation": "catalog/lib/GameProfiles.php",
+    "implementation_hint": "gp_classify_file",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Profile/source version compatibility gate",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "entry_hint": "profileAllowsCatalogRow",
+    "implementation": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+    "implementation_hint": "resolveForGame",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Physical source hash, duplicate and alias identity",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogPackageImportService.php",
+    "entry_hint": "md5_file",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php",
+    "implementation_hint": "function persist",
+    "area": "dispatch"
+  },
+  {
+    "group": "1 Intake / identity / classification",
+    "name": "Corrupt/unsupported package rejection and error reason",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "CatalogInvalidPackageException",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogLegacyPackageCorruptionDetector.php",
+    "implementation_hint": "class CatalogLegacyPackageCorruptionDetector",
+    "area": "dispatch"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Canonical engine-owned reader dispatch",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "resolveForGame",
+    "implementation": "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+    "implementation_hint": "function resolveForGame",
+    "area": "dispatch"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Package summary, versions, raw offsets",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "entry_hint": "assertParsedHeaderAllowed",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "implementation_hint": "getHeader",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "GUID, package flags and signed summary fields",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "packageGuid",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "implementation_hint": "getHeader",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Names table read",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "getNames",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "implementation_hint": "getNames",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Imports table, class/outer package indices",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "getImports",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "implementation_hint": "getImports",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Exports table, native serialized object indices",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "getExports",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "implementation_hint": "getExports",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "FName index, number and name-reference semantics",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+    "entry_hint": "nameLookup",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+    "implementation_hint": "function normalizedTables",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Class, outer, super/template, object flags",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+    "entry_hint": "function exportCoverageRows",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+    "implementation_hint": "withSerializedObjectPaths",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "Bounds/structural validation and malformed tables",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "validatePackage",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "implementation_hint": "assertParsedHeaderAllowed",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE2-owned UT2004 pre-v100 UE1 wire compatibility",
+    "engines": "2",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "entry_hint": "CatalogUE2LegacyCompatibilityPackageReader",
+    "implementation": "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php",
+    "implementation_hint": "class CatalogUE2LegacyCompatibilityPackageReader",
+    "area": "ut2004_legacy_ue1"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UT3 compression chunks and extra summary data",
+    "engines": "3",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
+    "entry_hint": "compressionRows",
+    "implementation": "catalog/parsers/UE3CatalogReader.php",
+    "implementation_hint": "CatalogUE3PackageReader",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4/UE5 classic custom and engine versions",
+    "engines": "4C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "entry_hint": "applyProfile",
+    "implementation": "UE4/UnrealPackageReader.php",
+    "implementation_hint": "readCustomVersions",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4/UE5 classic soft/string asset references",
+    "engines": "4C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+    "entry_hint": "getStringAssetReferences",
+    "implementation": "UE5/UnrealPackageReader.php",
+    "implementation_hint": "getStringAssetReferences",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4/UE5 classic DependsMap serialized references",
+    "engines": "4C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+    "entry_hint": "getDependsMap",
+    "implementation": "UE5/UnrealPackageReader.php",
+    "implementation_hint": "getDependsMap",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4/UE5 classic preload dependency arrays",
+    "engines": "4C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+    "entry_hint": "getPreloadDependencies",
+    "implementation": "UE5/UnrealPackageReader.php",
+    "implementation_hint": "getPreloadDependencies",
+    "area": "tables"
+  },
+  {
+    "group": "2 Reader / source tables",
+    "name": "UE4/UE5 classic mounted long package name/path",
+    "engines": "4C",
+    "entry": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+    "entry_hint": "scanner_ue_package_name_from_source_relative",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "implementation_hint": "assertParsedHeaderAllowed",
+    "area": "dispatch"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE4/UE5 PAK ingest and archive identity",
+    "engines": "4CZ",
+    "entry": "catalog/pak-import.php",
+    "entry_hint": "pak",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php",
+    "implementation_hint": "class CatalogPakImportJobHandler",
+    "area": "dispatch"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE4/UE5 PAK index/entries and member extraction",
+    "engines": "4CZ",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php",
+    "entry_hint": "CatalogPakArchiveStore",
+    "implementation": "catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php",
+    "implementation_hint": "class CatalogPakArchiveStore",
+    "area": "dispatch"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 IoStore container .utoc/.ucas import",
+    "engines": "Z",
+    "entry": "catalog/iostore-import.php",
+    "entry_hint": "iostore",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+    "implementation_hint": "class CatalogIoStoreImportJobHandler",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 IoStore TOC header, chunk types and offsets",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+    "entry_hint": "class CatalogIoStoreImportJobHandler",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+    "implementation_hint": "function chunks",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 IoStore compressed/encrypted blocks and partitions",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerStorage.php",
+    "entry_hint": "Uedb5IoStoreTocReader",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+    "implementation_hint": "function readAndDecodeBlock",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 Zen ContainerHeader and PackageStore entries",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+    "entry_hint": "CHUNK_TYPE_CONTAINER_HEADER",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
+    "implementation_hint": "class Uedb5IoStoreContainerHeaderReader",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 Zen package summary/names/export bundles",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+    "entry_hint": "Uedb5ZenPackageReader",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+    "implementation_hint": "function readExportBundles",
+    "area": "tables"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 Zen package/object indexes and load/dependency graph",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+    "entry_hint": "importedPackageRows",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
+    "implementation_hint": "function readDependencyEntries",
+    "area": "tables"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 Zen script objects and runtime indexes",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+    "entry_hint": "script",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
+    "implementation_hint": "class Uedb5ZenScriptObjectsReader",
+    "area": "verify_import"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 Zen optional segment and redirects",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
+    "entry_hint": "optional_segment",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
+    "implementation_hint": "class Uedb5ZenEffectivePackageStoreContextBuilder",
+    "area": "mount_provider"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 IoStore package name indexing and publishing",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
+    "entry_hint": "class CatalogIoStoreNameIndexJobHandler",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+    "implementation_hint": "class CatalogZenIoStorePackagePublisher",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 IoStore backup/restore of original container",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php",
+    "entry_hint": "class CatalogIoStoreBackupJobHandler",
+    "implementation": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerBackupService.php",
+    "implementation_hint": "class CatalogIoStoreContainerBackupService",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "3 Engine containers",
+    "name": "UE5 Zen indexed package extraction / streamed download",
+    "engines": "Z",
+    "entry": "catalog/iostore-package-download.php",
+    "entry_hint": "CatalogIoStoreIndexedPackageReader",
+    "implementation": "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php",
+    "implementation_hint": "function extract",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Build canonical engine/game-specific UEDB5 table snapshot",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+    "entry_hint": "buildForGameId",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php",
+    "implementation_hint": "class Uedb5MetadataSnapshotWriter",
+    "area": "tables"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Stage/re-read versioned physical metadata snapshot",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
+    "entry_hint": "function publish",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+    "implementation_hint": "class Uedb5MetadataReader",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Assert original source bytes/identity before publication",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5VerifiedFilePublisher.php",
+    "entry_hint": "assertSourceIdentity",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php",
+    "implementation_hint": "class CatalogVerifiedPackageIdentityRepository",
+    "area": "dispatch"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Publish physical provider package keys",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php",
+    "entry_hint": "PdoUedb5ProviderKeyPublisher",
+    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5ProviderKeyPublisher.php",
+    "implementation_hint": "class PdoUedb5ProviderKeyPublisher",
+    "area": "mount_provider"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Compact name candidates and package search index",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogSearchIndexJobHandler.php",
+    "entry_hint": "class CatalogSearchIndexJobHandler",
+    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5NameCandidateSynchronizer.php",
+    "implementation_hint": "class PdoUedb5NameCandidateSynchronizer",
+    "area": "tables"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Compact object candidates and identity cross references",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php",
+    "entry_hint": "PdoUedb5CompactCandidatePublisher",
+    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5ObjectCandidateSynchronizer.php",
+    "implementation_hint": "class PdoUedb5ObjectCandidateSynchronizer",
+    "area": "tables"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "Validate staging format/source policy and payload epoch",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "function preflight",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php",
+    "implementation_hint": "class Uedb5DependencyPublicationScope",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "4 UEDB5 stage and indexes",
+    "name": "UE5 Zen FPackageId snapshot registration/base publication",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+    "entry_hint": "CatalogIoStoreMemberCatalogPublisher",
+    "implementation": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+    "implementation_hint": "function publish",
+    "area": "iostore_ingest"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Determine required physical package roots from imports",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+    "entry_hint": "function rebuild",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+    "implementation_hint": "function normalizedTables",
+    "area": "verify_import"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Look up physical provider candidates without guesswork",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "withClassicNativeMountEvidence",
+    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+    "implementation_hint": "class PdoUedb5PhysicalProviderSelector",
+    "area": "mount_provider"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Apply game-scoped native mount/search-order evidence",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "withClassicNativeMountEvidence",
+    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
+    "implementation_hint": "mount_order_authoritative",
+    "area": "mount_provider"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Compare classic VerifyImport class, outer and export identity",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+    "entry_hint": "Uedb5ClassicDependencyResolver",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
+    "implementation_hint": "function resolve",
+    "area": "verify_import"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Resolve Zen script/package/object runtime dependencies",
+    "engines": "Z",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+    "entry_hint": "Uedb5Ue5ZenDependencyResolver",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
+    "implementation_hint": "class Uedb5Ue5ZenDependencyResolver",
+    "area": "verify_import"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Classify resolved, missing, package-only, common, unresolved",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "function runFile",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
+    "implementation_hint": "function rebuild",
+    "area": "verify_import"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Publish UEDB5 per-import dependency edge outcomes",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "PdoUedb5DependencyProjectionPublisher",
+    "implementation": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
+    "implementation_hint": "function publish",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Publish per-package dependency counts and summaries",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "entry_hint": "PdoUedb5DependencyProjectionPublisher",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
+    "implementation_hint": "class Uedb5DependencyProjectionBuilder",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "5 Provider and dependencies",
+    "name": "Refresh file/game and affected dependency projections",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php",
+    "entry_hint": "class CatalogDependencyRefreshJobHandler",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php",
+    "implementation_hint": "class CatalogAffectedDependencyRefreshCoordinator",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Browse verified file list, engine filter and dependency sort",
+    "engines": "1234CZ",
+    "entry": "catalog/game-files.php",
+    "entry_hint": "depFilter",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
+    "implementation_hint": "class PdoGameFileListQuery",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "View original package details/source identity/dependencies",
+    "engines": "1234CZ",
+    "entry": "catalog/file-info.php",
+    "entry_hint": "file",
+    "implementation": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+    "implementation_hint": "class CatalogCompactDependencyReadService",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Page through stored Names, Imports and Exports",
+    "engines": "1234CZ",
+    "entry": "catalog/file-examine-paged-core.php",
+    "entry_hint": "fetchFilteredPage",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+    "implementation_hint": "function fetchFilteredPage",
+    "area": "tables"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Cross-link import/export references and name usage",
+    "engines": "1234CZ",
+    "entry": "catalog/file-examine-paged-core.php",
+    "entry_hint": "examine_reference",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+    "implementation_hint": "function nameUsage",
+    "area": "tables"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Export stored package tables as CSV or JSON",
+    "engines": "1234CZ",
+    "entry": "catalog/file-examine-export.php",
+    "entry_hint": "fetchPage",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+    "implementation_hint": "function fetchPage",
+    "area": "tables"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Show requires/used-by and reverse physical references",
+    "engines": "1234CZ",
+    "entry": "catalog/file-examine-dependencies.php",
+    "entry_hint": "requiredBy",
+    "implementation": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+    "implementation_hint": "function usedByRows",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Per-game missing packages, objects and freshness",
+    "engines": "1234CZ",
+    "entry": "catalog/game-missing.php",
+    "entry_hint": "publicationFreshness",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
+    "implementation_hint": "function publicationFreshness",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Global missing package rollup and drill-down",
+    "engines": "1234CZ",
+    "entry": "catalog/missing.php",
+    "entry_hint": "missing",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php",
+    "implementation_hint": "class PdoMissingDetailListQuery",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Cross-game dependency providers/missing comparison",
+    "engines": "1234CZ",
+    "entry": "catalog/dependency-cross-examine.php",
+    "entry_hint": "cross",
+    "implementation": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
+    "implementation_hint": "class PdoGameDependencyCrossExamineQuery",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Object coverage, superset and duplicate provider check",
+    "engines": "1234CZ",
+    "entry": "catalog/package-coverage.php",
+    "entry_hint": "coverage",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php",
+    "implementation_hint": "class PdoPackageObjectCoverageResolver",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Download original file bytes with range/access handling",
+    "engines": "1234C",
+    "entry": "catalog/download.php",
+    "entry_hint": "download",
+    "implementation": "catalog/src/Infrastructure/Downloads/CatalogDownloadRangeStreamer.php",
+    "implementation_hint": "class CatalogDownloadRangeStreamer",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Generate game-specific dependency bundle (ZIP/UMOD/PAK)",
+    "engines": "1234CZ",
+    "entry": "catalog/download-package.php",
+    "entry_hint": "download",
+    "implementation": "catalog/src/Infrastructure/Downloads/PdoCatalogPackageExportPlanner.php",
+    "implementation_hint": "class PdoCatalogPackageExportPlanner",
+    "area": "website_dependency"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Unverified game matching, repair and promotion",
+    "engines": "1234C",
+    "entry": "catalog/unverified-files.php",
+    "entry_hint": "unverified",
+    "implementation": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",
+    "implementation_hint": "class PdoUnverifiedGameMatchQuery",
+    "area": "dispatch"
+  },
+  {
+    "group": "6 Website / user outputs",
+    "name": "Federated/cross-game dependency closure and physical copy",
+    "engines": "1234C",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php",
+    "entry_hint": "class CatalogCrossGameCopyBatchJobHandler",
+    "implementation": "catalog/src/Infrastructure/Unverified/CatalogCrossGameDependencyClosurePlanner.php",
+    "implementation_hint": "class CatalogCrossGameDependencyClosurePlanner",
+    "area": "website_dependency"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Full per-game/file source synchronization and recheck",
+    "engines": "1234C",
+    "entry": "catalog/full-sync.php",
+    "entry_hint": "sync",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php",
+    "implementation_hint": "class CatalogFullSyncJobHandler",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Rebuild UEDB5 source snapshots from original files",
+    "engines": "1234C",
+    "entry": "catalog/bin/migrate-uedb5-game.php",
+    "entry_hint": "Uedb5",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+    "implementation_hint": "class Uedb5GameSourceMigrationService",
+    "area": "tables"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Rebuild UEDB5 dependency Pass 2 for a source game",
+    "engines": "1234CZ",
+    "entry": "catalog/bin/migrate-uedb5-dependencies.php",
+    "entry_hint": "Uedb5",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+    "implementation_hint": "function run",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Reconcile source identity, alias and misnamed files",
+    "engines": "1234C",
+    "entry": "catalog/source-identity-repair.php",
+    "entry_hint": "source",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
+    "implementation_hint": "class CatalogMisnamedFileScanJobHandler",
+    "area": "mount_provider"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Repair and validate compact metadata/provider projections",
+    "engines": "1234CZ",
+    "entry": "catalog/src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php",
+    "entry_hint": "class CatalogCompactMetadataRepairJobHandler",
+    "implementation": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
+    "implementation_hint": "class Uedb5MigrationValidator",
+    "area": "dependency_publish"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Refresh game catalog statistics with publication freshness",
+    "engines": "1234CZ",
+    "entry": "catalog/bin/rebuild-game-catalog-stats.php",
+    "entry_hint": "stats",
+    "implementation": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+    "implementation_hint": "class PdoGameCatalogStats",
+    "area": "website_dependency"
+  },
+  {
+    "group": "7 Maintenance / resync",
+    "name": "Recover queued file jobs and preserve failure provenance",
+    "engines": "1234CZ",
+    "entry": "catalog/background-jobs.php",
+    "entry_hint": "jobs",
+    "implementation": "catalog/src/Infrastructure/Jobs/CatalogOrphanedJobRecovery.php",
+    "implementation_hint": "class CatalogOrphanedJobRecovery",
+    "area": "dependency_publish"
+  }
+]

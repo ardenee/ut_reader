@@ -6,6 +6,8 @@ The objective is to make UnrealDB's **observable file handling** match the corre
 - [TEST-PLAN.md](TEST-PLAN.md): 32 concrete operation/path cases with source, fixture, user risk and stopping condition, generated from contracts.json.
 - [contracts.json](contracts.json): ONE live register with 24 risk categories (not tests), 32 actual implementation-derived operation cases and a single current decision per case. NOT_REVIEWED means end-to-end proof has not yet been mapped, NOT that historical accepted proof is invalid.
 - [code-paths.json](code-paths.json): SHA-index of actual production PHP files and operational entrypoints. Filename-derived roles are discovery candidates, not proof of runtime reachability.
+- [OPERATION-INVENTORY.md](OPERATION-INVENTORY.md): source-derived UE1-UE5 operation inventory, 79 named capabilities and six format/engine branch columns; discovery **only**, not a second status register.
+- [tools/build_operation_inventory.py](tools/build_operation_inventory.py) and [tools/operation_inventory_definitions.json](tools/operation_inventory_definitions.json): read-only validated generator and source anchors for that operation matrix.
 - [callgraph.json](callgraph.json):  static lexical class-reference navigation (not proof of actual runtime calls).
 - [ARCHITECTURE.md](ARCHITECTURE.md): production ingestion, reader, dependency and persistence boundaries.
 - [WORKFLOW.md](WORKFLOW.md): mandatory reason-to-test, one-proof, stop and release rules.

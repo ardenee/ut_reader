@@ -47,7 +47,7 @@ NOT_REVIEWED means the real production call and applicable Epic game-source vers
 | UE2 | CatalogUE2BinaryStream.php (see ARCHITECTURE.md for real reader class) | Unreal II, UT2003, UT2004 use different game source overrides. UT2004 pre-v100 legacy UE1-wire-format packages use a UE2-owned compatibility reader under explicit profile rules; never load the UE1 reader module. |
 | UE3 | EpicUE3PackageReader.php (see ARCHITECTURE.md for real reader class) | UT3 v512 licensee0 original Jan-2008 Epic source, not a later UE3 branch overlay. |
 | UE4 | UnrealPackageReader.php (see ARCHITECTURE.md for real reader class) | UT4 clean-master branch source authoritative through v511; UE4 4.0.2 and UE4 4.27.2 are history/differential only. |
-| UE5 | UnrealPackageReader.php (see ARCHITECTURE.md for real reader class) | UE5 classic header reader is available for file scans; UE5 Zen IoStore uses a DISTINCT ingestion/publisher path. Uedb5GameSourceRegistry game IDs do not include ue5, so do not propose a classical game-id snapshot-publisher test as an active route. |
+| UE5 | UnrealPackageReader.php (see ARCHITECTURE.md for real reader class) | UE5 game ID 14 is registered to sourceKey ue5. Classic source-selected .uasset files use the independent UnrealPackageReader5 and Uedb5SourceSnapshotFactory snapshot builder; Zen .utoc/.ucas imports use the distinct IoStore/PackageStore ingestion and publisher path. Do not substitute Zen package results for classic files, and do not infer PRD classic publication from code support alone. |
 
 ## Stop rules
 
