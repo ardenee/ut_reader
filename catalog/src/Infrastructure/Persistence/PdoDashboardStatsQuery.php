@@ -40,6 +40,7 @@ final class PdoDashboardStatsQuery implements DashboardStatsQuery
                 'missing' => (int)($global['missing_dependency_count'] ?? 0),
                 'resolved' => (int)($global['resolved_dependency_count'] ?? 0),
             ];
+            $dependencyCurrent = (int)($global['dependency_current'] ?? 0);
         } else {
             $files = $this->one(
                 'SELECT COUNT(*) files, '
@@ -47,9 +48,10 @@ final class PdoDashboardStatsQuery implements DashboardStatsQuery
                 . "COALESCE(SUM(scan_status='failed'),0) failed "
                 . 'FROM ue_files'
             );
-            $dependencies = $this->one(
-                'SELECT COALESCE(SUM(outcome=0),0) missing, COALESCE(SUM(outcome=1),0) resolved FROM ue_uedb5_dependency_edges'
-            );
+            // A missing cached-statistics table is not evidence that a raw historical
+            // dependency projection is current. Keep counts withheld.
+            $dependencies = ['missing'=>0,'resolved'=>0];
+            $dependencyCurrent = 0;
         }
 
         $transfers = $this->one(
@@ -74,6 +76,7 @@ final class PdoDashboardStatsQuery implements DashboardStatsQuery
             'files' => (int)($files['files'] ?? 0),
             'verified' => (int)($files['verified'] ?? 0),
             'failed' => (int)($files['failed'] ?? 0),
+            'dependency_current' => $dependencyCurrent,
             'missing' => (int)($dependencies['missing'] ?? 0),
             'resolved' => (int)($dependencies['resolved'] ?? 0),
             'fedQueued' => (int)($transfers['queued'] ?? 0),

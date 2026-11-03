@@ -101,6 +101,7 @@ final class Uedb5DependencyRebuilder
                         'ue2_runtime_mount_context_unavailable',
                         'ue3_runtime_mount_context_unavailable',
                         'ue4_runtime_mount_context_unavailable',
+                        'ue5_runtime_mount_context_unavailable',
                     ], true)
                     || !is_array($row['candidate_file_ids'] ?? null)) {
                     throw new RuntimeException('Unresolved classic physical provider requires explicit missing original mount context.');
@@ -117,6 +118,18 @@ final class Uedb5DependencyRebuilder
                     'candidate_file_ids' => $candidateIds,
                     'reason_code' => $sourceReason,
                 ];
+                continue;
+            }
+            if ((string)($row['selection_status'] ?? 'selected') === 'missing') {
+                // Authoritative original mounted-file search found no provider.
+                // Do not attempt to open a null file ID: the source resolver
+                // must receive no provider and emit its normal missing result.
+                if (($row['selection_source'] ?? null) !== 'evidenced_original_classic_mount_order'
+                    || (int)($row['game_id'] ?? 0) < 1
+                    || trim((string)($row['package_name'] ?? '')) === ''
+                    || ($row['file_id'] ?? null) !== null) {
+                    throw new RuntimeException('Missing classic provider requires evidenced original mount order and no file identity.');
+                }
                 continue;
             }
             if ((string)($row['selection_status'] ?? 'selected') === 'ambiguous') {

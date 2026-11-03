@@ -32,6 +32,7 @@ final class PdoMissingDetailListQuery
             'SELECT DISTINCT p.game_id,p.file_id,e.source_index,g.name game_name,'
             . 'f.package_name owner_package_name,f.original_name owner_original_name '
             . 'FROM ue_uedb5_dependency_packages p '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('p')
             . 'JOIN ue_uedb5_dependency_edges e ON e.file_id=p.file_id '
             . 'AND e.required_package_key_kind=p.package_key_kind AND e.required_package_key=p.package_key '
             . 'AND e.source_kind=1 AND e.outcome=0 '
@@ -119,8 +120,9 @@ final class PdoMissingDetailListQuery
         }
 
         $edgeStatement = $this->db->prepare(
-            'SELECT source_index FROM ue_uedb5_dependency_edges '
-            . 'WHERE file_id=? AND source_kind=1 AND outcome=0 ORDER BY source_index'
+            'SELECT e.source_index FROM ue_uedb5_dependency_edges e '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e')
+            . 'WHERE e.file_id=? AND e.source_kind=1 AND e.outcome=0 ORDER BY e.source_index'
         );
         $edgeStatement->execute([$fileId]);
         $indexes = array_map('intval', $edgeStatement->fetchAll(PDO::FETCH_COLUMN) ?: []);
@@ -173,6 +175,7 @@ final class PdoMissingDetailListQuery
             'SELECT f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
             . 'g.id game_id,g.name game_name,SUM(p.missing_count) missing_object_rows '
             . 'FROM ue_uedb5_dependency_packages p '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('p')
             . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
             . 'JOIN ue_games g ON g.id=p.game_id '
             . 'WHERE p.required_package_name=? AND p.missing_count>0 '

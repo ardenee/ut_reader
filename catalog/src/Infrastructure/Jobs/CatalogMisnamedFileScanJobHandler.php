@@ -145,7 +145,8 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
             . ') '
             . 'AND EXISTS ('
             . 'SELECT 1 FROM ue_uedb5_dependency_packages p '
-            . 'WHERE p.file_id=f.id AND p.game_id=f.game_id AND p.missing_count>0'
+            . 'WHERE p.file_id=f.id AND p.game_id=f.game_id AND p.missing_count>0 AND '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('p')
             . ') ORDER BY f.id LIMIT ' . self::OWNER_BATCH_SIZE;
 
         $statement = $this->db->prepare($sql);

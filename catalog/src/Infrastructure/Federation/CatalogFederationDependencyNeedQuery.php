@@ -28,6 +28,7 @@ final class CatalogFederationDependencyNeedQuery
         if ($requiredObjectPath === '') {
             $statement = $this->db->prepare(
                 'SELECT 1 FROM ue_uedb5_dependency_packages p '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('p')
                 . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
                 . 'WHERE p.required_package_name=? AND p.missing_count>0 LIMIT 1'
             );
@@ -37,6 +38,7 @@ final class CatalogFederationDependencyNeedQuery
 
         $statement = $this->db->prepare(
             'SELECT DISTINCT p.game_id,p.file_id FROM ue_uedb5_dependency_packages p '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('p')
             . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
             . 'WHERE p.required_package_name=? AND p.missing_count>0 ORDER BY p.file_id'
         );

@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope;
 
 /** Loads stable cursor pages of a game's file list and dependency summaries. */
 final class PdoGameFileListQuery
@@ -136,6 +137,7 @@ final class PdoGameFileListQuery
             $this->db,
             'SELECT f.id,f.package_name,f.original_name,COALESCE(SUM(s.missing_count),0) missing_count '
             . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
+            . ' AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
             . $whereSql . ' GROUP BY f.id,f.package_name,f.original_name' . $having
             . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
             . ' LIMIT ' . $limit,
@@ -155,11 +157,14 @@ final class PdoGameFileListQuery
             $this->db,
             'SELECT f.id,f.package_name,f.original_name,f.package_guid,f.md5,f.sha1,f.extension,'
             . 'f.package_version,f.licensee_version,f.file_size,f.is_compressed,f.uploaded_at,'
+            . '(CASE WHEN ' . Uedb5DependencyPublicationScope::currentFilePredicate('f')
+            . ' THEN 1 ELSE 0 END) dependency_projection_current,'
             . 'COALESCE(SUM(s.resolved_count),0) resolved_count,'
             . 'COALESCE(SUM(s.missing_count),0) missing_count,'
             . 'COALESCE(SUM(s.package_only_count),0) package_only_count,'
             . 'COALESCE(SUM(s.common_count),0) common_count '
             . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
+            . ' AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
             . 'WHERE f.id IN (' . $placeholders . ') GROUP BY f.id',
             $fileIds
         );

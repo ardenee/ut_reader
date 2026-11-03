@@ -29,7 +29,7 @@ try {
 
     $health = catalog_one(
         $db,
-        'SELECT p.engine_key,v.source_policy,v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256 '
+        'SELECT p.engine_key,v.format_version,v.source_policy,v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256,s.dependency_completed_at '
         . 'FROM ue_uedb5_files v JOIN ue_games g ON g.id=v.game_id '
         . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
         . 'LEFT JOIN ue_uedb5_migration_status s '
@@ -41,6 +41,8 @@ try {
     $expectedPolicy = is_array($health)
         ? $policyClass::policyForEngine((string)($health['engine_key'] ?? '')) : '';
     if (!is_array($health)
+        || (int)($health['format_version']??0) !== 5
+        || empty($health['dependency_completed_at'])
         || (string)($health['dependency_policy']??'') !== $expectedPolicy
         || !hash_equals((string)($health['payload_sha256']??''),(string)($health['dependency_payload_sha256']??''))) {
         http_response_code(409);
@@ -68,7 +70,7 @@ try {
         . ' JOIN ue_games mg ON mg.id=m.game_id'
         . ' JOIN ue_game_profiles ep ON ep.id=mg.profile_id AND ep.is_active=1'
         . ' JOIN ue_uedb5_migration_status ms ON ms.file_id=m.file_id AND ms.game_id=m.game_id '
-        . 'AND ms.dependency_payload_sha256=m.payload_sha256 AND ms.dependency_policy='
+        . 'AND ms.dependency_completed_at IS NOT NULL AND ms.dependency_payload_sha256=m.payload_sha256 AND ms.dependency_policy='
         . $enginePolicySql
         . ' JOIN ue_files dst ON dst.id=l.resolved_file_id AND dst.scan_status="verified"'
         . ' WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.resolved_file_id<>?'
@@ -83,7 +85,7 @@ try {
         . ' JOIN ue_games mg ON mg.id=m.game_id'
         . ' JOIN ue_game_profiles ep ON ep.id=mg.profile_id AND ep.is_active=1'
         . ' JOIN ue_uedb5_migration_status ms ON ms.file_id=m.file_id AND ms.game_id=m.game_id '
-        . 'AND ms.dependency_payload_sha256=m.payload_sha256 AND ms.dependency_policy='
+        . 'AND ms.dependency_completed_at IS NOT NULL AND ms.dependency_payload_sha256=m.payload_sha256 AND ms.dependency_policy='
         . $enginePolicySql
         . ' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified"'
         . ' WHERE l.resolved_file_id=? AND l.file_id<>?'

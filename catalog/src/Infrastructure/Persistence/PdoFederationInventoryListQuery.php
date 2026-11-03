@@ -154,6 +154,7 @@ final class PdoFederationInventoryListQuery
             . 'SELECT s.game_id,ng.name game_name,LOWER(TRIM(s.required_package_name)) package_key,'
             . 'COUNT(*) needed_by_parent_files '
             . 'FROM ue_uedb5_dependency_packages s '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('s')
             . 'JOIN ue_files needer ON needer.id=s.file_id AND needer.scan_status="verified" '
             . 'JOIN ue_games ng ON ng.id=s.game_id '
             . 'WHERE s.missing_count>0 '
@@ -178,6 +179,7 @@ final class PdoFederationInventoryListQuery
             . 'SUM(s.missing_count) object_count,COUNT(*) use_count,'
             . 'MAX(CASE WHEN ' . $baseGameSql . ' THEN 1 ELSE 0 END) is_base_game '
             . 'FROM ue_uedb5_dependency_packages s '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('s')
             . 'JOIN ue_files f ON f.id=s.file_id AND f.scan_status="verified" '
             . 'JOIN ue_games g ON g.id=s.game_id '
             . 'LEFT JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1 '

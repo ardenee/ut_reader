@@ -270,6 +270,7 @@ final class PdoUnverifiedGameMatchQuery
             'SELECT e.file_id owner_file_id,e.source_index,e.required_package_key_kind,'
             . 'HEX(e.required_package_key) required_package_key_hex,owner.game_id,g.name game_name '
             . 'FROM ue_uedb5_dependency_edges e '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e')
             . 'JOIN ue_files owner ON owner.id=e.file_id AND owner.scan_status="verified" '
             . 'JOIN ue_games g ON g.id=owner.game_id '
             . 'WHERE e.source_kind=' . Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT

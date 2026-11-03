@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1025,
-  "edges_count": 3620,
+  "nodes": 1026,
+  "edges_count": 3625,
   "edge_types": {
-    "use": 1233,
-    "new": 952,
-    "static_or_expression": 1435
+    "use": 1235,
+    "new": 954,
+    "static_or_expression": 1436
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -511,24 +511,18 @@
     {
       "from": "catalog/api/v1/game-missing-counts.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
-      "syntax": "static_or_expression",
-      "line": 45
-    },
-    {
-      "from": "catalog/api/v1/game-missing-counts.php",
-      "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
       "syntax": "use",
       "line": 16
     },
     {
       "from": "catalog/api/v1/game-missing-counts.php",
-      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
       "syntax": "new",
       "line": 27
     },
     {
       "from": "catalog/api/v1/game-missing-counts.php",
-      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
       "syntax": "use",
       "line": 17
     },
@@ -3182,13 +3176,13 @@
       "from": "catalog/dashboard.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 89
+      "line": 91
     },
     {
       "from": "catalog/dashboard.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 89
+      "line": 91
     },
     {
       "from": "catalog/dependency-cross-examine-action.php",
@@ -3308,7 +3302,7 @@
       "from": "catalog/download-info.php",
       "to": "catalog/src/Infrastructure/Downloads/CatalogPackageExportSettingsService.php",
       "syntax": "new",
-      "line": 72
+      "line": 73
     },
     {
       "from": "catalog/download-info.php",
@@ -3320,7 +3314,7 @@
       "from": "catalog/download-info.php",
       "to": "catalog/src/Infrastructure/Downloads/PdoCatalogPackageExportPlanner.php",
       "syntax": "new",
-      "line": 110
+      "line": 126
     },
     {
       "from": "catalog/download-info.php",
@@ -3330,9 +3324,21 @@
     },
     {
       "from": "catalog/download-info.php",
+      "to": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+      "syntax": "new",
+      "line": 102
+    },
+    {
+      "from": "catalog/download-info.php",
+      "to": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+      "syntax": "use",
+      "line": 20
+    },
+    {
+      "from": "catalog/download-info.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoPackageCoverageCache.php",
       "syntax": "new",
-      "line": 255
+      "line": 271
     },
     {
       "from": "catalog/download-info.php",
@@ -3344,7 +3350,7 @@
       "from": "catalog/download-info.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php",
       "syntax": "static_or_expression",
-      "line": 246
+      "line": 262
     },
     {
       "from": "catalog/download-info.php",
@@ -3356,25 +3362,25 @@
       "from": "catalog/download-info.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 132
+      "line": 148
     },
     {
       "from": "catalog/download-info.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 200
+      "line": 216
     },
     {
       "from": "catalog/download-info.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 148
+      "line": 164
     },
     {
       "from": "catalog/download-info.php",
       "to": "catalog/src/Presentation/Ui/Component/IconButton.php",
       "syntax": "static_or_expression",
-      "line": 132
+      "line": 148
     },
     {
       "from": "catalog/download-logs.php",
@@ -4328,7 +4334,7 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 382
+      "line": 397
     },
     {
       "from": "catalog/game-files.php",
@@ -4340,7 +4346,7 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "syntax": "new",
-      "line": 388
+      "line": 403
     },
     {
       "from": "catalog/game-files.php",
@@ -4358,7 +4364,7 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 524
+      "line": 546
     },
     {
       "from": "catalog/game-files.php",
@@ -4376,25 +4382,25 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 460
+      "line": 480
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/LoadingState.php",
       "syntax": "static_or_expression",
-      "line": 452
+      "line": 472
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 422
+      "line": 437
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 455
+      "line": 475
     },
     {
       "from": "catalog/game-manager.php",
@@ -6354,9 +6360,21 @@
     },
     {
       "from": "catalog/library.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
+      "syntax": "new",
+      "line": 38
+    },
+    {
+      "from": "catalog/library.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
+      "syntax": "use",
+      "line": 17
+    },
+    {
+      "from": "catalog/library.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
       "syntax": "new",
-      "line": 31
+      "line": 32
     },
     {
       "from": "catalog/library.php",
@@ -8288,7 +8306,7 @@
       "from": "catalog/src/Infrastructure/Federation/CatalogFederationDependencyNeedQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "new",
-      "line": 53
+      "line": 55
     },
     {
       "from": "catalog/src/Infrastructure/Federation/CatalogFederationDependencyNeedQuery.php",
@@ -12500,7 +12518,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
       "to": "catalog/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php",
       "syntax": "static_or_expression",
-      "line": 196
+      "line": 197
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
@@ -12512,7 +12530,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfileExternalSchemaResolver.php",
       "syntax": "static_or_expression",
-      "line": 277
+      "line": 278
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
@@ -14900,7 +14918,7 @@
       "from": "catalog/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 536
+      "line": 537
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php",
@@ -15014,7 +15032,7 @@
       "from": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "new",
-      "line": 244
+      "line": 245
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
@@ -15026,7 +15044,7 @@
       "from": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
       "syntax": "static_or_expression",
-      "line": 226
+      "line": 227
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
@@ -15116,13 +15134,13 @@
       "from": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataContainer.php",
       "syntax": "static_or_expression",
-      "line": 239
+      "line": 242
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "new",
-      "line": 67
+      "line": 68
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
@@ -15524,19 +15542,19 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/class-remap.php",
       "syntax": "static_or_expression",
-      "line": 412
+      "line": 418
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogUnrealIdentityHash.php",
       "syntax": "static_or_expression",
-      "line": 67
+      "line": 72
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 447
+      "line": 453
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15554,19 +15572,19 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicVerifyImportResolver.php",
       "syntax": "static_or_expression",
-      "line": 444
+      "line": 450
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 353
+      "line": 359
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 457
+      "line": 463
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15578,7 +15596,7 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 455
+      "line": 461
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15590,7 +15608,7 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageStoreBackendArbitrator.php",
       "syntax": "static_or_expression",
-      "line": 350
+      "line": 356
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
@@ -15923,34 +15941,46 @@
       "line": 5
     },
     {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "static_or_expression",
+      "line": 27
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 9
+    },
+    {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogUnrealIdentityHash.php",
       "syntax": "static_or_expression",
-      "line": 468
+      "line": 481
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 257
+      "line": 270
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
       "syntax": "static_or_expression",
-      "line": 460
+      "line": 473
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicVerifyImportResolver.php",
       "syntax": "static_or_expression",
-      "line": 222
+      "line": 235
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 288
+      "line": 301
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
@@ -16382,7 +16412,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogUnrealIdentityHash.php",
       "syntax": "static_or_expression",
-      "line": 178
+      "line": 180
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
@@ -16400,7 +16430,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
       "syntax": "static_or_expression",
-      "line": 198
+      "line": 200
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
@@ -17702,7 +17732,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoFederationInventoryListQuery.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 200
+      "line": 202
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoFederationInventoryListQuery.php",
@@ -17720,19 +17750,19 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
       "syntax": "new",
-      "line": 23
+      "line": 24
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 80
+      "line": 81
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 45
+      "line": 46
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
@@ -17744,7 +17774,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 303
+      "line": 305
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
@@ -17756,7 +17786,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
       "syntax": "new",
-      "line": 294
+      "line": 296
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
@@ -17768,7 +17798,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "new",
-      "line": 380
+      "line": 383
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
@@ -17984,7 +18014,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "new",
-      "line": 268
+      "line": 271
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php",
@@ -17996,13 +18026,13 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 60
+      "line": 62
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 36
+      "line": 37
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php",
@@ -18116,7 +18146,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "new",
-      "line": 51
+      "line": 52
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php",
@@ -18128,7 +18158,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php",
       "syntax": "static_or_expression",
-      "line": 79
+      "line": 80
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
@@ -19760,7 +19790,7 @@
       "from": "catalog/src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogJobDisplayStatus.php",
       "syntax": "static_or_expression",
-      "line": 111
+      "line": 118
     },
     {
       "from": "catalog/src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php",
@@ -19838,7 +19868,7 @@
       "from": "catalog/src/Infrastructure/Unverified/CatalogCrossGameDependencyClosurePlanner.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
       "syntax": "static_or_expression",
-      "line": 101
+      "line": 114
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/CatalogCrossGameDependencyClosurePlanner.php",
@@ -20528,7 +20558,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "new",
-      "line": 289
+      "line": 290
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",

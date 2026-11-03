@@ -240,6 +240,7 @@ final class CatalogFederationTransferClient
         return \catalog_one(
             $this->db,
             'SELECT p.file_id id FROM ue_uedb5_dependency_packages p '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('p')
             . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
             . 'JOIN ue_games g ON g.id=f.game_id '
             . 'WHERE p.missing_count>0 AND LOWER(p.required_package_name)=LOWER(?)'

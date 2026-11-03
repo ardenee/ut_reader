@@ -16,6 +16,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use DateTimeImmutable;
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope;
 
 /**
  * Maintains compact per-game counters used by dashboard, library and game lists.
@@ -293,7 +294,7 @@ final class PdoGameCatalogStats
         return $rebuilt;
     }
 
-    /** @return array<string,int> */
+    /** @return array<string,int|null> */
     public function global(): array
     {
         if (!$this->available()) {
@@ -327,6 +328,15 @@ final class PdoGameCatalogStats
         }
         foreach ($cached as $key => $value) {
             $cached[$key] = (int)$value;
+        }
+        $current = Uedb5DependencyPublicationScope::allGameStatsCurrent($this->db);
+        $cached['dependency_current'] = $current ? 1 : 0;
+        if (!$current) {
+            foreach (['dependency_count','missing_dependency_count','resolved_dependency_count',
+                'package_only_dependency_count','common_dependency_count','missing_package_count',
+                'missing_base_game_dependency_count'] as $key) {
+                $cached[$key] = null;
+            }
         }
         return $cached;
     }

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1025,
+  "total_files": 1026,
   "roles": {
     "CONTAINER": 88,
     "DATABASE": 119,
-    "DEPENDENCY": 59,
+    "DEPENDENCY": 60,
     "ERROR": 34,
     "FILE": 7,
     "GENERAL": 152,
@@ -21,7 +21,7 @@
     "UI": 160
   },
   "engine_hints": {
-    "shared": 868,
+    "shared": 869,
     "ue1": 93,
     "ue2": 12,
     "ue3": 4,
@@ -367,8 +367,8 @@
     },
     {
       "path": "catalog/api/v1/game-missing-counts.php",
-      "sha256": "31088f7c4382fcaae4bfcca07349a02f8608313aa72ab79673327c425784746c",
-      "bytes": 2803,
+      "sha256": "d765b938e32a36622ec593082d85d692c3fcfd6683ce8eb4da97a722268a8d3e",
+      "bytes": 2101,
       "engine_hints": [
         "shared"
       ],
@@ -2539,8 +2539,8 @@
     },
     {
       "path": "catalog/dashboard.php",
-      "sha256": "c7d0809da8cae4a34d9fc9e2ef143db0f56ad427f979f0a345c15aa915728fa5",
-      "bytes": 6493,
+      "sha256": "a3870084358d2cfc19e43b16586ff5fd601dce6c9dae82529aaae402fe32b6db",
+      "bytes": 6904,
       "engine_hints": [
         "shared"
       ],
@@ -2624,8 +2624,8 @@
     },
     {
       "path": "catalog/download-info.php",
-      "sha256": "e65e0bb95ab8499ac1b439e7379017600d0906047a55d5eb7e39ed19410b6bd9",
-      "bytes": 21766,
+      "sha256": "f78f12c8b6dc31986daa92e13014316aac96a6adc655b039244613b8e292874d",
+      "bytes": 23026,
       "engine_hints": [
         "shared"
       ],
@@ -2932,8 +2932,8 @@
     },
     {
       "path": "catalog/file-examine-dependencies.php",
-      "sha256": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
-      "bytes": 5438,
+      "sha256": "f826883d802a647b4753a5337981e575fb7011c92ee104cb4c9b655d7ef71373",
+      "bytes": 5673,
       "engine_hints": [
         "shared"
       ],
@@ -2988,8 +2988,8 @@
     },
     {
       "path": "catalog/file-examine-paged-core.php",
-      "sha256": "d45b57bd5be9bb3c4d358b0fbb9d01025cca08b81bc0273126a0a47558ea416b",
-      "bytes": 26096,
+      "sha256": "0e3cac0168ad6bb9abf9473d399e6638a06a9bddf9f6c28b48f7c2954ae39a87",
+      "bytes": 27072,
       "engine_hints": [
         "shared"
       ],
@@ -3058,8 +3058,8 @@
     },
     {
       "path": "catalog/file-info.php",
-      "sha256": "0c96e50bc808632b22f2318e789269e69d2782ef24d25176a8adbf41232c2bd3",
-      "bytes": 14017,
+      "sha256": "8f495d3361633d33049a9d83b8d03977c542358b651776753c2d275fb6c41a1c",
+      "bytes": 14616,
       "engine_hints": [
         "shared"
       ],
@@ -3142,8 +3142,8 @@
     },
     {
       "path": "catalog/game-files.php",
-      "sha256": "3f0e5319c050b127c83f888e1765374278323b72491e5be35f7cfecec1b249b0",
-      "bytes": 26170,
+      "sha256": "128c5a348fb298b4b944c1dbb0909f769a7e5ca19f8fb1699b95f23e2eb5b65f",
+      "bytes": 27694,
       "engine_hints": [
         "shared"
       ],
@@ -4396,8 +4396,8 @@
     },
     {
       "path": "catalog/library.php",
-      "sha256": "94bb4ad9628713ba38b0cbb7b4dd8bffd65fff2d8547743cd145116989cfbae1",
-      "bytes": 6509,
+      "sha256": "edddc38ec5604c4c5081f0e5e3867a1b554ecc9100ad94522e39457eaa04012a",
+      "bytes": 6539,
       "engine_hints": [
         "shared"
       ],
@@ -6368,8 +6368,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Federation/CatalogFederationDependencyNeedQuery.php",
-      "sha256": "4892cdb7814baba46bfa7513bc01165cb259b70b9147df19b4b50329398dc5f0",
-      "bytes": 3865,
+      "sha256": "a0786e7dae36acddad9c090fc5fe481c9d39b76fe51300b6513495c84ef3a2d9",
+      "bytes": 4099,
       "engine_hints": [
         "shared"
       ],
@@ -6836,8 +6836,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Federation/CatalogFederationTransferClient.php",
-      "sha256": "ed7420233ebfd94c8dffd48fbdc3d922db6d77fd76b06f931a5d6bdb69969d49",
-      "bytes": 9147,
+      "sha256": "8c2f857d2f455be39f4cce35b3b4c4f397bc50ae3a4a81cef28d5dcdc059081e",
+      "bytes": 9262,
       "engine_hints": [
         "shared"
       ],
@@ -7076,8 +7076,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Games/PdoGameFileReassignmentSelectionQuery.php",
-      "sha256": "ebd798827327b9bb498ae78e1f30a77bde6698476a606b0539ea9898f23981a9",
-      "bytes": 7555,
+      "sha256": "e5cc89ae9f54f04e77ab89920008b5143e4e018fd6e3c475c1ce6ac8fe1fd4fd",
+      "bytes": 7785,
       "engine_hints": [
         "shared"
       ],
@@ -8473,8 +8473,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
-      "sha256": "93c6af1d0176f90008eea4aa4faa134d85ed91000d55ddfc9f8c5c685f878db0",
-      "bytes": 13853,
+      "sha256": "1e2309a8b6767b6add7fa420776954b44dc5919deb0927c65868397184aafd03",
+      "bytes": 13975,
       "engine_hints": [
         "shared"
       ],
@@ -8546,8 +8546,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php",
-      "sha256": "10a94bfd6959a8a04862b3c6b232f737390cec23470bf3c991304a1cb9b73d8f",
-      "bytes": 7476,
+      "sha256": "1612d27694ee926d2c89d629701ab07a0b4ed4a11850a7c126b035124d30d7df",
+      "bytes": 7595,
       "engine_hints": [
         "shared"
       ],
@@ -9207,8 +9207,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php",
-      "sha256": "664726532b795a455005cca14f90e26e27a35b727403630ae866778edf598599",
-      "bytes": 28621,
+      "sha256": "02e892bfcb02c54cbaec21989953db78946b701ac6ec6986792e26f23870051a",
+      "bytes": 28753,
       "engine_hints": [
         "shared"
       ],
@@ -9235,8 +9235,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
-      "sha256": "fc4709fbaf687a0877cd9d99cc2f4a151e73bb1e17aa9da8dcab0b914f47d67c",
-      "bytes": 16129,
+      "sha256": "88a04e01216cc3ed080ba1bba1f648c248c22a1cbc13d1def2bf13f6a859ca99",
+      "bytes": 16241,
       "engine_hints": [
         "shared"
       ],
@@ -9292,8 +9292,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
-      "sha256": "5e723c7f06db17b948c540ccff9966579a49c6475f260327573462f86efa9e4b",
-      "bytes": 13089,
+      "sha256": "da7ad45c94d89d8e90ffa46af89dd493f48990b7fa317cd5e8c7ecea52c45d67",
+      "bytes": 13369,
       "engine_hints": [
         "shared"
       ],
@@ -9519,8 +9519,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
-      "sha256": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c",
-      "bytes": 24785,
+      "sha256": "3cc2648bccd36b2f772ee656be72b8857eca29b891982ba2a16d6717e36374c5",
+      "bytes": 25224,
       "engine_hints": [
         "shared"
       ],
@@ -9660,9 +9660,23 @@
       "class": "Uedb5DependencyProjectionBuilder"
     },
     {
+      "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php",
+      "sha256": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d",
+      "bytes": 8199,
+      "engine_hints": [
+        "shared"
+      ],
+      "path_roles": [
+        "DEPENDENCY"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "does"
+    },
+    {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php",
-      "sha256": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
-      "bytes": 22590,
+      "sha256": "f6ed565432dfad01365ac4d8d16ddf37dd36a7b81f06e0d12f7caab3bc6c6588",
+      "bytes": 23474,
       "engine_hints": [
         "shared"
       ],
@@ -9873,8 +9887,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
-      "sha256": "abdbe88b170244ca3f9c08b03048d7a84411dadfe7c144091e7b13b98ebfa387",
-      "bytes": 24080,
+      "sha256": "c5cbba08fafe0de1a731edbf2ba5224130bf54d03c9910d2d22453ffc587d50b",
+      "bytes": 24272,
       "engine_hints": [
         "shared"
       ],
@@ -10841,8 +10855,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoDashboardStatsQuery.php",
-      "sha256": "4b9293dd17f4b0e0ea087117d385c3852c2adccd72edc525d8486223bcf8f1d7",
-      "bytes": 4072,
+      "sha256": "af7383def7c9daa20ae0d52071ed4c51718b72f78c0f5759f821389c5709ec47",
+      "bytes": 4276,
       "engine_hints": [
         "shared"
       ],
@@ -10956,8 +10970,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoFederationInventoryListQuery.php",
-      "sha256": "86e7081ba4b57f1c59f6b0d9d2736d2785423075671946371cf8bfdfac57f3bc",
-      "bytes": 10239,
+      "sha256": "621bc078f93a3c7f8ba7fa92d3d8a870531d86c18451321af16e933ec8067ee9",
+      "bytes": 10469,
       "engine_hints": [
         "shared"
       ],
@@ -10970,8 +10984,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
-      "sha256": "08cb5989f1ce168eca8f74c3cf799e7cb84f43bfdf829777ffcdf955f846c565",
-      "bytes": 2005,
+      "sha256": "6f96763ebc7dd4acd37ced84960d9abe0fafff9cddfb49bbaf173b6f14655345",
+      "bytes": 2792,
       "engine_hints": [
         "shared"
       ],
@@ -10984,8 +10998,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
-      "sha256": "5f7b6c546e76373d7e950dba086f4f3ffd05bd50271e3e4c0d9b9051a57b247f",
-      "bytes": 16592,
+      "sha256": "2291eb8295fac97ac020ef8c86c6cad87de354fbff223644e0daa8cd3e34f5c2",
+      "bytes": 17175,
       "engine_hints": [
         "shared"
       ],
@@ -10998,8 +11012,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
-      "sha256": "1af8f93e87daf856f04dbaa6afaab32918f40851e0a066997de95c057852a47f",
-      "bytes": 8931,
+      "sha256": "3e9d5d2ca5618efe83647267099651de693a2f0c02076a2e558473079d35c0e1",
+      "bytes": 9350,
       "engine_hints": [
         "shared"
       ],
@@ -11012,8 +11026,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
-      "sha256": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-      "bytes": 18873,
+      "sha256": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+      "bytes": 19703,
       "engine_hints": [
         "shared"
       ],
@@ -11170,8 +11184,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php",
-      "sha256": "c70a0b0992cf6375aad58179a8991edee228292e58d2034cabe069575acf7291",
-      "bytes": 12266,
+      "sha256": "4861d43c1e88b53545b13cb5c199426fe34d97973a5dca93104d3476619d7f55",
+      "bytes": 12620,
       "engine_hints": [
         "shared"
       ],
@@ -11184,8 +11198,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php",
-      "sha256": "4e6adef9a50b4bd76669093f94ef3724be4023cf5b99abf46545a808f0fba789",
-      "bytes": 3432,
+      "sha256": "f71b74b8db8de9a650d79c003de0ff9a54e55a5a045a5faa1f3be490cc1d71ff",
+      "bytes": 3584,
       "engine_hints": [
         "shared"
       ],
@@ -11254,8 +11268,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php",
-      "sha256": "659bc45de23dc10e0eb59973b070e8ae0e5ec242697923650f1668661d674c9a",
-      "bytes": 4553,
+      "sha256": "cdc0ea3775fd342974c554a56e6ee06c6ff02eda28b376cb251401077743fe6a",
+      "bytes": 4668,
       "engine_hints": [
         "shared"
       ],
@@ -13357,8 +13371,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php",
-      "sha256": "c8e97aba6f533651444331d8cd2df38039433558ddc8c587af5ef0fcfac8fc98",
-      "bytes": 8029,
+      "sha256": "347601e2e624c832fc60fcbb15389eef17b7ae117a6eb35dd4c92a7771f28901",
+      "bytes": 8664,
       "engine_hints": [
         "shared"
       ],
@@ -13427,8 +13441,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/CatalogCrossGameDependencyClosurePlanner.php",
-      "sha256": "40a3e40428a3642cac07f5091fa2727bfc8d310c33cfa671ca63575d5f5d0633",
-      "bytes": 8546,
+      "sha256": "41f4996137d45305a63a61d5d63db024b52cde2e3f35abcbd4ad461cbf88a9b7",
+      "bytes": 9297,
       "engine_hints": [
         "shared"
       ],
@@ -13779,8 +13793,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",
-      "sha256": "32a5d714c874610cd9de4cfebd5e5942d4d2689af2578346673a34a76b9e74d0",
-      "bytes": 15592,
+      "sha256": "40643c580a9ab817f66515851f63c5fb501fd955695d56bc9d6af04f9091d274",
+      "bytes": 15704,
       "engine_hints": [
         "shared"
       ],
@@ -13793,8 +13807,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Unverified/PdoUnverifiedReferenceMatchQuery.php",
-      "sha256": "c1974beeeb05abe6a472a7ec5a1995a8617af406971353e500983403dd83c550",
-      "bytes": 2283,
+      "sha256": "ef7a6dad7a92ad8a3cb564b1220db115398239b6f79ad77484f1dcab72df5264",
+      "bytes": 2398,
       "engine_hints": [
         "shared"
       ],

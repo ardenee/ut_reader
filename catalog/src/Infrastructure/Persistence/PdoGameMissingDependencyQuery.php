@@ -49,7 +49,7 @@ final class PdoGameMissingDependencyQuery
         $policy = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService::policyForEngine($engineKey);
         $statement = $this->db->prepare(
             'SELECT COUNT(*) verified,'
-            . 'COALESCE(SUM(CASE WHEN v.file_id IS NOT NULL AND s.dependency_policy=? '
+            . 'COALESCE(SUM(CASE WHEN v.file_id IS NOT NULL AND v.format_version=5 AND s.dependency_completed_at IS NOT NULL AND s.dependency_policy=? '
             . 'AND s.dependency_payload_sha256=v.payload_sha256 THEN 1 ELSE 0 END),0) current_files '
             . 'FROM ue_files f '
             . 'LEFT JOIN ue_uedb5_files v ON v.file_id=f.id AND v.game_id=f.game_id '
@@ -233,8 +233,9 @@ final class PdoGameMissingDependencyQuery
         $packageName=trim($packageName);
         if($gameId<1 || $packageName==='' || !$this->scopeContains($packageName,$packageNames)) return 0;
         $s=$this->db->prepare(
-            'SELECT COALESCE(SUM(missing_count),0) FROM ue_uedb5_dependency_packages '
-            . 'WHERE game_id=? AND missing_count>0 AND required_package_name=?'
+            'SELECT COALESCE(SUM(s.missing_count),0) FROM ue_uedb5_dependency_packages s '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('s')
+            . 'WHERE s.game_id=? AND s.missing_count>0 AND s.required_package_name=?'
         );
         $s->execute([$gameId,$packageName]);
         return (int)($s->fetchColumn() ?: 0);
@@ -267,6 +268,7 @@ final class PdoGameMissingDependencyQuery
             . 'f.package_name owner_package_name,f.original_name owner_original_name,'
             . 'rf.package_name provider_package_name,rf.original_name provider_original_name '
             . 'FROM ue_uedb5_dependency_edges e '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e')
             . 'JOIN ue_uedb5_dependency_packages p ON p.file_id=e.file_id '
             . 'AND p.package_key_kind=e.required_package_key_kind AND p.package_key=e.required_package_key '
             . 'JOIN ue_files f ON f.id=e.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
@@ -351,7 +353,8 @@ final class PdoGameMissingDependencyQuery
     {
         $w=$alias.'.game_id=? AND '.$alias.'.missing_count>0 '
             . 'AND EXISTS (SELECT 1 FROM ue_files summary_owner WHERE summary_owner.id='.$alias.'.file_id '
-            . 'AND summary_owner.game_id='.$alias.'.game_id AND summary_owner.scan_status="verified")';
+            . 'AND summary_owner.game_id='.$alias.'.game_id AND summary_owner.scan_status="verified")'
+            . ' AND ' . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate($alias);
         $a=[$gameId];
         if($packageNames!==null){
             if($packageNames===[]) return ['1=0',[]];

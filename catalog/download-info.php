@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsServic
 use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageObjectCoverageResolver;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogCompactDependencyReadService;
 
 function render_availability(PDO $db, int $fileId): string
 {
@@ -92,14 +93,29 @@ try {
     $formDependencies = !isset($_GET['dependencies']) || (string)$_GET['dependencies'] !== '0';
     $formAllowIncomplete = $settings['allow_incomplete'] && (string)($_GET['allow_incomplete'] ?? '0') === '1';
 
-    $dependencySource = 'ue_uedb5_dependency_edges';
-    $depCount = (int)(catalog_one(
-        $db,
-        'SELECT COUNT(DISTINCT rf.id) c FROM ' . $dependencySource . ' d '
-        . 'JOIN ue_files rf ON rf.id=d.resolved_file_id '
-        . 'WHERE d.file_id=? AND d.outcome IN (1,2)',
-        [$id]
-    )['c'] ?? 0);
+    $dependencyRows = [];
+    $dependencyProjectionError = null;
+    if ((string)($file['scan_status'] ?? '') !== 'verified') {
+        $dependencyProjectionError = 'Dependency results are unavailable for files not yet verified.';
+    } else {
+        try {
+            $dependencyRows = (new CatalogCompactDependencyReadService($db, $config))->rows($id);
+        } catch (RuntimeException $error) {
+            if (!str_contains($error->getMessage(), 'Dependency publication is stale')
+                && !str_contains($error->getMessage(), 'missing current format-5 dependency metadata')) {
+                throw $error;
+            }
+            $dependencyProjectionError = 'Dependency results have not been regenerated for this engine policy.';
+        }
+    }
+    $resolvedIds = [];
+    foreach ($dependencyRows as $dependency) {
+        if (in_array((string)($dependency['status'] ?? ''), ['resolved','package_only'], true)
+            && (int)($dependency['resolved_id'] ?? 0) > 0) {
+            $resolvedIds[(int)$dependency['resolved_id']] = true;
+        }
+    }
+    $depCount = $dependencyProjectionError === null ? count($resolvedIds) : null;
 
     $dependencyPlan = null;
     $dependencyPlanError = null;
@@ -344,15 +360,16 @@ try {
     }
     echo '</div>';
 
-    $missing = catalog_all(
-        $db,
-        'SELECT required_package,required_object_path,status FROM ' . $dependencySource . ' d '
-        . 'WHERE d.file_id=? AND d.status IN ("missing","package_only") '
-        . 'ORDER BY required_package,required_object_path LIMIT 500',
-        [$id]
-    );
+    $missing = array_values(array_filter($dependencyRows,
+        static fn(array $row): bool => in_array((string)($row['status'] ?? ''), ['missing','package_only'], true)));
+    usort($missing, static fn(array $a,array $b):int =>
+        strnatcasecmp((string)$a['required_package'],(string)$b['required_package'])
+        ?: strnatcasecmp((string)$a['required_object_path'],(string)$b['required_object_path']));
+    $missing = array_slice($missing, 0, 500);
     echo '<div class="card"><h2>Missing or package-only dependency objects</h2>';
-    if (!$missing) {
+    if ($dependencyProjectionError !== null) {
+        echo '<p class="muted">'.catalog_h($dependencyProjectionError).' This is unknown, not zero missing.</p>';
+    } elseif (!$missing) {
         echo '<p class="muted">No missing or package-only dependency objects.</p>';
     } else {
         echo '<table><tr><th>Status</th><th>Required package</th><th>Required object</th></tr>';

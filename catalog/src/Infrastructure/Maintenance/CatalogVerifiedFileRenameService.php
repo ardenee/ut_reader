@@ -219,6 +219,7 @@ final class CatalogVerifiedFileRenameService
         $statement = $this->db->prepare(
             'SELECT e.file_id,e.source_index,p.required_package_name '
             . 'FROM ue_uedb5_dependency_edges e '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e')
             . 'JOIN ue_uedb5_dependency_packages p ON p.file_id=e.file_id '
             . 'AND p.package_key_kind=e.required_package_key_kind AND p.package_key=e.required_package_key '
             . 'JOIN ue_files f ON f.id=e.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '

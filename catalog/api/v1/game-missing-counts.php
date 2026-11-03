@@ -14,7 +14,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5SqlProjectionContract;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogListQuery;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -24,40 +24,30 @@ try {
         JsonResponse::error('method_not_allowed', 'Only GET is supported.', 405);
     }
 
-    $stats = new PdoGameCatalogStats($application->db);
-    if ($stats->available()) {
-        /* Never rebuild all game projections from an interactive API request. */
-        $rows = catalog_all(
-            $application->db,
-            'SELECT g.id game_id,COALESCE(s.missing_dependency_count,0) missing_dependency_count '
-            . 'FROM ue_games g LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id ORDER BY g.id'
-        );
-    } else {
-        $dependencySource = 'ue_uedb5_dependency_edges';
-        $rows = catalog_all(
-            $application->db,
-            'SELECT g.id game_id, COALESCE(md.missing_dependency_count,0) missing_dependency_count '
-            . 'FROM ue_games g '
-            . 'LEFT JOIN ('
-            . '  SELECT f.game_id, COUNT(*) missing_dependency_count '
-            . '  FROM ' . $dependencySource . ' d '
-            . '  JOIN ue_files f ON f.id=d.file_id '
-            . '  WHERE d.outcome=' . Uedb5SqlProjectionContract::OUTCOME_MISSING . ' '
-            . '  GROUP BY f.game_id'
-            . ') md ON md.game_id=g.id '
-            . 'ORDER BY g.id'
-        );
-    }
-
+    $rows = (new PdoGameCatalogListQuery($application->db))->all();
     $counts = [];
+    $pendingGameIds = [];
+    $total = 0;
     foreach ($rows as $row) {
-        $counts[(string)(int)$row['game_id']] = (int)$row['missing_dependency_count'];
+        $id = (int)$row['id'];
+        $count = $row['missing_dependency_count'];
+        if ($count === null) {
+            $counts[(string)$id] = null;
+            $pendingGameIds[] = $id;
+        } else {
+            $counts[(string)$id] = (int)$count;
+            $total += (int)$count;
+        }
+    }
+    if ($pendingGameIds !== []) {
+        $total = null;
     }
 
     JsonResponse::send([
         'ok' => true,
         'counts' => $counts,
-        'total' => array_sum($counts),
+        'total' => $total,
+        'stale_game_ids' => $pendingGameIds,
     ]);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();

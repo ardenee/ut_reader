@@ -83,6 +83,18 @@ final class CatalogCrossGameDependencyClosurePlanner
                 $visited[(int)$fileId] = true;
             }
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $current = \catalog_one(
+                $this->db,
+                'SELECT COUNT(*) c FROM ue_files f WHERE f.id IN (' . $placeholders . ') AND '
+                    . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentFilePredicate('f'),
+                $chunk
+            );
+            if ((int)($current['c'] ?? 0) !== count($chunk)) {
+                throw new \RuntimeException(
+                    'Cross-game dependency closure cannot use stale source-file dependencies. '
+                    . 'Source-correct UEDB5 Pass 2 is required.'
+                );
+            }
             $rows = \catalog_all(
                 $this->db,
                 'SELECT e.file_id,e.source_kind,e.source_index,e.outcome,e.resolved_file_id,'
@@ -90,6 +102,7 @@ final class CatalogCrossGameDependencyClosurePlanner
                 . 'e.required_object_key_kind,HEX(e.required_object_key) required_object_key_hex,'
                 . 'provider.game_id provider_game_id,provider_v5.file_id provider_metadata_file_id '
                 . 'FROM ue_uedb5_dependency_edges e '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e')
                 . 'LEFT JOIN ue_files provider ON provider.id=e.resolved_file_id AND provider.scan_status="verified" '
                 . 'LEFT JOIN ue_uedb5_files provider_v5 ON provider_v5.file_id=provider.id AND provider_v5.game_id=provider.game_id '
                 . 'WHERE e.file_id IN (' . $placeholders . ') '

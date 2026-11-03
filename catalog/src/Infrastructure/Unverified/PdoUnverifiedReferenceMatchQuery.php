@@ -41,6 +41,7 @@ final class PdoUnverifiedReferenceMatchQuery
             'SELECT LOWER(s.required_package_name) package_key,g.id game_id,g.name game_name,'
             . 'COUNT(DISTINCT s.file_id) owner_count,COALESCE(SUM(s.dependency_count),0) import_count'
             . ' FROM ue_uedb5_dependency_packages s'
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('s')
             . ' JOIN ue_games g ON g.id=s.game_id'
             . ' WHERE s.required_package_name IN (' . $placeholders . ')'
             . ' GROUP BY LOWER(s.required_package_name),g.id,g.name'

@@ -306,6 +306,11 @@ try {
     $limit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
     $filter = trim((string)($_GET['file_filter'] ?? ''));
     $depFilter = trim((string)($_GET['dep_filter'] ?? ''));
+    $gameDependencyCurrent = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::isGameCurrent(
+        $db, (int)$gameId, (string)($game['profile_engine'] ?? '')
+    );
+    $dependencySelectionUnavailable = !$gameDependencyCurrent
+        && in_array($depFilter, ['resolved','missing','package_only','common','any'], true);
     $typeFilter = trim((string)($_GET['type_filter'] ?? ''));
     $compressionFilter = $showCompression ? trim((string)($_GET['compression_filter'] ?? '')) : '';
     $sort = trim((string)($_GET['sort'] ?? 'package'));
@@ -318,6 +323,14 @@ try {
     }
     if (!isset($sortMap[$sort])) {
         $sort = 'package';
+    }
+    $dependencySortUnavailable = $sort === 'deps' && !$gameDependencyCurrent;
+    if ($dependencySortUnavailable) {
+        $sort = 'package';
+    }
+    if ($dependencySelectionUnavailable) {
+        // An unverified dependency filter is unknown, not an empty result set.
+        $depFilter = '';
     }
 
     $where = 'WHERE f.game_id=?';
@@ -332,7 +345,8 @@ try {
     }
     if (in_array($depFilter, ['resolved', 'missing', 'package_only', 'common', 'any'], true)) {
         if ($depFilter === 'any') {
-            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx WHERE dx.file_id=f.id)';
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')';
         } else {
             $countColumn = match ($depFilter) {
                 'resolved' => 'resolved_count',
@@ -340,7 +354,8 @@ try {
                 'package_only' => 'package_only_count',
                 default => 'common_count',
             };
-            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx WHERE dx.file_id=f.id AND dx.' . $countColumn . '>0)';
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND dx.' . $countColumn . '>0 AND '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')';
         }
     }
     $typeExts = game_files_type_filter_sql($typeFilter);
@@ -420,6 +435,11 @@ try {
         ? 'Files, versions, dependency status and downloads. UE3 UPK package containers are shown separately.'
         : 'Files, versions, dependency status and downloads.';
     echo CatalogUi::pageHeader((string)$game['name'], $description, ['Back to games' => 'games.php']);
+    if (!$gameDependencyCurrent) {
+        echo '<div class="card"><strong>Dependency publication unavailable.</strong> '
+            . 'Current missing/resolved classifications are unknown until the engine-specific source publication is complete. '
+            . 'If requested, dependency filtering or dependency sorting has been skipped to avoid misleading results.</div>';
+    }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files</h2><p>' . catalog_h((string)$totalRows) . ' matching files.'
         . ($separateUpkContainers ? ' UPK containers are available under the UPK packages tab.' : '')
@@ -484,7 +504,9 @@ try {
                     $dependencyBadges[] = '<div>' . game_files_status_badge($key, $count) . '</div>';
                 }
             }
-            $deps = $dependencyBadges !== [] ? '<div class="game-files-dependency-list">' . implode('', $dependencyBadges) . '</div>' : '<span class="muted">none</span>';
+            $deps = (int)($file['dependency_projection_current'] ?? 0) !== 1
+                ? '<span class="muted" title="Source-correct dependency publication is not current">unknown — pending recheck</span>'
+                : ($dependencyBadges !== [] ? '<div class="game-files-dependency-list">' . implode('', $dependencyBadges) . '</div>' : '<span class="muted">none</span>');
             $compressed = (int)($file['is_compressed'] ?? 0) === 1;
             $compression = CatalogUi::badge($compressed ? 'compressed chunks' : 'none', $compressed ? 'warning' : 'success');
             [$fileType, $fileTypeClass] = game_files_type_from_extension((string)($file['extension'] ?? ''));

@@ -38,6 +38,7 @@ final class PdoPackageSupersetAnalyzer
 
         $statement = $db->prepare(
             'SELECT DISTINCT p.file_id FROM ue_uedb5_dependency_packages p '
+            . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('p')
             . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id AND f.scan_status="verified" '
             . 'WHERE p.game_id=? AND p.required_package_name=? ORDER BY p.file_id'
         );

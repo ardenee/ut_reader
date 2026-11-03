@@ -37,7 +37,7 @@ final class Uedb5ParityV5ReadService
     private function requireCurrentDependencyPolicy(int $gameId,int $fileId): void
     {
         $stmt=$this->db->prepare(
-            'SELECT p.engine_key,v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256 '
+            'SELECT p.engine_key,v.format_version,v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256,s.dependency_completed_at '
             . 'FROM ue_uedb5_files v JOIN ue_games g ON g.id=v.game_id '
             . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
             . 'LEFT JOIN ue_uedb5_migration_status s '
@@ -50,6 +50,8 @@ final class Uedb5ParityV5ReadService
             ? Uedb5GameDependencyPassService::policyForEngine((string)($row['engine_key']??''))
             : '';
         if(!is_array($row)
+            || (int)($row['format_version']??0)!==5
+            || empty($row['dependency_completed_at'])
             || (string)($row['dependency_policy']??'')!==$expected
             || !hash_equals((string)($row['payload_sha256']??''),(string)($row['dependency_payload_sha256']??''))) {
             throw new RuntimeException('Dependency publication is stale for game #'.$gameId
@@ -164,7 +166,7 @@ final class Uedb5ParityV5ReadService
             . 'JOIN ue_files f ON f.id=e.file_id AND f.game_id=? AND f.scan_status="verified" '
             . 'JOIN ue_uedb5_files v ON v.file_id=e.file_id AND v.game_id=f.game_id '
             . 'JOIN ue_uedb5_migration_status ms ON ms.file_id=v.file_id AND ms.game_id=v.game_id '
-            . 'AND ms.dependency_policy=? AND ms.dependency_payload_sha256=v.payload_sha256 '
+            . 'AND ms.dependency_completed_at IS NOT NULL AND ms.dependency_policy=? AND ms.dependency_payload_sha256=v.payload_sha256 '
             . 'WHERE e.resolved_file_id=? AND e.file_id<>? ORDER BY e.file_id'
         );
         $s->execute([$gameId,$policy,$targetFileId,$targetFileId]);

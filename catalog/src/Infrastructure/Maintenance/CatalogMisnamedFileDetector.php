@@ -420,10 +420,11 @@ final class CatalogMisnamedFileDetector
             }
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
-                'SELECT resolved_file_id,COUNT(DISTINCT file_id) dependant_count '
-                . 'FROM ue_uedb5_dependency_edges '
-                . 'WHERE outcome=1 AND resolved_file_id IN (' . $placeholders . ') AND file_id<>resolved_file_id '
-                . 'GROUP BY resolved_file_id'
+                'SELECT e.resolved_file_id,COUNT(DISTINCT e.file_id) dependant_count '
+                . 'FROM ue_uedb5_dependency_edges e '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e')
+                . 'WHERE e.outcome=1 AND e.resolved_file_id IN (' . $placeholders . ') AND e.file_id<>e.resolved_file_id '
+                . 'GROUP BY e.resolved_file_id'
             );
             $statement->execute($chunk);
             while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {

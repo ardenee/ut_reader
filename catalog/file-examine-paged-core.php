@@ -258,14 +258,24 @@ try {
         ))));
         $packageFiles = PdoPackageTablePageQuery::packageFiles($db, (int)$file['game_id'], $roots);
     }
+    $dependencyCurrentRow = catalog_one(
+        $db,
+        'SELECT ' . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentFilePredicate('f')
+            . ' dependency_current FROM ue_files f WHERE f.id=?',
+        [$fileId]
+    );
+    $dependencyCurrent = (int)($dependencyCurrentRow['dependency_current'] ?? 0) === 1;
     // Relationship counts belong to the tab chrome, so compute the two
     // distinct-package counts on every examiner request rather than only after
     // the relationship tab has been selected.
+    $freshDependencyJoins = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('l');
     $relationshipCounts = catalog_one(
         $db,
         'SELECT '
-        . '(SELECT COUNT(DISTINCT resolved_file_id) FROM ue_uedb5_dependency_edges WHERE file_id=? AND resolved_file_id IS NOT NULL AND outcome IN (1,2)) uses_count,'
-        . '(SELECT COUNT(DISTINCT file_id) FROM ue_uedb5_dependency_edges WHERE resolved_file_id=? AND outcome IN (1,2)) used_by_count',
+        . '(SELECT COUNT(DISTINCT l.resolved_file_id) FROM ue_uedb5_dependency_edges l '
+        . $freshDependencyJoins . ' WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.outcome IN (1,2)) uses_count,'
+        . '(SELECT COUNT(DISTINCT l.file_id) FROM ue_uedb5_dependency_edges l '
+        . $freshDependencyJoins . ' WHERE l.resolved_file_id=? AND l.outcome IN (1,2)) used_by_count',
         [$fileId, $fileId]
     ) ?: ['uses_count' => 0, 'used_by_count' => 0];
 
@@ -274,13 +284,13 @@ try {
         $relationshipRows = catalog_all($db,
             'SELECT l.resolved_file_id file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
             . 'FROM ue_uedb5_dependency_edges l JOIN ue_files f ON f.id=l.resolved_file_id '
-            . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.outcome IN (1,2) AND f.scan_status="verified" '
+            . $freshDependencyJoins . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.outcome IN (1,2) AND f.scan_status="verified" '
             . 'GROUP BY l.resolved_file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     } elseif ($table === 'used-by') {
         $relationshipRows = catalog_all($db,
             'SELECT l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
             . 'FROM ue_uedb5_dependency_edges l JOIN ue_files f ON f.id=l.file_id '
-            . 'WHERE l.resolved_file_id=? AND l.outcome IN (1,2) AND f.scan_status="verified" '
+            . $freshDependencyJoins . 'WHERE l.resolved_file_id=? AND l.outcome IN (1,2) AND f.scan_status="verified" '
             . 'GROUP BY l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
     }
     $metadataVersion = (int)(catalog_one($db, 'SELECT format_version FROM ue_uedb5_files WHERE file_id=?', [$fileId])['format_version'] ?? 0);
@@ -345,7 +355,13 @@ try {
         $tabCount = $counts[$key] ?? '';
         echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ($tabCount !== '' ? ' <span>' . $tabCount . '</span>' : '') . '</a>';
     }
-    echo '</nav><section data-file-examine-native-panel>';
+    echo '</nav>';
+    if (!$dependencyCurrent) {
+        echo '<p class="muted">Dependency links for this file are not verified under the current engine policy. '
+            . 'Only independently current reverse references are shown; missing or resolved outcomes remain unknown '
+            . 'until source-correct regeneration.</p>';
+    }
+    echo '<section data-file-examine-native-panel>';
 
     if ($table === 'uses' || $table === 'used-by') {
         $heading = $table === 'uses' ? 'Uses' : 'Used By';

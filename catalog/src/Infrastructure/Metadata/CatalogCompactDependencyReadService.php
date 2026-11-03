@@ -56,7 +56,8 @@ final class CatalogCompactDependencyReadService
             Uedb5SqlProjectionContract::OUTCOME_PACKAGE_ONLY => 'package_only',
             Uedb5SqlProjectionContract::OUTCOME_COMMON => 'common',
             Uedb5SqlProjectionContract::OUTCOME_UNRESOLVED => 'unresolved',
-            default => 'missing',
+            Uedb5SqlProjectionContract::OUTCOME_MISSING => 'missing',
+            default => throw new RuntimeException('Unknown UEDB5 dependency outcome code ' . $status),
         };
     }
 
@@ -144,6 +145,7 @@ final class CatalogCompactDependencyReadService
         $s = $this->db->prepare(
             'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.sha1,src.file_size '
             . 'FROM ue_uedb5_dependency_edges e '
+            . Uedb5DependencyPublicationScope::joinCurrentEdges('e')
             . 'JOIN ue_files src ON src.id=e.file_id AND src.scan_status="verified" '
             . 'WHERE e.resolved_file_id=? AND e.outcome IN (1,2) ORDER BY src.package_name,src.original_name LIMIT ' . $limit
         );
@@ -182,6 +184,7 @@ final class CatalogCompactDependencyReadService
         }
         $sql = 'SELECT DISTINCT e.file_id source_file_id,e.source_index import_index,e.resolved_file_id,e.outcome '
             . 'FROM ue_uedb5_dependency_edges e '
+            . Uedb5DependencyPublicationScope::joinCurrentEdges('e')
             . 'JOIN ue_files src ON src.id=e.file_id AND src.game_id=? AND src.scan_status="verified" '
             . 'WHERE src.id<>? AND e.source_kind=' . Uedb5SqlProjectionContract::DEP_SOURCE_IMPORT
             . ' AND (' . implode(' OR ', $conditions) . ') ORDER BY e.file_id,e.source_index';

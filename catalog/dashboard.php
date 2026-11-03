@@ -45,8 +45,9 @@ try {
     catalog_stat_card('Total files', $stats['files']);
     catalog_stat_card('Verified files', $stats['verified'], '', 'good');
     catalog_stat_card('Failed files', $stats['failed'], 'Need review', $stats['failed'] > 0 ? 'warning' : '');
-    catalog_stat_card('Missing dependency rows', $stats['missing'], 'Core repair target', $stats['missing'] > 0 ? 'attention' : 'good');
-    catalog_stat_card('Resolved dependency rows', $stats['resolved']);
+    $depsCurrent = (int)($stats['dependency_current'] ?? 0) === 1;
+    catalog_stat_card('Missing dependency rows', $depsCurrent ? $stats['missing'] : 'Unavailable', $depsCurrent ? 'Current-source dependency rows' : 'Rebuild under the current Epic source policy', $depsCurrent ? ($stats['missing'] > 0 ? 'attention' : 'good') : 'warning');
+    catalog_stat_card('Resolved dependency rows', $depsCurrent ? $stats['resolved'] : 'Unavailable');
     catalog_stat_card('Queued federation jobs', $stats['fedQueued']);
     catalog_stat_card('Downloaded waiting import', $stats['fedDownloaded'], '', $stats['fedDownloaded'] > 0 ? 'attention' : '');
     catalog_stat_card('Failed federation jobs', $stats['fedFailed'], '', $stats['fedFailed'] > 0 ? 'warning' : '');
@@ -58,7 +59,7 @@ try {
     echo '<div class="two-col"><div class="card"><h2>Primary workflow</h2><div class="grid">';
     catalog_tool_card('1. Setup library', 'setup.php', 'Add games, upload files, add storage locations, and scan local/HTTP sources.', 'start');
     catalog_tool_card('2. Browse library', 'library.php', 'View games/files, search package metadata, and inspect file details.');
-    catalog_tool_card('3. Missing files', 'missing.php', 'Review missing dependencies and resolve them locally or through federation.', $stats['missing'] > 0 ? (string)$stats['missing'] : 'ok');
+    catalog_tool_card('3. Missing files', 'missing.php', 'Review missing dependencies and resolve them locally or through federation.', $depsCurrent ? ($stats['missing'] > 0 ? (string)$stats['missing'] : 'ok') : 'pending');
     catalog_tool_card('4. Game backups', 'game-backups.php', 'Create full-copy game exports with original filenames and restore them on this or another site.', 'backup');
     catalog_tool_card('5. Federation', 'federation/admin.php', 'Manage connections, inventories, file requests, transfers, settings and diagnostics.');
     catalog_tool_card('6. Background jobs', 'background-jobs.php', 'Monitor uploads and maintenance jobs; start or stop the detached worker without SSH.', 'primary');
@@ -70,11 +71,12 @@ try {
     echo '</div></div>';
 
     echo '<div class="card"><h2>Needs attention</h2>';
-    if ($stats['missing'] === 0 && $stats['fedFailed'] === 0 && $stats['mirrorWaiting'] === 0 && $stats['joinPending'] === 0 && $stats['fedDownloaded'] === 0) {
+    if ($depsCurrent && $stats['missing'] === 0 && $stats['fedFailed'] === 0 && $stats['mirrorWaiting'] === 0 && $stats['joinPending'] === 0 && $stats['fedDownloaded'] === 0) {
         echo '<p class="muted">No major issues currently flagged.</p>';
     } else {
         echo '<ul>';
-        if ($stats['missing'] > 0) echo '<li><a href="missing.php">Missing dependencies need review.</a></li>';
+        if (!$depsCurrent) echo '<li>Dependency counts are unavailable pending source-correct publication.</li>';
+        if ($depsCurrent && $stats['missing'] > 0) echo '<li><a href="missing.php">Missing dependencies need review.</a></li>';
         if ($stats['fedDownloaded'] > 0) echo '<li><a href="federation/queue.php?tab=waiting">Downloaded federation files are waiting for import.</a></li>';
         if ($stats['fedFailed'] > 0) echo '<li><a href="federation/queue.php?tab=failed">Failed federation transfers need review.</a></li>';
         if ($stats['mirrorWaiting'] > 0) echo '<li><a href="mirror-queue.php">Mirror jobs need administrator action.</a></li>';

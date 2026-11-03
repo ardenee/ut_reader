@@ -53,10 +53,15 @@ final class PdoUedb5PhysicalProviderSelector
         $packageKeyKind = Uedb5SqlProjectionContract::classicPackageKeyKindForImportSchema(
             (string)($consumer['section_schemas']['imports'] ?? '')
         );
+        $classicSchema = strtolower((string)($consumer['section_schemas']['imports'] ?? ''));
+        $ue5Source = $gameId === 14 && str_starts_with($classicSchema, 'ue5.classic.');
         $requirements = [];
         foreach ($baseline as $result) {
             $result = (array)$result;
-            if (str_starts_with((string)($result['reason'] ?? ''), 'source_irrelevant_name_none')) {
+            if (str_starts_with((string)($result['reason'] ?? ''), 'source_irrelevant_name_none')
+                || ($ue5Source && (string)($result['status'] ?? '') === 'runtime_only')) {
+                // UE5 /Script native objects need live class state, not a physical
+                // package candidate from the filesystem.
                 continue;
             }
             $packageName = (string)($result['provider_package'] ?? '');
@@ -194,7 +199,6 @@ final class PdoUedb5PhysicalProviderSelector
             // present in the game's physical runtime mount environment.
             // UT2004 version<100 uses a UE2-owned UE1-wire compatibility
             // schema, so use the game profile as the owner, not just 'ue1.'.
-            $classicSchema = strtolower((string)($consumer['section_schemas']['imports'] ?? ''));
             $ue2Source = in_array($gameId, [2, 4, 5], true)
                 && (str_starts_with($classicSchema, 'ue2.')
                     || str_starts_with($classicSchema, 'ue1.ut2004.compat.'));
@@ -202,19 +206,21 @@ final class PdoUedb5PhysicalProviderSelector
                 && str_starts_with($classicSchema, 'ue1.');
             $ue3Source = $gameId === 6 && str_starts_with($classicSchema, 'ue3.ut3.');
             $ue4Source = $gameId === 7 && str_starts_with($classicSchema, 'ue4.ut4.');
-            if ($orderedMounts === null && ($ue1Source || $ue2Source || $ue3Source || $ue4Source)) {
+            if ($orderedMounts === null && ($ue1Source || $ue2Source || $ue3Source || $ue4Source || $ue5Source)) {
                 $selected[] = [
                     'game_id' => $gameId,
                     'file_id' => null,
                     'package_name' => (string)$packageName,
                     'selection_status' => 'source_unresolved',
-                    'selection_source' => $ue4Source
+                    'selection_source' => $ue5Source
+                        ? 'ue5_runtime_mount_context_unavailable'
+                        : ($ue4Source
                         ? 'ue4_runtime_mount_context_unavailable'
                         : ($ue3Source
                             ? 'ue3_runtime_mount_context_unavailable'
                             : ($ue2Source
                                 ? 'ue2_runtime_mount_context_unavailable'
-                                : 'ue1_runtime_mount_context_unavailable')),
+                                : 'ue1_runtime_mount_context_unavailable'))),
                     'candidate_file_ids' => array_values(array_map(
                         static fn(array $candidate): int => (int)$candidate['file_id'],
                         $candidates

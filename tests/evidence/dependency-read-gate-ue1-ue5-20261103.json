@@ -1,0 +1,170 @@
+{
+  "schema": "source-sha-bounded-ue1-ue5-read-gates-v1",
+  "date": "2026-11-03",
+  "existing_contract_cases": [
+    "ue1-website-dependency",
+    "ue2-website-dependency",
+    "ue3-website-dependency",
+    "ue4-website-dependency",
+    "ue5-dependency-publish",
+    "ue5-mount-provider",
+    "ue5-verify-import",
+    "ue5-website-dependency"
+  ],
+  "completion_scope": "Shared PHP source-code defensive read gates; not a new engine-native parity certification",
+  "source_review_anchor_verification": [
+    {
+      "engine": "ue1",
+      "contract": "ue1-website-dependency",
+      "file": "L:\\Source\\Games\\Unreal\\Unreal [v1.200] [1998-05-19]\\Core\\Src\\UnObj.cpp",
+      "symbol": "FObjectManager::GetPackageLinker",
+      "sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462"
+    },
+    {
+      "engine": "ue2",
+      "contract": "ue2-website-dependency",
+      "file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
+      "symbol": "ULinkerLoad::VerifyImport",
+      "sha256": "851bdc5bbc3248db9f2ad4b29beae0503f4cf7ec27f5c0e857e2a7c6a79a4ec7"
+    },
+    {
+      "engine": "ue3",
+      "contract": "ue3-website-dependency",
+      "file": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [01-00-2008]\\epic.jan2008\\UnrealEngine3\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+      "symbol": "ULinkerLoad::VerifyImport",
+      "sha256": "e19f04113b7634656af145f8c7bc363e9492a19b819b007328d2a3036407e603"
+    },
+    {
+      "engine": "ue4",
+      "contract": "ue4-website-dependency",
+      "file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "symbol": "FLinkerLoad",
+      "sha256": "e6b4bd2f16d4b54fc66569b3f7e63995d9892c36314bae196f19d39644a3fa36"
+    },
+    {
+      "engine": "ue5",
+      "contract": "ue5-verify-import",
+      "file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "symbol": "FLinkerLoad::VerifyImport",
+      "sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24"
+    },
+    {
+      "engine": "ue5",
+      "contract": "ue5-mount-provider",
+      "file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "symbol": "FLinkerLoad::VerifyImport",
+      "sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24"
+    },
+    {
+      "engine": "ue5",
+      "contract": "ue5-dependency-publish",
+      "file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "symbol": "PackageStore",
+      "sha256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9"
+    },
+    {
+      "engine": "ue5",
+      "contract": "ue5-website-dependency",
+      "file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "symbol": "PackageStore",
+      "sha256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9"
+    },
+    {
+      "engine": "ue5",
+      "branch": "ue5_classic",
+      "file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+      "symbol": "FLinkerLoad::VerifyImport",
+      "sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24"
+    },
+    {
+      "engine": "ue5",
+      "branch": "ue5_classic_name",
+      "file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\UObjectGlobals.cpp",
+      "symbol": "FPackageName::SearchForPackageOnDisk",
+      "sha256": "896cd2b6254f7586f08c98890fe61382c1ab16b78cbd3ebd378af23141924696"
+    },
+    {
+      "engine": "ue5",
+      "branch": "ue5_zen",
+      "file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
+      "symbol": "PackageStore",
+      "sha256": "fb5c1930f5b8e6611392c3009dde16922661c7942f2eaa8d875492c8981f67b9"
+    }
+  ],
+  "changed_application_source_sha256": {
+    "catalog/api/v1/game-missing-counts.php": "d765b938e32a36622ec593082d85d692c3fcfd6683ce8eb4da97a722268a8d3e",
+    "catalog/dashboard.php": "a3870084358d2cfc19e43b16586ff5fd601dce6c9dae82529aaae402fe32b6db",
+    "catalog/download-info.php": "f78f12c8b6dc31986daa92e13014316aac96a6adc655b039244613b8e292874d",
+    "catalog/file-examine-dependencies.php": "f826883d802a647b4753a5337981e575fb7011c92ee104cb4c9b655d7ef71373",
+    "catalog/file-examine-paged-core.php": "0e3cac0168ad6bb9abf9473d399e6638a06a9bddf9f6c28b48f7c2954ae39a87",
+    "catalog/file-info.php": "8f495d3361633d33049a9d83b8d03977c542358b651776753c2d275fb6c41a1c",
+    "catalog/game-files.php": "128c5a348fb298b4b944c1dbb0909f769a7e5ca19f8fb1699b95f23e2eb5b65f",
+    "catalog/library.php": "edddc38ec5604c4c5081f0e5e3867a1b554ecc9100ad94522e39457eaa04012a",
+    "catalog/src/Infrastructure/Federation/CatalogFederationDependencyNeedQuery.php": "a0786e7dae36acddad9c090fc5fe481c9d39b76fe51300b6513495c84ef3a2d9",
+    "catalog/src/Infrastructure/Federation/CatalogFederationTransferClient.php": "8c2f857d2f455be39f4cce35b3b4c4f397bc50ae3a4a81cef28d5dcdc059081e",
+    "catalog/src/Infrastructure/Games/PdoGameFileReassignmentSelectionQuery.php": "e5cc89ae9f54f04e77ab89920008b5143e4e018fd6e3c475c1ce6ac8fe1fd4fd",
+    "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php": "1e2309a8b6767b6add7fa420776954b44dc5919deb0927c65868397184aafd03",
+    "catalog/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php": "1612d27694ee926d2c89d629701ab07a0b4ed4a11850a7c126b035124d30d7df",
+    "catalog/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php": "02e892bfcb02c54cbaec21989953db78946b701ac6ec6986792e26f23870051a",
+    "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php": "88a04e01216cc3ed080ba1bba1f648c248c22a1cbc13d1def2bf13f6a859ca99",
+    "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php": "da7ad45c94d89d8e90ffa46af89dd493f48990b7fa317cd5e8c7ecea52c45d67",
+    "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "3cc2648bccd36b2f772ee656be72b8857eca29b891982ba2a16d6717e36374c5",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "f6ed565432dfad01365ac4d8d16ddf37dd36a7b81f06e0d12f7caab3bc6c6588",
+    "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php": "c5cbba08fafe0de1a731edbf2ba5224130bf54d03c9910d2d22453ffc587d50b",
+    "catalog/src/Infrastructure/Persistence/PdoDashboardStatsQuery.php": "af7383def7c9daa20ae0d52071ed4c51718b72f78c0f5759f821389c5709ec47",
+    "catalog/src/Infrastructure/Persistence/PdoFederationInventoryListQuery.php": "621bc078f93a3c7f8ba7fa92d3d8a870531d86c18451321af16e933ec8067ee9",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php": "6f96763ebc7dd4acd37ced84960d9abe0fafff9cddfb49bbaf173b6f14655345",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php": "2291eb8295fac97ac020ef8c86c6cad87de354fbff223644e0daa8cd3e34f5c2",
+    "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php": "3e9d5d2ca5618efe83647267099651de693a2f0c02076a2e558473079d35c0e1",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+    "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php": "4861d43c1e88b53545b13cb5c199426fe34d97973a5dca93104d3476619d7f55",
+    "catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php": "f71b74b8db8de9a650d79c003de0ff9a54e55a5a045a5faa1f3be490cc1d71ff",
+    "catalog/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php": "cdc0ea3775fd342974c554a56e6ee06c6ff02eda28b376cb251401077743fe6a",
+    "catalog/src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php": "347601e2e624c832fc60fcbb15389eef17b7ae117a6eb35dd4c92a7771f28901",
+    "catalog/src/Infrastructure/Unverified/CatalogCrossGameDependencyClosurePlanner.php": "41f4996137d45305a63a61d5d63db024b52cde2e3f35abcbd4ad461cbf88a9b7",
+    "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php": "40643c580a9ab817f66515851f63c5fb501fd955695d56bc9d6af04f9091d274",
+    "catalog/src/Infrastructure/Unverified/PdoUnverifiedReferenceMatchQuery.php": "ef7a6dad7a92ad8a3cb564b1220db115398239b6f79ad77484f1dcab72df5264"
+  },
+  "regressions": [
+    {
+      "method": "SQLite in-memory synthetic rows",
+      "engines": [
+        "UE1",
+        "UE2",
+        "UE3",
+        "UE4",
+        "UE5"
+      ],
+      "verified": "Per engine v14 policy + exact payload SHA + completed timestamp gate; rejected v13, wrong payload SHA, absent completion, stale cached aggregates and stale counts for empty game",
+      "native_epic_oracle": false
+    },
+    {
+      "method": "PRD read-only MySQL transaction; explicit ROLLBACK",
+      "verified": "PRD game ids 2,3,4,5,6,7,12 had old v13; v14 filtered. UE5 game14 had zero verified; cached status withheld. UT4 file 1353254 had 348 historic resolved/package_only and 0 current. UE1 file 1246569 had 50 historic resolved/package_only and 0 current",
+      "database_writes": 0
+    },
+    {
+      "method": "PRD read-only MySQL consumer queries; explicit ROLLBACK",
+      "verified": "Game file sort flags stale UT4, missing-file list 0 current rows, Belt_fx historic missing details 0 current, usedBy 0 current, dashboard dependency_current=0; no false missing/resolved from sampled paths",
+      "database_writes": 0
+    },
+    {
+      "method": "MySQL read-only EXPLAIN",
+      "verified": "12 generated diagnostic count queries parsed/planned; UE4 64247 verified files currently stale; UE1 cross-game closure blocked instead of silently returning empty/missing",
+      "database_writes": 0
+    },
+    {
+      "method": "UE5 original .uasset Xdebug isolated test (prior targeted evidence)",
+      "evidence": "tests/evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json",
+      "verified": "Source_unresolved without native mounted evidence; negative mounted set fixture does not throw; 24 rows preserved",
+      "native_classic_mount_runtime": false
+    }
+  ],
+  "not_verified_and_not_claimed": [
+    "Native UE5 classic mounted-session differential",
+    "Published current v14 PRD dependencies across UE1-UE5",
+    "Production HTTP UI after deployment on all routes"
+  ],
+  "no_prd_database_migration_or_update": true
+}
