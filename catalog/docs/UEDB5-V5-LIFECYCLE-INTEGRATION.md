@@ -233,7 +233,7 @@ Neither this service nor the test modifies production SQL or the Satisfactory in
 
 ### Package Viewer naming and future IoStore container import
 
-The UI's generic navigation and PAK browser title are renamed **Package Viewer** (existing `paks.php`, `game-paks.php`, `pak-info.php` URLs intentionally remain stable). The existing backend, `ue_pak_archives` / `ue_pak_entries`, **still handles only self-contained `.pak` archives**; this rename does not enable IoStore browsing. The current UI states that IoStore browsing is being integrated.
+The UI's generic navigation and PAK browser title are renamed **Package Viewer** (existing `pakages.php`, `game-paks.php`, `pak-info.php` per-game package detail URLs remain stable). The existing backend, `ue_pak_archives` / `ue_pak_entries`, **still handles only self-contained `.pak` archives**; this rename does not enable IoStore browsing. The current UI states that IoStore browsing is being integrated.
 
 An IoStore container comprises a `.utoc` table of contents and companion `.ucas` payload (possibly numbered partitions). The container is the upload/retention unit; **each Zen package inside is catalogued by `FPackageId`**, not by misidentifying either raw companion file as an ordinary `.upk`.
 

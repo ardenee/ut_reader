@@ -324,6 +324,22 @@ function validateHeader(extension, fileSize, head, tail, fileName) {
         return {kind: 'redirect-uz2', description: 'Epic UZ2 redirect; full record validation follows'};
     }
 
+    if (extension === 'utoc') {
+        const magic = '-==--==--==--==-';
+        const valid = head.length >= 16
+            && Array.from(head.subarray(0, 16), function (b) { return String.fromCharCode(b); }).join('') === magic;
+        if (!valid) {
+            throw new Error('Invalid IoStore TOC header magic: ' + String(fileName || 'unknown.utoc') + '.');
+        }
+        return {kind: 'iostore-toc', description: 'Unreal IoStore container TOC; must accompany matching .ucas'};
+    }
+    if (extension === 'ucas') {
+        if (fileSize < 1) throw new Error('IoStore data partition is empty.');
+        // UCAS has no independent package magic. The accompanying TOC
+        // controls physical chunk bounds and partition count.
+        return {kind: 'iostore-data', description: 'IoStore data partition; paired TOC required'};
+    }
+
     if (extension === 'pak') {
         const littleEndianMagic = [0xe1, 0x12, 0x6f, 0x5a];
         const bigEndianMagic = [0x5a, 0x6f, 0x12, 0xe1];

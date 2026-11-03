@@ -67,6 +67,7 @@
     const activeArchiveStops = new Set();
     let processedFiles = 0;
     let pendingValidation = [];
+    let ioStoreSubmissionKey = '';
     let diagnosticLines = [];
     let diagnosticProblemLines = [];
     let diagnosticDropped = 0;
@@ -102,6 +103,37 @@
             unit++;
         }
         return (unit ? value.toFixed(2) : String(Math.round(value))) + ' ' + units[unit];
+    }
+
+    function isIoStoreName(name) {
+        return ['utoc', 'ucas'].includes(extensionOf(name));
+    }
+
+    function ioStoreStem(item) {
+        const path = String(item.relativePath || item.file.name).replace(/\\/g, '/');
+        const ext = extensionOf(item.file.name);
+        const base = path.slice(0, -('.' + ext).length);
+        return (ext === 'ucas' ? base.replace(/_s[1-9][0-9]*$/i, '') : base).toLowerCase();
+    }
+
+    function validateIoStoreBatch(items) {
+        const families = new Map();
+        items.forEach(function (item) {
+            if (!isIoStoreName(item.file.name)) return;
+            const key = ioStoreStem(item);
+            if (!families.has(key)) families.set(key, {toc:0, data:0, names:new Set(), duplicate:false});
+            const family = families.get(key);
+            const filename = String(item.file.name).toLowerCase();
+            if (family.names.has(filename)) family.duplicate = true;
+            family.names.add(filename);
+            if (extensionOf(item.file.name) === 'utoc') family.toc++;
+            else family.data++;
+        });
+        const invalid = new Set();
+        families.forEach(function (family, key) {
+            if (family.toc !== 1 || family.data < 1 || family.duplicate) invalid.add(key);
+        });
+        return invalid;
     }
 
     function extensionOf(name) {
@@ -716,11 +748,19 @@
 
     async function inspectBatch(items, batchNumber) {
         const checked = [];
+        const invalidIoStoreFamilies = validateIoStoreBatch(items);
         for (let index = 0; index < items.length; index++) {
             ensureRunning();
             const item = items[index];
             const name = item.relativePath || item.file.name;
             const extension = extensionOf(item.file.name);
+            if (isIoStoreName(item.file.name) && invalidIoStoreFamilies.has(ioStoreStem(item))) {
+                counters.rejected++;
+                counters.checked++;
+                addLog('rejected', name, 'IoStore upload requires one .utoc and its matching .ucas data partitions in the same selected batch.');
+                renderSummary();
+                continue;
+            }
             if (!allowedExtensions.has(extension)) {
                 counters.rejected++;
                 counters.checked++;
@@ -750,7 +790,9 @@
                     manifest: {
                         client_id: clientId,
                         name: item.file.name,
-                        relative_path: name,
+                        relative_path: isIoStoreName(item.file.name)
+                            ? 'iostore/' + ioStoreSubmissionKey + '/' + name.replace(/\\/g, '/')
+                            : name,
                         size: item.file.size,
                         identity_size: identitySize,
                         md5: String(inspection.md5 || ''),
@@ -955,7 +997,14 @@
                     const fileId = Number(row.unverified_file_id || 0);
                     const message = String(row.result_message || '').trim();
 
-                    if (status === 'unverified') {
+                    if (status === 'container_pending' || status === 'container_queued') {
+                        counters.unverified++;
+                        addLog('unverified', entry.label,
+                            (status === 'container_queued'
+                                ? 'IoStore contribution approved; container import queued by an administrator.'
+                                : 'IoStore component retained in quarantine, awaiting matching parts and administrator review.')
+                            + (message ? ' — ' + message : ''));
+                    } else if (status === 'unverified') {
                         counters.unverified++;
                         addLog(
                             'unverified',
@@ -1385,6 +1434,11 @@
         }
 
         operationActive = true;
+        // A fresh unpredictable submission group keeps multiple simultaneous
+        // .utoc/.ucas families from different contributors or uploads separate.
+        ioStoreSubmissionKey = Array.from(crypto.getRandomValues(new Uint8Array(16)), function (b) {
+            return b.toString(16).padStart(2, '0');
+        }).join('');
         stopRequested = false;
         startButton.disabled = true;
         stopButton.hidden = false;

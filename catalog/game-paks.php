@@ -47,7 +47,7 @@ try {
     $db = catalog_db($config);
     $gameId = game_paks_int('id', 0, 0, PHP_INT_MAX);
     if ($gameId < 1) {
-        header('Location: paks.php');
+        header('Location: pakages.php');
         exit;
     }
     $game = catalog_one(

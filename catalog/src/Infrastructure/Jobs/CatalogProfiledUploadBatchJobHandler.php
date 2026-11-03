@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreUploadRoutingPolicy;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogProfiledUploadBatchJobHandler implements JobHandler
@@ -88,6 +89,7 @@ final class CatalogProfiledUploadBatchJobHandler implements JobHandler
         foreach ($slice['items'] as $item) {
             $stagedPath = (string)$item['staged_path'];
             $originalName = (string)$item['original_name'];
+            CatalogIoStoreUploadRoutingPolicy::assertProfiledPackage($originalName);
             $type = (string)$item['kind'] === 'pak'
                 ? JobType::IMPORT_STAGED_PAK
                 : (CatalogArchiveExtractor::isArchiveName($originalName)

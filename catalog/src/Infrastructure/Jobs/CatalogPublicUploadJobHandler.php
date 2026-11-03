@@ -13,6 +13,8 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadTransferStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreUploadRoutingPolicy;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadDuplicateDetector;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
@@ -45,6 +47,9 @@ final class CatalogPublicUploadJobHandler implements JobHandler
         $store = new CatalogPublicUploadTransferStore($this->db, $this->config);
         $row = $store->ledgerForJob($publicUploadId, $token);
         $status = strtolower(trim((string)($row['status'] ?? '')));
+        if ($status === 'container_pending' || $status === 'container_queued') {
+            return $this->result($row, 'completed');
+        }
         if (in_array($status, ['unverified', 'duplicate'], true) && (int)($row['unverified_file_id'] ?? 0) > 0) {
             return $this->result($row, 'completed');
         }
@@ -107,6 +112,47 @@ final class CatalogPublicUploadJobHandler implements JobHandler
                 $decodedPath = (string)$decoded['path'];
                 $workingPath = $decodedPath;
                 $workingName = trim((string)($decoded['filename'] ?? '')) ?: preg_replace('/\.(?:uz|uz2|uz3)$/i', '', $sourceName);
+            }
+
+            // IoStore components are transport containers, not classic Unreal
+            // package files. Retain them in protected quarantine for paired
+            // administrator review; never promote an anonymous container directly.
+            if (CatalogIoStoreUploadRoutingPolicy::isIoStoreComponent($sourceName)) {
+                $identity = $this->hashFile($sourcePath, $context, $sourceName);
+                foreach (['md5', 'sha1'] as $algorithm) {
+                    $client = strtolower(trim((string)($row['client_' . $algorithm] ?? '')));
+                    if ($client === '' || !hash_equals($client, $identity[$algorithm])) {
+                        throw new RuntimeException('IoStore public contribution ' . strtoupper($algorithm)
+                            . ' does not match the server-retained bytes.');
+                    }
+                }
+                if (str_ends_with(strtolower($sourceName), '.utoc')) {
+                    $toc = new Uedb5IoStoreTocReader($sourcePath);
+                    if ((int)($toc->header()['partition_count'] ?? 0) < 1) {
+                        throw new RuntimeException('Public IoStore TOC has no data partitions.');
+                    }
+                }
+                // UCAS does not carry a standalone package header/magic; it is
+                // paired with its TOC and checked against the TOC when reviewed.
+                $this->updateLedger($publicUploadId, [
+                    'status' => 'container_pending',
+                    'server_md5' => $identity['md5'],
+                    'server_sha1' => $identity['sha1'],
+                    'active_identity_key' => null,
+                    'result_message' => 'IoStore component retained in quarantine; '
+                        . 'pending complete .utoc/.ucas set and administrator review.',
+                ]);
+                $context->checkpoint([
+                    'stage' => 'complete',
+                    'percent' => 100,
+                    'message' => 'IoStore component retained in quarantine for administrator review.',
+                ]);
+                return [
+                    'status' => 'container_pending',
+                    'public_upload_id' => $publicUploadId,
+                    'file_id' => 0,
+                    'message' => 'IoStore component retained; no catalog files imported.',
+                ];
             }
 
             if (!is_file($workingPath) || !\scanner_file_has_unreal_package_magic($workingPath)) {

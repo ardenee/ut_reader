@@ -1,0 +1,125 @@
+{
+  "schema": "ue5-public-admin-iostore-and-retained-package-archive-ui-v1",
+  "date": "2026-11-03",
+  "purpose": "Fix genuine profiled/public upload misrouting of IoStore components; retain verified original .utoc+.ucas paired archives under anonymous review; replace separate package archive overview roots with one directory of .pak,.upk,.utoc,.ucas.",
+  "file_formats_as_stored": {
+    "pak": "ue_pak_archives (self-contained retained PAK)",
+    "upk": "verified original UE3 ue_files (serialized exports in the package itself)",
+    "utoc": "ue_iostore_containers (retained TOC SHA256)",
+    "ucas": "ue_iostore_container_parts (one SHA256 per retained partition)"
+  },
+  "original_genuine_current_global_container": {
+    "utoc_sha256": "0f72c200169b09519ac727d0149ef4f3c35d6234f1326c7efe5ee0bcf04095e6",
+    "ucas_sha256": "b57553fe214c9db7f854fb23db9cb6eb1c3c84fd714998b882487396373e211c",
+    "utoc_bytes": 2982,
+    "ucas_bytes": 3540752,
+    "retained_review_source_and_destination_sha256_match": true,
+    "TOC_partition_count": 1
+  },
+  "admin_upload_path": {
+    "page": "catalog/profiled-upload.php",
+    "handler": "catalog/iostore-import.php",
+    "actual_browser_selected_File_objects_forwarded": true,
+    "profiled_api_and_job_non_container_route_rejected": true,
+    "original_sources_retained_then_indexed_after_admin_queue": true
+  },
+  "public_upload_path": {
+    "page": "catalog/public-upload.php",
+    "inspector": "catalog/assets/upload-file-inspector-worker.js",
+    "preflight": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
+    "worker": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
+    "public_result_status": "container_pending",
+    "unverified_quarantine": "public-uploads/incoming",
+    "approve_permission": "administrator only",
+    "approval_page": "catalog/iostore-import.php",
+    "review": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+    "approved_job_type": "catalog.import_iostore_container",
+    "byte_hashes": "browser MD5 + SHA1 matched by server; SHA256 checked for retained review copies",
+    "global_content_deduplication_for_iostore_disabled": "each TOC/UCAS set independently retained, not falsely treated as duplicate loose package",
+    "public_verified_game_import_without_admin_review": false
+  },
+  "actual_behavioral_tests": {
+    "original_paired_acceptance": "tests/tools/verify_iostore_public_admin_uploads.php",
+    "PHP_integration_positive_sets": 1,
+    "PHP_integration_negative_guards": [
+      "double_approval",
+      "invented_group",
+      "unknown_game",
+      "anonymous_promotion",
+      "orphan_toc",
+      "quarantine_hash_drift",
+      "TOC_partition_cardinality"
+    ],
+    "browser_actual_selected_pair_cases": 5,
+    "browser_negative_cases": 5,
+    "browser_test": "tests/tools/verify_public_iostore_browser.js",
+    "new_merged_root_nav_test": "tests/tools/verify_unified_pakages_directory.php",
+    "previously_queued_wrong_imports": "profiled upload .utoc/.ucas as package staging (Magic not found)",
+    "new_case_ids": 0
+  },
+  "PRD_readonly_inventory_prior_to_new_import": {
+    "pak_archive_rows": 217,
+    "verified_upk_rows": 3581,
+    "utoc_container_rows": 0,
+    "ucas_partition_rows": 0
+  },
+  "removed_root_files": [
+    "catalog/paks.php",
+    "catalog/upks.php"
+  ],
+  "preserved_detail_pages": [
+    "catalog/game-paks.php",
+    "catalog/game-upks.php",
+    "catalog/pak-info.php",
+    "catalog/upk-info.php",
+    "catalog/iostore-info.php"
+  ],
+  "new_root": "catalog/pakages.php",
+  "retained_section_file_types": [
+    "pak",
+    "upk",
+    "utoc",
+    "ucas"
+  ],
+  "new_source_file_sha256": {
+    "catalog/pakages.php": "2d59417f0c9874e0c79ae29bee5111b7a70792d7d2781d7b601a9868bdc15594",
+    "catalog/lib/CatalogNavigation.php": "7d70396561289f67c2f493b1066c9baf0d7c94ad5edea15ba0d425d6344a3b0d",
+    "catalog/public-upload.php": "25178060429fbc1bc1a7c1f842eeab8ed07aa1f3d017bee049c6d4a2ae57de02",
+    "catalog/profiled-upload.php": "8522776898056427eb75ca2522e2584d48db074b66e2b8516e86ddae7df03c56",
+    "catalog/iostore-import.php": "9ef7f2f6a928bcc547d4f19b5d97b4dee46f37c5daf669732481139a0f08357d",
+    "catalog/assets/public-upload.js": "9a43697bef58f1b47128d2f5c3beb301b0fe47db6f69bfd4292da7ef2555a6cf",
+    "catalog/assets/profiled-upload-jobs-core.js": "c7cc8c7cf41c2a672fddb51c5cfd47e10b28dae21850981fa6a79cd4e79db980",
+    "catalog/assets/upload-file-inspector-worker.js": "a1819f2a2a465cf1415cc3626709b6167c0399d333dab2df65803a54a526ef88",
+    "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php": "9bc0700e96381d1d68a6957a50f98fc4c8d7027795ed0d3e64748cb033c8a78f",
+    "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php": "5ca75d00133c680ae61d2fc672df5e63e4c0bed756ccc8614b7de2c8732c9aec",
+    "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php": "faabc49ed1e61ecba2bff9962d00a79a3f09b1d1f002d1048522ad2d32b33be8",
+    "catalog/src/Infrastructure/Import/CatalogPublicUploadTransferStore.php": "6aa305b23421730ed642dd228d78d2165252cf32c48edff82b82f066939688a9",
+    "catalog/src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php": "fa47989c4f4898a996b6ad9794a3571e831bc514f10537079668a1aa652288e3",
+    "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php": "d4790cdd61ca18ffe913cf7dce8562ba7527fb2afed30100c5d1fef5f0bef9c0",
+    "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php": "3846c4ad34a4c54809e0591084b7dc56067af74d75309a590816cde5a6d9ad61",
+    "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php": "a711536fa40f3a38ade83203d3e14190c48b259b6e2e693b3f79f51e0d50a26c",
+    "catalog/api/v1/profiled-upload-chunk.php": "b4c6a068ee0c6863c1f3b678893bafae8ffde18ea857d0a09c9eb1fb68a8148c",
+    "catalog/api/v1/profiled-upload-batch.php": "44c8bfbe6f86e0213b769dfe3e9bcd0abd9b6db6c689e4ca3cbc810e359a0b8c",
+    "catalog/src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php": "6c53add9aceb65019808119602b2ad6316f064c345952e9b1033054197d81b1b",
+    "catalog/game-paks.php": "401694770193a2fa128e941b4e1b21c3fe25b030d00463d954c6c23a57739dd4",
+    "catalog/pak-import.php": "84ca00020f18cbd4d886385ad87230cde11d7e793cdf38b526c52224a7fee488",
+    "catalog/iostore-package-info.php": "3c489ae7c7d5803f41c3f60327fc64794538758b2a448bf1c2eb5a7c8a6305e6",
+    "catalog/iostore-backup.php": "6c3db7414fda0741f5d7fbc62b5259191486f45c88879e79639d1fc32964f3fd"
+  },
+  "test_script_sha256": {
+    "tests/tools/verify_iostore_public_admin_uploads.php": "cfabcf9dad9ee0fb457a0ef8b8b5135b15840e967fac7566e734a829284701ec",
+    "tests/tools/verify_public_iostore_browser.js": "71ae4b18983891234b34dc73a33edc100c56c09d4da6d2f028fc1d1e84e4e993",
+    "tests/tools/verify_unified_pakages_directory.php": "e17c0e1ba8ee04004f8cb9126437c9ed1bbc2f65347c21f7ec93205c8c45bcff"
+  },
+  "limitations": [
+    "No source-correct v14 game14 dependency publication or real browser upload was performed during the isolated tests.",
+    "PRD iostore is empty until user imports a valid container; do not infer zero missing dependencies.",
+    "Public per-file limit from current PRD settings is 2 GiB; administrator browser multipart limit is 1 GiB. Larger containers require a local server .utoc path or a separately implemented chunked IoStore transfer."
+  ],
+  "PRD_database_writes": 0,
+  "original_game_files_modified": false,
+  "contract_register_counts_unchanged": {
+    "PASS": 27,
+    "BLOCKED": 5
+  }
+}

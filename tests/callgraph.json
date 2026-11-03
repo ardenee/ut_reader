@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1027,
-  "edges_count": 3630,
+  "nodes": 1028,
+  "edges_count": 3646,
   "edge_types": {
-    "use": 1235,
-    "new": 953,
-    "static_or_expression": 1442
+    "use": 1244,
+    "new": 957,
+    "static_or_expression": 1445
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -1286,13 +1286,13 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 131
+      "line": 135
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 283
+      "line": 287
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1316,7 +1316,7 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php",
       "syntax": "new",
-      "line": 240
+      "line": 244
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1328,7 +1328,7 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadBatchStore.php",
       "syntax": "new",
-      "line": 157
+      "line": 161
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1340,7 +1340,7 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
       "syntax": "new",
-      "line": 301
+      "line": 305
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1352,7 +1352,7 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 281
+      "line": 285
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1364,7 +1364,7 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
       "syntax": "new",
-      "line": 161
+      "line": 165
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1376,7 +1376,7 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Infrastructure/Settings/CatalogProgramSettingsStore.php",
       "syntax": "new",
-      "line": 179
+      "line": 183
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1388,7 +1388,7 @@
       "from": "catalog/api/v1/profiled-upload-batch.php",
       "to": "catalog/src/Presentation/Http/JsonResponse.php",
       "syntax": "static_or_expression",
-      "line": 141
+      "line": 145
     },
     {
       "from": "catalog/api/v1/profiled-upload-batch.php",
@@ -1400,7 +1400,7 @@
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php",
       "syntax": "static_or_expression",
-      "line": 50
+      "line": 51
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
@@ -1412,13 +1412,13 @@
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 33
+      "line": 34
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Import/CatalogChunkedUploadStore.php",
       "syntax": "new",
-      "line": 133
+      "line": 141
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
@@ -1428,9 +1428,21 @@
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "static_or_expression",
+      "line": 61
+    },
+    {
+      "from": "catalog/api/v1/profiled-upload-chunk.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "use",
+      "line": 19
+    },
+    {
+      "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadBatchStore.php",
       "syntax": "new",
-      "line": 129
+      "line": 137
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
@@ -1442,7 +1454,7 @@
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
       "syntax": "new",
-      "line": 268
+      "line": 276
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
@@ -1454,37 +1466,37 @@
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
       "syntax": "new",
-      "line": 126
+      "line": 134
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
       "syntax": "use",
-      "line": 21
+      "line": 22
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Settings/CatalogProgramSettingsStore.php",
       "syntax": "new",
-      "line": 172
+      "line": 180
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Infrastructure/Settings/CatalogProgramSettingsStore.php",
       "syntax": "use",
-      "line": 20
+      "line": 21
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Presentation/Http/JsonResponse.php",
       "syntax": "static_or_expression",
-      "line": 107
+      "line": 115
     },
     {
       "from": "catalog/api/v1/profiled-upload-chunk.php",
       "to": "catalog/src/Presentation/Http/JsonResponse.php",
       "syntax": "use",
-      "line": 22
+      "line": 23
     },
     {
       "from": "catalog/api/v1/profiled-upload-preflight.php",
@@ -4964,7 +4976,7 @@
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 52
+      "line": 70
     },
     {
       "from": "catalog/iostore-import.php",
@@ -4976,7 +4988,7 @@
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadStager.php",
       "syntax": "new",
-      "line": 35
+      "line": 53
     },
     {
       "from": "catalog/iostore-import.php",
@@ -4986,15 +4998,27 @@
     },
     {
       "from": "catalog/iostore-import.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "syntax": "new",
+      "line": 27
+    },
+    {
+      "from": "catalog/iostore-import.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "syntax": "use",
+      "line": 11
+    },
+    {
+      "from": "catalog/iostore-import.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php",
       "syntax": "static_or_expression",
-      "line": 91
+      "line": 109
     },
     {
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
       "syntax": "new",
-      "line": 59
+      "line": 33
     },
     {
       "from": "catalog/iostore-import.php",
@@ -5006,7 +5030,7 @@
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 50
+      "line": 68
     },
     {
       "from": "catalog/iostore-import.php",
@@ -5018,19 +5042,19 @@
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
       "syntax": "new",
-      "line": 34
+      "line": 52
     },
     {
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
       "syntax": "use",
-      "line": 11
+      "line": 12
     },
     {
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php",
       "syntax": "static_or_expression",
-      "line": 19
+      "line": 20
     },
     {
       "from": "catalog/iostore-import.php",
@@ -5042,13 +5066,13 @@
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 75
+      "line": 93
     },
     {
       "from": "catalog/iostore-import.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 75
+      "line": 93
     },
     {
       "from": "catalog/iostore-info.php",
@@ -6833,52 +6857,52 @@
       "line": 53
     },
     {
-      "from": "catalog/paks.php",
-      "to": "catalog/class-remap.php",
+      "from": "catalog/pakages.php",
+      "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 64
+      "line": 177
     },
     {
-      "from": "catalog/paks.php",
+      "from": "catalog/pakages.php",
       "to": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php",
       "syntax": "static_or_expression",
-      "line": 31
+      "line": 25
     },
     {
-      "from": "catalog/paks.php",
+      "from": "catalog/pakages.php",
       "to": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php",
+      "syntax": "use",
+      "line": 17
+    },
+    {
+      "from": "catalog/pakages.php",
+      "to": "catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php",
+      "syntax": "static_or_expression",
+      "line": 24
+    },
+    {
+      "from": "catalog/pakages.php",
+      "to": "catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php",
       "syntax": "use",
       "line": 16
     },
     {
-      "from": "catalog/paks.php",
-      "to": "catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php",
-      "syntax": "static_or_expression",
-      "line": 30
-    },
-    {
-      "from": "catalog/paks.php",
-      "to": "catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php",
-      "syntax": "use",
-      "line": 15
-    },
-    {
-      "from": "catalog/paks.php",
+      "from": "catalog/pakages.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 33
+      "line": 40
     },
     {
-      "from": "catalog/paks.php",
+      "from": "catalog/pakages.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 33
+      "line": 40
     },
     {
-      "from": "catalog/paks.php",
+      "from": "catalog/pakages.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 55
+      "line": 113
     },
     {
       "from": "catalog/parsers/EpicUE3PackageReader.php",
@@ -6974,7 +6998,7 @@
       "from": "catalog/profiled-upload.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php",
       "syntax": "static_or_expression",
-      "line": 94
+      "line": 97
     },
     {
       "from": "catalog/profiled-upload.php",
@@ -6986,7 +7010,7 @@
       "from": "catalog/profiled-upload.php",
       "to": "catalog/src/Infrastructure/Import/CatalogChunkedUploadStore.php",
       "syntax": "new",
-      "line": 248
+      "line": 251
     },
     {
       "from": "catalog/profiled-upload.php",
@@ -6998,7 +7022,7 @@
       "from": "catalog/profiled-upload.php",
       "to": "catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php",
       "syntax": "new",
-      "line": 68
+      "line": 69
     },
     {
       "from": "catalog/profiled-upload.php",
@@ -7008,63 +7032,75 @@
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
-      "syntax": "new",
-      "line": 69
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "static_or_expression",
+      "line": 80
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
       "syntax": "use",
       "line": 16
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
       "syntax": "new",
-      "line": 152
+      "line": 70
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
       "syntax": "use",
       "line": 17
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
       "syntax": "new",
-      "line": 54
+      "line": 155
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
       "syntax": "use",
       "line": 18
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Settings/CatalogProgramSettingsStore.php",
+      "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
       "syntax": "new",
-      "line": 207
+      "line": 55
     },
     {
       "from": "catalog/profiled-upload.php",
-      "to": "catalog/src/Infrastructure/Settings/CatalogProgramSettingsStore.php",
+      "to": "catalog/src/Infrastructure/Security/CatalogPublicAccessGuard.php",
       "syntax": "use",
       "line": 19
     },
     {
       "from": "catalog/profiled-upload.php",
+      "to": "catalog/src/Infrastructure/Settings/CatalogProgramSettingsStore.php",
+      "syntax": "new",
+      "line": 210
+    },
+    {
+      "from": "catalog/profiled-upload.php",
+      "to": "catalog/src/Infrastructure/Settings/CatalogProgramSettingsStore.php",
+      "syntax": "use",
+      "line": 20
+    },
+    {
+      "from": "catalog/profiled-upload.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 329
+      "line": 365
     },
     {
       "from": "catalog/profiled-upload.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 329
+      "line": 365
     },
     {
       "from": "catalog/program-settings.php",
@@ -7130,7 +7166,7 @@
       "from": "catalog/public-upload.php",
       "to": "catalog/src/Infrastructure/Import/CatalogBucketUploadTransferStoreFactory.php",
       "syntax": "static_or_expression",
-      "line": 35
+      "line": 40
     },
     {
       "from": "catalog/public-upload.php",
@@ -7166,13 +7202,13 @@
       "from": "catalog/public-upload.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 59
+      "line": 64
     },
     {
       "from": "catalog/public-upload.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 59
+      "line": 64
     },
     {
       "from": "catalog/query-telemetry.php",
@@ -9422,7 +9458,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 69
+      "line": 70
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
@@ -9434,7 +9470,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php",
       "syntax": "static_or_expression",
-      "line": 56
+      "line": 57
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
@@ -9452,13 +9488,19 @@
       "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
       "to": "catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php",
       "syntax": "new",
-      "line": 144
+      "line": 145
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "static_or_expression",
+      "line": 53
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 326
+      "line": 327
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php",
@@ -9467,10 +9509,46 @@
       "line": 17
     },
     {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "static_or_expression",
+      "line": 203
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "use",
+      "line": 8
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "new",
+      "line": 161
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "use",
+      "line": 9
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "new",
+      "line": 202
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "use",
+      "line": 10
+    },
+    {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 74
+      "line": 75
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
@@ -9482,7 +9560,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
       "to": "catalog/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php",
       "syntax": "new",
-      "line": 329
+      "line": 340
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
@@ -9614,7 +9692,13 @@
       "from": "catalog/src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 84
+      "line": 95
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "static_or_expression",
+      "line": 144
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php",
@@ -12938,7 +13022,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 36
+      "line": 37
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
@@ -12950,7 +13034,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogArchiveExtractor.php",
       "syntax": "static_or_expression",
-      "line": 93
+      "line": 95
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
@@ -12960,9 +13044,21 @@
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "static_or_expression",
+      "line": 92
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "use",
+      "line": 20
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
       "to": "catalog/src/Infrastructure/Import/CatalogProfiledUploadBatchStore.php",
       "syntax": "new",
-      "line": 49
+      "line": 50
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
@@ -12974,13 +13070,13 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 86
+      "line": 87
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "use",
-      "line": 20
+      "line": 21
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php",
@@ -13160,7 +13256,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 33
+      "line": 35
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
@@ -13170,9 +13266,21 @@
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "static_or_expression",
+      "line": 120
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
+      "syntax": "use",
+      "line": 16
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Import/CatalogPublicUploadTransferStore.php",
       "syntax": "new",
-      "line": 45
+      "line": 47
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
@@ -13184,23 +13292,35 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php",
       "syntax": "new",
-      "line": 140
+      "line": 186
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php",
       "syntax": "use",
-      "line": 16
+      "line": 18
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php",
       "syntax": "new",
-      "line": 180
+      "line": 226
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php",
+      "syntax": "use",
+      "line": 19
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "new",
+      "line": 130
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "use",
       "line": 17
     },
@@ -13208,25 +13328,25 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 247
+      "line": 293
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "use",
-      "line": 18
+      "line": 20
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php",
       "syntax": "new",
-      "line": 91
+      "line": 96
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "to": "catalog/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php",
       "syntax": "use",
-      "line": 19
+      "line": 21
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php",
@@ -21627,30 +21747,6 @@
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
       "line": 142
-    },
-    {
-      "from": "catalog/upks.php",
-      "to": "catalog/class-remap.php",
-      "syntax": "static_or_expression",
-      "line": 52
-    },
-    {
-      "from": "catalog/upks.php",
-      "to": "catalog/src/Presentation/Ui/CatalogUi.php",
-      "syntax": "static_or_expression",
-      "line": 42
-    },
-    {
-      "from": "catalog/upks.php",
-      "to": "catalog/src/Presentation/Ui/Component/Alert.php",
-      "syntax": "static_or_expression",
-      "line": 68
-    },
-    {
-      "from": "catalog/upks.php",
-      "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
-      "syntax": "static_or_expression",
-      "line": 42
     },
     {
       "from": "catalog/upload-bucket-v2.php",

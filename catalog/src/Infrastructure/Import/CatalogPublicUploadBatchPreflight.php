@@ -66,7 +66,8 @@ final class CatalogPublicUploadBatchPreflight
                         'Public contribution upload currently accepts Unreal packages and duplicate-safe .uz/.uz2/.uz3 redirects only.'
                     );
                 }
-                $policy->validateName($name, true);
+                $policy->validateName($name, true, true);
+                $isIoStore = $policy->isIoStoreComponent($name);
 
                 $size = (int)($item['size'] ?? 0);
                 if ($size < 1 || $size > (int)$settings['max_file_bytes']) {
@@ -102,7 +103,11 @@ final class CatalogPublicUploadBatchPreflight
                     $guid = '';
                 }
 
-                $identityKey = $md5 !== '' && $sha1 !== '' && $identitySize > 0
+                // Each IoStore component belongs to a TOC/partition family;
+                // global content identity deduplication must not erase an
+                // otherwise complete pair submitted by another contributor.
+                // The server still verifies MD5/SHA1 for every retained byte.
+                $identityKey = !$isIoStore && $md5 !== '' && $sha1 !== '' && $identitySize > 0
                     ? hash('sha256', $md5 . "\0" . $sha1 . "\0" . $identitySize)
                     : '';
                 if ($identityKey !== '' && isset($identityKeys[$identityKey])) {
@@ -116,7 +121,9 @@ final class CatalogPublicUploadBatchPreflight
                 }
                 if ($identityKey !== '') {
                     $identityKeys[$identityKey] = $index;
-                    $md5s[$md5] = true;
+                    if (!$isIoStore) {
+                        $md5s[$md5] = true; // Container bytes are not an invalid UE package.
+                    }
                 }
                 if ($guid !== '') {
                     $guids[$guid] = true;
@@ -132,6 +139,7 @@ final class CatalogPublicUploadBatchPreflight
                     'sha1' => $sha1,
                     'guid' => $guid,
                     'redirect' => $redirect,
+                    'iostore_component' => $isIoStore,
                     'identity_key' => $identityKey,
                 ];
             } catch (\Throwable $error) {
@@ -154,7 +162,7 @@ final class CatalogPublicUploadBatchPreflight
 
         foreach ($normalized as $index => $item) {
             $identity = (string)$item['identity_key'];
-            if ($identity !== '' && isset($invalidByIdentity[$identity])) {
+            if (empty($item['iostore_component']) && $identity !== '' && isset($invalidByIdentity[$identity])) {
                 $match = $invalidByIdentity[$identity];
                 $results[$index] = [
                     'client_id' => $item['client_id'],
@@ -167,7 +175,7 @@ final class CatalogPublicUploadBatchPreflight
                 unset($normalized[$index]);
                 continue;
             }
-            if ($identity !== '' && isset($existingByIdentity[$identity])) {
+            if (empty($item['iostore_component']) && $identity !== '' && isset($existingByIdentity[$identity])) {
                 $match = $existingByIdentity[$identity];
                 $results[$index] = [
                     'client_id' => $item['client_id'],
@@ -179,7 +187,10 @@ final class CatalogPublicUploadBatchPreflight
                 unset($normalized[$index]);
                 continue;
             }
-            if ($identity !== '' && isset($pendingByIdentity[$identity])) {
+            // IoStore parts must stay in their submitted TOC/UCAS group. A
+            // global pending-content match from another contributor cannot
+            // replace the matching partition in this contribution.
+            if (empty($item['iostore_component']) && $identity !== '' && isset($pendingByIdentity[$identity])) {
                 $results[$index] = [
                     'client_id' => $item['client_id'],
                     'action' => 'skip',
@@ -376,7 +387,7 @@ final class CatalogPublicUploadBatchPreflight
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
                 'SELECT active_identity_key FROM ue_public_uploads WHERE active_identity_key IN (' . $placeholders . ') '
-                . 'AND status IN ("reserved","uploading","uploaded","processing") '
+                . 'AND status IN ("reserved","uploading","uploaded","processing","container_pending","container_queued") '
                 . 'AND (status NOT IN ("reserved","uploading") OR reservation_expires_at>UTC_TIMESTAMP(6))'
             );
             $statement->execute($chunk);

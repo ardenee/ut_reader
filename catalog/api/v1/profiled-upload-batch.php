@@ -56,6 +56,10 @@ function profiled_upload_allowed_extensions(mixed $json): array
 function profiled_upload_batch_file_policy(array $batch, string $originalName): array
 {
     $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+    if (\UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreUploadRoutingPolicy::isIoStoreComponent($originalName)) {
+        return ['allowed'=>false,'reason'=>\UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreUploadRoutingPolicy::REDIRECT_MESSAGE,
+            'is_pak'=>false,'is_archive'=>false,'is_redirect'=>false,'extension'=>$extension];
+    }
     $isPak = $extension === 'pak';
     $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
     $isArchive = CatalogArchiveExtractor::isArchiveName($originalName);

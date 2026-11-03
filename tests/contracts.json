@@ -2604,14 +2604,16 @@
         "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED.",
         "2026-11-03 zero-input UE5 scope correction: game14 has no verified staged files; the per-game Missing Dependencies page now reports unavailable explicitly, not a demonstrated 0 missing. The five-engine SQL website consumer regression includes this empty-game case and PRD original read-only publicationFreshness(14) returned verified=0/current=0/stale=0. Production V14 and authenticated browser output remain unverified.",
         "2026-11-03 current Satisfactory 1.2 UE5.6.1 source selection remains a legitimate part of this existing website publication blocker: the current Zen SOURCE_POLICY string says 5.8.3, private Satisfactory engine patch source is NOT required absent original serialization counterevidence; complete provider mount evidence remains unavailable, game14 PRD has zero verified original files, and no current v14 publication/HTTP mixed outcomes exist. 66 of 124234 package-store imports refer outside the single main container; none are automatically missing. Evidence tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
-        "2026-11-03 UE5.6.1 source-release dispatch corrected: this is no longer a website-publication blocker. The remaining website acceptance depends on staging original game14 files and publishing real v14 dependencies, then HTTP/mixed outcomes. No private game engine source prerequisite. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
+        "2026-11-03 UE5.6.1 source-release dispatch corrected: this is no longer a website-publication blocker. The remaining website acceptance depends on staging original game14 files and publishing real v14 dependencies, then HTTP/mixed outcomes. No private game engine source prerequisite. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
+        "2026-11-03 browser upload ingress corrected and unified archive viewing implemented; zero original game14 TOC/UCAS entries in PRD before user import. This does not prove live UI source-correct v14 publication. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
         "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json",
         "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json",
         "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
-        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
+        "tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
       ],
       "epic_additional_source_anchors": [
         {
@@ -2763,10 +2765,12 @@
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
-        "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
+        "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
+        "2026-11-03 new actual browser entry/anonymous ingress paths: .utoc/.ucas are treated as paired IoStore containers, not classic packages; true current Satisfactory global source pair passed SHA-verified disposable review/queue proof, 7 negative guards and 10 browser pair selections. The original Epic-certified ingestion reader remains untouched. PRD physical import not executed. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
       ],
       "additional_evidence": [
-        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json"
+        "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
+        "tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
       ]
     }
   ],

@@ -16,6 +16,7 @@ use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreUploadRoutingPolicy;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
@@ -57,6 +58,13 @@ function profiled_chunk_extensions(mixed $raw): array
 function profiled_chunk_file_policy(string $originalName, string $engineKey, mixed $allowedExtensions): array
 {
     $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+    if (CatalogIoStoreUploadRoutingPolicy::isIoStoreComponent($originalName)) {
+        return [
+            'allowed' => false, 'is_pak' => false, 'is_redirect' => false,
+            'is_archive' => false,
+            'reason' => CatalogIoStoreUploadRoutingPolicy::REDIRECT_MESSAGE,
+        ];
+    }
     $isPak = $extension === 'pak';
     $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
     $isArchive = CatalogArchiveExtractor::isArchiveName($originalName);

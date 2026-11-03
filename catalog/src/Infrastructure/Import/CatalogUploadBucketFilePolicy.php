@@ -21,6 +21,7 @@ final class CatalogUploadBucketFilePolicy
     private ?array $allowedPackageExtensions = null;
 
     private ?bool $pakContainerAllowed = null;
+    private ?bool $ioStoreContainerAllowed = null;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -41,9 +42,8 @@ final class CatalogUploadBucketFilePolicy
         foreach (\gp_all_profiles($this->db) as $profile) {
             foreach (\gp_extensions($profile) as $extension) {
                 $extension = \catalog_clean_unreal_extension((string)$extension);
-                // PAK is a transport/container identity. It is deliberately not
-                // a package-table extension even if an older profile listed it.
-                if ($extension !== '' && $extension !== 'pak') {
+                // Container components are not loose Unreal package-table extensions.
+                if ($extension !== '' && !in_array($extension, ['pak', 'utoc', 'ucas'], true)) {
                     $extensions[$extension] = true;
                 }
             }
@@ -51,7 +51,7 @@ final class CatalogUploadBucketFilePolicy
         if ($extensions === []) {
             foreach (($this->config['allowed_extensions'] ?? []) as $extension) {
                 $extension = \catalog_clean_unreal_extension((string)$extension);
-                if ($extension !== '' && $extension !== 'pak') {
+                if ($extension !== '' && !in_array($extension, ['pak', 'utoc', 'ucas'], true)) {
                     $extensions[$extension] = true;
                 }
             }
@@ -75,6 +75,17 @@ final class CatalogUploadBucketFilePolicy
         return $this->allowedExtensions = array_keys($extensions);
     }
 
+    /** @return list<string> */
+    public function allowedPublicExtensions(): array
+    {
+        $extensions = $this->allowedPackageExtensions();
+        if ($this->ioStoreContainerAllowed()) {
+            $extensions[] = 'utoc';
+            $extensions[] = 'ucas';
+        }
+        return $extensions;
+    }
+
     public function cleanName(string $name, string $missingMessage = 'Chunked bucket upload filename is missing.'): string
     {
         $name = \catalog_clean_unreal_filename(basename(str_replace('\\', '/', trim($name))));
@@ -84,9 +95,15 @@ final class CatalogUploadBucketFilePolicy
         return $name;
     }
 
-    public function validateName(string $name, bool $allowRedirectWrapper = true): void
+    public function validateName(string $name, bool $allowRedirectWrapper = true, bool $allowIoStore = false): void
     {
         if (($allowRedirectWrapper && $this->isRedirectWrapper($name)) || $this->isArchive($name)) {
+            return;
+        }
+        if ($this->isIoStoreComponent($name)) {
+            if (!$allowIoStore || !$this->ioStoreContainerAllowed()) {
+                throw new \InvalidArgumentException('IoStore contribution requires an active UE5 game profile.');
+            }
             return;
         }
         if ($this->isPakContainer($name)) {
@@ -120,6 +137,24 @@ final class CatalogUploadBucketFilePolicy
     public function isPakContainer(string $name): bool
     {
         return \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION)) === 'pak';
+    }
+
+    public function isIoStoreComponent(string $name): bool
+    {
+        return CatalogIoStoreUploadRoutingPolicy::isIoStoreComponent($name);
+    }
+
+    private function ioStoreContainerAllowed(): bool
+    {
+        if ($this->ioStoreContainerAllowed !== null) {
+            return $this->ioStoreContainerAllowed;
+        }
+        foreach (\gp_all_profiles($this->db) as $profile) {
+            if (str_starts_with(strtoupper(trim((string)($profile['engine_key'] ?? ''))), 'UE5')) {
+                return $this->ioStoreContainerAllowed = true;
+            }
+        }
+        return $this->ioStoreContainerAllowed = false;
     }
 
     private function pakContainerAllowed(): bool

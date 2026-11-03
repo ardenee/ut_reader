@@ -133,7 +133,7 @@ try {
     catalog_page_header(
         'PAK Import',
         'The original UE4 or UE5 PAK is retained as a self-contained downloadable archive while its entries are extracted and cataloged separately.',
-        ['PAK Archives' => 'paks.php', 'Background Jobs' => 'background-jobs.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']
+        ['PAK Archives' => 'pakages.php', 'Background Jobs' => 'background-jobs.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']
     );
 
     if (!CatalogPakArchiveStore::schemaInstalled($db)) {

@@ -16,7 +16,7 @@ try {
     catalog_head('Package Viewer: Zen package');
     echo CatalogUi::pageHeader('Zen package details',
         (string)$details['package_name'],
-        ['Container'=>'iostore-info.php?id='.$container,'Package Viewer'=>'paks.php']);
+        ['Container'=>'iostore-info.php?id='.$container,'Package Viewer'=>'pakages.php']);
     echo '<section class="ui-section"><div class="ui-section__header"><h2>IoStore package</h2></div><div class="ui-section__body"><table><tbody>';
     foreach([
         'Package name'=>$details['package_name'],

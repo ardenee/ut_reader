@@ -53,7 +53,7 @@ try{
  catalog_flash($_SESSION['iostore_backup_flash']??null);unset($_SESSION['iostore_backup_flash']);
  catalog_page_header('IoStore container backups',
     'Preserve entire .utoc/.ucas sets, their partition SHA-256 manifest and internal package indexes through durable jobs.',
-    ['Package Viewer'=>'paks.php','Background Jobs'=>'background-jobs.php']);
+    ['Package Viewer'=>'pakages.php','Background Jobs'=>'background-jobs.php']);
  if(!$installed)echo CatalogUi::alert('warning','IoStore migration not installed. Backup and restore are disabled.');
  elseif($games===[])echo CatalogUi::alert('warning','No active UE5 game profiles are available.');
  else{

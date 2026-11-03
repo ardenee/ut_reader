@@ -50,6 +50,7 @@ final class CatalogProfiledUploadQueue
     ): array {
         $game = $this->requiredGame($gameId);
         $originalName = CatalogImportPathPolicy::filename($originalName);
+        CatalogIoStoreUploadRoutingPolicy::assertProfiledPackage($originalName);
         $size = (int)($staged['size'] ?? 0);
         $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
         $isPak = $extension === 'pak';

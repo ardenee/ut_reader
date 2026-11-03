@@ -157,7 +157,7 @@ final class CatalogPublicUploadTransferStore
         try {
             $row = $this->ownedRow($token, $ip, true);
             $status = strtolower(trim((string)($row['status'] ?? '')));
-            if (in_array($status, ['uploaded', 'processing', 'unverified', 'duplicate'], true)) {
+            if (in_array($status, ['uploaded', 'processing', 'unverified', 'duplicate', 'container_pending', 'container_queued'], true)) {
                 $this->db->commit();
                 return $row;
             }

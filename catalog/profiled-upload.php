@@ -13,6 +13,7 @@ require_once __DIR__ . '/lib/CatalogPakArchive.php';
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogIoStoreUploadRoutingPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessGuard;
@@ -75,6 +76,8 @@ function profiled_upload_enqueue(PDO $db, array $config): array
     foreach ($temporaryFiles as $index => $temporaryPath) {
         $originalName = (string)($_FILES['files']['name'][$index] ?? 'upload.bin');
         $displayName = profiled_upload_relative_path((int)$index, $originalName);
+        // Reject before copying/uploading to ordinary package staging.
+        CatalogIoStoreUploadRoutingPolicy::assertProfiledPackage($originalName);
         $errorCode = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
         if ($errorCode !== UPLOAD_ERR_OK) {
             $messages[] = [
@@ -261,10 +264,43 @@ try {
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
             'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
             'PAK Import' => 'pak-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
+            'IoStore Import' => 'iostore-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
             'Library' => 'library.php',
         ]
     );
 
+    // IoStore is a paired container format, not a profiled loose-package
+    // upload. This is a functional embedded form posting to the existing
+    // admin-only, validated IoStore import endpoint.
+    $ue5UploadGames = array_values(array_filter($games,
+        static fn(array $game): bool => str_starts_with(
+            strtoupper((string)($game['profile_engine'] ?? '')), 'UE5'
+        )
+    ));
+    if ($ue5UploadGames !== []) {
+        echo '<div class="card"><h2>Upload a UE5 IoStore container (.utoc + .ucas)</h2>';
+        echo '<p>Upload the TOC and every matching data partition together. '
+            . 'The original container files are retained and indexed as one IoStore set, '
+            . 'never parsed as loose Unreal packages. Local PRD paths are supported for large containers.</p>';
+        echo '<form id="profiled-iostore-form" method="post" action="iostore-import.php" enctype="multipart/form-data" data-ui-loading-form>';
+        echo '<input type="hidden" name="csrf" value="'.catalog_h(catalog_csrf('iostore-import')).'">';
+        echo '<label>UE5 game <select name="game_id" required>';
+        foreach ($ue5UploadGames as $ue5Game) {
+            $id = (int)$ue5Game['id'];
+            echo '<option value="'.$id.'"'.($id===$selectedGameId?' selected':'').'>'
+                .catalog_h((string)$ue5Game['name']).'</option>';
+        }
+        echo '</select></label>';
+        echo '<p><label>.utoc TOC <input type="file" name="utoc_file" accept=".utoc"></label></p>';
+        echo '<p><label>Matching .ucas data partitions <input type="file" name="ucas_files[]" accept=".ucas" multiple></label></p>';
+        echo '<p><label>Or local server .utoc path <input type="text" name="local_utoc_path" '
+            . 'placeholder="C:\Games\Example\Content\Paks\pakchunk0.utoc" style="width:min(100%,760px)"></label></p>';
+        echo '<button type="submit">Queue complete IoStore container</button></form></div>';
+    }
+    echo '<div class="card"><h2>IoStore (.utoc/.ucas) uses a separate importer</h2>';
+    echo '<p>This upload form handles individual Unreal packages, .pak files and supported archives. '
+        . 'IoStore files must be imported as a complete .utoc and matching .ucas container set, not separate packages.</p>';
+    echo '<p><a class="button" href="iostore-import.php?game_id=' . $selectedGameId . '">Open IoStore container import</a></p></div>';
     echo '<div class="card"><h2>Upload and import</h2>';
     echo '<form id="profiled-upload-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';

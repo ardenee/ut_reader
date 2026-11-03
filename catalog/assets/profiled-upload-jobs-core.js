@@ -96,6 +96,9 @@
 
     function clientPolicy(file) {
         const extension = extensionOf(file);
+        if (extension === 'utoc' || extension === 'ucas') {
+            return {allowed: false, reason: 'IoStore .utoc/.ucas files must be imported together using Import IoStore, not as individual packages. Open iostore-import.php for the selected UE5 game.'};
+        }
         if (isPak(file)) {
             if (!['UE4', 'UE5'].includes(batchEngineKey)) {
                 return {allowed: false, reason: 'PAK containers are only valid for UE4/UE5 target games.'};
@@ -628,6 +631,52 @@
             return;
         }
 
+        const ioStoreFiles = files.filter(function (file) {
+            return ['utoc', 'ucas'].includes(extensionOf(file));
+        });
+        if (ioStoreFiles.length) {
+            const dedicated = document.getElementById('profiled-iostore-form');
+            const tocs = ioStoreFiles.filter(function (file) { return extensionOf(file) === 'utoc'; });
+            const parts = ioStoreFiles.filter(function (file) { return extensionOf(file) === 'ucas'; });
+            const game = String(form.querySelector('[name="game_id"]').value || '');
+            const validGame = dedicated && Array.from(dedicated.querySelector('[name="game_id"]').options)
+                .some(function (option) { return option.value === game; });
+            if (!dedicated || !validGame) {
+                window.alert('IoStore imports require an active UE5 game. Use the IoStore form on this page.');
+                return;
+            }
+            if (ioStoreFiles.length !== files.length || tocs.length !== 1 || !parts.length) {
+                window.alert('Select one complete .utoc/.ucas family at a time, without mixing loose packages. The IoStore form also accepts a local server path.');
+                return;
+            }
+            const base = tocs[0].name.replace(/\.utoc$/i, '').toLowerCase();
+            const seen = new Set();
+            let validParts = true;
+            parts.forEach(function (file) {
+                const lower = file.name.toLowerCase();
+                const plain = lower === base + '.ucas';
+                const partitionSuffix = lower.startsWith(base + '_s')
+                    ? lower.slice((base + '_s').length) : '';
+                const numbered = /^[1-9][0-9]*\.ucas$/.test(partitionSuffix);
+                if (seen.has(lower) || (!plain && !numbered)) validParts = false;
+                seen.add(lower);
+            });
+            if (!validParts || !seen.has(base + '.ucas')) {
+                window.alert('Selected .ucas filenames do not match the .utoc. No files were uploaded.');
+                return;
+            }
+            // The actual selected File objects are submitted by the dedicated
+            // CSRF-protected IoStore form, not the loose-package uploader.
+            const tocTransfer = new DataTransfer();
+            tocTransfer.items.add(tocs[0]);
+            const partTransfer = new DataTransfer();
+            parts.forEach(function (file) { partTransfer.items.add(file); });
+            dedicated.querySelector('[name="utoc_file"]').files = tocTransfer.files;
+            dedicated.querySelector('[name="ucas_files[]"]').files = partTransfer.files;
+            dedicated.querySelector('[name="game_id"]').value = game;
+            dedicated.requestSubmit();
+            return;
+        }
         batchGameId = String(form.querySelector('[name="game_id"]').value || '');
         batchStrictProfile = String(form.querySelector('[name="strict_profile"]').value || '1');
         submitButton.disabled = true;
