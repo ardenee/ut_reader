@@ -820,6 +820,24 @@ final class Uedb5ClassicDependencyResolver
     private static function engine(array $snapshot): string
     {
         $schema = strtolower(trim((string)($snapshot['section_schemas']['imports'] ?? '')));
+        // UT2004 runs in UE2 even when a pre-v100 package uses UE1's wire
+        // layout. The schema prefix owns serialization, not runtime
+        // VerifyImport. Epic UT2004 v3186 Core/Src/UnLinker.cpp uses UE2's
+        // ULinkerLoad::VerifyImport, with PACKAGE_MIN_VERSION 60.
+        if (str_starts_with($schema, 'ue1.ut2004.compat.')) {
+            $file = (array)($snapshot['file'] ?? []);
+            $version = self::packageVersion($snapshot);
+            if ((int)($file['game_id'] ?? 0) !== 5
+                || (string)($snapshot['package_family'] ?? '') !== 'classic-linkerload'
+                || strtolower(trim((string)($snapshot['source_policy'] ?? '')))
+                    !== 'ue1-ut2004-legacy-texture-profile-compatible'
+                || $version === null || $version < 60 || $version >= 100) {
+                throw new RuntimeException(
+                    'UT2004 legacy UE1-wire snapshot must remain owned by its UE2 game and version profile.'
+                );
+            }
+            return 'ue2';
+        }
         foreach (['ue1', 'ue2', 'ue3', 'ue4', 'ue5'] as $engine) {
             if (str_starts_with($schema, $engine . '.')) {
                 return $engine;

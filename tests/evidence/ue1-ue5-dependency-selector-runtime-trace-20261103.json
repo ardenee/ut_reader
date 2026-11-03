@@ -1,0 +1,276 @@
+{
+  "schema": "uedb5-original-xdebug-provider-selection-and-engine-owned-baseline-v1",
+  "date": "2026-11-03",
+  "purpose": "Trace actually executed UEDB5 Pass2 read-only provider selection and baseline dependency semantics; isolate a UE2-owned UT2004 legacy-wire attribution defect without PRD/database writes.",
+  "original_pass1_evidence_file": "tests/evidence/ue1-ue5-original-runtime-process-trace-20261103.json",
+  "original_pass1_evidence_sha256": "17fa858861d078d3fc586d9912f661c7ddbeb4a4b36157013024a3ad474e8572",
+  "original_physical_samples_selected": 5,
+  "engine_coverage": [
+    "UE1",
+    "UE2",
+    "UE3",
+    "UE4",
+    "UE5 classic standalone baseline"
+  ],
+  "actual_prd_pass2_read_only_provider_selector_cases": [
+    {
+      "engine": "UE1",
+      "case": "UE1-UT99",
+      "file_id": 1258016,
+      "original_file_sha256": "241524193d7d370424de171847c1e5f927355b770e2c7af5bc42dac5264c63e6",
+      "original_metadata_container_sha256": "87c5083b925c56c18d83aecfdc65cecadb14c78df4125ab1da60259dba54e21a",
+      "import_count": 12,
+      "observed_baseline_dependency_rows": 12,
+      "baseline_outcomes": {
+        "unresolved": 12
+      },
+      "baseline_reason_counts": {
+        "ue1_verify_import_source_implementation_unavailable": 12
+      },
+      "selector": {
+        "chosen_provider_ids": [],
+        "ambiguous_count": 0,
+        "source_unresolved_count": 1,
+        "native_mount_evidence_present": false
+      },
+      "real_xdebug_verified_function_call_counts": {
+        "Uedb5GameDependencyPassService->runFile": 1,
+        "PdoUedb5PhysicalProviderSelector->select": 2,
+        "Uedb5ClassicDependencyResolver::resolve": 2,
+        "Uedb5MetadataReader->snapshot": 3
+      },
+      "xdebug_trace_sha256": "b45a3387115432a7e022773022d886dfd82ac78d44181313ae36905623caa7a5",
+      "trace_bytes": 1789981,
+      "trace_retained_on_DEV_only": "pass2-UE1-UT99.xt",
+      "sql_writes": 0,
+      "source_container_writes": 0,
+      "full_rebuild_or_publish_observed": false
+    },
+    {
+      "engine": "UE2",
+      "case": "UE2-Unreal2-v69",
+      "file_id": 149508,
+      "original_file_sha256": "3f456b6b0a2065244e39221a97e4776cfa2ee8e00dea855a72d1beabb491aebf",
+      "original_metadata_container_sha256": "2e22655e20f37153ab1297bda042a1114205d1847db50b64dcf9c5abeac2918c",
+      "import_count": 14,
+      "observed_baseline_dependency_rows": 14,
+      "baseline_outcomes": {
+        "unresolved": 14
+      },
+      "baseline_reason_counts": {
+        "ue2_runtime_mount_provider_unselected": 14
+      },
+      "selector": {
+        "chosen_provider_ids": [],
+        "ambiguous_count": 0,
+        "source_unresolved_count": 1,
+        "native_mount_evidence_present": false
+      },
+      "real_xdebug_verified_function_call_counts": {
+        "Uedb5GameDependencyPassService->runFile": 1,
+        "PdoUedb5PhysicalProviderSelector->select": 2,
+        "Uedb5ClassicDependencyResolver::resolve": 2,
+        "Uedb5MetadataReader->snapshot": 3
+      },
+      "xdebug_trace_sha256": "2728fe57183dc9b88580ea469f780f9e35b24204f8516689a4c14c5babb6285b",
+      "trace_bytes": 5575163,
+      "trace_retained_on_DEV_only": "pass2-UE2-Unreal2-v69.xt",
+      "sql_writes": 0,
+      "source_container_writes": 0,
+      "full_rebuild_or_publish_observed": false
+    },
+    {
+      "engine": "UE2",
+      "case": "UE2-UT2004-compat-v99",
+      "file_id": 111505,
+      "original_file_sha256": "1227de1648fa140da9fcbf93dcb2a14ee7d66c604127fa22f19c5b9d61f9b0f6",
+      "original_metadata_container_sha256": "d9b397fdb4b91822459172cee6671f3fc7e7a3f63a27342053d95c3c805c3178",
+      "import_count": 5,
+      "observed_baseline_dependency_rows": 5,
+      "baseline_outcomes": {
+        "unresolved": 5
+      },
+      "baseline_reason_counts": {
+        "ue2_verify_import_source_implementation_unavailable": 5
+      },
+      "selector": {
+        "chosen_provider_ids": [],
+        "ambiguous_count": 0,
+        "source_unresolved_count": 0,
+        "native_mount_evidence_present": false
+      },
+      "real_xdebug_verified_function_call_counts": {
+        "Uedb5GameDependencyPassService->runFile": 1,
+        "PdoUedb5PhysicalProviderSelector->select": 2,
+        "Uedb5ClassicDependencyResolver::resolve": 2,
+        "Uedb5MetadataReader->snapshot": 3
+      },
+      "xdebug_trace_sha256": "79d588b6dd670ffdd6f2d950e241e09549a3fe215688a8c9c843f898ef682b30",
+      "trace_bytes": 1191562,
+      "trace_retained_on_DEV_only": "pass2-UE2-UT2004-compat-v99.xt",
+      "sql_writes": 0,
+      "source_container_writes": 0,
+      "full_rebuild_or_publish_observed": false
+    },
+    {
+      "engine": "UE3",
+      "case": "UE3-UT3-v512",
+      "file_id": 1275867,
+      "original_file_sha256": "117f17f6f5c4de53eedad05a6bdfa14239202d0bd9c079a69013e9724c360037",
+      "original_metadata_container_sha256": "c7c2f17154b52faf8f078c50f89f77f4da7744b6871c1e72ac61376220a8dfb8",
+      "import_count": 10,
+      "observed_baseline_dependency_rows": 10,
+      "baseline_outcomes": {
+        "unresolved": 10
+      },
+      "baseline_reason_counts": {
+        "ue3_runtime_mount_provider_unselected": 10
+      },
+      "selector": {
+        "chosen_provider_ids": [],
+        "ambiguous_count": 0,
+        "source_unresolved_count": 0,
+        "native_mount_evidence_present": false
+      },
+      "real_xdebug_verified_function_call_counts": {
+        "Uedb5GameDependencyPassService->runFile": 1,
+        "PdoUedb5PhysicalProviderSelector->select": 2,
+        "Uedb5ClassicDependencyResolver::resolve": 2,
+        "Uedb5MetadataReader->snapshot": 3
+      },
+      "xdebug_trace_sha256": "b24513647bf0f44f3ec9039548c722944e9eddc212a839a205e80f93e52d71fa",
+      "trace_bytes": 2572472,
+      "trace_retained_on_DEV_only": "pass2-UE3-UT3-v512.xt",
+      "sql_writes": 0,
+      "source_container_writes": 0,
+      "full_rebuild_or_publish_observed": false
+    },
+    {
+      "engine": "UE4",
+      "case": "UE4-UT4-v383",
+      "file_id": 1335845,
+      "original_file_sha256": "4cf09992bad6dc5e967634c418fceec8a172433adc2e8d624bcd8f8c84fa25a7",
+      "original_metadata_container_sha256": "fcb07e367173088a9ffde8b41a8e61b667525dd5f340458b92377e4f55e7d247",
+      "import_count": 10,
+      "observed_baseline_dependency_rows": 10,
+      "baseline_outcomes": {
+        "common": 6,
+        "unresolved": 4
+      },
+      "baseline_reason_counts": {
+        "common_or_script_package": 6,
+        "ue4_runtime_mount_provider_unselected": 4
+      },
+      "selector": {
+        "chosen_provider_ids": [],
+        "ambiguous_count": 0,
+        "source_unresolved_count": 2,
+        "native_mount_evidence_present": false
+      },
+      "real_xdebug_verified_function_call_counts": {
+        "Uedb5GameDependencyPassService->runFile": 1,
+        "PdoUedb5PhysicalProviderSelector->select": 2,
+        "Uedb5ClassicDependencyResolver::resolve": 2,
+        "Uedb5MetadataReader->snapshot": 3
+      },
+      "xdebug_trace_sha256": "f0dad41f74fa1a6501ef3afc2696d83ff1b00b3e7969c17be75a9b4d5dac7e00",
+      "trace_bytes": 2005418,
+      "trace_retained_on_DEV_only": "pass2-UE4-UT4-v383.xt",
+      "sql_writes": 0,
+      "source_container_writes": 0,
+      "full_rebuild_or_publish_observed": false
+    }
+  ],
+  "UE5_classic_original_standalone_baseline": {
+    "original_Epic_5_8_3_asset_sha256": "07a7072b2bb9cdf7504ecfcddbb0b927800d6d40ad0306ae2e54a259d9a8bc2c",
+    "source_policy": "ue5-5.8.3-release-396c9f059903aed5fec78ecd3d437a40c6415368",
+    "original_imports": 24,
+    "actual_baseline_rows": 24,
+    "observed_baseline_outcomes": {
+      "missing": 10,
+      "runtime_only": 14
+    },
+    "baseline_reasons": {
+      "script package/native object resolution requires runtime state": 14,
+      "selected package linker is unavailable": 10
+    },
+    "no_mount_context_supplied": true,
+    "status_interpretation": "The ten local baseline rows labeled missing have NO selected linker or authoritative runtime-mount evidence. They are NOT certified missing packages; a complete Pass2 selector/ambiguity-adjustment step was not run on a staged game14 file.",
+    "UE5_Zen_tested_this_batch": false,
+    "Epic_native_binary_executed_this_batch": false,
+    "xdebug_trace_sha256": "70b304b92cc704ab7edf9a4ca72f7f4b054eccdcb51bc693baa9687447a4789f",
+    "trace_bytes": 8125144
+  },
+  "UT2004_UE2_engine_ownership_source_analysis": {
+    "original_game_id": 5,
+    "original_file_id": 111505,
+    "original_file_name": "AW-Labels.utx",
+    "original_package_version": 99,
+    "original_licensee": 0,
+    "source_field_schema": "ue1.ut2004.compat.object-import.v1",
+    "source_policy": "ue1-ut2004-legacy-texture-profile-compatible",
+    "owner_engine": "UE2 (UT2004 game profile); UE1 is the wire layout, not the runtime loader",
+    "original_Epic_v3186_source_files": [
+      {
+        "file": "L:/Source/Games/UT2004/Unreal Tournament 2004 - v3186/Core/Src/UnLinker.cpp",
+        "sha256": "8211e91df606390cea9e3758e17884c3b41238c6f0195f90a40c55c5ec7252d7",
+        "verify_import_line": 477
+      },
+      {
+        "file": "L:/Source/Games/UT2004/Unreal Tournament 2004 - v3186/Core/Inc/UnObjVer.h",
+        "sha256": "fb53f749f83538adc4815cd9f05f3c89fbe412e37ed2edf47a388df5528f620c",
+        "package_current_version": 127,
+        "min_compatible_version": 60,
+        "current_version_line": 24,
+        "min_version_line": 32
+      }
+    ],
+    "pre_fix_current_code_sha256": null,
+    "post_fix_source_sha256": "1961db78194ca017e831f3efa9f8b8b2fc0dffd26b0d623def23e895a6f757af",
+    "regression_script_source_sha256": "c966d4b9af4566dea46717ecc7fbd117a7f79c9d9f46ff4ab4752a1ace6022aa",
+    "genuine_original_metadata_snapshot_unchanged_sha256": "d9b397fdb4b91822459172cee6671f3fc7e7a3f63a27342053d95c3c805c3178",
+    "baseline_before": {
+      "rows": 5,
+      "status": {
+        "unresolved": 5
+      },
+      "reasons": {
+        "ue1_verify_import_source_implementation_unavailable": 5
+      },
+      "xdebug_sha256": "ce4fdafc4737770779ee632d43753d029724c8c0eb9f815b1d872b6473b57b06"
+    },
+    "baseline_after": {
+      "rows": 5,
+      "status": {
+        "unresolved": 5
+      },
+      "reasons": {
+        "ue2_verify_import_source_implementation_unavailable": 5
+      },
+      "xdebug_sha256": "79d588b6dd670ffdd6f2d950e241e09549a3fe215688a8c9c843f898ef682b30"
+    },
+    "negative_guards": "Wrong owning game, source policy, pre-v100 version and package family rejected in existing UE2-owned compatibility regression.",
+    "source_scope_limit": "v3186 compiled loader source supports v99 input because its PACKAGE_MIN_VERSION is 60; it does NOT identify the original binary which wrote the v99 file, nor does it authorize an exact-build UE2 VerifyImport outcome. The result remains unresolved, not missing."
+  },
+  "cross_engine_no_SQL_replay_after_shared_resolver_correction": {
+    "cases": 5,
+    "unchanged_unrelated_engine_game_cases": 4,
+    "targeted_UE2_owner_correction_cases": 1,
+    "DEV_only_result_sha256": "c5ee63597365cbfa051829212f03177b41f0a08453e837085d2f749c4e631f65",
+    "PRD_writes": 0,
+    "all_outcome_and_reason_counts_match_expected": true
+  },
+  "source_execution_limits": [
+    "The five PRD staged Pass2 runs used runFile(game_id,file_id,false,true) under enforced read-only MySQL sessions; skipPreflight=true bypassed game-wide staging-readiness preflight, NOT file identity check.",
+    "In the real service apply=false performs source-scoped provider selection and metadata reads but intentionally skips Uedb5DependencyRebuilder::rebuild and PdoUedb5DependencyProjectionPublisher::publish. No v14 SQL publication has been certified.",
+    "The second source-specific baseline resolver was invoked directly in memory with NO selected providers; outcomes do not establish original runtime mount state.",
+    "UE5 classic used original Epic UE5.8.3 asset in memory, not a game14 PRD staged file; this proves baseline method execution only.",
+    "Original Unreal II v110 licensee2481 Epic build source remains unpinned and was not silently substituted from older v69 source.",
+    "The original UE1 and UE2 reader parity certifications and five blocked website-dependency cases remain unchanged; no new PASS is awarded."
+  ],
+  "PRD_database_updates": 0,
+  "original_UE_files_modified": 0,
+  "original_UEDB5_containers_modified": 0,
+  "UE5_original_UE58_3_native_engine_executions_new": 0,
+  "raw_xdebug_files_and_full_results_remain_DEV_local": "D:/Temp/UnrealDB/process-tracing/dependency-ue1-ue5-20261103 and dependency-ue2-owner-correction-20261103"
+}

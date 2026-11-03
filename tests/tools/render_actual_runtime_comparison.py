@@ -46,6 +46,19 @@ def main() -> None:
         if not path.is_file() or sha256(path) != expected:
             raise RuntimeError(f"Production code changed since Xdebug evidence: {filename}")
 
+    dep_path = REPO / "tests/evidence/ue1-ue5-dependency-selector-runtime-trace-20261103.json"
+    dependency = json.loads(dep_path.read_text("utf-8"))
+    if dependency.get("schema") != "uedb5-original-xdebug-provider-selection-and-engine-owned-baseline-v1":
+        raise RuntimeError("Wrong UE1-UE5 dependency runtime-evidence schema")
+    if dependency["original_pass1_evidence_sha256"] != sha256(args.evidence):
+        raise RuntimeError("Earlier original package evidence changed since dependency tracing")
+    if sha256(REPO/"catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php") != (
+        dependency["UT2004_UE2_engine_ownership_source_analysis"]["post_fix_source_sha256"]
+    ):
+        raise RuntimeError("Changed dependency resolver cannot reuse earlier observed Xdebug evidence")
+    dep_cases = dependency["actual_prd_pass2_read_only_provider_selector_cases"]
+    if len(dep_cases) != 5 or any(c["sql_writes"] != 0 for c in dep_cases):
+        raise RuntimeError("Incomplete or mutated dependency audit scope")
     service_cases = evidence["real_service_traces"]
     direct_cases = evidence["direct_real_reader_traces"]
     if len(service_cases) != 7 or len(direct_cases) != 6:
@@ -72,6 +85,23 @@ def main() -> None:
         "source_mode": "reader-only",
     })
 
+    dep_rows=[]
+    for c in dep_cases:
+        outcomes=", ".join(f"{k}={v}" for k,v in c["baseline_outcomes"].items())
+        reasons="; ".join(f"{k}: {v}" for k,v in c["baseline_reason_counts"].items())
+        dep_rows.append(
+            "<tr><td><strong>"+display(c["engine"])+"</strong></td><td>"+display(c["case"])+
+            "</td><td>"+display(c["file_id"])+"</td><td>"+display(outcomes)+
+            "</td><td>"+display(reasons)+
+            "</td><td>Pass2 real selector + isolated baseline; no runtime mounts or SQL writes</td></tr>"
+        )
+    ue5_dep=dependency["UE5_classic_original_standalone_baseline"]
+    dep_rows.append(
+        "<tr><td><strong>UE5 classic</strong></td><td>Original installed 5.8.3 asset</td><td>not staged in PRD</td>"
+        "<td>"+display(", ".join(f"{k}={v}" for k,v in ue5_dep["observed_baseline_outcomes"].items()))+
+        "</td><td><strong>Unbound baseline: 10 'missing' labels are NOT verified missing packages</strong></td>"
+        "<td>Standalone actual PHP resolver call, no runtime mount/Pass2</td></tr>"
+    )
     source_anchors = evidence["epic_source_anchors_by_role"]
     result = [
         "digraph UEProcess {",
@@ -180,6 +210,29 @@ def main() -> None:
         "<th>Pinned Epic C++ source</th><th>Execution scope</th></tr></thead><tbody>",
         *rows,
         "</tbody></table></div>",
+        "<h2>Actual source-scoped provider selection and dependency baselines</h2>",
+        "<p><strong>Five</strong> original PRD package paths executed the production "
+        "Uedb5GameDependencyPassService::runFile(false, skipPreflight=true) selector under "
+        "an enforced SQL read-only transaction, plus isolated no-provider classic dependency "
+        "baselines. UE5's original installed asset executed its standalone "
+        "VerifyImport resolver, with no active game14 staging.</p>",
+        "<div style=\"overflow:auto\"><table><thead><tr><th>Engine</th><th>Observed trace</th>"
+        "<th>File ID</th><th>Observed baseline status counts</th><th>Interpretation / reason</th>"
+        "<th>Execution scope</th></tr></thead><tbody>",
+        *dep_rows,
+        "</tbody></table></div>",
+        "<p><strong>Confirmed UE2 UT2004 v99 ownership correction:</strong> its five import "
+        "rows previously reported a UE1 source-implementation-unavailable reason. The "
+        "source-selected UE2 runtime ownership now reports UE2 source implementation "
+        "unavailable instead, still unresolved. Original package bytes and the staged "
+        "container SHA-256 are unchanged. Epic UT2004 v3186 supports loading package "
+        "v99 but does not prove the exact original author build, VerifyImport result "
+        "or runtime mount. Four source-context negatives passed.</p>",
+        "<p>The <strong>ten UE5 baseline 'missing'</strong> labels were obtained with "
+        "<em>no providers supplied</em>; they are not a native runtime missing verdict. "
+        "This batch did not call the writer, rebuild or SQL publisher and it "
+        "cannot close the five website dependency contracts. "
+        "SHA-pinned evidence: <code>tests/evidence/ue1-ue5-dependency-selector-runtime-trace-20261103.json</code>.</p>",
         "<h2>Independent comparisons and exclusions</h2>",
         "<p><strong>UE2 Unreal II v69:</strong> Original file #149508 and the selected 2000-12-09 "
         "linker match earlier accepted original-byte comparisons; this runtime run observed "
