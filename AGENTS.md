@@ -5,6 +5,12 @@ UnrealDB must handle Unreal *files and exposed dependency results* as the correc
 
 Epic source is authoritative at L:\Source (UE1–UE5), with applicable game source layered on the engine source. The package version alone is not evidence of the correct game: Unreal v1.227 and UT99 v432 can share v69; v469f must be explicitly identified. Never borrow a different game's reader as fallback, and never invent a mounted package when runtime search order is unavailable. Report UNKNOWN/AMBIGUOUS rather than a false missing/resolved dependency.
 
+## UE5 file-format source authority (clarified 2026-11-03)
+
+For UE5, the required authority for UnrealDB's **actual file/header/table operations** is the correctly selected **Epic UE5 engine release** (e.g., Epic 5.6.1 for current Satisfactory 1.2), coupled with genuine game packages and independent structural/native comparisons wherever available. UnrealDB does not load game code or render/gameplay state. Do **not** require game-studio private source, modified engine binaries, or proof that no custom engine patches exist as a prerequisite for format parsing, table acceptance, or staging imports.
+
+A game-specific serialization change is a **conditional investigation**, not an assumed blocker. Examine it only if original bytes, reported serialization/version metadata, a reproducible decoder mismatch, an Epic-version contradiction, or a source-backed version gate identifies a concrete departure affecting an UnrealDB operation. Document the observed path, bytes, expected Epic branch and resulting failure; otherwise continue under Epic release source. This does not waive version/source-policy dispatch, package identity, bounds checking, correct name/import/export decoding, or uncertainty where provider mount evidence is unavailable. Do not infer missing dependencies from absence in a single container. Keep broader native runtime/VerifyImport claims separate from file/header/table proof.
+
 ## Current testing authority (2026-11-02 reset)
 - **tests/README.md** — only current workflow authority.
 - **tests/contracts.json** — 24 risk categories (not tests), 32 concrete implementation-path cases with one status per case. NOT_REVIEWED is a planning state for the new end-to-end contract, not rejection of prior accepted proofs.

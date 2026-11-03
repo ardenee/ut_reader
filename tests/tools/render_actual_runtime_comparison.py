@@ -376,9 +376,12 @@ def main() -> None:
         "either release. <strong>66</strong> imported-package references to "
         "<strong>26</strong> nonlocal FPackageIds are not classified missing "
         "without an authenticated mounted package store.</p>",
-        "<p><strong>Not yet import-certified:</strong> existing Zen publication source policy "
-        "still says 5.8.3; Satisfactory's custom 5.6.1 native runtime is not available "
-        "for full game-specific verification. No PRD game14 files are published. "
+        "<p><strong>Outstanding source-labelled publication:</strong> existing Zen "
+        "SOURCE_POLICY still says 5.8.3 and needs Epic 5.6.1 selection for this build. "
+        "Game-studio private code is NOT a prerequisite for package header/table "
+        "parity unless genuine bytes demonstrate a serialization divergence. "
+        "Authoritative mount context and v14 PRD website publication remain separate "
+        "requirements; no PRD game14 files are published. "
         "The five existing website blockers remain open. Proof: "
         "<code>tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json</code>"
         " SHA-256 <code>" + sha256(current_ue5_path) + "</code>.</p>",
