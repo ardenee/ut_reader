@@ -142,7 +142,9 @@ try {
         } else {
             echo '<div class="ui-table-region"><table><thead><tr><th>Container</th><th>Zen packages</th><th>Status</th><th>Browse</th></tr></thead><tbody>';
             foreach ($iostore as $c) {
-                echo '<tr><td>' . catalog_h((string)$c['name']) . '</td><td>' . number_format((int)$c['package_count'])
+                echo '<tr><td>' . catalog_h((string)$c['name'])
+                    . ((int)$c['package_count'] === 0 ? '<br><small class="muted">No standalone package entries</small>' : '')
+                    . '</td><td>' . number_format((int)$c['package_count'])
                     . '</td><td>' . catalog_h((string)$c['status']) . '</td><td><a href="iostore-info.php?id=' . (int)$c['id'] . '">View contents</a></td></tr>';
             }
             echo '</tbody></table></div>';

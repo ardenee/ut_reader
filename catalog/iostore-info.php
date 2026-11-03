@@ -3,10 +3,12 @@ declare(strict_types=1);
 require_once __DIR__.'/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerIndexer;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
 
 catalog_start_session();
 try {
-    $db=catalog_db(catalog_config());
+    $config=catalog_config();
+    $db=catalog_db($config);
     $id=filter_input(INPUT_GET,'id',FILTER_VALIDATE_INT);
     if (!is_int($id)||$id<1) throw new RuntimeException('Container ID is required.');
     if (!CatalogIoStoreContainerIndexer::schemaInstalled($db)) {
@@ -47,6 +49,56 @@ try {
         .number_format((int)$container['package_count']).' indexed packages · status: '
         .catalog_h((string)$container['status']).'</p><p class="mono small">TOC SHA-256: '
         .catalog_h((string)$container['utoc_sha256']).'</p></div>';
+    if ((int)$container['package_count'] === 0) {
+        // Epic IoChunkId.h: ExportBundleData=1 is a package; ScriptObjects=5
+        // is cooked global metadata and must never be published as a file.
+        echo '<section class="ui-section"><div class="ui-section__header"><h2>Container contents</h2></div><div class="ui-section__body">';
+        echo '<p><strong>No indexed Zen package files.</strong> The original .utoc/.ucas set is retained. The TOC chunk breakdown below explains whether this is a metadata-only container or an indexing problem.</p>';
+        try {
+            $storageRoot = realpath((string)($config['storage_path'] ?? ''));
+            $relativeToc = str_replace('\\', '/', (string)$container['utoc_relative_path']);
+            if ($storageRoot === false || !str_starts_with($relativeToc, 'games/')
+                || str_contains($relativeToc, '..') || str_contains($relativeToc, ':')) {
+                throw new RuntimeException('Retained IoStore source path is invalid.');
+            }
+            $tocPath = realpath($storageRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativeToc));
+            $rootPrefix = strtolower(rtrim(str_replace('\\', '/', $storageRoot), '/') . '/');
+            if ($tocPath === false || !str_starts_with(strtolower(str_replace('\\', '/', $tocPath)), $rootPrefix)) {
+                throw new RuntimeException('Retained IoStore TOC is unavailable inside catalogue storage.');
+            }
+            $tocReader = new Uedb5IoStoreTocReader($tocPath);
+            $typeNames = [0=>'Invalid', 1=>'ExportBundleData', 2=>'BulkData', 3=>'OptionalBulkData',
+                4=>'MemoryMappedBulkData', 5=>'ScriptObjects', 6=>'ContainerHeader', 7=>'ExternalFile',
+                8=>'ShaderCodeLibrary', 9=>'ShaderCode', 10=>'PackageStoreEntry',
+                11=>'DerivedData', 12=>'EditorDerivedData', 13=>'PackageResource'];
+            $kinds = [];
+            foreach ($tocReader->chunks() as $chunk) {
+                $type = (int)$chunk['chunk_type'];
+                $kinds[$type] ??= ['count'=>0, 'bytes'=>0];
+                $kinds[$type]['count']++;
+                $kinds[$type]['bytes'] += (int)$chunk['length'];
+            }
+            ksort($kinds);
+            echo '<table><thead><tr><th>Actual TOC chunk type</th><th>Chunks</th><th>Logical size</th></tr></thead><tbody>';
+            foreach ($kinds as $type => $stats) {
+                echo '<tr><td>' . catalog_h(($typeNames[$type] ?? 'Unknown') . ' (' . $type . ')') . '</td>'
+                    . '<td>' . number_format($stats['count']) . '</td>'
+                    . '<td>' . catalog_h(catalog_bytes($stats['bytes'])) . '</td></tr>';
+            }
+            echo '</tbody></table>';
+            if (!empty($kinds[1]['count'])) {
+                echo '<p><strong>Index discrepancy:</strong> the original TOC contains ExportBundleData chunks but the catalogue has no indexed Zen packages. This requires an indexing repair, not a new file upload.</p>';
+            } elseif (isset($kinds[5])) {
+                echo '<p class="muted">Metadata-only container: ScriptObjects holds cooked global script-object references, not independent package files. Nothing should appear in the game Files list from this chunk.</p>';
+            } else {
+                echo '<p class="muted">This TOC has no standalone package chunks to publish to the game Files list.</p>';
+            }
+        } catch (Throwable $contentsError) {
+            echo '<p class="muted">The retained TOC chunk breakdown could not be displayed: '
+                . catalog_h($contentsError->getMessage()) . '</p>';
+        }
+        echo '</div></section>';
+    }
     echo '<section class="ui-section"><div class="ui-section__header"><h2>Contained packages</h2></div><div class="ui-section__body">';
     echo '<form method="get"><input type="hidden" name="id" value="'.$id.'"><label>Package name or FPackageId <input name="q" value="'.catalog_h($filter).'" maxlength="80"></label> <button type="submit">Filter</button></form>';
     echo '<p>'.number_format($total).' result(s)</p><div class="ui-table-region"><table><thead><tr><th>TOC entry</th><th>FPackageId</th><th>Package name</th><th>Chunk</th><th>Logical size</th><th>Publication</th></tr></thead><tbody>';
