@@ -1,0 +1,44 @@
+{
+  "schema": "ue5-583-native-classic-mounted-load-v1",
+  "source_engine": "Epic UE5.8.3 installed binary and local source",
+  "source_method": "UnrealEditor-Cmd.exe -run=PythonScript -Script=load_native.py -unattended -nop4 -nullrhi",
+  "native_commandlet_exit_code": 0,
+  "native_log_markers_verified": [
+    "LogPythonScriptCommandlet: Running Python script:",
+    "UNREALDB_NATIVE_CLASSIC_PROBE_PASS",
+    "Python script executed successfully",
+    "Success - 0 error(s), 0 warning(s)"
+  ],
+  "runtime_log_sha256": "6fc57fc9a126b5deed6c7c05ec0f70767206fc522a8507315f67dd57ac2a2969",
+  "native_result_sha256": "25eba3219fd289705b206e8c4b21a64391ccf26b10f677d7f47e015ab23cf384",
+  "probe_script_sha256": "04c7797d841a906c286e371f6ff82e3b8c681b6c860a5e4c6c6f8d5df19f712c",
+  "probe_uproject_sha256": "3d8a4c21e7ea7f4b11bbdd1b1dde197cfb6c15bee7405d8d232c257a50abe825",
+  "native_exe_sha256": "4dbab2739e7afef7ec96cdfe48a63211742209f9a56af0620cf228913d64fb0c",
+  "engine_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
+  "engine_source_anchor_sha256": "ef8fd898979342391585d906166344a34153ef00b24fcaad8d13b018386e6c24",
+  "source_asset_outcomes": [
+    {
+      "original_package": "/Engine/EngineMaterials/BaseFlattenMaterial",
+      "original_file_sha256": "07a7072b2bb9cdf7504ecfcddbb0b927800d6d40ad0306ae2e54a259d9a8bc2c",
+      "loaded": true,
+      "loaded_object": "/Engine/EngineMaterials/BaseFlattenMaterial.BaseFlattenMaterial",
+      "class_name": "Material",
+      "outer_name": "/Engine/EngineMaterials/BaseFlattenMaterial"
+    },
+    {
+      "original_package": "/Engine/EngineMaterials/BaseFlattenDiffuseMap",
+      "original_file_sha256": "ac66586ee4782cdc8f693e9c45354db66dd0fca23b16173cd97d3380f7d01eec",
+      "loaded": true,
+      "loaded_object": "/Engine/EngineMaterials/BaseFlattenDiffuseMap.BaseFlattenDiffuseMap",
+      "class_name": "Texture2D",
+      "outer_name": "/Engine/EngineMaterials/BaseFlattenDiffuseMap"
+    }
+  ],
+  "asset_bytes_verified_unchanged_after_native_exit": true,
+  "original_engine_source_modified": false,
+  "production_database_writes": 0,
+  "test_environment": "Disposable C:/Temp/UnrealDB/UE5/native-classic-process-audit project (local only; no PRD)",
+  "evidence_class": "ACTUAL_EPIC_NATIVE_PACKAGE_LOAD; NO_NATIVE_VERIFYIMPORT_STACK_OR_DUPLICATE_PROVIDER_MOUNT_CONTEXT",
+  "verified_scope": "The installed Epic UE5.8.3 editor resolved and loaded two original mounted /Engine classic assets by exact object path, classes Material and Texture2D, exit code 0. This confirms actual original native package identity and mount path for these inputs.",
+  "remaining_scope": "Native linker VerifyImport execution/redirector branches, duplicate competing providers and authoritative mount search order were not observed; source-only defensive code and SQL/website outcomes are separately tracked; no whole-engine PASS asserted."
+}
