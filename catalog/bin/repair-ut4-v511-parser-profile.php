@@ -111,7 +111,7 @@ foreach ($ids as $id) {
         if ($version < 214 || $version > 511 || (int)$row['licensee_version'] !== 0) {
             throw new RuntimeException('catalogue_version_outside_ut4_clean_master');
         }
-        if ((string)($row['dependency_policy'] ?? '') !== Uedb5GameDependencyPassService::DEPENDENCY_POLICY) {
+        if ((string)($row['dependency_policy'] ?? '') !== Uedb5GameDependencyPassService::policyForEngine('UE4')) {
             throw new RuntimeException('dependency_policy_not_current');
         }
         $registeredPayload = (string)($row['payload_sha256'] ?? '');

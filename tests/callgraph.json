@@ -2,9 +2,9 @@
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
   "nodes": 1025,
-  "edges_count": 3619,
+  "edges_count": 3620,
   "edge_types": {
-    "use": 1232,
+    "use": 1233,
     "new": 952,
     "static_or_expression": 1435
   },
@@ -12674,7 +12674,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Domain/Jobs/ClaimedJob.php",
       "syntax": "new",
-      "line": 363
+      "line": 376
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
@@ -12686,7 +12686,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 69
+      "line": 70
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
@@ -12698,13 +12698,13 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 383
+      "line": 396
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php",
       "syntax": "new",
-      "line": 273
+      "line": 286
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
@@ -12716,13 +12716,13 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogPreparedJobFileStore.php",
       "syntax": "new",
-      "line": 237
+      "line": 250
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php",
       "syntax": "new",
-      "line": 178
+      "line": 191
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
@@ -12732,21 +12732,27 @@
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/VerifiedCompactMetadataHealth.php",
+      "syntax": "use",
+      "line": 25
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
-      "line": 175
+      "line": 188
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php",
       "syntax": "new",
-      "line": 232
+      "line": 245
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php",
       "syntax": "use",
-      "line": 25
+      "line": 26
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogOrphanedJobRecovery.php",
@@ -15980,49 +15986,49 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
       "syntax": "new",
-      "line": 45
+      "line": 59
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5MigrationStatusRepository.php",
       "syntax": "new",
-      "line": 46
+      "line": 60
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php",
       "syntax": "new",
-      "line": 43
+      "line": 57
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
       "syntax": "static_or_expression",
-      "line": 520
+      "line": 534
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
       "syntax": "new",
-      "line": 40
+      "line": 54
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php",
       "syntax": "new",
-      "line": 41
+      "line": 55
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenEffectivePackageStoreContextBuilder.php",
       "syntax": "static_or_expression",
-      "line": 403
+      "line": 417
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenMountedStoreContextBuilder.php",
       "syntax": "static_or_expression",
-      "line": 407
+      "line": 421
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
@@ -16376,13 +16382,13 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogUnrealIdentityHash.php",
       "syntax": "static_or_expression",
-      "line": 160
+      "line": 178
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "syntax": "static_or_expression",
-      "line": 49
+      "line": 50
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
@@ -16394,7 +16400,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
       "syntax": "static_or_expression",
-      "line": 180
+      "line": 198
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
@@ -20354,13 +20360,13 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/class-remap.php",
       "syntax": "static_or_expression",
-      "line": 146
+      "line": 144
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php",
       "syntax": "static_or_expression",
-      "line": 294
+      "line": 292
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20372,7 +20378,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataContainer.php",
       "syntax": "static_or_expression",
-      "line": 171
+      "line": 169
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20408,7 +20414,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe1VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 333
+      "line": 331
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20420,7 +20426,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe2VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 346
+      "line": 344
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20432,7 +20438,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe3VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 358
+      "line": 356
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -20444,7 +20450,7 @@
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoUe4VerifyImportProjectionResolver.php",
       "syntax": "static_or_expression",
-      "line": 376
+      "line": 374
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",

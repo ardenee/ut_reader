@@ -773,7 +773,7 @@
         "catalog/src/Infrastructure/Metadata/Uedb5ClassicDependencyResolver.php": "6474ef2548d4ed32c0fd15117ffd4c1ecf01556b5846ecc1c875cb2990584eb4",
         "catalog/src/Infrastructure/Metadata/Uedb5Ue1VerifyImportSourceProfile.php": "b92b43a08b88b38ac5f67f3a0b75b54c134ea6583464fd6274aac2aa0f236526",
         "catalog/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php": "b30cbd8cc2391535d675c1e09f03c2074aa1db3a4c3b9df7569d289e106b95d8",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
         "catalog/src/Infrastructure/Persistence/PdoDependencyResolver.php": "73aab3067d7b7e176e756e9918a3d782149cde63400a199f21032fded0ac168a",
         "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8"
       },
@@ -887,7 +887,7 @@
       "test_authorization": "ACCEPTED: prior original T076 native source proof plus 343 read-only actual PRD source-specific checks; no native sessions or SQL writes",
       "result_evidence": "tests/evidence/ue1/prd-readonly-source-mount-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
@@ -915,7 +915,8 @@
         "Existing PRD persisted dependency rows were NOT rebuilt, and remain pre-fix. Live website and SQL publisher parity are not certified by this selector-only PASS.",
         "Actual production non-writing runFile(apply=false) reports source_unresolved_provider_count 19 and 14 on the two genuine maps; source-common-only files report 0. No PRD SQL writes.",
         "Native mount context now travels through production processFile and is source-scoped to original game/consumer, rejecting cross-file and cross-engine reuse.",
-        "UE2 final mount change maintains separate UE1 source-unresolved reason and true UE1 source-specific paths."
+        "UE2 final mount change maintains separate UE1 source-unresolved reason and true UE1 source-specific paths.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -956,7 +957,7 @@
       "test_authorization": "Production implementation verified on original PRD metadata via disposable SQL publisher/website and actual PRD read-only preflight. PRD 85091-file data rollout separately pending.",
       "result_evidence": "tests/evidence/ue1/ue1-publisher-original-prd-sql-isolated-acceptance-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
@@ -984,7 +985,8 @@
         "New UE1 v14 policy distinguishes all 85091 historical PRD UE1 v13 rows from current, UE2–UE5 still v13. Actual PRD consumer snapshots generated 442 correct unresolved/common rows through production SQL publisher to isolated SQLite. PRD MySQL write and regeneration not performed: remains BLOCKED.",
         "PASS implemented metadata path: original UE1 source files, actual UEDB5 table dependency resolver, real SQL projection publisher in disposable DB, current/stale/payload website queries, original provider IDs and links, rollback/idempotence.",
         "PRODUCTION DATABASE IS NOT CURRENT: 85091 original UE1 verified files still v13. Both UE1 games read-only Pass2 preflight ready, but no PRD SQL writes occurred. Website currently rejects stale UE1 results correctly; rollout tracked explicitly separate.",
-        "UE2 final mount change maintains separate UE1 source-unresolved reason and true UE1 source-specific paths."
+        "UE2 final mount change maintains separate UE1 source-unresolved reason and true UE1 source-specific paths.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -1028,9 +1030,9 @@
       "result_evidence": "tests/evidence/ue1/ue1-website-original-prd-isolated-current-stale-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
-        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
-        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
+        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/game-missing.php": "db3f099677ed526963daca5affc95ce3dfc3369332b0dde55d828cec39116812",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
       },
       "php_source_sites": [
@@ -1057,7 +1059,8 @@
         "Current UEDB5 file dependency reader rejects old UE1 outcomes. Game-missing page withholds stale UE1 counts until current, with explicit user warning; isolated website SQL query reports zero false missing on 442 corrected imports. Logged-in PRD browser acceptance remains BLOCKED.",
         "PASS implemented metadata path: original UE1 source files, actual UEDB5 table dependency resolver, real SQL projection publisher in disposable DB, current/stale/payload website queries, original provider IDs and links, rollback/idempotence.",
         "PRODUCTION DATABASE IS NOT CURRENT: 85091 original UE1 verified files still v13. Both UE1 games read-only Pass2 preflight ready, but no PRD SQL writes occurred. Website currently rejects stale UE1 results correctly; rollout tracked explicitly separate.",
-        "UE2 final mount change maintains separate UE1 source-unresolved reason and true UE1 source-specific paths."
+        "UE2 final mount change maintains separate UE1 source-unresolved reason and true UE1 source-specific paths.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
@@ -1286,7 +1289,7 @@
       "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
       "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
@@ -1309,7 +1312,8 @@
         "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
         "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified.",
         "FINAL SOURCE MOUNT GUARD: original UE2 physically installed runtime mount cannot be inferred from one indexed candidate. Five genuine UE2 PRD source consumers, 313 imports, now 313 unresolved without mounted session; zero missing/resolved/package_only or fabricated provider IDs.",
-        "Previously reported 158 matched exports were conditional against explicitly supplied real original provider files, NOT evidence of original native mounted runtime search order. No inference of live native Mount Paths."
+        "Previously reported 158 matched exports were conditional against explicitly supplied real original provider files, NOT evidence of original native mounted runtime search order. No inference of live native Mount Paths.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -1345,7 +1349,7 @@
       "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
       "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
@@ -1369,7 +1373,8 @@
         "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
         "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified.",
         "FINAL SOURCE MOUNT GUARD: original UE2 physically installed runtime mount cannot be inferred from one indexed candidate. Five genuine UE2 PRD source consumers, 313 imports, now 313 unresolved without mounted session; zero missing/resolved/package_only or fabricated provider IDs.",
-        "Previously reported 158 matched exports were conditional against explicitly supplied real original provider files, NOT evidence of original native mounted runtime search order. No inference of live native Mount Paths."
+        "Previously reported 158 matched exports were conditional against explicitly supplied real original provider files, NOT evidence of original native mounted runtime search order. No inference of live native Mount Paths.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -1407,9 +1412,9 @@
       "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
-        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
-        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
+        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/game-missing.php": "db3f099677ed526963daca5affc95ce3dfc3369332b0dde55d828cec39116812",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
       },
       "php_source_sites": [
@@ -1432,7 +1437,8 @@
         "UE2 SQL AND WEBSITE CODE PATHS: 313 source-only unmounted edges and 244 real selected provider edges with exact current/stale read-model and Requires/RequiredBy in isolated SQL, no PRD SQL changes.",
         "No native mesh/texture/sound loads, no UE1 parser imported by UT2004 v99 compatibility reader, no new test IDs. Original database publication held until all other engine readers are certified.",
         "FINAL SOURCE MOUNT GUARD: original UE2 physically installed runtime mount cannot be inferred from one indexed candidate. Five genuine UE2 PRD source consumers, 313 imports, now 313 unresolved without mounted session; zero missing/resolved/package_only or fabricated provider IDs.",
-        "Previously reported 158 matched exports were conditional against explicitly supplied real original provider files, NOT evidence of original native mounted runtime search order. No inference of live native Mount Paths."
+        "Previously reported 158 matched exports were conditional against explicitly supplied real original provider files, NOT evidence of original native mounted runtime search order. No inference of live native Mount Paths.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -1619,7 +1625,7 @@
       "test_authorization": "Source exact table-only UE3 metadata on original PRD file corpus; no native UObject payload loads, no PRD database publication.",
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
@@ -1639,7 +1645,8 @@
       "review_findings": [
         "PASS: Jan-2008 Epic source and seven original UT3 version512 packages, independent complete 35593 names/17904 imports/34635 exports serialized field and offset parity, 0 mismatches.",
         "Fixed UE3 selected-provider root confusion and false physical-mount inference. 17904 original imports with unknown mount now safely unresolved. Real genuine Engine provider conditional matching 376 source export indices.",
-        "Source-scoped two real duplicate Engine candidates and reverse test order only; actual runtime mount order not claimed. Isolated SQL 7473 unknown-mount edges, 3134 conditional provider edges, website real Requires/RequiredBy correct and stale/payload exclusions pass; no production DB updates."
+        "Source-scoped two real duplicate Engine candidates and reverse test order only; actual runtime mount order not claimed. Isolated SQL 7473 unknown-mount edges, 3134 conditional provider edges, website real Requires/RequiredBy correct and stale/payload exclusions pass; no production DB updates.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -1673,7 +1680,7 @@
       "test_authorization": "Source exact table-only UE3 metadata on original PRD file corpus; no native UObject payload loads, no PRD database publication.",
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
@@ -1694,7 +1701,8 @@
       "review_findings": [
         "PASS: Jan-2008 Epic source and seven original UT3 version512 packages, independent complete 35593 names/17904 imports/34635 exports serialized field and offset parity, 0 mismatches.",
         "Fixed UE3 selected-provider root confusion and false physical-mount inference. 17904 original imports with unknown mount now safely unresolved. Real genuine Engine provider conditional matching 376 source export indices.",
-        "Source-scoped two real duplicate Engine candidates and reverse test order only; actual runtime mount order not claimed. Isolated SQL 7473 unknown-mount edges, 3134 conditional provider edges, website real Requires/RequiredBy correct and stale/payload exclusions pass; no production DB updates."
+        "Source-scoped two real duplicate Engine candidates and reverse test order only; actual runtime mount order not claimed. Isolated SQL 7473 unknown-mount edges, 3134 conditional provider edges, website real Requires/RequiredBy correct and stale/payload exclusions pass; no production DB updates.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -1730,9 +1738,9 @@
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
-        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
-        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
+        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/game-missing.php": "db3f099677ed526963daca5affc95ce3dfc3369332b0dde55d828cec39116812",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
       },
       "php_source_sites": [
@@ -1752,7 +1760,8 @@
       "review_findings": [
         "PASS: Jan-2008 Epic source and seven original UT3 version512 packages, independent complete 35593 names/17904 imports/34635 exports serialized field and offset parity, 0 mismatches.",
         "Fixed UE3 selected-provider root confusion and false physical-mount inference. 17904 original imports with unknown mount now safely unresolved. Real genuine Engine provider conditional matching 376 source export indices.",
-        "Source-scoped two real duplicate Engine candidates and reverse test order only; actual runtime mount order not claimed. Isolated SQL 7473 unknown-mount edges, 3134 conditional provider edges, website real Requires/RequiredBy correct and stale/payload exclusions pass; no production DB updates."
+        "Source-scoped two real duplicate Engine candidates and reverse test order only; actual runtime mount order not claimed. Isolated SQL 7473 unknown-mount edges, 3134 conditional provider edges, website real Requires/RequiredBy correct and stale/payload exclusions pass; no production DB updates.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -1939,7 +1948,7 @@
       "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
       "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
@@ -1959,7 +1968,8 @@
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
-        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -1993,7 +2003,7 @@
       "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
       "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
@@ -2014,7 +2024,8 @@
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
-        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -2050,9 +2061,9 @@
       "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
-        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
-        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
+        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/game-missing.php": "db3f099677ed526963daca5affc95ce3dfc3369332b0dde55d828cec39116812",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
       },
       "php_source_sites": [
@@ -2072,7 +2083,8 @@
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
-        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes."
+        "1,488 source imports/edges published in isolated SQL, website missing totals zero, transactional rollback pass; four actual production UE4 Pass2 calls apply=false; no SQL/metadata writes.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -2181,7 +2193,8 @@
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
-        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes."
+        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
+        "2026-11-03 original source differential: UE5.0.0 Zen FZenPackageSummary 44 bytes with GraphDataOffset vs 5.8.3 52 bytes with dependency bundle/name offsets; early cooked native binary not independently checked. tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -2266,7 +2279,7 @@
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/PdoUedb5PhysicalProviderSelector.php": "4a6a8b1d2efde975ca48a14806db0e60e3375f3b14c386eacf3a90a655f7619c"
       },
       "php_source_sites": [
@@ -2287,7 +2300,8 @@
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
-        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes."
+        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -2322,7 +2336,7 @@
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "d88b20c71497af669919f3854d4396b7bf34654fde60ff06a850e658642459ac",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
         "catalog/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php": "3af2ed4ec19ca3c3ddb371b24bd99584bd5a9e54d8c3ae8e10bbf81a96f2ca39",
         "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php": "831f3d9ca5495458eb01964c7047b19892811b27b1450c07b3679982daf607bb"
       },
@@ -2344,7 +2358,8 @@
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
-        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes."
+        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {
@@ -2381,9 +2396,9 @@
       "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "f3514bd2ef8400ce28b38a537031fcb260884f88775e592f6ddc8137017f4c97",
-        "catalog/file-examine-dependencies.php": "dbc9af3994241ddcf8e1c9384feef3215d7ee56fa23ca2823cdfbe6e09747774",
-        "catalog/game-missing.php": "f48e5d35350121b7e1cf9c9c9eeacc5e5c8cfba9f6db6a786b0d7460432ed5d1",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
+        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/game-missing.php": "db3f099677ed526963daca5affc95ce3dfc3369332b0dde55d828cec39116812",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508"
       },
       "php_source_sites": [
@@ -2404,7 +2419,8 @@
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
-        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes."
+        "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
+        "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json"
       ]
     },
     {

@@ -1,5 +1,35 @@
 # UnrealDB current project status
 
+## Verified checkpoint: 3 November 2026 - reader code 32/32, PRD dependency SQL pending
+
+The existing implementation-derived source-parity register remains **32/32 PASS**
+(UE1 6, UE2 7, UE3 6, UE4 6, UE5 7) within defined original native/source
+boundaries, not certification of every engine release. Original UE5.0.0
+FZenPackageSummary is **44 bytes** (GraphDataOffset), versus 5.8.3
+**52 bytes** (dependency bundles/imported names). The source-pinned 5.8.3
+Zen reader must not be advertised as native-verified for UE5.0.0 cooked bytes;
+no genuine 5.0.0 cooked fixture was tested in this batch.
+
+**PRD 235,239 verified/staged source files remain intact; their dependency
+projections still carry the historical v13 marker.** All five engine
+resolvers now use distinct source-correct v14 publication epochs. Old v13
+missing/resolved outcomes are withheld from user-facing missing/Requires/
+Required By and cross-game dependency reads until actual source-correct
+per-engine Pass 2 regeneration; no policy is mass relabeled. UE1 85,091
+pending, UE2 79,179, UE3 6,722, UE4 64,247; UE5 Satisfactory
+game14 has 0 imported/staged IoStore packages in PRD. Read-only checks
+against original UT4 file #1353254 retain 527 original SQL edges but
+reject stale dependency interpretation. Duplicate verified import with
+intact V5 and stale-only dependency status remains a duplicate, **not**
+a forced source reimport or metadata repair.
+
+**No production SQL, original source, IoStore imports or UEDB5 metadata
+writes** occurred in this verification phase. Epic source and DEV-native
+fixture inventories remain untouched. See
+[UE5 actual first/latest source and engine-epoch evidence](../tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json)
+and the [per-engine production rollout gate](../tests/ENGINE-DEPENDENCY-EPOCH-CUTOVER-20261103.md).
+The earlier October checkpoints below are historical descriptions.
+
 **Verified checkpoint: 15 October 2026.** This document is the navigation entry point for **current** production state. Dated migration and format design reports remain historical source/provenance records, even where their original text uses present tense.
 
 ## UE5.8.3 audit update — 19 October 2026

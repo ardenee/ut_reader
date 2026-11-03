@@ -12,10 +12,24 @@ final class Uedb5GameDependencyPassService
 {
     public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v13';
     public const UE1_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue1-mount-v14';
+    public const UE2_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue2-mount-v14';
+    public const UE3_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue3-mount-v14';
+    public const UE4_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue4-mount-v14';
+    public const UE5_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue5-mount-v14';
 
     public static function policyForEngine(string $engineKey): string
     {
-        return strtoupper(trim($engineKey)) === 'UE1' ? self::UE1_DEPENDENCY_POLICY : self::DEPENDENCY_POLICY;
+        // The original mounted provider/source resolver differs per generation.
+        // Source-correct post-parity results must never reuse pre-correction v13
+        // status even when the staged source payload SHA256 is unchanged.
+        return match (strtoupper(trim($engineKey))) {
+            'UE1' => self::UE1_DEPENDENCY_POLICY,
+            'UE2' => self::UE2_DEPENDENCY_POLICY,
+            'UE3' => self::UE3_DEPENDENCY_POLICY,
+            'UE4' => self::UE4_DEPENDENCY_POLICY,
+            'UE5' => self::UE5_DEPENDENCY_POLICY,
+            default => self::DEPENDENCY_POLICY,
+        };
     }
 
     private function policyForGame(int $gameId): string

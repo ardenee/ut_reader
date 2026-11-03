@@ -1,6 +1,6 @@
 # UE1 Epic-source dependency policy production cutover
 
-Status (2026-11-02): **NOT APPLIED**. The six UE1 reader/publisher/website implementation tests are PASS, but PRD dependency publication is still on the historical policy for 85,091 files (UT99 74,303; Unreal Gold 10,788). Source-correct UE1 dependency policy **uedb5-dependency-pass-ue1-mount-v14** is implemented. Policy **uedb5-dependency-pass-v13** must remain for UE2–UE5; it is obsolete only for UE1.
+Status (2026-11-02): **NOT APPLIED**. The six UE1 reader/publisher/website implementation tests are PASS, but PRD dependency publication is still on the historical policy for 85,091 files (UT99 74,303; Unreal Gold 10,788). Source-correct UE1 dependency policy **uedb5-dependency-pass-ue1-mount-v14** is implemented. UE2–UE5 now have independent source-correct **v14** dependency policy markers; their existing v13 PRD projections also require separately controlled Pass 2 regeneration. The UE1 migration must not modify those engines.
 
 ## Execute locally on PRD Lelly-pc
 
@@ -20,7 +20,7 @@ Optional: add -CanaryOnly to apply and verify just the two original-file canarie
 
     C:\php8.5\php.exe "C:\Apache24\htdocs\unrealdb\catalog\bin\verify-ue1-epic-policy-cutover.php"
 
-The verifier succeeds only if all verified UE1 files have v14 policy and matching registered UEDB5 payload hashes, zero UE1 v13 status rows, and checked UE2–UE4 games retain their current independent v13 policies.
+The verifier succeeds only if all verified UE1 files have v14 policy and matching registered UEDB5 payload hashes, zero UE1 v13 status rows, and the UE1-only policy does not appear under UE2–UE4. Those engines can independently remain stale until their own Pass 2 cutovers.
 
 ## Safety and access boundary
 

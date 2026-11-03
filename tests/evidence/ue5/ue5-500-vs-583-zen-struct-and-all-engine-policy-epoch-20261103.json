@@ -1,0 +1,302 @@
+{
+  "date": "2026-11-03",
+  "scope": "Existing UE5 source/table and UE1-UE5 dependency-publish/website contracts only; no new operation cases.",
+  "UE5_source_revision_pair": {
+    "first": "5.0.0-release@05ce24e3038cb1994a7c71d4d0058dbdb112f52b",
+    "last": "5.8.3-release@396c9f059903aed5fec78ecd3d437a40c6415368"
+  },
+  "verified_original_cpp_header_SHA256": {
+    "UE5_5_0_0_AsyncLoading2_h": "f71d9225821b6483d843e3d5ad82545f6201e268ea07cb6ae2cd1cce4ba8b526",
+    "UE5_5_8_3_AsyncLoading2_h": "088f00a8c970458e4bb717490ac4d50361d635ddf8cb0b7b1a5c93ff4d9feef2",
+    "UE5_5_0_0_ObjectVersion_h": "5510988c9f711ec8eb88b751941b033d16130658af4900bbf87b65e363cab45e",
+    "UE5_5_8_3_ObjectVersion_h": "4c1ce99232b6bcd538654d67d0fb3e05fc55eea982b249883a3159303d020c87"
+  },
+  "actual_Cpp_FZenPackageSummary": {
+    "UE5_5_0_0": {
+      "bytes": 44,
+      "fields": [
+        {
+          "type": "uint32",
+          "name": "bHasVersioningInfo",
+          "size": 4,
+          "offset": 0
+        },
+        {
+          "type": "uint32",
+          "name": "HeaderSize",
+          "size": 4,
+          "offset": 4
+        },
+        {
+          "type": "FMappedName",
+          "name": "Name",
+          "size": 8,
+          "offset": 8
+        },
+        {
+          "type": "uint32",
+          "name": "PackageFlags",
+          "size": 4,
+          "offset": 16
+        },
+        {
+          "type": "uint32",
+          "name": "CookedHeaderSize",
+          "size": 4,
+          "offset": 20
+        },
+        {
+          "type": "int32",
+          "name": "ImportedPublicExportHashesOffset",
+          "size": 4,
+          "offset": 24
+        },
+        {
+          "type": "int32",
+          "name": "ImportMapOffset",
+          "size": 4,
+          "offset": 28
+        },
+        {
+          "type": "int32",
+          "name": "ExportMapOffset",
+          "size": 4,
+          "offset": 32
+        },
+        {
+          "type": "int32",
+          "name": "ExportBundleEntriesOffset",
+          "size": 4,
+          "offset": 36
+        },
+        {
+          "type": "int32",
+          "name": "GraphDataOffset",
+          "size": 4,
+          "offset": 40
+        }
+      ]
+    },
+    "UE5_5_8_3": {
+      "bytes": 52,
+      "fields": [
+        {
+          "type": "uint32",
+          "name": "bHasVersioningInfo",
+          "size": 4,
+          "offset": 0
+        },
+        {
+          "type": "uint32",
+          "name": "HeaderSize",
+          "size": 4,
+          "offset": 4
+        },
+        {
+          "type": "FMappedName",
+          "name": "Name",
+          "size": 8,
+          "offset": 8
+        },
+        {
+          "type": "uint32",
+          "name": "PackageFlags",
+          "size": 4,
+          "offset": 16
+        },
+        {
+          "type": "uint32",
+          "name": "_Unused",
+          "size": 4,
+          "offset": 20
+        },
+        {
+          "type": "int32",
+          "name": "ImportedPublicExportHashesOffset",
+          "size": 4,
+          "offset": 24
+        },
+        {
+          "type": "int32",
+          "name": "ImportMapOffset",
+          "size": 4,
+          "offset": 28
+        },
+        {
+          "type": "int32",
+          "name": "ExportMapOffset",
+          "size": 4,
+          "offset": 32
+        },
+        {
+          "type": "int32",
+          "name": "ExportBundleEntriesOffset",
+          "size": 4,
+          "offset": 36
+        },
+        {
+          "type": "int32",
+          "name": "DependencyBundleHeadersOffset",
+          "size": 4,
+          "offset": 40
+        },
+        {
+          "type": "int32",
+          "name": "DependencyBundleEntriesOffset",
+          "size": 4,
+          "offset": 44
+        },
+        {
+          "type": "int32",
+          "name": "ImportedPackageNamesOffset",
+          "size": 4,
+          "offset": 48
+        }
+      ]
+    }
+  },
+  "zen_enum_source": {
+    "UE5_5_0_0": [
+      "Initial"
+    ],
+    "UE5_5_8_3": [
+      "Initial",
+      "DataResourceTable",
+      "ImportedPackageNames",
+      "ExportDependencies"
+    ]
+  },
+  "source_boundary": "UE5.0 graph-data arc/bundle-header layout is not UE5.8.3 dependency-bundle + imported-name layout; 5.8.3 reader SUMMARY_SIZE=52 and source_policy restricted to 5.8.3. Do not claim early Zen support from late reader.",
+  "early_original_cooked_input": "NOT_AVAILABLE; first release Git source has no cooked Engine/Content uasset fixture. No native 5.0 cooked package was decoded, no 5.0 all-branch certification claimed.",
+  "original_583_live_header_observation": {
+    "package_id": "FCCBEBA8823DAA3A",
+    "source_original_sha256": "67972ff1f3ee2fe1b643abbad195a53a01447202b7780362fdde522e233e3649",
+    "bHasVersioningInfo": 0,
+    "packageSummaryVersionPresence_can_disambiguate_5_0_from_5_8": false
+  },
+  "current_reader_metadata_SHA256": "90665000c906630161aa942dd6c771c85c88c41d5e6daf0e68e324d1d331cbd7",
+  "prior_source_audit_evidence_SHA256": "f27bdf125193efd3ec7a3d9db5e1df36c1f0bcd4612c777a134266dacde097d0",
+  "real_PRD_readonly_engine_epoch_result": {
+    "result": "ALL_FIVE_ENGINE_POLICY_EPOCHS_REAL_PRD_READONLY_FAIL_CLOSED_PASS",
+    "engine_policies": {
+      "UE1": "uedb5-dependency-pass-ue1-mount-v14",
+      "UE2": "uedb5-dependency-pass-ue2-mount-v14",
+      "UE3": "uedb5-dependency-pass-ue3-mount-v14",
+      "UE4": "uedb5-dependency-pass-ue4-mount-v14",
+      "UE5": "uedb5-dependency-pass-ue5-mount-v14"
+    },
+    "game_readiness": [
+      {
+        "game_id": 2,
+        "engine": "UE2",
+        "verified": 1217,
+        "current": 0,
+        "stale": 1217,
+        "policy": "uedb5-dependency-pass-ue2-mount-v14"
+      },
+      {
+        "game_id": 3,
+        "engine": "UE1",
+        "verified": 74303,
+        "current": 0,
+        "stale": 74303,
+        "policy": "uedb5-dependency-pass-ue1-mount-v14"
+      },
+      {
+        "game_id": 4,
+        "engine": "UE2",
+        "verified": 5082,
+        "current": 0,
+        "stale": 5082,
+        "policy": "uedb5-dependency-pass-ue2-mount-v14"
+      },
+      {
+        "game_id": 5,
+        "engine": "UE2",
+        "verified": 72880,
+        "current": 0,
+        "stale": 72880,
+        "policy": "uedb5-dependency-pass-ue2-mount-v14"
+      },
+      {
+        "game_id": 6,
+        "engine": "UE3",
+        "verified": 6722,
+        "current": 0,
+        "stale": 6722,
+        "policy": "uedb5-dependency-pass-ue3-mount-v14"
+      },
+      {
+        "game_id": 7,
+        "engine": "UE4",
+        "verified": 64247,
+        "current": 0,
+        "stale": 64247,
+        "policy": "uedb5-dependency-pass-ue4-mount-v14"
+      },
+      {
+        "game_id": 12,
+        "engine": "UE1",
+        "verified": 10788,
+        "current": 0,
+        "stale": 10788,
+        "policy": "uedb5-dependency-pass-ue1-mount-v14"
+      },
+      {
+        "game_id": 14,
+        "engine": "UE5",
+        "verified": 0,
+        "current": 0,
+        "stale": 0,
+        "policy": "uedb5-dependency-pass-ue5-mount-v14"
+      }
+    ],
+    "original_verified_files": 235239,
+    "old_v13_UT4_edges_still_untouched": 527,
+    "V5_reader_old_UT4_stale_guard": true,
+    "required_by_old_UT4_links_suppressed": true,
+    "cross_examine_old_UT4_stale_guard": true,
+    "PRD_writes": 0
+  },
+  "real_PRD_readonly_proof_SHA256": "b2e120ab70fe1d92293d41b640315e32137c202aed78429a4823c384c1d5a891",
+  "read_only_test_driver_SHA256": "5d33fc2799634d55e85bf7c1f1440f16c63311b4797d329008353c53af43ff4e",
+  "new_source_correct_UE_engine_policies": {
+    "UE1": "uedb5-dependency-pass-ue1-mount-v14",
+    "UE2": "uedb5-dependency-pass-ue2-mount-v14",
+    "UE3": "uedb5-dependency-pass-ue3-mount-v14",
+    "UE4": "uedb5-dependency-pass-ue4-mount-v14",
+    "UE5": "uedb5-dependency-pass-ue5-mount-v14"
+  },
+  "source_status_note": "All 235239 staged PRD files have old v13 status, and do not meet independent source-correct v14 policy. This is not evidence that the raw original package bytes or past V5 staging are corrupt; it is status-level source/dependency invalidation.",
+  "stale_web_and_read_services": "Engine-specific exact policy plus identical payload SHA checked for current per-file dependency reads, inbound Required By edges, file-examine Requires/Required By, cross-game dependencies, and per-game missing page; stale statuses withheld until actual separate source-correct Pass2.",
+  "UE1_cutover_verifier": "Maps game_id2/4/5 to UE2,6 to UE3,7 to UE4. Other engine policy epochs remain independently stale and do not block UE1-only cutover.",
+  "production_code_SHA256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "66e5e96ef5a9a03067c5759620847edd49491f5c649a14dafcdaf860c8a1103a",
+    "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php": "abdbe88b170244ca3f9c08b03048d7a84411dadfe7c144091e7b13b98ebfa387",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
+    "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+    "catalog/game-missing.php": "db3f099677ed526963daca5affc95ce3dfc3369332b0dde55d828cec39116812",
+    "catalog/bin/repair-ut4-v511-parser-profile.php": "fb0e61fd19406dd96f5fc80e70db939fce959e5a8c0d1a70aa2f5ef54ea8acf8",
+    "catalog/bin/verify-ue1-epic-policy-cutover.php": "79061ae7f87d244f094be4bcb0a19076627c95d80016599fa1a00e045272f48e",
+    "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php": "d108e17de46ddd05b156ff1d868658cf17df0f4cc4d83276f63dc6a88e77f693"
+  },
+  "original_UT4_duplicate_healthy_metadata_stale_dependency_no_reimport": {
+    "result": "GENUINE_ORIGINAL_UT4_DUPLICATE_STALE_DEPENDENCY_NOT_REIMPORTED_READONLY_PASS",
+    "genuine_original_file_id": 1353254,
+    "stale_caught_as_dependency_not_byte_corruption": true,
+    "original_response": {
+      "status": "duplicate",
+      "file_id": 1353254,
+      "dependency_projection_stale": true,
+      "message": "Duplicate verified file #1353254; source metadata is intact, dependency Pass 2 needs separate regeneration."
+    },
+    "no_reimport_or_repair": true,
+    "original_unchanged_sql_edges": 527,
+    "original_PRD_sql_writes": 0
+  },
+  "original_UT4_duplicate_safe_readonly_driver_SHA256": "85c13499d6f5f78519bbcead4ba94cb5f7d7dafa13c05628b5e798cd552f5790",
+  "PRD_MySQL_writes": 0,
+  "PRD_original_file_writes": 0,
+  "reused_native_acceptance_without_rerun": true,
+  "existing_contract_ids_added": 0
+}

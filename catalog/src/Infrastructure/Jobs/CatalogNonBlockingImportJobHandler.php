@@ -22,6 +22,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceReimportService;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationStale;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
 /**
@@ -157,8 +158,20 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             return $result;
         }
 
-        if (VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
+        try {
+            VerifiedCompactMetadataHealth::verify($this->db, $this->config, $fileId);
             return $result;
+        } catch (Uedb5DependencyPublicationStale) {
+            // Existing source bytes and V5 metadata are good; only Pass 2 is
+            // obsolete. Never reimport an intact file merely to update an
+            // engine's dependency policy epoch.
+            $result['dependency_projection_stale'] = true;
+            $result['message'] = 'Duplicate verified file #' . $fileId
+                . '; source metadata is intact, dependency Pass 2 needs separate regeneration.';
+            return $result;
+        } catch (Throwable) {
+            // True corrupt/missing compact source metadata still needs the
+            // original interrupted-publication recovery path below.
         }
 
         $userId = isset($job->payload['user_id']) && (int)$job->payload['user_id'] > 0

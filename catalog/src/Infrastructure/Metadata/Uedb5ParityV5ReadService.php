@@ -30,25 +30,30 @@ final class Uedb5ParityV5ReadService
         return $this->snapshotCache[$fileId];
     }
     /**
-     * A V5 snapshot can still be readable after its dependency resolution
-     * becomes obsolete. Reject only UE1 prior-to-mount-parity projections;
-     * never treat stale stored "missing" or "resolved" as Epic load outcomes.
+     * A parsed V5 snapshot can outlive a corrected engine-specific dependency
+     * resolver. Require the exact engine's policy and source payload hash
+     * before exposing any persisted missing/resolved provider outcome.
      */
-    private function requireCurrentUe1DependencyPolicy(int $gameId,int $fileId,string $sourcePolicy): void
+    private function requireCurrentDependencyPolicy(int $gameId,int $fileId): void
     {
-        if(!str_starts_with(strtolower($sourcePolicy),'ue1-'))return;
         $stmt=$this->db->prepare(
-            'SELECT v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256 '
-            . 'FROM ue_uedb5_files v LEFT JOIN ue_uedb5_migration_status s '
+            'SELECT p.engine_key,v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256 '
+            . 'FROM ue_uedb5_files v JOIN ue_games g ON g.id=v.game_id '
+            . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'LEFT JOIN ue_uedb5_migration_status s '
             . 'ON s.file_id=v.file_id AND s.game_id=v.game_id '
             . 'WHERE v.game_id=? AND v.file_id=? LIMIT 1'
         );
         $stmt->execute([$gameId,$fileId]);
         $row=$stmt->fetch(PDO::FETCH_ASSOC);
+        $expected=is_array($row)
+            ? Uedb5GameDependencyPassService::policyForEngine((string)($row['engine_key']??''))
+            : '';
         if(!is_array($row)
-            || (string)($row['dependency_policy']??'')!==Uedb5GameDependencyPassService::UE1_DEPENDENCY_POLICY
+            || (string)($row['dependency_policy']??'')!==$expected
             || !hash_equals((string)($row['payload_sha256']??''),(string)($row['dependency_payload_sha256']??''))) {
-            throw new RuntimeException('UE1 dependency publication is stale: rerun source-correct UEDB5 Pass 2 for file #'.$fileId.'.');
+            throw new RuntimeException('Dependency publication is stale for game #'.$gameId
+                .' file #'.$fileId.': source-correct UEDB5 Pass 2 is required.');
         }
     }
 
@@ -57,7 +62,7 @@ final class Uedb5ParityV5ReadService
     {
         try{
             $manifest=$this->reader->manifest($gameId,$fileId);
-            $this->requireCurrentUe1DependencyPolicy($gameId,$fileId,(string)($manifest['source_policy']??''));
+            $this->requireCurrentDependencyPolicy($gameId,$fileId);
             $counts=(array)($manifest['counts']??[]);
             if(!array_key_exists('dependency_results',$counts))return[];
             $policy=(string)($manifest['source_policy']??'');$rows=[];
@@ -100,7 +105,7 @@ final class Uedb5ParityV5ReadService
         foreach($indexes as $index){$index=(int)$index;if($index>=0)$wanted[$index]=true;}
         if($wanted===[])return[];
         $manifest=$this->reader->manifest($gameId,$fileId);
-        $this->requireCurrentUe1DependencyPolicy($gameId,$fileId,(string)($manifest['source_policy']??''));
+        $this->requireCurrentDependencyPolicy($gameId,$fileId);
         if(!array_key_exists('dependency_results',(array)($manifest['sections']??[])))return[];
         $policy=(string)($manifest['source_policy']??'');$out=[];
         try{
@@ -144,12 +149,25 @@ final class Uedb5ParityV5ReadService
     /** @return list<int> */
     public function requiredByFileIds(int $gameId,int $targetFileId):array
     {
+        $engine=$this->db->prepare(
+            'SELECT p.engine_key FROM ue_games g JOIN ue_game_profiles p '
+            . 'ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=? LIMIT 1'
+        );
+        $engine->execute([$gameId]);
+        $engineKey=$engine->fetchColumn();
+        if(!is_string($engineKey) || $engineKey===''){
+            throw new RuntimeException('No active source engine for Required By game #'.$gameId.'.');
+        }
+        $policy=Uedb5GameDependencyPassService::policyForEngine($engineKey);
         $s=$this->db->prepare(
             'SELECT DISTINCT e.file_id FROM ue_uedb5_dependency_edges e '
             . 'JOIN ue_files f ON f.id=e.file_id AND f.game_id=? AND f.scan_status="verified" '
+            . 'JOIN ue_uedb5_files v ON v.file_id=e.file_id AND v.game_id=f.game_id '
+            . 'JOIN ue_uedb5_migration_status ms ON ms.file_id=v.file_id AND ms.game_id=v.game_id '
+            . 'AND ms.dependency_policy=? AND ms.dependency_payload_sha256=v.payload_sha256 '
             . 'WHERE e.resolved_file_id=? AND e.file_id<>? ORDER BY e.file_id'
         );
-        $s->execute([$gameId,$targetFileId,$targetFileId]);
+        $s->execute([$gameId,$policy,$targetFileId,$targetFileId]);
         return array_map('intval',$s->fetchAll(PDO::FETCH_COLUMN)?:[]);
     }
 

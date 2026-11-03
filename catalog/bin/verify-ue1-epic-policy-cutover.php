@@ -77,21 +77,31 @@ foreach ($games as $id => $label) {
     ];
 }
 $other = [];
-foreach ([2 => 'UE2', 5 => 'UE3', 6 => 'UE4', 7 => 'UE4'] as $id => $engine) {
+foreach ([2 => 'UE2', 4 => 'UE2', 5 => 'UE2', 6 => 'UE3', 7 => 'UE4'] as $id => $engine) {
     $fresh = $missing->publicationFreshness($id, $engine);
-    if ((int)$fresh['stale'] !== 0) {
-        throw new RuntimeException('Non-UE1 dependency status changed or is stale: game ' . $id);
+    // UE1's cutover must never publish the UE1-only policy to another
+    // engine; the other engines have their own independent pending epochs.
+    $foreign = $db->prepare(
+        'SELECT COUNT(*) FROM ue_uedb5_migration_status s '
+        . 'JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id '
+        . 'WHERE f.game_id=? AND s.dependency_policy=?'
+    );
+    $foreign->execute([$id, Uedb5GameDependencyPassService::UE1_DEPENDENCY_POLICY]);
+    if ((int)$foreign->fetchColumn() !== 0) {
+        throw new RuntimeException('UE1 policy was applied to a foreign engine: game ' . $id);
     }
     $other[] = [
         'id' => $id, 'engine' => $engine,
         'current' => (int)$fresh['current'],
         'stale' => (int)$fresh['stale'],
-        'preserved_policy' => (string)$fresh['expected_policy'],
+        'engine_policy' => (string)$fresh['expected_policy'],
+        'ue1_policy_rows' => 0,
+        'separate_engine_cutover_required' => (int)$fresh['stale'] > 0,
     ];
 }
 echo json_encode([
     'ue1_cutover_complete' => $complete,
-    'old_v13_policy_preserved_only_for_other_engines' => true,
+    'other_engine_policies_are_separate' => true,
     'ue1' => $results,
     'other_engines' => $other
 ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR), PHP_EOL;

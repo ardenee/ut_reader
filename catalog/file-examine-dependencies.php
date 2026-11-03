@@ -29,31 +29,47 @@ try {
 
     $health = catalog_one(
         $db,
-        'SELECT v.source_policy,v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256 '
-        . 'FROM ue_uedb5_files v LEFT JOIN ue_uedb5_migration_status s '
+        'SELECT p.engine_key,v.source_policy,v.payload_sha256,s.dependency_policy,s.dependency_payload_sha256 '
+        . 'FROM ue_uedb5_files v JOIN ue_games g ON g.id=v.game_id '
+        . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+        . 'LEFT JOIN ue_uedb5_migration_status s '
         . 'ON s.file_id=v.file_id AND s.game_id=v.game_id '
         . 'WHERE v.file_id=? AND v.game_id=? LIMIT 1',
         [$fileId, (int)$file['game_id']]
     );
-    if (is_array($health) && str_starts_with(strtolower((string)($health['source_policy']??'')), 'ue1-')
-        && ((string)($health['dependency_policy']??'') !== \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService::UE1_DEPENDENCY_POLICY
-            || !hash_equals((string)($health['payload_sha256']??''),(string)($health['dependency_payload_sha256']??'')))) {
+    $policyClass = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService::class;
+    $expectedPolicy = is_array($health)
+        ? $policyClass::policyForEngine((string)($health['engine_key'] ?? '')) : '';
+    if (!is_array($health)
+        || (string)($health['dependency_policy']??'') !== $expectedPolicy
+        || !hash_equals((string)($health['payload_sha256']??''),(string)($health['dependency_payload_sha256']??''))) {
         http_response_code(409);
         echo json_encode(['ok'=>false,'stale_dependency_projection'=>true,'requires'=>[],'required_by'=>[],
-            'error'=>'UE1 dependency results need source-correct regeneration; old resolved/missing links are not verified.'],
+            'error'=>'Dependency results need source-correct regeneration; old resolved/missing links are not verified.'],
             JSON_THROW_ON_ERROR);
         exit;
     }
+
+    // Required By spans other games. The publishing game profile, not a
+    // serialized source_policy prefix, selects its source-correct epoch.
+    // This matters for UE2's own UE1-wire compatibility packages.
+    $enginePolicySql = 'CASE UPPER(ep.engine_key)';
+    foreach (['UE1','UE2','UE3','UE4','UE5'] as $engine) {
+        $enginePolicySql .= ' WHEN ' . $db->quote($engine) . ' THEN '
+            . $db->quote($policyClass::policyForEngine($engine));
+    }
+    $enginePolicySql .= ' ELSE ' . $db->quote($policyClass::DEPENDENCY_POLICY) . ' END';
 
     $requires = catalog_all(
         $db,
         'SELECT DISTINCT dst.id,dst.original_name file,dst.package_name package,dst.file_size size,dst.package_guid guid,dst.md5'
         . ' FROM ue_uedb5_dependency_edges l'
         . ' JOIN ue_uedb5_files m ON m.file_id=l.file_id AND m.format_version=5'
+        . ' JOIN ue_games mg ON mg.id=m.game_id'
+        . ' JOIN ue_game_profiles ep ON ep.id=mg.profile_id AND ep.is_active=1'
         . ' JOIN ue_uedb5_migration_status ms ON ms.file_id=m.file_id AND ms.game_id=m.game_id '
         . 'AND ms.dependency_payload_sha256=m.payload_sha256 AND ms.dependency_policy='
-        . 'CASE WHEN m.source_policy LIKE "ue1-%" THEN "uedb5-dependency-pass-ue1-mount-v14" '
-        . 'ELSE "uedb5-dependency-pass-v13" END'
+        . $enginePolicySql
         . ' JOIN ue_files dst ON dst.id=l.resolved_file_id AND dst.scan_status="verified"'
         . ' WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.resolved_file_id<>?'
         . ' ORDER BY dst.original_name,dst.id LIMIT 5000',
@@ -64,10 +80,11 @@ try {
         'SELECT DISTINCT src.id,src.original_name file,src.package_name package,src.file_size size,src.package_guid guid,src.md5'
         . ' FROM ue_uedb5_dependency_edges l'
         . ' JOIN ue_uedb5_files m ON m.file_id=l.file_id AND m.format_version=5'
+        . ' JOIN ue_games mg ON mg.id=m.game_id'
+        . ' JOIN ue_game_profiles ep ON ep.id=mg.profile_id AND ep.is_active=1'
         . ' JOIN ue_uedb5_migration_status ms ON ms.file_id=m.file_id AND ms.game_id=m.game_id '
         . 'AND ms.dependency_payload_sha256=m.payload_sha256 AND ms.dependency_policy='
-        . 'CASE WHEN m.source_policy LIKE "ue1-%" THEN "uedb5-dependency-pass-ue1-mount-v14" '
-        . 'ELSE "uedb5-dependency-pass-v13" END'
+        . $enginePolicySql
         . ' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified"'
         . ' WHERE l.resolved_file_id=? AND l.file_id<>?'
         . ' ORDER BY src.original_name,src.id LIMIT 5000',
