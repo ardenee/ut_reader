@@ -1,0 +1,729 @@
+{
+  "schema": "source-sha-pinned-actual-php-xdebug-original-game-package-traces-v1",
+  "date": "2026-11-03",
+  "purpose": "Advance 83-operation static inventory to bounded real runtime call-chain proof for original game-profiled package snapshot operations, reusing accepted Epic differentials.",
+  "source_of_truth": "source-selected Epic engine/game source on local DEV L: and already accepted native/binary evidence; no assumed cross-engine parser behavior",
+  "application_commit": "a928743ab3ea403749a46d8ef4387e37b09d1109",
+  "observations": {
+    "PRD_original_file_service_apply_false_traces": 7,
+    "original_PRD_SHA256_files_revalidated_readonly": 7,
+    "engines_represented": [
+      "UE1",
+      "UE2",
+      "UE3",
+      "UE4",
+      "UE5 classic direct-only"
+    ],
+    "original_standalone_reader_traces": 6,
+    "UE5_live_PRD_staged_original_files": 0,
+    "Xdebug_version": "3.5.3",
+    "service_processing_chain": "actual Uedb5GameSourceMigrationService::runFile(false) -> sourcePath -> assertSourceIdentity -> Uedb5SourceSnapshotFactory -> profileAllowsCatalogRow -> source-selected reader -> per-game snapshot builder -> section counts",
+    "PRD_transactions": "SET SESSION TRANSACTION READ ONLY + BEGIN + ROLLBACK; only SELECT queries were invoked, apply=false, no publisher",
+    "original_file_mutations": 0,
+    "PRD_database_mutations": 0,
+    "Epic_native_execution_new_this_batch": 0,
+    "SQL_publication_and_authenticated_website_traces_new_this_batch": 0,
+    "UE5_Zen_IoStore_new_trace_this_batch": 0
+  },
+  "real_service_traces": [
+    {
+      "observed_path": "service-UE1-ut99",
+      "engine": "ue1",
+      "game_id": 3,
+      "original_file_id": 1258016,
+      "verified_original_package": {
+        "file_id": 1258016,
+        "game_id": 3,
+        "original_name": "colonnes.u",
+        "original_package_name": "colonnes",
+        "size": 10003,
+        "sha256": "241524193d7d370424de171847c1e5f927355b770e2c7af5bc42dac5264c63e6",
+        "catalog_md5_and_sha1_verified": true,
+        "catalog_package_version": 69,
+        "catalog_licensee_version": 0
+      },
+      "source_policy_from_successful_run": "ue1-ut99-v430-public-source-partial",
+      "summary_names_imports_exports": {
+        "summary": 1,
+        "names": 29,
+        "imports": 12,
+        "exports": 3
+      },
+      "actual_function_entries": 2362,
+      "actual_php_methods_verified": {
+        "Uedb5GameSourceMigrationService->runFile": 1,
+        "Uedb5GameSourceMigrationService->assertSourceIdentity": 1,
+        "Uedb5SourceSnapshotFactory->buildForGameId": 1,
+        "Uedb5SourceSnapshotFactory->profileAllowsCatalogRow": 1,
+        "Uedb5SourceSnapshotFactory->buildForSourceKey": 1,
+        "CatalogUE1PackageReader->__construct": 1,
+        "CatalogUE1PackageReader->getNames": 1,
+        "CatalogUE1PackageReader->getImports": 1,
+        "CatalogUE1PackageReader->getExports": 1,
+        "Uedb5Ut99SnapshotBuilder::build": 1
+      },
+      "actual_implementation_paths": [
+        "catalog/src/Domain/Package/CatalogUE1AnsiName.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php"
+      ],
+      "xdebug_trace": {
+        "DEV_only_relative_name": "service-UE1-ut99.xt",
+        "sha256": "5097c58d774d7441183b10e4d4194a49838cdaf7ed5b7d633af07f406bdc509a",
+        "bytes": 713080
+      },
+      "applicable_Epic_source_anchor_roles": [
+        "ue1_v432_header",
+        "ue1_base_object"
+      ],
+      "exact_Epic_source_revision_pinned": true,
+      "observed_sql_writes": 0,
+      "uedb5_writer_or_projection_publisher_executed": false,
+      "native_Epic_loader_current_run": false
+    },
+    {
+      "observed_path": "service-UE2-unreal2",
+      "engine": "ue2",
+      "game_id": 2,
+      "original_file_id": 111144,
+      "verified_original_package": {
+        "file_id": 111144,
+        "game_id": 2,
+        "original_name": "CubemapsT.utx",
+        "original_package_name": "CubemapsT",
+        "size": 47866,
+        "sha256": "e93510c38b6003ee3fe6dd69044f94b669df31334e14604bcf4c044eea3b4b35",
+        "catalog_md5_and_sha1_verified": true,
+        "catalog_package_version": 110,
+        "catalog_licensee_version": 2481
+      },
+      "source_policy_from_successful_run": "ue2-warfare-v126-serialization",
+      "summary_names_imports_exports": {
+        "summary": 1,
+        "names": 30,
+        "imports": 7,
+        "exports": 9
+      },
+      "actual_function_entries": 2670,
+      "actual_php_methods_verified": {
+        "Uedb5GameSourceMigrationService->runFile": 1,
+        "Uedb5GameSourceMigrationService->assertSourceIdentity": 1,
+        "Uedb5SourceSnapshotFactory->buildForGameId": 1,
+        "Uedb5SourceSnapshotFactory->profileAllowsCatalogRow": 1,
+        "Uedb5SourceSnapshotFactory->buildForSourceKey": 1,
+        "CatalogUE2PackageReader->__construct": 1,
+        "CatalogUE2PackageReader->getNames": 1,
+        "CatalogUE2PackageReader->getImports": 1,
+        "CatalogUE2PackageReader->getExports": 1,
+        "Uedb5Unreal2SnapshotBuilder::build": 1
+      },
+      "actual_implementation_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php"
+      ],
+      "xdebug_trace": {
+        "DEV_only_relative_name": "service-UE2-unreal2.xt",
+        "sha256": "d53d2e7d6aa2ad818f5c092c14c94097fbb16a034a1547c936a41bccdcbc406b",
+        "bytes": 645231
+      },
+      "applicable_Epic_source_anchor_roles": [],
+      "exact_Epic_source_revision_pinned": false,
+      "observed_sql_writes": 0,
+      "uedb5_writer_or_projection_publisher_executed": false,
+      "native_Epic_loader_current_run": false
+    },
+    {
+      "observed_path": "service-UE2-unreal2-v69",
+      "engine": "ue2",
+      "game_id": 2,
+      "original_file_id": 149508,
+      "verified_original_package": {
+        "file_id": 149508,
+        "game_id": 2,
+        "original_name": "SS3rdWorld.utx",
+        "original_package_name": "SS3rdWorld",
+        "size": 3104391,
+        "sha256": "3f456b6b0a2065244e39221a97e4776cfa2ee8e00dea855a72d1beabb491aebf",
+        "catalog_md5_and_sha1_verified": true,
+        "catalog_package_version": 69,
+        "catalog_licensee_version": 0
+      },
+      "source_policy_from_successful_run": "ue2-unreal2-2000-12-09-package-v69",
+      "summary_names_imports_exports": {
+        "summary": 1,
+        "names": 97,
+        "imports": 14,
+        "exports": 67
+      },
+      "actual_function_entries": 11946,
+      "actual_php_methods_verified": {
+        "Uedb5GameSourceMigrationService->runFile": 1,
+        "Uedb5GameSourceMigrationService->assertSourceIdentity": 1,
+        "Uedb5SourceSnapshotFactory->buildForGameId": 1,
+        "Uedb5SourceSnapshotFactory->profileAllowsCatalogRow": 1,
+        "Uedb5SourceSnapshotFactory->buildForSourceKey": 1,
+        "CatalogUE2PackageReader->__construct": 1,
+        "CatalogUE2PackageReader->getNames": 1,
+        "CatalogUE2PackageReader->getImports": 1,
+        "CatalogUE2PackageReader->getExports": 1,
+        "Uedb5Unreal2SnapshotBuilder::build": 1
+      },
+      "actual_implementation_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE2TableSnapshotBuilder.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php"
+      ],
+      "xdebug_trace": {
+        "DEV_only_relative_name": "service-UE2-unreal2-v69.xt",
+        "sha256": "f9351fc171c473b9f096271fe1ea448d7aa808a88ecb2b533688fccfaa37c702",
+        "bytes": 2771819
+      },
+      "applicable_Epic_source_anchor_roles": [
+        "ue2_unreal2_2000"
+      ],
+      "exact_Epic_source_revision_pinned": true,
+      "observed_sql_writes": 0,
+      "uedb5_writer_or_projection_publisher_executed": false,
+      "native_Epic_loader_current_run": false
+    },
+    {
+      "observed_path": "service-UE2-ut2004-legacy",
+      "engine": "ue2",
+      "game_id": 5,
+      "original_file_id": 111505,
+      "verified_original_package": {
+        "file_id": 111505,
+        "game_id": 5,
+        "original_name": "AW-Labels.utx",
+        "original_package_name": "AW-Labels",
+        "size": 23479,
+        "sha256": "1227de1648fa140da9fcbf93dcb2a14ee7d66c604127fa22f19c5b9d61f9b0f6",
+        "catalog_md5_and_sha1_verified": true,
+        "catalog_package_version": 99,
+        "catalog_licensee_version": 0
+      },
+      "source_policy_from_successful_run": "ue1-ut2004-legacy-texture-profile-compatible",
+      "summary_names_imports_exports": {
+        "summary": 1,
+        "names": 21,
+        "imports": 5,
+        "exports": 3
+      },
+      "actual_function_entries": 1704,
+      "actual_php_methods_verified": {
+        "Uedb5GameSourceMigrationService->runFile": 1,
+        "Uedb5GameSourceMigrationService->assertSourceIdentity": 1,
+        "Uedb5SourceSnapshotFactory->buildForGameId": 1,
+        "Uedb5SourceSnapshotFactory->profileAllowsCatalogRow": 1,
+        "Uedb5SourceSnapshotFactory->buildForSourceKey": 1,
+        "CatalogUE2LegacyCompatibilityPackageReader->__construct": 1,
+        "CatalogUE2LegacyCompatibilityPackageReader->getNames": 1,
+        "CatalogUE2LegacyCompatibilityPackageReader->getImports": 1,
+        "CatalogUE2LegacyCompatibilityPackageReader->getExports": 1,
+        "Uedb5UE2LegacyCompatibilityTableSnapshotBuilder::build": 1
+      },
+      "actual_implementation_paths": [
+        "catalog/src/Domain/Package/CatalogUE1AnsiName.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5UE2LegacyCompatibilityTableSnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2BinaryStream.php",
+        "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php"
+      ],
+      "xdebug_trace": {
+        "DEV_only_relative_name": "service-UE2-ut2004-legacy.xt",
+        "sha256": "387252ee123d6968f454dfae99c4490bdadafa721f58dc9f37e3a93d17fed728",
+        "bytes": 476661
+      },
+      "applicable_Epic_source_anchor_roles": [
+        "ue2_ut2004_3186"
+      ],
+      "exact_Epic_source_revision_pinned": true,
+      "observed_sql_writes": 0,
+      "uedb5_writer_or_projection_publisher_executed": false,
+      "native_Epic_loader_current_run": false
+    },
+    {
+      "observed_path": "service-UE3-ut3",
+      "engine": "ue3",
+      "game_id": 6,
+      "original_file_id": 1275867,
+      "verified_original_package": {
+        "file_id": 1275867,
+        "game_id": 6,
+        "original_name": "Q_HitS_Content.upk",
+        "original_package_name": "Q_HitS_Content",
+        "size": 10169,
+        "sha256": "117f17f6f5c4de53eedad05a6bdfa14239202d0bd9c079a69013e9724c360037",
+        "catalog_md5_and_sha1_verified": true,
+        "catalog_package_version": 512,
+        "catalog_licensee_version": 0
+      },
+      "source_policy_from_successful_run": "ue3-ut3-jan2008-package-v512",
+      "summary_names_imports_exports": {
+        "summary": 1,
+        "names": 39,
+        "imports": 10,
+        "exports": 7
+      },
+      "actual_function_entries": 4110,
+      "actual_php_methods_verified": {
+        "Uedb5GameSourceMigrationService->runFile": 1,
+        "Uedb5GameSourceMigrationService->assertSourceIdentity": 1,
+        "Uedb5SourceSnapshotFactory->buildForGameId": 1,
+        "Uedb5SourceSnapshotFactory->profileAllowsCatalogRow": 1,
+        "Uedb5SourceSnapshotFactory->buildForSourceKey": 1,
+        "CatalogUE3PackageReader->__construct": 1,
+        "CatalogUE3PackageReader->getNames": 1,
+        "CatalogUE3PackageReader->getImports": 1,
+        "CatalogUE3PackageReader->getExports": 1,
+        "Uedb5Ut3SnapshotBuilder::build": 1
+      },
+      "actual_implementation_paths": [
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php"
+      ],
+      "xdebug_trace": {
+        "DEV_only_relative_name": "service-UE3-ut3.xt",
+        "sha256": "d291c1bf47b9ba5269d56a5e006bf89f113993cb6ca1b87926b4aff8157e08c6",
+        "bytes": 1412105
+      },
+      "applicable_Epic_source_anchor_roles": [
+        "ue3_jan2008_linker"
+      ],
+      "exact_Epic_source_revision_pinned": true,
+      "observed_sql_writes": 0,
+      "uedb5_writer_or_projection_publisher_executed": false,
+      "native_Epic_loader_current_run": false
+    },
+    {
+      "observed_path": "service-UE4-ut4-v383",
+      "engine": "ue4",
+      "game_id": 7,
+      "original_file_id": 1335845,
+      "verified_original_package": {
+        "file_id": 1335845,
+        "game_id": 7,
+        "original_name": "EditorHelp.uasset",
+        "original_package_name": "/Engine/EditorMeshes/EditorHelp",
+        "size": 415152,
+        "sha256": "4cf09992bad6dc5e967634c418fceec8a172433adc2e8d624bcd8f8c84fa25a7",
+        "catalog_md5_and_sha1_verified": true,
+        "catalog_package_version": 383,
+        "catalog_licensee_version": 0
+      },
+      "source_policy_from_successful_run": "ue4-ut4-clean-master-v511-classic-package",
+      "summary_names_imports_exports": {
+        "summary": 1,
+        "names": 65,
+        "imports": 10,
+        "exports": 4
+      },
+      "actual_function_entries": 3360,
+      "actual_php_methods_verified": {
+        "Uedb5GameSourceMigrationService->runFile": 1,
+        "Uedb5GameSourceMigrationService->assertSourceIdentity": 1,
+        "Uedb5SourceSnapshotFactory->buildForGameId": 1,
+        "Uedb5SourceSnapshotFactory->profileAllowsCatalogRow": 1,
+        "Uedb5SourceSnapshotFactory->buildForSourceKey": 1,
+        "UnrealPackageReader4->__construct": 1,
+        "UnrealPackageReader4->getNames": 1,
+        "UnrealPackageReader4->getImports": 1,
+        "UnrealPackageReader4->getExports": 1,
+        "Uedb5Ut4SnapshotBuilder::build": 1
+      },
+      "actual_implementation_paths": [
+        "UE4/UnrealPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php"
+      ],
+      "xdebug_trace": {
+        "DEV_only_relative_name": "service-UE4-ut4-v383.xt",
+        "sha256": "a7904f5bca3b270cb0ecc125cde4b060c7f663df8c1540e9b9399044411b0540",
+        "bytes": 691030
+      },
+      "applicable_Epic_source_anchor_roles": [
+        "ue4_ut4_summary",
+        "ue4_ut4_object"
+      ],
+      "exact_Epic_source_revision_pinned": true,
+      "observed_sql_writes": 0,
+      "uedb5_writer_or_projection_publisher_executed": false,
+      "native_Epic_loader_current_run": false
+    },
+    {
+      "observed_path": "service-UE4-ut4-v511",
+      "engine": "ue4",
+      "game_id": 7,
+      "original_file_id": 118576,
+      "verified_original_package": {
+        "file_id": 118576,
+        "game_id": 7,
+        "original_name": "HeroTPP.uasset",
+        "original_package_name": "/Game/RestrictedAssets/Proto/TempCharacter/Characters/HeroTPP/HeroTPP",
+        "size": 10002,
+        "sha256": "1cdad57b15806416cd3c615f123bbd9216ebc4f9dfaf4cf03ab0c3abbd6ec93f",
+        "catalog_md5_and_sha1_verified": true,
+        "catalog_package_version": 511,
+        "catalog_licensee_version": 0
+      },
+      "source_policy_from_successful_run": "ue4-ut4-clean-master-v511-classic-package",
+      "summary_names_imports_exports": {
+        "summary": 1,
+        "names": 135,
+        "imports": 9,
+        "exports": 2
+      },
+      "actual_function_entries": 5756,
+      "actual_php_methods_verified": {
+        "Uedb5GameSourceMigrationService->runFile": 1,
+        "Uedb5GameSourceMigrationService->assertSourceIdentity": 1,
+        "Uedb5SourceSnapshotFactory->buildForGameId": 1,
+        "Uedb5SourceSnapshotFactory->profileAllowsCatalogRow": 1,
+        "Uedb5SourceSnapshotFactory->buildForSourceKey": 1,
+        "UnrealPackageReader4->__construct": 1,
+        "UnrealPackageReader4->getNames": 1,
+        "UnrealPackageReader4->getImports": 1,
+        "UnrealPackageReader4->getExports": 1,
+        "Uedb5Ut4SnapshotBuilder::build": 1
+      },
+      "actual_implementation_paths": [
+        "UE4/UnrealPackageReader.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
+        "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php"
+      ],
+      "xdebug_trace": {
+        "DEV_only_relative_name": "service-UE4-ut4-v511.xt",
+        "sha256": "7ae16f4bb3c2f7453a3bbd293d13078c139e037261baf5e4ea26977aca5cb5e0",
+        "bytes": 1115873
+      },
+      "applicable_Epic_source_anchor_roles": [
+        "ue4_ut4_summary",
+        "ue4_ut4_object"
+      ],
+      "exact_Epic_source_revision_pinned": true,
+      "observed_sql_writes": 0,
+      "uedb5_writer_or_projection_publisher_executed": false,
+      "native_Epic_loader_current_run": false
+    }
+  ],
+  "direct_real_reader_traces": [
+    {
+      "engine": "ue1",
+      "fixture": "UE1-ut99",
+      "original_SHA256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "names": 3345,
+      "imports": 60,
+      "exports": 5370,
+      "raw_trace_sha256": "dc720fd5641c0783e7c77ffc65e98705353829e5c8ce87ec865a3017762dc5d7",
+      "trace_bytes": 239673619,
+      "trace_limited_to_reader_plus_snapshot": true
+    },
+    {
+      "engine": "ue2",
+      "fixture": "UE2-unreal2",
+      "original_SHA256": "e93510c38b6003ee3fe6dd69044f94b669df31334e14604bcf4c044eea3b4b35",
+      "names": 30,
+      "imports": 7,
+      "exports": 9,
+      "raw_trace_sha256": "3ba11454dc505d765e8d0fe8fbf4d53fd8e03bd7357070dc7cf868512971aede",
+      "trace_bytes": 603486,
+      "trace_limited_to_reader_plus_snapshot": true
+    },
+    {
+      "engine": "ue2",
+      "fixture": "UE2-ut2004",
+      "original_SHA256": "1227de1648fa140da9fcbf93dcb2a14ee7d66c604127fa22f19c5b9d61f9b0f6",
+      "names": 21,
+      "imports": 5,
+      "exports": 3,
+      "raw_trace_sha256": "f9373b3a21e7cea77afa8403a3e7816db3404c9f8708223bb720cf9aa9b93143",
+      "trace_bytes": 431844,
+      "trace_limited_to_reader_plus_snapshot": true
+    },
+    {
+      "engine": "ue3",
+      "fixture": "UE3-ut3",
+      "original_SHA256": "117f17f6f5c4de53eedad05a6bdfa14239202d0bd9c079a69013e9724c360037",
+      "names": 39,
+      "imports": 10,
+      "exports": 7,
+      "raw_trace_sha256": "0cf940d6dfd482821b5f1250d3744d101b1f3d7ff604f8c61be3d67ce762409f",
+      "trace_bytes": 1373151,
+      "trace_limited_to_reader_plus_snapshot": true
+    },
+    {
+      "engine": "ue4",
+      "fixture": "UE4-ut4",
+      "original_SHA256": "1cdad57b15806416cd3c615f123bbd9216ebc4f9dfaf4cf03ab0c3abbd6ec93f",
+      "names": 135,
+      "imports": 9,
+      "exports": 2,
+      "raw_trace_sha256": "85d41a7879d29015af7c74b1eab7204b93ba299dde37babfec3be64d6e25ad14",
+      "trace_bytes": 1062125,
+      "trace_limited_to_reader_plus_snapshot": true
+    },
+    {
+      "engine": "ue5",
+      "fixture": "UE5-ue5",
+      "original_SHA256": "07a7072b2bb9cdf7504ecfcddbb0b927800d6d40ad0306ae2e54a259d9a8bc2c",
+      "names": 210,
+      "imports": 24,
+      "exports": 59,
+      "raw_trace_sha256": "a0baa0c0c7e337dac5e4379173692422b183a7309eec84c111458a4626140249",
+      "trace_bytes": 6670057,
+      "trace_limited_to_reader_plus_snapshot": true
+    }
+  ],
+  "epic_source_anchors_by_role": {
+    "ue1_v432_header": {
+      "sha256": "ecc70ab300dd14994a3d648166652b571082f7ed5c04185b779fe251294e91a0",
+      "source_anchor_lines": [
+        {
+          "anchor": "operator<<",
+          "first_line": 33
+        },
+        {
+          "anchor": "FPackageFileSummary",
+          "first_line": 110
+        },
+        {
+          "anchor": "NameMap",
+          "first_line": 197
+        }
+      ],
+      "previous_sha_match_where_pinned": true
+    },
+    "ue1_base_object": {
+      "sha256": "a07a8edb700110116acd5312e46e2bb778755abe830b500ba6e0ad8a6169f80a",
+      "source_anchor_lines": [
+        {
+          "anchor": "BuildNameMap",
+          "first_line": 2166
+        },
+        {
+          "anchor": "BuildImportMap",
+          "first_line": 2196
+        }
+      ],
+      "previous_sha_match_where_pinned": false
+    },
+    "ue2_unreal2_2000": {
+      "sha256": "bf306975bab6819ef50b23e4b6b3ece44c1d5001295a935e45b7180d0dc8994f",
+      "source_anchor_lines": [
+        {
+          "anchor": "ULinkerLoad::ULinkerLoad",
+          "first_line": 158
+        },
+        {
+          "anchor": "FPackageFileSummary",
+          "first_line": 70
+        },
+        {
+          "anchor": "NameMap.AddItem",
+          "first_line": 230
+        }
+      ],
+      "previous_sha_match_where_pinned": false
+    },
+    "ue2_ut2004_3186": {
+      "sha256": "8211e91df606390cea9e3758e17884c3b41238c6f0195f90a40c55c5ec7252d7",
+      "source_anchor_lines": [
+        {
+          "anchor": "FPackageFileSummary::",
+          "first_line": 111
+        },
+        {
+          "anchor": "ULinkerLoad::ULinkerLoad",
+          "first_line": 259
+        },
+        {
+          "anchor": "NameMap.AddItem",
+          "first_line": 343
+        }
+      ],
+      "previous_sha_match_where_pinned": false
+    },
+    "ue3_jan2008_linker": {
+      "sha256": "e19f04113b7634656af145f8c7bc363e9492a19b819b007328d2a3036407e603",
+      "source_anchor_lines": [
+        {
+          "anchor": "FPackageFileSummary::",
+          "first_line": 219
+        },
+        {
+          "anchor": "PACKAGE_FILE_TAG",
+          "first_line": 228
+        },
+        {
+          "anchor": "NameMap",
+          "first_line": 352
+        }
+      ],
+      "previous_sha_match_where_pinned": true
+    },
+    "ue4_ut4_summary": {
+      "sha256": "e397b3a6122677adc0df9a8a3143b187da1c79926c58fbeb3a0980e9a70562d4",
+      "source_anchor_lines": [
+        {
+          "anchor": "FPackageFileSummary::",
+          "first_line": 6
+        },
+        {
+          "anchor": "operator<<",
+          "first_line": 31
+        },
+        {
+          "anchor": "PACKAGE_FILE_TAG",
+          "first_line": 50
+        }
+      ],
+      "previous_sha_match_where_pinned": true
+    },
+    "ue4_ut4_object": {
+      "sha256": "0c9c24041a14a6b9f1cd27fe35a88336b5c6179e2a02e91bb883c41f907d40dd",
+      "source_anchor_lines": [
+        {
+          "anchor": "VER_UE4_64BIT_EXPORTMAP_SERIALSIZES",
+          "first_line": 113
+        },
+        {
+          "anchor": "FObjectExport",
+          "first_line": 30
+        }
+      ],
+      "previous_sha_match_where_pinned": true
+    },
+    "ue5_583_summary": {
+      "sha256": "45ba74addefec3877b18fe0c49a3eb398f24e1c35fe2f547afcecdef3ef12f8c",
+      "source_anchor_lines": [
+        {
+          "anchor": "FPackageFileSummary::",
+          "first_line": 13
+        },
+        {
+          "anchor": "PACKAGE_FILE_TAG",
+          "first_line": 77
+        }
+      ],
+      "previous_sha_match_where_pinned": false
+    },
+    "ue5_583_object": {
+      "sha256": "572fb09a84b99a14e9349fa84fa1a6a76b640e10778e423488092ab863b11206",
+      "source_anchor_lines": [
+        {
+          "anchor": "FObjectExport",
+          "first_line": 37
+        },
+        {
+          "anchor": "VER_UE4_64BIT_EXPORTMAP_SERIALSIZES",
+          "first_line": 151
+        }
+      ],
+      "previous_sha_match_where_pinned": false
+    }
+  },
+  "reused_original_parity_evidence_SHA256": {
+    "ue1": "c520fb069888867abd9e8ad6db47ca0b9e528755c0819353402706b4698c4ec2",
+    "ue2": "8f4a8f8f850a9bf12b797134e78f64cf8f5db43bf8b159408cd8c67ec12e5376",
+    "ue3": "d73d98043bcab6b88bfc12560d8d0307099c4e881e2f50abd7d386487f600f5a",
+    "ue4": "fcd7ca4eed757db9b7b55ae4871a326cc25437d1383ca9820fca0b4f454e74ae",
+    "ue5": "339cc324b509b3c415f4603bb0960651573294ba4cc74ac35b9f970676fd27d1"
+  },
+  "noteworthy_matching_original_oracles": [
+    {
+      "engine": "UE2",
+      "source": "Unreal II 2000-12-09 source from earlier accepted report",
+      "source_selected_file_id": 149508,
+      "fixture_sha256": "3f456b6b0a2065244e39221a97e4776cfa2ee8e00dea855a72d1beabb491aebf",
+      "actual_Xdebug_snapshot_names_imports_exports": [
+        97,
+        14,
+        67
+      ],
+      "previous_independent_original_differential": "10 UE2 original packages, 1152 names, 333 imports, 648 exports, 0 byte-field/offset mismatches. Original file149508 included.",
+      "native_source_sha256": "bf306975bab6819ef50b23e4b6b3ece44c1d5001295a935e45b7180d0dc8994f"
+    },
+    {
+      "engine": "UE4",
+      "source": "UT4 clean-master selected Epic 32-/64-bit export branch",
+      "source_selected_file_id": 1335845,
+      "fixture_sha256": "4cf09992bad6dc5e967634c418fceec8a172433adc2e8d624bcd8f8c84fa25a7",
+      "actual_Xdebug_snapshot_names_imports_exports": [
+        65,
+        10,
+        4
+      ],
+      "previous_independent_original_differential": "Same original original v383 source fixture, all 65 names, 10 imports and 4 exports and full serialized export size/offset independently decoded with 0 mismatch; UE4 v511 64-bit gate is present in selected source."
+    },
+    {
+      "engine": "UE5",
+      "source": "UE5 5.8.3 installed Epic original classic asset",
+      "fixture_sha256": "07a7072b2bb9cdf7504ecfcddbb0b927800d6d40ad0306ae2e54a259d9a8bc2c",
+      "actual_Xdebug_snapshot_names_imports_exports": [
+        210,
+        24,
+        59
+      ],
+      "additional_sections": {
+        "soft_package_references": 5,
+        "depends_map": 59
+      },
+      "previous_native_evidence": "Original compiled UE5.8.3 editor commandlet successfully loaded exact /Engine/EngineMaterials/BaseFlattenMaterial.BaseFlattenMaterial as Material, reused prior SHA evidence; no native restart."
+    }
+  ],
+  "limits_and_unresolved_branches": [
+    "Source-selected UE1 UT99 v69 policy is ue1-ut99-v430-public-source-partial. UT99 v432 provides matching version/summary source headers but complete compiled source for all linker decisions is not available, and v69 alone cannot identify patch level; exact native load-branch parity not newly proven.",
+    "UE2 Unreal II v110/licensee2481 trace selects ue2-warfare-v126-serialization but its original versioned Epic game-source revision is not independently pinned. The 2000-12-09 v69 source must NOT be reused as a v110 source authority; this case has an intentionally EMPTY Epic anchor list. Separate original UE2 v69/licensee0 trace was added to match the exact accepted 2000-12-09 source.",
+    "UT2004 v99 original correctly routes through UE2-owned compatibility rather than generic UE1 parser. Full native class/instance VerifyImport remains independent of these summary/table traces.",
+    "UE3 UT3 v512 trace matches Jan2008 source family but selected small original file1275867 was not independently byte-decoded in the old exact original native sample.",
+    "UE4 source-selected v511 unversioned requires game-profile context; first harness without profile returned effective 0 and failed; source-scoped profile version511 then succeeded. This was a disposable driver setup error, not a production reader defect.",
+    "UE5 classic original 5.8.3 was processed by standalone reader/snapshot, not production game14 Pass1 because original PRD game14 has no staged verified files. UE5 Zen IoStore was not rerun; accepted previous original Zen evidence unchanged.",
+    "The production CLI file-id path demands --apply, therefore actual dry-run evidence exercised the real service runFile(false) with manual same bootstrap imports, not CLI file-id entrypoint. This limits end-to-end entrypoint claims.",
+    "No source-specific competing provider mount-order or internal Epic VerifyImport step was newly executed. No v14 production dependency Pass2, SQL publication or live authenticated website outcome. Existing website contracts stay BLOCKED.",
+    "These traces prove methods actually invoked, not byte-by-byte equivalence of every value to new Epic runtime. Link prior independent exact original native/byte evidence only where source/fixture match."
+  ],
+  "raw_trace_retention": "All .xt function traces remain exclusively under DEV D:/Temp/UnrealDB/process-tracing/actual-callpaths-ue1-ue5-20261103; the repository only receives this compact SHA-pinned metadata.",
+  "production_code_sha256": {
+    "catalog/src/Infrastructure/Metadata/Uedb5GameSourceMigrationService.php": "4f52ede126bc1aa3fdd5e02f3d8e7cc7b96c727aea6a6fa8d09f21125b4d2ad3",
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
+    "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "d09baea2367aa71339dc94221265329ffeb8a9fd1d92e5b60a501d0b10f7ca54",
+    "catalog/src/Infrastructure/Readers/CatalogUE2PackageReader.php": "730bb5965d80f63938b2a8b09fdda3ef0a54acf29d43a67da355e53a99361d02",
+    "catalog/src/Infrastructure/Readers/CatalogUE2LegacyCompatibilityPackageReader.php": "4237b88a7292077507038ae2d71f78e63a4200d13d5ba2140ff2d951381355c0",
+    "catalog/parsers/UE3CatalogReader.php": "b05cdd0681ace6a36dcb09771b6d5e6ad35f7b2ae024d10bca007f2261501522",
+    "UE4/UnrealPackageReader.php": "479f3aeffac7e8b8d3765371a69bcf538e2c396a61633164ab3578c194271c08",
+    "UE5/UnrealPackageReader.php": "039d19bffbe09dc0c53bc8d9ddd2aada6a6daafc8ef8c276fb5b7aaeb70319a0",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut99SnapshotBuilder.php": "df64ed31a8f3fa34d8ecec145af430f76c8cbd58dd0381680b605654fa8bb9f8",
+    "catalog/src/Infrastructure/Metadata/Uedb5Unreal2SnapshotBuilder.php": "f78dba1e6b21f4cb43e782fb87b6800461a04063272b58e1d86d5a3376c0814e",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php": "4b4ca11c8e9df704b0fb4d88a8ac1844a1a0c11e2ecc1298f6ba275b25858be8",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php": "dd150673b58372b68fc2878a76938aa8661a1dfde5c986004a70596ad8eabd48",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ue5ClassicSnapshotBuilder.php": "b3282165d3e2a18cc4b2864ef989f52ed81a967921363bc145c3737384ac9480"
+  }
+}

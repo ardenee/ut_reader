@@ -25,6 +25,22 @@ A PASS needs applicable Epic source, a genuine/authoritative oracle for the rele
 
 Tools installed on game-amd: Graphviz 16.1.0 (`C:\Program Files\Graphviz\bin\dot.exe`), Doxygen 1.18.0 (`C:\Program Files\doxygen\bin\doxygen.exe`) and Xdebug 3.5.3 for PHP 8.5 TS VS17 at `D:\php8.5\ext\php_xdebug-3.5.3-8.5-ts-vs17-x86_64.dll`, opt-in through `D:\Temp\UnrealDB\process-tracing\php-with-xdebug.cmd` or an explicit CLI-only `-d zend_extension=...` argument. Neither Apache PHP configuration nor PRD is modified. Commercial SciTools Understand is **not** installed.
 
+### Observed original UE1–UE5 PHP execution paths (2026-11-03)
+
+The **new bounded Xdebug process batch** is recorded in [UE1–UE5 original runtime process trace evidence](evidence/ue1-ue5-original-runtime-process-trace-20261103.json). This is **one retained evidence batch, not another test register**. Seven actual `Uedb5GameSourceMigrationService::runFile(game_id, file_id, false)` traces executed against original SHA-256-verified PRD files in an enforced MySQL `SET SESSION TRANSACTION READ ONLY` transaction: UT99 UE1 v69; Unreal II UE2 v110 and v69; UT2004 UE2-owned v99 legacy compatibility; UT3 UE3 v512; UT4 UE4 explicit v383 and unversioned game-profile v511. The path actually observed includes source identity checks, source/game/version selection, engine-owned reader, full summary/name/import/export snapshots, and final section counts. Seven original file SHA-256 identities, Xdebug trace digests, 14 exact production PHP source hashes and nine Epic C++ source anchor hashes are pinned; all raw traces remain on DEV `D:\Temp`.
+
+Six additional direct original-reader traces cover UE1, UE2 (including UT2004 compatibility), UE3, UE4 and original installed **Epic UE5.8.3 BaseFlattenMaterial.uasset**. UE5 in this batch was **reader-and-snapshot only**, because no original game14 file is staged in PRD. UE5 Zen/IoStore was not repeated. Exact prior source/fixture matches support reuse of independent UE2 Unreal II v69 and UE4 UT4 v383 byte-by-byte differentials and the earlier Epic UE5.8.3 compiled original classic asset load. These older oracle results were **not** rerun. Unreal II v110/licensee 2481 deliberately has **NO pinned exact Epic build source**: the v69 Unreal II 2000 source must not be misrepresented as v110 authority. UT99's v430 partial policy and v432 source header also do not establish complete compiled linker behavior.
+
+The production CLI `migrate-uedb5-game.php --file-id` deliberately requires `--apply`; the audit called its **actual production service method with `apply=false`**, using the same necessary parser-profile bootstrap. No SQL writer, Pass2 publisher, authoritative mount ordering, authenticated website endpoint or new native Epic runtime was executed; the five website dependency cases remain **BLOCKED**. The PRD transaction was read-only and rolled back; original source bytes and database records were untouched.
+
+The DEV-only [Graphify five-engine execution comparison](http://127.0.0.1:8765/unrealdb/graphify-out/process-ue1-ue5.html) overlays observed PHP processing stages and **separate static Epic C++ source references**; dashed references **never** imply native execution. The existing Graphify index now links to it. To regenerate only that visualization from immutable compact proof (not repeat tests):
+
+```powershell
+python tests/tools/render_actual_runtime_comparison.py
+```
+
+Full trace files, original content and Epic C++ source are **not** committed or deployed. Keep current contract decisions in `tests/contracts.json` rather than treating a diagram as a new PASS.
+
 The first source-matched process is UE5 classic physical provider selection (case `ue5-mount-provider`). An isolated original-assets PHP script in `D:\Temp\UnrealDB\UE5\verify_ue5_classic_no_mount_original_pair_20261103.php` processed genuine `BaseFlattenMaterial.uasset` and `BaseFlattenDiffuseMap.uasset`. Its Xdebug trace is `D:\Temp\UnrealDB\process-tracing\ue5_original_classic.xt`; the test result is `ue5-run-result.json`. The bounded public audit evidence is `evidence/ue5/ue5-classic-mount-provider-process-audit-20261103.json`. The original source is under `L:\Source\Engine\UE5\UE 5.8.3`. Doxygen generated static C++ call-graphs in `D:\Temp\UnrealDB\process-tracing\doxygen-ue5-classic\html`.
 
 To regenerate only the *visualization of retained evidence* (not repeat the test), from the repository root on DEV:
