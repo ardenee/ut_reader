@@ -109,7 +109,7 @@
   "test_script_sha256": {
     "tests/tools/verify_iostore_public_admin_uploads.php": "cfabcf9dad9ee0fb457a0ef8b8b5135b15840e967fac7566e734a829284701ec",
     "tests/tools/verify_public_iostore_browser.js": "71ae4b18983891234b34dc73a33edc100c56c09d4da6d2f028fc1d1e84e4e993",
-    "tests/tools/verify_unified_pakages_directory.php": "e17c0e1ba8ee04004f8cb9126437c9ed1bbc2f65347c21f7ec93205c8c45bcff"
+    "tests/tools/verify_unified_pakages_directory.php": "7fff3e2f3871b5ce2287a281ccba10a8eeba8969bc94d1e082a1c76e053711da"
   },
   "limitations": [
     "No source-correct v14 game14 dependency publication or real browser upload was performed during the isolated tests.",

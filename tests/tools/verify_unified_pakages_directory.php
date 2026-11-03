@@ -48,9 +48,19 @@ if (!is_string($nav) || str_contains($nav,"'UPK Packages' =>") || str_contains($
     throw new RuntimeException('Removed UPK root navigation still exists.');
 }
 $validLinks=0;
-foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(
+// Only inspect source folders. PRD catalog/storage contains hundreds of
+// thousands of original archives; walking it adds no route evidence.
+$sourceTree = new RecursiveDirectoryIterator(
     $root.'/catalog', FilesystemIterator::SKIP_DOTS
-)) as $item) {
+);
+$sourceOnly = new RecursiveCallbackFilterIterator(
+    $sourceTree,
+    static fn(SplFileInfo $item): bool => !$item->isDir()
+        || !in_array(strtolower($item->getFilename()), [
+            'storage', 'vendor', 'node_modules', '.git', 'archive', 'cache',
+        ], true)
+);
+foreach(new RecursiveIteratorIterator($sourceOnly) as $item) {
     if (!$item->isFile() || !in_array(strtolower($item->getExtension()),['php','js'],true)) continue;
     $content=file_get_contents((string)$item);
     if (!is_string($content)) continue;
