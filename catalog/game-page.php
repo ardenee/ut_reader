@@ -73,15 +73,20 @@ try {
     $pageNo = min($pageNo, $totalPages);
     $offset = ($pageNo - 1) * $limit;
 
+    $publicationPredicate = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('s');
+    $currentFilePredicate = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentFilePredicate('f');
     $files = catalog_all(
         $db,
-        "SELECT f.*, COALESCE(SUM(s.resolved_count),0) resolved_count, COALESCE(SUM(s.missing_count),0) missing_count, COALESCE(SUM(s.package_only_count),0) package_only_count, COALESCE(SUM(s.common_count),0) common_count
-         FROM ue_files f
-         LEFT JOIN ue_dependency_package_summaries s ON s.file_id=f.id
-         $where
-         GROUP BY f.id
-         ORDER BY f.package_name, f.original_name
-         LIMIT $limit OFFSET $offset",
+        "SELECT f.*, (CASE WHEN $currentFilePredicate THEN 1 ELSE 0 END) dependency_projection_current,"
+        . " COALESCE(SUM(s.resolved_count),0) resolved_count,"
+        . " COALESCE(SUM(s.missing_count),0) missing_count,"
+        . " COALESCE(SUM(s.package_only_count),0) package_only_count,"
+        . " COALESCE(SUM(s.common_count),0) common_count"
+        . " FROM ue_files f"
+        . " LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id AND $publicationPredicate"
+        . " $where GROUP BY f.id"
+        . " ORDER BY f.package_name, f.original_name"
+        . " LIMIT $limit OFFSET $offset",
         $args
     );
 
@@ -130,7 +135,9 @@ try {
                 $deps .= '<span class="dep ' . $key . '">' . $key . ': ' . $count . '</span>';
             }
         }
-        $deps = $deps ?: '<span class="muted">none</span>';
+        $deps = (int)($file['dependency_projection_current'] ?? 0) === 1
+            ? ($deps ?: '<span class="muted">none</span>')
+            : '<span class="muted">Unavailable — source-correct dependency publication required</span>';
         echo '<tr>';
         echo '<td class="mono" data-col="package">' . catalog_h($file['package_name']) . '</td>';
         echo '<td data-col="file">' . catalog_h($file['original_name']) . '<br><span class="muted small">GUID ' . catalog_h($file['package_guid']) . '</span></td>';

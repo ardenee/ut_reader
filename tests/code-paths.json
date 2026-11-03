@@ -3170,8 +3170,8 @@
     },
     {
       "path": "catalog/game-missing.php",
-      "sha256": "db3f099677ed526963daca5affc95ce3dfc3369332b0dde55d828cec39116812",
-      "bytes": 31047,
+      "sha256": "1292999398fc440adec8a801852590eae27484195433206564581420bd29b20c",
+      "bytes": 30325,
       "engine_hints": [
         "shared"
       ],
@@ -3184,8 +3184,8 @@
     },
     {
       "path": "catalog/game-page.php",
-      "sha256": "ec42b32f1e5d6e7fe148cb92669a1c727288b1b539df47e47e655a51c4a17868",
-      "bytes": 9923,
+      "sha256": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e",
+      "bytes": 10539,
       "engine_hints": [
         "shared"
       ],
@@ -4538,8 +4538,8 @@
     },
     {
       "path": "catalog/missing.php",
-      "sha256": "0acc3cc11de713e591b92d41aff7b6099b427f1ff1d05698f81bbb2a1d24a62d",
-      "bytes": 25269,
+      "sha256": "7ad4b1c856fa59d0e09d9e99504ee1622a5c3ee40ef7605b00e4b3f417c7f59a",
+      "bytes": 26872,
       "engine_hints": [
         "shared"
       ],

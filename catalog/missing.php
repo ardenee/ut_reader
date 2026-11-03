@@ -132,6 +132,22 @@ try {
         throw new RuntimeException('Current dependency package summaries are unavailable.');
     }
 
+    // This is a GLOBAL view. A partial current-source rollout must never
+    // be advertised as a complete zero-missing package inventory.
+    if (!\UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::allGameStatsCurrent($db)) {
+        catalog_head('Missing Files');
+        catalog_page_header('Missing Files', 'The source-correct dependency inventory is not yet fully published.');
+        echo '<div class="card"><h2>Dependency results unavailable</h2>'
+            . '<p>At least one game has stale or unpublished dependency results, or its '
+            . 'cached counts predate the last completed source-correct publication. '
+            . 'Historical resolved and missing rows are deliberately withheld, not zero.</p>'
+            . '<p>Game-specific source and publication state can be reviewed in '
+            . '<a href="games.php">Games</a>. Production dependency Pass 2 regeneration '
+            . 'is a separate administrative operation.</p></div>';
+        catalog_foot();
+        return;
+    }
+
     $missingFileListQuery = new PdoMissingFileListQuery($db);
     $missingDetailListQuery = new PdoMissingDetailListQuery($db);
     $selectedPackage = missing_selected_package();
@@ -140,10 +156,19 @@ try {
     $perPage = 200;
     $detailPerPage = 200;
 
-    $filesWithMissing = catalog_count($db, 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependency_package_summaries WHERE missing_count>0');
-    $missingObjects = catalog_count($db, 'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries');
-    $missingPackages = catalog_count($db, 'SELECT COUNT(DISTINCT required_package) c FROM ue_dependency_package_summaries WHERE missing_count>0');
-    $resolved = catalog_count($db, 'SELECT COALESCE(SUM(resolved_count),0) c FROM ue_dependency_package_summaries');
+    $publicationJoin = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('s');
+    $filesWithMissing = catalog_count($db,
+        'SELECT COUNT(DISTINCT s.file_id) c FROM ue_uedb5_dependency_packages s '
+        . $publicationJoin . 'WHERE s.missing_count>0');
+    $missingObjects = catalog_count($db,
+        'SELECT COALESCE(SUM(s.missing_count),0) c FROM ue_uedb5_dependency_packages s '
+        . $publicationJoin);
+    $missingPackages = catalog_count($db,
+        'SELECT COUNT(DISTINCT s.required_package_name) c FROM ue_uedb5_dependency_packages s '
+        . $publicationJoin . 'WHERE s.missing_count>0');
+    $resolved = catalog_count($db,
+        'SELECT COALESCE(SUM(s.resolved_count),0) c FROM ue_uedb5_dependency_packages s '
+        . $publicationJoin);
 
     $filePageCount = max(1, (int)ceil($filesWithMissing / $perPage));
     $filesMove = strtolower(trim((string)($_GET['files_move'] ?? 'first')));
@@ -200,7 +225,8 @@ try {
         $detailBaseParams = ['file_id' => $selectedFileId];
         $detailTotal = catalog_count(
             $db,
-            'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries WHERE file_id=?',
+            'SELECT COALESCE(SUM(s.missing_count),0) c FROM ue_uedb5_dependency_packages s '
+            . $publicationJoin . 'WHERE s.file_id=?',
             [$selectedFileId]
         );
         $detailOwner = catalog_one(
@@ -214,7 +240,8 @@ try {
         $detailBaseParams = ['package' => $selectedPackage, 'view' => 'files'];
         $detailTotal = catalog_count(
             $db,
-            'SELECT COUNT(*) c FROM ue_dependency_package_summaries WHERE required_package=? AND missing_count>0',
+            'SELECT COUNT(*) c FROM ue_uedb5_dependency_packages s '
+            . $publicationJoin . 'WHERE s.required_package_name=? AND s.missing_count>0',
             [$selectedPackage]
         );
     } elseif ($selectedPackage !== '') {
@@ -222,7 +249,8 @@ try {
         $detailBaseParams = ['package' => $selectedPackage, 'view' => 'objects'];
         $detailTotal = catalog_count(
             $db,
-            'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries WHERE required_package=? AND missing_count>0',
+            'SELECT COALESCE(SUM(s.missing_count),0) c FROM ue_uedb5_dependency_packages s '
+            . $publicationJoin . 'WHERE s.required_package_name=? AND s.missing_count>0',
             [$selectedPackage]
         );
     }
@@ -432,9 +460,12 @@ CSS;
 
     $rows = catalog_all(
         $db,
-        'SELECT required_package,SUM(missing_count) missing_object_rows,COUNT(*) requiring_file_count '
-        . 'FROM ue_dependency_package_summaries WHERE missing_count>0 '
-        . 'GROUP BY required_package ORDER BY missing_object_rows DESC,requiring_file_count DESC,required_package'
+        'SELECT s.required_package_name required_package,SUM(s.missing_count) missing_object_rows,'
+        . 'COUNT(DISTINCT s.file_id) requiring_file_count '
+        . 'FROM ue_uedb5_dependency_packages s '
+        . $publicationJoin . 'WHERE s.missing_count>0 '
+        . 'GROUP BY s.required_package_name '
+        . 'ORDER BY missing_object_rows DESC,requiring_file_count DESC,s.required_package_name'
     );
 
     echo '<div class="card"><h2>Missing packages</h2>';

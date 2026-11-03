@@ -99,7 +99,10 @@
     "catalog/file-examine-paged-core.php": "0e3cac0168ad6bb9abf9473d399e6638a06a9bddf9f6c28b48f7c2954ae39a87",
     "catalog/file-info.php": "8f495d3361633d33049a9d83b8d03977c542358b651776753c2d275fb6c41a1c",
     "catalog/game-files.php": "128c5a348fb298b4b944c1dbb0909f769a7e5ca19f8fb1699b95f23e2eb5b65f",
+    "catalog/game-missing.php": "1292999398fc440adec8a801852590eae27484195433206564581420bd29b20c",
+    "catalog/game-page.php": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e",
     "catalog/library.php": "edddc38ec5604c4c5081f0e5e3867a1b554ecc9100ad94522e39457eaa04012a",
+    "catalog/missing.php": "7ad4b1c856fa59d0e09d9e99504ee1622a5c3ee40ef7605b00e4b3f417c7f59a",
     "catalog/src/Infrastructure/Federation/CatalogFederationDependencyNeedQuery.php": "a0786e7dae36acddad9c090fc5fe481c9d39b76fe51300b6513495c84ef3a2d9",
     "catalog/src/Infrastructure/Federation/CatalogFederationTransferClient.php": "8c2f857d2f455be39f4cce35b3b4c4f397bc50ae3a4a81cef28d5dcdc059081e",
     "catalog/src/Infrastructure/Games/PdoGameFileReassignmentSelectionQuery.php": "e5cc89ae9f54f04e77ab89920008b5143e4e018fd6e3c475c1ce6ac8fe1fd4fd",
@@ -166,5 +169,121 @@
     "Published current v14 PRD dependencies across UE1-UE5",
     "Production HTTP UI after deployment on all routes"
   ],
-  "no_prd_database_migration_or_update": true
+  "no_prd_database_migration_or_update": true,
+  "2026_11_03_website_missing_consumer_followup": {
+    "source_correction_scope": "Source-only active global missing.php, direct game-page.php and game-missing.php; no PRD data rebuilding or current-policy relabeling",
+    "reviewed_direct_entrypoints": [
+      "catalog/missing.php",
+      "catalog/game-page.php",
+      "catalog/game-missing.php"
+    ],
+    "tested_source_sha256": {
+      "catalog/missing.php": "7ad4b1c856fa59d0e09d9e99504ee1622a5c3ee40ef7605b00e4b3f417c7f59a",
+      "catalog/game-page.php": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e",
+      "catalog/game-missing.php": "1292999398fc440adec8a801852590eae27484195433206564581420bd29b20c"
+    },
+    "new_regression": {
+      "path": "tests/tools/verify_website_dependency_read_state.php",
+      "source_sha256": "d87dd1b11c292c2171da29cfa44c13cba617383a758b1899723fa75e49578547",
+      "outcome": "PASS five-engine nonzero current/mixed-stale presentation, plus no-verified-files UE5 game state remains unavailable rather than false zero",
+      "production_database_writes": 0
+    },
+    "original_PRD_readonly_tests": [
+      {
+        "path": "D:\\Temp\\UnrealDB\\process-tracing\\verify_website_missing_current_source_prd_readonly_20261103.php",
+        "sha256": "e73e66988526268ee5a31d71af1c05571ff24448c8be6816b20b4df6b01f30ab",
+        "using": "PRD SELECT-only transaction with explicit ROLLBACK"
+      },
+      {
+        "path": "D:\\Temp\\UnrealDB\\process-tracing\\verify_old_game_page_and_missing_ui_prd_readonly_20261103.php",
+        "sha256": "e48373c8401b5baa66f2fd13635afa7dee868ed654908d4da0b14049c49bddbd",
+        "using": "PRD SELECT-only transaction with explicit ROLLBACK"
+      }
+    ],
+    "actual_prd_file_health_by_game": [
+      {
+        "game_id": 2,
+        "engine": "UE2",
+        "verified": 1217,
+        "current_v14": 0
+      },
+      {
+        "game_id": 3,
+        "engine": "UE1",
+        "verified": 74303,
+        "current_v14": 0
+      },
+      {
+        "game_id": 4,
+        "engine": "UE2",
+        "verified": 5082,
+        "current_v14": 0
+      },
+      {
+        "game_id": 5,
+        "engine": "UE2",
+        "verified": 72880,
+        "current_v14": 0
+      },
+      {
+        "game_id": 6,
+        "engine": "UE3",
+        "verified": 6722,
+        "current_v14": 0
+      },
+      {
+        "game_id": 7,
+        "engine": "UE4",
+        "verified": 64247,
+        "current_v14": 0
+      },
+      {
+        "game_id": 12,
+        "engine": "UE1",
+        "verified": 10788,
+        "current_v14": 0
+      },
+      {
+        "game_id": 14,
+        "engine": "UE5",
+        "verified": 0,
+        "current_v14": 0
+      }
+    ],
+    "practical_risks_fixed": [
+      "Active global Missing Files page queried legacy ue_dependency_package_summaries even though current file/drill-down readers use ue_uedb5_dependency_packages",
+      "Global missing page historically displayed stale missing/resolved totals; now it fails closed with explicit Unavailable while any game is stale or cached stats are not refreshed",
+      "Legacy game-page.php used ue_dependency_package_summaries and rendered no dependencies even with real historical data; now it uses source-current UEDB5 projections and marks old files Unavailable",
+      "Game-missing.php displayed three zero counters and No missing packages while intentionally withholding stale dependency data; now shows Unavailable and a source-publication warning",
+      "Game-missing.php displayed a Run cleanup button calling old v13 table and a read-only rebuildFile() facade; now disables the nonfunctional cleanup rather than claiming success",
+      "The original PRD game14 UE5 has zero staged verified files. Per-game website missing page now shows Unavailable and explains that no original file-derived dependency outcomes exist until original verified source files are staged, rather than calling zero missing a demonstrated native outcome."
+    ],
+    "prd_legacy_ue_dependency_package_summaries_table_exists_and_contains_rows": true,
+    "prd_uedb5_dependency_packages_table_exists_and_contains_rows": true,
+    "historical_examples_held": [
+      {
+        "engine": "UE4",
+        "file_id": 1353254,
+        "historical_package_summaries": 224,
+        "currently_publishable": 0
+      },
+      {
+        "engine": "UE1",
+        "file_id": 1246569,
+        "historical_package_summaries": 15,
+        "currently_publishable": 0
+      }
+    ],
+    "original_prd_mysql_explain_current_source_queries": 6,
+    "original_prd_exact_game_page_group_by_sql_tested_engines": [
+      "UE1",
+      "UE2",
+      "UE3",
+      "UE4"
+    ],
+    "production_or_original_files_modified": false,
+    "production_database_writes": 0,
+    "HTTP_website_UI_verified": false,
+    "reason_full_website_contract_remains_BLOCKED": "All seven games with actual verified files lack source-current v14 publication; UE5 game14 has no staged files. Authenticated live HTTP browser acceptance was not performed. The fixes prevent stale counts from masquerading as zero or a current missing/resolved result, but do not create authoritative new missing data."
+  }
 }

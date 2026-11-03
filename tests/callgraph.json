@@ -2,10 +2,10 @@
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
   "nodes": 1026,
-  "edges_count": 3627,
+  "edges_count": 3626,
   "edge_types": {
     "use": 1235,
-    "new": 954,
+    "new": 953,
     "static_or_expression": 1438
   },
   "ambiguous_class_names": {
@@ -4423,12 +4423,6 @@
     {
       "from": "catalog/game-missing.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoDependencyPackageSummary.php",
-      "syntax": "new",
-      "line": 103
-    },
-    {
-      "from": "catalog/game-missing.php",
-      "to": "catalog/src/Infrastructure/Persistence/PdoDependencyPackageSummary.php",
       "syntax": "use",
       "line": 7
     },
@@ -4436,7 +4430,7 @@
       "from": "catalog/game-missing.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
       "syntax": "new",
-      "line": 116
+      "line": 107
     },
     {
       "from": "catalog/game-missing.php",
@@ -4448,25 +4442,25 @@
       "from": "catalog/game-missing.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 144
+      "line": 137
     },
     {
       "from": "catalog/game-missing.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 211
+      "line": 225
     },
     {
       "from": "catalog/game-missing.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 174
+      "line": 184
     },
     {
       "from": "catalog/game-missing.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 144
+      "line": 137
     },
     {
       "from": "catalog/game-page.php",
@@ -4478,7 +4472,7 @@
       "from": "catalog/game-page.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
-      "line": 207
+      "line": 214
     },
     {
       "from": "catalog/game-paks.php",
@@ -6506,7 +6500,7 @@
       "from": "catalog/missing.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 163
+      "line": 188
     },
     {
       "from": "catalog/missing.php",
@@ -6530,7 +6524,7 @@
       "from": "catalog/missing.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php",
       "syntax": "new",
-      "line": 136
+      "line": 152
     },
     {
       "from": "catalog/missing.php",
@@ -6542,7 +6536,7 @@
       "from": "catalog/missing.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php",
       "syntax": "new",
-      "line": 135
+      "line": 151
     },
     {
       "from": "catalog/missing.php",

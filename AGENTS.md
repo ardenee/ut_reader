@@ -24,7 +24,7 @@ Do not create another test register, unrelated "closure" spreadsheets, parallel 
 5. Record one result in tests/contracts.json, link final SHA-pinned original evidence, and stop the test. No "continue" reruns of previously passing contracts with unchanged transitive inputs.
 6. Deploy only verified changed source from DEV to PRD with protected config/storage/Git exclusions and exact SHA checks. Do not execute PHP acceptance tests or change Epic source on PRD.
 
-Temporary work: C:\Temp\UnrealDB\<engine>\<contract>\<run>. Unique durable new proof only under tests/evidence/<engine>/<contract>. Limit copied engine builds, instrumented DLLs and cooked projects to a specified necessary oracle and post-acceptance cleanup decision. Never change existing accepted native evidence or original source packages.
+Temporary work: D:\Temp\UnrealDB\<engine>\<contract>\<run>. Unique durable new proof only under tests/evidence/<engine>/<contract>. Limit copied engine builds, instrumented DLLs and cooked projects to a specified necessary oracle and post-acceptance cleanup decision. Never change existing accepted native evidence or original source packages.
 
 ## Environments
 - DEV game-amd (192.168.0.51): C:\Users\arden\source\repos\ut_reader. Docker available, not needed for file parity.

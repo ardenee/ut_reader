@@ -13,7 +13,7 @@
 
 A discovered behaviour outside the 24 frozen contracts requires an explicit user-risk rationale and approval to add. Never increase accepted test totals by repeatedly testing identical source code. Batch independent unverified requirements; retain existing engine certifications.
 
-Transient tests: C:\Temp\UnrealDB\<engine>\<contract>\<run>. Canonical accepted proofs: tests/evidence/<engine>/<contract>. Never create new copies of complete engine source or massive cooked fixtures without a specific indispensable oracle and cleanup rule.
+Transient tests: D:\Temp\UnrealDB\<engine>\<contract>\<run>. Canonical accepted proofs: tests/evidence/<engine>/<contract>. Never create new copies of complete engine source or massive cooked fixtures without a specific indispensable oracle and cleanup rule.
 
 Performance is measured by mandatory *unverified behaviour remaining*, defects corrected and production parity—not the quantity of tests or log files.
 

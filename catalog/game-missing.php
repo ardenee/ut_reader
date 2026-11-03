@@ -90,25 +90,16 @@ try{
     $game=$gameId>0?catalog_one($db,'SELECT g.id,g.name,g.slug,UPPER(TRIM(p.engine_key)) engine_key FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',[$gameId]):null;if(!$game)throw new RuntimeException('Choose a valid game from the Games page.');
     $type=$_SERVER['REQUEST_METHOD']==='POST'?(strtolower(trim((string)($_POST['dependency_type']??'all')))==='base_game'?'base_game':'all'):game_missing_type();
     if($_SERVER['REQUEST_METHOD']==='POST'){
-        try{
-            if(!$isAdmin)throw new RuntimeException('Administrator access is required.');
-            catalog_check_csrf('game_missing_summary_cleanup');
-            if((string)($_POST['action']??'')!=='cleanup_stale_summary')throw new RuntimeException('Unknown missing-dependency action.');
-            $cleanupFileId=max(0,(int)($_POST['file_id']??0));if($cleanupFileId<1)throw new RuntimeException('Choose a valid stale summary owner.');
-            $owner=catalog_one($db,'SELECT s.file_id,MAX(COALESCE(f.scan_status,"missing")) scan_status,COUNT(*) summary_rows FROM ue_dependency_package_summaries s LEFT JOIN ue_files f ON f.id=s.file_id AND f.game_id=s.game_id WHERE s.game_id=? AND s.file_id=? GROUP BY s.file_id',[$gameId,$cleanupFileId]);
-            if(!is_array($owner)){
-                $_SESSION['game_missing_flash']='Summary owner #'.$cleanupFileId.' is already clean.';
-            }else{
-                if((string)($owner['scan_status']??'')==='verified')throw new RuntimeException('Refusing cleanup: summary owner #'.$cleanupFileId.' is currently verified.');
-                (new PdoDependencyPackageSummary($db))->rebuildFile($cleanupFileId);
-                $remaining=(int)(catalog_one($db,'SELECT COUNT(*) remaining FROM ue_dependency_package_summaries WHERE game_id=? AND file_id=?',[$gameId,$cleanupFileId])['remaining']??0);
-                if($remaining>0)throw new RuntimeException('Cleanup did not remove all stale summary rows for owner #'.$cleanupFileId.'.');
-                $_SESSION['game_missing_flash']='Stale dependency summaries cleaned for owner #'.$cleanupFileId.'.';
-            }
-        }catch(Throwable $cleanupError){$_SESSION['game_missing_flash']='Cleanup failed: '.$cleanupError->getMessage();}
-        header('Location: '.game_missing_url($gameId,$type));exit;
+        // The former cleanup form addressed retired v13 tables and called
+        // a read-only V5 counting facade, so it could never clean records.
+        // Do not promise a mutation that cannot happen.
+        $_SESSION['game_missing_flash']='Legacy summary cleanup is unavailable. '
+            . 'Use the engine-scoped UEDB5 maintenance workflow after evidence review.';
+        header('Location: '.game_missing_url($gameId,$type));
+        exit;
     }
-    $cleanupCsrf=$isAdmin?catalog_csrf('game_missing_summary_cleanup'):'';
+    // The old cleanup UI is deliberately disabled: no side effects or
+    // misleading success messages on this read-only dependency view.
     $flash=$_SESSION['game_missing_flash']??null;unset($_SESSION['game_missing_flash']);
     $baseGameOnly=$type==='base_game';$packageSearch=game_missing_text('q',255);$objectSearch=game_missing_text('object_q',500);
     $selectedPackage=game_missing_text('package',255);$selectedObject=game_missing_text('object',1000);$objectPage=max(1,game_missing_int('object_page',1));$objectLimit=200;$engineKey=strtoupper(trim((string)($game['engine_key']??'')));$evidenceKey=game_missing_text('evidence',64);$evidenceFileId=0;$evidenceImportIndex=-1;if(preg_match('/^(\d+):(\d+)$/',$evidenceKey,$m)===1){$evidenceFileId=(int)$m[1];$evidenceImportIndex=(int)$m[2];}
@@ -116,9 +107,11 @@ try{
     $missingQuery=new PdoGameMissingDependencyQuery($db);$scope=$baseGameOnly?$missingQuery->officialBaseGamePackageNames($gameId):null;
     $dependencyPublication=$missingQuery->publicationFreshness($gameId,$engineKey);
     $dependencyRowsStale=is_array($dependencyPublication)&&(int)($dependencyPublication['stale']??0)>0;
-    $projectionHealth=$isAdmin?$missingQuery->projectionHealth($gameId,20):['stale_files'=>0,'stale_rows'=>0,'stale_missing_rows'=>0,'owners'=>[]];$totals=$dependencyRowsStale?['missing_objects'=>0,'missing_packages'=>0,'files_with_missing'=>0]:$missingQuery->totals($gameId,$scope);$packageRows=$dependencyRowsStale?[]:$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
+    $noVerifiedDependencyFiles=(int)($dependencyPublication['verified']??0)===0;
+    $dependencyResultsUnavailable=$dependencyRowsStale||$noVerifiedDependencyFiles;
+    $projectionHealth=$isAdmin?$missingQuery->projectionHealth($gameId,20):['stale_files'=>0,'stale_rows'=>0,'stale_missing_rows'=>0,'owners'=>[]];$totals=$dependencyResultsUnavailable?['missing_objects'=>null,'missing_packages'=>null,'files_with_missing'=>null]:$missingQuery->totals($gameId,$scope);$packageRows=$dependencyResultsUnavailable?[]:$missingQuery->packageRows($gameId,$scope,500,0,$packageSearch);
     $objectRows=[];$objectTotal=0;$objectOffset=0;$packageProviders=[];$objectFiles=[];$diagnostic=null;$evidence=null;$sampleEvidence=null;
-    if(!$dependencyRowsStale&&$selectedPackage!==''&&($scope===null||in_array(strtolower($selectedPackage),array_map('strtolower',$scope),true))){
+    if(!$dependencyResultsUnavailable&&$selectedPackage!==''&&($scope===null||in_array(strtolower($selectedPackage),array_map('strtolower',$scope),true))){
         $objectTotal=$missingQuery->objectTotal($gameId,$selectedPackage,$scope,$objectSearch);$objectOffset=($objectPage-1)*$objectLimit;
         $objectRows=$missingQuery->objectRows($gameId,$selectedPackage,$scope,$objectLimit,$objectOffset,$objectSearch);
         $packageProviders=catalog_dependency_provider_candidates($db,$gameId,0,$selectedPackage);
@@ -147,31 +140,52 @@ CSS;
     echo '<label>Dependency type<select name="dependency_type"><option value="all"'.(!$baseGameOnly?' selected':'').'>All missing dependencies</option><option value="base_game"'.($baseGameOnly?' selected':'').'>Official base-game dependencies only</option></select></label>';
     echo '<label>Package search<input name="q" value="'.catalog_h($packageSearch).'" placeholder="package name"></label><button type="submit">Apply filters</button></form></div></section>';
 
-    if($dependencyRowsStale){
-        echo '<section class="ui-section"><div class="ui-section__body"><div class="gm-note"><strong>Source-correct dependency results are not yet published.</strong> ';
-        echo number_format((int)$dependencyPublication['stale']).' of '.number_format((int)$dependencyPublication['verified']).' verified files have an older dependency policy or payload. ';
-        echo 'Previously published missing/resolved counts have been withheld: Epic runtime mount selection cannot be reconstructed from uploaded catalogue order. ';
-        echo 'Use the relevant engine-scoped dependency Pass 2 with authenticated original mount/store evidence where available; otherwise new results remain explicitly unresolved. ';
-        echo 'Old database rows remain intact but are not presented as current engine outcomes.</div></div></section>';
+    if($dependencyResultsUnavailable){
+        echo '<section class="ui-section"><div class="ui-section__body"><div class="gm-note"><strong>Source-correct dependency results are unavailable.</strong> ';
+        if($noVerifiedDependencyFiles){
+            echo 'No verified staged files exist for this game. No missing/resolved outcome can be established.';
+        } else {
+            echo number_format((int)$dependencyPublication['stale']).' of '.number_format((int)$dependencyPublication['verified']).' verified files have an older dependency policy or payload. ';
+        }
+        if(!$noVerifiedDependencyFiles){
+            echo 'Previously published missing/resolved counts have been withheld: Epic runtime mount selection cannot be reconstructed from uploaded catalogue order. ';
+        } else {
+            echo 'Missing/resolved totals are unavailable rather than zero because the game contains no verified files. ';
+        }
+        if($noVerifiedDependencyFiles){
+            echo 'Verified original packages must be staged before any source-correct Pass 2. ';
+            echo 'There are no verified file-derived dependency outcomes to display.';
+        } else {
+            echo 'Use the relevant engine-scoped dependency Pass 2 with authenticated original mount/store evidence where available; otherwise new results remain explicitly unresolved. ';
+            echo 'Old database rows remain intact but are not presented as current engine outcomes.';
+        }
+        echo '</div></div></section>';
     }
     if($isAdmin&&(int)($projectionHealth['stale_files']??0)>0){
         $staleFiles=(int)$projectionHealth['stale_files'];$staleRows=(int)$projectionHealth['stale_rows'];$staleMissing=(int)$projectionHealth['stale_missing_rows'];$owners=(array)($projectionHealth['owners']??[]);
-        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Projection health</h2><p>Admin-only cleanup. Stale package-summary owners are excluded from the missing-dependency counts below.</p></div></div><div class="ui-section__body">';
+        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Projection health</h2><p>Historical package-summary owners are not current missing-dependency evidence; this page is read-only.</p></div></div><div class="ui-section__body">';
         echo '<div class="gm-note"><strong>'.number_format($staleFiles).' stale summary owner'.($staleFiles===1?'':'s').' / '.number_format($staleRows).' stale summary rows / '.number_format($staleMissing).' stale missing counts.</strong><br>Stale here means the summary owner is no longer a verified/current file. These rows are projection drift, not current missing-dependency evidence.</div>';
-        if($owners!==[]){echo '<table class="gm-table"><thead><tr><th>Owner file</th><th>Status</th><th class="num">Summary rows</th><th class="num">Stale missing</th><th class="num">Live dependency rows</th><th>Cleanup</th></tr></thead><tbody>';
-            foreach($owners as $owner){$fid=(int)($owner['file_id']??0);echo '<tr><td class="mono">#'.$fid.'</td><td>'.catalog_h((string)($owner['scan_status']??'missing')).'</td><td class="num">'.(int)($owner['summary_rows']??0).'</td><td class="num">'.(int)($owner['stale_missing_rows']??0).'</td><td class="num">'.(int)($owner['live_dependency_rows']??0).'</td><td><form method="post" class="gm-cleanup-form"><input type="hidden" name="csrf" value="'.catalog_h($cleanupCsrf).'"><input type="hidden" name="action" value="cleanup_stale_summary"><input type="hidden" name="game_id" value="'.$gameId.'"><input type="hidden" name="dependency_type" value="'.catalog_h($type).'"><input type="hidden" name="file_id" value="'.$fid.'"><button type="submit" class="button secondary gm-cleanup-button">Run cleanup</button></form></td></tr>';}
+        if($owners!==[]){echo '<table class="gm-table"><thead><tr><th>Owner file</th><th>Status</th><th class="num">Summary rows</th><th class="num">Stale missing</th><th class="num">Live dependency rows</th><th>Action</th></tr></thead><tbody>';
+            foreach($owners as $owner){$fid=(int)($owner['file_id']??0);echo '<tr><td class="mono">#'.$fid.'</td><td>'.catalog_h((string)($owner['scan_status']??'missing')).'</td><td class="num">'.(int)($owner['summary_rows']??0).'</td><td class="num">'.(int)($owner['stale_missing_rows']??0).'</td><td class="num">'.(int)($owner['live_dependency_rows']??0).'</td><td><span class="muted">Maintenance required (not available here)</span></td></tr>';}
             echo '</tbody></table>';}
-        echo '<p class="muted small">Cleanup rebuilds only that summary owner. For a failed owner it removes the stale summaries and writes nothing back. The button disables as soon as it is submitted; after a successful cleanup the owner no longer appears on reload.</p></div></section>';
+        echo '<p class="muted small">Legacy cleanup was not a real write operation; the control has been removed. '
+            . 'Investigate stale owners using the dedicated source-correct maintenance workflow.</p></div></section>';
     }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Summary</h2><p>Current rows classified as missing. Source-unresolved UT3 cooked export-outer imports are excluded.</p></div></div><div class="ui-section__body"><table class="gm-summary"><tbody>';
-    echo '<tr><th>Missing objects</th><td class="num"><strong>'.(int)$totals['missing_objects'].'</strong></td><td>Requested object identities that did not resolve.</td></tr>';
-    echo '<tr><th>Required packages</th><td class="num"><strong>'.(int)$totals['missing_packages'].'</strong></td><td>Logical packages containing those missing/rejected objects.</td></tr>';
-    echo '<tr><th>Affected files</th><td class="num"><strong>'.(int)$totals['files_with_missing'].'</strong></td><td>Verified files containing at least one missing dependency row.</td></tr>';
+    $displayMissing = static fn(string $key):string =>
+        $dependencyResultsUnavailable ? 'Unavailable' : number_format((int)$totals[$key]);
+    echo '<tr><th>Missing objects</th><td class="num"><strong>'.$displayMissing('missing_objects').'</strong></td><td>Requested object identities that did not resolve.</td></tr>';
+    echo '<tr><th>Required packages</th><td class="num"><strong>'.$displayMissing('missing_packages').'</strong></td><td>Logical packages containing those missing/rejected objects.</td></tr>';
+    echo '<tr><th>Affected files</th><td class="num"><strong>'.$displayMissing('files_with_missing').'</strong></td><td>Verified files containing at least one missing dependency row.</td></tr>';
     echo '</tbody></table></div></section>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Required packages</h2><p>Start here. Open a package to inspect its missing object paths and the files that require them.</p></div></div><div class="ui-section__body">';
-    if($packageRows===[])echo CatalogUi::emptyState('No missing packages','Nothing currently matches the selected scope/search.');
+    if($dependencyResultsUnavailable)echo CatalogUi::emptyState(
+        'Dependency results unavailable',
+        'No verified files are staged, or source-correct dependency publication is incomplete.'
+    );
+    elseif($packageRows===[])echo CatalogUi::emptyState('No missing packages','Nothing currently matches the selected scope/search.');
     else{echo'<table class="gm-table"><thead><tr><th>Package</th><th class="num">Missing objects</th><th class="num">Affected files</th><th></th></tr></thead><tbody>';
         foreach($packageRows as $packageRow){$name=(string)$packageRow['required_package'];$selected=strcasecmp($name,$selectedPackage)===0;$packageAnchor=gm_anchor_id('package',$name);$url=game_missing_url($gameId,$type,['q'=>$packageSearch,'package'=>$name]).'#'.$packageAnchor;
             echo'<tr id="'.catalog_h($packageAnchor).'"'.($selected?' class="gm-package-selected"':'').'><td><strong class="mono">'.catalog_h($name).'</strong></td><td class="num">'.(int)$packageRow['missing_object_rows'].'</td><td class="num">'.(int)$packageRow['requiring_file_count'].'</td><td class="gm-actions"><a class="button secondary" href="'.catalog_h($url).'">'.($selected?'Objects open':'Show objects').'</a></td></tr>';
@@ -204,7 +218,7 @@ CSS;
         echo'</tbody></table>';
     }
     echo'</div></section>';
-    if($isAdmin)echo '<script>document.querySelectorAll(".gm-cleanup-form").forEach(function(form){form.addEventListener("submit",function(event){var button=form.querySelector(".gm-cleanup-button");if(!button||button.disabled){event.preventDefault();return;}if(!window.confirm("Clean stale dependency summaries for this owner?")){event.preventDefault();return;}button.disabled=true;button.textContent="Cleaning...";});});</script>';
+
     catalog_foot();
 }catch(Throwable $error){
     if(!headers_sent())catalog_head('Game missing dependencies error');
