@@ -34,6 +34,34 @@ namespace {
     if (!is_file($rawToc) || !is_file($rawData)) {
         throw new \RuntimeException('Genuine current UE5 global original is missing.');
     }
+    // The actual admin unverified-files UI must expose the existing
+    // CSRF-protected trusted approval handler; the ordinary indexed-file
+    // bulk Import selected form must remain separate.
+    $unverifiedPage = file_get_contents(dirname(__DIR__, 2) . '/catalog/unverified-files.php');
+    $existingHandler = file_get_contents(dirname(__DIR__, 2) . '/catalog/iostore-import.php');
+    if (!is_string($unverifiedPage) || !is_string($existingHandler)) {
+        throw new \RuntimeException('Unverified review routes could not be inspected.');
+    }
+    foreach ([
+        'CatalogPublicIoStoreReviewService',
+        'IoStore contributions awaiting review',
+        'Approve &amp; queue IoStore import',
+        'catalog_csrf(\'iostore-import\')',
+        'name="action" value="approve_public_iostore"',
+        'name="review_key"',
+        'action="iostore-import.php"',
+        'name="game_id"',
+        'iostore-public-reviews',
+    ] as $required) {
+        if (!str_contains($unverifiedPage, $required)) {
+            throw new \RuntimeException('Admin unverified review UI is missing '. $required);
+        }
+    }
+    if (!str_contains($existingHandler, "=== 'approve_public_iostore'")
+        || !str_contains($existingHandler, "catalog_check_csrf('iostore-import')")
+        || !str_contains($existingHandler, 'CatalogQueueWorkerStarter')) {
+        throw new \RuntimeException('Unverified approval form does not target the actual trusted queued importer.');
+    }
     $sourceHashes = [hash_file('sha256',$rawToc),hash_file('sha256',$rawData)];
     if ($sourceHashes !== [
         '0f72c200169b09519ac727d0149ef4f3c35d6234f1326c7efe5ee0bcf04095e6',

@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadTransferStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicIoStoreReviewService;
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedFilesPageQuery;
 
 function uv_list_int(string $key, int $default = 0): int
@@ -187,6 +188,12 @@ try {
         : ['ready' => 0, 'pending' => 0, 'failed' => 0, 'missing' => 0, 'total' => 0];
     $summary = $model['summary'];
     $publicUploads = is_array($model['public_uploads'] ?? null) ? $model['public_uploads'] : [];
+    $publicIoStoreReviews = (new CatalogPublicIoStoreReviewService($db, $config))->pending();
+    $publicIoStoreGames = $publicIoStoreReviews !== []
+        ? catalog_all($db, 'SELECT g.id, g.name FROM ue_games g '
+            . 'JOIN ue_game_profiles p ON p.id=g.profile_id '
+            . 'WHERE p.is_active=1 AND UPPER(p.engine_key) LIKE "UE5%" ORDER BY g.name', [])
+        : [];
     $extensionOptions = $model['extension_options'];
     $engineOptions = $model['engine_options'];
 
@@ -236,6 +243,48 @@ CSS;
         . '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)($summary['indexed_bytes'] ?? 0))) . '</h2><p>Indexed queue storage</p></div>'
         . '</div>';
 
+    if ($publicIoStoreReviews !== []) {
+        echo '<section id="iostore-public-reviews" class="ui-section"><div class="ui-section__header"><div><h2>IoStore contributions awaiting review</h2>'
+            . '<p>Complete .utoc/.ucas pairs can be approved and imported by an administrator. '
+            . 'These are original container files, not individual unverified package records.</p></div></div>'
+            . '<div class="ui-section__body">';
+        foreach ($publicIoStoreReviews as $review) {
+            $ready = !empty($review['ready']);
+            $name = (string)$review['name'];
+            echo '<div class="card"><h3>' . catalog_h($name) . ' — IoStore container</h3>'
+                . '<p>' . (int)$review['toc_count'] . ' TOC and '
+                . (int)$review['part_count'] . ' UCAS partition(s), '
+                . catalog_h(catalog_bytes((int)$review['total_bytes'])) . ' retained in quarantine.</p>';
+            if (!$ready) {
+                echo '<p class="muted">Awaiting a complete, non-duplicated .utoc/.ucas pair. '
+                    . 'Import is unavailable until all parts are present.</p>';
+            } elseif ($publicIoStoreGames === []) {
+                echo '<p class="muted">No active UE5 target game is available for approval.</p>';
+            } else {
+                echo '<form method="post" action="iostore-import.php" data-ui-loading-form>'
+                    . '<input type="hidden" name="csrf" value="'
+                    . catalog_h(catalog_csrf('iostore-import')) . '">'
+                    . '<input type="hidden" name="action" value="approve_public_iostore">'
+                    . '<input type="hidden" name="review_key" value="'
+                    . catalog_h((string)$review['key']) . '">'
+                    . '<label>Target UE5 game <select name="game_id" required>';
+                foreach ($publicIoStoreGames as $game) {
+                    $id = (int)$game['id'];
+                    echo '<option value="' . $id . '"' . ($id === 14 ? ' selected' : '') . '>'
+                        . catalog_h((string)$game['name']) . '</option>';
+                }
+                echo '</select></label> <button type="submit" class="primary" '
+                    . 'onclick="return confirm('
+                    . '&quot;Approve this complete IoStore pair and queue an import for the selected game?&quot;'
+                    . ')">Approve &amp; queue IoStore import</button></form>'
+                    . '<p class="muted">Approval checks each retained file hash and TOC-declared '
+                    . 'partition before creating the existing IoStore import job.</p>';
+            }
+            echo '</div>';
+        }
+        echo '</div></section>';
+    }
+
     if ($publicUploads !== []) {
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Public contribution status</h2>'
             . '<p>Recent public upload processing outcomes and items still waiting for background validation.</p></div></div>'
@@ -272,6 +321,9 @@ CSS;
                 . '<td>' . catalog_h((string)($publicUpload['result_message'] ?? ''))
                 . ($resultFileId > 0
                     ? '<br><a href="file-info.php?id=' . $resultFileId . '">File #' . $resultFileId . '</a>'
+                    : '')
+                . ($status === 'container_pending'
+                    ? '<br><a href="#iostore-public-reviews">Review / import IoStore pair</a>'
                     : '')
                 . '</td>'
                 . '<td class="mono small">' . catalog_h((string)($publicUpload['updated_at'] ?? '')) . '</td></tr>';

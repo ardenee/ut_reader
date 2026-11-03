@@ -2605,7 +2605,8 @@
         "2026-11-03 zero-input UE5 scope correction: game14 has no verified staged files; the per-game Missing Dependencies page now reports unavailable explicitly, not a demonstrated 0 missing. The five-engine SQL website consumer regression includes this empty-game case and PRD original read-only publicationFreshness(14) returned verified=0/current=0/stale=0. Production V14 and authenticated browser output remain unverified.",
         "2026-11-03 current Satisfactory 1.2 UE5.6.1 source selection remains a legitimate part of this existing website publication blocker: the current Zen SOURCE_POLICY string says 5.8.3, private Satisfactory engine patch source is NOT required absent original serialization counterevidence; complete provider mount evidence remains unavailable, game14 PRD has zero verified original files, and no current v14 publication/HTTP mixed outcomes exist. 66 of 124234 package-store imports refer outside the single main container; none are automatically missing. Evidence tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
         "2026-11-03 UE5.6.1 source-release dispatch corrected: this is no longer a website-publication blocker. The remaining website acceptance depends on staging original game14 files and publishing real v14 dependencies, then HTTP/mixed outcomes. No private game engine source prerequisite. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
-        "2026-11-03 browser upload ingress corrected and unified archive viewing implemented; zero original game14 TOC/UCAS entries in PRD before user import. This does not prove live UI source-correct v14 publication. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
+        "2026-11-03 browser upload ingress corrected and unified archive viewing implemented; zero original game14 TOC/UCAS entries in PRD before user import. This does not prove live UI source-correct v14 publication. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json",
+        "2026-11-03 New Unverified Files admin approval control closes browser missing-action defect. Real pending PRD global IoStore pair is eligible, but it is not yet imported or v14 published. Do NOT mark website dependency PASS until real publication and HTTP testing. Evidence tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
@@ -2613,7 +2614,8 @@
         "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json",
         "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
         "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
-        "tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
+        "tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json",
+        "tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json"
       ],
       "epic_additional_source_anchors": [
         {
@@ -2708,7 +2710,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
         "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
         "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php",
-        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php"
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php",
+        "catalog/unverified-files.php"
       ],
       "dispatch_trace": "CatalogIoStoreImportJobHandler::handle -> CatalogIoStoreContainerStorage::import -> INDEX_IOSTORE_PACKAGE_NAMES -> PUBLISH_IOSTORE_PACKAGES -> CatalogZenIoStorePackagePublisher::publish -> Uedb5Ue5ZenIoStoreSnapshotBuilder::build",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
@@ -2734,7 +2737,8 @@
         "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php": "426ddf2a24624145275d528133e713ae3b5feae52e04eabe4cf87e42f084c7f6",
         "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php": "7b5f082ee593799738cb4dc7852830cb21821c0cd4e04c1d279ba248e5bf90d5",
         "catalog/src/Infrastructure/Storage/CatalogIoStoreIndexedPackageReader.php": "3bca1aaf71014b507f97c155f464134296707ed8f5ffc3847da16703c3345d45",
-        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167"
+        "catalog/src/Infrastructure/Metadata/Uedb5ZenSourcePolicy.php": "7e07454cae2e051df1c49aeeb59677c0f40b43412203f44f23b2411b7743b167",
+        "catalog/unverified-files.php": "139febc17d5f7f529df9e89243ca45f2e6f1134fe1063bdc1fbbd020a15ff71a"
       },
       "php_source_sites": [
         {
@@ -2766,11 +2770,13 @@
         "NEW original Satisfactory PRD read-only package source check (7 genuine chunks, 27241 total TOC chunks); 3 real UE5.8.3 classic engine assets, no payload execution, 98 real Zen dependency edges with 8 package projections isolated SQL, website no false missing; external soft packages unresolved without original mount.",
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
         "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
-        "2026-11-03 new actual browser entry/anonymous ingress paths: .utoc/.ucas are treated as paired IoStore containers, not classic packages; true current Satisfactory global source pair passed SHA-verified disposable review/queue proof, 7 negative guards and 10 browser pair selections. The original Epic-certified ingestion reader remains untouched. PRD physical import not executed. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
+        "2026-11-03 new actual browser entry/anonymous ingress paths: .utoc/.ucas are treated as paired IoStore containers, not classic packages; true current Satisfactory global source pair passed SHA-verified disposable review/queue proof, 7 negative guards and 10 browser pair selections. The original Epic-certified ingestion reader remains untouched. PRD physical import not executed. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json",
+        "2026-11-03 PRD live public original global.utoc/global.ucas pair recognized as ready from two quarantined rows; admin Unverified Files page now offers source-verified paired IoStore review/queue via original privileged iostore-import.php handler. Not a loose-package import. Original positive + seven negative integration cases passed. No PRD job was queued by the audit. Evidence tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json"
       ],
       "additional_evidence": [
         "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
-        "tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json"
+        "tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json",
+        "tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json"
       ]
     }
   ],

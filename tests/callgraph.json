@@ -2,10 +2,10 @@
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
   "nodes": 1028,
-  "edges_count": 3646,
+  "edges_count": 3648,
   "edge_types": {
-    "use": 1244,
-    "new": 957,
+    "use": 1245,
+    "new": 958,
     "static_or_expression": 1445
   },
   "ambiguous_class_names": {
@@ -21594,9 +21594,21 @@
     },
     {
       "from": "catalog/unverified-files.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "syntax": "new",
+      "line": 191
+    },
+    {
+      "from": "catalog/unverified-files.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "syntax": "use",
+      "line": 13
+    },
+    {
+      "from": "catalog/unverified-files.php",
       "to": "catalog/src/Infrastructure/Import/CatalogPublicUploadTransferStore.php",
       "syntax": "new",
-      "line": 147
+      "line": 148
     },
     {
       "from": "catalog/unverified-files.php",
@@ -21608,43 +21620,43 @@
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php",
       "syntax": "new",
-      "line": 168
+      "line": 169
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Infrastructure/Unverified/PdoUnverifiedFilesPageQuery.php",
       "syntax": "use",
-      "line": 13
+      "line": 14
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 200
+      "line": 207
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 212
+      "line": 219
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 358
+      "line": 410
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 200
+      "line": 207
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 338
+      "line": 390
     },
     {
       "from": "catalog/unverified-game-matches-refresh.php",

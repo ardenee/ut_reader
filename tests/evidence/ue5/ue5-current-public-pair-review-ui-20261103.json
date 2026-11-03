@@ -1,0 +1,65 @@
+{
+  "schema": "ue5-current-public-iostore-pair-admin-unverified-review-action-v1",
+  "date": "2026-11-03",
+  "discovery": "The production Unverified Files page displayed two CONTAINER_PENDING public upload rows but gave no import control. The ordinary unverified Import selected form is intentionally inapplicable to IoStore containers.",
+  "PRD_readonly_prechange": {
+    "public_upload_records": [
+      {
+        "id": 2329,
+        "file": "global.ucas",
+        "status": "container_pending"
+      },
+      {
+        "id": 2330,
+        "file": "global.utoc",
+        "status": "container_pending"
+      }
+    ],
+    "live_public_review_groups": 1,
+    "ready_groups": 1,
+    "group_name": "global",
+    "Toc_parts": 1,
+    "Ucas_parts": 1,
+    "combined_retained_bytes": 3543734,
+    "note": "Existing CatalogPublicIoStoreReviewService::pending() returned ready=true from actual PRD rows, using SELECT-only transaction. No details of upload grouping token or origin IP are preserved."
+  },
+  "actual_page_file": "catalog/unverified-files.php",
+  "actual_approval_handler": "catalog/iostore-import.php",
+  "code_entry": "CatalogPublicIoStoreReviewService::pending()",
+  "display_actions": [
+    "A separate IoStore contributions awaiting review panel before the ordinary public status list",
+    "Complete pair displays target active UE5 game selector (Satisfactory game14 preselected)",
+    "Button Approve & queue IoStore import POSTs the existing administrator-only iostore-import.php action approve_public_iostore",
+    "CSRF token uses existing iostore-import scope, not the ordinary unverified bulk-action token",
+    "Incomplete pairs remain visible but cannot be approved",
+    "Existing public upload status rows link to the actual review panel"
+  ],
+  "test": {
+    "script": "tests/tools/verify_iostore_public_admin_uploads.php",
+    "script_sha256": "5ae9e6bf000fa61f10c7355ad837d2a0305cf0048a023ac013121d7bce33adcc",
+    "test_result": "PASS",
+    "genuine_original_global_archive_byte_hashes_matched": true,
+    "positive_review_queue_handoff": true,
+    "negative_guards": [
+      "double_approval",
+      "invented_group",
+      "unknown_game",
+      "anonymous_promotion",
+      "orphan_toc",
+      "quarantine_hash_drift",
+      "TOC_partition_cardinality"
+    ],
+    "UI_review_form_contract_assertions": 9,
+    "import_job_created_on_PRD": false
+  },
+  "page_source_sha256": "139febc17d5f7f529df9e89243ca45f2e6f1134fe1063bdc1fbbd020a15ff71a",
+  "existing_handlers_unchanged": true,
+  "PRD_SQL_writes": 0,
+  "source_archive_modifications": 0,
+  "UE5_deps_v14_publication_verified": false,
+  "test_case_ids_added": 0,
+  "existing_contract_status": {
+    "PASS": 27,
+    "BLOCKED": 5
+  }
+}
