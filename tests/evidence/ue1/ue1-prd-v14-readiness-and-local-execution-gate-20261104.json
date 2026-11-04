@@ -1,0 +1,133 @@
+{
+  "schema": "UE1-website-dependency-real-production-precutover-readiness-v1",
+  "date": "2026-11-04",
+  "contract": "ue1-website-dependency",
+  "status": "BLOCKED",
+  "scope": "User-requested final UE1 production cutover; DEV-only read-only verification and original-source evidence reuse; no production Pass2 write.",
+  "epic_source": "Original v1.200, UT99 v432, Unreal 1.227 and v469f source-selected evidence already accepted in UE1 contracts. Do not conflate shared v69 with authority.",
+  "source_verification": "Previously accepted original UE1 native import/table/provider evidence reused; no repeated native tests or payload reading.",
+  "game_preflights": [
+    {
+      "game_id": 3,
+      "game": "UT99",
+      "verified": 74303,
+      "staged": 74303,
+      "missing_primary_provider": 0,
+      "invalid_staged": 0,
+      "current_v14": 0,
+      "remaining_v14": 74303,
+      "pass2_ready": true
+    },
+    {
+      "game_id": 12,
+      "game": "Unreal Gold",
+      "verified": 10788,
+      "staged": 10788,
+      "missing_primary_provider": 0,
+      "invalid_staged": 0,
+      "current_v14": 0,
+      "remaining_v14": 10788,
+      "pass2_ready": true
+    }
+  ],
+  "policy": "uedb5-dependency-pass-ue1-mount-v14",
+  "total_verified": 85091,
+  "total_current_v14": 0,
+  "remaining_v14": 85091,
+  "preflight_method": "The actual production catalog/bin/migrate-uedb5-dependencies.php --preflight for games 3 and 12, executed on DEV using read-only PRD database and original PRD metadata over UNC; no --apply.",
+  "website_http_from_DEV_using_PRD_readonly_mysql": [
+    {
+      "path": "catalog/file-examine.php?id=113256&tab=uses",
+      "status": 200,
+      "observed": "stale policy notice"
+    },
+    {
+      "path": "catalog/file-examine.php?id=1246569&tab=used-by",
+      "status": 200,
+      "observed": "stale policy notice"
+    },
+    {
+      "path": "catalog/file-info.php?id=113256",
+      "status": 200,
+      "observed": "stale policy notice"
+    },
+    {
+      "path": "catalog/file-info.php?id=1246569",
+      "status": 200,
+      "observed": "stale policy notice"
+    },
+    {
+      "path": "catalog/file-examine-dependencies.php?id=113256",
+      "status": 409,
+      "observed": "stale_dependency_projection=true, no requires or required_by"
+    },
+    {
+      "path": "catalog/file-examine-dependencies.php?id=1246569",
+      "status": 409,
+      "observed": "stale_dependency_projection=true, no requires or required_by"
+    },
+    {
+      "path": "catalog/game-missing.php?game_id=3",
+      "status": 200,
+      "observed": "Admin required, not accepted as authenticated Missing UI verification"
+    },
+    {
+      "path": "catalog/game-missing.php?game_id=12",
+      "status": 200,
+      "observed": "Admin required, not accepted as authenticated Missing UI verification"
+    }
+  ],
+  "production_access": {
+    "desktop_commander_connected_devices": [
+      "game-amd only"
+    ],
+    "prd_desktop_commander_connected": false,
+    "winrm_from_dev": "unavailable",
+    "wmi_from_dev": "unavailable",
+    "remote_task_scheduler_from_dev": "unavailable (network path not found)",
+    "unc_prd_storage": "accessible read-only preflight",
+    "local_prd_script_guard": "Requires $env:COMPUTERNAME equals Lelly-pc. Do not bypass or run writer on DEV.",
+    "full_database_and_metadata_restore_point": "NOT independently verified"
+  },
+  "original_prd_canaries": [
+    {
+      "game_id": 3,
+      "file_id": 113256,
+      "uedb5_present": true
+    },
+    {
+      "game_id": 12,
+      "file_id": 1246569,
+      "uedb5_present": true
+    }
+  ],
+  "release_safety": {
+    "allowed_now": "preflight, read-only source inspection, website stale-policy verification, hash comparisons",
+    "not_executed": "--apply production canary or 85091-file Pass2",
+    "reason": "Production-local execution and verified database+metadata backup/restore prerequisites not met through connected tools.",
+    "next_operation": "On Lelly-pc, verify production database and metadata backup/restore, then run the already-staged PRD-only script in canary mode, verify source-pinned canary results, and only then resume UE1-scoped bulk regeneration.",
+    "canary_command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Apache24\\htdocs\\unrealdb\\catalog\\bin\\apply-ue1-epic-policy-cutover.ps1 -Apply -CanaryOnly",
+    "bulk_command": "powershell -NoProfile -ExecutionPolicy Bypass -File C:\\Apache24\\htdocs\\unrealdb\\catalog\\bin\\apply-ue1-epic-policy-cutover.ps1 -Apply -Workers 2 -Limit 100",
+    "verifier_command": "C:\\php8.5\\php.exe C:\\Apache24\\htdocs\\unrealdb\\catalog\\bin\\verify-ue1-epic-policy-cutover.php",
+    "stop_condition": "Both games 85091/85091 current source SHA and v14, no old UE1 v13 rows, independent website counts and positive, negative, ambiguous outputs match current stored outcomes."
+  },
+  "code_sha256": {
+    "catalog/bin/apply-ue1-epic-policy-cutover.ps1": "ecc9880ca833f284ef485e94e23261f704a45afb12e16669f0aa9a44d4427f50",
+    "catalog/bin/verify-ue1-epic-policy-cutover.php": "79061ae7f87d244f094be4bcb0a19076627c95d80016599fa1a00e045272f48e",
+    "catalog/bin/migrate-uedb5-dependencies.php": "9f0b0d66acb637f9665b7ae84d6b82bab2499b764b4a43304d24f1818cdaa4f6",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+    "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
+    "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+    "catalog/file-info.php": "c4ea4c8f865707cb3d64b6effa861f831181dbf37840dd6ff591e7d04b25fdff"
+  },
+  "prd_cutover_runner_hash_matches_dev": true,
+  "prd_cutover_verifier_hash_matches_dev": true,
+  "prd_migration_runner_hash_matches_dev": true,
+  "temporary_readonly_probes": [
+    "D:/Temp/UnrealDB/ue1/preflight-ue1-v14-current-readonly.ps1",
+    "D:/Temp/UnrealDB/ue1/verify-ue1-current-shared-website-20261104.ps1",
+    "D:/Temp/UnrealDB/ue1/probe-prd-ue1-execution-prerequisites.ps1"
+  ],
+  "policy_observation": "UE1 v14 remains unexecuted. Report BLOCKED; do not count a preflight as successful production republishing or fabricated missing/resolved dependencies."
+}

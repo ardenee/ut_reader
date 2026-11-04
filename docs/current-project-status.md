@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## UE1 4 November 2026 - production cutover ready, NOT executed
+
+**UE1 website dependency remains BLOCKED, not PASS.** Genuine production read-only preflight on both UE1 games shows **85,091/85,091** verified files with staged current-format UEDB5 and primary provider keys: UT99 game #3 has 74,303 and Unreal Gold game #12 has 10,788. Both have zero invalid identities and complete staging, but **0/85,091 currently published under uedb5-dependency-pass-ue1-mount-v14**. Original source/native parser evidence was reused, not rerun.
+
+The current PHP website examiner and File Info rendered HTTP 200 on DEV using read-only PRD MySQL for original file IDs #113256 and #1246569, with stale-data notices; JSON dependency endpoints return HTTP 409 and hide old v13 links. Admin-only Missing pages cannot be verified unauthenticated. Existing production canary, migration and policy verifier scripts are SHA-identical across DEV and PRD; no original UE1 file or production database was modified.
+
+**Operational blocker:** PRD Lelly-pc is not connected to Desktop Commander. WinRM, WMI and remote Task Scheduler from DEV are unavailable. The scoped migration script enforces local PRD execution; the separate production rollout policy additionally requires a verified full database/metadata backup and restore point before writes. The script does not itself verify a full database backup, and no restore point has been independently verified. Do not bypass the guard by migrating 85,091 files from DEV over UNC storage and remote MySQL.
+
+**PRD-local execution after a verified backup/restore point:** run the already-staged PowerShell script C:\Apache24\htdocs\unrealdb\catalog\bin\apply-ue1-epic-policy-cutover.ps1 with -Apply -CanaryOnly; after both canaries pass, run it with -Apply -Workers 2 -Limit 100, then C:\php8.5\php.exe C:\Apache24\htdocs\unrealdb\catalog\bin\verify-ue1-epic-policy-cutover.php. The jobs are resumable, scoped to UE1 games 3 and 12, and preserve UE2-UE5 independent epochs.
+
+Evidence: [genuine UE1 preflight and website read-path status](../tests/evidence/ue1/ue1-prd-v14-readiness-and-local-execution-gate-20261104.json). The [single contract register](../tests/contracts.json) retains ue1-website-dependency=BLOCKED until actual source-correct production regeneration and website outcomes are verified.
+
+---
+
 ## Verified checkpoint: 4 November 2026 - seven UE5 operations closed
 
 **Current fixed operation-path register: 28 PASS / 4 BLOCKED across five Unreal engines. UE5 is 7/7 PASS in the implemented file/header/table/IoStore/dependency/website scope.** The four remaining blocked cases are UE1-UE4 website dependency views; their historical v13 database projections have not been republished under per-engine v14.

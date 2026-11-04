@@ -2,6 +2,10 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
+## UE1 current production gate (4 November 2026)
+
+UE1 preflight is 85,091/85,091 ready across UT99 (74,303) and Unreal Gold (10,788), with **0 current UE1 v14**. DEV PHP HTTP reads against PRD MySQL show correct stale suppression (examination/File Info 200 with notices; dependency JSON 409). The PRD-local production cutover requires a verified database/metadata backup and an active PRD command session, neither accessible through the current DEV-only Desktop Commander connection. **No production migration was launched or claimed. UE1 website-dependency remains BLOCKED.** See [new focused evidence](evidence/ue1/ue1-prd-v14-readiness-and-local-execution-gate-20261104.json).
+
 ## Current acceptance decision (4 November 2026)
 
 The fixed 32-case operation register records **28 PASS / 4 BLOCKED**. UE5 is **7/7 PASS** in its implemented reader, IoStore and source-backed website scope. The last ue5-website-dependency blocker is closed with genuine Satisfactory 27,240/27,240 current-policy packages, original imported-package identities, DEV PHP HTTP against production read-only MySQL, and exact DEV/PRD source SHA hashes. Only UE1-UE4 website-dependency contracts remain blocked, pending separate current-policy Pass 2 publication.

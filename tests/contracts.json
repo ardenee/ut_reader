@@ -1003,7 +1003,7 @@
         "F22"
       ],
       "status": "BLOCKED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "code_path_evidence": "ORIGINAL_UE1_PRD_85091_STAGED_TWO_READONLY_PREFLIGHTS_AND_REAL_DEV_HTTP_PRD_SQL_STALE_SUPPRESSION; PRD_LOCAL_WRITER_AND_BACKUP_GATE_UNMET",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -1037,9 +1037,9 @@
       "test_authorization": "Production implementation verified on original PRD metadata via disposable SQL publisher/website and actual PRD read-only preflight. PRD 85091-file data rollout separately pending.",
       "result_evidence": "tests/evidence/ue1/ue1-website-original-prd-isolated-current-stale-20261102.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
-        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
         "catalog/game-missing.php": "ea8b403468f1c5266b18248efdba7088861425e70cf56d59e3c4aaec0c493286",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508",
         "catalog/missing.php": "7ad4b1c856fa59d0e09d9e99504ee1622a5c3ee40ef7605b00e4b3f417c7f59a",
@@ -1057,7 +1057,7 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-03",
+      "reviewed_at": "2026-11-04",
       "current_review_source_sha256": {
         "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "69223b83d6f5376a3b0c1dc46b141e01e1a2c619f92384767aeb104f3f829995",
         "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b34de749ddd9932cfafd2da7774d314b6aae7c92d223454fec886a730a2363dc"
@@ -1073,16 +1073,18 @@
         "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
         "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified.",
         "2026-11-03 DEV shared source-path correction and source-correct read gates: isolated original UE5.8.3 classic assets prove unknown mount => source_unresolved and negative mounted set => no exception (fixture only); all five engine v14 policy, source payload SHA, dependency_completed_at and cached timestamp checks exercised in SQLite; read-only PRD v13 examples and 12 actual MySQL EXPLAIN queries checked. Historical v13 missing/resolved links are hidden on tested user-facing read paths. NO PRD SQL writes. Status remains BLOCKED: no v14 production dependency publication permitted, no complete native classic mounted-session differential; do not confuse PHP safety with Epic full parity.",
-        "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED."
+        "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED.",
+        "2026-11-04 verified REAL current PRD UE1 preflight: UT99 74303 and Unreal Gold 10788, 85091/85091 staged with 0 invalid or missing provider keys, but 0 v14 current. The actual current PHP examiner and File Info HTTP render stale notices, JSON requires/used_by return 409 fail closed. PRD-local policy migration/verification script SHA matches DEV. Only DEV Remote Desktop Commander connected; PRD WinRM/WMI/schtasks remote execution unavailable, and full DB+metadata restore point cannot be verified. No production writes or canary execution. Remains BLOCKED pending PRD-local backed-up canary then bulk current-policy Pass2. Evidence: tests/evidence/ue1/ue1-prd-v14-readiness-and-local-execution-gate-20261104.json"
       ],
       "epic_source_anchor_sha256": "560d2ab53d5094b44e1b7f3d56db0b958d63c64ddceebaa0531f6e30f0577462",
       "source_bound_to_game_context": "unreal-v1.200 source anchor; UT99 v432 / v469f and Unreal v1.227 game-specific overlays must be independently selected, not inferred from v69",
       "production_prd_readonly_access": "verified MySQL 8.4.11 192.168.0.55:3306; PHP file access via //192.168.0.55/c$/Apache24/htdocs/unrealdb/catalog/storage",
       "current_live_proof_sha_ref": "tests/evidence/ue1/prd-readonly-source-tables-20261102.json sha256:acc4e48f31da88ca756f2b935439ba29124929b00e3f480e9b9e0e0d1499f737",
-      "production_rollout_status": "PRD_UE1_85091_DEPENDENCY_ROWS_STALE_PASS2_NOT_APPLIED",
+      "production_rollout_status": "PRD_UE1_85091_STAGED_0_V14; PRD_LOCAL_EXECUTION_AND_BACKUP_GATE_NOT_MET; PASS2_NOT_APPLIED_2026_11_04",
       "historical_review_status": "PASS",
       "additional_evidence": [
-        "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json"
+        "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json",
+        "tests/evidence/ue1/ue1-prd-v14-readiness-and-local-execution-gate-20261104.json"
       ]
     },
     {
