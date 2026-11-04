@@ -2201,7 +2201,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
+      "production_rollout_status": "PRD_GAME14_SATISFACTORY_27240_ZEN_MEMBERS_CURRENT_UE5_V14_0_STALE_2026_11_04; SOURCE_UNRESOLVED_NOT_MISSING",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
@@ -2258,7 +2258,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
+      "production_rollout_status": "PRD_GAME14_SATISFACTORY_27240_ZEN_MEMBERS_CURRENT_UE5_V14_0_STALE_2026_11_04; SOURCE_UNRESOLVED_NOT_MISSING",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
@@ -2319,7 +2319,7 @@
       "out_of_scope_native_payload_loading": true,
       "scope_revised_at": "2026-11-02",
       "reviewed_at": "2026-11-03",
-      "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
+      "production_rollout_status": "PRD_GAME14_SATISFACTORY_27240_ZEN_MEMBERS_CURRENT_UE5_V14_0_STALE_2026_11_04; SOURCE_UNRESOLVED_NOT_MISSING",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
@@ -2401,7 +2401,7 @@
         }
       ],
       "reviewed_at": "2026-11-03",
-      "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
+      "production_rollout_status": "PRD_GAME14_SATISFACTORY_27240_ZEN_MEMBERS_CURRENT_UE5_V14_0_STALE_2026_11_04; SOURCE_UNRESOLVED_NOT_MISSING",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
@@ -2492,7 +2492,7 @@
         }
       ],
       "reviewed_at": "2026-11-03",
-      "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
+      "production_rollout_status": "PRD_GAME14_SATISFACTORY_27240_ZEN_MEMBERS_CURRENT_UE5_V14_0_STALE_2026_11_04; SOURCE_UNRESOLVED_NOT_MISSING",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
@@ -2537,8 +2537,8 @@
         "F17",
         "F22"
       ],
-      "status": "BLOCKED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_SATISFACTORY_SOURCE_INDEXED_SQL_PRD_V14_27240_OF_27240_AND_REAL_HTTP_DEV_PHP_READONLY_PRD_DB; SOURCE_BOUND_DUPLICATE_NEGATIVES; AUTHENTICATED_PRD_BROWSER_UNVERIFIED",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -2554,29 +2554,33 @@
         "catalog/missing.php",
         "catalog/game-page.php"
       ],
-      "dispatch_trace": "UE5 Zen selected source policy; do not infer UE5 classic game id",
+      "dispatch_trace": "public/admin IoStore intake -> indexed Zen members -> current v14 dependency packages/edges -> Uedb5DependencyPublicationScope current source policy and payload SHA -> PdoZenPackageUsedByQuery / PdoZenPackageUsesQuery -> file-examine-paged-core.php / file-info.php / file-examine-dependencies.php; game-missing and cross-examine SQL freshness verified read-only",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE5\\UE 5.8.3\\Engine\\Source\\Runtime\\CoreUObject\\Private\\Serialization\\PackageStore.cpp",
       "epic_symbol_to_verify": "PackageStore",
       "game_profiles": [
         "ue5-iostore",
         "ue5-classic-reader"
       ],
-      "source_provenance_constraint": "UE5 game ID 14 is currently registered to sourceKey ue5 (separate classic and Zen dispatch). Classic .uasset LinkerLoad / VerifyImport and mounted package paths are independent of Zen IoStore PackageStore. Original UE5.8.3 game14 PRD currently has no verified published files. Do not infer a native classic mounted environment from catalog candidate uniqueness or reuse a Zen source anchor as proof of classic behavior.",
+      "source_provenance_constraint": "UE5 game 14 now has 27,240 original published Zen members on PRD (Satisfactory Epic 5.6.1 format) with current UE5 v14 dependency policy; classic .uasset remains separate. Source-backed static catalogue FPackageId matches must not be conflated with native mounted-provider or VerifyImport selection.",
       "test_purpose": "UI reports missing or resolved dependency incorrectly",
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
+      "runtime_call_chain_verified": true,
       "test_authorization": "UE5.8.3 already native-certified bounded implemented code paths plus source-pinned current original read-only Zen/classic verification; early 5.0.0 source compared but 5.0.0 cooked byte fixtures not re-certified.",
-      "result_evidence": "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json",
+      "result_evidence": "tests/evidence/ue5/ue5-upload-dependency-and-website-final-closure-20261104.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
-        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
         "catalog/game-missing.php": "1292999398fc440adec8a801852590eae27484195433206564581420bd29b20c",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508",
         "catalog/missing.php": "7ad4b1c856fa59d0e09d9e99504ee1622a5c3ee40ef7605b00e4b3f417c7f59a",
-        "catalog/game-page.php": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e"
+        "catalog/game-page.php": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e",
+        "catalog/src/Infrastructure/Persistence/PdoZenPackageUsedByQuery.php": "4eab513d26f8444fe88259683f4d09911afc99cd3ccd500ae5e2105c23d8203e",
+        "catalog/src/Infrastructure/Persistence/PdoZenPackageUsesQuery.php": "e63b8a3d71797adcee8968c6b2eac1c9f3d63f4fde7157cdfebfd24f5d5c4faa",
+        "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+        "catalog/file-info.php": "c4ea4c8f865707cb3d64b6effa861f831181dbf37840dd6ff591e7d04b25fdff"
       },
       "php_source_sites": [
         {
@@ -2590,8 +2594,8 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-03",
-      "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
+      "reviewed_at": "2026-11-04",
+      "production_rollout_status": "PRD_GAME14_SATISFACTORY_27240_ZEN_MEMBERS_CURRENT_UE5_V14_0_STALE_2026_11_04; SOURCE_UNRESOLVED_NOT_MISSING",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
@@ -2606,7 +2610,8 @@
         "2026-11-03 current Satisfactory 1.2 UE5.6.1 source selection remains a legitimate part of this existing website publication blocker: the current Zen SOURCE_POLICY string says 5.8.3, private Satisfactory engine patch source is NOT required absent original serialization counterevidence; complete provider mount evidence remains unavailable, game14 PRD has zero verified original files, and no current v14 publication/HTTP mixed outcomes exist. 66 of 124234 package-store imports refer outside the single main container; none are automatically missing. Evidence tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
         "2026-11-03 UE5.6.1 source-release dispatch corrected: this is no longer a website-publication blocker. The remaining website acceptance depends on staging original game14 files and publishing real v14 dependencies, then HTTP/mixed outcomes. No private game engine source prerequisite. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
         "2026-11-03 browser upload ingress corrected and unified archive viewing implemented; zero original game14 TOC/UCAS entries in PRD before user import. This does not prove live UI source-correct v14 publication. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json",
-        "2026-11-03 New Unverified Files admin approval control closes browser missing-action defect. Real pending PRD global IoStore pair is eligible, but it is not yet imported or v14 published. Do NOT mark website dependency PASS until real publication and HTTP testing. Evidence tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json"
+        "2026-11-03 New Unverified Files admin approval control closes browser missing-action defect. Real pending PRD global IoStore pair is eligible, but it is not yet imported or v14 published. Do NOT mark website dependency PASS until real publication and HTTP testing. Evidence tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json",
+        "2026-11-04 FIXED: genuine PRD 27240/27240 current v14, zero stale, source exact FPackageId reverse references correctly rendered in actual PHP HTTP from DEV against PRD read-only SQL; 1 real Ramp recipe, 212 BC_Foundations consumers, 202 ACL consumers, negative missing, ambiguous provider fail closed; 7 HTTP renders and source-backed JSON/File Info checks. PRD HTTPS from DEV returned 403 for unauthenticated requests; authenticated PRD browser not claimed. Historical blocked conclusions above superseded. Evidence tests/evidence/ue5/ue5-upload-dependency-and-website-final-closure-20261104.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
@@ -2615,7 +2620,8 @@
         "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json",
         "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
         "tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json",
-        "tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json"
+        "tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json",
+        "tests/evidence/ue5/ue5-upload-dependency-and-website-final-closure-20261104.json"
       ],
       "epic_additional_source_anchors": [
         {
@@ -2763,7 +2769,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_GAME14_SATISFACTORY_ZERO_REGISTERED_IOSTORE_CONTAINERS_FILES_USER_DB_IMPORT_DEFERRED",
+      "production_rollout_status": "PRD_GAME14_SATISFACTORY_27240_ZEN_MEMBERS_CURRENT_UE5_V14_0_STALE_2026_11_04; SOURCE_UNRESOLVED_NOT_MISSING",
       "review_findings": [
         "PASS original registered UE5.8.3 implementation codepath: original Epic native metadata, TOC, package name/import/export, dependency and isolated durable ingest acceptance dated 2026-10-19 retained and pinned, not pointlessly repeated.",
         "NEW source-corrected game14 registry and original Zen retained-source validator. Real original member ID FCCBEBA8823DAA3A re-read from retained .utoc/.ucas and .zenpkg with exact original hashes; corruption detection rejects path, MD5 and original TOC SHA mismatches.",
@@ -2771,7 +2777,8 @@
         "Actual production game14 UE5 profile exists but has ZERO retained SQL IoStore containers/packages and zero staged files. This is a deliberate deferred database rollout, NOT a native reader failure. Earliest 5.0.0 source compared but actual cooked version 5.0.0 format not certified from original sample bytes.",
         "2026-11-03 Satisfactory original Epic UE5.6.1 source-release dispatch closed. Actual game14 Zen package 13616274F41D838E chose Epic 5.6.1 in the builder and all 98 dependency rows carried the correct source/resolver labels, without inventing missing packages. Five negative policy/mixed-release guards passed, legacy UE5.8.3 direct source remains available, and source-selected Xdebug method calls were retained. No PRD v14 publication or website certification was performed. tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",
         "2026-11-03 new actual browser entry/anonymous ingress paths: .utoc/.ucas are treated as paired IoStore containers, not classic packages; true current Satisfactory global source pair passed SHA-verified disposable review/queue proof, 7 negative guards and 10 browser pair selections. The original Epic-certified ingestion reader remains untouched. PRD physical import not executed. Evidence tests/evidence/ue5/ue5-public-admin-iostore-and-pakages-ui-20261103.json",
-        "2026-11-03 PRD live public original global.utoc/global.ucas pair recognized as ready from two quarantined rows; admin Unverified Files page now offers source-verified paired IoStore review/queue via original privileged iostore-import.php handler. Not a loose-package import. Original positive + seven negative integration cases passed. No PRD job was queued by the audit. Evidence tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json"
+        "2026-11-03 PRD live public original global.utoc/global.ucas pair recognized as ready from two quarantined rows; admin Unverified Files page now offers source-verified paired IoStore review/queue via original privileged iostore-import.php handler. Not a loose-package import. Original positive + seven negative integration cases passed. No PRD job was queued by the audit. Evidence tests/evidence/ue5/ue5-current-public-pair-review-ui-20261103.json",
+        "2026-11-04 actual PRD IoStore source import fully published: 27240 verified Zen members and current UE5 v14 Pass2 on all; upload and restore schedule source-correct dependency job durably from intake, with 13 bounded retry/deferral/failed-name tests. Historical second SQL examination backfill was specific to old publication; new publisher indexes examination in transaction. Evidence tests/evidence/ue5/ue5-upload-dependency-and-website-final-closure-20261104.json"
       ],
       "additional_evidence": [
         "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json",

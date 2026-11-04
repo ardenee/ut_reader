@@ -1,19 +1,19 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1028,
+  "total_files": 1045,
   "roles": {
-    "CONTAINER": 91,
-    "DATABASE": 119,
-    "DEPENDENCY": 60,
+    "CONTAINER": 108,
+    "DATABASE": 125,
+    "DEPENDENCY": 62,
     "ERROR": 34,
     "FILE": 7,
     "GENERAL": 152,
     "INGEST": 73,
-    "JOBS": 218,
+    "JOBS": 221,
     "LINKER": 27,
     "NAME": 4,
-    "OBJECT": 66,
+    "OBJECT": 69,
     "OPERATIONS": 19,
     "OUTPUT": 138,
     "SOURCE": 10,
@@ -26,7 +26,7 @@
     "ue2": 12,
     "ue3": 4,
     "ue4": 12,
-    "ue5": 41
+    "ue5": 58
   },
   "paths": [
     {
@@ -991,8 +991,8 @@
     },
     {
       "path": "catalog/assets/catalog-identities.js",
-      "sha256": "d172261c1974015ce84d4bf3889b0560904f6a238c93f1b18fe6dd71007265ff",
-      "bytes": 13590,
+      "sha256": "3badb995df19c28623b8dd3839273ba88faba8695540751f8ca77ecb0ae16a2f",
+      "bytes": 13819,
       "engine_hints": [
         "shared"
       ],
@@ -1103,8 +1103,8 @@
     },
     {
       "path": "catalog/assets/catalog-ui.js",
-      "sha256": "970191eccba6ed69bf84e2215343d19ab0d4831630907e81f1fc711667e34c6a",
-      "bytes": 50615,
+      "sha256": "e34f1707c147c7bf6b14c5eea8e8a42c48aa102792ba5b95b170e2d404d9d3b5",
+      "bytes": 50923,
       "engine_hints": [
         "shared"
       ],
@@ -1476,8 +1476,8 @@
     },
     {
       "path": "catalog/assets/unverified-file-actions.js",
-      "sha256": "0f39b17d1d5ffabc72131303b5f5f8aac7579282877e7a5a7d6144d3b3cea38f",
-      "bytes": 26224,
+      "sha256": "4161a02af761e448dfd72fc56870ab5e0a8055ca04611a254c661ee2e7808b75",
+      "bytes": 27540,
       "engine_hints": [
         "shared"
       ],
@@ -1705,6 +1705,36 @@
       "class": null
     },
     {
+      "path": "catalog/bin/backfill-zen-exam-headers.php",
+      "sha256": "8ce0880d9ca07152c1008248472d4013f8a474ce818f3e71cb164252ce93a74b",
+      "bytes": 2595,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "DATABASE"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
+      "path": "catalog/bin/backfill-zen-exam-projection.php",
+      "sha256": "48af3294b2529375f806c1ad3cc013be54e776bd4e651ad35234a2f8c8dd11fd",
+      "bytes": 2557,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "DATABASE"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
       "path": "catalog/bin/catalog-worker-detached.php",
       "sha256": "463d311da939af9c1213fbfd8631a62bfea40f630e636b781b5890fa54b19990",
       "bytes": 13574,
@@ -1918,6 +1948,21 @@
       "class": null
     },
     {
+      "path": "catalog/bin/index-zen-script-objects.php",
+      "sha256": "1ee669be68384586c20cfbbf8f22a7788370a68afb74c68aee3d9e824aecc400",
+      "bytes": 1676,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "OBJECT"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
       "path": "catalog/bin/inspect-unreal-file.php",
       "sha256": "31d68d4157e0083b1cf2ea037226f8c022a2b220f47b5a4866887e84efdc8357",
       "bytes": 40976,
@@ -1953,6 +1998,21 @@
         "shared"
       ],
       "path_roles": [
+        "DATABASE"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
+      "path": "catalog/bin/install-zen-exam-projection.php",
+      "sha256": "b2e0b9a16946fe3b65b0cad59875103cf2c6c6be3d505e726c2fb62b9d530a24",
+      "bytes": 2753,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
         "DATABASE"
       ],
       "review_priority": "RELATED",
@@ -2932,8 +2992,8 @@
     },
     {
       "path": "catalog/file-examine-dependencies.php",
-      "sha256": "8cf83435f32ba589b97b7396a6885203e4f3a401a456a8314b83ac321639ebc6",
-      "bytes": 3980,
+      "sha256": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
+      "bytes": 5629,
       "engine_hints": [
         "shared"
       ],
@@ -2988,8 +3048,8 @@
     },
     {
       "path": "catalog/file-examine-paged-core.php",
-      "sha256": "476641059b2e2b75825a0f16b5af5571dde182752f55d57e9a1caa8bf9e295c4",
-      "bytes": 27651,
+      "sha256": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+      "bytes": 46409,
       "engine_hints": [
         "shared"
       ],
@@ -3001,9 +3061,37 @@
       "class": null
     },
     {
+      "path": "catalog/file-examine-zen-exports.php",
+      "sha256": "022a7802519c12e9142fa8b40a1f5f8d0575dec1b70af0ac474acfb691e58672",
+      "bytes": 8457,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER"
+      ],
+      "review_priority": "ENTRYPOINT",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
+      "path": "catalog/file-examine-zen-tables.php",
+      "sha256": "3cf06b7574dbc6018afc50fd779938f2e37da2df2b6787d2c1f275b859323db0",
+      "bytes": 11941,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER"
+      ],
+      "review_priority": "ENTRYPOINT",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "and"
+    },
+    {
       "path": "catalog/file-examine.php",
-      "sha256": "c32192b3e55c0375cf92a9c6285a97f40c3d671d4bf9707c421ec0e2ea7175c7",
-      "bytes": 13834,
+      "sha256": "a4cb431c15bbe7d77f7ad77191a55535739d7c7a67a9b17134c5b57fb5d59aba",
+      "bytes": 14555,
       "engine_hints": [
         "shared"
       ],
@@ -3058,8 +3146,8 @@
     },
     {
       "path": "catalog/file-info.php",
-      "sha256": "8f495d3361633d33049a9d83b8d03977c542358b651776753c2d275fb6c41a1c",
-      "bytes": 14616,
+      "sha256": "c4ea4c8f865707cb3d64b6effa861f831181dbf37840dd6ff591e7d04b25fdff",
+      "bytes": 18759,
       "engine_hints": [
         "shared"
       ],
@@ -3142,8 +3230,8 @@
     },
     {
       "path": "catalog/game-files.php",
-      "sha256": "128c5a348fb298b4b944c1dbb0909f769a7e5ca19f8fb1699b95f23e2eb5b65f",
-      "bytes": 27694,
+      "sha256": "81e320dbb29d60aba516dcef8af5671107dfb1e55332ed89f325c01a073a16bb",
+      "bytes": 29782,
       "engine_hints": [
         "shared"
       ],
@@ -3198,8 +3286,8 @@
     },
     {
       "path": "catalog/game-paks.php",
-      "sha256": "401694770193a2fa128e941b4e1b21c3fe25b030d00463d954c6c23a57739dd4",
-      "bytes": 10612,
+      "sha256": "ccfb369c3895e47b5847b4d0e555755bc26daeec033f461d1575bc5bf837c9d2",
+      "bytes": 10761,
       "engine_hints": [
         "shared"
       ],
@@ -3366,8 +3454,8 @@
     },
     {
       "path": "catalog/iostore-info.php",
-      "sha256": "395c68f70ddddcd7f57a2eaabb9456ad8e4da7fccfbe4e72c1768595dfbb2335",
-      "bytes": 4929,
+      "sha256": "72ae9bd2b78d5e7c35699eaf093041236dde3b839dbe9cc9fb02fe1095ab61bf",
+      "bytes": 8709,
       "engine_hints": [
         "ue5"
       ],
@@ -4479,6 +4567,21 @@
       "class": null
     },
     {
+      "path": "catalog/migrations/202611040001_zen_exam_sql_projection.php",
+      "sha256": "a4de831e491b6e0603daded4ac3a81518bdcbe40d8325c8ddce99dbc38a8371c",
+      "bytes": 2309,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "DATABASE"
+      ],
+      "review_priority": "RELATED",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
       "path": "catalog/mirror-job.php",
       "sha256": "a7d3e7a2efb1a906d6a8b5eb5a7a523a76f64a260d56029e5bf7155b374b96d3",
       "bytes": 4314,
@@ -4750,8 +4853,8 @@
     },
     {
       "path": "catalog/public-upload.php",
-      "sha256": "25178060429fbc1bc1a7c1f842eeab8ed07aa1f3d017bee049c6d4a2ae57de02",
-      "bytes": 12327,
+      "sha256": "00ec6979729420350cba58851838d3fa4b1675418d79748c595549db3869c98c",
+      "bytes": 12477,
       "engine_hints": [
         "shared"
       ],
@@ -5650,8 +5753,8 @@
     },
     {
       "path": "catalog/src/Domain/Jobs/JobType.php",
-      "sha256": "986d351aace7a87f7fc0d70eb8b3c128c2c793287a6b59c1b8e00177da2f7544",
-      "bytes": 6694,
+      "sha256": "aa9cd7aff32f7139727c6f2b2e24f8e59d9221326b08bbae1c28d02e494fabc8",
+      "bytes": 6943,
       "engine_hints": [
         "shared"
       ],
@@ -7454,6 +7557,20 @@
       "class": "CatalogIoStoreMemberCatalogPublisher"
     },
     {
+      "path": "catalog/src/Infrastructure/Import/CatalogIoStoreRetainedFamilyMatcher.php",
+      "sha256": "6b05c68623f1b5a63c22310592059f4d768ed013671ab365bfe0b68bbe74e6b2",
+      "bytes": 6258,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogIoStoreRetainedFamilyMatcher"
+    },
+    {
       "path": "catalog/src/Infrastructure/Import/CatalogIoStoreUploadRoutingPolicy.php",
       "sha256": "9bc0700e96381d1d68a6957a50f98fc4c8d7027795ed0d3e64748cb033c8a78f",
       "bytes": 923,
@@ -7598,8 +7715,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
-      "sha256": "5ca75d00133c680ae61d2fc672df5e63e4c0bed756ccc8614b7de2c8732c9aec",
-      "bytes": 11909,
+      "sha256": "c54f231a22a55e6a72d94f7ccbf8183f18c3a74e88cbf29231fbe3b796f2a2f9",
+      "bytes": 15466,
       "engine_hints": [
         "ue5"
       ],
@@ -7612,8 +7729,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
-      "sha256": "faabc49ed1e61ecba2bff9962d00a79a3f09b1d1f002d1048522ad2d32b33be8",
-      "bytes": 26863,
+      "sha256": "7586590d0a9e6444d88cd8d79c27b48563cffe4304f002c0a1e585b5a4a231da",
+      "bytes": 28863,
       "engine_hints": [
         "shared"
       ],
@@ -7795,8 +7912,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
-      "sha256": "714c1d8f16cafbb3c89d585b39158478975e1146cd86e004678976eeb8a4b321",
-      "bytes": 6349,
+      "sha256": "cfa4ed3d6d8ace7dcd2fe70ecfa69a5963af0d4b010dd62b29aaa6a56fdca3da",
+      "bytes": 7509,
       "engine_hints": [
         "ue5"
       ],
@@ -8284,8 +8401,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php",
-      "sha256": "5026c3a4921be189fec8e04e27d91f604ce9fe780973f6b333b7ff6a29c4d357",
-      "bytes": 4237,
+      "sha256": "e87120008754fa96ecb2d99031e3e740f3b77230afc5ca8c6e7118a1cba7ffe5",
+      "bytes": 4197,
       "engine_hints": [
         "ue5"
       ],
@@ -8298,9 +8415,25 @@
       "class": "CatalogIoStoreBackupJobHandler"
     },
     {
+      "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "sha256": "a96e4d1902d00598924742424335c894a3fd5316bad9a66a76beb998c04a11a6",
+      "bytes": 7274,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "DEPENDENCY",
+        "JOBS"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogIoStoreDependencyPassJobHandler"
+    },
+    {
       "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
-      "sha256": "7ce57e03c3cfd53c3060d0514ad5b4d1ad4090de274bc32d40f83b855098804e",
-      "bytes": 4555,
+      "sha256": "75bdcf9a370c4ea49e4708e29fc693f2fb6dccd6ea6ec620dd04a6228c20ae32",
+      "bytes": 6119,
       "engine_hints": [
         "ue5"
       ],
@@ -8314,8 +8447,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
-      "sha256": "3f526c52f1099bf291bf200c26067a6a3c2d47e88d37ac0407e378fe942a08cd",
-      "bytes": 5029,
+      "sha256": "ed7623a4fa08942888a03518f0762fbf6de58c62933b32c0c3c854aa9b8fb1ea",
+      "bytes": 7455,
       "engine_hints": [
         "ue5"
       ],
@@ -8341,6 +8474,21 @@
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "CatalogIoStoreNameIndexJobHandler"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Jobs/CatalogIoStorePostImportJobs.php",
+      "sha256": "eaacfc497464103f667429278bdba479e075030fdfd27820afab268a3adaf2d8",
+      "bytes": 1970,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "JOBS"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogIoStorePostImportJobs"
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogJobDisplayStatus.php",
@@ -8458,8 +8606,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
-      "sha256": "0ce9ecb53f6b5fd3252ad48154a28ad46b65bc3ff3d4e2e701345a3fffa201e8",
-      "bytes": 14271,
+      "sha256": "6b5ba1252a8bc346811da8d15de04fbb80e5182dd1ff320e76af5f674b37272f",
+      "bytes": 14536,
       "engine_hints": [
         "shared"
       ],
@@ -8882,8 +9030,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php",
-      "sha256": "95561d48fd436692799a24e337803b3288b3f8aa017b98d198a09318136085bc",
-      "bytes": 14982,
+      "sha256": "4882fdab22905eff00af4e81eb760acfec06e38e0f29bd3a098118153c983438",
+      "bytes": 16078,
       "engine_hints": [
         "shared"
       ],
@@ -8964,6 +9112,22 @@
       "review_priority": "RELATED",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "CatalogWorkerRuntimeStateStore"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "sha256": "5314b6296725e8a3ea157513760bc07715b773eb639cb1543e2878537ee2f63e",
+      "bytes": 6136,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "DATABASE",
+        "JOBS"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogZenExamBackfillJobHandler"
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/GameBackupExportJobHandler.php",
@@ -9404,6 +9568,36 @@
       "class": "CatalogUnrealIdentityHash"
     },
     {
+      "path": "catalog/src/Infrastructure/Metadata/CatalogZenCookedScriptLabelLookup.php",
+      "sha256": "35954b714ec9d8d385e49a40cdef705f9171a8efff0cac1d421097e7383685ca",
+      "bytes": 4048,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "OBJECT"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogZenCookedScriptLabelLookup"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "sha256": "e82364eb4aa61256a7769e8e230d3606fdcbee981937489f1bfb1e4a48f843be",
+      "bytes": 10669,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "DEPENDENCY"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogZenStaticDependencyLookup"
+    },
+    {
       "path": "catalog/src/Infrastructure/Metadata/CompactDependencyEncoding.php",
       "sha256": "be9f9b17b5604c8e0c23f1f247afa430b58ed875bc55bd336ecaec533e27a44a",
       "bytes": 845,
@@ -9476,8 +9670,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/PdoUedb5CompactCandidatePublisher.php",
-      "sha256": "e7d0d866627a20efdfd05b0a58d03a1f1fde65968ef20fc04b0b1ebf0b09588f",
-      "bytes": 7149,
+      "sha256": "ef8b47356ac72526b32921602572ceb17c5bfe1fc4af61c838305553f1ec4f20",
+      "bytes": 9188,
       "engine_hints": [
         "shared"
       ],
@@ -9587,6 +9781,36 @@
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "deliberately"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "sha256": "02481e3888111ce36fcb91edb24ee648e5e07e3e59f54e149512d242316b7d17",
+      "bytes": 15790,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "DATABASE"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "PdoZenExamProjection"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "sha256": "617b151a72ed2387d7061edd3a243983a1a941f4d9a6aea0a7a10b1879b922b1",
+      "bytes": 4427,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER",
+        "OBJECT"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "PdoZenScriptObjectProjector"
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
@@ -9789,8 +10013,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
-      "sha256": "3c186fecf42f7fb947971f289aefc5625cb2d49dd35bbda5b44e5bf74f9a5746",
-      "bytes": 16806,
+      "sha256": "c78c4edb4a398d374a107a6cf58cfe65ceea1f76044204d9d31d3e14bc8c13e0",
+      "bytes": 17027,
       "engine_hints": [
         "ue5"
       ],
@@ -9887,8 +10111,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
-      "sha256": "f2b8b3aa6f5f840b2a68e233d23f095b841bf867d75e430b9901e6ba9ed11b00",
-      "bytes": 42287,
+      "sha256": "1255149a7c87d6702be8f295f7ddb92b58717dd889af7bb6b6ef12eb1914fe4b",
+      "bytes": 44358,
       "engine_hints": [
         "shared"
       ],
@@ -9944,8 +10168,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php",
-      "sha256": "74c89cd901714583d3b796b408036505d05c38726ef88b37eb850c1105999f0d",
-      "bytes": 10733,
+      "sha256": "cacd8b88672aab496525ccf144831e6eb5f35ff2a9a551e6be8bc8875b9309ec",
+      "bytes": 11014,
       "engine_hints": [
         "shared"
       ],
@@ -10201,8 +10425,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
-      "sha256": "7b5f082ee593799738cb4dc7852830cb21821c0cd4e04c1d279ba248e5bf90d5",
-      "bytes": 18172,
+      "sha256": "bd1e0de9f608e6b9e24f68740e2cc9fb99d5368b0fb05b2af10c913fbae8b6bd",
+      "bytes": 19239,
       "engine_hints": [
         "ue5"
       ],
@@ -11056,8 +11280,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
-      "sha256": "3e9d5d2ca5618efe83647267099651de693a2f0c02076a2e558473079d35c0e1",
-      "bytes": 9350,
+      "sha256": "e81fa8859be963b4c44c051326fe20411e0041d74484dac2b0f136c6797b414b",
+      "bytes": 13365,
       "engine_hints": [
         "shared"
       ],
@@ -11326,8 +11550,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
-      "sha256": "ebe3097d825bd4ca57bf2fb8233a882c2e787632d0a9880818c433e45a84a513",
-      "bytes": 18743,
+      "sha256": "0f88136f8684df23886d6a2b701a8ea0bf2b13c496ee33e64ca327f5b1581d4c",
+      "bytes": 21411,
       "engine_hints": [
         "shared"
       ],
@@ -11499,6 +11723,34 @@
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "PdoWorkflowChildStateQuery"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Persistence/PdoZenPackageUsedByQuery.php",
+      "sha256": "4eab513d26f8444fe88259683f4d09911afc99cd3ccd500ae5e2105c23d8203e",
+      "bytes": 4388,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "PdoZenPackageUsedByQuery"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Persistence/PdoZenPackageUsesQuery.php",
+      "sha256": "e63b8a3d71797adcee8968c6b2eac1c9f3d63f4fde7157cdfebfd24f5d5c4faa",
+      "bytes": 2786,
+      "engine_hints": [
+        "ue5"
+      ],
+      "path_roles": [
+        "CONTAINER"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "PdoZenPackageUsesQuery"
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/SchemaInspector.php",
@@ -14369,8 +14621,8 @@
     },
     {
       "path": "catalog/unverified-files-action.php",
-      "sha256": "2272fb60bacd6c2a583cd69fe4f933640db1268ec885f942b20174955047aaa2",
-      "bytes": 9845,
+      "sha256": "337b830031e34d86d1c3d632d34012e822e419feadecac2bd471ab7b317ccc86",
+      "bytes": 12597,
       "engine_hints": [
         "shared"
       ],
@@ -14383,8 +14635,8 @@
     },
     {
       "path": "catalog/unverified-files.php",
-      "sha256": "139febc17d5f7f529df9e89243ca45f2e6f1134fe1063bdc1fbbd020a15ff71a",
-      "bytes": 30977,
+      "sha256": "a34a1ee2110987d5a67fd2555f0ee01340ffbb7c0a9a2275ea11939ba595ef7b",
+      "bytes": 32119,
       "engine_hints": [
         "shared"
       ],

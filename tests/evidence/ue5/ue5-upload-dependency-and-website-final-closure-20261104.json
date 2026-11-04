@@ -1,0 +1,143 @@
+{
+  "schema": "UE5-website-source-backed-closure-v1",
+  "date": "2026-11-04",
+  "contract_key": "ue5-website-dependency",
+  "contract_ids": [
+    "F17",
+    "F22"
+  ],
+  "status": "PASS",
+  "scope": "Actual UnrealDB Zen/IoStore public/admin upload follow-up and source-backed read-only website operations; UE5.8.3 native engine evidence reused, Satisfactory current game source release Epic 5.6.1 selected independently.",
+  "failure_reasons_fixed": [
+    "Original Satisfactory import on 2026-11-03 completed before the automatic dependency follow-up was first added in commit 7f0b46b9. Manual source-correct Pass 2 job 9525707 completed 27240/27240.",
+    "IoStore upload/restore previously relied on final publication callback for dependency scheduling; a persisted dependency job is now created at initial intake with duplicate-key retry and wait/failure handling.",
+    "UE5 Zen Used By and File Info formerly counted only runtime-style resolved links and incorrectly omitted exact serialized ImportedPackageIds, giving zero links for genuine source-backed package relationships.",
+    "UE5 File Info performed an avoidable physical .uedb5 read even when its current Zen tables were all in SQL, breaking browsing without storage."
+  ],
+  "production_verified_read_only": {
+    "game_id": 14,
+    "game": "Satisfactory",
+    "container_id": 2,
+    "container": "FactoryGame-WindowsServer.utoc",
+    "valid_original_published_packages": 27240,
+    "current_dependency_policy": "uedb5-dependency-pass-ue5-mount-v14",
+    "verified_files": 27240,
+    "current_files": 27240,
+    "stale_files": 0,
+    "projected_missing_objects": 0,
+    "projected_missing_packages": 0,
+    "explanation": "Current v14 rows have no source-verified missing object claims; unresolved external mounted dependencies are NOT automatically missing.",
+    "backend_jobs": [
+      {
+        "job": 9525704,
+        "type": "IMPORT_IOSTORE_CONTAINER",
+        "status": "completed"
+      },
+      {
+        "job": 9525705,
+        "type": "INDEX_IOSTORE_PACKAGE_NAMES",
+        "status": "completed",
+        "remaining": 0
+      },
+      {
+        "job": 9525706,
+        "type": "PUBLISH_IOSTORE_PACKAGES",
+        "status": "completed",
+        "remaining": 0
+      },
+      {
+        "job": 9525707,
+        "type": "INDEX_IOSTORE_DEPENDENCIES",
+        "status": "completed",
+        "done": 27240,
+        "remaining": 0
+      },
+      {
+        "job": 9525708,
+        "type": "BACKFILL_ZEN_EXAM_SQL",
+        "status": "completed",
+        "done": 27240,
+        "remaining": 0,
+        "reason": "Historical import SQL exam backfill; new publication writes exam tables directly"
+      }
+    ],
+    "original_source_reference_samples": [
+      {
+        "provider_file_id": 1363210,
+        "provider_package": "/Game/FactoryGame/Buildable/Building/Ramp/Desc_RampInverted_8x4_Corner_02",
+        "referencing_file_id": 1364723,
+        "source_import_references": 4,
+        "static_used_by_total": 1
+      },
+      {
+        "provider_file_id": 1379013,
+        "provider_package": "/Game/FactoryGame/Interface/UI/InGame/BuildMenu/BuildCategories/BC_Foundations",
+        "static_used_by_total": 212
+      },
+      {
+        "provider_file_id": 1386377,
+        "provider_package": "/ACLPlugin/ACLAnimBoneCompressionSettings",
+        "static_used_by_total": 202
+      },
+      {
+        "provider_file_id": 1384899,
+        "static_used_by_total": 0
+      },
+      {
+        "consumer_file_id": 1363870,
+        "unmatched_serialized_package_id": "876BB7A606A509BB",
+        "result": "No indexed package match; not source-verified engine missing"
+      }
+    ],
+    "source_sql_check": "D:/Temp/UnrealDB/ue5/verify-ue5-remaining-admin-source-queries.php read-only SELECT transaction; 27240/27240 v14; missing objects/packages 0; cross-examine 0 candidates without fabricated missing."
+  },
+  "verification": {
+    "queue_handoff": "13 PASS named assertions on original durable queue API and SQLite publication gate, including normal/metadata-only, retry, deferral, failed indexing, empty container.",
+    "source_website": "10 PASS named HTML assertions across 202 source refs, three pages, zero refs, missing provider and classic UE1 route, using PHP built-in HTTP and read-only PRD MySQL.",
+    "file_info_and_json": "18 PASS assertions on real PRD source rows; exact reverse file IDs, 202 ACL references, 200-row bound and next-page link, source-unavailable .uedb5 remains readable via SQL, original .utoc name.",
+    "provider_negatives": "4 PASS SQLite scenarios: two physical providers ambiguous, reverse attribution fail-closed, unique exact provider, no provider unresolved.",
+    "production_version_source": "Epics 5.6.1-release source selected for current Satisfactory 1.2 serialized tables; original UE5.8.3 native IoStore/package evidence already accepted and intentionally not rerun.",
+    "website_execution": "Actual DEV PHP 8.5 HTTP renderer with production MySQL SELECT-only and deliberately unavailable local storage; PRD deployed file SHA256 identical.",
+    "production_http_constraint": "Direct unauthenticated HTTPS from DEV to PRD for file-info and file-examine returned HTTP 403. Authenticated browser UI on PRD has not been independently exercised; do NOT claim an authenticated PRD HTTP acceptance.",
+    "cross_engine_impact": "tests/tools/impact.py: file-examine-dependencies.php, file-examine-paged-core.php and file-info.php shared; UE5 branch is explicit extension=zenpkg and classic branches retained; UE1 sample HTTP examiner passed with same DEV SQL-only setup, original non-Zen file-info cannot run with intentionally non-existent storage and was not counted."
+  },
+  "verification_scripts_held_on_DEV": [
+    "D:/Temp/UnrealDB/ue5/verify-ue5-upload-dependency-handoff.php",
+    "D:/Temp/UnrealDB/ue5/verify-real-source-zen-reverse-query.php",
+    "D:/Temp/UnrealDB/ue5/verify-ue5-website-ambiguous-provider-guard.php",
+    "D:/Temp/UnrealDB/ue5/check-ue5-website-usedby-acceptance.py",
+    "D:/Temp/UnrealDB/ue5/validate-website-fileinfo-json-static.py",
+    "D:/Temp/UnrealDB/ue5/verify-ue5-remaining-admin-source-queries.php"
+  ],
+  "changed_code_sha256": {
+    "catalog/src/Infrastructure/Jobs/CatalogIoStorePostImportJobs.php": "eaacfc497464103f667429278bdba479e075030fdfd27820afab268a3adaf2d8",
+    "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php": "75bdcf9a370c4ea49e4708e29fc693f2fb6dccd6ea6ec620dd04a6228c20ae32",
+    "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php": "e87120008754fa96ecb2d99031e3e740f3b77230afc5ca8c6e7118a1cba7ffe5",
+    "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php": "a96e4d1902d00598924742424335c894a3fd5316bad9a66a76beb998c04a11a6",
+    "catalog/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php": "4882fdab22905eff00af4e81eb760acfec06e38e0f29bd3a098118153c983438",
+    "catalog/src/Infrastructure/Persistence/PdoZenPackageUsedByQuery.php": "4eab513d26f8444fe88259683f4d09911afc99cd3ccd500ae5e2105c23d8203e",
+    "catalog/src/Infrastructure/Persistence/PdoZenPackageUsesQuery.php": "e63b8a3d71797adcee8968c6b2eac1c9f3d63f4fde7157cdfebfd24f5d5c4faa",
+    "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+    "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
+    "catalog/file-info.php": "c4ea4c8f865707cb3d64b6effa861f831181dbf37840dd6ff591e7d04b25fdff"
+  },
+  "prior_source_proofs_sha256": {
+    "tests/evidence/ue5/ue5-seven-implemented-583-codepaths-real-original-20261102.json": "68b3d1dd4f6c8565ebba7cd7a7d45004dfb54a07e221ceba3f1f6ec7a71cc62e",
+    "tests/evidence/ue5/ue5-genuine-native-classic-and-engine-owned-dispatch-20261103.json": "339cc324b509b3c415f4603bb0960651573294ba4cc74ac35b9f970676fd27d1",
+    "tests/evidence/ue5/ue5-current-satisfactory-561-source-audit-20261103.json": "507208b4beb4decac9c5c0ab2cd619e9a87204dac218f2e2fafb7290674b1df0",
+    "tests/evidence/ue5/ue5-current-satisfactory-561-source-policy-dispatch-20261103.json": "039aefff436701aa543719887a009f05ede69837faa04fab7ca4defb014fb3ff",
+    "tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json": "20167ad4e03672d45bfc6a9fd1d4d03c677fb275bc017c8ba65ddc3571bb4e90"
+  },
+  "commits": {
+    "new_intake_followup": "9ba48789",
+    "static_website_links": "89e776e8",
+    "previous_late_callback": "7f0b46b9"
+  },
+  "deployment": "DEV to GitHub main to PRD; 10 modified website/worker files SHA256 verified by remote PowerShell robocopy. No original Epic source, PRD game bytes or database changed in this verification.",
+  "limitations": [
+    "The 7/7 register describes bounded implemented UE5 reader/website operations, not every UE5 binary format or private game-engine patch.",
+    "UE5.0.0 first cooked Zen format differs from UE5.8.3 and has no independent original cooked-fixture native byte certification; do not claim first-release Zen acceptance.",
+    "No independently authenticated production browser session; direct PRD HTTP returns 403.",
+    "Static indexed-package matches describe file catalogue presence. Without original mounted engine context they do not establish runtime loader-selected provider or prove an absent package is missing."
+  ]
+}

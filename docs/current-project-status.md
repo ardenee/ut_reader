@@ -1,10 +1,24 @@
 # UnrealDB current project status
 
-## Verified checkpoint: 3 November 2026 - reader code 32/32, PRD dependency SQL pending
+## Verified checkpoint: 4 November 2026 - seven UE5 operations closed
 
-The existing implementation-derived source-parity register remains **32/32 PASS**
-(UE1 6, UE2 7, UE3 6, UE4 6, UE5 7) within defined original native/source
-boundaries, not certification of every engine release. Original UE5.0.0
+**Current fixed operation-path register: 28 PASS / 4 BLOCKED across five Unreal engines. UE5 is 7/7 PASS in the implemented file/header/table/IoStore/dependency/website scope.** The four remaining blocked cases are UE1-UE4 website dependency views; their historical v13 database projections have not been republished under per-engine v14.
+
+**PRD Satisfactory game 14:** FactoryGame-WindowsServer.utoc retained and indexed 27,240 original Zen packages. Durable source-backed dependency pass job #9525707 completed all 27,240/27,240, leaving 0 stale UE5 v14 policy publications. Current missing-dependency SQL projections contain 0 explicitly source-proven missing objects; source-unknown mounted references remain unresolved rather than inferred missing. Historical Zen SQL-examination backfill job #9525708 completed separately; new package publication writes examination rows atomically.
+
+**Upload lifecycle fixed and deployed:** commit [9ba48789](https://github.com/ardenee/ut_reader/commit/9ba48789) schedules name indexing, member publication and a durable dependency follow-up from initial IoStore upload/backup restore. The dependency job defers until publication completes, reports failed name indexing and reuses active dedupe keys on retry. 13 named handoff checks passed. Metadata-only global.utoc is not misclassified as package-bearing.
+
+**UE5 web and dependency closure:** commit [89e776e8](https://github.com/ardenee/ut_reader/commit/89e776e8) corrects File Info, Uses, Used By and the JSON endpoint for verified Zen packages. Real exact FPackageId references from current UEDB5 summary records produce 1 consumer for Ramp #1363210, 212 for BC_Foundations #1379013, and 202 for ACLAnimBoneCompressionSettings #1386377. Pagination, negative provider and duplicate physical provider cases are checked without claiming native runtime mount resolution. Local PHP HTTP views ran against production MySQL read-only with unavailable .uedb5 storage to verify SQL-only browsing. Ten changed worker/web source files were deployed DEV to GitHub to PRD, with SHA-256 comparisons.
+
+**Closure boundary:** these results verify seven implemented UnrealDB UE5 operations, reusing accepted Epic 5.8.3 native comparisons and current Satisfactory 5.6.1 selected-source evidence, not every historical UE5 cooked format. UE5.0.0 first-release 44-byte Zen summary has not been independently validated from genuine 5.0 cooked bytes. Direct unauthenticated PRD HTTPS requests from DEV returned 403; authenticated production browser UI is not independently proven, although DEV HTTP plus PRD read-only MySQL and PRD code hashes are. No Epic source, original PRD package bytes or PRD SQL changed in this closure audit.
+
+Accepted evidence: [UE5 auto dependency and website F17/F22 closeout](../tests/evidence/ue5/ue5-upload-dependency-and-website-final-closure-20261104.json) and [single operation register](../tests/contracts.json).
+
+---
+
+## Historical checkpoint: 3 November 2026 - superseded by UE5 live publication
+
+The 3 November source-parity summary described 32 implemented code paths, but the live end-to-end contract register still had five website blockers then. This does not represent 32 end-to-end passes. Original UE5.0.0
 FZenPackageSummary is **44 bytes** (GraphDataOffset), versus 5.8.3
 **52 bytes** (dependency bundles/imported names). The source-pinned 5.8.3
 Zen reader must not be advertised as native-verified for UE5.0.0 cooked bytes;

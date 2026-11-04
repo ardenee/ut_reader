@@ -2,6 +2,12 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
+## Current acceptance decision (4 November 2026)
+
+The fixed 32-case operation register records **28 PASS / 4 BLOCKED**. UE5 is **7/7 PASS** in its implemented reader, IoStore and source-backed website scope. The last ue5-website-dependency blocker is closed with genuine Satisfactory 27,240/27,240 current-policy packages, original imported-package identities, DEV PHP HTTP against production read-only MySQL, and exact DEV/PRD source SHA hashes. Only UE1-UE4 website-dependency contracts remain blocked, pending separate current-policy Pass 2 publication.
+
+See [UE5 final evidence](evidence/ue5/ue5-upload-dependency-and-website-final-closure-20261104.json). Previous **27 PASS / 5 BLOCKED** statements below describe historical 3 November observations and are superseded. Direct unauthenticated PRD HTTPS from DEV returned 403; an authenticated production browser session is not independently demonstrated. UE5.0.0 first-release Zen cooked-byte acceptance is outside the verified 5.6.1/5.8.3 scope.
+
 ## Canonical files
 - [TEST-PLAN.md](TEST-PLAN.md): 32 concrete operation/path cases with source, fixture, user risk and stopping condition, generated from contracts.json.
 - [contracts.json](contracts.json): ONE live register with 24 risk categories (not tests), 32 actual implementation-derived operation cases and a single current decision per case. NOT_REVIEWED means end-to-end proof has not yet been mapped, NOT that historical accepted proof is invalid.

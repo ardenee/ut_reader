@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1028,
-  "edges_count": 3648,
+  "nodes": 1045,
+  "edges_count": 3778,
   "edge_types": {
-    "use": 1245,
-    "new": 958,
-    "static_or_expression": 1445
+    "use": 1275,
+    "new": 986,
+    "static_or_expression": 1517
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -2165,6 +2165,18 @@
       "line": 71
     },
     {
+      "from": "catalog/bin/backfill-download-geoip-country.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 131
+    },
+    {
+      "from": "catalog/bin/backfill-invalid-ue-system-errors.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 37
+    },
+    {
       "from": "catalog/bin/backfill-invalid-ue-system-errors.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
@@ -2211,6 +2223,60 @@
       "to": "catalog/src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php",
       "syntax": "use",
       "line": 13
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-headers.php",
+      "to": "catalog/bin/catalog-worker-detached.php",
+      "syntax": "static_or_expression",
+      "line": 31
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-headers.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "new",
+      "line": 20
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-headers.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "use",
+      "line": 5
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-headers.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+      "syntax": "new",
+      "line": 19
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-headers.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+      "syntax": "use",
+      "line": 6
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-projection.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "new",
+      "line": 16
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-projection.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "use",
+      "line": 6
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-projection.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+      "syntax": "new",
+      "line": 15
+    },
+    {
+      "from": "catalog/bin/backfill-zen-exam-projection.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+      "syntax": "use",
+      "line": 7
     },
     {
       "from": "catalog/bin/catalog-worker-detached.php",
@@ -2343,6 +2409,48 @@
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
       "line": 100
+    },
+    {
+      "from": "catalog/bin/index-zen-script-objects.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "syntax": "new",
+      "line": 31
+    },
+    {
+      "from": "catalog/bin/index-zen-script-objects.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "syntax": "use",
+      "line": 8
+    },
+    {
+      "from": "catalog/bin/index-zen-script-objects.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "new",
+      "line": 30
+    },
+    {
+      "from": "catalog/bin/index-zen-script-objects.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "use",
+      "line": 7
+    },
+    {
+      "from": "catalog/bin/install-zen-exam-projection.php",
+      "to": "catalog/src/Infrastructure/Persistence/MigrationRunner.php",
+      "syntax": "use",
+      "line": 9
+    },
+    {
+      "from": "catalog/bin/install-zen-exam-projection.php",
+      "to": "catalog/src/Infrastructure/Persistence/SchemaInspector.php",
+      "syntax": "new",
+      "line": 34
+    },
+    {
+      "from": "catalog/bin/install-zen-exam-projection.php",
+      "to": "catalog/src/Infrastructure/Persistence/SchemaInspector.php",
+      "syntax": "use",
+      "line": 8
     },
     {
       "from": "catalog/bin/job-control.php",
@@ -2619,6 +2727,12 @@
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
       "syntax": "use",
       "line": 14
+    },
+    {
+      "from": "catalog/bin/repair-archive-child-queues.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 80
     },
     {
       "from": "catalog/bin/repair-background-job-compatibility.php",
@@ -3027,6 +3141,12 @@
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
       "line": 10
+    },
+    {
+      "from": "catalog/bin/sync-uedb5-provider-keys.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 21
     },
     {
       "from": "catalog/bin/sync-uedb5-provider-keys.php",
@@ -4076,19 +4196,31 @@
       "from": "catalog/file-examine-paged-core.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
       "syntax": "static_or_expression",
-      "line": 43
+      "line": 87
     },
     {
       "from": "catalog/file-examine-paged-core.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
       "syntax": "use",
-      "line": 13
+      "line": 15
+    },
+    {
+      "from": "catalog/file-examine-paged-core.php",
+      "to": "catalog/src/Presentation/Ui/Support/Html.php",
+      "syntax": "static_or_expression",
+      "line": 50
+    },
+    {
+      "from": "catalog/file-examine-zen-tables.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStateFrameReader.php",
+      "syntax": "static_or_expression",
+      "line": 53
     },
     {
       "from": "catalog/file-examine.php",
       "to": "catalog/src/Application/Catalog/CatalogPackageHeaderInspector.php",
       "syntax": "static_or_expression",
-      "line": 259
+      "line": 272
     },
     {
       "from": "catalog/file-examine.php",
@@ -4100,7 +4232,7 @@
       "from": "catalog/file-examine.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
       "syntax": "new",
-      "line": 173
+      "line": 175
     },
     {
       "from": "catalog/file-examine.php",
@@ -4112,7 +4244,7 @@
       "from": "catalog/file-examine.php",
       "to": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
       "syntax": "new",
-      "line": 168
+      "line": 170
     },
     {
       "from": "catalog/file-examine.php",
@@ -4160,13 +4292,13 @@
       "from": "catalog/file-info.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 105
+      "line": 217
     },
     {
       "from": "catalog/file-info.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
-      "line": 106
+      "line": 218
     },
     {
       "from": "catalog/file-maintenance.php",
@@ -4344,9 +4476,15 @@
     },
     {
       "from": "catalog/game-files.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 344
+    },
+    {
+      "from": "catalog/game-files.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 397
+      "line": 399
     },
     {
       "from": "catalog/game-files.php",
@@ -4358,7 +4496,7 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "syntax": "new",
-      "line": 403
+      "line": 405
     },
     {
       "from": "catalog/game-files.php",
@@ -4370,49 +4508,49 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 106
+      "line": 108
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 546
+      "line": 577
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Badge.php",
       "syntax": "static_or_expression",
-      "line": 106
+      "line": 108
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 119
+      "line": 121
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 480
+      "line": 482
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/LoadingState.php",
       "syntax": "static_or_expression",
-      "line": 472
+      "line": 474
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 437
+      "line": 439
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 475
+      "line": 477
     },
     {
       "from": "catalog/game-manager.php",
@@ -4482,6 +4620,12 @@
     },
     {
       "from": "catalog/game-page.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 66
+    },
+    {
+      "from": "catalog/game-page.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
       "line": 214
@@ -4491,6 +4635,12 @@
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
       "line": 106
+    },
+    {
+      "from": "catalog/game-paks.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 94
     },
     {
       "from": "catalog/game-paks.php",
@@ -4532,7 +4682,7 @@
       "from": "catalog/game-paks.php",
       "to": "catalog/src/Presentation/Ui/Component/Badge.php",
       "syntax": "static_or_expression",
-      "line": 184
+      "line": 186
     },
     {
       "from": "catalog/game-paks.php",
@@ -4544,7 +4694,7 @@
       "from": "catalog/game-paks.php",
       "to": "catalog/src/Presentation/Ui/Component/IconButton.php",
       "syntax": "static_or_expression",
-      "line": 189
+      "line": 191
     },
     {
       "from": "catalog/game-paks.php",
@@ -4569,6 +4719,12 @@
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
       "line": 85
+    },
+    {
+      "from": "catalog/game-upks.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 77
     },
     {
       "from": "catalog/game-upks.php",
@@ -5078,19 +5234,43 @@
       "from": "catalog/iostore-info.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 22
+      "line": 24
+    },
+    {
+      "from": "catalog/iostore-info.php",
+      "to": "catalog/class-remap.php",
+      "syntax": "static_or_expression",
+      "line": 53
+    },
+    {
+      "from": "catalog/iostore-info.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 29
+    },
+    {
+      "from": "catalog/iostore-info.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "new",
+      "line": 69
+    },
+    {
+      "from": "catalog/iostore-info.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "use",
+      "line": 6
     },
     {
       "from": "catalog/iostore-info.php",
       "to": "catalog/src/Infrastructure/Persistence/SchemaInspector.php",
       "syntax": "new",
-      "line": 18
+      "line": 20
     },
     {
       "from": "catalog/iostore-info.php",
       "to": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerIndexer.php",
       "syntax": "static_or_expression",
-      "line": 12
+      "line": 14
     },
     {
       "from": "catalog/iostore-info.php",
@@ -5102,19 +5282,19 @@
       "from": "catalog/iostore-info.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 43
+      "line": 45
     },
     {
       "from": "catalog/iostore-info.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 70
+      "line": 122
     },
     {
       "from": "catalog/iostore-info.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 43
+      "line": 45
     },
     {
       "from": "catalog/iostore-package-download.php",
@@ -5375,6 +5555,12 @@
       "line": 182
     },
     {
+      "from": "catalog/lib/CatalogDependencyDiagnostics.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 9
+    },
+    {
       "from": "catalog/lib/CatalogDependencySchema.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoDependencySchemaManager.php",
       "syntax": "new",
@@ -5487,6 +5673,12 @@
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
       "line": 20
+    },
+    {
+      "from": "catalog/lib/CatalogPerformance.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 248
     },
     {
       "from": "catalog/lib/CatalogPublicAccess.php",
@@ -5817,6 +6009,12 @@
       "to": "catalog/src/Infrastructure/Downloads/CatalogDownloadRangeStreamer.php",
       "syntax": "use",
       "line": 13
+    },
+    {
+      "from": "catalog/lib/ExternalMirrors.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 37
     },
     {
       "from": "catalog/lib/FederationAuth.php",
@@ -6473,6 +6671,12 @@
       "line": 4
     },
     {
+      "from": "catalog/migrations/202611040001_zen_exam_sql_projection.php",
+      "to": "catalog/src/Infrastructure/Persistence/SchemaInspector.php",
+      "syntax": "use",
+      "line": 4
+    },
+    {
       "from": "catalog/mirror-job.php",
       "to": "catalog/src/Infrastructure/Maintenance/CatalogExternalMirrorAdminService.php",
       "syntax": "new",
@@ -6765,6 +6969,12 @@
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
       "line": 91
+    },
+    {
+      "from": "catalog/pak-info.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 75
     },
     {
       "from": "catalog/pak-info.php",
@@ -7401,6 +7611,12 @@
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
       "line": 377
+    },
+    {
+      "from": "catalog/src/Application/Federation/CatalogFederationConflictListService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 45
     },
     {
       "from": "catalog/src/Application/Federation/CatalogFederationConflictListService.php",
@@ -8075,6 +8291,12 @@
       "line": 147
     },
     {
+      "from": "catalog/src/Infrastructure/Downloads/CatalogBaseGameProtectionAdminService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 135
+    },
+    {
       "from": "catalog/src/Infrastructure/Downloads/CatalogDownloadAuditService.php",
       "to": "catalog/src/Infrastructure/Downloads/CatalogGeoIpCountryResolver.php",
       "syntax": "new",
@@ -8460,6 +8682,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Federation/CatalogFederationInventoryActions.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 292
+    },
+    {
+      "from": "catalog/src/Infrastructure/Federation/CatalogFederationInventoryActions.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
       "line": 313
@@ -8520,6 +8748,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Federation/CatalogFederationJoinApiService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 129
+    },
+    {
+      "from": "catalog/src/Infrastructure/Federation/CatalogFederationJoinApiService.php",
       "to": "catalog/src/Infrastructure/Federation/CatalogFederationApiException.php",
       "syntax": "new",
       "line": 30
@@ -8553,6 +8787,12 @@
       "to": "catalog/src/Infrastructure/Federation/CatalogFederationPolicyValue.php",
       "syntax": "static_or_expression",
       "line": 74
+    },
+    {
+      "from": "catalog/src/Infrastructure/Federation/CatalogFederationPeerInventorySyncService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 132
     },
     {
       "from": "catalog/src/Infrastructure/Federation/CatalogFederationPublicJoinRequestService.php",
@@ -9512,7 +9752,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 203
+      "line": 276
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
@@ -9522,9 +9762,21 @@
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreRetainedFamilyMatcher.php",
+      "syntax": "new",
+      "line": 65
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogPublicUploadTransferStore.php",
+      "syntax": "new",
+      "line": 140
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "new",
-      "line": 161
+      "line": 234
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
@@ -9536,7 +9788,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 202
+      "line": 275
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
@@ -9552,6 +9804,18 @@
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 425
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogIoStoreRetainedFamilyMatcher.php",
+      "syntax": "new",
+      "line": 170
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
       "to": "catalog/src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php",
       "syntax": "new",
       "line": 49
@@ -9560,7 +9824,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
       "to": "catalog/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php",
       "syntax": "new",
-      "line": 340
+      "line": 374
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogPublicUploadBatchPreflight.php",
@@ -9830,7 +10094,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5BaseProjectionPublisher.php",
       "syntax": "new",
-      "line": 96
+      "line": 101
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
@@ -9842,13 +10106,25 @@
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5MigrationStatusRepository.php",
       "syntax": "new",
-      "line": 98
+      "line": 104
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5MigrationStatusRepository.php",
       "syntax": "use",
       "line": 16
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "new",
+      "line": 116
+    },
+    {
+      "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "use",
+      "line": 17
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
@@ -9860,7 +10136,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataContainer.php",
       "syntax": "static_or_expression",
-      "line": 53
+      "line": 54
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
@@ -9872,7 +10148,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
       "syntax": "new",
-      "line": 69
+      "line": 70
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
@@ -9884,7 +10160,7 @@
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataSnapshotWriter.php",
       "syntax": "new",
-      "line": 92
+      "line": 95
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
@@ -9896,19 +10172,19 @@
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "syntax": "new",
-      "line": 100
+      "line": 106
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "syntax": "use",
-      "line": 17
+      "line": 18
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 88
+      "line": 90
     },
     {
       "from": "catalog/src/Infrastructure/Import/CatalogZenIoStorePackagePublisher.php",
@@ -10005,6 +10281,12 @@
       "to": "catalog/src/Presentation/Ui/Component/Progress.php",
       "syntax": "static_or_expression",
       "line": 140
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 253
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php",
@@ -10629,6 +10911,12 @@
       "to": "catalog/src/Presentation/Ui/Component/Progress.php",
       "syntax": "static_or_expression",
       "line": 79
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogBackgroundJobHistoryCleanupQueue.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 115
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogBackgroundJobHistoryCleanupQueue.php",
@@ -11394,6 +11682,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 422
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php",
       "to": "catalog/src/Application/Jobs/JobExecutionContext.php",
       "syntax": "use",
       "line": 12
@@ -11874,6 +12168,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogIoStorePostImportJobs.php",
+      "syntax": "new",
+      "line": 61
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
       "line": 60
@@ -11909,6 +12209,66 @@
       "line": 13
     },
     {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Application/Jobs/JobExecutionContext.php",
+      "syntax": "use",
+      "line": 8
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/ClaimedJob.php",
+      "syntax": "use",
+      "line": 10
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "static_or_expression",
+      "line": 29
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "use",
+      "line": 11
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
+      "syntax": "static_or_expression",
+      "line": 69
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "new",
+      "line": 96
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "use",
+      "line": 12
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+      "syntax": "new",
+      "line": 140
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+      "syntax": "use",
+      "line": 13
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 114
+    },
+    {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
       "to": "catalog/src/Application/Jobs/JobExecutionContext.php",
       "syntax": "use",
@@ -11924,7 +12284,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 29
+      "line": 31
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
@@ -11934,21 +12294,57 @@
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
-      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogIoStorePostImportJobs.php",
       "syntax": "new",
-      "line": 72
+      "line": 98
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
-      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "syntax": "new",
+      "line": 95
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "syntax": "use",
+      "line": 14
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "new",
+      "line": 93
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
+      "syntax": "static_or_expression",
+      "line": 94
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "use",
       "line": 13
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "new",
+      "line": 74
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "use",
+      "line": 15
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
       "to": "catalog/src/Infrastructure/Storage/CatalogIoStoreContainerStorage.php",
       "syntax": "new",
-      "line": 61
+      "line": 63
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
@@ -11972,7 +12368,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 19
+      "line": 20
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
@@ -11984,25 +12380,43 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
       "to": "catalog/src/Infrastructure/Import/CatalogIoStoreMemberCatalogPublisher.php",
       "syntax": "new",
-      "line": 56
+      "line": 61
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
       "to": "catalog/src/Infrastructure/Import/CatalogIoStoreMemberCatalogPublisher.php",
       "syntax": "use",
-      "line": 11
+      "line": 12
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "new",
-      "line": 48
+      "line": 50
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "use",
-      "line": 12
+      "line": 13
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "new",
+      "line": 114
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "use",
+      "line": 11
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalSerializedObjectReader.php",
+      "syntax": "static_or_expression",
+      "line": 112
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
@@ -12041,6 +12455,18 @@
       "line": 12
     },
     {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStorePostImportJobs.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "static_or_expression",
+      "line": 27
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogIoStorePostImportJobs.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "use",
+      "line": 8
+    },
+    {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobDisplayStatus.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
@@ -12063,6 +12489,12 @@
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
       "line": 66
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 206
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php",
@@ -12188,7 +12620,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Application/Jobs/JobWorker.php",
       "syntax": "new",
-      "line": 195
+      "line": 197
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12224,7 +12656,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php",
       "syntax": "new",
-      "line": 167
+      "line": 169
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12236,19 +12668,19 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php",
       "syntax": "new",
-      "line": 169
+      "line": 171
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php",
       "syntax": "new",
-      "line": 182
+      "line": 184
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php",
       "syntax": "new",
-      "line": 174
+      "line": 176
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12289,6 +12721,12 @@
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php",
+      "syntax": "new",
+      "line": 165
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
       "syntax": "new",
       "line": 163
     },
@@ -12356,7 +12794,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php",
       "syntax": "new",
-      "line": 165
+      "line": 167
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12374,13 +12812,13 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "syntax": "new",
-      "line": 178
+      "line": 180
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php",
       "syntax": "new",
-      "line": 191
+      "line": 193
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12404,7 +12842,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogStorageMaintenanceJobHandler.php",
       "syntax": "new",
-      "line": 189
+      "line": 191
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12429,6 +12867,12 @@
       "to": "catalog/src/Infrastructure/Jobs/CatalogUnverifiedMetadataRepairJobHandler.php",
       "syntax": "new",
       "line": 129
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "syntax": "new",
+      "line": 164
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12476,7 +12920,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 196
+      "line": 198
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12861,6 +13305,12 @@
       "to": "catalog/src/Infrastructure/Persistence/PdoWorkerOwnership.php",
       "syntax": "use",
       "line": 16
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 183
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php",
@@ -14183,6 +14633,60 @@
       "line": 17
     },
     {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 56
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Application/Jobs/JobExecutionContext.php",
+      "syntax": "use",
+      "line": 9
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/ClaimedJob.php",
+      "syntax": "use",
+      "line": 11
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "static_or_expression",
+      "line": 30
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "use",
+      "line": 12
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "new",
+      "line": 63
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "use",
+      "line": 13
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+      "syntax": "new",
+      "line": 62
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataReader.php",
+      "syntax": "use",
+      "line": 14
+    },
+    {
       "from": "catalog/src/Infrastructure/Jobs/GameBackupExportJobHandler.php",
       "to": "catalog/src/Application/Jobs/JobCancellationRequested.php",
       "syntax": "use",
@@ -14271,6 +14775,12 @@
       "to": "catalog/src/Domain/Jobs/ClaimedJob.php",
       "syntax": "use",
       "line": 19
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/GameBackupImportJobHandler.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 505
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/GameBackupImportJobHandler.php",
@@ -14586,6 +15096,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 167
+    },
+    {
+      "from": "catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
       "syntax": "static_or_expression",
       "line": 215
@@ -14697,6 +15213,12 @@
       "to": "catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php",
       "syntax": "static_or_expression",
       "line": 67
+    },
+    {
+      "from": "catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 296
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php",
@@ -15030,6 +15552,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 153
+    },
+    {
+      "from": "catalog/src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
       "line": 537
@@ -15093,6 +15621,12 @@
       "to": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedQueueStorage.php",
       "syntax": "use",
       "line": 18
+    },
+    {
+      "from": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 228
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogVerifiedFileRenameService.php",
@@ -15192,6 +15726,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Maintenance/CatalogZeroGuidRepairService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 55
+    },
+    {
+      "from": "catalog/src/Infrastructure/Maintenance/CatalogZeroGuidRepairService.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogProjectionReconciliationQueue.php",
       "syntax": "static_or_expression",
       "line": 117
@@ -15243,6 +15783,12 @@
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
       "line": 10
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 190
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php",
@@ -15395,6 +15941,36 @@
       "line": 7
     },
     {
+      "from": "catalog/src/Infrastructure/Metadata/CatalogZenCookedScriptLabelLookup.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 4
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "to": "catalog/lib/CatalogDependencyDiagnostics.php",
+      "syntax": "static_or_expression",
+      "line": 146
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "to": "catalog/src/Infrastructure/Metadata/CatalogZenCookedScriptLabelLookup.php",
+      "syntax": "static_or_expression",
+      "line": 122
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionContract.php",
+      "syntax": "static_or_expression",
+      "line": 84
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 4
+    },
+    {
       "from": "catalog/src/Infrastructure/Metadata/CompactDependencyEncoding.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
@@ -15512,7 +16088,7 @@
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5CompactCandidatePublisher.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5CompactCandidateProjectionBuilder.php",
       "syntax": "static_or_expression",
-      "line": 95
+      "line": 121
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5CompactCandidatePublisher.php",
@@ -15561,6 +16137,12 @@
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
       "line": 5
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/PdoUedb5MigrationStatusRepository.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 51
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/PdoUedb5MigrationStatusRepository.php",
@@ -15797,6 +16379,36 @@
       "line": 36
     },
     {
+      "from": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
+      "syntax": "static_or_expression",
+      "line": 313
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 4
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
+      "syntax": "static_or_expression",
+      "line": 88
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenScriptObjectsReader.php",
+      "syntax": "static_or_expression",
+      "line": 33
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/PdoZenScriptObjectProjector.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
+      "syntax": "static_or_expression",
+      "line": 4
+    },
+    {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
@@ -15957,6 +16569,12 @@
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
       "line": 5
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5CutoverReadinessVerifier.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 159
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5CutoverReadinessVerifier.php",
@@ -16128,6 +16746,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 524
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php",
       "syntax": "new",
       "line": 59
@@ -16268,25 +16892,25 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 381
+      "line": 388
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
       "syntax": "new",
-      "line": 257
+      "line": 264
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5BinaryReader.php",
       "syntax": "static_or_expression",
-      "line": 303
+      "line": 310
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreCodec.php",
       "syntax": "new",
-      "line": 56
+      "line": 57
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
@@ -16406,37 +17030,37 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/PdoUedb5ProviderKeyPublisher.php",
       "syntax": "new",
-      "line": 459
+      "line": 498
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php",
       "syntax": "static_or_expression",
-      "line": 514
+      "line": 553
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameSourceRegistry.php",
       "syntax": "static_or_expression",
-      "line": 126
+      "line": 142
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "new",
-      "line": 197
+      "line": 228
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "static_or_expression",
-      "line": 202
+      "line": 234
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataContainer.php",
       "syntax": "static_or_expression",
-      "line": 101
+      "line": 117
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
@@ -16448,7 +17072,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MigrationStatus.php",
       "syntax": "static_or_expression",
-      "line": 63
+      "line": 79
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
@@ -16460,31 +17084,31 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5SqlProjectionBuilder.php",
       "syntax": "static_or_expression",
-      "line": 457
+      "line": 496
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 211
+      "line": 250
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5Ut4SnapshotBuilder.php",
       "syntax": "static_or_expression",
-      "line": 255
+      "line": 294
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ValidationException.php",
       "syntax": "new",
-      "line": 91
+      "line": 107
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ZenPackageReader.php",
       "syntax": "static_or_expression",
-      "line": 121
+      "line": 60
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5MigrationValidator.php",
@@ -16533,6 +17157,12 @@
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
       "line": 4
+    },
+    {
+      "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 199
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
@@ -16586,7 +17216,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5MetadataContainer.php",
       "syntax": "static_or_expression",
-      "line": 203
+      "line": 207
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php",
@@ -16610,7 +17240,7 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php",
       "to": "catalog/src/Presentation/Ui/Component/Section.php",
       "syntax": "static_or_expression",
-      "line": 233
+      "line": 237
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5RuntimeProviderSnapshotLoader.php",
@@ -16946,13 +17576,13 @@
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreContainerHeaderReader.php",
       "syntax": "static_or_expression",
-      "line": 35
+      "line": 207
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5IoStoreTocReader.php",
       "syntax": "static_or_expression",
-      "line": 30
+      "line": 41
     },
     {
       "from": "catalog/src/Infrastructure/Metadata/Uedb5Ue5ZenIoStoreSnapshotBuilder.php",
@@ -17568,6 +18198,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoBackgroundJobFileTreeQuery.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 301
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoBackgroundJobFileTreeQuery.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
       "line": 66
@@ -17724,6 +18360,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoCompactCaseInsensitiveExportResolver.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 216
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoCompactCaseInsensitiveExportResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogUnrealIdentityHash.php",
       "syntax": "static_or_expression",
       "line": 223
@@ -17849,6 +18491,12 @@
       "line": 86
     },
     {
+      "from": "catalog/src/Infrastructure/Persistence/PdoDuplicateGroupListQuery.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 60
+    },
+    {
       "from": "catalog/src/Infrastructure/Persistence/PdoFederationConflictListQuery.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
@@ -17886,6 +18534,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoFederationInventoryListQuery.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 127
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoFederationInventoryListQuery.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
       "line": 61
@@ -17903,22 +18557,46 @@
       "line": 24
     },
     {
+      "from": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 211
+    },
+    {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
-      "line": 81
+      "line": 82
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 221
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 46
+      "line": 47
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "use",
       "line": 14
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
+      "to": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "syntax": "new",
+      "line": 226
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
+      "to": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "syntax": "use",
+      "line": 16
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
@@ -17955,6 +18633,12 @@
       "to": "catalog/src/Infrastructure/Metadata/Uedb5ParityV5ReadService.php",
       "syntax": "use",
       "line": 10
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 162
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoInvalidUeSystemErrorBackfill.php",
@@ -18027,6 +18711,12 @@
       "to": "catalog/bin/catalog-worker-detached.php",
       "syntax": "static_or_expression",
       "line": 118
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoJobClaimer.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 279
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoJobClaimer.php",
@@ -18222,6 +18912,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 225
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogUnrealIdentityHash.php",
       "syntax": "static_or_expression",
       "line": 236
@@ -18314,13 +19010,25 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 241
+      "line": 297
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "new",
+      "line": 92
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
+      "to": "catalog/src/Infrastructure/Metadata/PdoZenExamProjection.php",
+      "syntax": "use",
+      "line": 15
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5RuntimeMetadataReader.php",
       "syntax": "new",
-      "line": 394
+      "line": 450
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
@@ -18332,7 +19040,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoPackageTablePageQuery.php",
       "to": "catalog/src/Infrastructure/Readers/CatalogUE1OriginalUnrealfilePropertiesReader.php",
       "syntax": "static_or_expression",
-      "line": 386
+      "line": 442
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoSourceIdentityAuditQuery.php",
@@ -18435,6 +19143,24 @@
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueueSupport.php",
       "syntax": "static_or_expression",
       "line": 24
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoZenPackageUsesQuery.php",
+      "to": "catalog/bin/catalog-worker-detached.php",
+      "syntax": "static_or_expression",
+      "line": 35
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoZenPackageUsesQuery.php",
+      "to": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "syntax": "new",
+      "line": 39
+    },
+    {
+      "from": "catalog/src/Infrastructure/Persistence/PdoZenPackageUsesQuery.php",
+      "to": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
+      "syntax": "use",
+      "line": 7
     },
     {
       "from": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicArrayValueReader.php",
@@ -19452,6 +20178,12 @@
     },
     {
       "from": "catalog/src/Infrastructure/Search/Uedb5CatalogMetadataSearch.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 390
+    },
+    {
+      "from": "catalog/src/Infrastructure/Search/Uedb5CatalogMetadataSearch.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
       "line": 551
@@ -19533,6 +20265,12 @@
       "to": "catalog/src/Infrastructure/Security/FederationSecretStore.php",
       "syntax": "static_or_expression",
       "line": 26
+    },
+    {
+      "from": "catalog/src/Infrastructure/Security/CatalogMfaService.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 100
     },
     {
       "from": "catalog/src/Infrastructure/Security/CatalogMfaService.php",
@@ -19989,6 +20727,12 @@
       "to": "catalog/src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php",
       "syntax": "static_or_expression",
       "line": 33
+    },
+    {
+      "from": "catalog/src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 196
     },
     {
       "from": "catalog/src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php",
@@ -20703,6 +21447,12 @@
       "to": "catalog/class-remap.php",
       "syntax": "static_or_expression",
       "line": 71
+    },
+    {
+      "from": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 277
     },
     {
       "from": "catalog/src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php",
@@ -21536,7 +22286,7 @@
       "from": "catalog/unverified-files-action.php",
       "to": "catalog/src/Application/Unverified/CatalogUnverifiedActionService.php",
       "syntax": "new",
-      "line": 202
+      "line": 247
     },
     {
       "from": "catalog/unverified-files-action.php",
@@ -21552,9 +22302,33 @@
     },
     {
       "from": "catalog/unverified-files-action.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "syntax": "new",
+      "line": 208
+    },
+    {
+      "from": "catalog/unverified-files-action.php",
+      "to": "catalog/src/Infrastructure/Import/CatalogPublicIoStoreReviewService.php",
+      "syntax": "use",
+      "line": 26
+    },
+    {
+      "from": "catalog/unverified-files-action.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
+      "syntax": "new",
+      "line": 231
+    },
+    {
+      "from": "catalog/unverified-files-action.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
+      "syntax": "use",
+      "line": 27
+    },
+    {
+      "from": "catalog/unverified-files-action.php",
       "to": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedActionSourceResolver.php",
       "syntax": "new",
-      "line": 201
+      "line": 246
     },
     {
       "from": "catalog/unverified-files-action.php",
@@ -21566,7 +22340,7 @@
       "from": "catalog/unverified-files-action.php",
       "to": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedImporterAdapter.php",
       "syntax": "new",
-      "line": 204
+      "line": 249
     },
     {
       "from": "catalog/unverified-files-action.php",
@@ -21578,7 +22352,7 @@
       "from": "catalog/unverified-files-action.php",
       "to": "catalog/src/Infrastructure/Unverified/CatalogUnverifiedQueueMutationService.php",
       "syntax": "new",
-      "line": 203
+      "line": 248
     },
     {
       "from": "catalog/unverified-files-action.php",
@@ -21590,7 +22364,7 @@
       "from": "catalog/unverified-files-action.php",
       "to": "catalog/src/Presentation/Ui/Component/Progress.php",
       "syntax": "static_or_expression",
-      "line": 71
+      "line": 73
     },
     {
       "from": "catalog/unverified-files.php",
@@ -21632,31 +22406,31 @@
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 207
+      "line": 217
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 219
+      "line": 229
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 410
+      "line": 388
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 207
+      "line": 217
     },
     {
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 390
+      "line": 365
     },
     {
       "from": "catalog/unverified-game-matches-refresh.php",
@@ -21813,6 +22587,12 @@
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
       "line": 138
+    },
+    {
+      "from": "catalog/upload-issues.php",
+      "to": "catalog/file-examine-zen-tables.php",
+      "syntax": "static_or_expression",
+      "line": 221
     },
     {
       "from": "catalog/upload-issues.php",
