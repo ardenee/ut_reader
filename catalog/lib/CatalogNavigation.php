@@ -60,6 +60,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Storage Audit' => $root . 'storage-audit.php',
         ],
         'Maintenance' => [
+            'Update All Game Dependencies' => $root . 'engine-dependency-update.php',
             'Background Jobs' => $root . 'background-jobs.php',
             'Job Resource Limits' => $root . 'job-resource-limits.php',
             'Job Logging' => $root . 'job-logging.php',
@@ -74,7 +75,6 @@ function catalog_admin_navigation_groups(string $root): array
             'Workload Tracing' => $root . 'workload-tracing.php',
             'Full Sync' => $root . 'full-sync.php',
             'Dependency Refresh' => $root . 'dependency-refresh.php',
-            'Update All Game Dependencies' => $root . 'engine-dependency-update.php',
             'Asset Metadata Rebuild' => $root . 'asset-metadata-rebuild.php',
             'Source Identity Repair' => $root . 'source-identity-repair.php',
             'Package Normalizer' => $root . 'package-normalize.php',

@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1045,
-  "edges_count": 3778,
+  "nodes": 1047,
+  "edges_count": 3798,
   "edge_types": {
-    "use": 1275,
-    "new": 986,
-    "static_or_expression": 1517
+    "use": 1284,
+    "new": 991,
+    "static_or_expression": 1523
   },
   "ambiguous_class_names": {
     "md5": 45,
@@ -3723,6 +3723,72 @@
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
       "line": 216
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "static_or_expression",
+      "line": 72
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "use",
+      "line": 6
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
+      "syntax": "new",
+      "line": 88
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
+      "syntax": "use",
+      "line": 7
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "static_or_expression",
+      "line": 33
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "use",
+      "line": 9
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "new",
+      "line": 48
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
+      "syntax": "use",
+      "line": 10
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Presentation/Ui/CatalogUi.php",
+      "syntax": "static_or_expression",
+      "line": 95
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Presentation/Ui/Component/Alert.php",
+      "syntax": "static_or_expression",
+      "line": 158
+    },
+    {
+      "from": "catalog/engine-dependency-update.php",
+      "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
+      "syntax": "static_or_expression",
+      "line": 95
     },
     {
       "from": "catalog/federation/_requests-child.php",
@@ -11837,6 +11903,54 @@
       "line": 17
     },
     {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Application/Jobs/JobExecutionContext.php",
+      "syntax": "use",
+      "line": 6
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/ClaimedJob.php",
+      "syntax": "use",
+      "line": 8
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "static_or_expression",
+      "line": 20
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Domain/Jobs/JobType.php",
+      "syntax": "use",
+      "line": 9
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "new",
+      "line": 47
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
+      "syntax": "use",
+      "line": 10
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+      "syntax": "new",
+      "line": 91
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php",
+      "syntax": "use",
+      "line": 12
+    },
+    {
       "from": "catalog/src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php",
       "to": "catalog/src/Application/Jobs/JobCancellationRequested.php",
       "syntax": "use",
@@ -12699,6 +12813,12 @@
       "to": "catalog/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php",
       "syntax": "new",
       "line": 115
+    },
+    {
+      "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
+      "to": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "syntax": "new",
+      "line": 116
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",

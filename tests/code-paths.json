@@ -1,16 +1,16 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1045,
+  "total_files": 1047,
   "roles": {
     "CONTAINER": 108,
     "DATABASE": 125,
-    "DEPENDENCY": 62,
+    "DEPENDENCY": 64,
     "ERROR": 34,
     "FILE": 7,
     "GENERAL": 152,
     "INGEST": 73,
-    "JOBS": 221,
+    "JOBS": 222,
     "LINKER": 27,
     "NAME": 4,
     "OBJECT": 69,
@@ -21,7 +21,7 @@
     "UI": 159
   },
   "engine_hints": {
-    "shared": 868,
+    "shared": 870,
     "ue1": 93,
     "ue2": 12,
     "ue3": 4,
@@ -2795,6 +2795,20 @@
       "class": null
     },
     {
+      "path": "catalog/engine-dependency-update.php",
+      "sha256": "40977f27f21d5fc0c750b96e82e475cff08bde70cfaf1dbefb2b96407e4552f8",
+      "bytes": 8562,
+      "engine_hints": [
+        "shared"
+      ],
+      "path_roles": [
+        "DEPENDENCY"
+      ],
+      "review_priority": "ENTRYPOINT",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": null
+    },
+    {
       "path": "catalog/federation/_diagnostics-conflicts.php",
       "sha256": "ab61fb88774318b88be8cbb0909c6f3ec6cbae7b7213fb5f88052246e324e2bb",
       "bytes": 7114,
@@ -3753,7 +3767,7 @@
     },
     {
       "path": "catalog/lib/CatalogNavigation.php",
-      "sha256": "a065f991648f68ad082406abe226b635f3fbdc0736d80d1c4bc88500fa68e777",
+      "sha256": "a6bf952def374e63d65c30e3866fc850937ca48c79dc7667b742c86e45ff89ac",
       "bytes": 7466,
       "engine_hints": [
         "shared"
@@ -8312,6 +8326,21 @@
       "review_priority": "RELATED",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "CatalogDetachedWorkerStop"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php",
+      "sha256": "caa5fe8d8efbf3445ded5891def4b480609f4d955a3f56b02674f0f1abf9b62c",
+      "bytes": 5695,
+      "engine_hints": [
+        "shared"
+      ],
+      "path_roles": [
+        "DEPENDENCY",
+        "JOBS"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "CatalogEngineDependencyUpdateJobHandler"
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php",
