@@ -15,12 +15,12 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 
 /**
  * Bounded, resumable source-verifying projection of existing Zen packages.
- * One claim performs at most 20 isolated file transactions. Canonical
+ * One claim performs at most 100 isolated file transactions. Canonical
  * .uedb5 is verified ONCE here; HTTP requests use source-bound SQL rows.
  */
 final class CatalogZenExamBackfillJobHandler implements JobHandler
 {
-    private const LIMIT = 20;
+    private const LIMIT = 100;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly PDO $db, private readonly array $config) {}
@@ -117,7 +117,7 @@ final class CatalogZenExamBackfillJobHandler implements JobHandler
             $context->checkpoint($state);
             if($remaining>0) {
                 if($processed===0)throw new RuntimeException('Zen SQL backfill made no progress.');
-                $context->defer(2,$state,false);
+                $context->defer(1,$state,false);
             }
             return $state+['status'=>'completed'];
         } finally {

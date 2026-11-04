@@ -38,14 +38,12 @@ function examine_zen_table_reference(
             . '">Export #' . $index . '</a>';
     }
     if ($kind === 'ScriptImport') {
-        $html = isset($cookedLabels[$raw])
-            ? '<span class="mono path">' . catalog_h($cookedLabels[$raw]) . '</span>'
-            : '<span class="mono">0x' . catalog_h($raw) . '</span>';
+        $label = $cookedLabels[$raw] ?? ('0x' . $raw);
+        $html = '<span class="mono path">' . catalog_h($label) . '</span>';
         if (isset($importIndices[$raw])) {
-            $index = $importIndices[$raw];
-            $html .= '<span class="examine-zen-ref-link"><a class="xref" href="'
-                . catalog_h(examine_href($fileId, 'import-'.$index, $pageSize))
-                . '">Import #' . $index . '</a></span>';
+            $html = '<a class="xref mono path" href="'
+                . catalog_h(examine_href($fileId, 'import-'.$importIndices[$raw], $pageSize))
+                . '">' . catalog_h($label) . '</a>';
         }
         return $html;
     }
@@ -673,23 +671,21 @@ try {
                     if ($outer === 'FFFFFFFFFFFFFFFF') {
                         $outerHtml = '<span class="muted">Root script package</span>';
                     } elseif ((string)$detail['outer_path'] !== '') {
-                        $outerHtml = '<span class="mono path">' . catalog_h((string)$detail['outer_path']) . '</span>';
-                        if (isset($importIndexByRaw[$outer])) {
-                            $outerHtml .= '<span class="examine-zen-ref-link"><a class="xref" href="#import-'
-                                . $importIndexByRaw[$outer] . '">Import #' . $importIndexByRaw[$outer]
-                                . '</a></span>';
-                        }
+                        $outerPath = catalog_h((string)$detail['outer_path']);
+                        $outerHtml = isset($importIndexByRaw[$outer])
+                            ? '<a class="xref mono path" href="#import-'
+                                . $importIndexByRaw[$outer] . '">' . $outerPath . '</a>'
+                            : '<span class="mono path">' . $outerPath . '</span>';
                     } else {
                         $outerHtml = '<span class="mono">0x' . catalog_h($outer) . '</span>';
                     }
                     $class = strtoupper((string)$detail['cdo_class_index']);
                     if ((string)$detail['cdo_class_path'] !== '') {
-                        $classHtml = '<span class="mono path">' . catalog_h((string)$detail['cdo_class_path']) . '</span>';
-                        if (isset($importIndexByRaw[$class])) {
-                            $classHtml .= '<span class="examine-zen-ref-link"><a class="xref" href="#import-'
-                                . $importIndexByRaw[$class] . '">Import #' . $importIndexByRaw[$class]
-                                . '</a></span>';
-                        }
+                        $classPath = catalog_h((string)$detail['cdo_class_path']);
+                        $classHtml = isset($importIndexByRaw[$class])
+                            ? '<a class="xref mono path" href="#import-'
+                                . $importIndexByRaw[$class] . '">' . $classPath . '</a>'
+                            : '<span class="mono path">' . $classPath . '</span>';
                     } elseif ($class !== 'FFFFFFFFFFFFFFFF' && preg_match('/^[A-F0-9]{16}$/D', $class)) {
                         $classHtml = '<span class="mono">0x' . catalog_h($class) . '</span>';
                     }

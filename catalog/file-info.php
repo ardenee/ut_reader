@@ -79,17 +79,68 @@ catalog_head('File info');echo <<<'CSS'
 .file-info-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.file-info-title h1{margin:0}.file-info-context{margin:8px 0}.file-imports-scroll{overflow-x:auto}.file-imports-table{width:100%}.file-imports-table th:nth-child(1){width:9%}.file-imports-table th:nth-child(2){width:22%}.file-imports-table th:nth-child(3){width:32%}.file-imports-table th:nth-child(4){width:9%}.file-imports-table th:nth-child(5){width:28%}.file-map-nav{display:flex;gap:10px;flex-wrap:wrap}.file-map-nav a{display:flex;gap:12px;align-items:center;border:1px solid var(--border,#2b3950);border-radius:8px;padding:12px;text-decoration:none}.file-relations-map{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.file-map-node{flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border,#2b3950);padding:14px;border-radius:10px}.file-map-node strong{overflow-wrap:anywhere}.file-map-current{border-color:var(--blue,#76a9ff)}.file-map-arrow{font-size:24px}[data-sortable-table] th{cursor:pointer;user-select:none}[data-sortable-table] th::after{content:'↕';display:inline-block;margin-left:7px;color:var(--muted);font-size:11px;opacity:.7}[data-sortable-table] th.is-sort-ascending::after{content:'▲';color:var(--blue);opacity:1}[data-sortable-table] th.is-sort-descending::after{content:'▼';color:var(--blue);opacity:1}
 </style>
 CSS;
+$isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
+echo catalog_file_feedback_form_html($id);
+if ($isZen) {
+    $zen = catalog_one($db,
+        'SELECT HEX(package_id) AS package_id,container_id FROM ue_iostore_packages '
+        . 'WHERE file_id=? AND chunk_index=0 ORDER BY id LIMIT 1', [$id]);
+    $zenId = (string)($zen['package_id'] ?? '');
+    $containerId = (int)($zen['container_id'] ?? 0);
+    $packageHref = 'file-examine.php?id=' . $id;
+    $gameHref = 'game-files.php?id=' . (int)$file['game_id'];
+    echo '<div class="card"><div class="file-info-title"><h1>'
+        . catalog_h((string)$file['package_name'])
+        . '</h1><span class="dep file-type-pill type-package">Zen / IoStore</span></div>'
+        . '<p class="file-info-context"><a href="' . $gameHref . '">'
+        . catalog_h((string)$file['game_name']) . '</a> · Cooked UE5 package</p>'
+        . '<p><a class="button" href="download-info.php?id=' . $id . '">Download options</a> '
+        . '<a class="button secondary" href="' . $packageHref . '">Examine file</a></p>'
+        . '<table><tbody>'
+        . '<tr><th>FPackageId</th><td class="mono">'
+        . ($zenId !== '' ? catalog_h($zenId) : 'Not indexed') . '</td></tr>'
+        . '<tr><th>Package name</th><td class="mono path">' . catalog_h((string)$file['package_name']) . '</td></tr>'
+        . '<tr><th>Source</th><td>'
+        . ($containerId > 0 ? '<a href="iostore-info.php?id=' . $containerId . '">IoStore container #' . $containerId . '</a>' : 'IoStore member')
+        . '</td></tr>'
+        . '<tr><th>Tables</th><td><a href="' . $packageHref . '">'
+        . (int)$file['name_count'] . ' names / ' . (int)$file['import_count']
+        . ' imports / ' . (int)$file['export_count'] . ' exports</a></td></tr>'
+        . '</tbody></table><p class="muted">'
+        . 'Zen package headers do not contain a classic package GUID. '
+        . 'The internal .zenpkg filename is a storage identifier, not an original UE5 filename.'
+        . '</p></div>';
+} else {
 $compressed=(int)($file['is_compressed']??0)===1;[$fileType,$fileTypeClass]=file_info_type_from_extension((string)($file['extension']??''));$packageHref='file-examine.php?id='.$id;$gameHref='game-files.php?id='.(int)$file['game_id'];
 echo'<div class="card"><div class="file-info-title"><h1>'.catalog_h($file['package_name']).'</h1><span class="dep file-type-pill '.catalog_h($fileTypeClass).'">'.catalog_h($fileType).'</span></div><p class="file-info-context"><a href="'.$packageHref.'">'.catalog_h($file['original_name']).'</a> / <a href="'.$gameHref.'">'.catalog_h($file['game_name']).'</a></p><p><a class="button" href="download-info.php?id='.$id.'">Download options</a> <a class="button secondary" href="'.$packageHref.'">Examine file</a></p><p><span class="dep '.($compressed?'compressed':'uncompressed').'">'.($compressed?'compressed':'uncompressed').'</span> <span class="mono small">flags 0x'.strtoupper(str_pad(dechex((int)($file['compression_flags']??0)),8,'0',STR_PAD_LEFT)).'</span></p><table><tr><th>MD5</th><td class="mono">'.catalog_h($file['md5']).'</td></tr><tr><th>SHA1</th><td class="mono">'.catalog_h($file['sha1']).'</td></tr><tr><th>GUID</th><td class="mono">'.catalog_h($file['package_guid']).'</td></tr><tr><th>Tables</th><td><a href="'.$packageHref.'">'.(int)$file['name_count'].' names / '.(int)$file['import_count'].' imports / '.(int)$file['export_count'].' exports</a></td></tr></table></div>';
+}
 echo '<div class="card"><h2>Inside this file</h2><nav class="file-map-nav">'
     . '<a href="file-examine.php?id='.$id.'&tab=names">Names <strong>'.(int)$file['name_count'].'</strong></a>'
     . '<a href="file-examine.php?id='.$id.'&tab=imports">Imports <strong>'.(int)$file['import_count'].'</strong></a>'
     . '<a href="file-examine.php?id='.$id.'&tab=exports">Exports <strong>'.(int)$file['export_count'].'</strong></a>'
     . '</nav><p class="muted">Names are stored strings. Imports refer to objects outside or within the package hierarchy. Exports are objects defined by this package. Select a section to examine the original indexed entries and their references.</p></div>';
-if($dependencyProjectionError!==null)echo '<div class="card"><h2>Dependency publication unavailable</h2><p>'.catalog_h($dependencyProjectionError).'</p></div>';echo '<div class="card" id="dependencies"><h2>Imports and linked files</h2>'
-    . '<p class="muted">Each row comes from the serialized Unreal import table. External file links are shown only for V5 package-level or object-level matches. An export link is shown only when V5 confirms a specific export identity. A dash does not mean the import is invalid or that Unreal Engine cannot load it.</p>'
-    . '<p class="muted">Showing '.count($importPage['rows']).' of '.(int)$file['import_count'].' import entries. <a href="file-examine.php?id='.$id.'&tab=imports">View every import</a>.</p>'
-    . file_info_imports_table($importPage['rows'], $dependencyByIndex, $id, (int)$file['game_id'], $packageFiles) . '</div>';
+if ($dependencyProjectionError !== null) {
+    echo '<div class="card"><h2>Dependency publication unavailable</h2><p>'
+        . catalog_h($dependencyProjectionError) . '</p></div>';
+}
+if ($isZen) {
+    echo '<div class="card" id="dependencies"><h2>Import references</h2>'
+        . '<p>There are ' . (int)$file['import_count'] . ' serialized Zen import references. '
+        . 'The UE5 examiner displays their cooked script names, typed reference identities, '
+        . 'outer references and recorded classes without treating them as classic signed import indexes.</p>'
+        . '<p><a class="button secondary" href="file-examine.php?id=' . $id
+        . '&amp;tab=imports">Examine ' . (int)$file['import_count'] . ' imports</a></p></div>';
+} else {
+    echo '<div class="card" id="dependencies"><h2>Imports and linked files</h2>'
+        . '<p class="muted">Each row comes from the serialized Unreal import table. '
+        . 'External file links are shown only for V5 package-level or object-level matches. '
+        . 'An export link is shown only when V5 confirms a specific export identity.</p>'
+        . '<p class="muted">Showing ' . count($importPage['rows']) . ' of '
+        . (int)$file['import_count'] . ' import entries. <a href="file-examine.php?id=' . $id
+        . '&amp;tab=imports">View every import</a>.</p>'
+        . file_info_imports_table($importPage['rows'], $dependencyByIndex, $id, (int)$file['game_id'], $packageFiles)
+        . '</div>';
+}
 $usesById=[];foreach($deps as$d){$target=(int)($d['resolved_id']??0);if($target<1||$target===$id||!in_array((string)($d['status']??''),['resolved','package_only'],true))continue;$usesById[$target]=['id'=>$target,'package_name'=>(string)($d['resolved_package']??''),'original_name'=>(string)($d['resolved_file']??''),'package_guid'=>(string)($d['resolved_guid']??''),'md5'=>(string)($d['resolved_md5']??''),'sha1'=>(string)($d['resolved_sha1']??''),'file_size'=>(int)($d['resolved_size']??0)];}$uses=array_values($usesById);usort($uses,static fn($a,$b)=>strnatcasecmp((string)$a['package_name'],(string)$b['package_name'])?:strnatcasecmp((string)$a['original_name'],(string)$b['original_name']));
 $reverseCounts=catalog_one($db,'SELECT COUNT(DISTINCT e.file_id) AS c FROM ue_uedb5_dependency_edges e '. \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e') . ' WHERE e.resolved_file_id=? AND e.outcome IN (1,2)',[$id]);$reverseCount=(int)($reverseCounts['c']??0);
 echo '<div class="card"><h2>File connections</h2><div class="file-relations-map">'
@@ -100,7 +151,7 @@ echo '<div class="card"><h2>File connections</h2><div class="file-relations-map"
     . '<div class="file-map-node"><span class="muted">Current files using this package</span><strong>'.$reverseCount.'</strong><a href="file-examine.php?id='.$id.'&tab=used-by">View referring files</a></div>'
     . '</div></div>';
 echo '<div class="card"><h2>Uses ('.count($uses).')</h2>'.file_info_related_files_table($uses,$dependencyProjectionError??'No linked external files recorded.').'</div>';$usedBy=catalog_dependency_used_by_rows($db,$id,200);echo'<div class="card"><h2>Used by ('.count($usedBy).')</h2>'.file_info_related_files_table($usedBy,'No files reference this package in the V5 provider links.').'</div>';
-echo catalog_file_feedback_form_html($id);
+
 echo <<<'HTML'
 <script>(function(){'use strict';var tabs=Array.from(document.querySelectorAll('[data-dependency-tab]')),panels=Array.from(document.querySelectorAll('[data-dependency-panel]')),nav=document.querySelector('[data-dependency-default]');function name(){var h=decodeURIComponent(location.hash.replace(/^#/,''));return h.indexOf('dependency-')===0?h.slice(11):(nav?nav.dataset.dependencyDefault:'all')}function activate(n){if(!panels.some(p=>p.dataset.dependencyPanel===n))n=nav?nav.dataset.dependencyDefault:'all';panels.forEach(p=>p.hidden=p.dataset.dependencyPanel!==n);tabs.forEach(t=>t.classList.toggle('is-active',t.dataset.dependencyTab===n))}tabs.forEach(t=>t.addEventListener('click',e=>{e.preventDefault();history.pushState(null,'','#dependency-'+t.dataset.dependencyTab);activate(t.dataset.dependencyTab)}));addEventListener('hashchange',()=>activate(name()));activate(name());document.querySelectorAll('table[data-sortable-table]').forEach(function(table){var head=table.tHead&&table.tHead.rows[0],body=table.tBodies[0];if(!head||!body)return;var active=-1,asc=true;Array.from(head.cells).forEach(function(th,i){th.addEventListener('click',function(){if(active===i)asc=!asc;else{active=i;asc=true}Array.from(body.rows).sort(function(a,b){var x=(a.cells[i]?.dataset.sortValue||a.cells[i]?.textContent||'').trim(),y=(b.cells[i]?.dataset.sortValue||b.cells[i]?.textContent||'').trim();return(asc?1:-1)*x.localeCompare(y,undefined,{numeric:true,sensitivity:'base'})}).forEach(r=>body.appendChild(r))})})})})();</script>
 HTML;
