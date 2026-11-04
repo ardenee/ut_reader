@@ -295,6 +295,7 @@ try {
     $rows = $page['rows'];
     $isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
     $zenScriptLabels = [];
+    $zenScriptDetails = [];
     if ($isZen && in_array($table, ['imports','exports'], true)) {
         $scriptIndexes = [];
         foreach ($rows as $item) {
@@ -315,6 +316,11 @@ try {
             $zenScriptLabels = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenCookedScriptLabelLookup::labels(
                 $db, (string)$config['storage_path'], (int)$file['game_id'], $scriptIndexes
             );
+            if ($table === 'imports') {
+                $zenScriptDetails = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenCookedScriptLabelLookup::describe(
+                    $db, (string)$config['storage_path'], (int)$file['game_id'], $scriptIndexes
+                );
+            }
         }
     }
     $packageFiles = [];
@@ -600,39 +606,74 @@ try {
                     . ' script-import identities identified from cooked ScriptObjects</strong> '
                     . '<span class="muted">(this page)</span>.</p>';
             }
-            echo '<p class="muted">UE5 Zen serializes typed 64-bit import identities, not classic '
-                . 'ClassPackage/ClassName/ObjectName or signed outer references. '
-                . 'An identified cooked name establishes source identity, not runtime loading '
-                . 'or mounted provider selection.</p>'
+            echo '<p class="muted">The object name, script module, serialized outer and '
+                . 'class-default-object class are recovered from the retained cooked ScriptObjects table '
+                . 'where the engine serialized them. An empty CDO class field does not mean the '
+                . 'object lacks a class; that relationship was not serialized here. '
+                . 'Runtime loading and provider selection are independent.</p>'
                 . '<div class="examine-table-region"><table class="examine-imports-table"><thead><tr>'
-                . '<th>Index</th><th>Kind</th><th>Cooked object identity / serialized hash</th>'
-                . '<th>Identity identified?</th><th>Runtime provider status</th></tr></thead><tbody>';
+                . '<th>Index / kind</th><th>Imported object</th><th>Script module</th>'
+                . '<th>Outer / owner</th><th>CDO class (when recorded)</th>'
+                . '<th>Serialized identity</th><th>Runtime resolution</th></tr></thead><tbody>';
+            $importIndexByRaw = [];
+            foreach ($rows as $item) {
+                $importIndexByRaw[strtoupper((string)($item['raw_type_and_id'] ?? ''))]
+                    = (int)($item['import_index'] ?? -1);
+            }
             foreach ($rows as $row) {
                 $index = (int)$row['import_index'];
                 $rowId = 'import-' . $index;
                 $kind = (string)($row['type'] ?? '');
                 $rawIndex = strtoupper((string)($row['raw_type_and_id'] ?? ''));
-                if ($kind === 'ScriptImport') {
-                    $known = isset($zenScriptLabels[$rawIndex]);
-                    $identityState = $known
-                        ? 'Yes — cooked ScriptObjects name'
-                        : 'No matching cooked ScriptObjects record';
-                    $runtimeState = 'Runtime script registration unverified';
-                } elseif ($kind === 'PackageImport') {
-                    $identityState = 'Yes — FPackageId and PublicExportHash';
-                    $runtimeState = 'Mounted provider selection unverified';
-                } elseif ($kind === 'Export') {
-                    $identityState = 'Yes — local export index';
-                    $runtimeState = 'Local reference, not external provider';
-                } else {
-                    $identityState = $kind === 'Null' ? 'Null sentinel' : 'Unknown kind';
-                    $runtimeState = 'Not applicable';
+                $detail = $zenScriptDetails[$rawIndex] ?? null;
+                $nameHtml = examine_zen_index_html($row, $zenScriptLabels, $fileId, $pageSize);
+                $moduleHtml = '<span class="muted">Not serialized</span>';
+                $outerHtml = '<span class="muted">Not serialized</span>';
+                $classHtml = '<span class="muted">Not serialized</span>';
+                if ($kind === 'ScriptImport' && is_array($detail)) {
+                    $nameHtml = '<strong>' . catalog_h((string)$detail['name']) . '</strong>'
+                        . '<small class="mono path">' . catalog_h((string)$detail['path']) . '</small>';
+                    if ((string)$detail['module'] !== '') {
+                        $moduleHtml = '<span class="mono path">' . catalog_h((string)$detail['module']) . '</span>';
+                    }
+                    $outer = strtoupper((string)$detail['outer_index']);
+                    if ($outer === 'FFFFFFFFFFFFFFFF') {
+                        $outerHtml = '<span class="muted">Root script package</span>';
+                    } elseif ((string)$detail['outer_path'] !== '') {
+                        $outerHtml = '<span class="mono path">' . catalog_h((string)$detail['outer_path']) . '</span>';
+                        if (isset($importIndexByRaw[$outer])) {
+                            $outerHtml .= '<small><a class="xref" href="#import-' . $importIndexByRaw[$outer]
+                                . '">Import #' . $importIndexByRaw[$outer] . '</a></small>';
+                        }
+                    } else {
+                        $outerHtml = '<span class="mono">0x' . catalog_h($outer) . '</span>';
+                    }
+                    $class = strtoupper((string)$detail['cdo_class_index']);
+                    if ((string)$detail['cdo_class_path'] !== '') {
+                        $classHtml = '<span class="mono path">' . catalog_h((string)$detail['cdo_class_path']) . '</span>';
+                        if (isset($importIndexByRaw[$class])) {
+                            $classHtml .= '<small><a class="xref" href="#import-' . $importIndexByRaw[$class]
+                                . '">Import #' . $importIndexByRaw[$class] . '</a></small>';
+                        }
+                    } elseif ($class !== 'FFFFFFFFFFFFFFFF' && preg_match('/^[A-F0-9]{16}$/D', $class)) {
+                        $classHtml = '<span class="mono">0x' . catalog_h($class) . '</span>';
+                    }
                 }
+                $runtimeState = match ($kind) {
+                    'ScriptImport' => 'Script registration not runtime-verified',
+                    'PackageImport' => 'Mounted package provider not runtime-verified',
+                    'Export' => 'Local export reference',
+                    default => 'Not applicable',
+                };
                 echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '')
-                    . '><td class="mono">' . $index . '</td>'
-                    . '<td>' . catalog_h($kind) . '</td>'
-                    . '<td>' . examine_zen_index_html($row, $zenScriptLabels, $fileId, $pageSize) . '</td>'
-                    . '<td>' . catalog_h($identityState) . '</td>'
+                    . '><td><span class="mono">' . $index . '</span><small>' . catalog_h($kind) . '</small></td>'
+                    . '<td>' . $nameHtml . '</td>'
+                    . '<td>' . $moduleHtml . '</td>'
+                    . '<td>' . $outerHtml . '</td>'
+                    . '<td>' . $classHtml . '</td>'
+                    . '<td><span class="mono">0x' . catalog_h($rawIndex) . '</span>'
+                    . '<small>' . (isset($zenScriptLabels[$rawIndex])
+                        ? 'Identified in cooked ScriptObjects' : 'Serialized index') . '</small></td>'
                     . '<td class="muted">' . catalog_h($runtimeState) . '</td></tr>';
             }
             echo '</tbody></table></div>';
