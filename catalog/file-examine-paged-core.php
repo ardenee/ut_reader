@@ -363,6 +363,12 @@ try {
         [$fileId]
     );
     $dependencyCurrent = (int)($dependencyCurrentRow['dependency_current'] ?? 0) === 1;
+    // Catalogue resolution uses only persisted identities: cooked ScriptObjects
+    // and exact FPackageId + PublicExportHash candidates. No live game state.
+    $zenStaticImports = $isZen && $table === 'imports' && $rows !== []
+        ? (new \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenStaticDependencyLookup($db))
+            ->forImports((int)$file['game_id'], $rows)
+        : [];
     $zenImportOutcomes = [];
     if ($isZen && $table === 'imports' && $dependencyCurrent && $rows !== []) {
         $indices = array_values(array_unique(array_map(
@@ -416,6 +422,10 @@ try {
                 . 'LIMIT ' . $zenReferencePageSize . ' OFFSET ' . $offset, [$fileId]);
         }
     }
+    $zenStaticPackages = $isZen && $table === 'uses' && $zenSourceReferences !== []
+        ? (new \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenStaticDependencyLookup($db))
+            ->forImportedPackages((int)$file['game_id'], $zenSourceReferences)
+        : [];
     $relationshipRows = [];
     if ($table === 'uses') {
         $relationshipRows = catalog_all($db,
@@ -504,12 +514,12 @@ try {
     ];
     echo '<div class="card" id="package-tables"><nav class="examine-tabs">';
     foreach (['names' => 'Names','imports' => 'Imports','exports' => 'Exports','uses' => 'Uses','used-by' => 'Used By'] as $key => $label) {
-        // Zen serialized package/object requirements are not equivalent to a
-        // runtime-confirmed provider link. Do not show a misleading zero.
+        // Zen counts describe serialized references; package existence is
+        // independently matched against the current indexed catalogue.
         $tabCount = $isZen && $key === 'uses'
             ? $zenSourceTotal . ' packages / ' . (int)$file['import_count'] . ' object imports'
             : ($isZen && $key === 'used-by'
-                ? (int)($counts[$key] ?? 0) . ' confirmed'
+                ? (int)($counts[$key] ?? 0) . ' published links'
                 : ($key === 'uses' && !$dependencyCurrent ? 'unverified' : ($counts[$key] ?? '')));
         echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ($tabCount !== '' ? ' <span>' . $tabCount . '</span>' : '') . '</a>';
     }
@@ -523,34 +533,45 @@ try {
 
     if ($table === 'uses' || $table === 'used-by') {
         $heading = $table === 'uses' ? 'Uses' : 'Used By';
-        echo '<h2>' . $heading . '</h2><p class="muted">Runtime-confirmed provider links, where available.</p>';
+        echo '<h2>' . $heading . '</h2>';
+        if ($isZen) {
+            echo '<p class="muted">References are matched against already indexed catalogue files. '
+                . 'Open Imports for exact object and script identities.</p>';
+        } else {
+            echo '<p class="muted">Published provider links, where available.</p>';
+        }
         if ($isZen && $table === 'uses') {
             echo '<p class="muted"><strong>' . $zenSourceTotal
                 . ' source-backed external package identities</strong> are recorded in the Zen '
                 . 'ImportedPackages map, alongside ' . (int)$file['import_count']
-                . ' typed object imports. These are real serialized references; '
-                . 'they are not proof of a runtime-selected package-store provider. '
+                . ' typed object imports. Each listed package identity is checked '
+                . 'against verified, indexed files using its exact FPackageId. '
                 . '<a href="' . catalog_h(examine_tab_href($fileId, 'imports', $pageSize))
                 . '">Inspect object imports</a>.</p>';
             if ($zenSourceReferences !== []) {
                 echo '<div class="examine-table-region"><table><thead><tr><th>Source package name</th>'
-                    . '<th>FPackageId</th><th>Reference occurrences</th><th>Publication outcome</th>'
+                    . '<th>FPackageId</th><th>Reference occurrences</th><th>Catalogue match</th>'
                     . '</tr></thead><tbody>';
-                foreach ($zenSourceReferences as $reference) {
-                    $status = match ((int)$reference['summary_outcome']) {
-                        0 => 'missing (runtime-evidenced)',
-                        1 => 'resolved (runtime-evidenced)',
-                        2 => 'package only',
-                        3 => 'common',
-                        default => 'unresolved — runtime mount context unavailable',
-                    };
+                foreach ($zenSourceReferences as $refIndex => $reference) {
+                    $match = $zenStaticPackages[$refIndex] ?? [];
+                    $state = (string)($match['state'] ?? '');
+                    if ($state === 'package_found') {
+                        $status = '<a class="xref path" href="file-examine.php?id='
+                            . (int)$match['file_id'] . '">Found — '
+                            . catalog_h((string)$match['package_name']) . '</a>';
+                    } elseif ($state === 'multiple_matches') {
+                        $status = '<span class="muted">Found in '
+                            . (int)$match['match_count'] . ' files (ambiguous provider)</span>';
+                    } else {
+                        $status = '<span class="muted">No indexed package match</span>';
+                    }
                     $requiredName = trim((string)($reference['required_package_name'] ?? ''));
                     echo '<tr><td class="mono path">'
                         . ($requiredName !== '' ? catalog_h($requiredName)
                             : '<span class="muted">Name not serialized</span>')
                         . '</td><td class="mono">' . catalog_h((string)$reference['package_id'])
                         . '</td><td>' . (int)$reference['dependency_count']
-                        . '</td><td>' . catalog_h($status) . '</td></tr>';
+                        . '</td><td>' . $status . '</td></tr>';
                 }
                 echo '</tbody></table></div>';
                 $lastPage = (int)ceil($zenSourceTotal / $zenReferencePageSize);
@@ -576,7 +597,7 @@ try {
         }
         if ($relationshipRows === []) {
             $emptyText = $isZen && $table === 'uses'
-                ? 'No runtime-selected provider links are established. This is not a zero-dependency result; the serialized import requirements are shown above or in the Imports tab.'
+                ? 'External package and script-object catalogue matches are shown above and in the Imports tab.'
                 : ($table === 'uses' && !$dependencyCurrent
                     ? 'Current Uses results are unavailable until source-correct dependency publication. The visible count is not proof that this package has no dependencies.'
                     : ($table === 'used-by'
@@ -681,11 +702,12 @@ try {
                     . '<span class="muted">(this page)</span>.</p>';
             }
             echo '<p class="muted">Each row below is a serialized UE5 Zen import. '
-                . 'Cooked ScriptObjects may identify its path without proving live script registration. '
-                . 'The ' . (int)$file['export_count'] . ' exports are local objects defined by this package, '
-                . 'not resolved external imports. Source dependency-bundle/load-order entries are a separate class of record.</p>'
+                . 'Catalogue matches use exact cooked ScriptObjects identities or FPackageId plus PublicExportHash '
+                . 'in verified imported files. The ' . (int)$file['export_count']
+                . ' exports are local objects defined by this package, not resolved external imports. '
+                . 'Dependency-bundle/load-order entries are a separate type of record.</p>'
                 . '<div class="examine-table-region"><table class="examine-imports-table" data-catalog-identity-skip="1"><thead><tr>'
-                . '<th>Index</th><th>Registration / provider</th><th>Object ref</th>'
+                . '<th>Index</th><th>Catalogue resolution</th><th>Object ref</th>'
                 . '<th>Script package</th><th>Class</th><th>Object</th>'
                 . '<th>Outer ref</th><th>Full path</th>'
                 . '</tr></thead><tbody>';
@@ -757,33 +779,36 @@ try {
                     $objectHtml = '<a class="xref mono" href="#export-' . $local
                         . '">Export #' . $local . '</a>';
                 }
-                $statusHtml = '<span class="muted">Not evaluated</span>';
+                $statusHtml = '<span class="muted">No indexed match</span>';
                 if ($kind === 'Null') {
                     $statusHtml = '<span class="muted">Null slot — no dependency</span>';
                 } elseif ($kind === 'Export') {
                     $statusHtml = '<span class="muted">Local export reference</span>';
-                } elseif (!$dependencyCurrent) {
-                    $statusHtml = '<span class="muted">Dependency data stale</span>';
-                } elseif (isset($zenImportOutcomes[$index])) {
-                    $edge = $zenImportOutcomes[$index];
-                    $outcome = (int)$edge['outcome'];
-                    $classification = (int)$edge['classification'];
-                    if ($classification === 5 && $outcome === 4) {
-                        // Epic ScriptObjects identities are present, but live
-                        // script registration is not proven by cooked bytes.
-                        $statusHtml = '<span class="muted" title="ScriptImports are source-identified from cooked ScriptObjects; '
-                            . 'the runtime script registry is not available to UnrealDB. '
-                            . 'This is not a missing-object verdict.">Runtime script registration unverified</span>';
-                    } else {
-                        $label = match ($outcome) {
-                            0 => 'Missing (source-evidenced)',
-                            1 => 'Provider resolved',
-                            2 => 'Package only',
-                            3 => 'Common',
-                            4 => 'Provider unresolved',
-                            default => 'Unknown status',
-                        };
-                        $statusHtml = '<span class="muted">' . catalog_h($label) . '</span>';
+                } else {
+                    $match = $zenStaticImports[$index] ?? null;
+                    if (is_array($match)) {
+                        $state = (string)($match['state'] ?? '');
+                        if ($state === 'resolved_script') {
+                            $container = (int)($match['container_id'] ?? 0);
+                            $statusHtml = $container > 0
+                                ? '<a class="xref" href="iostore-info.php?id=' . $container
+                                    . '">Resolved — global.utoc ScriptObjects</a>'
+                                : '<span>Resolved — cooked ScriptObjects</span>';
+                        } elseif ($state === 'resolved_export') {
+                            $providerId = (int)$match['file_id'];
+                            $exportIndex = (int)$match['export_index'];
+                            $label = 'Resolved — ' . (string)$match['package_name'];
+                            $statusHtml = '<a class="xref path" href="'
+                                . catalog_h(examine_href($providerId, 'export-'.$exportIndex, $pageSize))
+                                . '">' . catalog_h($label) . '</a>';
+                        } elseif ($state === 'package_found') {
+                            $statusHtml = '<a class="xref path" href="file-examine.php?id='
+                                . (int)$match['file_id'] . '">Package found — '
+                                . catalog_h((string)$match['package_name']) . '</a>';
+                        } elseif ($state === 'multiple_matches') {
+                            $statusHtml = '<span class="muted">Multiple matching files ('
+                                . (int)$match['match_count'] . ') — ambiguous provider</span>';
+                        }
                     }
                 }
                 echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '')

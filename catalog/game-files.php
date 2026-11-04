@@ -437,18 +437,6 @@ try {
         ? 'Files, versions, dependency status and downloads. UE3 UPK package containers are shown separately.'
         : 'Files, versions, dependency status and downloads.';
     echo CatalogUi::pageHeader((string)$game['name'], $description, ['Back to games' => 'games.php']);
-    if ($engineMajor === 5) {
-        $zenFound = catalog_one($db,
-            'SELECT id FROM ue_files WHERE game_id=? AND extension="zenpkg" LIMIT 1', [$gameId]);
-        $runtimeContexts = (array)($config['zen_runtime_context_by_game'] ?? []);
-        $runtimeContext = (array)($runtimeContexts[$gameId] ?? $runtimeContexts[(string)$gameId] ?? []);
-        if ($zenFound && empty($runtimeContext['package_store_context_authoritative'])) {
-            echo '<div class="card"><strong>Zen mounted-store context is not authoritative.</strong> '
-                . 'Unresolved FPackageId dependencies are not classified as missing or resolved. '
-                . 'The dependency pass can extract source-backed requirements, but definitive provider selection needs '
-                . 'original runtime mount and backend evidence.</div>';
-        }
-    }
     if (!$gameDependencyCurrent) {
         echo '<div class="card"><strong>Dependency publication unavailable.</strong> '
             . 'Current missing/resolved classifications are unknown until the engine-specific source publication is complete. '
@@ -513,24 +501,22 @@ try {
         foreach ($files as $file) {
             $isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
             $zenPackageId = strtoupper((string)($file['zen_package_id'] ?? ''));
-            $scriptUnverified = $isZen ? (int)($file['script_unverified_count'] ?? 0) : 0;
+            $staticResolved = $isZen ? (int)($file['static_resolved_count'] ?? 0) : 0;
+            $staticScripts = $isZen ? (int)($file['static_script_count'] ?? 0) : 0;
             $dependencyBadges = [];
             foreach (['resolved', 'missing', 'package_only', 'common', 'unresolved'] as $key) {
                 $count = (int)($file[$key . '_count'] ?? 0);
-                if ($key === 'unresolved' && $isZen) {
-                    // UE5 ScriptImport identities have no mounted runtime registry
-                    // here; they are not proof of a missing file or broken import.
-                    $count = max(0, $count - $scriptUnverified);
+                if (!$count) continue;
+                $badge = game_files_status_badge($key, $count);
+                if ($key === 'resolved' && $staticResolved > 0) {
+                    $badge = '<a href="file-examine.php?id=' . (int)$file['id']
+                        . '&amp;tab=imports#package-tables" title="Exact catalogue matches: '
+                        . $staticResolved . ' source references found in indexed packages'
+                        . ($staticScripts > 0 ? ', including ' . $staticScripts
+                            . ' cooked ScriptObjects entries in global.utoc' : '')
+                        . '">' . $badge . '</a>';
                 }
-                if ($count) {
-                    $dependencyBadges[] = '<div>' . game_files_status_badge($key, $count) . '</div>';
-                }
-            }
-            if ($scriptUnverified > 0) {
-                $dependencyBadges[] = '<div><a href="file-examine.php?id=' . (int)$file['id']
-                    . '&amp;tab=imports#package-tables" title="Cooked script-object identities are known. Runtime script registration has not been verified; this is not a missing-file verdict.">'
-                    . CatalogUi::badge('script imports: ' . $scriptUnverified . ' (runtime unverified)', 'neutral')
-                    . '</a></div>';
+                $dependencyBadges[] = '<div>' . $badge . '</div>';
             }
             $deps = (int)($file['dependency_projection_current'] ?? 0) !== 1
                 ? ($isZen && (string)($file['v5_stage_status'] ?? '') === 'staged'

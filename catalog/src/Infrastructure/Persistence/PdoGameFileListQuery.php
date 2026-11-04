@@ -13,6 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope;
+use UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenStaticDependencyLookup;
 
 /** Loads stable cursor pages of a game's file list and dependency summaries. */
 final class PdoGameFileListQuery
@@ -155,7 +156,7 @@ final class PdoGameFileListQuery
         $placeholders = implode(',', array_fill(0, count($fileIds), '?'));
         $rows = \catalog_all(
             $this->db,
-            'SELECT f.id,f.package_name,f.original_name,f.package_guid,f.md5,f.sha1,f.extension,'
+            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.package_guid,f.md5,f.sha1,f.extension,'
             . 'f.package_version,f.licensee_version,f.file_size,f.is_compressed,f.uploaded_at,'
             . '(SELECT HEX(z.package_id) FROM ue_iostore_packages z WHERE z.file_id=f.id AND z.chunk_index=0 LIMIT 1) zen_package_id,'
             . '(SELECT z.container_id FROM ue_iostore_packages z WHERE z.file_id=f.id AND z.chunk_index=0 LIMIT 1) zen_container_id,'
@@ -187,14 +188,15 @@ final class PdoGameFileListQuery
                 && (int)($row['dependency_projection_current'] ?? 0) === 1) {
                 $zenIds[] = (int)$fileId;
                 $rowsById[$fileId]['unresolved_count'] = 0;
-                $rowsById[$fileId]['script_unverified_count'] = 0;
+                $rowsById[$fileId]['static_resolved_count'] = 0;
+                $rowsById[$fileId]['static_script_count'] = 0;
+                $rowsById[$fileId]['static_package_found_count'] = 0;
             }
         }
         if ($zenIds !== []) {
             $zenPlaceholders = implode(',', array_fill(0, count($zenIds), '?'));
             $unresolvedRows = \catalog_all($this->db,
-                'SELECT file_id,COUNT(*) unresolved,'
-                . 'SUM(CASE WHEN classification=5 THEN 1 ELSE 0 END) script_unverified '
+                'SELECT file_id,COUNT(*) unresolved '
                 . 'FROM ue_uedb5_dependency_edges '
                 . 'WHERE file_id IN (' . $zenPlaceholders . ') AND outcome=4 GROUP BY file_id',
                 $zenIds
@@ -203,8 +205,44 @@ final class PdoGameFileListQuery
                 $id = (int)$entry['file_id'];
                 if (isset($rowsById[$id])) {
                     $rowsById[$id]['unresolved_count'] = (int)$entry['unresolved'];
-                    $rowsById[$id]['script_unverified_count'] = (int)$entry['script_unverified'];
                 }
+            }
+
+            // The Epic-analog dependency projection deliberately records
+            // unknown mount selection. UnrealDB's *catalogue* question is
+            // simpler: does a verified file actually provide the exact source
+            // identity? Match it without reading files or simulating a game.
+            $candidateRows = catalog_all($this->db,
+                'SELECT file_id,source_kind,source_index,required_package_key_kind,'
+                . 'HEX(required_package_key) package_key,required_object_key_kind,'
+                . 'HEX(required_object_key) object_key '
+                . 'FROM ue_uedb5_dependency_edges '
+                . 'WHERE file_id IN (' . $zenPlaceholders . ') AND outcome=4 '
+                . 'AND (required_object_key_kind IN (2,3) '
+                . 'OR required_package_key_kind=2)',
+                $zenIds
+            );
+            $gameId = (int)($rowsById[$zenIds[0]]['game_id'] ?? 0);
+            $static = (new CatalogZenStaticDependencyLookup($this->db))
+                ->forEdges($gameId, $candidateRows);
+            foreach ($candidateRows as $edge) {
+                $id = (int)$edge['file_id'];
+                $key = $id . ':' . (int)$edge['source_kind'] . ':' . (int)$edge['source_index'];
+                $state = (string)($static[$key]['state'] ?? '');
+                if ($state === 'resolved_script' || $state === 'resolved_export') {
+                    $rowsById[$id]['static_resolved_count']++;
+                    if ($state === 'resolved_script') $rowsById[$id]['static_script_count']++;
+                    $rowsById[$id]['unresolved_count'] = max(0,
+                        (int)$rowsById[$id]['unresolved_count'] - 1);
+                } elseif ($state === 'package_found') {
+                    $rowsById[$id]['static_package_found_count']++;
+                    $rowsById[$id]['unresolved_count'] = max(0,
+                        (int)$rowsById[$id]['unresolved_count'] - 1);
+                }
+            }
+            foreach ($zenIds as $id) {
+                $rowsById[$id]['resolved_count'] += $rowsById[$id]['static_resolved_count'];
+                $rowsById[$id]['package_only_count'] += $rowsById[$id]['static_package_found_count'];
             }
         }
 

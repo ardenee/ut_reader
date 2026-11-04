@@ -77,6 +77,7 @@ final class CatalogZenCookedScriptLabelLookup
                     'cdo_class_index'=>strtoupper((string)$row['cdo_class_index']),
                     'cdo_class_path'=>(string)$row['cdo_class_path'],
                     'source'=>'cooked_script_objects_sql_projection',
+                    'container_id'=>$containerId,
                 ];
             }
         }
