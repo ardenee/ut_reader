@@ -196,6 +196,10 @@
 
     function movePackageRefsToIndexTooltips(packageTables) {
         packageTables.querySelectorAll('.examine-imports-table, .examine-exports-table').forEach(function (table) {
+            // Zen raw ImportMap/ExportMap columns are authoritative source fields.
+            // This legacy classic-table formatter removes column 2 and the
+            // second grouped header, corrupting colspan and raw Zen values.
+            if (table.dataset.catalogIdentitySkip === '1') return;
             if (table.dataset.packageRefMoved === '1') return;
             Array.from(table.rows).forEach(function (row, rowIndex) {
                 if (row.cells.length < 2) return;
