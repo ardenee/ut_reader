@@ -14,6 +14,50 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
 
 catalog_start_session();
 
+/**
+ * Compact local Zen reference renderer matching the legacy examiner cells.
+ * File-identity enrichment must never operate on these package references.
+ *
+ * @param array<string,mixed> $ref
+ * @param array<string,string> $cookedLabels
+ * @param array<string,int> $importIndices
+ */
+function examine_zen_table_reference(
+    array $ref,
+    array $cookedLabels,
+    array $importIndices,
+    int $fileId,
+    int $pageSize
+): string {
+    $kind = (string)($ref['type'] ?? '');
+    $raw = strtoupper((string)($ref['raw_type_and_id'] ?? ''));
+    if ($kind === 'Null' || $kind === '') return '<span class="muted">—</span>';
+    if ($kind === 'Export' && isset($ref['local_export_index'])) {
+        $index = (int)$ref['local_export_index'];
+        return '<a class="xref mono" href="' . catalog_h(examine_href($fileId, 'export-'.$index, $pageSize))
+            . '">Export #' . $index . '</a>';
+    }
+    if ($kind === 'ScriptImport') {
+        $html = isset($cookedLabels[$raw])
+            ? '<span class="mono path">' . catalog_h($cookedLabels[$raw]) . '</span>'
+            : '<span class="mono">0x' . catalog_h($raw) . '</span>';
+        if (isset($importIndices[$raw])) {
+            $index = $importIndices[$raw];
+            $html .= '<span class="examine-zen-ref-link"><a class="xref" href="'
+                . catalog_h(examine_href($fileId, 'import-'.$index, $pageSize))
+                . '">Import #' . $index . '</a></span>';
+        }
+        return $html;
+    }
+    if ($kind === 'PackageImport') {
+        $packageId = (string)($ref['provider_package_id'] ?? '');
+        $hash = (string)($ref['provider_public_export_hash'] ?? '');
+        return '<span class="mono">FPackageId ' . catalog_h($packageId) . '</span>'
+            . '<span class="examine-zen-secondary">Export hash ' . catalog_h($hash) . '</span>';
+    }
+    return '<span class="mono">0x' . catalog_h($raw) . '</span>';
+}
+
 function examine_int(string $key, int $default = 0): int
 {
     $value = filter_input(INPUT_GET, $key, FILTER_VALIDATE_INT);
