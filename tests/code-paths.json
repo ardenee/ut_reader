@@ -1646,8 +1646,8 @@
     },
     {
       "path": "catalog/bin/apply-ue1-epic-policy-cutover.ps1",
-      "sha256": "ecc9880ca833f284ef485e94e23261f704a45afb12e16669f0aa9a44d4427f50",
-      "bytes": 4533,
+      "sha256": "e72f39bf01f625682e10264db171a57aa73e90c7da510c96c0a7d7d5af55b47a",
+      "bytes": 5253,
       "engine_hints": [
         "ue1"
       ],
@@ -2473,8 +2473,8 @@
     },
     {
       "path": "catalog/bin/verify-ue1-epic-policy-cutover.php",
-      "sha256": "79061ae7f87d244f094be4bcb0a19076627c95d80016599fa1a00e045272f48e",
-      "bytes": 5072,
+      "sha256": "17bffb34865ec3d14be3fff6dad3b306c826be066412df16e064358569542f1e",
+      "bytes": 5535,
       "engine_hints": [
         "ue1"
       ],

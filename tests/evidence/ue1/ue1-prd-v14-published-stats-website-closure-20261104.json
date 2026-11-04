@@ -1,0 +1,128 @@
+{
+  "schema": "unrealdb-source-verified-UE1-website-F17-F22-final-v1",
+  "date": "2026-11-04",
+  "contract_key": "ue1-website-dependency",
+  "status": "PASS",
+  "scope": "UE1 genuine PRD source-policy v14, current cached per-game statistics, and website/JSON read paths. Not a claim of native execution of all game packages or arbitrary mounted-provider selection.",
+  "production_cutover": {
+    "execution": "User-provided local PRD Lelly-pc log, independently verified against live PRD read-only UEDB5 and migration-status SQL",
+    "log": "C:/Temp/UnrealDB/UE1/epic-policy-cutover/cutover-20261104-132552.log",
+    "workers": 2,
+    "exit_codes": [
+      0,
+      0
+    ],
+    "games": [
+      {
+        "game_id": 3,
+        "game": "UT99",
+        "verified": 74303,
+        "v14_current": 74303,
+        "stale": 0,
+        "old_v13_rows": 0,
+        "policy": "uedb5-dependency-pass-ue1-mount-v14",
+        "last_dependency_published_at": "2026-11-04 15:16:55"
+      },
+      {
+        "game_id": 12,
+        "game": "Unreal Gold",
+        "verified": 10788,
+        "v14_current": 10788,
+        "stale": 0,
+        "old_v13_rows": 0,
+        "policy": "uedb5-dependency-pass-ue1-mount-v14",
+        "last_dependency_published_at": "2026-11-04 15:33:40"
+      }
+    ],
+    "total": 85091,
+    "all_verified": true,
+    "other_engines_preserve_independent_epochs": true
+  },
+  "root_cause_for_games_page_unavailable": {
+    "reason": "PdoGameCatalogListQuery deliberately rejects cached game statistics when updated_at precedes the last source-correct dependency publication.",
+    "before": [
+      {
+        "game_id": 3,
+        "stats_updated_at": "2026-10-05 16:06:20",
+        "last_dependency_published_at": "2026-11-04 15:16:55",
+        "stats_current": false
+      },
+      {
+        "game_id": 12,
+        "stats_updated_at": "2026-10-05 07:24:04",
+        "last_dependency_published_at": "2026-11-04 15:33:40",
+        "stats_current": false
+      }
+    ],
+    "fix": "Executed existing catalog/bin/rebuild-game-catalog-stats.php --game-id=<3|12> against PRD MySQL, updating only the two derived aggregate rows. Added auto-refresh in PRD-only scoped UE1 cutover script before final cutover verifier, and made full verifier include game_stats_current.",
+    "after": [
+      {
+        "game_id": 3,
+        "stats_updated_at": "2026-11-04 15:41:47",
+        "stats_current": true,
+        "verified_file_count": 74303,
+        "cached_total_file_count": 74434,
+        "stored_dependency_count": 8137633,
+        "source_evidenced_missing_count": 0,
+        "source_evidenced_missing_base_game_count": 0,
+        "resolved_count": 0,
+        "common_count": 4091838
+      },
+      {
+        "game_id": 12,
+        "stats_updated_at": "2026-11-04 15:41:47",
+        "stats_current": true,
+        "verified_file_count": 10788,
+        "cached_total_file_count": 10802,
+        "stored_dependency_count": 1252635,
+        "source_evidenced_missing_count": 0,
+        "source_evidenced_missing_base_game_count": 0,
+        "resolved_count": 0,
+        "common_count": 540859
+      }
+    ],
+    "interpretation": "Zero source-evidenced missing does not mean zero unresolved references. The UE1 source mount order is still not inferred or invented. Official v14 source unresolved remains distinct."
+  },
+  "acceptance": {
+    "full_ue1_verifier_on_PRD_SQL_from_DEV": "ue1_cutover_complete=true, game_stats_current=true for game_ids 3 and 12, no stale v14, no old v13; other engines independently unchanged",
+    "actual_HTTP_dev_php_prd_database": {
+      "games.php": 200,
+      "file-examine-dependencies.php?id=113256": 200,
+      "file-examine-dependencies.php?id=1246569": 200,
+      "file-examine.php?id=113256&tab=uses": 200,
+      "file-examine.php?id=1246569&tab=used-by": 200,
+      "file-info.php?id=113256": 200,
+      "file-info.php?id=1246569": 200,
+      "game-files.php?id=3": 200,
+      "game-files.php?id=12": 200,
+      "results": "UE1 games.php contains two numeric missing counters per game; no UE1 Unavailable badges. Both JSON endpoints return ok=true, not stale HTTP 409. No stale policy notices and no PHP errors on the tested examiner/fileinfo/filelist pages."
+    },
+    "stale_guard_fixture": "Seven distinct SQLite negative/positive current/stale scenarios passed: correct policy with stale cached timestamp, stats refresh, old v13 policy, mismatched source SHA, newer republished dependency, refresh after publication; full source epoch independent of stats cache.",
+    "script_validation": "PRD-local cutover PowerShell AST parses with zero errors and refresh commands precede final full verifier. PHP linter passes.",
+    "no_repeated_native_tests": "Existing original native UE1 source and table-reader tests accepted in prior evidence reused without reruns."
+  },
+  "files_sha256": {
+    "catalog/bin/apply-ue1-epic-policy-cutover.ps1": "e72f39bf01f625682e10264db171a57aa73e90c7da510c96c0a7d7d5af55b47a",
+    "catalog/bin/verify-ue1-epic-policy-cutover.php": "17bffb34865ec3d14be3fff6dad3b306c826be066412df16e064358569542f1e",
+    "catalog/bin/rebuild-game-catalog-stats.php": "21aba36ac56fe656f7b43033b20463b19c106315492eff29bf6279fb264540a4",
+    "catalog/games.php": "553885114109a2c07a61a15736caa2f180f782265c71b652c5cb1134a3b9741a",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php": "6f96763ebc7dd4acd37ced84960d9abe0fafff9cddfb49bbaf173b6f14655345",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php": "2291eb8295fac97ac020ef8c86c6cad87de354fbff223644e0daa8cd3e34f5c2",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+    "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa"
+  },
+  "verification_probes_dev": [
+    "D:/Temp/UnrealDB/ue1/audit-ue1-game-stats-after-cutover.php",
+    "D:/Temp/UnrealDB/ue1/verify-http-ue1-after-cutover-stats.ps1",
+    "D:/Temp/UnrealDB/ue1/validate-real-ue1-postcutover-website.py",
+    "D:/Temp/UnrealDB/ue1/verify-stats-gate-after-cutover-fixture.php",
+    "D:/Temp/UnrealDB/ue1/validate-cutover-script-and-epoch-cache.ps1"
+  ],
+  "constraints_and_limits": [
+    "The genuine local PRD cutover log was supplied by the user. Its final status was independently confirmed by read-only PRD SQL, not by a directly connected PRD Desktop Commander session.",
+    "Real PRD web authentication was not exercised; the actual PHP pages were executed using DEV PHP against production read-only MySQL. PRD deployed source hashes will be compared.",
+    "Source unresolved provider-selection or native mount order is not reclassified as missing or resolved.",
+    "Only existing UE1 native source/readers verified by prior accepted tests are inside this contract; no new UE1 binary payload paths or re-reading texture/mesh/sound was performed."
+  ]
+}

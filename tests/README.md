@@ -2,11 +2,17 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
-## UE1 current production gate (4 November 2026)
+## Current UE1 and UE5 acceptance decision (4 November 2026)
+
+The fixed 32-operation register now records **29 PASS / 3 BLOCKED**: UE1 **7/7 PASS**, UE5 **7/7 PASS** in their implemented reader, header/table, source-backed publication and website scopes. The final UE1 website dependency contract moved to PASS after the user's PRD-local 85,091-file v14 cutover, independent read-only PRD SQL confirmation, two scoped game statistics rebuilds and nine real DEV HTTP views with current PRD data. Both UE1 games now show numeric Missing badges on catalog/games.php; zero refers to *confirmed missing*, not unknown-mounted providers. The PRD-local orchestrator refreshes stats after future cutovers, and its final verifier rejects stale cache.
+
+See [final UE1 website and aggregate evidence](evidence/ue1/ue1-prd-v14-published-stats-website-closure-20261104.json) and [UE5 website and upload evidence](evidence/ue5/ue5-upload-dependency-and-website-final-closure-20261104.json). Only UE2-UE4 website dependency contracts remain blocked. Direct authenticated PRD browser access was not independently verified.
+
+## Historical UE1 pre-cutover gate (superseded 4 November 2026)
 
 UE1 preflight is 85,091/85,091 ready across UT99 (74,303) and Unreal Gold (10,788), with **0 current UE1 v14**. DEV PHP HTTP reads against PRD MySQL show correct stale suppression (examination/File Info 200 with notices; dependency JSON 409). The PRD-local production cutover requires a verified database/metadata backup and an active PRD command session, neither accessible through the current DEV-only Desktop Commander connection. **No production migration was launched or claimed. UE1 website-dependency remains BLOCKED.** See [new focused evidence](evidence/ue1/ue1-prd-v14-readiness-and-local-execution-gate-20261104.json).
 
-## Current acceptance decision (4 November 2026)
+## Historical UE5-only acceptance decision (superseded later 4 November 2026)
 
 The fixed 32-case operation register records **28 PASS / 4 BLOCKED**. UE5 is **7/7 PASS** in its implemented reader, IoStore and source-backed website scope. The last ue5-website-dependency blocker is closed with genuine Satisfactory 27,240/27,240 current-policy packages, original imported-package identities, DEV PHP HTTP against production read-only MySQL, and exact DEV/PRD source SHA hashes. Only UE1-UE4 website-dependency contracts remain blocked, pending separate current-policy Pass 2 publication.
 

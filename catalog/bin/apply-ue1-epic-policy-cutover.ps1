@@ -16,7 +16,11 @@ $php = 'C:\php8.5\php.exe'
 if (!(Test-Path -LiteralPath $php)) { throw "PRD PHP CLI missing: $php" }
 $runner = Join-Path $PSScriptRoot 'migrate-uedb5-dependencies.php'
 $verifier = Join-Path $PSScriptRoot 'verify-ue1-epic-policy-cutover.php'
-if (!(Test-Path -LiteralPath $runner) -or !(Test-Path -LiteralPath $verifier)) { throw 'UE1 Pass 2 migration scripts missing on PRD.' }
+$statsRebuilder = Join-Path $PSScriptRoot 'rebuild-game-catalog-stats.php'
+if (!(Test-Path -LiteralPath $runner) -or !(Test-Path -LiteralPath $verifier) -or
+    !(Test-Path -LiteralPath $statsRebuilder)) {
+    throw 'UE1 Pass 2 migration, stats refresh or verification scripts missing on PRD.'
+}
 $catalog = Split-Path -Parent $PSScriptRoot
 $storage = Join-Path $catalog 'storage'
 if (!(Test-Path -LiteralPath $storage)) { throw "PRD UEDB5 storage root missing: $storage" }
@@ -70,9 +74,21 @@ try {
         }
         Write-Output "UE1_GAME_DEPENDENCY_REPUBLICATION_WORKERS_COMPLETED game=$id"
     }
+    # Dependency republication invalidates the per-game statistics cache.
+    # These two scoped aggregate rebuilds must complete *before* declaring
+    # cutover done; otherwise catalog/games.php correctly shows Unavailable.
+    foreach ($id in @(3,12)) {
+        & $php $statsRebuilder "--game-id=$id"
+        if ($LASTEXITCODE -ne 0) {
+            throw "UE1 game $id dependency stats refresh failed; do not report cutover complete."
+        }
+        Write-Output "UE1_GAME_CATALOG_DEPENDENCY_STATS_REFRESHED game=$id"
+    }
     & $php $verifier
-    if ($LASTEXITCODE -ne 0) { throw 'One or more UE1 files still use an old policy or mismatched payload. See status output.' }
-    Write-Output 'UE1_BOTH_GAMES_SOURCE_POLICY_CUTOVER_COMPLETE_OLD_V13_ROWS_ZERO'
+    if ($LASTEXITCODE -ne 0) {
+        throw 'UE1 source-policy, payload or website aggregate freshness verification failed. See status output.'
+    }
+    Write-Output 'UE1_BOTH_GAMES_SOURCE_POLICY_AND_WEBSITE_STATS_CURRENT_OLD_V13_ROWS_ZERO'
 } finally {
     Stop-Transcript | Out-Null
     Write-Output "Migration log: $log"

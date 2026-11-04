@@ -3194,13 +3194,13 @@
       "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "syntax": "new",
-      "line": 13
+      "line": 14
     },
     {
       "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "syntax": "static_or_expression",
-      "line": 15
+      "line": 16
     },
     {
       "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
@@ -3212,13 +3212,13 @@
       "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
       "syntax": "new",
-      "line": 14
+      "line": 15
     },
     {
       "from": "catalog/bin/verify-ue1-epic-policy-cutover.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
       "syntax": "use",
-      "line": 10
+      "line": 11
     },
     {
       "from": "catalog/blacklisted.php",

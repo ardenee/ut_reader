@@ -7,6 +7,7 @@ if (PHP_SAPI !== 'cli') {
 }
 require_once dirname(__DIR__) . '/bootstrap.php';
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameMissingDependencyQuery;
 $app = catalog_bootstrap(false);
 $db = $app->db;
@@ -58,12 +59,17 @@ foreach ($games as $id => $label) {
     );
     $sql->execute([$id, Uedb5GameDependencyPassService::DEPENDENCY_POLICY]);
     $oldRows = (int)$sql->fetchColumn();
+    // A source-correct Pass 2 alone does not make the public games.php
+    // counters trustworthy: the cached game aggregate must be rebuilt after
+    // the latest dependency publication before full cutover is complete.
+    $statsCurrent = Uedb5DependencyPublicationScope::isGameStatsCurrent($db, $id, 'UE1');
     $ok = !empty($pre['pass2_ready'])
         && (int)$fresh['verified'] === (int)$pre['verified_count']
         && (int)$fresh['current'] === (int)$fresh['verified']
         && (int)$fresh['stale'] === 0
         && $oldRows === 0
-        && (string)$fresh['expected_policy'] === $target;
+        && (string)$fresh['expected_policy'] === $target
+        && $statsCurrent;
     $complete = $complete && $ok;
     $results[] = [
         'id' => $id, 'game' => $label,
@@ -73,6 +79,7 @@ foreach ($games as $id => $label) {
         'old_v13_ue1_rows' => $oldRows,
         'selected_policy' => $target,
         'preflight_ready' => !empty($pre['pass2_ready']),
+        'game_stats_current' => $statsCurrent,
         'cutover_complete' => $ok,
     ];
 }

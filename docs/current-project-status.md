@@ -1,6 +1,20 @@
 # UnrealDB current project status
 
-## UE1 4 November 2026 - production cutover ready, NOT executed
+## Verified checkpoint: UE1 published, statistics current (4 November 2026)
+
+**UE1 fully closed within the seven defined UnrealDB operations: 7/7 PASS, 0 BLOCKED.** Current fixed contract register: **29 PASS / 3 BLOCKED** across five engines; only UE2, UE3, UE4 website dependency source epochs are pending.
+
+**PRD-local UE1 cutover completed:** the user supplied the Lelly-pc production log C:\Temp\UnrealDB\UE1\epic-policy-cutover\cutover-20261104-132552.log. Both resumable workers exited zero. Independent read-only PRD SQL and source-policy verifier confirmed **UT99 74,303/74,303** and **Unreal Gold 10,788/10,788** verified files current under UE1-mount-v14, 0 stale, 0 old v13 rows. UE2/UE3/UE4 epochs remain separate; UE5 stays current. Accepted native UE1 reader/serialization evidence was reused, not rerun.
+
+**games.php Unavailable fixed:** the cutover advanced last UE1 dependency publication to November 4, but cached game stats were from October 5. Game-list freshness correctly hid outdated totals. Rebuilt existing scoped game statistics for IDs 3 and 12 against PRD; both rows were rebuilt November 4 at 15:41:47. They now satisfy the source policy, payload SHA and aggregate-after-publication gates. Public Missing and Base-game Missing badges are numeric (both 0 *confirmed missing*); this does **not** imply all UE1 imports are resolved, as source-unknown mounted providers remain unresolved.
+
+**Future cutovers protected:** the PRD-only UE1 orchestrator now refreshes both game statistics after dependency republication and **before** final cutover verification. The full verifier includes game_stats_current for each game; stale cache rejects a false success. Seven isolated SQLite negative/positive freshness cases and a PowerShell AST/order check passed. DEV PHP HTTP against real PRD read-only MySQL returned HTTP 200 on games.php, both dependency JSON endpoints, Uses/Used By, File Info and both game file lists. Source data, not old v13 records, drives the results; no game runtime was invented. Authenticated PRD browser was not independently exercised.
+
+**Source scope:** the seven implemented UE1 library/website paths are closed, not every possible historical UE1 binary or mounted game session. Three remaining blockages are UE2, UE3 and UE4 website dependency publication, not UE1. Evidence: [UE1 production and games.php closure](../tests/evidence/ue1/ue1-prd-v14-published-stats-website-closure-20261104.json) and [operation register](../tests/contracts.json).
+
+---
+
+## Historical UE1 pre-cutover checkpoint (superseded 4 November 2026)
 
 **UE1 website dependency remains BLOCKED, not PASS.** Genuine production read-only preflight on both UE1 games shows **85,091/85,091** verified files with staged current-format UEDB5 and primary provider keys: UT99 game #3 has 74,303 and Unreal Gold game #12 has 10,788. Both have zero invalid identities and complete staging, but **0/85,091 currently published under uedb5-dependency-pass-ue1-mount-v14**. Original source/native parser evidence was reused, not rerun.
 
