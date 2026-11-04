@@ -60,9 +60,11 @@ function file_examine_header_html(?array $inspection): string
     if ($inspection === null) {
         return '';
     }
-    $html = '<div class="card"><h2>Raw package header</h2>';
+    $html = '<div class="card"><details class="examine-raw-header">'
+        . '<summary style="cursor:pointer"><strong>Raw package header</strong></summary>'
+        . '<div style="margin-top:12px">';
     if (!$inspection['ok']) {
-        return $html . '<p class="muted">' . catalog_h($inspection['error']) . '</p></div>';
+        return $html . '<p class="muted">' . catalog_h($inspection['error']) . '</p></div></details></div>';
     }
 
     $html .= '<div class="two-col"><table>';
@@ -94,7 +96,7 @@ function file_examine_header_html(?array $inspection): string
         }
         $html .= '</details>';
     }
-    return $html . '</div>';
+    return $html . '</div></details></div>';
 }
 
 /**

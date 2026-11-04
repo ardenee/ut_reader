@@ -89,18 +89,21 @@ function zen_exam_header_value(mixed $value):string
  */
 function zen_exam_raw_header_html(\PDO $db,int $fileId,int $pageSize):string
 {
+    $collapsible='<div class="card"><details class="examine-raw-header">'
+        .'<summary style="cursor:pointer"><strong>Raw Zen package header — FZenPackageSummary</strong></summary>'
+        .'<div style="margin-top:12px">';
     $header=(new \UnrealDb\Catalog\Infrastructure\Metadata\PdoZenExamProjection($db))
         ->header($fileId);
     if($header===null){
-        return '<div class="card"><h2>Raw Zen package header</h2>'
+        return $collapsible
             .'<p class="muted">The serialized FZenPackageSummary has not yet been '
             .'materialized in the source-bound SQL examination index. '
-            .'No classic package header is substituted.</p></div>';
+            .'No classic package header is substituted.</p></div></details></div>';
     }
     $summary=(array)($header['summary']??[]);
     if($summary===[]){
-        return '<div class="card"><h2>Raw Zen package header</h2>'
-            .'<p class="muted">No serialized FZenPackageSummary in the verified projection.</p></div>';
+        return $collapsible
+            .'<p class="muted">No serialized FZenPackageSummary in the verified projection.</p></div></details></div>';
     }
     $fieldTypes=[
         'has_versioning_info'=>'uint32',
@@ -116,7 +119,7 @@ function zen_exam_raw_header_html(\PDO $db,int $fileId,int $pageSize):string
         'dependency_bundle_entries_offset'=>'int32',
         'imported_package_names_offset'=>'int32',
     ];
-    $result='<div class="card"><h2>Raw Zen package header — FZenPackageSummary</h2>'
+    $result=$collapsible
         .'<p class="muted">These fields are serialized in the cooked package header '
         .'and were decoded once from the verified source. IoStore FPackageId, '
         .'game assignment, storage filename and scanner status are <em>not</em> '
@@ -155,5 +158,5 @@ function zen_exam_raw_header_html(\PDO $db,int $fileId,int $pageSize):string
     }else{
         $result.='<p class="muted">Optional versioning information: not serialized.</p>';
     }
-    return $result.'</div>';
+    return $result.'</div></details></div>';
 }
