@@ -511,15 +511,27 @@ try {
         echo '</tr></thead><tbody>';
 
         foreach ($files as $file) {
+            $isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
+            $zenPackageId = strtoupper((string)($file['zen_package_id'] ?? ''));
+            $scriptUnverified = $isZen ? (int)($file['script_unverified_count'] ?? 0) : 0;
             $dependencyBadges = [];
             foreach (['resolved', 'missing', 'package_only', 'common', 'unresolved'] as $key) {
                 $count = (int)($file[$key . '_count'] ?? 0);
+                if ($key === 'unresolved' && $isZen) {
+                    // UE5 ScriptImport identities have no mounted runtime registry
+                    // here; they are not proof of a missing file or broken import.
+                    $count = max(0, $count - $scriptUnverified);
+                }
                 if ($count) {
                     $dependencyBadges[] = '<div>' . game_files_status_badge($key, $count) . '</div>';
                 }
             }
-            $isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
-            $zenPackageId = strtoupper((string)($file['zen_package_id'] ?? ''));
+            if ($scriptUnverified > 0) {
+                $dependencyBadges[] = '<div><a href="file-examine.php?id=' . (int)$file['id']
+                    . '&amp;tab=imports#package-tables" title="Cooked script-object identities are known. Runtime script registration has not been verified; this is not a missing-file verdict.">'
+                    . CatalogUi::badge('script imports: ' . $scriptUnverified . ' (runtime unverified)', 'neutral')
+                    . '</a></div>';
+            }
             $deps = (int)($file['dependency_projection_current'] ?? 0) !== 1
                 ? ($isZen && (string)($file['v5_stage_status'] ?? '') === 'staged'
                     ? '<span class="muted" title="Package metadata is published; its engine-specific dependency pass has not completed">Dependencies not evaluated</span>'

@@ -187,12 +187,15 @@ final class PdoGameFileListQuery
                 && (int)($row['dependency_projection_current'] ?? 0) === 1) {
                 $zenIds[] = (int)$fileId;
                 $rowsById[$fileId]['unresolved_count'] = 0;
+                $rowsById[$fileId]['script_unverified_count'] = 0;
             }
         }
         if ($zenIds !== []) {
             $zenPlaceholders = implode(',', array_fill(0, count($zenIds), '?'));
             $unresolvedRows = \catalog_all($this->db,
-                'SELECT file_id,COUNT(*) unresolved FROM ue_uedb5_dependency_edges '
+                'SELECT file_id,COUNT(*) unresolved,'
+                . 'SUM(CASE WHEN classification=5 THEN 1 ELSE 0 END) script_unverified '
+                . 'FROM ue_uedb5_dependency_edges '
                 . 'WHERE file_id IN (' . $zenPlaceholders . ') AND outcome=4 GROUP BY file_id',
                 $zenIds
             );
@@ -200,6 +203,7 @@ final class PdoGameFileListQuery
                 $id = (int)$entry['file_id'];
                 if (isset($rowsById[$id])) {
                     $rowsById[$id]['unresolved_count'] = (int)$entry['unresolved'];
+                    $rowsById[$id]['script_unverified_count'] = (int)$entry['script_unverified'];
                 }
             }
         }

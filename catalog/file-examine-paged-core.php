@@ -363,6 +363,24 @@ try {
         [$fileId]
     );
     $dependencyCurrent = (int)($dependencyCurrentRow['dependency_current'] ?? 0) === 1;
+    $zenImportOutcomes = [];
+    if ($isZen && $table === 'imports' && $dependencyCurrent && $rows !== []) {
+        $indices = array_values(array_unique(array_map(
+            static fn(array $item): int => (int)$item['import_index'], $rows
+        )));
+        // Precisely source_kind=1 (serialized ordinary import map). The
+        // two load-order outcomes (source_kind=4) are not import resolutions.
+        $placeholders = implode(',', array_fill(0, count($indices), '?'));
+        $edges = catalog_all($db,
+            'SELECT source_index,classification,outcome,resolved_file_id '
+            . 'FROM ue_uedb5_dependency_edges WHERE file_id=? AND source_kind=1 '
+            . 'AND source_index IN (' . $placeholders . ')',
+            array_merge([$fileId], $indices)
+        );
+        foreach ($edges as $edge) {
+            $zenImportOutcomes[(int)$edge['source_index']] = $edge;
+        }
+    }
     // Relationship counts belong to the tab chrome, so compute the two
     // distinct-package counts on every examiner request rather than only after
     // the relationship tab has been selected.
@@ -604,16 +622,47 @@ try {
     echo examine_pagination($fileId, $table, $page);
 
     if ($table === 'names') {
-        echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th>' . '' . '<th>Flags / hashes</th></tr></thead><tbody>';
-        foreach ($rows as $row) {
-            $index = (int)$row['name_index'];
-            $rowId = 'name-' . $index;
-            $text = (string)$row['name_text'];
-            echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '') . '><td class="mono">' . $index . '</td><td class="mono path">' . catalog_h($text) . '</td>'
-
-                . '<td class="mono">' . examine_name_flags($row['flags'] ?? null) . '</td></tr>';
+        if ($isZen) {
+            $hashVersion = strtoupper((string)($rows[0]['hash_version'] ?? ''));
+            echo '<h2>Names — Zen NameMap</h2>'
+                . '<p class="muted">NameMap entries store an 8-bit or UTF-16LE string, '
+                . 'the number of encoded units, and a 64-bit serialized name hash. '
+                . 'Zen NameMap does not have the classic per-name flags column.'
+                . ($hashVersion !== '' ? ' Hash version: <span class="mono">0x'
+                    . catalog_h($hashVersion) . '</span>.' : '') . '</p>'
+                . '<div class="examine-table-region"><table data-catalog-identity-skip="1"><thead><tr>'
+                . '<th>Index</th><th>Name</th><th>Hash (uint64)</th>'
+                . '<th>Encoding</th><th>Length (units)</th></tr></thead><tbody>';
+            foreach ($rows as $row) {
+                $index = (int)$row['name_index'];
+                $rowId = 'name-' . $index;
+                $name = (string)$row['name_text'];
+                $hash = strtoupper((string)($row['hash'] ?? ''));
+                $wide = (bool)($row['is_utf16'] ?? false);
+                echo '<tr id="' . $rowId . '"'
+                    . ($target === $rowId ? ' class="is-reference-target"' : '')
+                    . '><td class="mono">' . $index . '</td>'
+                    . '<td class="mono path">' . catalog_h($name) . '</td>'
+                    . '<td class="mono">' . ($hash !== '' ? '0x' . catalog_h($hash) : '—') . '</td>'
+                    . '<td>' . ($wide ? 'UTF-16LE' : '8-bit') . '</td>'
+                    . '<td class="mono">' . (int)($row['length'] ?? 0) . '</td></tr>';
+            }
+            echo '</tbody></table></div>';
+        } else {
+            echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr>'
+                . '<th>Index</th><th>Name</th><th>Flags / hashes</th></tr></thead><tbody>';
+            foreach ($rows as $row) {
+                $index = (int)$row['name_index'];
+                $rowId = 'name-' . $index;
+                echo '<tr id="' . $rowId . '"'
+                    . ($target === $rowId ? ' class="is-reference-target"' : '')
+                    . '><td class="mono">' . $index . '</td>'
+                    . '<td class="mono path">' . catalog_h((string)$row['name_text']) . '</td>'
+                    . '<td class="mono">' . examine_name_flags($row['flags'] ?? null)
+                    . '</td></tr>';
+            }
+            echo '</tbody></table></div>';
         }
-        echo '</tbody></table></div>';
     } elseif ($table === 'imports') {
         if ($isZen) {
             $scriptImports = 0;
@@ -631,11 +680,14 @@ try {
                     . ' script-import identities identified from cooked ScriptObjects</strong> '
                     . '<span class="muted">(this page)</span>.</p>';
             }
-            echo '<p class="muted">Showing serialized Zen import references and source-backed cooked names. '
-                . 'Runtime script registration and mounted-provider resolution are separate from source identification.</p>'
+            echo '<p class="muted">Each row below is a serialized UE5 Zen import. '
+                . 'Cooked ScriptObjects may identify its path without proving live script registration. '
+                . 'The ' . (int)$file['export_count'] . ' exports are local objects defined by this package, '
+                . 'not resolved external imports. Source dependency-bundle/load-order entries are a separate class of record.</p>'
                 . '<div class="examine-table-region"><table class="examine-imports-table" data-catalog-identity-skip="1"><thead><tr>'
-                . '<th>Index</th><th>Object ref</th><th>Script package</th><th>Class</th>'
-                . '<th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th>'
+                . '<th>Index</th><th>Registration / provider</th><th>Object ref</th>'
+                . '<th>Script package</th><th>Class</th><th>Object</th>'
+                . '<th>Outer ref</th><th>Full path</th>'
                 . '</tr></thead><tbody>';
             $importIndexByRaw = [];
             foreach ($rows as $item) {
@@ -651,20 +703,22 @@ try {
                 $refHtml = '<span class="mono">0x' . catalog_h($rawIndex) . '</span>';
                 // The page is already an Imports table. Show a type label only
                 // for non-script reference kinds, not repeated ScriptImport text.
-                if ($kind !== 'ScriptImport') {
+                if ($kind === 'Null') {
+                    $refHtml = '<span class="muted">Null</span>';
+                } elseif ($kind !== 'ScriptImport') {
                     $refHtml .= '<span class="examine-zen-secondary">' . catalog_h($kind) . '</span>';
                 }
                 $moduleHtml = '<span class="muted">—</span>';
                 $classHtml = '<span class="muted">—</span>';
                 $objectHtml = '<span class="muted">—</span>';
                 $outerHtml = '<span class="muted">—</span>';
-                $pathHtml = '<span class="muted">Not available</span>';
-                $rootHtml = '<span class="muted">—</span>';
+                $pathHtml = $kind === 'Null' ? '<span class="muted">—</span>'
+                    : '<span class="muted">Not available</span>';
                 if ($kind === 'ScriptImport' && is_array($detail)) {
                     $objectHtml = '<span class="mono path">' . catalog_h((string)$detail['name']) . '</span>';
                     $pathHtml = '<span class="mono path">' . catalog_h((string)$detail['path']) . '</span>';
                     if ((string)$detail['module'] !== '') {
-                        $rootHtml = $moduleHtml = '<span class="mono path">'
+                        $moduleHtml = '<span class="mono path">'
                             . catalog_h((string)$detail['module']) . '</span>';
                     }
                     $outer = strtoupper((string)$detail['outer_index']);
@@ -703,15 +757,44 @@ try {
                     $objectHtml = '<a class="xref mono" href="#export-' . $local
                         . '">Export #' . $local . '</a>';
                 }
+                $statusHtml = '<span class="muted">Not evaluated</span>';
+                if ($kind === 'Null') {
+                    $statusHtml = '<span class="muted">Null slot — no dependency</span>';
+                } elseif ($kind === 'Export') {
+                    $statusHtml = '<span class="muted">Local export reference</span>';
+                } elseif (!$dependencyCurrent) {
+                    $statusHtml = '<span class="muted">Dependency data stale</span>';
+                } elseif (isset($zenImportOutcomes[$index])) {
+                    $edge = $zenImportOutcomes[$index];
+                    $outcome = (int)$edge['outcome'];
+                    $classification = (int)$edge['classification'];
+                    if ($classification === 5 && $outcome === 4) {
+                        // Epic ScriptObjects identities are present, but live
+                        // script registration is not proven by cooked bytes.
+                        $statusHtml = '<span class="muted" title="ScriptImports are source-identified from cooked ScriptObjects; '
+                            . 'the runtime script registry is not available to UnrealDB. '
+                            . 'This is not a missing-object verdict.">Runtime script registration unverified</span>';
+                    } else {
+                        $label = match ($outcome) {
+                            0 => 'Missing (source-evidenced)',
+                            1 => 'Provider resolved',
+                            2 => 'Package only',
+                            3 => 'Common',
+                            4 => 'Provider unresolved',
+                            default => 'Unknown status',
+                        };
+                        $statusHtml = '<span class="muted">' . catalog_h($label) . '</span>';
+                    }
+                }
                 echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '')
                     . '><td class="mono">' . $index . '</td>'
+                    . '<td>' . $statusHtml . '</td>'
                     . '<td>' . $refHtml . '</td>'
                     . '<td>' . $moduleHtml . '</td>'
                     . '<td>' . $classHtml . '</td>'
                     . '<td>' . $objectHtml . '</td>'
                     . '<td>' . $outerHtml . '</td>'
-                    . '<td>' . $pathHtml . '</td>'
-                    . '<td>' . $rootHtml . '</td></tr>';
+                    . '<td>' . $pathHtml . '</td></tr>';
             }
             echo '</tbody></table></div>';
         } else {
