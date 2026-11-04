@@ -19,7 +19,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
  */
 final class CatalogIoStoreDependencyPassJobHandler implements JobHandler
 {
-    private const FILES_PER_CLAIM = 20;
+    private const FILES_PER_CLAIM = 100;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly PDO $db, private readonly array $config) {}
@@ -53,13 +53,22 @@ final class CatalogIoStoreDependencyPassJobHandler implements JobHandler
         $gameId = (int)$container['game_id'];
         $members = $this->db->prepare(
             'SELECT COUNT(*) total, SUM(CASE WHEN metadata_status="ready" AND '
-            . 'publication_status="published" AND file_id IS NOT NULL THEN 1 ELSE 0 END) published '
+            . 'publication_status="published" AND file_id IS NOT NULL THEN 1 ELSE 0 END) published, '
+            . 'SUM(CASE WHEN metadata_status="failed" THEN 1 ELSE 0 END) failed_names '
             . 'FROM ue_iostore_packages WHERE container_id=? AND chunk_index=0'
         );
         $members->execute([$containerId]);
         $counts = $members->fetch(PDO::FETCH_ASSOC) ?: [];
         $total = (int)($counts['total'] ?? 0);
         $published = (int)($counts['published'] ?? 0);
+        $failedNames = (int)($counts['failed_names'] ?? 0);
+        if ($failedNames > 0) {
+            // A failed name index cannot become publishable by waiting.
+            // Surface an actionable failure instead of deferring forever.
+            throw new RuntimeException('IoStore dependency indexing cannot start: '
+                . $failedNames . ' package name(s) failed indexing in container #'
+                . $containerId . '. Repair the failed members and retry.');
+        }
         if ($total === 0) {
             return ['status'=>'no_package_members','container_id'=>$containerId,'total'=>0];
         }
@@ -117,9 +126,9 @@ final class CatalogIoStoreDependencyPassJobHandler implements JobHandler
                 'batch_ms'=>round((hrtime(true)-$started)/1e6,2),
                 'done'=>$done,'remaining'=>$remaining,'total'=>$all,
                 'percent'=>$all > 0 ? (int)floor(100*$done/$all) : 100,
-                'resolution_context'=>'mounted store authority is required for definitive provider results',
+                'resolution_context'=>'original source-shaped dependency outcomes retained; static catalogue matching is separate',
                 'message'=>'Dependency Pass 2: '.$done.'/'.$all
-                    .' source-backed files processed. Unproven mounted providers remain unresolved.',
+                    .' source-backed files processed; indexed catalogue providers are matched by exact identities.',
             ];
             $context->checkpoint($progress);
             if ($remaining > 0) {

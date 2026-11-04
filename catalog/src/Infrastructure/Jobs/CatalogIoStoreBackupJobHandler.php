@@ -58,17 +58,19 @@ final class CatalogIoStoreBackupJobHandler implements JobHandler
         // used for a new IoStore upload, including idempotent restore retries.
         $containerId=(int)$result['container_id'];
         $queue=new PdoJobQueue($this->db);
-        $nameJobId=$queue->enqueue($job->queue,JobType::INDEX_IOSTORE_PACKAGE_NAMES,
-            ['container_id'=>$containerId],110,null,
-            'iostore-name-index-'.$containerId,null,3);
-        $publishJobId=$queue->enqueue($job->queue,JobType::PUBLISH_IOSTORE_PACKAGES,
-            ['container_id'=>$containerId],110,null,
-            'iostore-publish-'.$containerId,null,3);
+        $followups=(new CatalogIoStorePostImportJobs($queue))->enqueue(
+            $job->queue,$containerId,(int)$result['package_count']
+        );
+        $nameJobId=$followups['name_job_id'];
+        $publishJobId=$followups['publish_job_id'];
+        $dependencyJobId=$followups['dependency_job_id'];
         $context->checkpoint(['stage'=>'container_restored','game_id'=>$gameId,
             'container_id'=>$containerId,'percent'=>100,
-            'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId]);
+            'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId,
+            'dependency_job_id'=>$dependencyJobId]);
         return $result+['operation'=>'restore_iostore_container','backup_key'=>$key,
             'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId,
-            'note'=>'Container restored and indexed; package name indexing and V5 publication are queued.'];
+            'dependency_job_id'=>$dependencyJobId,
+            'note'=>'Container restored; name indexing, publication and applicable dependency processing are queued.'];
     }
 }

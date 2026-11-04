@@ -63,6 +63,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogGameStatsRefreshCoordinator.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogIoStorePostImportJobs.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php',

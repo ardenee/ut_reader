@@ -95,13 +95,13 @@ final class CatalogIoStoreImportJobHandler implements JobHandler
                 (new PdoZenScriptObjectProjector($this->db))->publish($containerId, $toc);
             }
         }
-        $nameJobId=$queue->enqueue($job->queue,JobType::INDEX_IOSTORE_PACKAGE_NAMES,
-            ['container_id'=>$containerId],110,null,
-            'iostore-name-index-'.$containerId,null,3);
-        $publishJobId=$queue->enqueue($job->queue,JobType::PUBLISH_IOSTORE_PACKAGES,
-            ['container_id'=>$containerId],110,null,
-            'iostore-publish-'.$containerId,null,3);
-        $context->checkpoint(['stage'=>'container_indexed','percent'=>100,'container_id'=>$containerId,'package_count'=>$result['package_count'],'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId]);
+        $followups=(new CatalogIoStorePostImportJobs($queue))->enqueue(
+            $job->queue,$containerId,(int)$result['package_count']
+        );
+        $nameJobId=$followups['name_job_id'];
+        $publishJobId=$followups['publish_job_id'];
+        $dependencyJobId=$followups['dependency_job_id'];
+        $context->checkpoint(['stage'=>'container_indexed','percent'=>100,'container_id'=>$containerId,'package_count'=>$result['package_count'],'name_job_id'=>$nameJobId,'publish_job_id'=>$publishJobId,'dependency_job_id'=>$dependencyJobId]);
         return [
             'status'=>'indexed',
             'container_id'=>(int)$result['container_id'],
@@ -110,7 +110,8 @@ final class CatalogIoStoreImportJobHandler implements JobHandler
             'retention_status'=>(string)$result['retention_status'],
             'name_job_id'=>$nameJobId,
             'publish_job_id'=>$publishJobId,
-            'note'=>'Container safely retained and indexed; package publication is a separate workflow.'
+            'dependency_job_id'=>$dependencyJobId,
+            'note'=>'Container retained; name indexing, publication and (for package-bearing containers) dependency indexing are queued durably.'
         ];
     }
 }
