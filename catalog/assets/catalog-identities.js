@@ -236,6 +236,9 @@
     }
 
     function processColumnTable(table) {
+        // Zen FPackageObjectIndex/PublicExportHash columns are object references,
+        // not a package file GUID/MD5/SHA identity. Never replace their cells.
+        if (table.dataset.catalogIdentitySkip === '1') return;
         if (table.dataset.catalogIdentityColumns === '1') return;
         var columns = identityColumns(table);
         if (!columns.length) return;
