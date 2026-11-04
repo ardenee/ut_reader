@@ -61,8 +61,12 @@ final class Uedb5RuntimeMetadataReader
             $fields = match ($section) {
                 'names' => [$row['text'] ?? $row['name_text'] ?? '', $row['index'] ?? $position],
                 'imports' => [$row['object_name'] ?? '', $row['class_name'] ?? '',
-                    $row['class_package'] ?? '', $row['index'] ?? $position],
-                'exports' => [$row['object_name'] ?? '', $row['index'] ?? $position],
+                    $row['class_package'] ?? '', $row['type'] ?? '',
+                    $row['script_import_hash'] ?? '', $row['provider_package_id'] ?? '',
+                    $row['provider_public_export_hash'] ?? '',
+                    $row['raw_type_and_id'] ?? '', $row['index'] ?? $position],
+                'exports' => [$row['object_name'] ?? '', $row['public_export_hash'] ?? '',
+                    $row['index'] ?? $position],
             };
             $found = false;
             foreach ($fields as $field) {

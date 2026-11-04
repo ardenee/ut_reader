@@ -178,6 +178,32 @@ final class PdoGameFileListQuery
             $rowsById[(int)$row['id']] = $row;
         }
 
+        // Package-summary rows exclude Zen ScriptImport identities. For Zen
+        // show every currently published unresolved dependency edge, not just
+        // the package subset, so script-only packages are not shown as "none".
+        $zenIds = [];
+        foreach ($rowsById as $fileId => $row) {
+            if (strtolower((string)($row['extension'] ?? '')) === 'zenpkg'
+                && (int)($row['dependency_projection_current'] ?? 0) === 1) {
+                $zenIds[] = (int)$fileId;
+                $rowsById[$fileId]['unresolved_count'] = 0;
+            }
+        }
+        if ($zenIds !== []) {
+            $zenPlaceholders = implode(',', array_fill(0, count($zenIds), '?'));
+            $unresolvedRows = \catalog_all($this->db,
+                'SELECT file_id,COUNT(*) unresolved FROM ue_uedb5_dependency_edges '
+                . 'WHERE file_id IN (' . $zenPlaceholders . ') AND outcome=4 GROUP BY file_id',
+                $zenIds
+            );
+            foreach ($unresolvedRows as $entry) {
+                $id = (int)$entry['file_id'];
+                if (isset($rowsById[$id])) {
+                    $rowsById[$id]['unresolved_count'] = (int)$entry['unresolved'];
+                }
+            }
+        }
+
         $ordered = [];
         foreach ($fileIds as $fileId) {
             if (isset($rowsById[$fileId])) {

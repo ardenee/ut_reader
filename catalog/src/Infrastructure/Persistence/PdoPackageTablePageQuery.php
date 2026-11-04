@@ -92,7 +92,10 @@ final class PdoPackageTablePageQuery
         );
 
         $rows = self::presentV5Rows($rows, $table);
-        if ($table === 'imports' || $table === 'exports') {
+        if (($table === 'imports' || $table === 'exports')
+            && strtolower((string)($file['extension'] ?? '')) !== 'zenpkg') {
+            // Zen FPackageObjectIndex is NOT a signed classic FPackageIndex.
+            // The generic outer-chain walker would invent false paths here.
             $rows = self::withSerializedObjectPaths($db, $fileId, $table, $rows, (string)($file['package_name'] ?? ''));
         }
         return [
@@ -132,7 +135,9 @@ final class PdoPackageTablePageQuery
             );
         }
         $rows = self::presentV5Rows((array)$search['rows'], $table);
-        if ($table !== 'names') $rows = self::withSerializedObjectPaths($db, $fileId, $table, $rows, (string)($file['package_name']??''));
+        if ($table !== 'names' && strtolower((string)($file['extension'] ?? '')) !== 'zenpkg') {
+            $rows = self::withSerializedObjectPaths($db, $fileId, $table, $rows, (string)($file['package_name'] ?? ''));
+        }
         $start = ($requestedPage-1)*$pageSize;
         return ['rows'=>$rows,'page'=>$requestedPage,'pages'=>$pages,'total'=>$total,
             'page_size'=>$pageSize,'start'=>$total ? $start+1 : 0,'end'=>$start+count($rows)];
