@@ -585,22 +585,55 @@ try {
         echo '</tbody></table></div>';
     } elseif ($table === 'imports') {
         if ($isZen) {
-            echo '<h2>Zen imports — FPackageObjectIndex</h2>'
-                . '<p class="muted">UE5 Zen serializes typed 64-bit import identities, not classic '
+            $scriptImports = 0;
+            $identifiedScripts = 0;
+            foreach ($rows as $item) {
+                if ((string)($item['type'] ?? '') !== 'ScriptImport') continue;
+                $scriptImports++;
+                if (isset($zenScriptLabels[strtoupper((string)($item['raw_type_and_id'] ?? ''))])) {
+                    $identifiedScripts++;
+                }
+            }
+            echo '<h2>Zen imports — FPackageObjectIndex</h2>';
+            if ($scriptImports > 0) {
+                echo '<p><strong>' . $identifiedScripts . ' of ' . $scriptImports
+                    . ' script-import identities identified from cooked ScriptObjects</strong> '
+                    . '<span class="muted">(this page)</span>.</p>';
+            }
+            echo '<p class="muted">UE5 Zen serializes typed 64-bit import identities, not classic '
                 . 'ClassPackage/ClassName/ObjectName or signed outer references. '
-                . 'Cooked script labels come from this game&#039;s retained global ScriptObjects metadata; '
-                . 'they do not prove runtime loading or mounted provider selection.</p>'
+                . 'An identified cooked name establishes source identity, not runtime loading '
+                . 'or mounted provider selection.</p>'
                 . '<div class="examine-table-region"><table class="examine-imports-table"><thead><tr>'
-                . '<th>Index</th><th>Kind</th><th>Serialized object identity / diagnostic label</th>'
-                . '<th>Dependency class</th></tr></thead><tbody>';
+                . '<th>Index</th><th>Kind</th><th>Cooked object identity / serialized hash</th>'
+                . '<th>Identity identified?</th><th>Runtime provider status</th></tr></thead><tbody>';
             foreach ($rows as $row) {
                 $index = (int)$row['import_index'];
                 $rowId = 'import-' . $index;
+                $kind = (string)($row['type'] ?? '');
+                $rawIndex = strtoupper((string)($row['raw_type_and_id'] ?? ''));
+                if ($kind === 'ScriptImport') {
+                    $known = isset($zenScriptLabels[$rawIndex]);
+                    $identityState = $known
+                        ? 'Yes — cooked ScriptObjects name'
+                        : 'No matching cooked ScriptObjects record';
+                    $runtimeState = 'Runtime script registration unverified';
+                } elseif ($kind === 'PackageImport') {
+                    $identityState = 'Yes — FPackageId and PublicExportHash';
+                    $runtimeState = 'Mounted provider selection unverified';
+                } elseif ($kind === 'Export') {
+                    $identityState = 'Yes — local export index';
+                    $runtimeState = 'Local reference, not external provider';
+                } else {
+                    $identityState = $kind === 'Null' ? 'Null sentinel' : 'Unknown kind';
+                    $runtimeState = 'Not applicable';
+                }
                 echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '')
                     . '><td class="mono">' . $index . '</td>'
-                    . '<td>' . catalog_h((string)($row['type'] ?? '')) . '</td>'
+                    . '<td>' . catalog_h($kind) . '</td>'
                     . '<td>' . examine_zen_index_html($row, $zenScriptLabels, $fileId, $pageSize) . '</td>'
-                    . '<td>' . catalog_h((string)($row['dependency_class'] ?? '')) . '</td></tr>';
+                    . '<td>' . catalog_h($identityState) . '</td>'
+                    . '<td class="muted">' . catalog_h($runtimeState) . '</td></tr>';
             }
             echo '</tbody></table></div>';
         } else {
