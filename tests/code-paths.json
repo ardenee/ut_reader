@@ -2796,8 +2796,8 @@
     },
     {
       "path": "catalog/engine-dependency-update.php",
-      "sha256": "40977f27f21d5fc0c750b96e82e475cff08bde70cfaf1dbefb2b96407e4552f8",
-      "bytes": 8562,
+      "sha256": "3b226cb7b15ef08ffde0e1c062666c45fb234ca222bb743c8bd330d73dbff188",
+      "bytes": 8760,
       "engine_hints": [
         "shared"
       ],

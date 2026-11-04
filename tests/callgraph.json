@@ -3728,7 +3728,7 @@
       "from": "catalog/engine-dependency-update.php",
       "to": "catalog/src/Domain/Jobs/JobType.php",
       "syntax": "static_or_expression",
-      "line": 72
+      "line": 75
     },
     {
       "from": "catalog/engine-dependency-update.php",
@@ -3740,7 +3740,7 @@
       "from": "catalog/engine-dependency-update.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php",
       "syntax": "new",
-      "line": 88
+      "line": 91
     },
     {
       "from": "catalog/engine-dependency-update.php",
@@ -3752,7 +3752,7 @@
       "from": "catalog/engine-dependency-update.php",
       "to": "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php",
       "syntax": "static_or_expression",
-      "line": 33
+      "line": 36
     },
     {
       "from": "catalog/engine-dependency-update.php",
@@ -3764,7 +3764,7 @@
       "from": "catalog/engine-dependency-update.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 48
+      "line": 51
     },
     {
       "from": "catalog/engine-dependency-update.php",
@@ -3776,19 +3776,19 @@
       "from": "catalog/engine-dependency-update.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 95
+      "line": 98
     },
     {
       "from": "catalog/engine-dependency-update.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 158
+      "line": 161
     },
     {
       "from": "catalog/engine-dependency-update.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 95
+      "line": 98
     },
     {
       "from": "catalog/federation/_requests-child.php",

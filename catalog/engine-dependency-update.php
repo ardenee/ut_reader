@@ -25,10 +25,13 @@ try{
     foreach($games as &$game){
         $id=(int)$game['id'];$engine=(string)($game['engine_key']??'');
         $game['supported']=in_array(strtoupper($engine),['UE1','UE2','UE3','UE4','UE5'],true);
-        $game['policy_current']=$game['supported']
-            && Uedb5DependencyPublicationScope::isGameCurrent($db,$id,$engine);
+        // The statistics gate already verifies the full source-policy gate.
+        // Avoid rescanning current games a second time for the same hashes.
         $game['stats_current']=$game['supported']
             && Uedb5DependencyPublicationScope::isGameStatsCurrent($db,$id,$engine);
+        $game['policy_current']=$game['supported']
+            && ($game['stats_current']
+                || Uedb5DependencyPublicationScope::isGameCurrent($db,$id,$engine));
         $game['policy']=$game['supported']
             ? Uedb5GameDependencyPassService::policyForEngine($engine):'unsupported';
     }
