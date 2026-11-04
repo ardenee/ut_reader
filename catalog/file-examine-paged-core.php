@@ -481,6 +481,16 @@ try {
         ? (new \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenStaticDependencyLookup($db))
             ->forImportedPackages((int)$file['game_id'], $zenSourceReferences)
         : [];
+    $zenUsedBy = ['status'=>'not_indexed','total'=>0,
+        'page'=>1,'page_size'=>$zenReferencePageSize,'rows'=>[]];
+    if ($isZen) {
+        // Query exactly serialized ImportedPackageId references in other
+        // verified files; never substitute engine loader mount selection.
+        $zenUsedBy = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoZenPackageUsedByQuery($db))
+            ->forFile((int)$file['game_id'],$fileId,
+                $zenReferencePage,$zenReferencePageSize,$table==='used-by');
+        $relationshipCounts['used_by_count']=(int)$zenUsedBy['total'];
+    }
     $relationshipRows = [];
     if ($table === 'uses') {
         $relationshipRows = catalog_all($db,
@@ -488,6 +498,8 @@ try {
             . 'FROM ue_uedb5_dependency_edges l JOIN ue_files f ON f.id=l.resolved_file_id '
             . $freshDependencyJoins . 'WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.outcome IN (1,2) AND f.scan_status="verified" '
             . 'GROUP BY l.resolved_file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1 ORDER BY f.package_name,f.original_name', [$fileId]);
+    } elseif ($table === 'used-by' && $isZen) {
+        $relationshipRows = $zenUsedBy['rows'];
     } elseif ($table === 'used-by') {
         $relationshipRows = catalog_all($db,
             'SELECT l.file_id,f.original_name,f.package_name,f.file_size,f.package_guid,f.md5,f.sha1,COUNT(*) reference_count '
@@ -595,7 +607,7 @@ try {
         $tabCount = $isZen && $key === 'uses'
             ? $zenSourceTotal . ' packages / ' . (int)$file['import_count'] . ' object imports'
             : ($isZen && $key === 'used-by'
-                ? (int)($counts[$key] ?? 0) . ' published links'
+                ? (int)($counts[$key] ?? 0) . ' indexed source references'
                 : ($key === 'uses' && !$dependencyCurrent ? 'unverified' : ($counts[$key] ?? '')));
         echo '<a class="examine-tab' . ($table === $key ? ' is-active' : '') . '" href="' . catalog_h(examine_tab_href($fileId, $key, $pageSize)) . '">' . $label . ($tabCount !== '' ? ' <span>' . $tabCount . '</span>' : '') . '</a>';
     }
@@ -677,7 +689,11 @@ try {
                 : ($table === 'uses' && !$dependencyCurrent
                     ? 'Current Uses results are unavailable until source-correct dependency publication. The visible count is not proof that this package has no dependencies.'
                     : ($table === 'used-by'
-                        ? 'No independently current reverse dependency references are published for this package.'
+                        ? ($isZen
+                            ? (($zenUsedBy['status']??'')==='ambiguous'
+                                ? 'Multiple indexed physical providers share this FPackageId; no single file is selected.'
+                                : 'No other current indexed package imports this exact FPackageId.')
+                            : 'No independently current reverse dependency references are published for this package.')
                         : 'No resolved package relationships found.'));
             echo '<p class="muted">' . catalog_h($emptyText) . '</p></section></div><a class="to-top" href="#top">↑</a>';
             catalog_foot();
@@ -695,7 +711,26 @@ try {
                 . '<span>SHA1: ' . catalog_h(trim((string)$relation['sha1']) ?: '—') . '</span></td>'
                 . '<td>' . (int)$relation['reference_count'] . '</td></tr>';
         }
-        echo '</tbody></table></div></section></div><a class="to-top" href="#top">↑</a>';
+        echo '</tbody></table></div>';
+        if ($isZen && $table==='used-by') {
+            $lastPage=max(1,(int)ceil((int)$zenUsedBy['total']/$zenReferencePageSize));
+            if ($lastPage>1) {
+                echo '<p class="page-links">Indexed source references: page '
+                    .(int)$zenUsedBy['page'].' of '.$lastPage;
+                foreach ([-1,1] as $step) {
+                    $next=(int)$zenUsedBy['page']+$step;
+                    if($next<1||$next>$lastPage)continue;
+                    $url='file-examine.php?'.http_build_query([
+                        'id'=>$fileId,'tab'=>'used-by','page_size'=>$pageSize,
+                        'ref_page'=>$next,
+                    ]).'#package-tables';
+                    echo ' <a class="button" href="'.catalog_h($url).'">'
+                        .($step<0?'Previous':'Next').'</a>';
+                }
+                echo '</p>';
+            }
+        }
+        echo '</section></div><a class="to-top" href="#top">↑</a>';
         catalog_foot();
         return;
     }

@@ -69,11 +69,35 @@ function file_info_related_files_table(array $rows, string $empty): string {
 }
 
 try{
-$config=catalog_config();$db=catalog_db($config);catalog_dependency_schema_ensure($db);$id=(int)($_GET['id']??0);$file=catalog_one($db,'SELECT f.*,g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?',[$id]);if(!$file)throw new RuntimeException('File not found');$dependencyProjectionError=null;try{$deps=catalog_dependency_rows($db,$config,$id);}catch(RuntimeException $error){if(!str_contains($error->getMessage(),'Dependency publication is stale'))throw $error;$deps=[];$dependencyProjectionError='Dependency links are not verified under the current Epic engine policy; regeneration is required.';}
-$dependencyByIndex=[];foreach($deps as $dep){$index=(int)($dep['import_index']??-1);if($index>=0)$dependencyByIndex[$index]=$dep;}
-$importPage=\UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::fetchPage($db,$file,'imports',1,250);
-$rootNames=array_values(array_unique(array_filter(array_map(static fn(array $r):string => trim((string)($r['root_package']??'')), $importPage['rows']))));
-$packageFiles=\UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::packageFiles($db,(int)$file['game_id'],$rootNames);
+$config=catalog_config();
+$db=catalog_db($config);
+catalog_dependency_schema_ensure($db);
+$id=(int)($_GET['id']??0);
+$file=catalog_one($db,'SELECT f.*,g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?',[$id]);
+if(!$file)throw new RuntimeException('File not found');
+$isZen=strtolower((string)($file['extension']??''))==='zenpkg';
+$dependencyProjectionError=null;
+$deps=[];$dependencyByIndex=[];$importPage=['rows'=>[]];$packageFiles=[];
+if(!$isZen){
+    // Classic packages retain the original source-backed, class/outer-aware
+    // dependency renderer. Zen uses SHA-bound SQL source indexes instead:
+    // browsing must not reopen tens of thousands of preserved .uedb5 files.
+    try{
+        $deps=catalog_dependency_rows($db,$config,$id);
+    }catch(RuntimeException $error){
+        if(!str_contains($error->getMessage(),'Dependency publication is stale'))throw $error;
+        $dependencyProjectionError='Dependency links are not verified under the current Epic engine policy; regeneration is required.';
+    }
+    foreach($deps as $dep){
+        $index=(int)($dep['import_index']??-1);
+        if($index>=0)$dependencyByIndex[$index]=$dep;
+    }
+    $importPage=\UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::fetchPage($db,$file,'imports',1,250);
+    $rootNames=array_values(array_unique(array_filter(array_map(
+        static fn(array $r):string=>trim((string)($r['root_package']??'')),$importPage['rows']
+    ))));
+    $packageFiles=\UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery::packageFiles($db,(int)$file['game_id'],$rootNames);
+}
 catalog_head('File info');echo <<<'CSS'
 <style>
 .file-info-title{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.file-info-title h1{margin:0}.file-info-context{margin:8px 0}.file-imports-scroll{overflow-x:auto}.file-imports-table{width:100%}.file-imports-table th:nth-child(1){width:9%}.file-imports-table th:nth-child(2){width:22%}.file-imports-table th:nth-child(3){width:32%}.file-imports-table th:nth-child(4){width:9%}.file-imports-table th:nth-child(5){width:28%}.file-map-nav{display:flex;gap:10px;flex-wrap:wrap}.file-map-nav a{display:flex;gap:12px;align-items:center;border:1px solid var(--border,#2b3950);border-radius:8px;padding:12px;text-decoration:none}.file-relations-map{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.file-map-node{flex:1;min-width:160px;display:flex;flex-direction:column;gap:8px;border:1px solid var(--border,#2b3950);padding:14px;border-radius:10px}.file-map-node strong{overflow-wrap:anywhere}.file-map-current{border-color:var(--blue,#76a9ff)}.file-map-arrow{font-size:24px}[data-sortable-table] th{cursor:pointer;user-select:none}[data-sortable-table] th::after{content:'↕';display:inline-block;margin-left:7px;color:var(--muted);font-size:11px;opacity:.7}[data-sortable-table] th.is-sort-ascending::after{content:'▲';color:var(--blue);opacity:1}[data-sortable-table] th.is-sort-descending::after{content:'▼';color:var(--blue);opacity:1}
@@ -83,8 +107,9 @@ $isZen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
 echo catalog_file_feedback_form_html($id);
 if ($isZen) {
     $zen = catalog_one($db,
-        'SELECT HEX(package_id) AS package_id,container_id FROM ue_iostore_packages '
-        . 'WHERE file_id=? AND chunk_index=0 ORDER BY id LIMIT 1', [$id]);
+        'SELECT HEX(p.package_id) AS package_id,p.container_id,c.name container_name '
+        . 'FROM ue_iostore_packages p JOIN ue_iostore_containers c ON c.id=p.container_id '
+        . 'WHERE p.file_id=? AND p.chunk_index=0 ORDER BY p.id LIMIT 1', [$id]);
     $zenId = (string)($zen['package_id'] ?? '');
     $containerId = (int)($zen['container_id'] ?? 0);
     $packageHref = 'file-examine.php?id=' . $id;
@@ -101,7 +126,8 @@ if ($isZen) {
         . ($zenId !== '' ? catalog_h($zenId) : 'Not indexed') . '</td></tr>'
         . '<tr><th>Package name</th><td class="mono path">' . catalog_h((string)$file['package_name']) . '</td></tr>'
         . '<tr><th>Source</th><td>'
-        . ($containerId > 0 ? '<a href="iostore-info.php?id=' . $containerId . '">IoStore container #' . $containerId . '</a>' : 'IoStore member')
+        . ($containerId > 0 ? '<a href="iostore-info.php?id=' . $containerId . '">'
+            . catalog_h((string)($zen['container_name'] ?? '')) . '</a>' : 'IoStore member')
         . '</td></tr>'
         . '<tr><th>Tables</th><td><a href="' . $packageHref . '">'
         . (int)$file['name_count'] . ' names / ' . (int)$file['import_count']
@@ -141,8 +167,31 @@ if ($isZen) {
         . file_info_imports_table($importPage['rows'], $dependencyByIndex, $id, (int)$file['game_id'], $packageFiles)
         . '</div>';
 }
-$usesById=[];foreach($deps as$d){$target=(int)($d['resolved_id']??0);if($target<1||$target===$id||!in_array((string)($d['status']??''),['resolved','package_only'],true))continue;$usesById[$target]=['id'=>$target,'package_name'=>(string)($d['resolved_package']??''),'original_name'=>(string)($d['resolved_file']??''),'package_guid'=>(string)($d['resolved_guid']??''),'md5'=>(string)($d['resolved_md5']??''),'sha1'=>(string)($d['resolved_sha1']??''),'file_size'=>(int)($d['resolved_size']??0)];}$uses=array_values($usesById);usort($uses,static fn($a,$b)=>strnatcasecmp((string)$a['package_name'],(string)$b['package_name'])?:strnatcasecmp((string)$a['original_name'],(string)$b['original_name']));
-$reverseCounts=catalog_one($db,'SELECT COUNT(DISTINCT e.file_id) AS c FROM ue_uedb5_dependency_edges e '. \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e') . ' WHERE e.resolved_file_id=? AND e.outcome IN (1,2)',[$id]);$reverseCount=(int)($reverseCounts['c']??0);
+$usesById=[];foreach($deps as$d){$target=(int)($d['resolved_id']??0);if($target<1||$target===$id||!in_array((string)($d['status']??''),['resolved','package_only'],true))continue;$usesById[$target]=['id'=>$target,'package_name'=>(string)($d['resolved_package']??''),'original_name'=>(string)($d['resolved_file']??''),'package_guid'=>(string)($d['resolved_guid']??''),'md5'=>(string)($d['resolved_md5']??''),'sha1'=>(string)($d['resolved_sha1']??''),'file_size'=>(int)($d['resolved_size']??0)];}
+$uses=array_values($usesById);usort($uses,static fn($a,$b)=>strnatcasecmp((string)$a['package_name'],(string)$b['package_name'])?:strnatcasecmp((string)$a['original_name'],(string)$b['original_name']));
+$reverseCounts=catalog_one($db,'SELECT COUNT(DISTINCT e.file_id) AS c FROM ue_uedb5_dependency_edges e '. \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentEdges('e') . ' WHERE e.resolved_file_id=? AND e.outcome IN (1,2)',[$id]);
+$reverseCount=(int)($reverseCounts['c']??0);
+$usedBy=[];
+$zenUses=null;$zenReverse=null;
+if($isZen){
+    $zenUses=(new \UnrealDb\Catalog\Infrastructure\Persistence\PdoZenPackageUsesQuery($db))
+        ->forFile((int)$file['game_id'],$id,200);
+    $zenReverse=(new \UnrealDb\Catalog\Infrastructure\Persistence\PdoZenPackageUsedByQuery($db))
+        ->forFile((int)$file['game_id'],$id,1,200,true);
+    $uses=[];
+    foreach($zenUses['rows'] as $row){
+        $row['original_name']=(string)$row['original_name'];
+        $uses[]=$row;
+    }
+    $usedBy=[];
+    foreach($zenReverse['rows'] as $row){
+        $row['id']=(int)$row['file_id'];
+        $usedBy[]=$row;
+    }
+    $reverseCount=(int)$zenReverse['total'];
+}else{
+    $usedBy=catalog_dependency_used_by_rows($db,$id,200);
+}
 echo '<div class="card"><h2>File connections</h2><div class="file-relations-map">'
     . '<div class="file-map-node"><span class="muted">Files this package uses</span><strong>'.count($uses).'</strong><a href="file-examine.php?id='.$id.'&tab=uses">View linked files</a></div>'
     . '<span class="file-map-arrow" aria-hidden="true">←</span>'
@@ -150,7 +199,19 @@ echo '<div class="card"><h2>File connections</h2><div class="file-relations-map"
     . '<span class="file-map-arrow" aria-hidden="true">←</span>'
     . '<div class="file-map-node"><span class="muted">Current files using this package</span><strong>'.$reverseCount.'</strong><a href="file-examine.php?id='.$id.'&tab=used-by">View referring files</a></div>'
     . '</div></div>';
-echo '<div class="card"><h2>Uses ('.count($uses).')</h2>'.file_info_related_files_table($uses,$dependencyProjectionError??'No linked external files recorded.').'</div>';$usedBy=catalog_dependency_used_by_rows($db,$id,200);echo'<div class="card"><h2>Used by ('.count($usedBy).')</h2>'.file_info_related_files_table($usedBy,'No files reference this package in the V5 provider links.').'</div>';
+echo '<div class="card"><h2>Uses ('.count($uses).')</h2>'
+    .file_info_related_files_table($uses,$dependencyProjectionError??'No linked external files recorded.');
+if($zenUses!==null&&$zenUses['truncated']){
+    echo '<p><a href="file-examine.php?id='.$id.'&tab=uses">See all serialized imported package references</a></p>';
+}
+echo '</div>';
+echo '<div class="card"><h2>Used by ('.($isZen?$reverseCount:count($usedBy)).')</h2>'
+    .file_info_related_files_table($usedBy,'No files reference this package in the current indexed catalogue.');
+if($zenReverse!==null&&$reverseCount>count($usedBy)){
+    echo '<p><a href="file-examine.php?id='.$id.'&tab=used-by">See all '
+        .$reverseCount.' indexed source references</a></p>';
+}
+echo '</div>';
 
 echo <<<'HTML'
 <script>(function(){'use strict';var tabs=Array.from(document.querySelectorAll('[data-dependency-tab]')),panels=Array.from(document.querySelectorAll('[data-dependency-panel]')),nav=document.querySelector('[data-dependency-default]');function name(){var h=decodeURIComponent(location.hash.replace(/^#/,''));return h.indexOf('dependency-')===0?h.slice(11):(nav?nav.dataset.dependencyDefault:'all')}function activate(n){if(!panels.some(p=>p.dataset.dependencyPanel===n))n=nav?nav.dataset.dependencyDefault:'all';panels.forEach(p=>p.hidden=p.dataset.dependencyPanel!==n);tabs.forEach(t=>t.classList.toggle('is-active',t.dataset.dependencyTab===n))}tabs.forEach(t=>t.addEventListener('click',e=>{e.preventDefault();history.pushState(null,'','#dependency-'+t.dataset.dependencyTab);activate(t.dataset.dependencyTab)}));addEventListener('hashchange',()=>activate(name()));activate(name());document.querySelectorAll('table[data-sortable-table]').forEach(function(table){var head=table.tHead&&table.tHead.rows[0],body=table.tBodies[0];if(!head||!body)return;var active=-1,asc=true;Array.from(head.cells).forEach(function(th,i){th.addEventListener('click',function(){if(active===i)asc=!asc;else{active=i;asc=true}Array.from(body.rows).sort(function(a,b){var x=(a.cells[i]?.dataset.sortValue||a.cells[i]?.textContent||'').trim(),y=(b.cells[i]?.dataset.sortValue||b.cells[i]?.textContent||'').trim();return(asc?1:-1)*x.localeCompare(y,undefined,{numeric:true,sensitivity:'base'})}).forEach(r=>body.appendChild(r))})})})})();</script>

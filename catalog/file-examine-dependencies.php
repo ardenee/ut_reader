@@ -20,7 +20,7 @@ try {
     catalog_dependency_schema_ensure($db);
     $fileId = max(0, (int)($_GET['id'] ?? 0));
 
-    $file = catalog_one($db, 'SELECT id,game_id FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1', [$fileId]);
+    $file = catalog_one($db, 'SELECT id,game_id,extension FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1', [$fileId]);
     if (!$file) {
         http_response_code(404);
         echo json_encode(['ok' => false, 'error' => 'Verified file not found.'], JSON_THROW_ON_ERROR);
@@ -49,26 +49,54 @@ try {
     // including when a UE2 package uses a UE1-compatible wire layout.
     $currentEdgeJoin = $scope::joinCurrentEdges('l');
 
-    $requires = catalog_all(
-        $db,
-        'SELECT DISTINCT dst.id,dst.original_name file,dst.package_name package,dst.file_size size,dst.package_guid guid,dst.md5'
-        . ' FROM ue_uedb5_dependency_edges l'
-        . $currentEdgeJoin
-        . ' JOIN ue_files dst ON dst.id=l.resolved_file_id AND dst.scan_status="verified"'
-        . ' WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.resolved_file_id<>?'
-        . ' ORDER BY dst.original_name,dst.id LIMIT 5000',
-        [$fileId, $fileId]
-    );
-    $requiredBy = catalog_all(
-        $db,
-        'SELECT DISTINCT src.id,src.original_name file,src.package_name package,src.file_size size,src.package_guid guid,src.md5'
-        . ' FROM ue_uedb5_dependency_edges l'
-        . $currentEdgeJoin
-        . ' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified"'
-        . ' WHERE l.resolved_file_id=? AND l.file_id<>?'
-        . ' ORDER BY src.original_name,src.id LIMIT 5000',
-        [$fileId, $fileId]
-    );
+    $isZen=strtolower((string)($file['extension']??''))==='zenpkg';
+    $requiredByTotal=null;
+    $requiredByTruncated=false;
+    $sourceTotal=null;
+    if($isZen){
+        // A Zen imported FPackageId may be present in an indexed file
+        // even when engine mount/provider fields are not established.
+        $uses=(new \UnrealDb\Catalog\Infrastructure\Persistence\PdoZenPackageUsesQuery($db))
+            ->forFile((int)$file['game_id'],$fileId,250);
+        $reverse=(new \UnrealDb\Catalog\Infrastructure\Persistence\PdoZenPackageUsedByQuery($db))
+            ->forFile((int)$file['game_id'],$fileId,1,250,true);
+        $requires=[];
+        foreach($uses['rows'] as $r){
+            $requires[]=['id'=>(int)$r['id'],'file'=>$r['original_name'],
+                'package'=>$r['package_name'],'size'=>(int)$r['file_size'],
+                'guid'=>$r['package_guid'],'md5'=>$r['md5']];
+        }
+        $requiredBy=[];
+        foreach($reverse['rows'] as $r){
+            $requiredBy[]=['id'=>(int)$r['file_id'],'file'=>$r['original_name'],
+                'package'=>$r['package_name'],'size'=>(int)$r['file_size'],
+                'guid'=>$r['package_guid'],'md5'=>$r['md5']];
+        }
+        $requiredByTotal=(int)$reverse['total'];
+        $requiredByTruncated=$requiredByTotal>count($requiredBy);
+        $sourceTotal=(int)$uses['source_total'];
+    }else{
+        $requires = catalog_all(
+            $db,
+            'SELECT DISTINCT dst.id,dst.original_name file,dst.package_name package,dst.file_size size,dst.package_guid guid,dst.md5'
+            . ' FROM ue_uedb5_dependency_edges l'
+            . $currentEdgeJoin
+            . ' JOIN ue_files dst ON dst.id=l.resolved_file_id AND dst.scan_status="verified"'
+            . ' WHERE l.file_id=? AND l.resolved_file_id IS NOT NULL AND l.resolved_file_id<>?'
+            . ' ORDER BY dst.original_name,dst.id LIMIT 5000',
+            [$fileId, $fileId]
+        );
+        $requiredBy = catalog_all(
+            $db,
+            'SELECT DISTINCT src.id,src.original_name file,src.package_name package,src.file_size size,src.package_guid guid,src.md5'
+            . ' FROM ue_uedb5_dependency_edges l'
+            . $currentEdgeJoin
+            . ' JOIN ue_files src ON src.id=l.file_id AND src.scan_status="verified"'
+            . ' WHERE l.resolved_file_id=? AND l.file_id<>?'
+            . ' ORDER BY src.original_name,src.id LIMIT 5000',
+            [$fileId, $fileId]
+        );
+    }
 
     foreach ($requires as &$row) {
         $row['id'] = (int)$row['id'];
@@ -87,6 +115,9 @@ try {
         'ok' => true,
         'requires' => $requires,
         'required_by' => $requiredBy,
+        'required_by_total' => $requiredByTotal ?? count($requiredBy),
+        'required_by_truncated' => $requiredByTruncated,
+        'required_package_sources' => $sourceTotal,
     ], JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
 } catch (Throwable $error) {
     http_response_code(500);
