@@ -10,7 +10,7 @@
   },
   "ambiguous_class_names": {
     "md5": 45,
-    "OR": 19,
+    "OR": 21,
     "CatalogSearchService": 1,
     "MD5": 1,
     "properties": 1
@@ -4478,13 +4478,13 @@
       "from": "catalog/game-files.php",
       "to": "catalog/file-examine-zen-tables.php",
       "syntax": "static_or_expression",
-      "line": 344
+      "line": 348
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 399
+      "line": 414
     },
     {
       "from": "catalog/game-files.php",
@@ -4496,7 +4496,7 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "syntax": "new",
-      "line": 405
+      "line": 420
     },
     {
       "from": "catalog/game-files.php",
@@ -4514,7 +4514,7 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 577
+      "line": 598
     },
     {
       "from": "catalog/game-files.php",
@@ -4532,25 +4532,25 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 482
+      "line": 499
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/LoadingState.php",
       "syntax": "static_or_expression",
-      "line": 474
+      "line": 489
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 439
+      "line": 454
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 477
+      "line": 494
     },
     {
       "from": "catalog/game-manager.php",
@@ -4790,7 +4790,7 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 91
+      "line": 116
     },
     {
       "from": "catalog/games.php",
@@ -4802,7 +4802,7 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 69
+      "line": 87
     },
     {
       "from": "catalog/games.php",
@@ -4826,7 +4826,7 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/TableRegion.php",
       "syntax": "static_or_expression",
-      "line": 82
+      "line": 100
     },
     {
       "from": "catalog/generated-package-download.php",
@@ -12620,7 +12620,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Application/Jobs/JobWorker.php",
       "syntax": "new",
-      "line": 197
+      "line": 198
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12650,37 +12650,37 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogArchiveMemberContentRoutingJobHandler.php",
       "syntax": "new",
-      "line": 147
+      "line": 148
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogArchiveWorkflowJobHandler.php",
       "syntax": "new",
-      "line": 169
+      "line": 170
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogBackgroundJobHistoryCleanupJobHandler.php",
       "syntax": "new",
-      "line": 125
+      "line": 126
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php",
       "syntax": "new",
-      "line": 171
+      "line": 172
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php",
       "syntax": "new",
-      "line": 184
+      "line": 185
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php",
       "syntax": "new",
-      "line": 176
+      "line": 177
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12692,7 +12692,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php",
       "syntax": "new",
-      "line": 135
+      "line": 136
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12716,37 +12716,37 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogGameFileReassignmentJobHandler.php",
       "syntax": "new",
-      "line": 133
+      "line": 134
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogIoStoreBackupJobHandler.php",
       "syntax": "new",
-      "line": 165
+      "line": 166
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php",
       "syntax": "new",
-      "line": 163
+      "line": 164
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogIoStoreImportJobHandler.php",
       "syntax": "new",
-      "line": 160
+      "line": 161
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogIoStoreMemberPublishJobHandler.php",
       "syntax": "new",
-      "line": 162
+      "line": 163
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogIoStoreNameIndexJobHandler.php",
       "syntax": "new",
-      "line": 161
+      "line": 162
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12770,139 +12770,139 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogMaintenanceJobHandler.php",
       "syntax": "new",
-      "line": 122
+      "line": 123
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php",
       "syntax": "new",
-      "line": 119
+      "line": 120
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingAffectedDependencyJobHandler.php",
       "syntax": "new",
-      "line": 117
+      "line": 118
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php",
       "syntax": "new",
-      "line": 149
+      "line": 150
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php",
       "syntax": "new",
-      "line": 167
+      "line": 168
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogProfiledUploadBatchJobHandler.php",
       "syntax": "new",
-      "line": 136
+      "line": 137
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php",
       "syntax": "new",
-      "line": 120
+      "line": 121
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadJobHandler.php",
       "syntax": "new",
-      "line": 180
+      "line": 181
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogPublicUploadMaintenanceJobHandler.php",
       "syntax": "new",
-      "line": 193
+      "line": 194
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogSearchIndexJobHandler.php",
       "syntax": "new",
-      "line": 118
+      "line": 119
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php",
       "syntax": "new",
-      "line": 124
+      "line": 125
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php",
       "syntax": "new",
-      "line": 150
+      "line": 151
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogStorageMaintenanceJobHandler.php",
       "syntax": "new",
-      "line": 191
+      "line": 192
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php",
       "syntax": "new",
-      "line": 148
+      "line": 149
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php",
       "syntax": "new",
-      "line": 131
+      "line": 132
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogUnverifiedGameMatchRefreshJobHandler.php",
       "syntax": "new",
-      "line": 130
+      "line": 131
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogUnverifiedMetadataRepairJobHandler.php",
       "syntax": "new",
-      "line": 129
+      "line": 130
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/CatalogZenExamBackfillJobHandler.php",
       "syntax": "new",
-      "line": 164
+      "line": 165
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/GameBackupExportJobHandler.php",
       "syntax": "new",
-      "line": 138
+      "line": 139
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/GameBackupImportCleanupJobHandler.php",
       "syntax": "new",
-      "line": 139
+      "line": 140
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/GameBackupImportJobHandler.php",
       "syntax": "new",
-      "line": 140
+      "line": 141
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/GeneratedPackageJobHandler.php",
       "syntax": "new",
-      "line": 137
+      "line": 138
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Jobs/UnverifiedDuplicateCleanupJobHandler.php",
       "syntax": "new",
-      "line": 126
+      "line": 127
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -12920,7 +12920,7 @@
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoJobQueue.php",
       "syntax": "new",
-      "line": 198
+      "line": 199
     },
     {
       "from": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
@@ -18572,7 +18572,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/file-examine-zen-tables.php",
       "syntax": "static_or_expression",
-      "line": 221
+      "line": 223
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
@@ -18590,7 +18590,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
       "syntax": "new",
-      "line": 226
+      "line": 228
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",

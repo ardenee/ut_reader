@@ -41,6 +41,15 @@ try {
     foreach ($games as $game) {
         $engine = trim((string)($game['profile_engine'] ?? ''));
         $engineBadge = CatalogUi::badge($engine !== '' ? $engine : 'no profile', $engine !== '' ? 'success' : 'warning');
+        $unresolvedAvailable = $game['unresolved_dependency_count'] !== null;
+        $unresolvedCount = $unresolvedAvailable ? (int)$game['unresolved_dependency_count'] : 0;
+        $unresolvedBadge = $unresolvedAvailable
+            ? CatalogUi::badge(number_format($unresolvedCount), $unresolvedCount > 0 ? 'warning' : 'success')
+            : CatalogUi::badge('Unavailable', 'warning');
+        $unresolvedUrl = 'game-files.php?' . http_build_query([
+            'id' => (int)$game['id'],
+            'dep_filter' => 'unresolved',
+        ]);
         $missingAvailable = $game['missing_dependency_count'] !== null;
         $baseGameMissingAvailable = $game['missing_base_game_dependency_count'] !== null;
         $missingCount = $missingAvailable ? (int)$game['missing_dependency_count'] : 0;
@@ -63,7 +72,16 @@ try {
         $rows .= '<td><strong>' . catalog_h($game['name']) . '</strong><br><span class="muted small">' . catalog_h($game['slug']) . '</span></td>';
         $rows .= '<td>' . $engineBadge . '</td>';
         $rows .= '<td data-sort-value="' . (int)$game['file_count'] . '">' . number_format((int)$game['file_count']) . '</td>';
-        $rows .= '<td data-sort-value="' . $missingCount . '"><a href="' . catalog_h($missingUrl) . '" title="Show all missing dependency object rows for this game">' . $missingBadge . '</a></td>';
+        $unresolvedContent = $unresolvedAvailable
+            ? '<a href="' . catalog_h($unresolvedUrl)
+                . '" title="Source-published unresolved references; a catalogue lookup can resolve some separately">'
+                . $unresolvedBadge . '</a>'
+            : $unresolvedBadge;
+        $rows .= '<td data-sort-value="' . ($unresolvedAvailable ? $unresolvedCount : -1)
+            . '">' . $unresolvedContent . '</td>';
+        $rows .= '<td data-sort-value="' . $missingCount . '"><a href="' . catalog_h($missingUrl)
+            . '" title="Only source-confirmed missing dependencies; unresolved is not missing">'
+            . $missingBadge . '</a></td>';
         $rows .= '<td data-sort-value="' . $baseGameMissingCount . '"><a href="' . catalog_h($baseGameMissingUrl) . '" title="Show missing official base-game dependency rows for this game">' . $baseGameMissingBadge . '</a></td>';
         $rows .= '<td data-sort-value="' . (int)$game['total_size'] . '">' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</td>';
         $rows .= '<td>' . CatalogUi::button('Open files', [
@@ -75,7 +93,7 @@ try {
     }
 
     $table = '<table data-sortable-table><caption class="ui-sr-only">Configured games in the UnrealDB catalog</caption>'
-        . '<thead><tr><th scope="col">Game</th><th scope="col">Profile engine</th><th scope="col">Files</th><th scope="col">Missing dependencies</th><th scope="col">Missing base-game dependencies</th><th scope="col">Total size</th><th scope="col">Open</th></tr></thead>'
+        . '<thead><tr><th scope="col">Game</th><th scope="col">Profile engine</th><th scope="col">Files</th><th scope="col" title="Source-published unresolved references">Unresolved dependencies</th><th scope="col">Missing (confirmed)</th><th scope="col">Missing base-game (confirmed)</th><th scope="col">Total size</th><th scope="col">Open</th></tr></thead>'
         . '<tbody>' . $rows . '</tbody></table>';
 
     echo CatalogUi::section(
@@ -85,6 +103,13 @@ try {
             'description' => number_format(count($games)) . ' configured game' . (count($games) === 1 ? '' : 's') . '.',
         ]
     );
+    echo '<p class="muted small">Unresolved references are source-published identities without an '
+        . 'established provider. They are not confirmed missing; UE5 can match some separately '
+        . 'against indexed catalogue exports. Unavailable means that game still needs its '
+        . 'engine-specific current-policy dependency publication or statistics refresh.</p>';
+    if (catalog_support_is_admin()) {
+        echo '<p><a href="engine-dependency-update.php">Admin: update all game dependency publications</a></p>';
+    }
     catalog_foot();
 } catch (Throwable $error) {
     catalog_head('Error');

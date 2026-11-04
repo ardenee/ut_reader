@@ -74,6 +74,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Workload Tracing' => $root . 'workload-tracing.php',
             'Full Sync' => $root . 'full-sync.php',
             'Dependency Refresh' => $root . 'dependency-refresh.php',
+            'Update All Game Dependencies' => $root . 'engine-dependency-update.php',
             'Asset Metadata Rebuild' => $root . 'asset-metadata-rebuild.php',
             'Source Identity Repair' => $root . 'source-identity-repair.php',
             'Package Normalizer' => $root . 'package-normalize.php',

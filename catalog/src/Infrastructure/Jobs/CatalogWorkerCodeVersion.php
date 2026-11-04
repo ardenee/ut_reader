@@ -76,6 +76,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/Uedb5DependencyRebuilder.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogIoStoreDependencyPassJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogEngineDependencyUpdateJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/Uedb5MigrationValidator.php',
             $this->catalogRoot . '/src/Infrastructure/Storage/CatalogIoStorePackageNameIndexer.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogIoStoreUploadStager.php',

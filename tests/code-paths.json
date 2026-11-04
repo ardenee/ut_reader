@@ -3230,8 +3230,8 @@
     },
     {
       "path": "catalog/game-files.php",
-      "sha256": "81e320dbb29d60aba516dcef8af5671107dfb1e55332ed89f325c01a073a16bb",
-      "bytes": 29782,
+      "sha256": "c7852065223cd3e09e682340d3c8c8d92677e1f7ac0f84349ffbbfa4cbf493f5",
+      "bytes": 31604,
       "engine_hints": [
         "shared"
       ],
@@ -3328,8 +3328,8 @@
     },
     {
       "path": "catalog/games.php",
-      "sha256": "553885114109a2c07a61a15736caa2f180f782265c71b652c5cb1134a3b9741a",
-      "bytes": 4699,
+      "sha256": "86c4dc0de87d5d277ba492c5b056929a25cbb769ba8a31c1f7f5486f82920260",
+      "bytes": 6261,
       "engine_hints": [
         "shared"
       ],
@@ -3753,8 +3753,8 @@
     },
     {
       "path": "catalog/lib/CatalogNavigation.php",
-      "sha256": "7d70396561289f67c2f493b1066c9baf0d7c94ad5edea15ba0d425d6344a3b0d",
-      "bytes": 7518,
+      "sha256": "a065f991648f68ad082406abe226b635f3fbdc0736d80d1c4bc88500fa68e777",
+      "bytes": 7466,
       "engine_hints": [
         "shared"
       ],
@@ -5723,8 +5723,8 @@
     },
     {
       "path": "catalog/src/Domain/Jobs/JobResourcePolicy.php",
-      "sha256": "d8194042b626c4d0d32101d0cbb0fd29b60214279ce121fcf607410c7ea20786",
-      "bytes": 20573,
+      "sha256": "ee815af469899382d7123075db11e44afbac09ae51f57f4e8655aa62aae2c035",
+      "bytes": 20183,
       "engine_hints": [
         "shared"
       ],
@@ -5753,8 +5753,8 @@
     },
     {
       "path": "catalog/src/Domain/Jobs/JobType.php",
-      "sha256": "aa9cd7aff32f7139727c6f2b2e24f8e59d9221326b08bbae1c28d02e494fabc8",
-      "bytes": 6943,
+      "sha256": "3d84cfe0195c9ff1db699efb668b77eb8949e8705bded485220097602b8734cf",
+      "bytes": 6965,
       "engine_hints": [
         "shared"
       ],
@@ -8606,8 +8606,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php",
-      "sha256": "6b5ba1252a8bc346811da8d15de04fbb80e5182dd1ff320e76af5f674b37272f",
-      "bytes": 14536,
+      "sha256": "d2a5e1a9664ecc4ece6ebd49d915d4d002cf461ef2f7ebcc4e73a5bc2cb84a8e",
+      "bytes": 14410,
       "engine_hints": [
         "shared"
       ],
@@ -9030,8 +9030,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php",
-      "sha256": "4882fdab22905eff00af4e81eb760acfec06e38e0f29bd3a098118153c983438",
-      "bytes": 16078,
+      "sha256": "7c7e511426acec87c2e8a0998d71f0d8b807fe7f93a6ba66418181f11a434998",
+      "bytes": 16183,
       "engine_hints": [
         "shared"
       ],
@@ -11252,8 +11252,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
-      "sha256": "6f96763ebc7dd4acd37ced84960d9abe0fafff9cddfb49bbaf173b6f14655345",
-      "bytes": 2792,
+      "sha256": "b3c6b119811c0a2447129674b62cc18b0e8b92008dc03591d0f8fc60a1d3486c",
+      "bytes": 3260,
       "engine_hints": [
         "shared"
       ],
@@ -11280,8 +11280,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
-      "sha256": "e81fa8859be963b4c44c051326fe20411e0041d74484dac2b0f136c6797b414b",
-      "bytes": 13365,
+      "sha256": "26635a910b237c1f01b5decac24fff9825abf34e912332cd8fb24a2d2d7bafa0",
+      "bytes": 13589,
       "engine_hints": [
         "shared"
       ],

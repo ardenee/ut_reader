@@ -113,6 +113,7 @@ final class CatalogJobWorkerFactory
             JobType::FULL_SYNC_DEPENDENCY_FILE => static fn() => new CatalogFullSyncUnitJobHandler($db, $trustedImportConfig),
             JobType::REPAIR_COMPACT_METADATA_FILE => static fn() => new CatalogCompactMetadataRepairJobHandler($db, $trustedImportConfig),
             JobType::REBUILD_GAME_DEPENDENCIES => static fn() => new CatalogDependencyRefreshJobHandler($db, $config),
+            JobType::UPDATE_ENGINE_GAME_DEPENDENCIES => static fn() => new CatalogEngineDependencyUpdateJobHandler($db, $config),
             JobType::REBUILD_FILE_DEPENDENCIES => static fn() => new CatalogDependencyRefreshJobHandler($db, $config),
             JobType::REBUILD_AFFECTED_DEPENDENCIES => static fn() => new CatalogNonBlockingAffectedDependencyJobHandler($db, $config),
             JobType::REBUILD_FILE_SEARCH_INDEX => static fn() => new CatalogSearchIndexJobHandler($db),

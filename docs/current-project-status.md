@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 4 November 2026 — all-game dependency updater and unresolved catalogue totals
+
+The current source-pinned UE1 v14 publications contain **4,045,795 unresolved references for UT99** and **711,776 for Unreal Gold**, with **zero source-confirmed missing references**. The previous public Games page showed 0/0 because it only presented missing and official-base-game missing aggregates. `catalog/games.php` now displays a separate **Unresolved dependencies** column, leaving **Missing (confirmed)** and **Missing base-game (confirmed)** explicitly distinct. Totals are derived from source-published, fresh cached `dependency_count - resolved - missing - package_only - common` (no new SQL schema/migration). Stale game policies continue to display **Unavailable**, never fabricated zeros.
+
+`catalog/game-files.php` now filters by **Unresolved**, retains **Missing (confirmed)**, supports Zen script-only source references in filtering, and sorts the UE1–UE4 dependency column by unresolved source counts instead of confirmed missing. Zen per-file catalogue matches are computed on the page, so its misleading source-only keyset dependency sort is disabled. UI tests against PRD read-only MySQL found UT99 `_AphexSnow.utx` (2 unresolved) under Unresolved and excluded it under Missing (confirmed), while UE5 ScriptImport source rows remain discoverable.
+
+New admin navigation **Maintenance → Update All Game Dependencies** points to `catalog/engine-dependency-update.php`. It enumerates all currently configured games dynamically (no hard-coded IDs), shows policy and statistics freshness, and after admin CSRF + explicit backup/UPDATE confirmation atomically queues one low-priority, durable **source-specific UEDB5 v14 Pass 2 job per outdated game**. `CatalogEngineDependencyUpdateJobHandler` is restricted to the Lelly-pc CLI worker; it uses the original `Uedb5GameDependencyPassService` with bounded resumable claims, exact source policy/metadata hashes and statistics rebuild on completion. This is **not** the old generic dependency refresh path. The new resource job uses the same per-game dependency concurrency key, and active queue dedupe prevents duplicate work.
+
+Read-only actual production preflight on all pending games passed: Unreal II 1,217; UT2003 5,082; UT2004 72,880; UT3 6,722; UT4 64,247; total **150,148 verified and staged**, with zero missing primary-provider keys, zero invalid staged identities and zero current v14 publications. These five game updates have **not been started**: queueing requires the administrator's backup acknowledgement in the new PRD page. UE1 and UE5 current games are skipped when their cached stats are also fresh. Current UE1/UE5 accepted parity statuses are unchanged.
+
+---
+
 ## Verified checkpoint: UE1 published, statistics current (4 November 2026)
 
 **UE1 fully closed within the seven defined UnrealDB operations: 7/7 PASS, 0 BLOCKED.** Current fixed contract register: **29 PASS / 3 BLOCKED** across five engines; only UE2, UE3, UE4 website dependency source epochs are pending.

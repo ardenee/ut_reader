@@ -136,7 +136,7 @@ final class PdoGameFileListQuery
         $having = $cursorSql !== '' ? ' HAVING ' . $cursorSql : '';
         return \catalog_all(
             $this->db,
-            'SELECT f.id,f.package_name,f.original_name,COALESCE(SUM(s.missing_count),0) missing_count '
+            'SELECT f.id,f.package_name,f.original_name,COALESCE(SUM(s.unresolved_count),0) unresolved_count '
             . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
             . ' AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
             . $whereSql . ' GROUP BY f.id,f.package_name,f.original_name' . $having
@@ -176,6 +176,7 @@ final class PdoGameFileListQuery
 
         $rowsById = [];
         foreach ($rows as $row) {
+            $row['source_unresolved_count'] = (int)($row['unresolved_count'] ?? 0);
             $rowsById[(int)$row['id']] = $row;
         }
 
@@ -205,6 +206,7 @@ final class PdoGameFileListQuery
                 $id = (int)$entry['file_id'];
                 if (isset($rowsById[$id])) {
                     $rowsById[$id]['unresolved_count'] = (int)$entry['unresolved'];
+                    $rowsById[$id]['source_unresolved_count'] = (int)$entry['unresolved'];
                 }
             }
 
@@ -265,7 +267,7 @@ final class PdoGameFileListQuery
             'size' => [['f.file_size', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
             'compression' => [['f.is_compressed', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
             'uploaded' => [['f.uploaded_at', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
-            'deps' => [['missing_count', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
+            'deps' => [['unresolved_count', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
             default => [['f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC']],
         };
     }
@@ -279,7 +281,7 @@ final class PdoGameFileListQuery
             'size' => [(int)$row['file_size'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
             'compression' => [(int)$row['is_compressed'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
             'uploaded' => [(string)$row['uploaded_at'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
-            'deps' => [(int)$row['missing_count'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
+            'deps' => [(int)($row['source_unresolved_count'] ?? $row['unresolved_count']), (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
             default => [(string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
         };
     }

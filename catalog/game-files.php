@@ -312,7 +312,7 @@ try {
         $db, (int)$gameId, (string)($game['profile_engine'] ?? '')
     );
     $dependencySelectionUnavailable = !$gameDependencyCurrent
-        && in_array($depFilter, ['resolved','missing','package_only','common','any'], true);
+        && in_array($depFilter, ['resolved','missing','package_only','common','unresolved','any'], true);
     $typeFilter = trim((string)($_GET['type_filter'] ?? ''));
     $compressionFilter = $showCompression ? trim((string)($_GET['compression_filter'] ?? '')) : '';
     $sort = trim((string)($_GET['sort'] ?? 'package'));
@@ -326,7 +326,11 @@ try {
     if (!isset($sortMap[$sort])) {
         $sort = 'package';
     }
-    $dependencySortUnavailable = $sort === 'deps' && !$gameDependencyCurrent;
+    // Zen rows receive exact catalogue matches after source projection. Those
+    // per-file matches cannot be ordered correctly by the old SQL summary key.
+    // Do not present an inaccurate keyset sort for Zen until materialised.
+    $dependencySortUnavailable = $sort === 'deps'
+        && (!$gameDependencyCurrent || $engineMajor === 5);
     if ($dependencySortUnavailable) {
         $sort = 'package';
     }
@@ -345,14 +349,25 @@ try {
         $like = '%' . $filter . '%';
         array_push($args, $like, $like, $like, $like, $like);
     }
-    if (in_array($depFilter, ['resolved', 'missing', 'package_only', 'common', 'any'], true)) {
+    if (in_array($depFilter, ['resolved', 'missing', 'package_only', 'common', 'unresolved', 'any'], true)) {
         if ($depFilter === 'any') {
-            $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND '
-                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')';
+            $where .= ' AND (EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')'
+                . ' OR (f.extension="zenpkg" AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_edges de '
+                . 'WHERE de.file_id=f.id AND '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('de') . ')))';
+        } elseif ($depFilter === 'unresolved') {
+            $where .= ' AND (EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND dx.unresolved_count>0 AND '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')'
+                . ' OR (f.extension="zenpkg" AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_edges de '
+                . 'WHERE de.file_id=f.id AND de.outcome=4 AND '
+                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('de') . ')))';
         } else {
             $countColumn = match ($depFilter) {
                 'resolved' => 'resolved_count',
                 'missing' => 'missing_count',
+                'unresolved' => 'unresolved_count',
                 'package_only' => 'package_only_count',
                 default => 'common_count',
             };
@@ -439,7 +454,7 @@ try {
     echo CatalogUi::pageHeader((string)$game['name'], $description, ['Back to games' => 'games.php']);
     if (!$gameDependencyCurrent) {
         echo '<div class="card"><strong>Dependency publication unavailable.</strong> '
-            . 'Current missing/resolved classifications are unknown until the engine-specific source publication is complete. '
+            . 'Current unresolved/resolved/missing classifications are unknown until the engine-specific source publication is complete. '
             . 'If requested, dependency filtering or dependency sorting has been skipped to avoid misleading results.</div>';
     }
 
@@ -450,7 +465,7 @@ try {
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
     echo '<label for="file-filter">Search files <input id="file-filter" class="wide-search" type="search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label>';
     echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
-    foreach (['' => 'All', 'any' => 'Has dependencies', 'missing' => 'Missing', 'resolved' => 'Resolved', 'package_only' => 'Package only', 'common' => 'Common'] as $value => $label) {
+    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved', 'package_only' => 'Package only', 'common' => 'Common', 'missing' => 'Missing (confirmed)'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
@@ -473,6 +488,8 @@ try {
     }
     echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Applying filters…', true) . '</span></span>';
     echo '<span id="file-filter-help" class="ui-sr-only">Changing filters reloads this file list.</span></form>';
+    echo '<p class="muted small">Unresolved means a source-published reference without a conclusive provider; '
+        . 'it is not confirmed missing. UE5 source results can be further matched by indexed catalogue identities.</p>';
 
     echo $pagination;
     if ($files === []) {
@@ -494,7 +511,11 @@ try {
         if ($showCompression) {
             echo '<th scope="col">' . game_files_sort_link('Internal Compression', 'compression', $sort, $dir) . '</th>';
         }
-        echo '<th scope="col">' . game_files_sort_link('Dependencies', 'deps', $sort, $dir) . '</th>';
+        echo '<th scope="col">Dependencies'
+            . ($engineMajor === 5
+                ? '<div class="small muted" title="Zen catalogue matches are calculated per page; a misleading source-only sort is disabled">source references</div>'
+                : '<div class="small muted">sort '.game_files_sort_link('unresolved', 'deps', $sort, $dir).'</div>')
+            . '</th>';
         echo '<th scope="col">Actions</th>';
         echo '</tr></thead><tbody>';
 

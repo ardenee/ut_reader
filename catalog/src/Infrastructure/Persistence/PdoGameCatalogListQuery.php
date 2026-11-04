@@ -28,7 +28,12 @@ final class PdoGameCatalogListQuery
                 . 'COALESCE(s.file_count,0) file_count,COALESCE(s.total_size,0) total_size,'
                 . 'COALESCE(s.verified_count,0) verified_count,COALESCE(s.failed_count,0) failed_count,'
                 . 'COALESCE(s.missing_dependency_count,0) missing_dependency_count,'
-                . 'COALESCE(s.missing_base_game_dependency_count,0) missing_base_game_dependency_count '
+                . 'COALESCE(s.missing_base_game_dependency_count,0) missing_base_game_dependency_count,'
+                . 'GREATEST(0,CAST(COALESCE(s.dependency_count,0) AS SIGNED)'
+                . '-CAST(COALESCE(s.missing_dependency_count,0) AS SIGNED)'
+                . '-CAST(COALESCE(s.resolved_dependency_count,0) AS SIGNED)'
+                . '-CAST(COALESCE(s.package_only_dependency_count,0) AS SIGNED)'
+                . '-CAST(COALESCE(s.common_dependency_count,0) AS SIGNED)) unresolved_dependency_count '
                 . 'FROM ue_games g '
                 . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
                 . 'LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id '
@@ -41,6 +46,7 @@ final class PdoGameCatalogListQuery
                 )) {
                     $game['missing_dependency_count'] = null;
                     $game['missing_base_game_dependency_count'] = null;
+                    $game['unresolved_dependency_count'] = null;
                 }
             }
             unset($game);
@@ -52,7 +58,8 @@ final class PdoGameCatalogListQuery
             . 'COUNT(f.id) file_count,COALESCE(SUM(f.file_size),0) total_size,'
             . 'COALESCE(SUM(f.scan_status="verified"),0) verified_count,'
             . 'COALESCE(SUM(f.scan_status="failed"),0) failed_count,'
-            . 'NULL missing_dependency_count,NULL missing_base_game_dependency_count '
+            . 'NULL missing_dependency_count,NULL missing_base_game_dependency_count,'
+            . 'NULL unresolved_dependency_count '
             . 'FROM ue_games g '
             . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
             . 'LEFT JOIN ue_files f ON f.game_id=g.id '

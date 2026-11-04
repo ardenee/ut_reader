@@ -126,6 +126,7 @@ final class JobResourcePolicy
                 self::positiveKey('import:file-id:', $payload['file_id'] ?? null)
             ),
             JobType::FULL_SYNC_DEPENDENCY_FILE => self::fullSyncDependencyProfile($payload),
+            JobType::UPDATE_ENGINE_GAME_DEPENDENCIES,
             JobType::REBUILD_GAME_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
                 self::defaultLimit(1),
