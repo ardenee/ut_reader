@@ -14,6 +14,7 @@ use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5StagingRegistrationRepository;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5BaseProjectionPublisher;
 use UnrealDb\Catalog\Infrastructure\Metadata\PdoUedb5MigrationStatusRepository;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoZenExamProjection;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MigrationValidator;
 
 /**
@@ -110,6 +111,10 @@ final class CatalogZenIoStorePackagePublisher
             }else{
                 $statuses->markStaged($fileId,(string)$written['payload_sha256'],$validation);
             }
+            // Publish the bounded browser examination projection from the
+            // SAME source-validated snapshot. No browse-time source reparse.
+            (new PdoZenExamProjection($this->db))
+                ->publish($snapshot, (string)$written['payload_sha256']);
             $this->db->commit();
         } catch (Throwable $e) {
             if ($this->db->inTransaction()) $this->db->rollBack();

@@ -26,6 +26,7 @@ final class Uedb5IoStoreTocReader
     public const CONTAINER_FLAG_ON_DEMAND = 0x10;
 
     public const CHUNK_TYPE_EXPORT_BUNDLE_DATA = 1;
+    public const CHUNK_TYPE_SCRIPT_OBJECTS = 5;
     public const CHUNK_TYPE_CONTAINER_HEADER = 6;
 
     /** @var array<string,mixed> */

@@ -10,6 +10,8 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogIoStoreContainerStorage;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5IoStoreTocReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoZenScriptObjectProjector;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /**
@@ -71,6 +73,28 @@ final class CatalogIoStoreImportJobHandler implements JobHandler
         // failures rather than falsely reporting the whole container published.
         $queue=new PdoJobQueue($this->db);
         $containerId=(int)$result['container_id'];
+        // Cooked ScriptObjects are game-wide identity metadata. Index once
+        // from retained global.utoc into SQL so browser import tables do not
+        // reopen or hash the source container on every request.
+        if (strtolower(basename($real)) === 'global.utoc') {
+            $root = realpath((string)($this->config['storage_path'] ?? ''));
+            $relative = str_replace('\\', '/', (string)$result['utoc_relative_path']);
+            if ($root === false || !str_starts_with($relative, 'games/')
+                || str_contains($relative, '..') || str_contains($relative, ':')
+                || str_contains($relative, '//')) {
+                throw new RuntimeException('Unsafe retained global.utoc ScriptObjects path.');
+            }
+            $path = realpath($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
+            if ($path === false || is_link($path)
+                || !str_starts_with(strtolower(str_replace('\\', '/', $path)),
+                    strtolower(rtrim(str_replace('\\', '/', $root), '/') . '/'))) {
+                throw new RuntimeException('Retained global.utoc path escaped catalog storage.');
+            }
+            $toc = new Uedb5IoStoreTocReader($path);
+            if ($toc->chunkIndexesByType(Uedb5IoStoreTocReader::CHUNK_TYPE_SCRIPT_OBJECTS) !== []) {
+                (new PdoZenScriptObjectProjector($this->db))->publish($containerId, $toc);
+            }
+        }
         $nameJobId=$queue->enqueue($job->queue,JobType::INDEX_IOSTORE_PACKAGE_NAMES,
             ['container_id'=>$containerId],110,null,
             'iostore-name-index-'.$containerId,null,3);

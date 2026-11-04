@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use RuntimeException;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5RuntimeMetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\PdoZenExamProjection;
 
 final class PdoPackageTablePageQuery
 {
@@ -87,9 +88,16 @@ final class PdoPackageTablePageQuery
         $page = max(1, min($page, $pages));
         $start = ($page - 1) * $pageSize;
         $fileId = (int)$file['id'];
-        $rows = self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
-            $reader->page($fileId, $table, $start, $pageSize)
-        );
+        $zen = strtolower((string)($file['extension'] ?? '')) === 'zenpkg';
+        $sqlExam = $zen ? new PdoZenExamProjection($db) : null;
+        $indexed = $sqlExam !== null && $sqlExam->isCurrent($fileId);
+        // The SQL projection is source-SHA bound; do not reopen .uedb5 on
+        // every page once its verified rows have been materialized.
+        $rows = $indexed
+            ? $sqlExam->page($fileId, $table, $start, $pageSize)
+            : self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
+                $reader->page($fileId, $table, $start, $pageSize)
+            );
 
         $rows = self::presentV5Rows($rows, $table);
         if (($table === 'imports' || $table === 'exports')
@@ -123,16 +131,23 @@ final class PdoPackageTablePageQuery
         $pageSize = self::normalizePageSize($pageSize);
         $requestedPage = max(1, $page);
         $fileId = (int)$file['id'];
-        $search = self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
-            $reader->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
-        );
+        $sqlExam = strtolower((string)($file['extension'] ?? '')) === 'zenpkg'
+            ? new PdoZenExamProjection($db) : null;
+        $indexed = $sqlExam !== null && $sqlExam->isCurrent($fileId);
+        $search = $indexed
+            ? $sqlExam->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
+            : self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
+                $reader->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
+            );
         $total = (int)$search['total'];
         $pages = max(1, (int)ceil($total/$pageSize));
         if ($requestedPage > $pages) {
             $requestedPage = $pages;
-            $search = self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
-                $reader->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
-            );
+            $search = $indexed
+                ? $sqlExam->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
+                : self::withRecovery($db, $fileId, static fn(Uedb5RuntimeMetadataReader $reader): array =>
+                    $reader->searchPage($fileId, $table, $query, ($requestedPage-1)*$pageSize, $pageSize)
+                );
         }
         $rows = self::presentV5Rows((array)$search['rows'], $table);
         if ($table !== 'names' && strtolower((string)($file['extension'] ?? '')) !== 'zenpkg') {

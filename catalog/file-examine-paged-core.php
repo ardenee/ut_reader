@@ -14,96 +14,6 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
 
 catalog_start_session();
 
-/**
- * Source-backed Zen paths. Follow only serialized local export outer indexes;
- * never infer an outer from package naming or reinterpret signed UE4 indexes.
- *
- * @param list<array<string,mixed>> $exports
- * @return array<int,string>
- */
-function examine_zen_export_paths(array $exports): array
-{
-    $lookup = [];
-    foreach ($exports as $row) {
-        if (!isset($row['index'])) continue;
-        $lookup[(int)$row['index']] = $row;
-    }
-    $paths = [];
-    $resolve = static function (int $index) use (&$resolve, &$paths, $lookup): ?string {
-        if (array_key_exists($index, $paths)) return $paths[$index];
-        $current = $index;
-        $parts = [];
-        $seen = [];
-        for ($depth=0; $depth < 128; $depth++) {
-            if (isset($seen[$current]) || !isset($lookup[$current])) {
-                return $paths[$index] = null;
-            }
-            $seen[$current] = true;
-            $row = $lookup[$current];
-            $name = $row['object_name'] ?? null;
-            $name = is_array($name) ? (string)($name['text'] ?? '') : (string)$name;
-            if ($name === '') return $paths[$index] = null;
-            $parts[] = $name;
-            $outer = (array)($row['outer_index'] ?? []);
-            $type = (string)($outer['type'] ?? '');
-            if ($type === 'Null') {
-                return $paths[$index] = implode('.', array_reverse($parts));
-            }
-            if ($type !== 'Export' || !isset($outer['local_export_index'])) {
-                return $paths[$index] = null;
-            }
-            $current = (int)$outer['local_export_index'];
-        }
-        return $paths[$index] = null;
-    };
-    foreach (array_keys($lookup) as $index) $resolve($index);
-    return array_filter($paths, 'is_string');
-}
-
-/**
- * Compact local Zen reference renderer matching the legacy examiner cells.
- * File-identity enrichment must never operate on these package references.
- *
- * @param array<string,mixed> $ref
- * @param array<string,string> $cookedLabels
- * @param array<string,int> $importIndices
- */
-function examine_zen_table_reference(
-    array $ref,
-    array $cookedLabels,
-    array $importIndices,
-    int $fileId,
-    int $pageSize
-): string {
-    $kind = (string)($ref['type'] ?? '');
-    $raw = strtoupper((string)($ref['raw_type_and_id'] ?? ''));
-    if ($kind === 'Null' || $kind === '') return '<span class="muted">—</span>';
-    if ($kind === 'Export' && isset($ref['local_export_index'])) {
-        $index = (int)$ref['local_export_index'];
-        return '<a class="xref mono" href="' . catalog_h(examine_href($fileId, 'export-'.$index, $pageSize))
-            . '">Export #' . $index . '</a>';
-    }
-    if ($kind === 'ScriptImport') {
-        $html = isset($cookedLabels[$raw])
-            ? '<span class="mono path">' . catalog_h($cookedLabels[$raw]) . '</span>'
-            : '<span class="mono">0x' . catalog_h($raw) . '</span>';
-        if (isset($importIndices[$raw])) {
-            $index = $importIndices[$raw];
-            $html .= '<span class="examine-zen-ref-link"><a class="xref" href="'
-                . catalog_h(examine_href($fileId, 'import-'.$index, $pageSize))
-                . '">Import #' . $index . '</a></span>';
-        }
-        return $html;
-    }
-    if ($kind === 'PackageImport') {
-        $packageId = (string)($ref['provider_package_id'] ?? '');
-        $hash = (string)($ref['provider_public_export_hash'] ?? '');
-        return '<span class="mono">FPackageId ' . catalog_h($packageId) . '</span>'
-            . '<span class="examine-zen-secondary">Export hash ' . catalog_h($hash) . '</span>';
-    }
-    return '<span class="mono">0x' . catalog_h($raw) . '</span>';
-}
-
 function examine_int(string $key, int $default = 0): int
 {
     $value = filter_input(INPUT_GET, $key, FILTER_VALIDATE_INT);
@@ -286,49 +196,6 @@ function examine_pagination(int $fileId, string $table, array $page): string
     return $html . '</p>';
 }
 
-/**
- * Epic Zen FPackageObjectIndex is a tagged 64-bit identity, not a signed
- * FPackageIndex. Show typed hashes and source-backed cooked ScriptObjects
- * labels without inventing legacy ClassPackage/ClassName or runtime resolution.
- *
- * @param array<string,mixed> $index
- * @param array<string,string> $scriptLabels
- */
-function examine_zen_index_html(array $index, array $scriptLabels, int $fileId, int $pageSize): string
-{
-    $type = (string)($index['type'] ?? '');
-    $raw = strtoupper((string)($index['raw_type_and_id'] ?? ''));
-    $identity = '';
-    if ($type === 'Null') {
-        return '<span class="muted">null</span>';
-    }
-    if ($type === 'ScriptImport') {
-        $hash = strtoupper((string)($index['script_import_hash'] ?? ''));
-        $identity = '<span class="mono">ScriptImport 0x' . catalog_h($hash) . '</span>';
-        if (isset($scriptLabels[$raw])) {
-            $identity = '<span class="mono path">' . catalog_h($scriptLabels[$raw]) . '</span>'
-                . '<small class="muted">Cooked ScriptObjects label · 0x' . catalog_h($hash)
-                . ' · runtime status not established</small>';
-        }
-    } elseif ($type === 'PackageImport') {
-        $packageId = strtoupper((string)($index['provider_package_id'] ?? ''));
-        $exportHash = strtoupper((string)($index['provider_public_export_hash'] ?? ''));
-        $identity = '<span class="mono">PackageImport · FPackageId ' . catalog_h($packageId) . '</span>'
-            . '<small class="muted">PublicExportHash ' . catalog_h($exportHash) . '</small>';
-    } elseif ($type === 'Export') {
-        $local = (int)($index['local_export_index'] ?? -1);
-        if ($local >= 0) {
-            $identity = '<a class="xref mono" href="'
-                . catalog_h(examine_href($fileId, 'export-' . $local, $pageSize))
-                . '">Local export #' . $local . '</a>';
-        }
-    }
-    if ($identity === '') {
-        $identity = '<span class="mono muted">' . catalog_h($type) . '</span>';
-    }
-    return $identity . '<small class="muted">Raw index ' . catalog_h($raw) . '</small>';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -416,15 +283,26 @@ try {
     $zenExportPaths = [];
     $zenImportIndices = [];
     if ($isZen && $table === 'exports' && $rows !== []) {
-        $zenSnapshot = (new \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5MetadataReader(
-            (string)$config['storage_path']
-        ))->snapshot((int)$file['game_id'], $fileId);
-        $zenExportPaths = examine_zen_export_paths((array)($zenSnapshot['sections']['exports'] ?? []));
-        foreach ((array)($zenSnapshot['sections']['imports'] ?? []) as $import) {
-            $raw = strtoupper((string)($import['raw_type_and_id'] ?? ''));
-            if (preg_match('/^[A-F0-9]{16}$/D', $raw)) {
-                $zenImportIndices[$raw] = (int)($import['index'] ?? -1);
+        // Paths were materialized from the validated snapshot during import.
+        // Never load the entire .uedb5 snapshot again for a browser page.
+        $rawIndices = [];
+        foreach ($rows as $record) {
+            $idx = (int)($record['export_index'] ?? -1);
+            if ($idx >= 0 && (string)($record['local_path'] ?? '') !== '') {
+                $zenExportPaths[$idx] = (string)$record['local_path'];
             }
+            foreach (['class_index','outer_index','super_index','template_index'] as $field) {
+                $ref = (array)($record[$field] ?? []);
+                $raw = strtoupper((string)($ref['raw_type_and_id'] ?? ''));
+                if ((string)($ref['type'] ?? '') === 'ScriptImport'
+                    && preg_match('/^[A-F0-9]{16}$/D',$raw) === 1) {
+                    $rawIndices[] = $raw;
+                }
+            }
+        }
+        if ($rawIndices !== []) {
+            $zenImportIndices = (new \UnrealDb\Catalog\Infrastructure\Metadata\PdoZenExamProjection($db))
+                ->importIndexLookup($fileId, $rawIndices);
         }
     }
 
@@ -824,8 +702,7 @@ try {
                 $index = (int)$row['export_index'];
                 $rowId = 'export-' . $index;
                 $localPath = (string)($zenExportPaths[$index] ?? '');
-                $fullPath = $localPath !== ''
-                    ? rtrim((string)$file['package_name'], '.') . '.' . $localPath : '';
+                $fullPath = (string)($row['full_path'] ?? '');
                 $classHtml = examine_zen_table_reference(
                     (array)($row['class_index'] ?? []), $zenScriptLabels, $zenImportIndices, $fileId, $pageSize
                 );

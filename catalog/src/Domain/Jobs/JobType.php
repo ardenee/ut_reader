@@ -49,6 +49,7 @@ final class JobType
     public const INDEX_IOSTORE_PACKAGE_NAMES = 'catalog.index_iostore_package_names';
     public const PUBLISH_IOSTORE_PACKAGES = 'catalog.publish_iostore_packages';
     public const INDEX_IOSTORE_DEPENDENCIES = 'catalog.index_iostore_dependencies';
+    public const BACKFILL_ZEN_EXAM_SQL = 'catalog.backfill_zen_exam_sql';
     public const BACKUP_IOSTORE_CONTAINER = 'catalog.backup_iostore_container';
     public const RESTORE_IOSTORE_CONTAINER = 'catalog.restore_iostore_container';
     public const IMPORT_STAGED_PAK = 'catalog.import_staged_pak';
@@ -103,6 +104,7 @@ final class JobType
             self::INDEX_IOSTORE_PACKAGE_NAMES,
             self::PUBLISH_IOSTORE_PACKAGES,
             self::INDEX_IOSTORE_DEPENDENCIES,
+            self::BACKFILL_ZEN_EXAM_SQL,
             self::BACKUP_IOSTORE_CONTAINER,
             self::RESTORE_IOSTORE_CONTAINER,
             self::IMPORT_STAGED_PAK,
