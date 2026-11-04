@@ -61,12 +61,69 @@ final class PdoZenExamProjection
             }
             if ($batched !== []) $this->insertBatch($batched);
         }
+        $header = (array)($sections['package_summary'][0] ?? []);
+        if ($header !== []) {
+            $this->insertHeader($fileId, $header);
+        }
         $q = $this->db->prepare('INSERT INTO ue_uedb5_zen_exam_files '
             . '(file_id,source_sha256,name_count,import_count,export_count) '
             . 'VALUES (?,?,?,?,?) ON DUPLICATE KEY UPDATE '
             . 'source_sha256=VALUES(source_sha256),name_count=VALUES(name_count),'
             . 'import_count=VALUES(import_count),export_count=VALUES(export_count),indexed_at=CURRENT_TIMESTAMP');
         $q->execute([$fileId,$payloadSha256,$nameCount,$importCount,$exportCount]);
+    }
+
+    /**
+     * A separate source-SHA-bound row holds the genuine cooked FZenPackageSummary.
+     * Browser requests only read this indexed record. Backfill and importer may
+     * populate it without rebuilding any already-correct name/import/export row.
+     * @param array<string,mixed> $snapshot
+     */
+    public function publishHeaderOnly(int $fileId, array $snapshot, string $payloadSha256): void
+    {
+        if (!$this->db->inTransaction()) {
+            throw new RuntimeException('Zen header projection needs a caller-owned transaction.');
+        }
+        $q = $this->db->prepare('SELECT e.file_id FROM ue_uedb5_zen_exam_files e '
+            . 'JOIN ue_uedb5_files v ON v.file_id=e.file_id '
+            . 'WHERE e.file_id=? AND e.source_sha256=? AND v.payload_sha256=? '
+            . 'AND v.package_family="zen-iostore" AND v.format_version=5 LIMIT 1');
+        $q->execute([$fileId,$payloadSha256,$payloadSha256]);
+        if ($q->fetchColumn() === false) {
+            throw new RuntimeException('Zen header source is not the current verified projection.');
+        }
+        $header = (array)($snapshot['sections']['package_summary'][0] ?? []);
+        if ($header === []) {
+            throw new RuntimeException('Source-backed Zen package summary is absent.');
+        }
+        $this->insertHeader($fileId,$header);
+    }
+
+    /** @param array<string,mixed> $header */
+    private function insertHeader(int $fileId, array $header): void
+    {
+        if (!isset($header['summary']) || !is_array($header['summary'])) {
+            throw new RuntimeException('Zen header record has no serialized summary.');
+        }
+        $json = json_encode($header, JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE);
+        $q = $this->db->prepare('INSERT INTO ue_uedb5_zen_exam_rows '
+            . '(file_id,section,row_index,reference_index,row_json,search_text) '
+            . 'VALUES (?,"header",0,NULL,?,"") '
+            . 'ON DUPLICATE KEY UPDATE row_json=VALUES(row_json),search_text=""');
+        $q->execute([$fileId,$json]);
+    }
+
+    /** @return array<string,mixed>|null */
+    public function header(int $fileId): ?array
+    {
+        if (!$this->isCurrent($fileId)) return null;
+        $q = $this->db->prepare('SELECT row_json FROM ue_uedb5_zen_exam_rows '
+            . 'WHERE file_id=? AND section="header" AND row_index=0');
+        $q->execute([$fileId]);
+        $json = $q->fetchColumn();
+        if (!is_string($json)) return null;
+        $header = json_decode($json,true,512,JSON_THROW_ON_ERROR);
+        return is_array($header) ? $header : null;
     }
 
     /** @param list<array{int,string,int,?string,string,string}> $batch */
@@ -129,6 +186,64 @@ final class PdoZenExamProjection
         $rows = [];
         foreach ($q->fetchAll(PDO::FETCH_COLUMN) as $json) {
             $rows[] = json_decode((string)$json,true,512,JSON_THROW_ON_ERROR);
+        }
+        return ['total'=>$count,'rows'=>$rows];
+    }
+
+    /**
+     * Reverse FExportMapEntry::ObjectName.NameIndex references to NameMap.
+     * A Zen ImportMap consists of FPackageObjectIndex values and has no
+     * serialized local NameMap references; do not guess them by text matching.
+     * This query only touches SQL rows for this file and never opens .uedb5.
+     *
+     * @param list<int> $names
+     * @return array<int,array{count:int,indices:list<int>}>
+     */
+    public function exportReferencesByName(int $fileId, array $names): array
+    {
+        if (!$this->isCurrent($fileId)) return [];
+        $wanted=[];
+        foreach($names as $index) if($index>=0)$wanted[$index]=true;
+        if($wanted===[])return [];
+        $q=$this->db->prepare('SELECT row_index, '
+            . 'JSON_UNQUOTE(JSON_EXTRACT(row_json,"$.object_name.name_index")) name_index '
+            . 'FROM ue_uedb5_zen_exam_rows WHERE file_id=? AND section="exports" '
+            . 'ORDER BY row_index');
+        $q->execute([$fileId]);
+        $links=[];
+        while(($record=$q->fetch(PDO::FETCH_ASSOC))!==false){
+            $nameIndex=(string)($record['name_index']??'');
+            if(!ctype_digit($nameIndex)||!isset($wanted[(int)$nameIndex]))continue;
+            $idx=(int)$nameIndex;
+            if(!isset($links[$idx]))$links[$idx]=['count'=>0,'indices'=>[]];
+            $links[$idx]['count']++;
+            if(count($links[$idx]['indices'])<12)$links[$idx]['indices'][]=(int)$record['row_index'];
+        }
+        return $links;
+    }
+
+    /** Bounded SQL-only ExportMap search by the actual serialized FMappedName index.
+     * @return array{total:int,rows:list<array<string,mixed>>}
+     */
+    public function exportPageByNameIndex(int $fileId,int $nameIndex,int $offset,int $limit):array
+    {
+        if($fileId<1||$nameIndex<0||!$this->isCurrent($fileId)){
+            return ['total'=>0,'rows'=>[]];
+        }
+        $where='file_id=? AND section="exports" '
+            .'AND JSON_UNQUOTE(JSON_EXTRACT(row_json,"$.object_name.name_index"))=?';
+        $params=[$fileId,(string)$nameIndex];
+        $total=$this->db->prepare('SELECT COUNT(*) FROM ue_uedb5_zen_exam_rows WHERE '.$where);
+        $total->execute($params);
+        $count=(int)$total->fetchColumn();
+        $q=$this->db->prepare('SELECT row_json FROM ue_uedb5_zen_exam_rows WHERE '.$where
+            .' ORDER BY row_index LIMIT '.max(1,min(1000,$limit)).' OFFSET '.max(0,$offset));
+        $q->execute($params);
+        $rows=[];
+        foreach($q->fetchAll(PDO::FETCH_COLUMN) as $json){
+            $row=json_decode((string)$json,true,512,JSON_THROW_ON_ERROR);
+            if(!is_array($row))throw new RuntimeException('Invalid named export projection row.');
+            $rows[]=$row;
         }
         return ['total'=>$count,'rows'=>$rows];
     }

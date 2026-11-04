@@ -9,6 +9,8 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/file-examine-zen-tables.php';
+require_once __DIR__ . '/file-examine-zen-exports.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
 
@@ -114,6 +116,7 @@ function examine_page_href(int $fileId, string $table, int $page, int $pageSize)
         'page' => max(1, $page),
         'page_size' => $pageSize,
         'filter' => trim((string)($_GET['filter'] ?? '')),
+        'name_ref' => trim((string)($_GET['name_ref'] ?? '')),
     ],static fn($value):bool=>$value !== '')) . '#package-tables';
 }
 
@@ -276,11 +279,24 @@ try {
         }
     }
 
+    $zenNameRef=null;
+    $rawNameRef=(string)($_GET['name_ref']??'');
+    if($target==='' && $filter==='' && $table==='exports'
+        && strtolower((string)($file['extension']??''))==='zenpkg'
+        && preg_match('/^(0|[1-9][0-9]{0,8})$/D',$rawNameRef)===1){
+        $zenNameRef=(int)$rawNameRef;
+    }
     $fetchStarted = microtime(true);
     if ($table === 'uses' || $table === 'used-by') {
         $page = ['rows'=>[],'page'=>1,'pages'=>1,'total'=>0,'page_size'=>$pageSize,'start'=>0,'end'=>0];
     } else {
-        $page = PdoPackageTablePageQuery::fetchFilteredPage($db, $file, $table, $filter, $requestedPage, $pageSize);
+        $page = $zenNameRef !== null
+            ? PdoPackageTablePageQuery::fetchZenExportsByNameIndex(
+                $db,$file,$zenNameRef,$requestedPage,$pageSize
+            )
+            : PdoPackageTablePageQuery::fetchFilteredPage(
+                $db,$file,$table,$filter,$requestedPage,$pageSize
+            );
     }
     $fetchElapsedMs = (int)round((microtime(true) - $fetchStarted) * 1000);
     error_log(
@@ -312,15 +328,28 @@ try {
             }
         }
         if ($scriptIndexes !== []) {
-            $zenScriptLabels = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenCookedScriptLabelLookup::labels(
-                $db, (string)$config['storage_path'], (int)$file['game_id'], $scriptIndexes
+            $zenScriptDetails = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenCookedScriptLabelLookup::describe(
+                $db,(string)$config['storage_path'],(int)$file['game_id'],$scriptIndexes
             );
-            if ($table === 'imports') {
-                $zenScriptDetails = \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenCookedScriptLabelLookup::describe(
-                    $db, (string)$config['storage_path'], (int)$file['game_id'], $scriptIndexes
-                );
+            foreach($zenScriptDetails as $raw=>$detail){
+                $zenScriptLabels[$raw]=(string)$detail['path'];
             }
         }
+    }
+    $zenHeaderNameIndex = null;
+    if ($isZen && $table === 'names') {
+        $header = (new \UnrealDb\Catalog\Infrastructure\Metadata\PdoZenExamProjection($db))
+            ->header($fileId);
+        if (is_array($header) && isset($header['summary']['name']['name_index'])) {
+            $zenHeaderNameIndex = (int)$header['summary']['name']['name_index'];
+        }
+    }
+    $zenNameReverse = [];
+    if ($isZen && $table === 'names' && $rows !== []) {
+        $zenNameReverse = (new \UnrealDb\Catalog\Infrastructure\Metadata\PdoZenExamProjection($db))
+            ->exportReferencesByName(
+                $fileId,array_map(static fn(array $r):int=>(int)$r['name_index'],$rows)
+            );
     }
     $zenExportPaths = [];
     $zenImportIndices = [];
@@ -336,7 +365,7 @@ try {
             foreach (['class_index','outer_index','super_index','template_index'] as $field) {
                 $ref = (array)($record[$field] ?? []);
                 $raw = strtoupper((string)($ref['raw_type_and_id'] ?? ''));
-                if ((string)($ref['type'] ?? '') === 'ScriptImport'
+                if ((string)($ref['type'] ?? '') !== 'Null'
                     && preg_match('/^[A-F0-9]{16}$/D',$raw) === 1) {
                     $rawIndices[] = $raw;
                 }
@@ -348,6 +377,32 @@ try {
         }
     }
 
+    $zenExternalRefMatches = [];
+    if ($isZen && $table === 'exports' && $rows !== []) {
+        $rawRefs=[];
+        foreach($rows as $row){
+            foreach(['outer_index','class_index','super_index','template_index'] as $field){
+                $ref=(array)($row[$field]??[]);
+                if((string)($ref['type']??'')==='PackageImport'){
+                    $raw=strtoupper((string)($ref['raw_type_and_id']??''));
+                    if(preg_match('/^[0-9A-F]{16}$/D',$raw))$rawRefs[$raw]=$ref;
+                }
+            }
+        }
+        if($rawRefs!==[]){
+            $candidates=[];$byIdx=[];
+            foreach($rawRefs as $raw=>$ref){
+                $index=count($candidates);
+                $candidates[]=$ref+['import_index'=>$index];
+                $byIdx[$index]=$raw;
+            }
+            $results=(new \UnrealDb\Catalog\Infrastructure\Metadata\CatalogZenStaticDependencyLookup($db))
+                ->forImports((int)$file['game_id'],$candidates);
+            foreach($byIdx as $index=>$raw){
+                if(isset($results[$index]))$zenExternalRefMatches[$raw]=$results[$index];
+            }
+        }
+    }
     $packageFiles = [];
     if ($table === 'imports' && !$isZen) {
         $roots = array_values(array_unique(array_filter(array_map(
@@ -454,41 +509,54 @@ try {
 
     echo '<div class="card hero" id="top"><h1>Examine ' . catalog_h($file['package_name']) . '</h1><p class="muted">Bounded database-backed Names, Imports and Exports pages. Cross-references open the page containing the selected row.</p><p><a class="button" href="' . catalog_h($back) . '">Back to files</a> <a class="button" href="file-info.php?id=' . $fileId . '">Package details</a> <a class="button" href="download-info.php?id=' . $fileId . '">Download options</a> <a class="button" href="package-coverage.php?file_id=' . $fileId . '">Send to Package Coverage</a></p></div>';
 
-    echo '<div class="card"><h2>Package header</h2><div class="two-col"><table>';
+    echo '<div class="card"><h2>Catalogue metadata &amp; package identity</h2>'
+        .'<p class="muted">Game assignment, member filename, file size, '
+        .'scan status and indexed counts are catalogue records. For Zen, '
+        .'FPackageId is read from the IoStore chunk index, not FZenPackageSummary; '
+        .'.zenpkg is an internally assigned member filename. The genuinely '
+        .'serialized Zen header is shown separately below.</p>'
+        .'<div class="two-col"><table>';
     $headerFields = [
-        'Game' => $file['game_name'],
-        'Package' => '<a href="file-info.php?id=' . $fileId . '">' . catalog_h((string)$file['package_name']) . '</a>',
+        'Game (catalogue)' => catalog_h((string)$file['game_name']),
+        'Package path (decoded)' => '<a href="file-info.php?id='.$fileId.'">'
+            .catalog_h((string)$file['package_name']).'</a>',
     ];
+    $zenSourceContainer = [];
     if ($isZen) {
-        $zenIdentity = catalog_one($db,
-            'SELECT HEX(package_id) package_id,container_id FROM ue_iostore_packages '
-            . 'WHERE file_id=? AND chunk_index=0 LIMIT 1', [$fileId]) ?: [];
+        $zenSourceContainer = catalog_one($db,
+            'SELECT HEX(p.package_id) package_id,p.container_id,c.name toc_name '
+            . 'FROM ue_iostore_packages p JOIN ue_iostore_containers c ON c.id=p.container_id '
+            . 'WHERE p.file_id=? AND p.chunk_index=0 LIMIT 1', [$fileId]) ?: [];
+        $sourceId=(int)($zenSourceContainer['container_id']??0);
+        $sourceName=(string)($zenSourceContainer['toc_name']??'');
         $headerFields += [
-            'Format' => 'UE5 Zen / IoStore',
-            'FPackageId' => (string)($zenIdentity['package_id'] ?? 'unavailable'),
-            'Internal retained member' => (string)$file['original_name'],
-            'Container ID' => (string)($zenIdentity['container_id'] ?? 'unavailable'),
+            'Format (reader classification)' => 'UE5 Zen / IoStore',
+            'FPackageId (IoStore index)' => catalog_h((string)($zenSourceContainer['package_id']??'unavailable')),
+            'Stored member filename (UnrealDB)' => catalog_h((string)$file['original_name']),
+            'Source IoStore file' => $sourceId>0
+                ? '<a href="iostore-info.php?id='.$sourceId.'">'
+                    .catalog_h($sourceName).'</a>'
+                : '<span class="muted">Not recorded</span>',
         ];
     } else {
         $headerFields += [
-            'File' => $file['original_name'],
-            'GUID' => $file['package_guid'] ?: '—',
-            'Version' => $file['package_version'] ?? '—',
-            'Licensee Version' => $file['licensee_version'] ?? '—',
+            'File (catalogue)' => catalog_h((string)$file['original_name']),
+            'GUID (catalogue)' => catalog_h((string)($file['package_guid']?:'—')),
+            'Version (catalogue)' => catalog_h((string)($file['package_version']??'—')),
+            'Licensee Version (catalogue)' => catalog_h((string)($file['licensee_version']??'—')),
         ];
     }
-    foreach ($headerFields as $label => $value) {
-        echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">'
-            . ($label === 'Package' ? (string)$value : catalog_h((string)$value))
-            . '</td></tr>';
+    foreach ($headerFields as $label=>$htmlValue){
+        echo '<tr><th>'.catalog_h($label).'</th><td class="mono path">'
+            .$htmlValue.'</td></tr>';
     }
     echo '</table><table>';
     foreach ([
         'Names' => (int)$file['name_count'],
         'Imports' => (int)$file['import_count'],
         'Exports' => (int)$file['export_count'],
-        'Size' => catalog_bytes((int)$file['file_size']),
-        'Status' => $file['scan_status'],
+        ($isZen ? 'Reconstructed member bytes' : 'File size') => catalog_bytes((int)$file['file_size']),
+        'Scan status (catalogue)' => $file['scan_status'],
     ] as $label => $value) {
         echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">' . catalog_h((string)$value) . '</td></tr>';
     }
@@ -496,11 +564,19 @@ try {
 
     if (!empty($file['detection_notes']) || !empty($file['scan_notes'])) {
         echo '<div class="card"><h2>Scanner notes</h2>';
-        if (!empty($file['detection_notes'])) {
-            echo '<h3>Detection</h3><pre class="mono path">' . catalog_h((string)$file['detection_notes']) . '</pre>';
-        }
-        if (!empty($file['scan_notes'])) {
-            echo '<h3>Scan</h3><pre class="mono path">' . catalog_h((string)$file['scan_notes']) . '</pre>';
+        $noteSourceId = $isZen ? (int)($zenSourceContainer['container_id']??0) : 0;
+        $noteLink = $noteSourceId>0
+            ? '<a href="iostore-info.php?id='.$noteSourceId.'">'
+                .catalog_h((string)($zenSourceContainer['toc_name']??'')).'</a>'
+            : '';
+        foreach(['detection_notes'=>'Detection','scan_notes'=>'Scan'] as $field=>$heading){
+            $note=(string)($file[$field]??'');
+            if($note==='')continue;
+            $safe=catalog_h($note);
+            if($noteLink!==''){
+                $safe=str_replace('IoStore container #'.$noteSourceId,$noteLink,$safe);
+            }
+            echo '<h3>'.$heading.'</h3><pre class="mono path">'.$safe.'</pre>';
         }
         echo '</div>';
     }
@@ -557,7 +633,7 @@ try {
                     $state = (string)($match['state'] ?? '');
                     if ($state === 'package_found') {
                         $status = '<a class="xref path" href="file-examine.php?id='
-                            . (int)$match['file_id'] . '">Found — '
+                            . (int)$match['file_id'] . '">'
                             . catalog_h((string)$match['package_name']) . '</a>';
                     } elseif ($state === 'multiple_matches') {
                         $status = '<span class="muted">Found in '
@@ -566,7 +642,7 @@ try {
                         $status = '<span class="muted">No indexed package match</span>';
                     }
                     $requiredName = trim((string)($reference['required_package_name'] ?? ''));
-                    echo '<tr><td class="mono path">'
+                    echo '<tr id="package-' . catalog_h((string)$reference['package_id']) . '"><td class="mono path">'
                         . ($requiredName !== '' ? catalog_h($requiredName)
                             : '<span class="muted">Name not serialized</span>')
                         . '</td><td class="mono">' . catalog_h((string)$reference['package_id'])
@@ -642,33 +718,16 @@ try {
     echo '<a class="button" href="file-examine-export.php?' . catalog_h(http_build_query(['id' => $fileId,'table' => $table,'format' => 'json'])) . '">JSON (all)</a></div>';
     echo examine_pagination($fileId, $table, $page);
 
+    if ($table === 'exports' && $isZen && $zenNameRef !== null) {
+        echo '<p class="muted">ExportMap rows whose serialized '
+            . 'ObjectName.NameIndex = <a class="xref mono" href="'
+            . catalog_h(examine_href($fileId,'name-'.$zenNameRef,$pageSize))
+            . '">'.$zenNameRef.'</a>. '
+            . 'These results preserve their original export-map row positions.</p>';
+    }
     if ($table === 'names') {
         if ($isZen) {
-            $hashVersion = strtoupper((string)($rows[0]['hash_version'] ?? ''));
-            echo '<h2>Names — Zen NameMap</h2>'
-                . '<p class="muted">NameMap entries store an 8-bit or UTF-16LE string, '
-                . 'the number of encoded units, and a 64-bit serialized name hash. '
-                . 'Zen NameMap does not have the classic per-name flags column.'
-                . ($hashVersion !== '' ? ' Hash version: <span class="mono">0x'
-                    . catalog_h($hashVersion) . '</span>.' : '') . '</p>'
-                . '<div class="examine-table-region"><table data-catalog-identity-skip="1"><thead><tr>'
-                . '<th>Index</th><th>Name</th><th>Hash (uint64)</th>'
-                . '<th>Encoding</th><th>Length (units)</th></tr></thead><tbody>';
-            foreach ($rows as $row) {
-                $index = (int)$row['name_index'];
-                $rowId = 'name-' . $index;
-                $name = (string)$row['name_text'];
-                $hash = strtoupper((string)($row['hash'] ?? ''));
-                $wide = (bool)($row['is_utf16'] ?? false);
-                echo '<tr id="' . $rowId . '"'
-                    . ($target === $rowId ? ' class="is-reference-target"' : '')
-                    . '><td class="mono">' . $index . '</td>'
-                    . '<td class="mono path">' . catalog_h($name) . '</td>'
-                    . '<td class="mono">' . ($hash !== '' ? '0x' . catalog_h($hash) : '—') . '</td>'
-                    . '<td>' . ($wide ? 'UTF-16LE' : '8-bit') . '</td>'
-                    . '<td class="mono">' . (int)($row['length'] ?? 0) . '</td></tr>';
-            }
-            echo '</tbody></table></div>';
+            zen_exam_names($rows,$zenNameReverse,$zenHeaderNameIndex,$fileId,$pageSize,$target);
         } else {
             echo '<h2>Names</h2><div class="examine-table-region"><table><thead><tr>'
                 . '<th>Index</th><th>Name</th><th>Flags / hashes</th></tr></thead><tbody>';
@@ -686,142 +745,7 @@ try {
         }
     } elseif ($table === 'imports') {
         if ($isZen) {
-            $scriptImports = 0;
-            $identifiedScripts = 0;
-            foreach ($rows as $item) {
-                if ((string)($item['type'] ?? '') !== 'ScriptImport') continue;
-                $scriptImports++;
-                if (isset($zenScriptLabels[strtoupper((string)($item['raw_type_and_id'] ?? ''))])) {
-                    $identifiedScripts++;
-                }
-            }
-            echo '<h2>Zen imports — FPackageObjectIndex</h2>';
-            if ($scriptImports > 0) {
-                echo '<p><strong>' . $identifiedScripts . ' of ' . $scriptImports
-                    . ' script-import identities identified from cooked ScriptObjects</strong> '
-                    . '<span class="muted">(this page)</span>.</p>';
-            }
-            echo '<p class="muted">Each row below is a serialized UE5 Zen import. '
-                . 'Catalogue matches use exact cooked ScriptObjects identities or FPackageId plus PublicExportHash '
-                . 'in verified imported files. The ' . (int)$file['export_count']
-                . ' exports are local objects defined by this package, not resolved external imports. '
-                . 'Dependency-bundle/load-order entries are a separate type of record.</p>'
-                . '<div class="examine-table-region"><table class="examine-imports-table" data-catalog-identity-skip="1"><thead><tr>'
-                . '<th>Index</th><th>Catalogue resolution</th><th>Object ref</th>'
-                . '<th>Script package</th><th>Class</th><th>Object</th>'
-                . '<th>Outer ref</th><th>Full path</th>'
-                . '</tr></thead><tbody>';
-            $importIndexByRaw = [];
-            foreach ($rows as $item) {
-                $importIndexByRaw[strtoupper((string)($item['raw_type_and_id'] ?? ''))]
-                    = (int)($item['import_index'] ?? -1);
-            }
-            foreach ($rows as $row) {
-                $index = (int)$row['import_index'];
-                $rowId = 'import-' . $index;
-                $kind = (string)($row['type'] ?? '');
-                $rawIndex = strtoupper((string)($row['raw_type_and_id'] ?? ''));
-                $detail = $zenScriptDetails[$rawIndex] ?? null;
-                $refHtml = '<span class="mono">0x' . catalog_h($rawIndex) . '</span>';
-                // The page is already an Imports table. Show a type label only
-                // for non-script reference kinds, not repeated ScriptImport text.
-                if ($kind === 'Null') {
-                    $refHtml = '<span class="muted">Null</span>';
-                } elseif ($kind !== 'ScriptImport') {
-                    $refHtml .= '<span class="examine-zen-secondary">' . catalog_h($kind) . '</span>';
-                }
-                $moduleHtml = '<span class="muted">—</span>';
-                $classHtml = '<span class="muted">—</span>';
-                $objectHtml = '<span class="muted">—</span>';
-                $outerHtml = '<span class="muted">—</span>';
-                $pathHtml = $kind === 'Null' ? '<span class="muted">—</span>'
-                    : '<span class="muted">Not available</span>';
-                if ($kind === 'ScriptImport' && is_array($detail)) {
-                    $objectHtml = '<span class="mono path">' . catalog_h((string)$detail['name']) . '</span>';
-                    $pathHtml = '<span class="mono path">' . catalog_h((string)$detail['path']) . '</span>';
-                    if ((string)$detail['module'] !== '') {
-                        $moduleHtml = '<span class="mono path">'
-                            . catalog_h((string)$detail['module']) . '</span>';
-                    }
-                    $outer = strtoupper((string)$detail['outer_index']);
-                    if ($outer === 'FFFFFFFFFFFFFFFF') {
-                        $outerHtml = '<span class="muted">Root script package</span>';
-                    } elseif ((string)$detail['outer_path'] !== '') {
-                        $outerPath = catalog_h((string)$detail['outer_path']);
-                        $outerHtml = isset($importIndexByRaw[$outer])
-                            ? '<a class="xref mono path" href="#import-'
-                                . $importIndexByRaw[$outer] . '">' . $outerPath . '</a>'
-                            : '<span class="mono path">' . $outerPath . '</span>';
-                    } else {
-                        $outerHtml = '<span class="mono">0x' . catalog_h($outer) . '</span>';
-                    }
-                    $class = strtoupper((string)$detail['cdo_class_index']);
-                    if ((string)$detail['cdo_class_path'] !== '') {
-                        $classPath = catalog_h((string)$detail['cdo_class_path']);
-                        $classHtml = isset($importIndexByRaw[$class])
-                            ? '<a class="xref mono path" href="#import-'
-                                . $importIndexByRaw[$class] . '">' . $classPath . '</a>'
-                            : '<span class="mono path">' . $classPath . '</span>';
-                    } elseif ($class !== 'FFFFFFFFFFFFFFFF' && preg_match('/^[A-F0-9]{16}$/D', $class)) {
-                        $classHtml = '<span class="mono">0x' . catalog_h($class) . '</span>';
-                    }
-                } elseif ($kind === 'PackageImport') {
-                    $provider = strtoupper((string)($row['provider_package_id'] ?? ''));
-                    $hash = strtoupper((string)($row['provider_public_export_hash'] ?? ''));
-                    $moduleHtml = $provider !== ''
-                        ? '<span class="mono">FPackageId ' . catalog_h($provider) . '</span>'
-                        : $moduleHtml;
-                    $objectHtml = $hash !== ''
-                        ? '<span class="mono">Export hash ' . catalog_h($hash) . '</span>'
-                        : $objectHtml;
-                } elseif ($kind === 'Export' && isset($row['local_export_index'])) {
-                    $local = (int)$row['local_export_index'];
-                    $objectHtml = '<a class="xref mono" href="#export-' . $local
-                        . '">Export #' . $local . '</a>';
-                }
-                $statusHtml = '<span class="muted">No indexed match</span>';
-                if ($kind === 'Null') {
-                    $statusHtml = '<span class="muted">Null slot — no dependency</span>';
-                } elseif ($kind === 'Export') {
-                    $statusHtml = '<span class="muted">Local export reference</span>';
-                } else {
-                    $match = $zenStaticImports[$index] ?? null;
-                    if (is_array($match)) {
-                        $state = (string)($match['state'] ?? '');
-                        if ($state === 'resolved_script') {
-                            $container = (int)($match['container_id'] ?? 0);
-                            $statusHtml = $container > 0
-                                ? '<a class="xref" href="iostore-info.php?id=' . $container
-                                    . '">Resolved — global.utoc ScriptObjects</a>'
-                                : '<span>Resolved — cooked ScriptObjects</span>';
-                        } elseif ($state === 'resolved_export') {
-                            $providerId = (int)$match['file_id'];
-                            $exportIndex = (int)$match['export_index'];
-                            $label = 'Resolved — ' . (string)$match['package_name'];
-                            $statusHtml = '<a class="xref path" href="'
-                                . catalog_h(examine_href($providerId, 'export-'.$exportIndex, $pageSize))
-                                . '">' . catalog_h($label) . '</a>';
-                        } elseif ($state === 'package_found') {
-                            $statusHtml = '<a class="xref path" href="file-examine.php?id='
-                                . (int)$match['file_id'] . '">Package found — '
-                                . catalog_h((string)$match['package_name']) . '</a>';
-                        } elseif ($state === 'multiple_matches') {
-                            $statusHtml = '<span class="muted">Multiple matching files ('
-                                . (int)$match['match_count'] . ') — ambiguous provider</span>';
-                        }
-                    }
-                }
-                echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '')
-                    . '><td class="mono">' . $index . '</td>'
-                    . '<td>' . $statusHtml . '</td>'
-                    . '<td>' . $refHtml . '</td>'
-                    . '<td>' . $moduleHtml . '</td>'
-                    . '<td>' . $classHtml . '</td>'
-                    . '<td>' . $objectHtml . '</td>'
-                    . '<td>' . $outerHtml . '</td>'
-                    . '<td>' . $pathHtml . '</td></tr>';
-            }
-            echo '</tbody></table></div>';
+            zen_exam_imports($rows,$zenStaticImports,$zenScriptDetails,$fileId,$pageSize,$target);
         } else {
         echo '<h2>Imports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-imports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th></tr></thead><tbody>';
         foreach ($rows as $row) {
@@ -838,56 +762,10 @@ try {
         }
     } else {
         if ($isZen) {
-            echo '<h2>Exports</h2><p class="muted">Zen exports use typed object references. '
-                . 'Full paths below are reconstructed only from serialized local Export outer links; '
-                . 'missing or nonlocal outers are not guessed.</p>'
-                . '<div class="examine-table-region"><table class="examine-exports-table" data-catalog-identity-skip="1"><thead><tr>'
-                . '<th>Index</th><th>Export hash</th><th>Class</th><th>Object</th>'
-                . '<th>Outer ref</th><th>Local path</th><th>Full path</th>'
-                . '<th>Flags</th><th>Serial size</th><th>Serial offset</th>'
-                . '</tr></thead><tbody>';
-            foreach ($rows as $row) {
-                $index = (int)$row['export_index'];
-                $rowId = 'export-' . $index;
-                $localPath = (string)($zenExportPaths[$index] ?? '');
-                $fullPath = (string)($row['full_path'] ?? '');
-                $classHtml = examine_zen_table_reference(
-                    (array)($row['class_index'] ?? []), $zenScriptLabels, $zenImportIndices, $fileId, $pageSize
-                );
-                $outerHtml = examine_zen_table_reference(
-                    (array)($row['outer_index'] ?? []), $zenScriptLabels, $zenImportIndices, $fileId, $pageSize
-                );
-                $objectHtml = examine_name_index_link(
-                    (string)$row['object_name'],
-                    isset($row['object_name_name_index']) ? (int)$row['object_name_name_index'] : null,
-                    $fileId, $pageSize
-                );
-                $extra = [];
-                foreach (['super_index'=>'Super','template_index'=>'Template'] as $field=>$label) {
-                    $ref = (array)($row[$field] ?? []);
-                    if ((string)($ref['type'] ?? '') === 'Null') continue;
-                    $extra[] = '<div><strong>' . $label . ':</strong> '
-                        . examine_zen_table_reference($ref, $zenScriptLabels, $zenImportIndices, $fileId, $pageSize)
-                        . '</div>';
-                }
-                if ($extra !== []) {
-                    $objectHtml .= '<details class="examine-zen-extras"><summary>Additional references</summary>'
-                        . implode('', $extra) . '</details>';
-                }
-                $exportHash = strtoupper((string)($row['public_export_hash'] ?? ''));
-                echo '<tr id="' . $rowId . '"' . ($target === $rowId ? ' class="is-reference-target"' : '')
-                    . '><td class="mono">' . $index . '</td>'
-                    . '<td class="mono">' . ($exportHash !== '' ? '0x' . catalog_h($exportHash) : '—') . '</td>'
-                    . '<td>' . $classHtml . '</td>'
-                    . '<td>' . $objectHtml . '</td>'
-                    . '<td>' . $outerHtml . '</td>'
-                    . '<td class="mono path">' . ($localPath !== '' ? catalog_h($localPath) : '—') . '</td>'
-                    . '<td class="mono path">' . ($fullPath !== '' ? catalog_h($fullPath) : '—') . '</td>'
-                    . '<td class="mono">' . catalog_h((string)($row['object_flags'] ?? '')) . '</td>'
-                    . '<td class="mono">' . catalog_h((string)($row['cooked_serial_size'] ?? '')) . '</td>'
-                    . '<td class="mono">' . catalog_h((string)($row['cooked_serial_offset'] ?? '')) . '</td></tr>';
-            }
-            echo '</tbody></table></div>';
+            zen_exam_exports(
+                $rows,$zenScriptLabels,$zenScriptDetails,$zenImportIndices,
+                $zenExternalRefMatches,$fileId,$pageSize,$target
+            );
         } else {
         echo '<h2>Exports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-exports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Local path</th><th>Full path</th><th>Flags</th><th>Serial size</th><th>Serial offset</th></tr></thead><tbody>';
         foreach ($rows as $row) {

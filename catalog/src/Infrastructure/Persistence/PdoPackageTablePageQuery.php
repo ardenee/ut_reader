@@ -118,6 +118,37 @@ final class PdoPackageTablePageQuery
     }
 
     /**
+     * UE5 Zen name reference navigation. Ordinary text search and classic
+     * import/export readers remain on their existing isolated paths.
+     * @return array{rows:list<array<string,mixed>>,page:int,pages:int,total:int,page_size:int,start:int,end:int}
+     */
+    public static function fetchZenExportsByNameIndex(
+        PDO $db,array $file,int $nameIndex,int $requestedPage,int $pageSize
+    ):array {
+        if(strtolower((string)($file['extension']??''))!=='zenpkg'||$nameIndex<0){
+            throw new RuntimeException('Name-index filtering requires a Zen package.');
+        }
+        $fileId=(int)$file['id'];
+        $size=self::normalizePageSize($pageSize);
+        $exam=new PdoZenExamProjection($db);
+        if(!$exam->isCurrent($fileId)){
+            throw new RuntimeException('Zen source-bound SQL projection is unavailable.');
+        }
+        $page=max(1,$requestedPage);
+        $result=$exam->exportPageByNameIndex($fileId,$nameIndex,($page-1)*$size,$size);
+        $total=(int)$result['total'];
+        $pages=max(1,(int)ceil($total/$size));
+        if($page>$pages){
+            $page=$pages;
+            $result=$exam->exportPageByNameIndex($fileId,$nameIndex,($page-1)*$size,$size);
+        }
+        $rows=self::presentV5Rows($result['rows'],'exports');
+        $start=($page-1)*$size;
+        return ['rows'=>$rows,'page'=>$page,'pages'=>$pages,'total'=>$total,
+            'page_size'=>$size,'start'=>$total?$start+1:0,'end'=>$start+count($rows)];
+    }
+
+    /**
      * Search the entire V5 section, then paginate the matches while keeping
      * serialized row indexes for links and outer-reference navigation.
      *
@@ -186,6 +217,11 @@ final class PdoPackageTablePageQuery
             } elseif ($table === 'exports') {
                 $row['export_index'] = (int)($row['export_index'] ?? $row['index'] ?? 0);
                 $value = $row['object_name'] ?? null;
+                // Preserve the original two uint32 FMappedName words for
+                // Zen raw-table display; decoded text is secondary metadata.
+                if (is_array($value) && isset($value['raw_index'])) {
+                    $row['object_name_mapped'] = $value;
+                }
                 if (is_array($value) && array_key_exists('name_index', $value)) {
                     $row['object_name_name_index'] = (int)$value['name_index'];
                 }

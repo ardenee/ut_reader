@@ -220,15 +220,19 @@ if (session_status() === PHP_SESSION_ACTIVE) {
     session_write_close();
 }
 
+// The included table view assigns $row inside its own loops. Preserve the
+// actual file record before inclusion so header/feedback cannot disappear
+// selectively on Exports or other tabs.
+$examFileRecord = is_array($row ?? null) ? $row : null;
 ob_start();
 require __DIR__ . '/file-examine-paged-core.php';
 $html = (string)ob_get_clean();
 $opaqueControlBytes = 0;
 $html = file_examine_render_opaque_controls($html, $opaqueControlBytes);
 
-$feedbackCardHtml = is_array($row ?? null) ? catalog_file_feedback_form_html($id) : '';
+$feedbackCardHtml = is_array($examFileRecord) ? catalog_file_feedback_form_html($id) : '';
 if ($feedbackCardHtml !== '') {
-    $marker = '<div class="card"><h2>Package header</h2>';
+    $marker = '<div class="card"><h2>Catalogue metadata &amp; package identity</h2>';
     $html = str_replace($marker, $feedbackCardHtml . $marker, $html);
 }
 
@@ -237,33 +241,41 @@ if ($opaqueControlBytes > 0) {
         . '<p class="muted">This package contains FName values with control bytes. '
         . 'They are displayed as <span class="mono">\\xNN</span> escapes so they are visible. '
         . 'Their stored values and import/export reference identities have not been changed.</p></div>';
-    $marker = '<div class="card"><h2>Package header</h2>';
+    $marker = '<div class="card"><h2>Catalogue metadata &amp; package identity</h2>';
     $html = str_replace($marker, $notice . $marker, $html);
 }
 
 if ($renameCardHtml !== '') {
-    $marker = '<div class="card"><h2>Package header</h2>';
+    $marker = '<div class="card"><h2>Catalogue metadata &amp; package identity</h2>';
     $html = str_replace($marker, $renameCardHtml . $marker, $html);
 }
 
 $headerHtml = '';
-if (is_array($row ?? null) && (string)($row['scan_status'] ?? '') === 'verified') {
-    try {
-        $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-        $relativePath = ltrim(str_replace(['/', '\\\\'], DIRECTORY_SEPARATOR, (string)($row['relative_path'] ?? '')), DIRECTORY_SEPARATOR);
-        $storedPath = $storageRoot !== false && $relativePath !== ''
-            ? realpath($storageRoot . DIRECTORY_SEPARATOR . $relativePath)
-            : false;
-        if ($storageRoot !== false && $storedPath !== false
-            && ($storedPath === $storageRoot || str_starts_with($storedPath, $storageRoot . DIRECTORY_SEPARATOR))) {
-            $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath, $row);
-        } else {
-            $headerInspection = CatalogPackageHeaderInspector::inspect(null, $row);
+if (is_array($examFileRecord) && (string)($examFileRecord['scan_status'] ?? '') === 'verified') {
+    if (strtolower((string)($examFileRecord['extension'] ?? '')) === 'zenpkg') {
+        // This is not a standalone classic .uasset. Use the exact,
+        // SHA-bound FZenPackageSummary already indexed from the original
+        // source; never apply the classic package tag inspector to .zenpkg.
+        $headerHtml = zen_exam_raw_header_html($db,$id,150);
+    } else {
+        try {
+            $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+            $relativePath = ltrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR,
+                (string)($examFileRecord['relative_path'] ?? '')), DIRECTORY_SEPARATOR);
+            $storedPath = $storageRoot !== false && $relativePath !== ''
+                ? realpath($storageRoot . DIRECTORY_SEPARATOR . $relativePath)
+                : false;
+            if ($storageRoot !== false && $storedPath !== false
+                && ($storedPath === $storageRoot || str_starts_with($storedPath,$storageRoot.DIRECTORY_SEPARATOR))) {
+                $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath,$examFileRecord);
+            } else {
+                $headerInspection = CatalogPackageHeaderInspector::inspect(null,$examFileRecord);
+            }
+        } catch (Throwable $error) {
+            $headerInspection = ['ok'=>false,'error'=>$error->getMessage(),'summary'=>[],'rows'=>[]];
         }
-    } catch (Throwable $error) {
-        $headerInspection = ['ok' => false, 'error' => $error->getMessage(), 'summary' => [], 'rows' => []];
+        $headerHtml = file_examine_header_html($headerInspection);
     }
-    $headerHtml = file_examine_header_html($headerInspection);
 }
 if ($headerHtml !== '') {
     $html = str_replace('<div class="card" id="package-tables">', $headerHtml . '<div class="card" id="package-tables">', $html);
