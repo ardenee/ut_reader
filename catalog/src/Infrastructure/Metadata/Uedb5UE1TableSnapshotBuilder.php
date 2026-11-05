@@ -48,6 +48,14 @@ final class Uedb5UE1TableSnapshotBuilder
 
         $version = (int)($header['version'] ?? 0);
         $pre50Unreal = $prefix === 'ue1.unreal' && $version < 50;
+        // Only the independently discriminated 227k on-disk variant can
+        // carry this optional field. Existing UE1/UT99 and earlier Unreal
+        // snapshots remain byte-for-byte schema-v1 compatible.
+        $hasArchetypes = $prefix === 'ue1.unreal'
+            && ($header['unreal227ExportLayout'] ?? null)
+                === 'native_227k_archetype_int32_structurally_discriminated'
+            && count(array_filter($exports, static fn(array $row): bool =>
+                (((int)($row['objectFlags'] ?? 0)) & 0x00000100) !== 0)) > 0;
 
         return [
             'file' => [
@@ -62,13 +70,17 @@ final class Uedb5UE1TableSnapshotBuilder
                 'summary' => $prefix . ($pre50Unreal ? '.package-summary.v2' : '.package-summary.v1'),
                 'names' => $prefix . '.name-entry.v1',
                 'imports' => $prefix . ($pre50Unreal ? '.object-import.v2' : '.object-import.v1'),
-                'exports' => $prefix . ($pre50Unreal ? '.object-export.v2' : '.object-export.v1'),
+                'exports' => $prefix . ($hasArchetypes ? '.object-export.v3'
+                    : ($pre50Unreal ? '.object-export.v2' : '.object-export.v1')),
             ],
             'sections' => [
                 'summary' => [self::summaryRow($header, $pre50Unreal)],
                 'names' => array_map(self::nameRow(...), $names),
                 'imports' => array_map(static fn(array $row): array => self::importRow($row, $version), $imports),
-                'exports' => array_map(static fn(array $row): array => self::exportRow($row, $pre50Unreal), $exports),
+                'exports' => array_map(
+                    static fn(array $row): array => self::exportRow($row, $pre50Unreal, $hasArchetypes),
+                    $exports
+                ),
             ],
         ];
     }
@@ -162,11 +174,12 @@ final class Uedb5UE1TableSnapshotBuilder
     }
 
     /** @param array<string,mixed> $row @return array<string,mixed> */
-    private static function exportRow(array $row, bool $pre50Unreal): array
-    {
+    private static function exportRow(
+        array $row, bool $pre50Unreal, bool $hasArchetypes
+    ): array {
         $index = (int)($row['index'] ?? -1);
         $serialSize = (int)($row['serialSize'] ?? 0);
-        return [
+        $output = [
             'index' => $index,
             'package_index' => $index + 1,
             'serialized_offset' => (int)($row['offset'] ?? -1),
@@ -187,6 +200,19 @@ final class Uedb5UE1TableSnapshotBuilder
             'serial_offset' => $serialSize !== 0 ? (int)($row['serialOffset'] ?? 0) : null,
             'serial_offset_encoding' => $serialSize !== 0 ? 'compact-index' : null,
         ];
+        if ($hasArchetypes) {
+            $present = (((int)($row['objectFlags'] ?? 0)) & 0x00000100) !== 0;
+            if ($present && !array_key_exists('archetypeIndex', $row)) {
+                throw new RuntimeException(
+                    'Unreal v227 export has RF_HasArchtype but no decoded ArchetypeIndex.'
+                );
+            }
+            $output['archetype_index_present'] = $present;
+            $output['archetype_index'] = $present
+                ? (int)($row['archetypeIndex'] ?? 0) : null;
+            $output['archetype_index_encoding'] = $present ? 'int32-le' : null;
+        }
+        return $output;
     }
 
     /** @return array{name_index:int,number:int,text:string} */

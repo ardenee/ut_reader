@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "date": "2026-11-05",
+  "existing_contract": "ue1-tables",
+  "scope": "Three previously open UE1 format-specification code audit findings; dedicated source-selected Unreal/UT99 handling, source-to-UEDB5 snapshots, and read-only requirements analysis. Not entire UE1 native certification.",
+  "source_evidence": {
+    "original_227k_core_sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+    "original_227k_FObjectExport_operator": "x86 0x1005DA20: compact ClassIndex, compact SuperIndex, int32 PackageIndex, FName ObjectName, uint32 ObjectFlags, optional signed int32 ArchetypeIndex iff object_flags&0x100 and LicenseeVer>=227, compact SerialSize, compact SerialOffset iff size!=0. Source: frozen 20261027-UE1-C227K-REA-FObjectExport-Archive.json; original 227k binary, not fabricated v227i equivalence.",
+    "original_227k_unmodified_file": "L:/Source/Games/Unreal/OldUnreal-UnrealPatch227k-Windows/System/UnrealShare.u",
+    "original_227k_file_sha256": "ab2e571dd2e0bad0d8e4389f4d8bc1c7476a61d809de69ce2e7552511197864d",
+    "original_227k_export_index_zero_based": 13627,
+    "original_227k_export_name": "BoxRigidBody",
+    "original_227k_export_record_offset": 48155230,
+    "original_227k_archetype_index": 13069,
+    "original_227k_wrong_format_result": "no-archetype decoder rejects original package at Export[13628] invalid PackageIndex, whereas real native 227k decoder passes all 13,873 exports.",
+    "original_227i_Engine_u_SHA256": "931ffb4ddf3b9b608cbfd49bc6d5f86ddbcbe9e9148ac8c7769d6ac3b13d4ac7",
+    "original_227i_scope": "Original 2012 227i Engine.u version69/licensee0, 6140 exports, zero archetype-flagged exports; no positive proof for earlier 227i flagged exports. No 227i binary-equivalence claim."
+  },
+  "issues": [
+    {
+      "id": 1,
+      "name": "Unreal 227k conditional export archive layout",
+      "decision": "CLOSED_WITHIN_SUPPORTED_227K_FILE_FORMAT_SCOPE",
+      "change": "CatalogUE1PackageReader now splits summary-loader semantics from explicit export archive interpretation. For game-selected Unreal 69/227 files with RF_HasArchtype, auto mode tests the opposite layout against entire table and reference validation; accepts verified native 227k branch only when alternative fails, rejects dual-valid ambiguous candidates and legacy-only unknown native branch. Explicit fixture modes do not imply game/runtime identity.",
+      "positive": "Genuine 227k UnrealShare.u, BoxRigidBody 13069, 13873 exports, no alternate parse",
+      "negative": "Synthetic dual-valid fails closed, synthetic UT99 version69/licensee227 flagged bytes only decode UT99 no-extension branch; original 227i zero-flag case remains unchanged."
+    },
+    {
+      "id": 2,
+      "name": "ArchetypeIndex missing in UE1 UEDB5 metadata",
+      "decision": "CLOSED_FOR_NEW_V3_SNAPSHOTS; EXISTING_PRD_RESNAPSHOT_STATUS_UNVERIFIED",
+      "change": "Uedb5UE1TableSnapshotBuilder emits UE1 Unreal export schema v3 exclusively for structurally discriminated 227k archive; flagged records carry archetype_index_present, archetype_index, int32-le wire type; other records explicitly absent; v1/v2 and all UT99/UE2 snapshots unchanged. Missing decoded archetype value is a hard error.",
+      "positive": "Original 227k 13069 retained through real Uedb5MetadataContainer::buildToFile and Uedb5MetadataReader::page, matched v3 manifest",
+      "remaining": "Production source metadata regeneration, if needed, must happen on PRD under backup and scoped Pass1/Pass2 procedures. DEV PRD MySQL connection actively refused. No PRD SQL actions executed."
+    },
+    {
+      "id": 3,
+      "name": "raw UE1 serialized name bytes not stored alongside decoded NameMap",
+      "decision": "CLOSED_SOURCE_NA_FOR_CURRENT_CATALOG_OPERATIONS",
+      "proof": "The 83-path operation inventory identifies name display, import/export names, dependency matching, metadata search/publishing and original file SHA/size checks. CatalogUE1PackageReader reads original bytes; Uedb5UE1TableSnapshotBuilder stores decoded text + flags + original entry offset; CatalogLegacyNameMapPreprocessor and Uedb5ClassicDependencyResolver consume decoded names; Uedb5MetadataContainer writes only independent UEDB5 metadata, not a rewritten Unreal package. No active UE1 package roundtrip writer/repacker requires exact name-archive bytes.",
+      "qualification": "If UnrealDB later implements UE1 package rewriting, exact raw name bytes or re-reading the original authenticated source must be designed and newly verified. This decision does not certify bit-perfect UE1 package reconstruction."
+    }
+  ],
+  "actual_verifications": [
+    "Original 227k native-method/source archive operator retained, original file SHA and genuine BoxRigidBody matched",
+    "Wrong/no-archetype branch rejects genuine 227k package",
+    "New v3 UE1 original 227k snapshot end-to-end serialize->read->index preserved",
+    "Separate ambiguous two-valid parser branches fail closed",
+    "Separate UT99 69/227 synthetic flag record uses UT99 non-227k policy",
+    "Original Unreal v61 / UT99 v432 / UT99 469f / UE2 runtime v126 archived byte/table and game-specific snapshot regression 4/4 unchanged",
+    "PHP -l all modified PHP production sources PASS, git diff --check PASS"
+  ],
+  "sha256_current_code": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "2b70d04cc9e12c9622cdffb9a1f5220378131b8e3116e7fb7fc2888243573043",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "144cea98033a4d59de8aac8081208c35fd910f9f5009548e0ebdb50bd733c627",
+    "catalog/bin/diagnose-ue1-227-archetype-snapshots.php": "9c0a45e17f33bc9238a3b071bd991e796100ad69ffce5f192a578a2b5cec8a29"
+  },
+  "new_temp_fixture_scripts_sha256": {
+    "D:/Temp/UnrealDB/UE1/verify-227k-archetype-endtoend-20261105.php": "6a25e7e44a3cc406aac7d902465d062758d688ea7c2898a6f0257f00d6f6ed10",
+    "D:/Temp/UnrealDB/UE1/verify-227k-ambiguity-only-20261105.php": "00d41e3c370ceabb3fc662b105b5c900131d037fcc138e3dc7d4215abb17441d",
+    "D:/Temp/UnrealDB/UE1/verify-ut99-unreal-flag-provenance-20261105.php": "ff7326b4827724126692e75174daf18289bdd390b4285b0f36bef89494a6325e"
+  },
+  "production_reconciliation": {
+    "read_only_diagnostic": "catalog/bin/diagnose-ue1-227-archetype-snapshots.php [--file-id=N] deployed to PRD but not executed from DEV; outputs exact IDs and required preexisting snapshot state; exit code 0 current, 2 needs resnapshot, 3 blocked.",
+    "dev_database_status": "192.168.0.55 MySQL connection refused; cannot read live candidate IDs or perform verified live PRD resnapshot.",
+    "read_only_prd_share": "Z:/Apache24/htdocs/unrealdb/catalog/storage/games/unrealgold/verified accessible; 10935 files enumerated; slow per-file SMB header scan stopped without mutation; no incomplete results promoted.",
+    "sql_changes": 0,
+    "original_game_packages_modified": 0,
+    "epic_binaries_modified": 0,
+    "native_engine_reruns": 0,
+    "backfill_executed": false
+  },
+  "no_new_contracts": true
+}

@@ -22,15 +22,50 @@ final class CatalogUE1PackageReader
     /** @var list<string> */
     private array $issues = [];
     private bool $unrealV227SummarySemantics;
+    /** null = require structural discrimination; true/false = explicit fixture mode. */
+    private ?bool $unrealV227kExportLayout;
+    private bool $saw227ArchetypeFlag = false;
 
-    public function __construct(string $path, bool $unrealV227SummarySemantics = false)
-    {
+    public function __construct(
+        string $path,
+        bool $unrealV227SummarySemantics = false,
+        ?bool $unrealV227kExportLayout = null
+    ) {
         $this->path = $path;
         $this->engineKey = 'UE1';
         $this->unrealV227SummarySemantics = $unrealV227SummarySemantics;
+        $this->unrealV227kExportLayout = $unrealV227kExportLayout;
         try {
             $this->parse();
+            if ($this->saw227ArchetypeFlag && $unrealV227kExportLayout === null) {
+                // Original shipped 227k Core.dll archives an extra signed INT
+                // for RF_HasArchtype and LicenseeVer>=227. The Unreal game ID
+                // establishes the chosen loader family, not the actual writer
+                // build. Test the alternative layout against the ENTIRE table:
+                // a valid alternative makes the on-disk layout ambiguous.
+                $withoutArchetype = new self($path, true, false);
+                if ($withoutArchetype->validatePackage() === []) {
+                    throw new RuntimeException(
+                        'Ambiguous Unreal v227 export archive: both layouts pass'
+                        . ' the full source-defined table/reference checks.'
+                    );
+                }
+                $this->header['unreal227ExportLayout'] =
+                    'native_227k_archetype_int32_structurally_discriminated';
+            }
         } catch (Throwable $error) {
+            if ($this->saw227ArchetypeFlag && $unrealV227kExportLayout === null
+                && !str_contains($error->getMessage(), 'Ambiguous Unreal v227')) {
+                $withoutArchetype = new self($path, true, false);
+                if ($withoutArchetype->validatePackage() === []) {
+                    $error = new RuntimeException(
+                        'Unreal v227 RF_HasArchtype export requires a different'
+                        . ' source-profile serializer: 227k native layout failed,'
+                        . ' legacy layout parsed but its native provenance is unverified.',
+                        0, $error
+                    );
+                }
+            }
             $message = trim($error->getMessage());
             $this->issues[] = get_class($error) . ': '
                 . ($message !== '' ? $message : 'Legacy package parsing failed.')
@@ -298,6 +333,12 @@ final class CatalogUE1PackageReader
                     : $reader->i32();
                 $objectName = $reader->packageIndex($version);
                 $flags = $reader->u32();
+                if ($this->unrealV227SummarySemantics
+                    && $version === 69
+                    && (int)($this->header['licenseeVersion'] ?? 0) >= 227
+                    && ($flags & 0x00000100) !== 0) {
+                    $this->saw227ArchetypeFlag = true;
+                }
                 // Authentic OldUnreal 227k Core.dll SHA256 c391cade...
                 // FArchive << FObjectExport (x86 0x1005DA20):
                 //  ClassIndex (compact), SuperIndex (compact), PackageIndex
@@ -310,6 +351,7 @@ final class CatalogUE1PackageReader
                 //  apply this 227-specific flag layout to UT99 archives.
                 $v227ArchetypeProfile = $this->engineKey === 'UE1'
                     && $this->unrealV227SummarySemantics
+                    && $this->unrealV227kExportLayout !== false
                     && $version === 69
                     && (int)($this->header['licenseeVersion']??0) >= 227;
                 $archetypeIndex = $v227ArchetypeProfile
@@ -396,6 +438,7 @@ final class CatalogUE1PackageReader
             // The compiled 227k ExportMap operator reads this extra signed
             // INT only for RF_HasArchtype under LicenseeVer >= 227.
             if ($this->engineKey === 'UE1' && $this->unrealV227SummarySemantics
+                && $this->unrealV227kExportLayout !== false
                 && $version === 69 && (int)($this->header['licenseeVersion']??0) >= 227
                 && ((int)$export['objectFlags'] & 0x00000100) !== 0) {
                 $this->validateUE1SignedReference(

@@ -2,6 +2,16 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
+## UE1 v227 conditional archetype follow-up — 5 November 2026
+
+The source-selected UE1 reader now **fails closed** on ambiguous version-69/licensee-227 export layouts rather than assuming Unreal Gold implies the original 227k compiled variant. The original 227k `UnrealShare.u` provides a positive native/on-disk oracle: one `BoxRigidBody` export has signed int32 `ArchetypeIndex=13069`; omitting that field corrupts the following export table. The dedicated Unreal UEDB5 export schema `ue1.unreal.object-export.v3` retains the field only when the compiled 227k layout is structurally discriminated; original UEDB5 encode/decode and the preexisting genuine 4/4 UE1/UE2 reader/snapshot regression passed. The 2012 227i class-runtime branch with flagged exports is **not** inferred from that evidence.
+
+The active catalogue does not write reconstructed UE1 packages, so raw on-disk name-byte duplication in UEDB5 is **not required** for its current operations. Exact source bytes remain accessible in the verified original files. This is not a package-repacker certification.
+
+Production **Pass 1 backfill status remains unverified**: the DEV-to-PRD MySQL connection refused access. The read-only `catalog/bin/diagnose-ue1-227-archetype-snapshots.php` must run **locally on PRD** to list any affected v69/licensee227 Unreal Gold file IDs and report whether their existing UEDB5 exports use v3. If any are marked `NEEDS_PASS1_RESNAPSHOT`, back up the current PRD metadata/database and run the reported *file-specific* existing Pass 1 migration followed by normal source-current dependency verification; do not blindly resnapshot the whole game. No PRD SQL or original package was modified by this audit.
+
+Retained details: [UE1 three-finding scope closure evidence](evidence/ue1/ue1-227-archetype-three-findings-closure-20261105.json). This does not change existing 32-case contract decisions or assert previously unverified native methods are fully accepted.
+
 ## Current acceptance decision — 5 November 2026: UE4 closeout
 
 **32 PASS / 0 BLOCKED** in the fixed 32-operation UE1–UE5 register; UE4 now **6/6 PASS** within its implemented original file/metadata/provider/dependency and website scope. UT4 PRD game7 has 64,247/64,247 current v14 dependency publications, 0 stale, current statistics, 334,462 unresolved and 0 source-confirmed missing. DEV PHP real HTTP on original PRD read-only metadata: 18 valid GETs and 26 source-accurate assertions, with earlier UT4 clean-master v383-v511 original parser/provider evidence reused. Zero new production code/native runs. Direct authenticated PRD browser was not tested; original mounted loader search order is still unknown and unresolved, not falsely missing.
