@@ -1,0 +1,57 @@
+{
+  "date": "2026-11-05",
+  "operation": "Existing UE3/UT3 table-reading and source-policy conformance; no new contract/category",
+  "engine": "ue3",
+  "game": "UT3",
+  "scope": "All 89 .u/.upk/.ut3 files supplied by retained UT3 Patch 5 archive; installation files SHA-256 identical to archived payload",
+  "source_archive": "\\\\192.168.0.55\\l$\\Updates\\UT3\\UT3-Patch5.exe",
+  "archive_sha256": "b66b8264a87c3ce63d5d39b18fed593cb40ab62e3cf1fd7df84352d8becd99f5",
+  "archive_to_installed_manifest": "tests/evidence/ue3/ut3-patch5-original-package-hash-differential-20261105.json",
+  "installation_root": "H:\\Epic Games\\Unreal Tournament 3",
+  "reader_file": "catalog/parsers/EpicUE3PackageReader.php",
+  "reader_sha256": "0856e22e76cd53bcaa6105af3cdaa3123e8763e0de310d844704878b92de1165",
+  "ut3_snapshot_builder_file": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php",
+  "ut3_snapshot_builder_sha256": "c95f6bd80eebd6f5ef082728626e33e9b51abc9cd07e2d6d1a7c0adaa29b1ae2",
+  "read_only_temp_script": "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\verify-patch5-all89-reader.php",
+  "read_only_script_sha256": "294f2a9775a23364ff5d3e3e1970e41f363dd7c0152692fc6474a688508fabef",
+  "read_only_raw_result": "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\patch5-all89-reader-review.json",
+  "read_only_result_sha256": "96d0c4aeee2e85a1f04e83ba9efe7a0113fafe5348d75c4357e408d241fd2737",
+  "outcome": {
+    "package_count": 89,
+    "packages_with_no_reader_validation_issues": 89,
+    "packages_with_reader_issue": 0,
+    "files_with_matching_name_import_export_summary_counts": 89,
+    "versions": {
+      "512/0": 89
+    },
+    "name_rows_decoded": 98769,
+    "import_rows_decoded": 19065,
+    "export_rows_decoded": 285529,
+    "compressed_package_count": 49,
+    "uncompressed_package_count": 40,
+    "compressed_chunk_count": 709
+  },
+  "claimed_verification_level": "Current production PHP reader accepted original previously SHA256-pinned game files; parsed table counts match summary; not a new independent Epic native compiled loader byte-field differential",
+  "prior_independent_field_oracle": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
+  "prior_7_package_independent_byte_results": {
+    "names": 35593,
+    "imports": 17904,
+    "exports": 34635,
+    "field_mismatches": 0
+  },
+  "prior_explicit_negative_guards": "tests/evidence/ue3/ue3-v512-spec-boundaries-20261105.json",
+  "prior_six_LZO_genuine_fixtures": "tests/evidence/ue3/ue3-udk-original-corpus-20261105.json",
+  "source_version_limits": "Format spec describes early 225-471 and later 491-867; current parser rejects early pre491 and unverified 472-490; UT3 game profile 512/0 strict",
+  "open_gaps": [
+    "Original native compiled-engine exact-byte decompression differential not performed",
+    "Later v813/v820 Xbox UDK LZX original packages fail PHP decompressor",
+    "UE3 225-471 separate reader not implemented in production",
+    "Full export-indexed DependsMap and later GUID/thumbnail auxiliary directories not materialized as general UE3 tables; current UT3 metadata consumer uses imports",
+    "Original runtime mount precedence not recoverable without selected mount context; dependency statuses deliberately unresolved in this case"
+  ],
+  "no_live_database_change": true,
+  "no_package_data_change": true,
+  "no_production_reader_source_change": true,
+  "new_contract_cases_created": 0,
+  "conclusion": "Current UT3 v512/0 file reader accepted all 89 original Patch 5 package bytes, including 49 compressed and 709 chunk descriptors; broader UE3 engine profile and LZX support incomplete"
+}
