@@ -1,0 +1,219 @@
+{
+  "schema": "games-dependency-drilldown-and-shared-numbered-pagination-v1",
+  "verified_on": "2026-11-05",
+  "status": "PASS",
+  "scope": "UI/read-model pagination and drilldown changes; no new Epic-source/native engine contract, parser change, or source-publication reclassification",
+  "original_source_certification": "Existing fixed 32-operation UE1-UE5 acceptance register unchanged and checked independently",
+  "games_header": {
+    "search_action_removed": true,
+    "library_action_removed": true,
+    "sitewide_search_untouched": true,
+    "admin_library_untouched": true
+  },
+  "drilldown": {
+    "every_current_game_has_unresolved_reference_and_file_links": true,
+    "every_current_game_has_resolved_reference_and_fully_satisfied_file_links": true,
+    "filter_routes": {
+      "unresolved": "game-files.php?id={game_id}&dep_filter=unresolved",
+      "resolved": "game-files.php?id={game_id}&dep_filter=resolved",
+      "resolved_files": "game-files.php?id={game_id}&dep_filter=fully_resolved"
+    },
+    "counts_are_not_interchangeable": "Reference column has game-wide number of references while list is distinct matching files; file-list heading labels both units.",
+    "verified_UT4": {
+      "id": 7,
+      "unresolved_references": 334462,
+      "unresolved_files": 43777,
+      "resolved_references": 413683,
+      "resolved_files": 20461
+    },
+    "verified_Satisfactory_UE5": {
+      "id": 14,
+      "unresolved_references": 244,
+      "unresolved_files": 51,
+      "resolved_references": 1847626,
+      "resolved_files": 27189,
+      "unindexed_package_ids": 26,
+      "unindexed_are_not_source_confirmed_missing": true,
+      "filter_generated_from_source_epoch_and_indexed_target_exception_ids": true,
+      "unknown_native_mount_context_not_promoted": true
+    }
+  },
+  "shared_pagination": {
+    "component": "catalog/src/Presentation/Ui/Component/Pagination.php",
+    "style": "catalog/assets/catalog-ui-components.css",
+    "features": [
+      "compact consistent flex layout",
+      "numeric nearby pages with first/last and ellipses",
+      "validated Go-to-page numeric GET form preserving active filters and sort",
+      "first/previous/next/last links",
+      "bounded OFFSET for arbitrary page selection in Game Files",
+      "retained HMAC-bound keyset cursors for adjacent Game Files navigation",
+      "two identical navigation control sets above/below long tables",
+      "clamped page requests, mobile responsive layout"
+    ],
+    "pages_using_shared_component": [
+      "catalog/game-files.php",
+      "catalog/game-page.php",
+      "catalog/file-examine-paged-core.php",
+      "catalog/pakages.php",
+      "catalog/game-paks.php",
+      "catalog/game-upks.php",
+      "catalog/duplicates.php",
+      "catalog/unverified-files.php"
+    ],
+    "cursor_only_other_pages_not_rewritten": [
+      "catalog/missing.php"
+    ],
+    "validated_paging_paths": {
+      "UT4_direct_middle": 200,
+      "UT4_direct_last": 643,
+      "UT4_signed_next_after_direct": 201,
+      "UT4_signed_previous_after_direct": 199,
+      "UT4_out_of_bounds_clamped": 643,
+      "UE5_unresolved_out_of_bounds_clamped": 1,
+      "UE5_direct_middle": 130,
+      "UE1_unresolved_direct": 2,
+      "UE2_fully_resolved_direct": 2
+    },
+    "exclusions": "No full scan of unrelated admin-only queue data; auth/CSRF protections unchanged. Missing.php uses separate cursor-only read model and is not claimed direct-jump capable."
+  },
+  "actual_DEV_PHP_HTTP_using_readonly_PRD_metadata": {
+    "first_batch_total": 16,
+    "first_batch_http_200_valid": 15,
+    "first_batch_legacy_redirect_303": 1,
+    "first_batch_routes": [
+      {
+        "route": "games.php?nocache=1",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=7&dep_filter=unresolved",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=7&dep_filter=fully_resolved",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=7&dep_filter=resolved",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=7&file_page=200",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=7&file_page=643",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=7&file_page=3&sort=size&dir=desc",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=14&dep_filter=unresolved",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=14&dep_filter=fully_resolved",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=14&dep_filter=resolved",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=14&file_page=130",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=3&dep_filter=unresolved&file_page=2",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "game-files.php?id=5&dep_filter=fully_resolved&file_page=2",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "index.php?page=game&id=7&file_page=2",
+        "http": "303",
+        "valid": false
+      },
+      {
+        "route": "file-examine.php?id=1353254&tab=imports&page=2",
+        "http": "200",
+        "valid": true
+      },
+      {
+        "route": "games.php?nocache=1",
+        "http": "200",
+        "valid": true
+      }
+    ],
+    "regression_5_get_200": true,
+    "regression_names": [
+      "legacy-direct",
+      "examine-after",
+      "negative-overshoot",
+      "ue5-overshoot",
+      "ut4-filtered-mid"
+    ],
+    "public_archive_6_get_200": true,
+    "public_archive_names": [
+      "pakages-upk-middle",
+      "pakages-zen",
+      "game-paks",
+      "game-upks-empty",
+      "game-files-after-all",
+      "games-after-all"
+    ],
+    "signed_keyset_navigation_next_and_previous_after_offset": "HTTP200; direct page200→201 and direct page200→199",
+    "static_71_named_UI_assertions": {
+      "total": 71,
+      "passed": 71,
+      "failed": []
+    },
+    "admin_only_duplicate_and_unverified_pages": "PHP linted and static output reviewed; login-protected browser paths not tested as authenticated admin"
+  },
+  "product_source_sha256": {
+    "catalog/games.php": "bd068844c26c06020f5fc2a99d3d2b41bffa5e56b41e66081298beaf1be99e5a",
+    "catalog/game-files.php": "0276504694dca2f7323c8bd26415f67081f04a3072abe259205a583cf0363b35",
+    "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php": "02d5822c2c2d450dd5d22ae3de6d0bedccc50191974723a5bcfab384dc2e8d40",
+    "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php": "88e9bc96cbe193931b84f7e8b11c032ae25da90a3c8ec5136a1a205388d7750b",
+    "catalog/src/Presentation/Ui/Component/Pagination.php": "a6cba2dd4ef8e23d1998a505ec11b7bf41e9c71421f2ec590f0ba1a23ecfc776",
+    "catalog/assets/catalog-ui-components.css": "b3aabae6da8f05d3cfc38eb33dd9c45514c5dad84ca0b1690bf322a3f0b3f8ee",
+    "catalog/game-page.php": "501d8dd23bbbb05e51d76121af8a32376e61df55cfcc59ee91d21def18426f30",
+    "catalog/file-examine-paged-core.php": "3398ed85bd8ab6e502e578c7c425106abe54685a0bcbdded5b59366d05653608",
+    "catalog/pakages.php": "130eb8d04d6485c9812ba5e4182f64505eadf0f51241e2ff4256b0a9ea199094",
+    "catalog/game-paks.php": "2f4e67528706031d3f8a2fffd9b365460c7ea93f7398459503f3e1498733ad22",
+    "catalog/game-upks.php": "d876a3db23ba23caece19d4ec8a5825bd2c5e6adafb6aeab05f7f735bd6baae7",
+    "catalog/duplicates.php": "9818e801cb7710dcc83330556af418e25e90afee1d12f6feadd2723e6cb00b5a",
+    "catalog/unverified-files.php": "8177fe0b8f1675a8f21ca434ff2041044869e87957a1c0ff253bdf342d626211",
+    "catalog/assets/catalog-ui.css": "304ae2c3accc23e78bba58f7f9228273b25c1066988f99dcaf98735ea357cc41",
+    "catalog/lib/CatalogSupportCore.php": "b9f1217fb03c5094ac280c93fe483258d38640ff185965adbe7de0859ec8ab53"
+  },
+  "PRD_MySQL_read_only": true,
+  "original_UE_files_modified": 0,
+  "PRD_database_writes": 0,
+  "new_Epic_contracts": 0,
+  "ephemeral_test_root": "D:/Temp/UnrealDB/games-page/nav-v2",
+  "stylesheet_cache_delivery": {
+    "catalog_ui_stylesheet_version": "CatalogSupportCore.php uses filemtime(catalog-ui.css) in link",
+    "nested_component_import_SHA16": "b3aabae6da8f05d3",
+    "imported_component_url": "catalog-ui-components.css?v=b3aabae6da8f05d3",
+    "ensures_old_CSS_clients_fetch_new_pagination_styles": true
+  }
+}

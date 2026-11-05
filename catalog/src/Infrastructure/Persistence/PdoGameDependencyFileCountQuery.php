@@ -19,7 +19,7 @@ use Throwable;
 
 final class PdoGameDependencyFileCountQuery
 {
-    private const CACHE_VERSION = 3;
+    private const CACHE_VERSION = 4;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -28,7 +28,7 @@ final class PdoGameDependencyFileCountQuery
     ) {
     }
 
-    /** @return array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int}|null */
+    /** @return array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int,unresolved_file_ids?:list<int>,no_satisfied_file_ids?:list<int>}|null */
     public function forCurrentGame(int $gameId, string $engine, string $statsUpdatedAt): ?array
     {
         $engine = strtoupper(trim($engine));
@@ -77,7 +77,7 @@ final class PdoGameDependencyFileCountQuery
     }
 
     /**
-     * @return array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int}
+     * @return array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int,unresolved_file_ids?:list<int>,no_satisfied_file_ids?:list<int>}
      * @param array{global_id:int,global_sha:string,epoch:string}|null $zenContext
      */
     private function aggregate(int $gameId, string $engine, ?array $zenContext): array
@@ -116,10 +116,7 @@ final class PdoGameDependencyFileCountQuery
         $scriptContainerId = (int)$context['global_id'];
         $scriptSha = (string)$context['global_sha'];
 
-        $sql = 'SELECT COALESCE(SUM(x.deps),0) dependency_count,'
-            . 'COALESCE(SUM(x.unresolved),0) unresolved_references,'
-            . 'COALESCE(SUM(x.unresolved>0),0) unresolved_files,'
-            . 'COALESCE(SUM(x.unresolved=0 AND x.deps>0),0) resolved_files '
+        $sql = 'SELECT x.file_id,x.deps,x.unresolved '
             . 'FROM (SELECT e.file_id,COUNT(*) deps,'
             . 'SUM(CASE WHEN e.outcome=0 THEN 1 WHEN e.outcome<>4 THEN 0 '
             . 'WHEN e.required_object_key_kind=3 '
@@ -157,7 +154,35 @@ final class PdoGameDependencyFileCountQuery
             . 'AND f.extension="zenpkg" GROUP BY e.file_id) x';
         $statement = $this->db->prepare($sql);
         $statement->execute([$scriptContainerId, hex2bin($scriptSha), $gameId]);
-        $zen = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        $zen = [
+            'dependency_count' => 0,
+            'unresolved_references' => 0,
+            'unresolved_files' => 0,
+            'resolved_files' => 0,
+        ];
+        $unresolvedIds = [];
+        $noSatisfiedIds = [];
+        // Retain only the exception IDs needed to reproduce the exact
+        // game-wide per-file filter; never cache a massive list of providers.
+        while ($r = $statement->fetch(PDO::FETCH_ASSOC)) {
+            $id = (int)$r['file_id'];
+            $deps = (int)$r['deps'];
+            $pending = (int)$r['unresolved'];
+            if ($id < 1 || $deps < 1 || $pending < 0 || $pending > $deps) {
+                throw new \RuntimeException('Invalid indexed Zen dependency group.');
+            }
+            $zen['dependency_count'] += $deps;
+            $zen['unresolved_references'] += $pending;
+            if ($pending > 0) {
+                $zen['unresolved_files']++;
+                $unresolvedIds[] = $id;
+            } else {
+                $zen['resolved_files']++;
+            }
+            if ($pending === $deps) {
+                $noSatisfiedIds[] = $id;
+            }
+        }
 
         // Duplicate provider or export identities would multiply joined rows.
         // Fail closed instead of counting those as legitimate extra references.
@@ -194,6 +219,8 @@ final class PdoGameDependencyFileCountQuery
         }
         $counts['dependency_count'] = $expected;
         $counts['unresolved_references'] = max(0, (int)($zen['unresolved_references'] ?? 0));
+        $counts['unresolved_file_ids'] = $unresolvedIds;
+        $counts['no_satisfied_file_ids'] = $noSatisfiedIds;
         return $counts;
     }
 
@@ -267,7 +294,7 @@ final class PdoGameDependencyFileCountQuery
         return is_writable($directory) ? $directory : null;
     }
 
-    /** @return array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int}|null */
+    /** @return array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int,unresolved_file_ids?:list<int>,no_satisfied_file_ids?:list<int>}|null */
     private function readCache(string $path, string $signature): ?array
     {
         if (!is_file($path)) {
@@ -303,11 +330,29 @@ final class PdoGameDependencyFileCountQuery
             && $counts['unresolved_references'] <= $counts['dependency_count']) {
             $result['dependency_count'] = $counts['dependency_count'];
             $result['unresolved_references'] = $counts['unresolved_references'];
+            // The exception sets are part of the same source+container epoch.
+            // If the cache predates these sets, recalculate rather than offer
+            // misleading UE5 filters based on source-only outcomes.
+            if (!is_array($counts['unresolved_file_ids'] ?? null)
+                || !is_array($counts['no_satisfied_file_ids'] ?? null)) {
+                return null;
+            }
+            foreach (['unresolved_file_ids', 'no_satisfied_file_ids'] as $key) {
+                foreach ($counts[$key] as $id) {
+                    if (!is_int($id) || $id < 1) {
+                        return null;
+                    }
+                }
+                $result[$key] = array_values(array_unique($counts[$key]));
+            }
+            if (count($result['unresolved_file_ids']) !== $result['unresolved_files']) {
+                return null;
+            }
         }
         return $result;
     }
 
-    /** @param array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int} $counts */
+    /** @param array{unresolved_files:int,resolved_files:int,dependency_count?:int,unresolved_references?:int,unresolved_file_ids?:list<int>,no_satisfied_file_ids?:list<int>} $counts */
     private function writeCache(string $path, string $signature, array $counts): void
     {
         try {

@@ -222,23 +222,29 @@ function examine_usage(array $usage, int $fileId, int $pageSize): string
 
 function examine_pagination(int $fileId, string $table, array $page): string
 {
-    if ((int)$page['pages'] <= 1) {
+    $pages = (int)$page['pages'];
+    if ($pages <= 1) {
         return '';
     }
     $current = (int)$page['page'];
-    $pages = (int)$page['pages'];
     $size = (int)$page['page_size'];
-    $html = '<p class="page-links">';
-    if ($current > 1) {
-        $html .= '<a class="button" href="' . catalog_h(examine_page_href($fileId, $table, 1, $size)) . '">First</a> ';
-        $html .= '<a class="button" href="' . catalog_h(examine_page_href($fileId, $table, $current - 1, $size)) . '">Previous</a> ';
-    }
-    $html .= '<span>Page ' . $current . ' of ' . $pages . '</span>';
-    if ($current < $pages) {
-        $html .= ' <a class="button" href="' . catalog_h(examine_page_href($fileId, $table, $current + 1, $size)) . '">Next</a>';
-        $html .= ' <a class="button" href="' . catalog_h(examine_page_href($fileId, $table, $pages, $size)) . '">Last</a>';
-    }
-    return $html . '</p>';
+    return CatalogUi::pagination($current, $pages, [
+        'label' => 'Package table pagination',
+        'first' => $current > 1 ? examine_page_href($fileId, $table, 1, $size) : '',
+        'previous' => $current > 1
+            ? examine_page_href($fileId, $table, $current - 1, $size) : '',
+        'next' => $current < $pages
+            ? examine_page_href($fileId, $table, $current + 1, $size) : '',
+        'last' => $current < $pages
+            ? examine_page_href($fileId, $table, $pages, $size) : '',
+        'page_url' => static fn(int $n): string => examine_page_href($fileId, $table, $n, $size),
+        'jump' => [
+            'action' => 'file-examine.php',
+            'name' => 'page',
+            'fields' => ['id' => $fileId, 'tab' => $table,
+                'page_size' => $size, 'filter' => (string)($_GET['filter'] ?? '')],
+        ],
+    ]);
 }
 
 try {

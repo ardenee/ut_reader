@@ -210,7 +210,7 @@ try {
     catalog_head('Unverified Files');
     echo <<<'CSS'
 <style>
-.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-public-contribution strong,.uv-public-contribution small{display:block}.uv-public-contribution small{margin-top:4px}.uv-public-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-note.bad{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
+.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-public-contribution strong,.uv-public-contribution small{display:block}.uv-public-contribution small{margin-top:4px}.uv-public-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-note.bad{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 CSS;
 
@@ -357,11 +357,24 @@ CSS;
         $query['queue_page'] = $number;
         return 'unverified-files.php?' . http_build_query($query);
     };
-    $pagination = '<div class="uv-pagination"><span>'
-        . ($page > 1 ? '<a class="button secondary" href="' . catalog_h($pageUrl($page - 1)) . '">Previous</a>' : '')
-        . '</span><span>Page ' . $page . ' of ' . $pages . '</span><span>'
-        . ($page < $pages ? '<a class="button secondary" href="' . catalog_h($pageUrl($page + 1)) . '">Next</a>' : '')
-        . '</span></div>';
+    $pagination = CatalogUi::pagination($page, $pages, [
+        'label' => 'Unverified file pagination',
+        'first' => $page > 1 ? $pageUrl(1) : '',
+        'previous' => $page > 1 ? $pageUrl($page - 1) : '',
+        'next' => $page < $pages ? $pageUrl($page + 1) : '',
+        'last' => $page < $pages ? $pageUrl($pages) : '',
+        'page_url' => $pageUrl,
+        'jump' => [
+            'action' => 'unverified-files.php',
+            'name' => 'queue_page',
+            'fields' => [
+                'source_game_id' => $sourceGameId,
+                'extension' => $extension, 'engine' => $engine,
+                'version' => $version, 'licensee' => $licensee,
+                'limit' => $limit,
+            ],
+        ],
+    ]);
     echo $pagination;
 
     echo '<form id="unverified-bulk-form" method="post" action="unverified-files-action.php">';

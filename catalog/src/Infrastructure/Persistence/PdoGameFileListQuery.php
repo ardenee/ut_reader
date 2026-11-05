@@ -101,6 +101,53 @@ final class PdoGameFileListQuery
         ];
     }
 
+    /**
+     * Direct bounded page selection for numbered links and a Go-to-page form.
+     * The ordinary adjacent-page route stays keyset based (no offsets).
+     *
+     * @param list<mixed> $whereArgs
+     * @return array{rows:list<array<string,mixed>>,first_cursor:?array,last_cursor:?array,has_previous:bool,has_next:bool}
+     */
+    public function fetchNumberedPage(
+        string $whereSql,
+        array $whereArgs,
+        string $sort,
+        string $direction,
+        int $limit,
+        int $pageNumber
+    ): array {
+        $limit = max(1, min(500, $limit));
+        $pageNumber = max(1, $pageNumber);
+        $offset = ($pageNumber - 1) * $limit;
+        [$columns, $directions] = self::sortDefinition($sort, $direction);
+        $order = CatalogKeysetPaginator::order($columns, $directions);
+        $fetchLimit = $limit + 1;
+        if ($sort === 'deps') {
+            $sql = 'SELECT f.id,f.package_name,f.original_name,'
+                . 'COALESCE(SUM(s.unresolved_count),0) unresolved_count '
+                . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
+                . 'AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
+                . $whereSql . ' GROUP BY f.id,f.package_name,f.original_name'
+                . ' ORDER BY ' . $order . ' LIMIT ' . $fetchLimit . ' OFFSET ' . $offset;
+        } else {
+            $sql = 'SELECT f.id FROM ue_files f ' . $whereSql
+                . ' ORDER BY ' . $order . ' LIMIT ' . $fetchLimit . ' OFFSET ' . $offset;
+        }
+        $idRows = \catalog_all($this->db, $sql, $whereArgs);
+        $hasNext = count($idRows) > $limit;
+        if ($hasNext) {
+            $idRows = array_slice($idRows, 0, $limit);
+        }
+        $rows = $this->hydrateRows(array_map(static fn(array $r): int => (int)$r['id'], $idRows));
+        return [
+            'rows' => $rows,
+            'first_cursor' => $rows !== [] ? self::cursorValues($rows[0], $sort) : null,
+            'last_cursor' => $rows !== [] ? self::cursorValues($rows[count($rows) - 1], $sort) : null,
+            'has_previous' => $pageNumber > 1,
+            'has_next' => $hasNext,
+        ];
+    }
+
     /** @param list<mixed> $whereArgs @param list<mixed> $cursorArgs @param list<string> $columns @param list<string> $directions */
     private function ordinarySortedIds(
         string $whereSql,

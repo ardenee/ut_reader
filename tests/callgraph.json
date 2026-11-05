@@ -2,15 +2,15 @@
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
   "nodes": 1048,
-  "edges_count": 3800,
+  "edges_count": 3810,
   "edge_types": {
-    "use": 1285,
-    "new": 992,
-    "static_or_expression": 1523
+    "use": 1286,
+    "new": 993,
+    "static_or_expression": 1531
   },
   "ambiguous_class_names": {
     "md5": 45,
-    "OR": 21,
+    "OR": 20,
     "CatalogSearchService": 1,
     "MD5": 1,
     "properties": 1
@@ -3698,13 +3698,13 @@
       "from": "catalog/duplicates.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 299
+      "line": 314
     },
     {
       "from": "catalog/duplicates.php",
       "to": "catalog/src/Presentation/Ui/Component/Badge.php",
       "syntax": "static_or_expression",
-      "line": 236
+      "line": 251
     },
     {
       "from": "catalog/duplicates.php",
@@ -3716,13 +3716,13 @@
       "from": "catalog/duplicates.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 211
+      "line": 226
     },
     {
       "from": "catalog/duplicates.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 216
+      "line": 209
     },
     {
       "from": "catalog/engine-dependency-update.php",
@@ -4272,6 +4272,18 @@
     },
     {
       "from": "catalog/file-examine-paged-core.php",
+      "to": "catalog/src/Presentation/Ui/CatalogUi.php",
+      "syntax": "static_or_expression",
+      "line": 231
+    },
+    {
+      "from": "catalog/file-examine-paged-core.php",
+      "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
+      "syntax": "static_or_expression",
+      "line": 231
+    },
+    {
+      "from": "catalog/file-examine-paged-core.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
       "line": 50
@@ -4544,13 +4556,13 @@
       "from": "catalog/game-files.php",
       "to": "catalog/file-examine-zen-tables.php",
       "syntax": "static_or_expression",
-      "line": 348
+      "line": 362
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Application/Pagination/CatalogKeysetPaginator.php",
       "syntax": "static_or_expression",
-      "line": 414
+      "line": 476
     },
     {
       "from": "catalog/game-files.php",
@@ -4560,9 +4572,21 @@
     },
     {
       "from": "catalog/game-files.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php",
+      "syntax": "new",
+      "line": 321
+    },
+    {
+      "from": "catalog/game-files.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php",
+      "syntax": "use",
+      "line": 17
+    },
+    {
+      "from": "catalog/game-files.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "syntax": "new",
-      "line": 420
+      "line": 482
     },
     {
       "from": "catalog/game-files.php",
@@ -4574,49 +4598,49 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 108
+      "line": 109
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 598
+      "line": 725
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Badge.php",
       "syntax": "static_or_expression",
-      "line": 108
+      "line": 109
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 121
+      "line": 607
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 499
+      "line": 626
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/LoadingState.php",
       "syntax": "static_or_expression",
-      "line": 489
+      "line": 611
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 454
+      "line": 529
     },
     {
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 494
+      "line": 137
     },
     {
       "from": "catalog/game-manager.php",
@@ -4692,9 +4716,21 @@
     },
     {
       "from": "catalog/game-page.php",
+      "to": "catalog/src/Presentation/Ui/CatalogUi.php",
+      "syntax": "static_or_expression",
+      "line": 112
+    },
+    {
+      "from": "catalog/game-page.php",
+      "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
+      "syntax": "static_or_expression",
+      "line": 112
+    },
+    {
+      "from": "catalog/game-page.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
-      "line": 217
+      "line": 224
     },
     {
       "from": "catalog/game-paks.php",
@@ -4769,6 +4805,12 @@
       "line": 65
     },
     {
+      "from": "catalog/game-paks.php",
+      "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
+      "syntax": "static_or_expression",
+      "line": 202
+    },
+    {
       "from": "catalog/game-profiles.php",
       "to": "catalog/src/Infrastructure/Games/CatalogGameProfileAdminService.php",
       "syntax": "new",
@@ -4814,7 +4856,7 @@
       "from": "catalog/game-upks.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 196
+      "line": 200
     },
     {
       "from": "catalog/game-upks.php",
@@ -4833,6 +4875,12 @@
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
       "line": 56
+    },
+    {
+      "from": "catalog/game-upks.php",
+      "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
+      "syntax": "static_or_expression",
+      "line": 178
     },
     {
       "from": "catalog/games.php",
@@ -4860,6 +4908,12 @@
     },
     {
       "from": "catalog/games.php",
+      "to": "catalog/src/Infrastructure/Readers/CatalogUE1ClassicStateFrameReader.php",
+      "syntax": "static_or_expression",
+      "line": 135
+    },
+    {
+      "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
       "line": 21
@@ -4868,25 +4922,25 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 167
+      "line": 180
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Badge.php",
       "syntax": "static_or_expression",
-      "line": 45
+      "line": 44
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 136
+      "line": 149
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 29
+      "line": 28
     },
     {
       "from": "catalog/games.php",
@@ -4898,13 +4952,13 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Section.php",
       "syntax": "static_or_expression",
-      "line": 28
+      "line": 27
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/TableRegion.php",
       "syntax": "static_or_expression",
-      "line": 156
+      "line": 169
     },
     {
       "from": "catalog/generated-package-download.php",
@@ -7191,6 +7245,12 @@
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
       "line": 113
+    },
+    {
+      "from": "catalog/pakages.php",
+      "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
+      "syntax": "static_or_expression",
+      "line": 270
     },
     {
       "from": "catalog/parsers/EpicUE3PackageReader.php",
@@ -18704,7 +18764,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/file-examine-zen-tables.php",
       "syntax": "static_or_expression",
-      "line": 223
+      "line": 270
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
@@ -18722,7 +18782,7 @@
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
       "to": "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php",
       "syntax": "new",
-      "line": 228
+      "line": 275
     },
     {
       "from": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",
@@ -21992,13 +22052,13 @@
       "from": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 32
+      "line": 38
     },
     {
       "from": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
-      "line": 27
+      "line": 33
     },
     {
       "from": "catalog/src/Presentation/Ui/Component/Pagination.php",
@@ -22550,7 +22610,7 @@
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 388
+      "line": 401
     },
     {
       "from": "catalog/unverified-files.php",
@@ -22562,7 +22622,7 @@
       "from": "catalog/unverified-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Pagination.php",
       "syntax": "static_or_expression",
-      "line": 365
+      "line": 360
     },
     {
       "from": "catalog/unverified-game-matches-refresh.php",

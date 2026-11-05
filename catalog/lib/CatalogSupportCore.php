@@ -532,7 +532,11 @@ function catalog_head(string $title): void
     echo '<link rel="icon" type="image/png" sizes="32x32" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-32x32.png') . '">';
     echo '<link rel="icon" type="image/png" sizes="16x16" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-16x16.png') . '">';
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog.css') . '">';
-    echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog-ui.css') . '">';
+    $uiStylesheetPath = __DIR__ . '/../assets/catalog-ui.css';
+    $uiStylesheetVersion = is_file($uiStylesheetPath)
+        ? (string)filemtime($uiStylesheetPath) : '1';
+    echo '<link rel="stylesheet" href="'
+        . catalog_h($root . 'assets/catalog-ui.css?v=' . $uiStylesheetVersion) . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
     if ($scriptName === 'unverified-files.php') {
         $timeoutRecoveryPath = __DIR__ . '/../assets/unverified-import-timeout-recovery.js';

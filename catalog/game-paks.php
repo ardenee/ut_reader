@@ -199,15 +199,19 @@ try {
         echo '</tbody></table></div>';
 
         if ($pages > 1) {
-            echo '<nav class="pagination">';
-            if ($page > 1) {
-                echo '<a class="button" href="' . catalog_h(game_paks_url(['pak_page' => $page - 1])) . '">Previous</a> ';
-            }
-            echo '<span>Page ' . $page . ' of ' . $pages . '</span>';
-            if ($page < $pages) {
-                echo ' <a class="button" href="' . catalog_h(game_paks_url(['pak_page' => $page + 1])) . '">Next</a>';
-            }
-            echo '</nav>';
+            echo CatalogUi::pagination($page, $pages, [
+                'label' => 'Package container pagination',
+                'first' => $page > 1 ? game_paks_url(['pak_page' => 1]) : '',
+                'previous' => $page > 1 ? game_paks_url(['pak_page' => $page - 1]) : '',
+                'next' => $page < $pages ? game_paks_url(['pak_page' => $page + 1]) : '',
+                'last' => $page < $pages ? game_paks_url(['pak_page' => $pages]) : '',
+                'page_url' => static fn(int $n): string => game_paks_url(['pak_page' => $n]),
+                'jump' => [
+                    'action' => 'game-paks.php',
+                    'name' => 'pak_page',
+                    'fields' => ['id' => $gameId, 'pak_filter' => $filter, 'status' => $status],
+                ],
+            ]);
         }
     }
     echo '</div></section>';

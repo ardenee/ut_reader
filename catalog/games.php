@@ -20,8 +20,7 @@ try {
     catalog_head('Games');
     echo CatalogUi::pageHeader(
         'Games',
-        'Browse the public catalog by game.',
-        ['Search' => 'index.php?page=search', 'Library' => 'library.php']
+        'Browse the public catalog by game.'
     );
 
     if ($games === []) {
@@ -80,6 +79,14 @@ try {
             'id' => $gameId,
             'dep_filter' => 'unresolved',
         ]);
+        $resolvedUrl = 'game-files.php?' . http_build_query([
+            'id' => $gameId,
+            'dep_filter' => 'resolved',
+        ]);
+        $completeUrl = 'game-files.php?' . http_build_query([
+            'id' => $gameId,
+            'dep_filter' => 'fully_resolved',
+        ]);
 
         $badge = static function (?int $count, string $positiveTone = 'success'): string {
             return $count === null
@@ -107,7 +114,7 @@ try {
             . number_format((int)$game['file_count']) . '</td>';
         $rows .= $numberCell(
             $unresolved,
-            $unresolved !== null && !$zen
+            $unresolved !== null
                 ? '<a href="' . catalog_h($unresolvedUrl)
                     . '" title="Source-published unresolved dependency references">'
                     . $unresolvedBadge . '</a>'
@@ -115,7 +122,7 @@ try {
         );
         $rows .= $numberCell(
             $unresolvedFiles,
-            $unresolvedFiles !== null && !$zen
+            $unresolvedFiles !== null
                 ? '<a href="' . catalog_h($unresolvedUrl)
                     . '" title="Distinct files with at least one current unresolved reference">'
                     . $unresolvedFileBadge . '</a>'
@@ -123,13 +130,19 @@ try {
         );
         $rows .= $numberCell(
             $resolved,
-            '<span title="Total references minus unresolved; includes common and package-only references, and for UE5 exact indexed targets">'
-                . $resolvedBadge . '</span>'
+            $resolved !== null
+                ? '<a href="' . catalog_h($resolvedUrl)
+                    . '" title="Browse files with at least one satisfied reference (' . number_format($resolved) . ' references game-wide)">'
+                    . $resolvedBadge . '</a>'
+                : $resolvedBadge
         );
         $rows .= $numberCell(
             $resolvedFiles,
-            '<span title="Files with at least one dependency and no unresolved or missing references; common and package-only references count as met">'
-                . $resolvedFileBadge . '</span>'
+            $resolvedFiles !== null
+                ? '<a href="' . catalog_h($completeUrl)
+                    . '" title="Browse ' . number_format($resolvedFiles) . ' files with all indexed dependencies met">'
+                    . $resolvedFileBadge . '</a>'
+                : $resolvedFileBadge
         );
         $rows .= '<td data-sort-value="' . (int)$game['total_size'] . '">'
             . catalog_h(catalog_bytes((int)$game['total_size'])) . '</td>';

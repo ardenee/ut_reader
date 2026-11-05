@@ -14,6 +14,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameFileListQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameDependencyFileCountQuery;
 
 catalog_start_session();
 require_once __DIR__ . '/lib/FederationAuth.php';
@@ -114,45 +115,43 @@ function game_files_pagination(
     bool $hasPrevious,
     bool $hasNext,
     string $previousCursor,
-    string $nextCursor
+    string $nextCursor,
+    array $jumpFields
 ): string {
-    $start = '';
-    if ($hasPrevious) {
-        $start .= CatalogUi::button('First', ['href' => game_files_url([
-            'cursor' => null,
-            'cursor_move' => null,
-            'cursor_page' => null,
-            'file_page' => null,
-        ]), 'variant' => 'secondary', 'size' => 'sm']);
-        $start .= CatalogUi::button('Previous', ['href' => game_files_url([
-            'cursor' => $previousCursor,
-            'cursor_move' => 'prev',
-            'cursor_page' => max(1, $pageNo - 1),
-            'file_page' => null,
-        ]), 'variant' => 'secondary', 'size' => 'sm']);
-    }
-
-    $end = '';
-    if ($hasNext) {
-        $end .= CatalogUi::button('Next', ['href' => game_files_url([
-            'cursor' => $nextCursor,
-            'cursor_move' => 'next',
-            'cursor_page' => min($totalPages, $pageNo + 1),
-            'file_page' => null,
-        ]), 'variant' => 'secondary', 'size' => 'sm']);
-        $end .= CatalogUi::button('Last', ['href' => game_files_url([
-            'cursor' => null,
-            'cursor_move' => 'last',
-            'cursor_page' => $totalPages,
-            'file_page' => null,
-        ]), 'variant' => 'secondary', 'size' => 'sm']);
-    }
-
-    return '<nav class="game-files-pagination" aria-label="File pagination">'
-        . '<div class="game-files-pagination__start">' . $start . '</div>'
-        . '<span class="subtle game-files-pagination__current" aria-current="page">Page ' . $pageNo . ' of ' . $totalPages . '</span>'
-        . '<div class="game-files-pagination__end">' . $end . '</div>'
-        . '</nav>';
+    $first = game_files_url([
+        'cursor' => null, 'cursor_move' => null,
+        'cursor_page' => null, 'file_page' => null,
+    ]);
+    $previous = game_files_url([
+        'cursor' => $previousCursor, 'cursor_move' => 'prev',
+        'cursor_page' => max(1, $pageNo - 1), 'file_page' => null,
+    ]);
+    $next = game_files_url([
+        'cursor' => $nextCursor, 'cursor_move' => 'next',
+        'cursor_page' => min($totalPages, $pageNo + 1), 'file_page' => null,
+    ]);
+    $last = game_files_url([
+        'cursor' => null, 'cursor_move' => 'last',
+        'cursor_page' => $totalPages, 'file_page' => null,
+    ]);
+    return CatalogUi::pagination($pageNo, $totalPages, [
+        'label' => 'File pagination',
+        'first' => $hasPrevious ? $first : '',
+        'previous' => $hasPrevious ? $previous : '',
+        'next' => $hasNext ? $next : '',
+        'last' => $hasNext ? $last : '',
+        // Direct page links deliberately drop keyset cursors; adjacent
+        // navigation still uses fast context-HMAC-protected keyset cursors.
+        'page_url' => static fn(int $p): string => game_files_url([
+            'cursor' => null, 'cursor_move' => null,
+            'cursor_page' => null, 'file_page' => $p,
+        ]),
+        'jump' => [
+            'action' => 'game-files.php',
+            'name' => 'file_page',
+            'fields' => $jumpFields,
+        ],
+    ]);
 }
 
 function game_files_actions(int $fileId, string $originalName, string $csrf, bool $isAdmin): string
@@ -201,12 +200,6 @@ html { scroll-behavior: smooth; }
 .game-files-controls .wide-search { width: 100%; min-width: 0; }
 .game-files-filter-actions { display: flex; align-items: center; justify-self: end; gap: 6px; white-space: nowrap; }
 .game-files-filter-actions .ui-button { margin: 0; }
-
-.game-files-pagination { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; margin: 12px 0; }
-.game-files-pagination__start, .game-files-pagination__end { display: flex; align-items: center; gap: 6px; }
-.game-files-pagination__start { justify-self: start; }
-.game-files-pagination__end { justify-self: end; }
-.game-files-pagination__current { justify-self: center; white-space: nowrap; }
 
 #game-files-table { width: 100% !important; min-width: 920px !important; table-layout: auto !important; }
 #game-files-table.game-files-table--no-compression { min-width: 820px !important; }
@@ -278,8 +271,6 @@ html { scroll-behavior: smooth; }
     .game-files-controls { grid-template-columns: 1fr; }
     .game-files-controls label { justify-content: space-between; }
     .game-files-filter-actions { justify-self: start; }
-    .game-files-pagination { gap: 8px; }
-    .game-files-pagination__start, .game-files-pagination__end { gap: 4px; }
     .game-files-to-top { right: 14px; bottom: 14px; }
 }
 </style>
@@ -312,7 +303,30 @@ try {
         $db, (int)$gameId, (string)($game['profile_engine'] ?? '')
     );
     $dependencySelectionUnavailable = !$gameDependencyCurrent
-        && in_array($depFilter, ['resolved','missing','package_only','common','unresolved','any'], true);
+        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','common','unresolved','any'], true);
+    // The Games page uses current catalogue target coverage for UE5 Zen
+    // (package/export ID and pinned global ScriptObjects). The file filter
+    // must consume the identical cached exception-set, not the source-only
+    // "unresolved" projection, or the link would show a different total.
+    $zenCoverage = null;
+    if (!$dependencySelectionUnavailable && $gameDependencyCurrent
+        && $engineMajor === 5
+        && in_array($depFilter, ['unresolved','resolved','fully_resolved'], true)) {
+        $stats = catalog_one($db,
+            'SELECT updated_at FROM ue_game_catalog_stats WHERE game_id=?', [$gameId]);
+        if ($stats !== null
+            && \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::isGameStatsCurrent(
+                $db, $gameId, (string)($game['profile_engine'] ?? '')
+            )) {
+            $zenCoverage = (new PdoGameDependencyFileCountQuery($db, $config))
+                ->forCurrentGame($gameId, (string)$game['profile_engine'],
+                    (string)($stats['updated_at'] ?? ''));
+        }
+        if ($zenCoverage === null
+            || !isset($zenCoverage['unresolved_file_ids'], $zenCoverage['no_satisfied_file_ids'])) {
+            $dependencySelectionUnavailable = true;
+        }
+    }
     $typeFilter = trim((string)($_GET['type_filter'] ?? ''));
     $compressionFilter = $showCompression ? trim((string)($_GET['compression_filter'] ?? '')) : '';
     $sort = trim((string)($_GET['sort'] ?? 'package'));
@@ -349,30 +363,75 @@ try {
         $like = '%' . $filter . '%';
         array_push($args, $like, $like, $like, $like, $like);
     }
-    if (in_array($depFilter, ['resolved', 'missing', 'package_only', 'common', 'unresolved', 'any'], true)) {
+    if ($engineMajor === 5 && $zenCoverage !== null
+        && in_array($depFilter, ['unresolved','resolved','fully_resolved'], true)) {
+        // All ID lists are internal integers generated from verified/current
+        // SQL, never client-provided identifiers. Exception sets are small
+        // relative to the 27k+ published Zen package members.
+        $unresolvedIds = array_map('intval', $zenCoverage['unresolved_file_ids']);
+        $noSatisfiedIds = array_map('intval', $zenCoverage['no_satisfied_file_ids']);
+        $missingIds = $unresolvedIds !== []
+            ? implode(',', $unresolvedIds) : '0';
+        $unmetIds = $noSatisfiedIds !== []
+            ? implode(',', $noSatisfiedIds) : '0';
+        $scope = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx');
+        $hasClassic = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+            . 'WHERE dx.file_id=f.id AND dx.dependency_count>0 AND ' . $scope . ')';
+        $hasZen = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_edges e '
+            . 'WHERE e.file_id=f.id)';
+        if ($depFilter === 'unresolved') {
+            $classic = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND dx.unresolved_count>0 AND ' . $scope . ')';
+            $zen = 'f.id IN (' . $missingIds . ')';
+        } elseif ($depFilter === 'fully_resolved') {
+            $classic = $hasClassic
+                . ' AND NOT EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count>0 OR dx.missing_count>0) '
+                . 'AND ' . $scope . ')';
+            $zen = $hasZen . ' AND f.id NOT IN (' . $missingIds . ')';
+        } else {
+            $classic = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND dx.dependency_count>'
+                . '(dx.unresolved_count+dx.missing_count) AND ' . $scope . ')';
+            $zen = $hasZen . ' AND f.id NOT IN (' . $unmetIds . ')';
+        }
+        $where .= ' AND f.scan_status="verified" AND '
+            . '((f.extension="zenpkg" AND ' . $zen . ') OR '
+            . '(f.extension<>"zenpkg" AND (' . $classic . ')))';
+    } elseif (in_array($depFilter,
+        ['resolved', 'fully_resolved', 'missing', 'package_only', 'common', 'unresolved', 'any'], true)) {
+        $scope = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx');
         if ($depFilter === 'any') {
             $where .= ' AND (EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND '
-                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')'
+                . $scope . ')'
                 . ' OR (f.extension="zenpkg" AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_edges de '
                 . 'WHERE de.file_id=f.id AND '
                 . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('de') . ')))';
         } elseif ($depFilter === 'unresolved') {
-            $where .= ' AND (EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
-                . 'WHERE dx.file_id=f.id AND dx.unresolved_count>0 AND '
-                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')'
-                . ' OR (f.extension="zenpkg" AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_edges de '
-                . 'WHERE de.file_id=f.id AND de.outcome=4 AND '
-                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('de') . ')))';
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND dx.unresolved_count>0 AND ' . $scope . ')';
+        } elseif ($depFilter === 'resolved') {
+            // A satisfied reference includes "common" and package-only,
+            // not only a uniquely selected physical source provider.
+            $where .= ' AND f.scan_status="verified" AND '
+                . 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND dx.dependency_count>'
+                . '(dx.unresolved_count+dx.missing_count) AND ' . $scope . ')';
+        } elseif ($depFilter === 'fully_resolved') {
+            $where .= ' AND f.scan_status="verified" AND '
+                . 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND dx.dependency_count>0 AND ' . $scope . ') '
+                . 'AND NOT EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count>0 OR dx.missing_count>0) '
+                . 'AND ' . $scope . ')';
         } else {
             $countColumn = match ($depFilter) {
-                'resolved' => 'resolved_count',
                 'missing' => 'missing_count',
-                'unresolved' => 'unresolved_count',
                 'package_only' => 'package_only_count',
                 default => 'common_count',
             };
-            $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND dx.' . $countColumn . '>0 AND '
-                . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')';
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
+                . 'WHERE dx.file_id=f.id AND dx.' . $countColumn . '>0 AND ' . $scope . ')';
         }
     }
     $typeExts = game_files_type_filter_sql($typeFilter);
@@ -392,8 +451,11 @@ try {
     $totalPages = max(1, (int)ceil($totalRows / $limit));
     $move = strtolower(trim((string)($_GET['cursor_move'] ?? 'first')));
     $move = in_array($move, ['first', 'next', 'prev', 'last'], true) ? $move : 'first';
+    $directPage = game_files_int('file_page', 0, 0, $totalPages);
     $pageNo = game_files_int('cursor_page', $move === 'last' ? $totalPages : 1, 1, $totalPages);
-    if ($move === 'first') {
+    if ($directPage > 0) {
+        $pageNo = $directPage;
+    } elseif ($move === 'first') {
         $pageNo = 1;
     } elseif ($move === 'last') {
         $pageNo = $totalPages;
@@ -412,15 +474,19 @@ try {
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     $cursorToken = trim((string)($_GET['cursor'] ?? ''));
     $cursor = $cursorToken !== '' ? CatalogKeysetPaginator::decode($config, $cursorContext, $cursorToken) : null;
-    if ($cursorToken !== '' && $cursor === null) {
+    if ($directPage === 0 && $cursorToken !== '' && $cursor === null) {
         $move = 'first';
         $pageNo = 1;
     }
 
     $fileListQuery = new PdoGameFileListQuery($db);
-    $page = $fileListQuery->fetchCursorPage($where, $args, $sort, $dir, $limit, $cursor, $move);
+    $page = $directPage > 0
+        ? $fileListQuery->fetchNumberedPage($where, $args, $sort, $dir, $limit, $pageNo)
+        : $fileListQuery->fetchCursorPage($where, $args, $sort, $dir, $limit, $cursor, $move);
     $files = $page['rows'];
-    if ($files === [] && $totalRows > 0 && $move !== 'first') {
+    if ($files === [] && $totalRows > 0 && $pageNo > 1) {
+        // The source changed between count and page selection: recover to
+        // page one instead of showing an impossible empty terminal page.
         $move = 'first';
         $pageNo = 1;
         $page = $fileListQuery->fetchCursorPage($where, $args, $sort, $dir, $limit, null, 'first');
@@ -439,7 +505,16 @@ try {
         (bool)$page['has_previous'],
         (bool)$page['has_next'],
         $previousCursor,
-        $nextCursor
+        $nextCursor,
+        [
+            'id' => $gameId,
+            'file_filter' => $filter,
+            'dep_filter' => $depFilter,
+            'type_filter' => $typeFilter,
+            'compression_filter' => $compressionFilter,
+            'sort' => $sort,
+            'dir' => $dir,
+        ]
     );
 
     $isAdmin = catalog_support_is_admin();
@@ -458,14 +533,61 @@ try {
             . 'If requested, dependency filtering or dependency sorting has been skipped to avoid misleading results.</div>';
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files</h2><p>' . catalog_h((string)$totalRows) . ' matching files.'
+    $filterDescriptions = [
+        'unresolved' => 'unresolved dependency references',
+        'resolved' => 'satisfied dependency references',
+        'fully_resolved' => 'files with all indexed references met',
+    ];
+    $countDescription = '';
+    if (isset($filterDescriptions[$depFilter]) && $filter === '' && $typeFilter === ''
+        && $compressionFilter === '' && $gameDependencyCurrent) {
+        if ($engineMajor === 5 && $zenCoverage !== null
+            && isset($zenCoverage['dependency_count'], $zenCoverage['unresolved_references'])) {
+            $references = $depFilter === 'unresolved'
+                ? (int)$zenCoverage['unresolved_references']
+                : ($depFilter === 'resolved'
+                    ? max(0, (int)$zenCoverage['dependency_count']
+                        - (int)$zenCoverage['unresolved_references'])
+                    : null);
+        } elseif ($engineMajor !== 5) {
+            $stat = catalog_one($db,
+                'SELECT dependency_count,resolved_dependency_count,common_dependency_count,'
+                . 'package_only_dependency_count,missing_dependency_count '
+                . 'FROM ue_game_catalog_stats WHERE game_id=?', [$gameId]);
+            $references = $stat !== null
+                ? ($depFilter === 'unresolved'
+                    ? max(0, (int)$stat['dependency_count']
+                        - (int)$stat['resolved_dependency_count']
+                        - (int)$stat['common_dependency_count']
+                        - (int)$stat['package_only_dependency_count']
+                        - (int)$stat['missing_dependency_count'])
+                    : ($depFilter === 'resolved'
+                        ? max(0, (int)$stat['dependency_count']
+                            - (int)($stat['dependency_count']
+                                - (int)$stat['resolved_dependency_count']
+                                - (int)$stat['common_dependency_count']
+                                - (int)$stat['package_only_dependency_count']
+                                - (int)$stat['missing_dependency_count']))
+                        : null))
+                : null;
+        } else {
+            $references = null;
+        }
+        if ($references !== null) {
+            $countDescription = ' · ' . number_format($references)
+                . ' ' . $filterDescriptions[$depFilter] . ' game-wide'
+                . ' (multiple references may belong to one file).';
+        }
+    }
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files</h2><p>'
+        . number_format($totalRows) . ' matching files' . catalog_h($countDescription) . '.'
         . ($separateUpkContainers ? ' UPK containers are available under the UPK packages tab.' : '')
         . '</p></div></div><div class="ui-section__body">';
     echo '<form class="table-controls game-files-controls" method="get" data-ui-loading-form aria-describedby="file-filter-help">';
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
     echo '<label for="file-filter">Search files <input id="file-filter" class="wide-search" type="search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label>';
     echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
-    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved', 'package_only' => 'Package only', 'common' => 'Common', 'missing' => 'Missing (confirmed)'] as $value => $label) {
+    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved (has met references)', 'fully_resolved' => 'Resolved Files (all met)', 'package_only' => 'Package only', 'common' => 'Common', 'missing' => 'Missing (confirmed)'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
@@ -488,8 +610,13 @@ try {
     }
     echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Applying filters…', true) . '</span></span>';
     echo '<span id="file-filter-help" class="ui-sr-only">Changing filters reloads this file list.</span></form>';
-    echo '<p class="muted small">Unresolved means a source-published reference without a conclusive provider; '
-        . 'it is not confirmed missing. UE5 source results can be further matched by indexed catalogue identities.</p>';
+    echo '<p class="muted small">'
+        . ($engineMajor === 5
+            ? 'UE5 filters use exact catalogue-indexed package, export and ScriptObject identities. '
+                . 'Unindexed references may be in another, not-yet-imported container and are not confirmed missing.'
+            : 'Unresolved means a source-published reference without a conclusive provider; '
+                . 'it is not confirmed missing. Common and package-only identities count as satisfied.')
+        . '</p>';
 
     echo $pagination;
     if ($files === []) {

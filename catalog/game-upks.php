@@ -175,15 +175,19 @@ try {
         echo '</tbody></table></div>';
 
         if ($pages > 1) {
-            echo '<nav class="pagination">';
-            if ($page > 1) {
-                echo '<a class="button" href="' . catalog_h(game_upks_url(['upk_page' => $page - 1])) . '">Previous</a> ';
-            }
-            echo '<span>Page ' . $page . ' of ' . $pages . '</span>';
-            if ($page < $pages) {
-                echo ' <a class="button" href="' . catalog_h(game_upks_url(['upk_page' => $page + 1])) . '">Next</a>';
-            }
-            echo '</nav>';
+            echo CatalogUi::pagination($page, $pages, [
+                'label' => 'Package container pagination',
+                'first' => $page > 1 ? game_upks_url(['upk_page' => 1]) : '',
+                'previous' => $page > 1 ? game_upks_url(['upk_page' => $page - 1]) : '',
+                'next' => $page < $pages ? game_upks_url(['upk_page' => $page + 1]) : '',
+                'last' => $page < $pages ? game_upks_url(['upk_page' => $pages]) : '',
+                'page_url' => static fn(int $n): string => game_upks_url(['upk_page' => $n]),
+                'jump' => [
+                    'action' => 'game-upks.php',
+                    'name' => 'upk_page',
+                    'fields' => ['id' => $gameId, 'upk_filter' => $filter],
+                ],
+            ]);
         }
     }
     echo '</div></section>';

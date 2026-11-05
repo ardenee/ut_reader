@@ -107,17 +107,23 @@ try {
     echo '<input type="search" id="displayed-file-filter" placeholder="Filter displayed page" autocomplete="off">';
     echo '</form>';
 
-    echo '<div class="page-links">';
-    if ($pageNo > 1) {
-        echo '<a class="button" href="' . catalog_h(game_page_url(['file_page' => 1])) . '">First</a> ';
-        echo '<a class="button" href="' . catalog_h(game_page_url(['file_page' => $pageNo - 1])) . '">Previous</a> ';
-    }
-    echo '<span class="subtle">Page ' . $pageNo . ' of ' . $totalPages . '</span> ';
-    if ($pageNo < $totalPages) {
-        echo '<a class="button" href="' . catalog_h(game_page_url(['file_page' => $pageNo + 1])) . '">Next</a> ';
-        echo '<a class="button" href="' . catalog_h(game_page_url(['file_page' => $totalPages])) . '">Last</a> ';
-    }
-    echo '</div>';
+    // Shared numbered pagination, including arbitrary-page jump, uses the
+    // same layout as the current game-files and package-table browsers.
+    $pageNavigation = CatalogUi::pagination($pageNo, $totalPages, [
+        'label' => 'Game file pagination',
+        'first' => $pageNo > 1 ? game_page_url(['file_page' => 1]) : '',
+        'previous' => $pageNo > 1 ? game_page_url(['file_page' => $pageNo - 1]) : '',
+        'next' => $pageNo < $totalPages ? game_page_url(['file_page' => $pageNo + 1]) : '',
+        'last' => $pageNo < $totalPages ? game_page_url(['file_page' => $totalPages]) : '',
+        'page_url' => static fn(int $page): string => game_page_url(['file_page' => $page]),
+        'jump' => [
+            'action' => 'index.php',
+            'name' => 'file_page',
+            'fields' => ['page' => 'game', 'id' => $gameId,
+                'file_filter' => $filter, 'limit' => $limit],
+        ],
+    ]);
+    echo $pageNavigation;
 
     echo '<div class="scroll"><table id="game-files-table" class="reorderable-table"><thead><tr>';
     echo '<th draggable="true" data-col="package">Package</th>';
@@ -152,6 +158,7 @@ try {
     }
 
     echo '</tbody></table></div>';
+    echo $pageNavigation;
     echo '</div>';
 
     if (catalog_support_is_admin()) {

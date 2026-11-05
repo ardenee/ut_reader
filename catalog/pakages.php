@@ -265,19 +265,18 @@ try {
                     .' files</a></p>';
             }
             if ($format !== 'all' && $pages > 1) {
-                echo '<nav class="pagination">';
-                if ($currentPage > 1) {
-                    echo '<a class="button" href="pakages.php?'
-                        .catalog_h(http_build_query($linkArgs+['page'=>$currentPage-1]))
-                        .'">Previous</a> ';
-                }
-                echo 'Page '.number_format($currentPage).' of '.number_format($pages);
-                if ($currentPage < $pages) {
-                    echo ' <a class="button" href="pakages.php?'
-                        .catalog_h(http_build_query($linkArgs+['page'=>$currentPage+1]))
-                        .'">Next</a>';
-                }
-                echo '</nav>';
+                $pageUrl = static fn(int $n): string => 'pakages.php?'
+                    . http_build_query($linkArgs + ['page' => $n]);
+                echo CatalogUi::pagination($currentPage, $pages, [
+                    'label' => strtoupper($kind) . ' file pagination',
+                    'first' => $currentPage > 1 ? $pageUrl(1) : '',
+                    'previous' => $currentPage > 1 ? $pageUrl($currentPage - 1) : '',
+                    'next' => $currentPage < $pages ? $pageUrl($currentPage + 1) : '',
+                    'last' => $currentPage < $pages ? $pageUrl($pages) : '',
+                    'page_url' => $pageUrl,
+                    'jump' => ['action' => 'pakages.php', 'name' => 'page',
+                        'fields' => $linkArgs],
+                ]);
             }
         }
         echo '</div>';

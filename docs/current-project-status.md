@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## 5 November 2026 — Games drilldown and consistent numbered pagination
+
+**Games public header:** removed duplicate Search and admin-only Library action buttons; global nav remains unchanged. All four current dependency counters are links: **Unresolved** and **Unresolved Files** open the `unresolved` game-file filter; **Resolved** opens files containing at least one satisfied dependency; **Resolved Files** opens `fully_resolved` (every dependency met). Reference totals and distinct matching file counts are explicitly shown with their different units. UE5 now shares the Games page's exact indexed-target exception-set; Satisfactory drilldowns match **244 unresolved references / 51 unresolved files**, **1,847,626 satisfied references**, and **27,189 fully satisfied files**. The 26 external-to-current-index package identities remain unresolved, not source-confirmed missing. Native source-policy projections are unchanged.
+
+**Style delivery:** the parent `catalog-ui.css` URL now has a file-mtime cache key and its nested `catalog-ui-components.css` import has a content-hash cache key, preventing browsers from continuing to use an older pagination layout after deployment.
+
+**Pagination:** one responsive, compact shared component provides numbered nearby pages, ellipses, first/previous/next/last and a validated Go-to-page field preserving filters and sort. The Game Files browser uses bounded SQL offset **only for direct page selection**, retaining HMAC/context-bound keyset cursors for fast adjacent navigation. Other existing offset-paginated views updated to the same controls: original game page, file-examine package tables, archive directory, PAK/UPK package lists, duplicate manager and unverified queue. No rewrite of the separate cursor-only confirmed-missing view is claimed.
+
+**Acceptance:** 71 named rendered Games/pagination assertions PASS; 15/15 HTTP 200 game/list GETs plus expected 303 historical game-page redirect; 5/5 direct regression GETs and 6/6 archive/PAK public GETs pass on DEV with PRD source metadata. UT4 page 200→signed next 201 and signed previous 199 pass; out-of-range selections clamp correctly. Direct legacy game-page and file-examine pagination both present numeric links and a Go form. Admin-only views were syntax/static checked, not bypassed for authenticated browser tests. No PRD SQL writes, native engine reruns or original corpus changes. Existing **32/32 fixed engine contracts remain PASS**. Evidence: [Games links and pagination](../tests/evidence/games-links-and-shared-pagination-20261105.json).
+
+---
+
 ## 5 November 2026 — Games Resolved correction and UE5 exact catalogue coverage
 
 **Corrected definition:** `Resolved` on `catalog/games.php` is **total dependency references − current unresolved references**. The former field `resolved_dependency_count` only counted uniquely engine-selected physical providers and therefore wrongly displayed zero for every game. For UE1–UE4, the fresh per-game source counts now yield the expected known/common/package-only satisfied totals; e.g. UT99 4,091,838, UT2004 3,260,406, UT3 1,079,968, UT4 413,683. The `Resolved Files` count remains dependency-bearing files with no outstanding source-unresolved/missing references.

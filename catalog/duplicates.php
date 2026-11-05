@@ -103,7 +103,7 @@ function duplicates_page_styles(): string
 {
     return <<<'CSS'
 <style>
-.duplicates-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin:0 0 12px}.duplicates-controls label{display:grid;gap:5px}.duplicates-controls .wide-search{width:min(520px,90vw)}.duplicates-pagination{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap}.duplicates-submit-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:12px 0}.duplicates-group-card{overflow:hidden}.duplicates-table{min-width:1510px}.duplicates-table th,.duplicates-table td{vertical-align:top}.duplicates-select-col{width:62px;text-align:center;white-space:nowrap}.duplicates-id,.duplicates-size,.duplicates-download{width:1%;white-space:nowrap}.duplicates-download{text-align:center}.duplicates-file-link,.duplicates-package-link{font-weight:650}.duplicates-md5,.duplicates-database,.duplicates-uploaded{white-space:nowrap;overflow-wrap:normal}.duplicates-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}.duplicates-help{border-left:4px solid var(--amber);padding-left:12px}.duplicates-download-link{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line2);border-radius:9px;color:var(--blue);background:rgba(118,169,255,.08);font-size:20px;font-weight:800;line-height:1}.duplicates-download-link:hover{background:rgba(118,169,255,.18);text-decoration:none}@media(max-width:760px){.duplicates-summary{grid-template-columns:1fr}}
+.duplicates-controls{display:flex;align-items:end;flex-wrap:wrap;gap:10px;margin:0 0 12px}.duplicates-controls label{display:grid;gap:5px}.duplicates-controls .wide-search{width:min(520px,90vw)}.duplicates-submit-bar{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:12px 0}.duplicates-group-card{overflow:hidden}.duplicates-table{min-width:1510px}.duplicates-table th,.duplicates-table td{vertical-align:top}.duplicates-select-col{width:62px;text-align:center;white-space:nowrap}.duplicates-id,.duplicates-size,.duplicates-download{width:1%;white-space:nowrap}.duplicates-download{text-align:center}.duplicates-file-link,.duplicates-package-link{font-weight:650}.duplicates-md5,.duplicates-database,.duplicates-uploaded{white-space:nowrap;overflow-wrap:normal}.duplicates-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}.duplicates-help{border-left:4px solid var(--amber);padding-left:12px}.duplicates-download-link{display:inline-grid;place-items:center;width:34px;height:34px;border:1px solid var(--line2);border-radius:9px;color:var(--blue);background:rgba(118,169,255,.08);font-size:20px;font-weight:800;line-height:1}.duplicates-download-link:hover{background:rgba(118,169,255,.18);text-decoration:none}@media(max-width:760px){.duplicates-summary{grid-template-columns:1fr}}
 </style>
 CSS;
 }
@@ -202,10 +202,25 @@ try {
     echo '<div class="stat"><h2>' . $page . ' / ' . $totalPages . '</h2><p>page</p></div>';
     echo '</div>';
 
-    $pagination = '<nav class="duplicates-pagination"><span class="muted">Showing ' . ($totalRows ? ($offset + 1) : 0) . '–' . min($offset + $limit, $totalRows) . ' of ' . $totalRows . ' duplicate file rows.</span><span>'
-        . ($page > 1 ? CatalogUi::button('First', ['href' => duplicates_url(['page' => 1]), 'variant' => 'secondary', 'size' => 'sm']) . CatalogUi::button('Previous', ['href' => duplicates_url(['page' => $page - 1]), 'variant' => 'secondary', 'size' => 'sm']) : '')
-        . ($page < $totalPages ? CatalogUi::button('Next', ['href' => duplicates_url(['page' => $page + 1]), 'variant' => 'secondary', 'size' => 'sm']) . CatalogUi::button('Last', ['href' => duplicates_url(['page' => $totalPages]), 'variant' => 'secondary', 'size' => 'sm']) : '')
-        . '</span></nav>';
+    $pagination = '<p class="muted small">Showing '
+        . ($totalRows ? ($offset + 1) : 0) . '–'
+        . min($offset + $limit, $totalRows)
+        . ' of ' . number_format($totalRows) . ' duplicate file rows.</p>'
+        . CatalogUi::pagination($page, $totalPages, [
+            'label' => 'Duplicate file pagination',
+            'first' => $page > 1 ? duplicates_url(['page' => 1]) : '',
+            'previous' => $page > 1 ? duplicates_url(['page' => $page - 1]) : '',
+            'next' => $page < $totalPages ? duplicates_url(['page' => $page + 1]) : '',
+            'last' => $page < $totalPages ? duplicates_url(['page' => $totalPages]) : '',
+            'page_url' => static fn(int $n): string => duplicates_url(['page' => $n]),
+            'jump' => [
+                'action' => 'duplicates.php',
+                'name' => 'page',
+                'fields' => ['q' => $query, 'game_id' => $gameId,
+                    'type_filter' => $typeFilter,
+                    'compression_filter' => $compressionFilter, 'limit' => $limit],
+            ],
+        ]);
 
     if ($totalRows === 0) {
         echo CatalogUi::emptyState('No active GUID duplicates found', 'No active duplicate package GUID rows match the current filters.');
