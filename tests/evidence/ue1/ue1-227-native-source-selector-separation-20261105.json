@@ -1,0 +1,75 @@
+{
+  "date": "2026-11-05",
+  "scope": "UE1 source-only native archive cursor versus game-aware source provenance validation separation. Follow-on evidence for existing ue1-tables operation, not new tests/contracts or universal UE1 native loader certification.",
+  "baseline_git_commit": "19bd5de3753c6016427239b41279865396716247",
+  "native_authority": {
+    "binary": "OldUnreal 227k Core.dll",
+    "sha256": "c391cade201acea9dd4e6c9f19b752ab99d338bf9dafb533920c4701e78ca194",
+    "method": "FArchive& operator<<(FArchive&, FObjectExport&) compiled x86 RVA 0x5da20",
+    "evidence": "archive/testing-legacy-2026-11-02/catalog/compliance/evidence/o06/20261027-UE1-C227K-REA-FObjectExport-Archive.json",
+    "rule": "Read ClassIndex and SuperIndex as compact indices, PackageIndex as fixed signed int32, ObjectName FName, ObjectFlags uint32; only when ObjectFlags has 0x100 and archive licensee>=227 consume fixed signed int32 ArchetypeIndex; then compact SerialSize and optional compact SerialOffset on nonzero size.",
+    "native_source_lic_before_227": "Compiled code clears RF_HasArchtype in loaded in-memory ObjectFlags; UnrealDB deliberately retains serialized raw ObjectFlags for file metadata and does not emulate runtime object mutation.",
+    "important_distinction": "The compiled 227k serializer DOES NOT probe alternative layouts or reject ambiguity; these checks are UnrealDB source-provenance policy."
+  },
+  "game_source_selector": {
+    "path": "catalog/src/Infrastructure/Readers/CatalogUE1UnrealExportSourceSelector.php",
+    "entrypoints": [
+      "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php",
+      "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php",
+      "catalog/src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php",
+      "catalog/bin/diagnose-ue1-227-archetype-snapshots.php"
+    ],
+    "scope": "Only source-selected Unreal Gold; UT99 and UE2 retain their readers. Native reader accepts explicit archive layout without inferring writer. Selector probes alternate layout only if conditional field was observed, rejects dual-valid ambiguity and alternate-only unknown provenance, and records a structural verification marker in the selected original UE1 reader. No fallback serializer is used for publication.",
+    "snapshot_fail_closed": "UE1 UEDB5 v3 writer rejects any raw native Unreal export flagged with RF_HasArchtype under >=227 if no independent source-validation marker exists; no silent omission of archetype."
+  },
+  "verified": {
+    "native_original_package": "L:/Source/Games/Unreal/OldUnreal-UnrealPatch227k-Windows/System/UnrealShare.u",
+    "original_package_sha256": "ab2e571dd2e0bad0d8e4389f4d8bc1c7476a61d809de69ce2e7552511197864d",
+    "original_export_zero_based_index": 13627,
+    "original_export_name": "BoxRigidBody",
+    "decoded_archetype_index": 13069,
+    "positive": "Native parser valid without provenance assertion; separate selector validates variant and marks it; UEDB5 v3 metadata writes and reads same archetype index.",
+    "negative": [
+      "Direct native reader cannot generate UEDB5 v1 from an unverified archetype-flagged archive.",
+      "Both structurally valid layouts rejected by separate source selector; raw parser alone does not perform ambiguity check.",
+      "UT99 v69/licensee227 flag-shaped bytes parsed as UT99 no-extension layout; Unreal-selected alternative-only archive rejected as unsupported/unverified.",
+      "Below-licensee227 archive does not consume conditional signed-int32 field.",
+      "Existing Unreal v61 source-selected and UT99 v432 package snapshots unaffected."
+    ],
+    "original_regression": "Four SHA-identity-matched original file and game-specific UEDB5 snapshot fixtures: Unreal v61, UT99 v432, UT99 469f, UE2 runtime v126 all exact 4/4 PASS.",
+    "previous_boundary_regression": "Unreal v61 exact63-byte name without terminator and UT99 v61 terminator cases both PASS.",
+    "production_user_provided_diagnostic_20261105": {
+      "candidates": 262,
+      "no_archetype_fields": 262,
+      "current": 0,
+      "needs_resnapshot": 0,
+      "blocked": 0,
+      "interpretation": "No UEDB5 regeneration or rescan required for those 262 verified original files."
+    },
+    "development_test_script": "D:/Temp/UnrealDB/UE1/verify-native-reader-versus-source-selector-20261105.php",
+    "test_script_sha256": "2452074ad492a645aeaa2d46efce9accae092c194d9ec29ca1c25e9dafd56166",
+    "four_original_regression_sha256": "58641bf58814750584d9c1016748994664544d8f3cc99f34b77975cebd7dfa93",
+    "php_lint": "7/7 changed PHP files PASS",
+    "git_diff_check": "PASS",
+    "new_native_engine_run": false,
+    "database_writes": 0,
+    "original_source_package_edits": 0,
+    "uedb5_snapshot_edits": 0,
+    "uedb5_backups_created": 0,
+    "backup_files_created": 0
+  },
+  "current_dev_sha256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "5910cd69dfab3977ab5c3eafdc6465f607e5a55dafabd054b83cd2659229c21b",
+    "catalog/src/Infrastructure/Readers/CatalogUE1UnrealExportSourceSelector.php": "db9d05e86d03a65844776f689e281a1ba2551e8500da2c9dc95f4f20a24161a9",
+    "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "9ea8565e85723a4c46429b937faf991ca406f922f2b3a6263f6d55ce2629f750",
+    "catalog/src/Infrastructure/Metadata/Uedb5UE1TableSnapshotBuilder.php": "530e75c247999bfd7cc93867ebb42e0598cb0d66fe617387ddb3a4625a2083ac",
+    "catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php": "66df77d18288ff66c620e77e4518b43bdcd29d43f0b3d096d1fddd0025df5970",
+    "catalog/src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php": "fe5f08b7f192939f2f89fc251404573150d4e71ddc5b47c2771838cb55e13bd5",
+    "catalog/bin/diagnose-ue1-227-archetype-snapshots.php": "c073d32f8745aa6d1d9c3961f9cba161ea9e8099d10ec934ece7c574febcf217"
+  },
+  "remaining_scope_limitations": [
+    "Individual 227i builds with flagged exports have not been proven equivalent to 227k; selector fails closed on ambiguous/no-native evidence.",
+    "Diagnostic display of original raw serialized names/flags is not a UE1 package repacker.",
+    "Tests do not assert full original ULinkerLoad runtime imported-object behavior."
+  ]
+}

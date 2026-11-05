@@ -159,7 +159,7 @@ final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorP
         $package = $readerEngine === 'UE1'
             && strtolower((string)($game['slug'] ?? '')) === 'unrealgold'
             && $readerClass === \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader::class
-            ? new $readerClass($temporaryPath, true)
+            ? \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1UnrealExportSourceSelector::load($temporaryPath)
             : new $readerClass($temporaryPath);
 
         \scanner_emit_percent($progress, 'scan', 9, 'Validating package');

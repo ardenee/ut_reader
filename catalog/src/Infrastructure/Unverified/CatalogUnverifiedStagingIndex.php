@@ -222,7 +222,7 @@ final class CatalogUnverifiedStagingIndex
         $reader = $queueGameId > 0 && $engine === 'UE1'
             && strtolower((string)($game['slug'] ?? '')) === 'unrealgold'
             && $readerClass === \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader::class
-            ? new $readerClass($path, true)
+            ? \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1UnrealExportSourceSelector::load($path)
             : new $readerClass($path);
         $issues = method_exists($reader, 'validatePackage')
             ? $reader->validatePackage()

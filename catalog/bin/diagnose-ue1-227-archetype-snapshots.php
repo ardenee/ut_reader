@@ -49,7 +49,7 @@ try {
                 || !hash_equals(strtolower((string)$file['sha1']), strtolower((string)sha1_file($source)))) {
                 throw new RuntimeException('Original source bytes do not match catalogued file identity.');
             }
-            $reader = new CatalogUE1PackageReader($source, true);
+            $reader = \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1UnrealExportSourceSelector::load($source);
             if ($reader->validatePackage() !== []) {
                 throw new RuntimeException(implode('; ', $reader->validatePackage()));
             }

@@ -136,7 +136,7 @@ final class Uedb5SourceSnapshotFactory
         }
         $reader = $sourceKey === 'unrealgold'
             && $readerClass === \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1PackageReader::class
-            ? new $readerClass($path, true)
+            ? \UnrealDb\Catalog\Infrastructure\Readers\CatalogUE1UnrealExportSourceSelector::load($path)
             : new $readerClass($path);
         if (!method_exists($reader, 'getHeader')) {
             throw new RuntimeException('Canonical package reader does not expose its parsed header for profile validation.');

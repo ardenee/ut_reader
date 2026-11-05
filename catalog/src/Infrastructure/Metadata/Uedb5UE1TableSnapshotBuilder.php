@@ -51,11 +51,26 @@ final class Uedb5UE1TableSnapshotBuilder
         // Only the independently discriminated 227k on-disk variant can
         // carry this optional field. Existing UE1/UT99 and earlier Unreal
         // snapshots remain byte-for-byte schema-v1 compatible.
+        $flaggedArchetypes = count(array_filter(
+            $exports,
+            static fn(array $row): bool =>
+                (((int)($row['objectFlags'] ?? 0)) & 0x00000100) !== 0
+        )) > 0;
         $hasArchetypes = $prefix === 'ue1.unreal'
             && ($header['unreal227ExportLayout'] ?? null)
                 === 'native_227k_archetype_int32_structurally_discriminated'
-            && count(array_filter($exports, static fn(array $row): bool =>
-                (((int)($row['objectFlags'] ?? 0)) & 0x00000100) !== 0)) > 0;
+            && $flaggedArchetypes;
+        // A raw native decoder is NOT proof of the selected game/runtime
+        // format. Prevent a direct diagnostic caller from silently storing
+        // a v1 snapshot that loses a serialized ArchetypeIndex.
+        if ($prefix === 'ue1.unreal' && $flaggedArchetypes
+            && (int)($header['licenseeVersion'] ?? 0) >= 227
+            && !$hasArchetypes) {
+            throw new RuntimeException(
+                'Unreal RF_HasArchtype exports require source-validated '
+                . '227k layout before UEDB5 snapshot publication.'
+            );
+        }
 
         return [
             'file' => [
