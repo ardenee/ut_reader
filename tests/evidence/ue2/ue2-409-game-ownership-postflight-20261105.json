@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-05",
+  "task": "Production source-game ownership correction, game2 -> UT2003/UT2004",
+  "observed_in_prd": true,
+  "source_policy": "uedb5-dependency-pass-ue2-mount-no-common-v15",
+  "phase1_directory_provenance": {
+    "confirmed": 391,
+    "ut2003_duplicated": 88,
+    "ut2004_duplicated": 303,
+    "source_package_bytes": 2077899282,
+    "unique_verified_destination_per_source": true,
+    "full_physical_source_target_sha256_equal": true,
+    "source_deleted_and_target_preserved": 391,
+    "source_manifest_sha256": "54239698BE60D07BB5A3B9B2C3A43C118B907CE57D6985FF9359ED5023EAAD57",
+    "source_uEDB5_backups_SHA256_checked": 391,
+    "correct_mirror_job_redirect": {
+      "id": 453,
+      "new_target_file_id": 137892
+    }
+  },
+  "phase2_version29": {
+    "candidates": 18,
+    "exact_correct_game_duplicates_deleted": 15,
+    "verified_original_source_moves": 3,
+    "retained_original_binary_backups": 3,
+    "source_uEDB5_backups_SHA256_checked": 18,
+    "manifest_sha256": "21B0577935E1435D2EDFD13D554506B3B2F85598BA003A012B46A28760741D2D",
+    "verified_moves": [
+      {
+        "old_game2_file_id": 149675,
+        "new_game5_file_id": 1390450,
+        "package": "U2Weapons.u",
+        "cleanup_warnings": 0
+      },
+      {
+        "old_game2_file_id": 149677,
+        "new_game5_file_id": 1390451,
+        "package": "U2WeaponsA.uax",
+        "cleanup_warnings": 0
+      },
+      {
+        "old_game2_file_id": 1247934,
+        "new_game5_file_id": 1390452,
+        "package": "DM-ArizA][.ut2",
+        "cleanup_warnings": 0,
+        "mirror_job_id": 88
+      }
+    ],
+    "test_callback_retry": "First source #149675 already imported into game5, callback TypeError occurred before source deletion; corrected, retried canonical verified destination path and completed. No source bytes lost."
+  },
+  "total_wrong_game_source_removed": 409,
+  "duplicates_deleted": 406,
+  "verified_distinct_moved": 3,
+  "validated_final_game_counts": {
+    "unreal_ii": {
+      "game_id": 2,
+      "before": 1217,
+      "after": 808
+    },
+    "ut2003": {
+      "game_id": 4,
+      "before": 5082,
+      "after": 5082
+    },
+    "ut2004": {
+      "game_id": 5,
+      "before": 72880,
+      "after": 72883
+    }
+  },
+  "postflight": {
+    "removed_old_file_rows": 409,
+    "deleted_source_uedb5_registrations": 409,
+    "deleted_source_provider_deps": true,
+    "deleted_source_physical_packages": 409,
+    "deleted_source_uedb5_containers": 409,
+    "surviving_correct_game_file_records": 409,
+    "source_uedb5_backups": 409,
+    "wrong_game_UT2003_UT2004_directory_provenance_left": 0,
+    "wrong_game_UE2_licencee29_file_versions_left": 0,
+    "game2_GamePlay_references_after": 0,
+    "mirror_jobs_preserved": [
+      {
+        "id": 88,
+        "target_file_id": 1390452,
+        "status": "queued"
+      },
+      {
+        "id": 453,
+        "target_file_id": 137892,
+        "status": "queued"
+      }
+    ],
+    "old_coverage_cache_invalidated": {
+      "headers": 197,
+      "provider_rows": 145,
+      "backup_sha256": "9AA3CE909B36A1CD698473B93716D6D5646FA69CEE29E293E57621ED5C8F15EF"
+    },
+    "source_current_package_coverage_rebuild": {
+      "complete": true,
+      "game_id": 2,
+      "verified_files": 808,
+      "groups_examined": 84,
+      "groups_cached": 70,
+      "groups_pruned": 14
+    }
+  },
+  "game2_current_stats": {
+    "freshness": true,
+    "verified": 808,
+    "duplicates": 1,
+    "total_catalogued": 809,
+    "dependency_count": 74556,
+    "resolved_count": 0,
+    "common_count": 0,
+    "source_policy": "ue2-mount-no-common-v15"
+  },
+  "game4_policy": {
+    "complete": 5082,
+    "verified": 5082,
+    "stats_fresh": true
+  },
+  "game5_policy_at_last_check": {
+    "complete": 6518,
+    "verified": 72883,
+    "stats_fresh": false,
+    "background_publication_continues": true
+  },
+  "pending_jobs_at_last_check": [
+    "catalog.rebuild_affected_dependencies",
+    "catalog.reconcile_catalog_projections"
+  ],
+  "backup_location_prd": "L:\\UnrealDB\\maintenance-audit\\ue2-owner-fix-20261105",
+  "tracked_source_script": "catalog/bin/reconcile-ue2-duplicate-game-ownership.php",
+  "notes": [
+    "source_relative_path is catalogue acquisition provenance, not a serialized UE game identifier.",
+    "Same bytes may legitimately be indexed under multiple games; original Unreal II 343T.utx is retained.",
+    "UT2003-named community Unreal II map-pack file ut2003barrensarc.utx was correctly retained.",
+    "No original Epic engine source or unrelated-engine metadata changed."
+  ]
+}

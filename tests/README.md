@@ -1,5 +1,11 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## UE2 production 409-file game-ownership reconciliation — 5 November 2026
+
+The independently audited **391 original source-directory-provable wrong-game files** were physically SHA-256-equal to a unique verified UT2003/UT2004 target. Live PRD canonical deletion removed the game #2 records/physical package bytes/UEDB5 provider projections; a further **15** exact UT2004 duplicates were deleted and **3 distinct original UT2004 files** moved by canonical verified import into game #5, retaining original file-byte backups. Both old queued external mirror jobs (#88 and #453) were remapped to valid destination IDs. Read-only PRD postflights verify no old identity/projection/storage remains; all correct game records remain. Final verified totals Unreal II **808**, UT2003 **5,082**, UT2004 **72,883**.
+
+Original 391 source/destination SHA256+SQL manifest and 18 second-batch original identity manifest, all 409 original UEDB5 SHA backups, three nonduplicate original bytes and the old 197-entry coverage cache backup are retained on PRD under `L:\\UnrealDB\\maintenance-audit\\ue2-owner-fix-20261105`. A resumable manifest-SHA-guarded exact duplicate cleanup driver is `catalog/bin/reconcile-ue2-duplicate-game-ownership.php`. Original correctness is not inferred from package name, version or cross-game byte duplicates alone: original Unreal II assets often legitimately occur in UT2004's inventory. This is independent of Epic parser parity. Game #2 UE2 v15 Pass2 808/808 now current and game statistics refreshed: 74,556 dependencies, zero common; UT2004 v15 Pass2 still running. See [PRD ownership evidence](../docs/ue2-409-game-ownership-production-reconciliation-2026-11-05.md).
+
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
 ## UE2 v15 source bypass rejection and cross-game ownership — 5 November 2026

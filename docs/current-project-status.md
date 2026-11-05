@@ -1,6 +1,18 @@
 # UnrealDB current project status
 
-## 5 November 2026 — UE2 v15 common shortcut removed in source; ownership repair/republication pending
+## 5 November 2026 — Unreal II wrong-game ownership repaired in PRD (409 files)
+
+The earlier UE2 Full Sync faithfully regenerated original packages but did not audit source game ownership, leaving Unreal II with UT2003/UT2004 content and 219 false common `GamePlay` dependencies. **Actual PRD repair completed:** 391 wrong-game files with original UT2003/UT2004 directory provenance and exact byte-identical verified counterparts removed; a second provenance/UE2-version check identified 15 more exact UT2004 duplicates removed and **3 distinct UT2004 originals imported/verified into game #5 first**, then retired from game #2. Overall **406 canonical duplicate deletions + 3 canonical verified moves** = **409 wrong-game records removed**. A total of 391+18 original source UEDB5 containers were SHA-256 backed up to PRD `L:\\UnrealDB\\maintenance-audit\\ue2-owner-fix-20261105`, together with complete preflight manifests, a backup of the old game2 coverage cache and durable action logs; three unique moved package bytes have a separate backup. Queued mirror jobs #88 and #453 were redirected to their valid surviving game5 files and retained.
+
+Source counts: Unreal II game #2 **1,217 → 808 verified**, UT2003 #4 **5,082 unchanged**, UT2004 #5 **72,880 → 72,883**. Final postflights found 0 deleted-source file identities/UEDB5/provider projections, 0 old source physical packages/UEDB5 containers, all 409 correct-game targets verified present and backups intact. The original Unreal II map-pack `ut2003barrensarc.utx` and the genuine Unreal II files whose bytes also occur in UT2004 are **retained**; package-name or cross-game hash alone cannot prove incorrect game ownership. UnrealDB's `source_relative_path` is original catalogue acquisition provenance, **not a serialized UE package field**.
+
+UE2 v15 Pass 2 for game #2 **808/808 complete**; independently rebuilt its cached `games.php` stats, freshness gate PASS, and dependency references **110,970 → 74,556** with no `common` shortcut. UT2003 #4 **5,082/5,082 v15 complete**; UT2004 #5 v15 publication is ongoing and its old cached aggregate is stale until full Pass 2 completion. Additional UT2004 affected-dependency and projection reconciliations were queued by canonical imports and must be executed by the PRD worker. The obsolete game2 Package Coverage cache (197 groups) was backed up and replaced via a completed source-current rebuild: **84 groups inspected, 70 cached, 14 pruned**.
+
+Evidence and restoration details: [UE2 production 409-file ownership correction](ue2-409-game-ownership-production-reconciliation-2026-11-05.md).
+
+---
+
+## Historical (superseded): 5 November 2026 — UE2 v15 shortcut and ownership investigation, before the 409-file PRD repair
 
 Epic UE2's source `VerifyImport` does not contain the configured UnrealDB `common_packages` dependency exemption. The earlier UE2 7/7 path closure was overbroad: tracing executable source paths did not assert that the UnrealDB-only shortcut was absent. UE2 v15 now ignores this shortcut while leaving other engine policies isolated. SHA-pinned genuine Unreal II files #111205 and #1360642 demonstrate 80 Core and 27 GamePlay imports, respectively, no longer incorrectly classified `common`. Production UE2 game IDs 2/4/5 need Pass 2 republication and cached statistic rebuild after deployment; old v14 figures must fail freshness until that occurs. The PRD local resumable scoped wrapper is `catalog/bin/publish-ue2-no-common-v15.ps1`; it requires explicit `-Apply`.
 
