@@ -1,0 +1,98 @@
+{
+  "schema": "ue3-ut3-v512-source-only-spec-boundary-review-1",
+  "date": "2026-11-05",
+  "contracts_existing": [
+    "ue3-dispatch",
+    "ue3-tables"
+  ],
+  "scope": "UT3 v512/l0 metadata reader and UT3-owned UEDB5 snapshot version guard; no native object loading, PRD SQL writes, or whole-engine completeness claim",
+  "source_specifications": [
+    "UE3_Package_File_Format_Specification.md (independent specification generated in current conversation)",
+    "UT3_UE3_v512_Game_Format_Addendum.md (independent game addendum)"
+  ],
+  "engine_source": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [01-00-2008]\\epic.jan2008\\UnrealEngine3",
+  "verified_originals": {
+    "fixture_manifest": "D:\\Temp\\UnrealDB\\ue3\\original-wire\\manifest.json",
+    "ids": [
+      149701,
+      112339,
+      1270627,
+      1270942,
+      1274646,
+      1292076,
+      1275854
+    ],
+    "all_sha256_and_size_matches": true,
+    "version": 512,
+    "licensee": 0,
+    "names": 35593,
+    "imports": 17904,
+    "exports": 34635,
+    "read_errors": 0,
+    "acceptance_file": "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\export-range-result.json"
+  },
+  "verified_boundary_fixes": [
+    {
+      "issue": "positive export span past logical archive accepted",
+      "before": {
+        "original_fixture": 149701,
+        "original_logical_size": 1776698,
+        "mutation": "first export SerialOffset at file offset 274693 ->1776798, size44",
+        "before_validation_issues": 0
+      },
+      "after": {
+        "validation_code": "ue3.export_payload_out_of_bounds",
+        "validation_issues": 1
+      },
+      "sample_sha256": "fa4417936a7d715458862a177976980b30cf8ff12ae9f80b3df2d171f9c75240",
+      "file": "catalog/parsers/EpicUE3PackageReader.php"
+    },
+    {
+      "issue": "later summary parser attempted older/unsupported version layouts",
+      "before": "accepted version range 1..867 but used later-family summary",
+      "after": {
+        "supported_range": "491..867 in generic UE3 parser",
+        "rejected_test_version_350": true,
+        "rejected_test_version_480": true,
+        "code": "ue3.unsupported_version_layout"
+      },
+      "file": "catalog/parsers/EpicUE3PackageReader.php"
+    },
+    {
+      "issue": "UT3 snapshot builder labelled 513/0 and 512/1 as source-confirmed UT3 512/0",
+      "before": {
+        "version_513_licensee_0": "accepted",
+        "version_512_licensee_1": "accepted"
+      },
+      "after": {
+        "version_513_licensee_0": "rejected",
+        "version_512_licensee_1": "rejected",
+        "original_512_0": "accepted",
+        "original_names": 5974,
+        "original_imports": 3134,
+        "original_exports": 4031
+      },
+      "file": "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php"
+    }
+  ],
+  "new_checked_paths": [
+    "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\verify-export-range-regression.php",
+    "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\check-ut3-builder-profile.php",
+    "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\verify-builder-positive.php"
+  ],
+  "sha256_changed_files": {
+    "catalog/parsers/EpicUE3PackageReader.php": "0856e22e76cd53bcaa6105af3cdaa3123e8763e0de310d844704878b92de1165",
+    "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php": "c95f6bd80eebd6f5ef082728626e33e9b51abc9cd07e2d6d1a7c0adaa29b1ae2"
+  },
+  "open_scope": [
+    "Original native runtime physical package mounting/selection remains unavailable; source-unresolved is correct.",
+    "No genuine compressed UT3 package differential in this new review; compression routine not re-certified.",
+    "Export-indexed DependsOffset section not materialized by metadata reader; UnrealDB currently derives dependency relationships from imports, not export DependsMap.",
+    "UE3 early-family 225-471 has a documented wire grammar but no implemented reader; now explicitly rejected rather than parsed with later layout.",
+    "Changed hashes in other UE3 existing contracts require separate scope-aware evidence; no blanket recertification claimed.",
+    "Shared CatalogLegacyNameMapPreprocessor contains UE1/UE2/UE3 masks; review engine-silo architecture before future changes."
+  ],
+  "no_originals_modified": true,
+  "no_prd_database_writes": true,
+  "result": "PASS on specifically corrected and tested metadata boundaries; broader complete UE3 source conformity not claimed"
+}

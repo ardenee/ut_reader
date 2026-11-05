@@ -129,7 +129,8 @@ final class CatalogUE3PackageReader
 {
     private const TAG=0x9E2A83C1, TAG_SWAPPED=0xC1832A9E;
     private const VER_ADDITIONAL_COOK_PACKAGE_SUMMARY=516, VER_REMOVED_COMPONENT_MAP=543,
-        VER_ASSET_THUMBNAILS_IN_PACKAGES=584, VER_ADDED_CROSSLEVEL_REFERENCES=623, VER_TEXTURE_PREALLOCATION=767, MAX_EPIC_UE3_VERSION=867;
+        VER_ASSET_THUMBNAILS_IN_PACKAGES=584, VER_ADDED_CROSSLEVEL_REFERENCES=623, VER_TEXTURE_PREALLOCATION=767,
+        MIN_SUPPORTED_LATER_UE3_VERSION=491, MAX_EPIC_UE3_VERSION=867;
     private const COMPRESS_ZLIB=1, COMPRESS_LZO=2, COMPRESS_LZX=4, COMPRESS_TYPE_MASK=0x0F;
 
     private string $physical='', $logical=''; private bool $swap=false;
@@ -175,9 +176,22 @@ final class CatalogUE3PackageReader
         elseif ($rawTag!==self::TAG) throw new RuntimeException(sprintf('Not an Epic UE3 package: tag=0x%08X',$rawTag));
 
         $packed=$r->u32('FileVersion'); $ver=$packed&0xffff; $lic=($packed>>16)&0xffff;
-        if ($ver<=0 || $ver>self::MAX_EPIC_UE3_VERSION) throw new RuntimeException(
-            "Unsupported/corrupt Epic UE3 package version=$ver licensee=$lic packed=".sprintf('0x%08X',$packed)
-            .'; Epic UE3 source defines engine package versions through '.self::MAX_EPIC_UE3_VERSION);
+        // This decoder implements the later UE3 summary/export family only.
+        // Earlier versions have conditional summary/export fields; versions 472-490
+        // have no verified layout. Never decode either with the later-family cursor.
+        if ($ver<self::MIN_SUPPORTED_LATER_UE3_VERSION || $ver>self::MAX_EPIC_UE3_VERSION) {
+            throw new CatalogUE3ValidationException(
+                'UE3 package version requires a different or unverified serialized layout.',
+                'ue3.unsupported_version_layout',
+                [
+                    'version'=>$ver,
+                    'licensee_version'=>$lic,
+                    'packed_version'=>sprintf('0x%08X',$packed),
+                    'supported_version_min'=>self::MIN_SUPPORTED_LATER_UE3_VERSION,
+                    'supported_version_max'=>self::MAX_EPIC_UE3_VERSION,
+                ]
+            );
+        }
 
         $h=$this->blankHeader(); $h['signature']=$h['tag']=self::TAG; $h['sourceTag']=$rawTag; $h['byteSwapped']=$this->swap;
         $h['packedVersion']=$packed; $h['version']=$ver; $h['licensee']=$h['licenseeVersion']=$lic;
@@ -334,6 +348,16 @@ final class CatalogUE3PackageReader
             $objectFlags=($flags['high'] << 32) | $flags['low'];
             $size=$r->i32("ExportMap[$i].SerialSize"); $off=$r->i32("ExportMap[$i].SerialOffset");
             if ($size<0 || $off<0) throw new RuntimeException("Invalid Epic UE3 export serial range export=$i size=$size offset=$off");
+            // File-backed exports with data must fit entirely in the logical archive.
+            // Check by subtraction to avoid overflow when combining serialized offsets and sizes.
+            $logicalSize=strlen($this->logical);
+            if ($size>0 && ($off>$logicalSize || $size>$logicalSize-$off)) {
+                throw new CatalogUE3ValidationException(
+                    'UE3 export payload exceeds the logical package data.',
+                    'ue3.export_payload_out_of_bounds',
+                    ['export_index'=>$i,'serial_size'=>$size,'serial_offset'=>$off,'logical_size'=>$logicalSize]
+                );
+            }
             $components=$ver<self::VER_REMOVED_COMPONENT_MAP?$this->componentMap($r,$i):[]; $exportFlags=$r->u32("ExportMap[$i].ExportFlags");
             $nc=$r->i32("ExportMap[$i].GenerationNetObjectCount.Count"); $this->arrayFits($r,$nc,4,"ExportMap[$i].GenerationNetObjectCount.Count");
             $net=[]; for ($j=0;$j<$nc;$j++) $net[]=$r->i32("ExportMap[$i].GenerationNetObjectCount[$j]");

@@ -248,3 +248,10 @@ C:\php8.5\php.exe catalog/bin/migrate.php status
 - [Game-profile version admission](../specs/game-profile-version-admission-2026-10-10.md) (no arbitrary version/licensee range rejection)
 - [Production deployment](production-deployment.md), [installation](installation.md), [database migration guide](database-migrations.md)
 - [Earlier production closeout (historical checkpoint)](../specs/uedb5-production-closeout-2026-10-12.md)
+
+## UE3 / UT3 v512 specification conformance review (2026-11-05)
+
+- Compared the source-selected UE3 metadata reader and UT3 snapshot builder against the independent UE3 format specification and UT3 addendum. Seven original SHA-256-pinned UT3 v512/licensee-0 package fixtures remain readable (35,593 names; 17,904 imports; 34,635 exports).
+- Corrected three isolated source-boundary defects: export payload range beyond logical EOF accepted, early/unsupported UE3 versions parsed under the later summary layout, and non-v512/licensee-0 files labelled with UT3's v512 policy. Disposable negative cases now reject; the genuine UT3 snapshot positive case passes.
+- No native UObject loading, production data modification or UEDB5 regeneration. Current evidence does not prove native package mount precedence or compressed UT3 package parity. Older UE3 source hashes in several downstream contract records require future scope-aware validation, not automatic wholesale recertification.
+- Details: [UE3 UT3 code compliance audit](ue3-v512-spec-conformance-audit-2026-11-05.md) and [new bounded acceptance evidence](../tests/evidence/ue3/ue3-v512-spec-boundaries-20261105.json).

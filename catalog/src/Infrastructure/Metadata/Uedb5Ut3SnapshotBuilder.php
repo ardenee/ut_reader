@@ -19,6 +19,14 @@ final class Uedb5Ut3SnapshotBuilder
             throw new RuntimeException('Cannot persist UT3 UEDB5 metadata: ' . implode('; ', $issues));
         }
         $header = (array)$reader->getHeader();
+        // The generic UE3 wire reader supports more revisions. This game-specific
+        // source policy is proved only for UT3 version 512 / licensee 0.
+        if ((int)($header['version'] ?? -1) !== 512
+            || (int)($header['licenseeVersion'] ?? $header['licensee'] ?? -1) !== 0) {
+            throw new RuntimeException(
+                'UT3 v512 source metadata cannot be assigned to a different package/licensee version.'
+            );
+        }
         $fileId = (int)($file['id'] ?? 0);
         $gameId = (int)($file['game_id'] ?? 0);
         if ($fileId < 1 || $gameId < 1) {

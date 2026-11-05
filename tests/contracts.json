@@ -1520,7 +1520,7 @@
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
         "catalog/src/Infrastructure/Readers/CatalogReaderResolver.php": "15af85144840217910ed9d3e2d9ce1b3a7ecbfe04c758caaa18ed5204ad71a14",
-        "catalog/parsers/EpicUE3PackageReader.php": "5587cd072b5e3b06c02cb7af58447a3ef32dbb8511cb75b1c40c4e86b602a7db"
+        "catalog/parsers/EpicUE3PackageReader.php": "0856e22e76cd53bcaa6105af3cdaa3123e8763e0de310d844704878b92de1165"
       },
       "php_source_sites": [
         {
@@ -1575,8 +1575,8 @@
       "result_evidence": "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json",
       "affected_code_sha256": {
         "catalog/src/Infrastructure/Metadata/Uedb5SourceSnapshotFactory.php": "c16cc39bacea925b72c9e5fb459727e635cf2520a56ace5a4bef667c272874df",
-        "catalog/parsers/EpicUE3PackageReader.php": "5587cd072b5e3b06c02cb7af58447a3ef32dbb8511cb75b1c40c4e86b602a7db",
-        "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php": "4b4ca11c8e9df704b0fb4d88a8ac1844a1a0c11e2ecc1298f6ba275b25858be8"
+        "catalog/parsers/EpicUE3PackageReader.php": "0856e22e76cd53bcaa6105af3cdaa3123e8763e0de310d844704878b92de1165",
+        "catalog/src/Infrastructure/Metadata/Uedb5Ut3SnapshotBuilder.php": "c95f6bd80eebd6f5ef082728626e33e9b51abc9cd07e2d6d1a7c0adaa29b1ae2"
       },
       "php_source_sites": [
         {
