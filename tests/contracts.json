@@ -1882,7 +1882,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "production_rollout_status": "PRD_UT4_64247_VERIFIED_64247_CURRENT_UE4_V14_0_STALE_2026_11_05_NO_NATIVE_RETEST",
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
@@ -1933,7 +1933,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "production_rollout_status": "PRD_UT4_64247_VERIFIED_64247_CURRENT_UE4_V14_0_STALE_2026_11_05_NO_NATIVE_RETEST",
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
@@ -1983,7 +1983,7 @@
       "out_of_scope_native_payload_loading": true,
       "scope_revised_at": "2026-11-02",
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "production_rollout_status": "PRD_UT4_64247_VERIFIED_64247_CURRENT_UE4_V14_0_STALE_2026_11_05_NO_NATIVE_RETEST",
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
@@ -2035,7 +2035,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "production_rollout_status": "PRD_UT4_64247_VERIFIED_64247_CURRENT_UE4_V14_0_STALE_2026_11_05_NO_NATIVE_RETEST",
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
@@ -2091,7 +2091,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "production_rollout_status": "PRD_UT4_64247_VERIFIED_64247_CURRENT_UE4_V14_0_STALE_2026_11_05_NO_NATIVE_RETEST",
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
@@ -2107,8 +2107,8 @@
         "F17",
         "F22"
       ],
-      "status": "BLOCKED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UT4_64247_OF_64247_PRD_CURRENT_UE4_V14_SOURCE_SHA_AND_PHP_HTTP_WEBSITE; 18_ACTUAL_GET_26_SOURCE_ASSERTIONS; MISSING_CROSS_GAME_READMODELS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -2124,7 +2124,7 @@
         "catalog/missing.php",
         "catalog/game-page.php"
       ],
-      "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
+      "dispatch_trace": "UT4 game7 clean-master UE4 source-selected reader v383-v511 -> UEDB5 v14 Pass2 source policy/payload -> current owner/source-provenance gate + stats -> game catalog, missing/cross-game queries, Game Files, legacy Game, File Info, Uses, file-examine-dependencies JSON and Download Info over original PRD metadata.",
       "epic_source_anchor_file": "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp",
       "epic_symbol_to_verify": "FLinkerLoad",
       "game_profiles": [
@@ -2135,17 +2135,22 @@
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "Implemented original UT4 version383-511 metadata-only paths source-verified with independent original byte-level parser and actual production dry-run. No UE4 4.0.2 version342 original file fixture asserted; no native loaded runtime mount context.",
-      "result_evidence": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+      "runtime_call_chain_verified": true,
+      "test_authorization": "UT4 source-selected original v383-v511 files; actual PRD current v14 source and read-only SQL; 18 DEV PHP HTTP GET, 26 source-accurate UI assertions and previously accepted conditional source-provider evidence. No native runtime rerun or PRD writes.",
+      "result_evidence": "tests/evidence/ue4/ue4-prd-v14-website-source-closure-20261105.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
-        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "36b5be8e7b8a1cbc0bf1a5d19123d00a1409714fa1a1efbad82a17c1a53296f4",
+        "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
         "catalog/game-missing.php": "ea8b403468f1c5266b18248efdba7088861425e70cf56d59e3c4aaec0c493286",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508",
         "catalog/missing.php": "7ad4b1c856fa59d0e09d9e99504ee1622a5c3ee40ef7605b00e4b3f417c7f59a",
-        "catalog/game-page.php": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e"
+        "catalog/game-page.php": "e1eedca00844297bf943f1f72271e5395745f46c98572f997cd9b966f4cce34e",
+        "catalog/file-info.php": "9721ddcc1b7907f002ed74b0f368dd603beace84c10cd5622ded2f0321ef462a",
+        "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+        "catalog/game-files.php": "c7852065223cd3e09e682340d3c8c8d92677e1f7ac0f84349ffbbfa4cbf493f5",
+        "catalog/games.php": "86c4dc0de87d5d277ba492c5b056929a25cbb769ba8a31c1f7f5486f82920260",
+        "catalog/download-info.php": "f78f12c8b6dc31986daa92e13014316aac96a6adc655b039244613b8e292874d"
       },
       "php_source_sites": [
         {
@@ -2159,8 +2164,8 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-03",
-      "production_rollout_status": "PRD_UE4_DEPENDENCY_RESULTS_NOT_REGENERATED_AFTER_READER_CHANGE",
+      "reviewed_at": "2026-11-05",
+      "production_rollout_status": "PRD_UT4_64247_VERIFIED_64247_CURRENT_UE4_V14_0_STALE_2026_11_05_NO_NATIVE_RETEST",
       "review_findings": [
         "Six UT4 implementation contracts verified against original clean-master source, plus 4.0.2/4.27.2 source version boundary audits. Nine genuine game7 files versions383..511, independent 5146 names/1488 imports/7557 complete exports and 32/64-bit serial boundaries, zero mismatches.",
         "Corrected UE4 selected-provider import root must match the source Core.Package and authoritative runtime mount; without original mounted paths original imports remain unresolved/common, zero invented missing or resolved.",
@@ -2168,11 +2173,13 @@
         "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
         "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified.",
         "2026-11-03 DEV shared source-path correction and source-correct read gates: isolated original UE5.8.3 classic assets prove unknown mount => source_unresolved and negative mounted set => no exception (fixture only); all five engine v14 policy, source payload SHA, dependency_completed_at and cached timestamp checks exercised in SQLite; read-only PRD v13 examples and 12 actual MySQL EXPLAIN queries checked. Historical v13 missing/resolved links are hidden on tested user-facing read paths. NO PRD SQL writes. Status remains BLOCKED: no v14 production dependency publication permitted, no complete native classic mounted-session differential; do not confuse PHP safety with Epic full parity.",
-        "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED."
+        "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED.",
+        "2026-11-05 UE4 FINAL WEBSITE ACCEPTANCE: original UT4 game7 64247/64247 v14 current, 0 stale and fresh statistics; 334462 unresolved, 413683 common, zero source-confirmed missing. Original nine-file UT4 v383-v511 prior independent full names/imports/exports parity reused without new native test. Read-only source SQL preflight, missing and cross-game read-model services and 18 actual PHP DEV HTTP routes against PRD source, with 26 exact source UI/JSON assertions passed. Unknown mount is not missing or resolved. No code or PRD SQL writes; authenticated PRD browser not exercised. Evidence tests/evidence/ue4/ue4-prd-v14-website-source-closure-20261105.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
-        "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json"
+        "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json",
+        "tests/evidence/ue4/ue4-prd-v14-website-source-closure-20261105.json"
       ]
     },
     {

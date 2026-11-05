@@ -1,0 +1,199 @@
+{
+  "schema": "UE4-original-UT4-source-selected-PRD-website-closure-v1",
+  "verified_date": "2026-11-05",
+  "engine": "ue4",
+  "existing_contract_key": "ue4-website-dependency",
+  "contract_ids": [
+    "F17",
+    "F22"
+  ],
+  "result": "PASS",
+  "scope": "UE4 original UT4 v383-v511 file/header/table/provider/dependency/website operations in fixed contract register. This batch checks current v14 PRD publication and actual web consumer paths, reuses earlier genuine original source/conditional-provider acceptance rather than rerunning original native oracle.",
+  "engine_policy": "uedb5-dependency-pass-ue4-mount-v14",
+  "game": {
+    "game_id": 7,
+    "name": "Unreal Tournament 4",
+    "source_profile": "UT4 clean-master",
+    "file_count": 64247,
+    "verified": 64247,
+    "staged": 64247,
+    "current_v14": 64247,
+    "stale_v14": 0,
+    "invalid_staged": 0,
+    "missing_primary_provider_keys": 0,
+    "stats_current": true,
+    "stats_updated_at": "2026-11-05 09:02:27",
+    "dependency_references": 748145,
+    "common": 413683,
+    "unresolved": 334462,
+    "confirmed_missing": 0,
+    "resolved_physical_links": 0,
+    "package_only": 0
+  },
+  "real_original_versioned_samples": [
+    {
+      "file_id": 1353254,
+      "version": 511,
+      "original_name": "industrial_asset_zoo.umap",
+      "original_sha256": "589dbcaeef20da85553b60c4e2a38f1ae7fec1547f9bd39d5584e81db8428709",
+      "source_unresolved": 440,
+      "source_common": 87,
+      "confirmed_missing": 0,
+      "physical_provider_links": 0
+    },
+    {
+      "file_id": 1340389,
+      "version": 510,
+      "original_name": "UT4_Base_1stP_AnimBP.uasset",
+      "original_sha256": "7b77fc720ae5b65ec0581ced282d41bc2ed054091d69092a71b5358142149adb",
+      "source_unresolved": 28,
+      "source_common": 175,
+      "confirmed_missing": 0,
+      "physical_provider_links": 0
+    },
+    {
+      "file_id": 1355626,
+      "version": 493,
+      "original_name": "WeaponTutorialMap.umap",
+      "original_sha256": "4ef83f68a3da5b8e0123ad82307303a7c9e4ddabb0ac5f7648c60610db3af2f7",
+      "source_unresolved": 104,
+      "source_common": 71,
+      "confirmed_missing": 0,
+      "physical_provider_links": 0
+    },
+    {
+      "file_id": 1335845,
+      "version": 383,
+      "original_name": "EditorHelp.uasset",
+      "original_sha256": "4cf09992bad6dc5e967634c418fceec8a172433adc2e8d624bcd8f8c84fa25a7",
+      "source_unresolved": 4,
+      "source_common": 6,
+      "confirmed_missing": 0,
+      "physical_provider_links": 0
+    }
+  ],
+  "production_readonly_preflight": "DEV PHP 8.5 original Uedb5GameDependencyPassService::preflight, current game policy, current statistics, PdoGameCatalogListQuery and source-freshness against PRD Lelly-pc MySQL SET TRANSACTION READ ONLY and rollback; verified all 64,247 current and no stale/invalid or missing primary-provider key.",
+  "production_readmodels": {
+    "publication_freshness": "64247 verified, 64247 current, 0 stale",
+    "confirmed_missing_objects": 0,
+    "confirmed_missing_packages": 0,
+    "missing_file_rows": 0,
+    "missing_package_rows": 0,
+    "cross_game_rows": 0,
+    "source_unresolved_separate_from_missing": true
+  },
+  "website_http": {
+    "method": "Actual PHP 8.5 DEV HTTP GET requests with PRD source-indexed read-only metadata; no static HTML simulation",
+    "response_count": 18,
+    "http_200_valid": 18,
+    "routes": [
+      "games",
+      "ut4-unresolved",
+      "ut4-confirmed-missing",
+      "ut4-legacy-game-page",
+      "ue4-v511-fileinfo",
+      "ue4-v510-fileinfo",
+      "ue4-v383-fileinfo",
+      "ue4-v493-fileinfo",
+      "ue4-v511-uses",
+      "ue4-v383-imports",
+      "ue4-v511-json",
+      "ue4-v510-json",
+      "ue4-v383-json",
+      "ue4-download-info",
+      "global-missing",
+      "ue3-regression",
+      "ue2-regression",
+      "ue1-regression"
+    ],
+    "production_authenticated_browser_tested": false
+  },
+  "website_assertions": {
+    "total": 26,
+    "passed": 26,
+    "cases": [
+      "18 actual HTTP routes 200 without server errors",
+      "game list original UT4 334462 unresolved and source-current missing=0",
+      "legacy UT4 original map has 440 unresolved and 87 common",
+      "UT4 game-files unresolved filter matches original map",
+      "UT4 game-files unresolved source counter exact",
+      "UT4 confirmed-missing filter shows no matching files",
+      "industrial_asset_zoo.umap exact original unresolved/common",
+      "industrial_asset_zoo.umap no fabricated physical provider link",
+      "industrial_asset_zoo.umap serialised Imports navigation",
+      "UT4_Base_1stP_AnimBP.uasset exact original unresolved/common",
+      "UT4_Base_1stP_AnimBP.uasset no fabricated physical provider link",
+      "UT4_Base_1stP_AnimBP.uasset serialised Imports navigation",
+      "EditorHelp.uasset exact original unresolved/common",
+      "EditorHelp.uasset no fabricated physical provider link",
+      "EditorHelp.uasset serialised Imports navigation",
+      "WeaponTutorialMap.umap exact original unresolved/common",
+      "WeaponTutorialMap.umap no fabricated physical provider link",
+      "WeaponTutorialMap.umap serialised Imports navigation",
+      "1353254 JSON gated current with no physical links",
+      "1340389 JSON gated current with no physical links",
+      "1335845 JSON gated current with no physical links",
+      "UT4 Uses links scoped to actual published resolved links",
+      "UT4 historic v383 import tab original count",
+      "UE3 original source regression intact",
+      "UE2 original source regression intact",
+      "UE1 File Info still renders"
+    ]
+  },
+  "acceptance_observations": [
+    "Games lists UT4 334,462 source unresolved and 0 confirmed missing with fresh current statistics.",
+    "UT4 original v511 industrial_asset_zoo.umap has 440 unresolved and 87 common; legacy Game page, Game Files source filter and File Info agree.",
+    "Version 510, 493 and 383 original source items display their exact unresolved/common counters; a physical index is not interpreted as mounted provider without native context.",
+    "Actual confirmed-missing filter returns 0, instead of interpreting 334,462 source-unresolved as missing.",
+    "JSON dependency endpoints for v511, v510 and v383 show valid current status and no invented physical requires/required_by links.",
+    "Uses view is scoped to established provider links; Imports original source table view remains available.",
+    "Missing and cross-game original read-model queries return source-confirmed 0 without false missing.",
+    "UE1, UE2 and UE3 previously accepted File Info outputs remain HTTP 200 and source-correct."
+  ],
+  "old_native_parity_reused": {
+    "path": "tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json",
+    "sha256": "fcd7ca4eed757db9b7b55ae4871a326cc25437d1383ca9820fca0b4f454e74ae",
+    "original_independent_names": 5146,
+    "original_independent_imports": 1488,
+    "original_independent_exports": 7557,
+    "original_mismatches": 0,
+    "source_version_sample_range": "v383-v511, original UT4 source"
+  },
+  "epic_source_authority": {
+    "selected": "UT4_clean_master",
+    "source_root": "L:\\Source\\Games\\UT4\\UnrealTournament",
+    "files_sha256": {
+      "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\Core\\Public\\UObject\\ObjectVersion.h": "5acc8d00b4960c5e3cbe66a06bd8140c23f839a5777e4e0db64934c6d511e83e",
+      "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\LinkerLoad.cpp": "e6b4bd2f16d4b54fc66569b3f7e63995d9892c36314bae196f19d39644a3fa36",
+      "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\PackageFileSummary.cpp": "e397b3a6122677adc0df9a8a3143b187da1c79926c58fbeb3a0980e9a70562d4",
+      "L:\\Source\\Games\\UT4\\UnrealTournament\\Engine\\Source\\Runtime\\CoreUObject\\Private\\UObject\\ObjectResource.cpp": "0c9c24041a14a6b9f1cd27fe35a88336b5c6179e2a02e91bb883c41f907d40dd"
+    },
+    "earliest_4_0_2_and_latest_4_27_2": "Historical branch context only; not substituted for UT4-specific source"
+  },
+  "current_product_source_sha256": {
+    "catalog/game-page.php": "e1eedca00844297bf943f1f72271e5395745f46c98572f997cd9b966f4cce34e",
+    "catalog/games.php": "86c4dc0de87d5d277ba492c5b056929a25cbb769ba8a31c1f7f5486f82920260",
+    "catalog/game-files.php": "c7852065223cd3e09e682340d3c8c8d92677e1f7ac0f84349ffbbfa4cbf493f5",
+    "catalog/file-info.php": "9721ddcc1b7907f002ed74b0f368dd603beace84c10cd5622ded2f0321ef462a",
+    "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+    "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
+    "catalog/download-info.php": "f78f12c8b6dc31986daa92e13014316aac96a6adc655b039244613b8e292874d",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php": "b3c6b119811c0a2447129674b62cc18b0e8b92008dc03591d0f8fc60a1d3486c",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "36b5be8e7b8a1cbc0bf1a5d19123d00a1409714fa1a1efbad82a17c1a53296f4",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70"
+  },
+  "temporary_verification": "D:/Temp/UnrealDB/ue4/website-v14",
+  "limits_and_nonclaims": [
+    "Unknown original mounted provider search order remains source unresolved; zero confirmed missing is not full dependency resolution.",
+    "No new Epic native UE4 compiled session or native mounted VerifyImport was run; old original/conditional tests reused.",
+    "No game-source payload loading, rendering or object instantiation was claimed.",
+    "Direct authenticated PRD HTTP/browser not exercised; PHP GET was on DEV with original PRD read-only database.",
+    "No PRD database/source-file writes from verification, no production PHP code change necessary."
+  ],
+  "native_ue4_oracle_runs_this_batch": 0,
+  "production_database_writes_this_batch": 0,
+  "original_package_byte_modifications": 0,
+  "new_contract_ids": 0
+}

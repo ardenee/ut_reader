@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## UE4 closeout — 5 November 2026
+
+**UE4 6/6 PASS; fixed UnrealDB contract register 32 PASS / 0 BLOCKED.** This is closure of the defined file/header/table/VerifyImport-classic/provider/dependency/website operations, not a claim to all possible native Unreal Engine runtime behavior.
+
+**UT4 game #7 production:** 64,247 verified files, 64,247 staged, 64,247 source-current UE4-mount-v14 dependency results; zero stale, zero invalid staged, zero missing primary provider keys. Cached game statistics refreshed 5 November 2026 09:02:27. Source references 748,145 total, of which 413,683 common and 334,462 unresolved; zero source-confirmed missing and zero authoritative physical mounted provider links. Unknown native mounts are not classified as missing.
+
+**UE4 F17/F22 website:** 18 actual PHP HTTP 200 DEV routes using PRD read-only original metadata and 26 exact source/UI assertions PASS; actual missing and cross-game query services source-current. Original UT4 files include v511 industrial_asset_zoo.umap #1353254 (440 unresolved, 87 common), v510 UT4_Base_1stP_AnimBP.uasset #1340389 (28, 175), v493 WeaponTutorialMap.umap #1355626 (104, 71), and v383 EditorHelp.uasset #1335845 (4, 6). Games, unresolved vs confirmed missing filter, legacy Game, File Info, Imports/Uses, dependency JSON and Download Info checked; UE1, UE2, UE3 controls still accurate.
+
+**Original-source scope:** UT4 clean-master source authority matches all four pinned Epic source SHA-256 anchors; original independent nine-file original names/imports/exports and conditional provider/isolated publisher acceptance reused rather than rerun. UE4 4.0.2 and UE4 4.27.2 provide release-boundary context only. No new production PHP changes, native runtime session, PRD SQL writes or authenticated PRD browser run. Evidence [current UT4 website acceptance](../tests/evidence/ue4/ue4-prd-v14-website-source-closure-20261105.json), [previous original UT4 source parity](../tests/evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json), [fixed register](../tests/contracts.json).
+
+---
+
 ## UE3 fully closed — 5 November 2026
 
 **UE3 6/6 PASS, zero remaining UE3 blockers** in the fixed UnrealDB operation register. All engines now show **31 PASS / 1 BLOCKED**; UE4 website dependency remains open. Existing Jan-2008 Epic UE3 original UT3 v512 licensee0 reader, complete table/VerifyImport/provider-conditional evidence reused without native reruns.

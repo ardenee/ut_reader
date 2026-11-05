@@ -2,7 +2,14 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
-## Current acceptance decision — 5 November 2026: UE3 closure
+## Current acceptance decision — 5 November 2026: UE4 closeout
+
+**32 PASS / 0 BLOCKED** in the fixed 32-operation UE1–UE5 register; UE4 now **6/6 PASS** within its implemented original file/metadata/provider/dependency and website scope. UT4 PRD game7 has 64,247/64,247 current v14 dependency publications, 0 stale, current statistics, 334,462 unresolved and 0 source-confirmed missing. DEV PHP real HTTP on original PRD read-only metadata: 18 valid GETs and 26 source-accurate assertions, with earlier UT4 clean-master v383-v511 original parser/provider evidence reused. Zero new production code/native runs. Direct authenticated PRD browser was not tested; original mounted loader search order is still unknown and unresolved, not falsely missing.
+
+See [UE4 final website](evidence/ue4/ue4-prd-v14-website-source-closure-20261105.json), [UE4 original source tests](evidence/ue4/ue4-original-version383-511-first-latest-source-six-codepaths-20261102.json) and [single live register](contracts.json).
+
+## Historical UE3 acceptance decision — 5 November 2026
+
 
 The fixed 32-operation register is now **31 PASS / 1 BLOCKED**. UE3 is **6/6 PASS** in its selected UT3 v512 source/metadata/provider/publication/website scope. Actual PRD source-current v14 covers UT3 6,722/6,722 verified files and 0 stale, 1,511,557 unresolved and 0 source-confirmed missing. 18 actual DEV PHP HTTP reads against original PRD metadata, 22 source-accurate UI assertions and read-only missing/cross-game source-model verifiers passed. UE3 Jan-2008 Epic source hash matches retained earlier byte/reader/provider evidence. No new native run or PHP production source change was required.
 
