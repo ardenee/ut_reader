@@ -1,0 +1,89 @@
+{
+  "date": "2026-11-05",
+  "scope": "Targeted UE1 file-format specification audit of active parser and UEDB5 table bridge. Adds evidence to existing ue1-tables contract; not a new acceptance case or global Epic certification.",
+  "baseline_commit": "c9aa5bad",
+  "result": "TARGETED_EDGE_FIX_VERIFIED_WITH_UNRESOLVED_SOURCE_PROVENANCE",
+  "verified_fixes": [
+    {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+      "rule": "Selected Unreal v1.200 name operator reads at most 63 bytes without requiring on-disk trailing zero; UT99 v400 reads NUL-terminated names before v64",
+      "actual_before": "63-byte original Unreal-style v61 name consumed a zero from Flags and failed at file EOF",
+      "actual_after": "63-byte Unreal source-style and 63-byte UT99 NUL-terminated cases each decoded name length 63 and Flags=458752"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php",
+      "rule": "Signed compact-index magnitude fits the represented signed int32",
+      "actual_after": "0, positive max, negative min accepted; positive and negative overflows rejected"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php",
+      "rule": "Versions below 34 have a different summary layout",
+      "actual_after": "Pre-v34 header fails closed with distinct diagnostic"
+    }
+  ],
+  "original_cpp_source_sha256": {
+    "Unreal_v1200_Core_Src_UnFile.cpp": "28501f39289459447b6b186371b9fef9d5bc01b84f87f29475cce5ca06e1f2ac",
+    "Unreal_v1200_Core_Inc_UnName.h": "281527f7adb81f182b119f2e4aef9d45e5fad2efe6c7b14749465222b5fe3633",
+    "UT99_v1400_Core_Src_UnName.cpp": "3d8ab9316fcb2bd88710f4c24762664c4423493db84876e96ef88a0069e302d3"
+  },
+  "verified_final_source_sha256": {
+    "catalog/src/Infrastructure/Readers/CatalogUE1BinaryStream.php": "b10170a4e2fcdd58176492be698c4210b1d500ac16db5d69c0661450d3460f9a",
+    "catalog/src/Infrastructure/Readers/CatalogUE1PackageReader.php": "856c19936425c342d4e7d297054a62b1c41de22b36cbe1e617f39a082b66a43e"
+  },
+  "temp_verifier_sha256": {
+    "D:/Temp/UnrealDB/UE1/audit-name-boundary-20261105.php": "d3d5bab6048af258be4c68a303fb53c90009b0046f6d99bf3884fd73f8f21adb",
+    "D:/Temp/UnrealDB/UE1/verify-ue1-compact-and-header-boundaries-20261105.php": "3d6e4cc051bfedab46c97467a4796d7a18cb9f5c3e534b5f2feab5667ff8d032",
+    "D:/Temp/UnrealDB/UE1/verify-real-unreal-v61-after-name-boundary-20261105.php": "a307a4374d5b4258cdc31e7761295db55622ba2352cf14b6ba0e217b756fa32",
+    "D:/Temp/UnrealDB/UE1/audit-ue1-four-original-snapshots-20261105.php": "58641bf58814750584d9c1016748994664544d8f3cc99f34b77975cebd7dfa93"
+  },
+  "verified_original_files": [
+    {
+      "case": "Unreal v1.200 v61",
+      "sha256": "198ea3d832875767932c9539fb2fedbea357b4cb670ed41d77f74f213ea74576",
+      "result": "34 names/3 imports/16 exports; selected-source parse identical to prior baseline"
+    },
+    {
+      "case": "UT99 v432 Engine.u",
+      "sha256": "d6d016aa28cc3880862770c9965ce67a5feac1ef04f3412ddafe8fc14ea1f695",
+      "result": "exact archived table + snapshot regression PASS"
+    },
+    {
+      "case": "UT99 469f Engine.u",
+      "sha256": "6466cc189183b4eaf36d80339ced9dac8b0711d6487930d6b213feccfb26620b",
+      "result": "exact archived table + snapshot regression PASS"
+    },
+    {
+      "case": "UE2 Runtime Engine.u",
+      "sha256": "779492bc0ee2bdd170217705715534352a671614745d169fd4b90a407ecb74cf8937",
+      "result": "cross-engine isolation archived regression PASS"
+    }
+  ],
+  "original_genuine_regression": "Four current original-file SHA identities matched archived reader/game snapshot manifest exactly (4/4). The retired C:/Temp file locations were replaced with original matching SHA files at D:/Temp in a disposable TEMP-only regression driver. Frozen original script and manifest unmodified.",
+  "unresolved_findings": [
+    {
+      "finding": "Unreal 227k conditional archetype layout is gated by a single game-wide v227 summary Boolean, not independently authenticated runtime build identity",
+      "decision": "NOT_CLOSED",
+      "action": "split summary source/version from compiled 227k FObjectExport dispatch; require explicit runtime provenance/diagnostic ambiguity"
+    },
+    {
+      "finding": "UE1 Unreal UEDB5 table snapshot builder discards parsed archetypeIndex despite reader retaining it",
+      "decision": "NOT_CLOSED",
+      "action": "version the export snapshot schema for optional archetype-index field and plan scoped resnapshot"
+    },
+    {
+      "finding": "UEDB5 name snapshot stores normalized text and flags but not original serialized name bytes or code-unit width",
+      "decision": "NOT_CLOSED",
+      "action": "preserve raw names in versioned snapshot if byte-for-byte standalone roundtripping is required"
+    },
+    {
+      "finding": "Direct no-profile parser constructions cannot always choose v1.200 vs UT99 pre64 name operator without known game-loader provenance",
+      "decision": "NOT_CLOSED",
+      "action": "explicit game/source argument at direct diagnostics where required"
+    }
+  ],
+  "existing_native_full_coverage_not_extended": true,
+  "prd_database_writes": 0,
+  "original_package_modifications": 0,
+  "native_engine_reruns": 0,
+  "new_contract_ids": 0
+}

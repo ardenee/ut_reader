@@ -57,6 +57,13 @@ final class CatalogUE1PackageReader
         $packed = $reader->u32();
         $version = $packed & 0xffff;
         $licensee = ($packed >> 16) & 0xffff;
+        // Pre-v34 Unreal packages omit the PackageFlags summary field.
+        // This source-defined v34+ reader must not interpret that older
+        // header as the 44-byte classic summary.
+        if ($version < 34) {
+            throw new RuntimeException('UE1 package version ' . $version
+                . ' requires the separate pre-v34 header format.');
+        }
         $flags = $reader->u32();
 
         $this->header = $this->blankHeader();
@@ -172,7 +179,12 @@ final class CatalogUE1PackageReader
             $entryOffset = $reader->tell();
             try {
                 $name = $version < 64
-                    ? $reader->cstring($this->engineKey === 'UE1')
+                    ? ($this->unrealV227SummarySemantics && $version <= 61
+                        // Original Unreal v1.200 caps the FArchive::String
+                        // name at 63 bytes without requiring an archive NUL.
+                        // UT99 v400's older name operator instead scans NUL.
+                        ? $reader->unrealV120Name()
+                        : $reader->cstring($this->engineKey === 'UE1'))
                     : $reader->fstring($version, $this->engineKey === 'UE1');
                 $flags = $reader->u32();
             } catch (Throwable $error) {

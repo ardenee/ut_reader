@@ -158,6 +158,12 @@ final class CatalogUE1BinaryStream
             $value |= ($byte & 0x7f) << $shift;
             $shift += 7;
         }
+        // FCompactIndex is an INT, not an arbitrary-precision LEB128.
+        // The final byte can encode a magnitude outside signed 32-bit;
+        // reject it rather than accepting an impossible table reference.
+        if ($value > ($negative ? 0x80000000 : 0x7FFFFFFF)) {
+            throw new RuntimeException('UE1 compact index exceeds signed int32 range.');
+        }
         return $negative ? -$value : $value;
     }
 
@@ -182,6 +188,26 @@ final class CatalogUE1BinaryStream
             $value .= $character;
         }
         throw new RuntimeException('Legacy package string reaches end of file without a terminator.');
+    }
+
+    /**
+     * Original Unreal v1.200 FArchive::String(Name, NAME_SIZE=64):
+     * deserialize at most 63 bytes, then terminate the in-memory name.
+     * An exactly 63-byte name has no on-disk NUL; the next byte is flags.
+     * UT99's v400 pre-64 name operator uses a different NUL-terminated
+     * loop, so this method must be selected by the Unreal game loader.
+     */
+    public function unrealV120Name(): string
+    {
+        $raw = '';
+        for ($count = 0; $count < 63; $count++) {
+            $byte = $this->bytes(1);
+            if ($byte === "\0") {
+                return self::fromSourceAnsi($raw);
+            }
+            $raw .= $byte;
+        }
+        return self::fromSourceAnsi($raw);
     }
 
     public function fstring(int $version, bool $sourceAnsi = false): string
