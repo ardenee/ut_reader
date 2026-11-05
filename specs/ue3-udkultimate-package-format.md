@@ -9,7 +9,7 @@ This specification documents the latest UE3 implementation present in the suppli
 - Source tree: `Unreal Engine [v3.0] UDKUltimate [05-11-17]/UDKUltimate`
 - Core source: `Development/Src/Core`
 
-This tree is used as the primary UE3 source of truth. Earlier UE3 trees in the repository are revision evidence only and must not silently replace this implementation.
+This tree is the authority for the **UDKUltimate engine revision documented here**, not for every UE3 game or the original UT3 runtime. The July-2013 UE3 Core tree and earlier revisions are separately available and must be selected by the target file's engine/game provenance. Engine-wide serialization findings belong to this UE3 specification; UT3-specific native or UnrealScript game rules belong to the UT3 addendum. Do not transfer later UDK loader behavior into UT3 v512 merely because the package-version reader supports backward compatibility.
 
 The latest package version in this tree is `VER_LATEST_ENGINE = 820` (the enum resolves through `VER_AUTOMATIC_VERSION_PLUS_ONE - 1`). Licensee version is 0. `GPackageFileMinVersion = 491`.
 
@@ -451,3 +451,18 @@ A UE3 reader must therefore not be implemented as “UE2 with a newer version nu
 ## Next specification
 
 The next target is **UE3 dependency resolution**, using this same UDKUltimate source tree as the primary authority and documenting only source-proven compatibility/fallback behavior.
+
+## Engine addendum — July 2013 UE3, UDK variants and package compression (2026-11-05)
+
+This section covers **general engine format and loader code** only. No UT3 gameplay classes, maps, game-source overrides or patch classification is defined here.
+
+The following source revisions are distinct and must not be merged into one inferred runtime: `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]`, `[05-03-2011]`, `[07-22-2013]`, and `Unreal Engine [v3.0] UDKUltimate [05-11-17]\UDKUltimate`. The final folder's date does not prove its implementation is later than July 2013 in every feature; actual source-defined version branches govern.
+
+- January 2008 UE3 name-map loading filters 64-bit client/server/editor context bits before constructing effective names. July 2013 and UDKUltimate loaders explicitly disregard those serialized context flags in the name map. The on-disk flags remain part of the name-entry serialization. This is a **runtime revision difference**, not a different game-specific file field.
+- Core import compatibility code evolves across revisions. Later engines contain class remapping and cooked-reference paths beyond January 2008. A later runtime's interpretation of an older package is not necessarily the interpretation of the original older executable.
+- Summary and export fields are version-gated. Examples retained in the documented later family are the additional-cook field at 516, component-map removal at 543, thumbnail offset at 584, cross-level metadata at 623 and texture allocation at 767. These rules are engine-wide for the source revision where they are defined.
+- UDKUltimate Xbox 360 compression uses `XMemCreateDecompressionContext(XMEMCODEC_LZX)` and `XMemDecompress`, with a documented four-byte compressed-buffer padding convention. This does not validate UnrealDB's independent generic LZX decoder by itself.
+
+**Original later-engine fixture result:** UE3 v813/0 Xbox 360 `DM-Deck_LOC_INT.xxx` and v820/0 Xbox 360 `UDK-UDKUltimate_LOC_INT.xxx` fail the current PHP LZX decoding path (`Invalid LZX block type=4` and `Invalid or incomplete LZX Huffman table`). A v820/0 PS3 ZLIB sample `ENVYENTRY.XXX` parses successfully, with 60 names, 18 imports and 18 exports. These are genuine-package tests, not an original compiled-XMem byte differential. LZX root cause and general later-console package certification remain **OPEN**; do not guess a window or padding fix.
+
+Supporting evidence is source-scoped in `tests/evidence/ue3/ue3-udk-original-corpus-20261105.json`. Retail UT3 game-source and official patch/package identity belong separately in `specs/ut3-v512-package-format.md` and its game-only evidence. No engine revision automatically supplies UT3 gameplay rules.

@@ -1,0 +1,89 @@
+{
+  "date": "2026-11-05",
+  "kind": "original-installed-retail-game-vs-local-UT3-Patch5-archive hash differential",
+  "scope": "UT3-only game package provenance; no native gameplay/engine compilation parity",
+  "archive": {
+    "path": "\\\\192.168.0.55\\l$\\Updates\\UT3\\UT3-Patch5.exe",
+    "physical_size": 343926484,
+    "container": "self-extracting RAR (7-Zip listing)",
+    "extraction_path": "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\official-patch5-fixtures\\Patch",
+    "extraction_status": "six selected members extracted without running installer",
+    "installer_executed": false
+  },
+  "package_matches": [
+    {
+      "name": "UTGame.u",
+      "sha256": "4afc01d750a21a33d2ab1dcf0cb7b914fb4be11f2c4f265b5aef0d8919a82927",
+      "byte_exact": true,
+      "version": 512,
+      "licensee": 0
+    },
+    {
+      "name": "UTGameContent.u",
+      "sha256": "144f38e75e3be47eb2d332b8bd798b3cb584573e8777be361e4275f3d5d29647",
+      "byte_exact": true,
+      "version": 512,
+      "licensee": 0
+    },
+    {
+      "name": "UT3Gold.u",
+      "sha256": "e9fdb8134ec16db4f6130b9dd901620dc54c9c8cb2fb8adc7825c1ca0adc7c5e",
+      "byte_exact": true,
+      "version": 512,
+      "licensee": 0
+    },
+    {
+      "name": "UT3GoldGame.u",
+      "sha256": "92bab172fbd43f9bb6ba87a8e2479af0f97747c127752f01169850142eb55f2b",
+      "byte_exact": true,
+      "version": 512,
+      "licensee": 0
+    },
+    {
+      "name": "Core.u",
+      "sha256": "1384474da4bed048b1b3df3bdad0d2b9e0a1aa4d6eeadca2dde894b9f9171993",
+      "byte_exact": true,
+      "version": 512,
+      "licensee": 0
+    }
+  ],
+  "executable": {
+    "patch5_sha256": "92182d30b254bda3d4f7d71337976964d51568cf8644f96751e64adc3424d021",
+    "installed_sha256": "097518615da0fe4ed73f104186121a58cd69ff30be1007e770fa2df0473cd70f",
+    "gamespy_client_sha256": "097518615da0fe4ed73f104186121a58cd69ff30be1007e770fa2df0473cd70f",
+    "same_size": 28505368,
+    "installed_equals_gamespy_client": true,
+    "installed_equals_patch5": false,
+    "native_loader_semantics_not_inferred": true
+  },
+  "other_media": {
+    "main_iso": "M:\\iso\\Unreal Tournament III.iso",
+    "bonus_iso": "M:\\iso\\Unreal Tournament III (Bonus Disc).iso",
+    "main_iso_listing": "InstallShield CAB chain and MSI, not yet extracted to compare original packages",
+    "regional_disc_archives": "M:\\iso\\Unreal Games, Europe and USA UT3 archives listed but not extracted",
+    "prd_update_dir": "\\\\192.168.0.55\\l$\\Updates\\UT3",
+    "other_named_candidates": [
+      "UT3 - Patch4.exe",
+      "UT3 - Patch5.exe",
+      "UT3 - TitanPack.exe",
+      "Patches_GameSpy\\Client\\UT3.exe"
+    ],
+    "claim_about_vendor_authenticity": "not cryptographically authenticated beyond local inventory"
+  },
+  "source_separation": {
+    "engine_addendum": "specs/ue3-udkultimate-package-format.md (UDK/July2013 engine serialization)",
+    "game_addendum": "specs/ut3-v512-package-format.md (UT3 original class/source and release packages)",
+    "class_name_match": "1,218/1,218 UT3ScriptSource_1.5 class name vs installed original export, previously retained source parity evidence"
+  },
+  "limitations": [
+    "Archive/patch file naming alone does not establish vendor signature or chronological finality",
+    "Base retail ISO package bytes not compared",
+    "Hash parity of packages is not proof original engine binary bytecode parity",
+    "No REA/CDB native loader trace on GameSpy executable; run only if actual UE3 catalogue path discrepancy identified"
+  ],
+  "original_files_modified": false,
+  "prd_database_modified": false,
+  "live_php_code_modified": false,
+  "temporary_copies_only": true,
+  "conclusion": "five PATCH5 packages identical to installed game packages; installed EXE exact GameSpy client match, different from Patch5 executable"
+}

@@ -294,3 +294,21 @@ Use:
 for a bounded count against the real staging DB, then rerun without `--summary` for exact file IDs.
 
 Only active v512/licensee-0 staged rows are considered by this diagnostic.
+
+## UT3 game addendum — release assets, class source and patch provenance (2026-11-05)
+
+**Scope rule:** This section uses UT3-specific source, installed game packages, and the game update media. General UE3 package serialization, archive decompression, name-map implementation and loader revision differences are maintained in the **UE3 engine specification**, notably `specs/ue3-udkultimate-package-format.md`. A UE3/UDK engine code change must not be inserted here as a UT3 gameplay or game-source rule. The `UT3ScriptSource_1.5` directory is different: despite being nested in UDKUltimate, its `Development/Src/UTGame`, `UTGameContent`, `UT3Gold` and `UT3GoldGame` modules contain UT3-specific script and are applicable game-addendum evidence.
+
+The installed `UTGame.u`, `UTGameContent.u`, `UT3Gold.u` and `UT3GoldGame.u` contain 908, 276, 20 and 14 class exports respectively. The named classes match those four `UT3ScriptSource_1.5` modules **1,218/1,218**. January 2008 also provides 32 native `UTGame` C++ files, ten headers and 838 UTGame scripts; they remain useful for UT3-specific file handling. July-2013 `UTGame` provides only 358/908 names from the installed `UTGame.u`. Class-name agreement alone does not prove identical source implementation or script bytecode.
+
+**Original release-media inventory:**
+
+- DEV `M:\iso\Unreal Tournament III.iso` and `Unreal Tournament III (Bonus Disc).iso` are present. The main ISO contains InstallShield installer components (`Data*.cab`, `SetupUT3.exe`, and a game MSI); its original installed UE3 files were **not** extracted or compared in this inspection. The additional regional disc archives in `M:\iso\Unreal Games` have likewise only been inventoried.
+- PRD `\\192.168.0.55\l$\Updates\UT3` includes Patch 4, Patch 5, Titan Pack and GameSpy-related files, plus community packs. These must be classified separately. Their filenames and timestamps alone are not version authority.
+- The local `UT3-Patch5.exe` archive is a RAR self-extracting package containing `Patch\UTGame\CookedPC\*.u` and `Patch\Binaries\UT3.exe`. Six selected members were safely extracted into `D:\Temp\UnrealDB\ue3\spec-review-20261105\official-patch5-fixtures` without running the installer or modifying game folders.
+- The Patch 5 `UTGame.u`, `UTGameContent.u`, `UT3Gold.u`, `UT3GoldGame.u`, and `Core.u` hashes are **byte-for-byte identical** to the installed counterparts; all five hash comparisons passed. This independently anchors the installed v512 game-source class inventory to the Patch 5 release bytes.
+- The Patch 5 `UT3.exe` differs from the installed executable: Patch 5 SHA-256 `92182d30b254bda3d4f7d71337976964d51568cf8644f96751e64adc3424d021`; installed SHA-256 `097518615da0fe4ed73f104186121a58cd69ff30be1007e770fa2df0473cd70f`. The installed executable **exactly matches** `Patches_GameSpy\Client\UT3.exe`, confirming that it is a distinct distributed binary. No native loader parity is inferred from this identity.
+
+Game-update acceptance policy: when a patched package differs, derive actual engine/licensee version and the changed name/import/export structure from its original bytes, compare against applicable game source, and only investigate native binary differences through REA/CDB when an identified UnrealDB operation presents a concrete unresolved mismatch. Do not assume a later patch or community modification silently changes the general UE3 file grammar.
+
+Source evidence: `tests/evidence/ue3/ut3-all-source-revision-provenance-and-installed-class-parity-20261105.json` and exact original Patch 5/installed hash evidence `tests/evidence/ue3/ut3-patch5-original-package-hash-differential-20261105.json`. These are extensions of existing UT3 source provenance, **not** new engine test categories or proof of base-ISO byte equivalence.
