@@ -1145,7 +1145,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1219,7 +1219,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1274,7 +1274,7 @@
       "out_of_scope_native_payload_loading": true,
       "scope_revised_at": "2026-11-02",
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1331,7 +1331,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1392,7 +1392,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1411,8 +1411,8 @@
         "F17",
         "F22"
       ],
-      "status": "BLOCKED",
-      "code_path_evidence": "CONFIRMED_PHP_STATIC_CALLSITES; RUNTIME_EXECUTION_UNPROVEN",
+      "status": "PASS",
+      "code_path_evidence": "ORIGINAL_UE2_79179_OF_79179_CURRENT_PRD_V14_SOURCE_SHA_AND_PHP_HTTP_WEBSITE; 23_EXACT_SOURCE_UI_ASSERTIONS; MISSING_AND_CROSS_EXAMINE_READMODELS",
       "actual_unrealdb_paths": [
         "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php",
         "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php",
@@ -1428,7 +1428,7 @@
         "catalog/missing.php",
         "catalog/game-page.php"
       ],
-      "dispatch_trace": "PdoGameMissingDependencyQuery and PdoGameDependencyCrossExamineQuery -> file-examine-dependencies.php",
+      "dispatch_trace": "UE2 game profile + selected original Epic/game source -> UEDB5 v14 Pass 2 per-game result with source payload SHA -> ue_uedb5_migration_status and ue_uedb5_dependency_edges/packages -> currentOwnerPredicate + cached stats freshness -> PdoGameCatalogListQuery, PdoGameMissingDependencyQuery, PdoGameDependencyCrossExamineQuery, file-examine-dependencies.php, file-examine-paged-core.php, file-info.php, game-files.php, game-page.php; actual PHP HTTP against production PRD SQL",
       "epic_source_anchor_file": "L:\\Source\\Engine\\UE2\\Unreal Engine [v2.5]_ Unreal Warfare [09-29-2007]\\Core\\Src\\UnLinker.cpp",
       "epic_symbol_to_verify": "ULinkerLoad::VerifyImport",
       "game_profiles": [
@@ -1441,17 +1441,19 @@
       "required_fixture": "genuine_consumer_mixed_provider_missing_and_ambiguous_views",
       "acceptance_condition": "Query result and UI status equal stored authoritative edge/outcome",
       "existing_proof_sha_refs": [],
-      "runtime_call_chain_verified": false,
-      "test_authorization": "Actual original PRD UE2 source-selected metadata from Unreal II, UT2003, UT2004 and UE2-owned UT2004 v99 compatibility; code-path parity only, not a PRD dependency republish or native UObject load.",
-      "result_evidence": "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json",
+      "runtime_call_chain_verified": true,
+      "test_authorization": "Actual read-only PRD source-policy v14 UE2 records and PHP HTTP read-models for original Unreal II, UT2003 and UT2004 source-selected files; original native byte/source proof reused without native rerun or fabricated mounted provider.",
+      "result_evidence": "tests/evidence/ue2/ue2-prd-v14-website-source-closure-20261105.json",
       "affected_code_sha256": {
-        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "20ae7e2c26aebf6fa65d633ecc5c19722830811dd0933aee023c2d010614af3d",
-        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "957e835448efa9ab5252ad53e300992689cbd43d66daf3738e4af65ea76a5f26",
-        "catalog/file-examine-dependencies.php": "eb058d84e6fdbc5b49c9daffa60eb08550e7d11a311d09126c6d9bf07540f4bb",
+        "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+        "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "36b5be8e7b8a1cbc0bf1a5d19123d00a1409714fa1a1efbad82a17c1a53296f4",
+        "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
         "catalog/game-missing.php": "ea8b403468f1c5266b18248efdba7088861425e70cf56d59e3c4aaec0c493286",
         "catalog/dependency-cross-examine.php": "9b193729b15c9a641df7c53d9ed6ded0eb1d61a53eba0c61069ce6aefd07d508",
         "catalog/missing.php": "7ad4b1c856fa59d0e09d9e99504ee1622a5c3ee40ef7605b00e4b3f417c7f59a",
-        "catalog/game-page.php": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e"
+        "catalog/game-page.php": "e1eedca00844297bf943f1f72271e5395745f46c98572f997cd9b966f4cce34e",
+        "catalog/file-info.php": "9721ddcc1b7907f002ed74b0f368dd603beace84c10cd5622ded2f0321ef462a",
+        "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a"
       },
       "php_source_sites": [
         {
@@ -1465,8 +1467,8 @@
           "call_site": "new PdoGameDependencyCrossExamineQuery("
         }
       ],
-      "reviewed_at": "2026-11-03",
-      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "reviewed_at": "2026-11-05",
+      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",
@@ -1477,11 +1479,13 @@
         "2026-11-03 production source-correct policy epoch: independent v14 per engine, exact policy plus staged V5 payload SHA required for current SQL/provider outputs; 235239 historical PRD v13 results withheld until separately authorized Pass2; no SQL row relabeled. Source+read-only evidence: tests/evidence/ue5/ue5-500-vs-583-zen-struct-and-all-engine-policy-epoch-20261103.json",
         "2026-11-03 newly traced consumer reachability: file-examine-paged-core.php, file-info.php, download-info.php, api/v1/game-missing-counts.php, cached dashboard statistics and supporting dependency reads can consume direct SQL edges/counters without current engine-specific v14 policy and payload SHA. Original PRD UT4 file 1353254 retains 527 v13 edges (348 previously resolved or package_only). Existing PASS applied only to earlier audited pages; end-to-end consumer publication freshness is not currently certified.",
         "2026-11-03 DEV shared source-path correction and source-correct read gates: isolated original UE5.8.3 classic assets prove unknown mount => source_unresolved and negative mounted set => no exception (fixture only); all five engine v14 policy, source payload SHA, dependency_completed_at and cached timestamp checks exercised in SQLite; read-only PRD v13 examples and 12 actual MySQL EXPLAIN queries checked. Historical v13 missing/resolved links are hidden on tested user-facing read paths. NO PRD SQL writes. Status remains BLOCKED: no v14 production dependency publication permitted, no complete native classic mounted-session differential; do not confuse PHP safety with Epic full parity.",
-        "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED."
+        "2026-11-03 source-only website followup: original PRD read-only check confirmed seven games have 235239 verified files and 0 current source-correct v14 dependency results; UE5 game14 has no staged files. Global Missing Files was reading retired ue_dependency_package_summaries (nonempty historical table), legacy game-page was showing false none, and game-missing was rendering false zero counts and a no-op legacy cleanup button. Corrected these active source paths to use source-current UEDB5 only and show Unavailable when policy publication is stale. Five-engine current/mixed-stale in-memory nonzero projection tests and 6 original PRD MySQL EXPLAIN queries pass, with 4 original game-family file reads. No production SQL writes. Full live HTTP and authoritative v14 PRD outcomes remain BLOCKED.",
+        "2026-11-05 UE2 FINAL WEBSITE ACCEPTANCE: genuine PRD Unreal II game2 1217/1217, UT2003 game4 5082/5082, UT2004 game5 72880/72880, current UE2 v14 and stats, zero stale. Read-only original source-shaped SQL has 7,719,112 unresolved and 0 confirmed missing; no arbitrary provider link claimed. Real PHP DEV HTTP against read-only production MySQL and original packages returned all 16 primary routes, 5 legacy game routes and 6 File Info regression routes HTTP 200; 23 original value/UI assertions pass. Old game-page falsely showed none for unresolved; file-info lacked the distinction between provider links and source refs; both corrected, UE1/UE5 regressions pass. Missing and cross-examine source read models return zero confirmed missing, without promoting unresolved to missing. Existing UE2 native/source/conditional-provider evidence reused; no native rerun. PRD authenticated browser not tested. Evidence tests/evidence/ue2/ue2-prd-v14-website-source-closure-20261105.json"
       ],
       "historical_review_status": "PASS",
       "additional_evidence": [
-        "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json"
+        "tests/evidence/dependency-read-gate-ue1-ue5-20261103.json",
+        "tests/evidence/ue2/ue2-prd-v14-website-source-closure-20261105.json"
       ]
     },
     {
@@ -2695,7 +2699,7 @@
         }
       ],
       "reviewed_at": "2026-11-02",
-      "production_rollout_status": "PRD_UE2_EXISTING_V13_DEPENDENCY_DATA_NOT_REGENERATED_AFTER_READER_CORRECTION",
+      "production_rollout_status": "PRD_UE2_79179_VERIFIED_79179_CURRENT_V14_0_STALE_NO_NATIVE_RETEST_2026_11_05",
       "review_findings": [
         "UE2 CODE-PATH PASS: actual original PRD files, independent original serialized byte and UEDB5 source table comparisons (10 files, 1152 names,333 imports,648 exports, exact offsets/fields), source-specific original package/version+licensee gates and four consolidated UE2 VerifyImport consumers.",
         "UE2 PROVIDER CORRECTION: source-selected root package checked before recursive import matching; runtime mount absent preserves unresolved; actual selected 158 original import/export edges; five genuine source provider-choice cases correctly handle ambiguity; exact physically ordered source context consumes verified actual duplicate providers only.",

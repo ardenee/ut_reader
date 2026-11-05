@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## UE2 fully closed — 5 November 2026
+
+**UE2 7/7 PASS, zero blocked within the seven defined UnrealDB operations.** The fixed all-engine register is now **30 PASS / 2 BLOCKED**; only the distinct UE3 and UE4 website dependency contracts remain open. Accepted UE2 reader/table/native-source and UE2-owned UT2004 v99 compatibility evidence were reused, not rerun.
+
+**Original PRD source-pinned data:** Unreal II 1,217/1,217, UT2003 5,082/5,082, UT2004 72,880/72,880. **79,179/79,179** verified and current under UE2-mount-v14 with zero stale and current game stats. Production has 7,719,112 unresolved references and zero source-confirmed missing. Zero missing is NOT proof that all dependencies are resolved; no native mounted provider was invented.
+
+**UE2 website F17/F22:** original source files #111205 U2.u (197 unresolved, 1,117 common), #149124 XGame.u (1,138, 530) and #111557 Construction_S.utx (47, 18) matched source SQL values and rendered counts. UE2-owned UT2004 legacy file #111505 AW-Labels.utx remained source-correct (five common). Games, filtered Game Files, old Game page, File Info, Uses examiner, source-gated JSON and missing/cross-game read models were verified using real DEV PHP HTTP and/or PRD SELECT-only MySQL against original retained files. 23 named UI assertions passed. Corrected the old Game page omission of unresolved and clarified zero physical links versus source references in File Info. UE1 and UE5 regressions passed.
+
+**Scope:** Earlier original native/source/conditional-provider evidence was reused without reruns. UE2 unmounted provider lookups remain unresolved rather than missing/resolved. An authenticated PRD browser session was not independently tested; DEV HTML against actual PRD source/MySQL and PRD-deployed source SHA checks provide the website acceptance. No original package/metadata/PRD SQL modifications were made by this batch.
+
+Evidence: [UE2 PRD v14 website closure](../tests/evidence/ue2/ue2-prd-v14-website-source-closure-20261105.json), [accepted UE2 original source parity](../tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json), [single contract register](../tests/contracts.json).
+
+---
+
 ## 4 November 2026 — all-game dependency updater and unresolved catalogue totals
 
 The current source-pinned UE1 v14 publications contain **4,045,795 unresolved references for UT99** and **711,776 for Unreal Gold**, with **zero source-confirmed missing references**. The previous public Games page showed 0/0 because it only presented missing and official-base-game missing aggregates. `catalog/games.php` now displays a separate **Unresolved dependencies** column, leaving **Missing (confirmed)** and **Missing base-game (confirmed)** explicitly distinct. Totals are derived from source-published, fresh cached `dependency_count - resolved - missing - package_only - common` (no new SQL schema/migration). Stale game policies continue to display **Unavailable**, never fabricated zeros.

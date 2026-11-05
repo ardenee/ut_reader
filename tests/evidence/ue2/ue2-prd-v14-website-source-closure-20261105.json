@@ -1,0 +1,169 @@
+{
+  "schema": "UE2-website-source-selected-current-PRD-closure-v1",
+  "verified_date": "2026-11-05",
+  "engine": "ue2",
+  "existing_contract_key": "ue2-website-dependency",
+  "contract_ids": [
+    "F17",
+    "F22"
+  ],
+  "result": "PASS",
+  "scope": "Actual UnrealDB UE2 website/durable metadata read contracts for three independently source-selected games; pre-existing Epic original byte, header/table/VerifyImport/native-mount conditional evidence reused, not rerun.",
+  "production_database": "PRD Lelly-pc MySQL queried over DEV in SET TRANSACTION READ ONLY, transaction rolled back. No PRD source package or metadata writes from audit.",
+  "engine_policy": "uedb5-dependency-pass-ue2-mount-v14",
+  "games": [
+    {
+      "id": 2,
+      "name": "Unreal II",
+      "verified": 1217,
+      "current": 1217,
+      "stale": 0,
+      "invalid_staging": 0,
+      "missing_provider_keys": 0,
+      "stats_current": true,
+      "dependency_references": 110970,
+      "common": 39295,
+      "unresolved": 71675,
+      "missing_confirmed": 0,
+      "resolved": 0,
+      "stats_updated_at": "2026-11-04 16:28:15"
+    },
+    {
+      "id": 4,
+      "name": "Unreal Tournament 2003",
+      "verified": 5082,
+      "current": 5082,
+      "stale": 0,
+      "invalid_staging": 0,
+      "missing_provider_keys": 0,
+      "stats_current": true,
+      "dependency_references": 462394,
+      "common": 129084,
+      "unresolved": 333310,
+      "missing_confirmed": 0,
+      "resolved": 0,
+      "stats_updated_at": "2026-11-04 16:46:32"
+    },
+    {
+      "id": 5,
+      "name": "Unreal Tournament 2004",
+      "verified": 72880,
+      "current": 72880,
+      "stale": 0,
+      "invalid_staging": 0,
+      "missing_provider_keys": 0,
+      "stats_current": true,
+      "dependency_references": 10574533,
+      "common": 3260406,
+      "unresolved": 7314127,
+      "missing_confirmed": 0,
+      "resolved": 0,
+      "stats_updated_at": "2026-11-05 07:58:07"
+    }
+  ],
+  "totals": {
+    "verified": 79179,
+    "current": 79179,
+    "stale": 0,
+    "unresolved": 7719112,
+    "confirmed_missing": 0,
+    "common": 3428785
+  },
+  "real_original_package_ui_differentials": [
+    {
+      "game_id": 2,
+      "file_id": 111205,
+      "original": "U2.u",
+      "edge_count": 1314,
+      "common": 1117,
+      "unresolved": 197,
+      "missing": 0,
+      "actual": "legacy game page and file-info match source SQL, 0 invented provider links"
+    },
+    {
+      "game_id": 4,
+      "file_id": 149124,
+      "original": "XGame.u",
+      "edge_count": 1668,
+      "common": 530,
+      "unresolved": 1138,
+      "missing": 0,
+      "actual": "legacy game page and file-info match source SQL, 0 invented provider links"
+    },
+    {
+      "game_id": 5,
+      "file_id": 111557,
+      "original": "Construction_S.utx",
+      "edge_count": 65,
+      "common": 18,
+      "unresolved": 47,
+      "missing": 0,
+      "actual": "legacy game page and file-info match source SQL, 0 invented provider links"
+    },
+    {
+      "game_id": 5,
+      "file_id": 111505,
+      "original": "AW-Labels.utx",
+      "owner": "UE2-owned UT2004 legacy v99 UE1-wire compatibility",
+      "common": 5,
+      "actual": "5 common displayed, no UE1-reader reclassification"
+    }
+  ],
+  "website_checks": {
+    "real_http": "DEV PHP 8.5 built-in server against PRD SELECT-only DB+retained source, real requests not static templating",
+    "http_16": "Games, three File Info, UT2004 compatibility File Info, three Uses exam tabs, four dependency JSON endpoints, three unresolved filtered game file lists, UT2004 confirmed-missing filtered list: all HTTP 200 and no server-rendered errors.",
+    "http_5": "One direct old Game page for each of UE2 games, UT2004 legacy package and UE1 control: all HTTP 200.",
+    "http_6": "Updated File Info for three UE2 originals, UT2004 legacy, UE1 classic and UE5 Zen: all HTTP 200.",
+    "semantic_assertions": 23,
+    "semantic_result": "23 PASS: exact original per-file common and unresolved, games.php 3 totals, zero confirmed missing filter, full source import link preserved, 0 unproved provider links, UT2004 legacy UE2 ownership, UE1 original control, UE5 Zen layout unchanged",
+    "admin_readmodels": "PdoGameMissingDependencyQuery::publicationFreshness, totals, fileRows, packageRows and PdoGameDependencyCrossExamineQuery::fetch all matched three game source publications: zero confirmed missing objects/packages/files, empty cross-game candidate results as no confirmed-missing source rows exist.",
+    "json_provider_links": "Four verified file-examine-dependencies JSON responses ok true, requires=[], required_by=[], because no physical mounted provider selection. Source-unresolved and common import references remain visible through file imports and game files; no missing or provider invented."
+  },
+  "defects_corrected": [
+    {
+      "path": "catalog/game-page.php",
+      "issue": "Legacy game page omitted source-unresolved count and displayed none for packages with unresolved dependencies.",
+      "fix": "Add fresh-policy-scoped SUM(s.unresolved_count) and show unresolved badge in same source-derived table."
+    },
+    {
+      "path": "catalog/file-info.php",
+      "issue": "Files this package uses showed zero links without explaining source-unresolved imports and appeared to claim zero dependencies.",
+      "fix": "Display fresh-source unresolved/common summary next to unchanged File Connections map, and call the linked-provider node Linked provider files."
+    }
+  ],
+  "scope_and_nonclaims": [
+    "Source-policy source unresolved is NOT a confirmed missing package or file; 0 missing is not 100% resolution.",
+    "Without mounted session engine provider order, 0 resolved links cannot be promoted to arbitrary matching provider records.",
+    "The preexisting UE2 genuine byte/table/source/profile/conditional VerifyImport tests are reused without native reruns. Unreal II v110 private build exact native source is not claimed.",
+    "Classic UT2004 UE1-compatible wire format remains under the UE2-owned reader.",
+    "Authenticated PRD browser session has not been independently tested; direct PRD unauthenticated HTTP was previously blocked (403); DEV HTTP+PRD source/MySQL and exact deployed hashes support website read-path acceptance."
+  ],
+  "prior_ue2_original_source_evidence": {
+    "tests/evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json": "8f4a8f8f850a9bf12b797134e78f64cf8f5db43bf8b159408cd8c67ec12e5376"
+  },
+  "production_path_sha256": {
+    "catalog/game-page.php": "e1eedca00844297bf943f1f72271e5395745f46c98572f997cd9b966f4cce34e",
+    "catalog/games.php": "86c4dc0de87d5d277ba492c5b056929a25cbb769ba8a31c1f7f5486f82920260",
+    "catalog/game-files.php": "c7852065223cd3e09e682340d3c8c8d92677e1f7ac0f84349ffbbfa4cbf493f5",
+    "catalog/file-info.php": "9721ddcc1b7907f002ed74b0f368dd603beace84c10cd5622ded2f0321ef462a",
+    "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+    "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php": "b3c6b119811c0a2447129674b62cc18b0e8b92008dc03591d0f8fc60a1d3486c",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "36b5be8e7b8a1cbc0bf1a5d19123d00a1409714fa1a1efbad82a17c1a53296f4",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70"
+  },
+  "temporary_decisive_checks_on_DEV": [
+    "D:/Temp/UnrealDB/ue2/verify-ue2-final-live-prd-v14.php",
+    "D:/Temp/UnrealDB/ue2/verify-ue2-missing-cross-examine-readmodels.php",
+    "D:/Temp/UnrealDB/ue2/exercise-ue2-current-website-http.ps1",
+    "D:/Temp/UnrealDB/ue2/verify-ue2-legacy-game-page-unresolved-http.ps1",
+    "D:/Temp/UnrealDB/ue2/verify-ue2-file-info-source-ref-counts.ps1",
+    "D:/Temp/UnrealDB/ue2/assert-current-ue2-source-website-closure.py"
+  ],
+  "native_engine_tests_run_in_this_batch": 0,
+  "production_SQL_writes_in_this_batch": 0,
+  "original_package_byte_modifications": 0,
+  "new_contract_ids": 0
+}

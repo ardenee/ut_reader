@@ -81,7 +81,8 @@ try {
         . " COALESCE(SUM(s.resolved_count),0) resolved_count,"
         . " COALESCE(SUM(s.missing_count),0) missing_count,"
         . " COALESCE(SUM(s.package_only_count),0) package_only_count,"
-        . " COALESCE(SUM(s.common_count),0) common_count"
+        . " COALESCE(SUM(s.common_count),0) common_count,"
+        . " COALESCE(SUM(s.unresolved_count),0) unresolved_count"
         . " FROM ue_files f"
         . " LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id AND $publicationPredicate"
         . " $where GROUP BY f.id"
@@ -129,7 +130,9 @@ try {
 
     foreach ($files as $file) {
         $deps = '';
-        foreach (['resolved', 'missing', 'package_only', 'common'] as $key) {
+        // An authoritative source-unresolved reference is still a dependency.
+        // Never show 'none' merely because no mounted provider was selected.
+        foreach (['resolved', 'missing', 'package_only', 'common', 'unresolved'] as $key) {
             $count = (int)($file[$key . '_count'] ?? 0);
             if ($count) {
                 $deps .= '<span class="dep ' . $key . '">' . $key . ': ' . $count . '</span>';

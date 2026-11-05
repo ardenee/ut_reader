@@ -2,7 +2,15 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
-## Current UE1 and UE5 acceptance decision (4 November 2026)
+## Current acceptance decision — 5 November 2026
+
+The fixed 32-operation register now records **30 PASS / 2 BLOCKED**: UE1 **7/7**, UE2 **7/7**, UE5 **7/7** within their implemented file/header/table/source-publication/website scopes. UE2 source-current PRD data covers Unreal II, UT2003 and UT2004: 79,179/79,179 verified current v14, zero stale, current game stats. DEV real PHP HTTP with production SELECT-only original data, 23 exact website assertions and the UT2004 v99 compatibility case passed. Two shared presentation fixes prevent unlinked physical providers appearing to mean zero source dependencies. Original reader/native evidence reused without rerun.
+
+**Only UE3 and UE4 website-dependency contracts remain BLOCKED.** Authenticated production browser access was not independently exercised. UE2 has 7,719,112 unresolved and zero source-confirmed missing references; neither implies native mount resolution.
+
+Evidence: [UE2 final website](evidence/ue2/ue2-prd-v14-website-source-closure-20261105.json), [UE2 original parity](evidence/ue2/ue2-real-original-metadata-and-dependency-parity-20261102.json) and [single live register](contracts.json).
+
+## Historical UE1 and UE5 acceptance decision (4 November 2026; superseded by 5 November status)
 
 The fixed 32-operation register now records **29 PASS / 3 BLOCKED**: UE1 **7/7 PASS**, UE5 **7/7 PASS** in their implemented reader, header/table, source-backed publication and website scopes. The final UE1 website dependency contract moved to PASS after the user's PRD-local 85,091-file v14 cutover, independent read-only PRD SQL confirmation, two scoped game statistics rebuilds and nine real DEV HTTP views with current PRD data. Both UE1 games now show numeric Missing badges on catalog/games.php; zero refers to *confirmed missing*, not unknown-mounted providers. The PRD-local orchestrator refreshes stats after future cutovers, and its final verifier rejects stale cache.
 

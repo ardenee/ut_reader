@@ -3160,8 +3160,8 @@
     },
     {
       "path": "catalog/file-info.php",
-      "sha256": "c4ea4c8f865707cb3d64b6effa861f831181dbf37840dd6ff591e7d04b25fdff",
-      "bytes": 18759,
+      "sha256": "9721ddcc1b7907f002ed74b0f368dd603beace84c10cd5622ded2f0321ef462a",
+      "bytes": 20026,
       "engine_hints": [
         "shared"
       ],
@@ -3286,8 +3286,8 @@
     },
     {
       "path": "catalog/game-page.php",
-      "sha256": "3aa3a73c1b24926880e1e23f80f764d7f89b9b88855599480fd441fd9e110f7e",
-      "bytes": 10539,
+      "sha256": "e1eedca00844297bf943f1f72271e5395745f46c98572f997cd9b966f4cce34e",
+      "bytes": 10780,
       "engine_hints": [
         "shared"
       ],

@@ -4358,13 +4358,13 @@
       "from": "catalog/file-info.php",
       "to": "catalog/src/Infrastructure/Archive/CatalogExternalArchiveReader.php",
       "syntax": "static_or_expression",
-      "line": 217
+      "line": 241
     },
     {
       "from": "catalog/file-info.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
-      "line": 218
+      "line": 242
     },
     {
       "from": "catalog/file-maintenance.php",
@@ -4694,7 +4694,7 @@
       "from": "catalog/game-page.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
-      "line": 214
+      "line": 217
     },
     {
       "from": "catalog/game-paks.php",

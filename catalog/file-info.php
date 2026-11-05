@@ -192,8 +192,32 @@ if($isZen){
 }else{
     $usedBy=catalog_dependency_used_by_rows($db,$id,200);
 }
-echo '<div class="card"><h2>File connections</h2><div class="file-relations-map">'
-    . '<div class="file-map-node"><span class="muted">Files this package uses</span><strong>'.count($uses).'</strong><a href="file-examine.php?id='.$id.'&tab=uses">View linked files</a></div>'
+// Link counts and serialized reference counts answer different questions.
+// Show both, so a source-unresolved UE2/UE3 import never looks like no dependency.
+$classicSourceCounts=null;
+if(!$isZen && $dependencyProjectionError===null){
+    $classicSourceCounts=catalog_one($db,
+        'SELECT COALESCE(SUM(p.unresolved_count),0) unresolved_count,'
+        .'COALESCE(SUM(p.common_count),0) common_count '
+        .'FROM ue_uedb5_dependency_packages p '
+        .'WHERE p.file_id=? AND '
+        .\UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('p'),
+        [$id]);
+}
+echo '<div class="card"><h2>File connections</h2>';
+if($classicSourceCounts!==null){
+    $sourceUnresolved=(int)($classicSourceCounts['unresolved_count']??0);
+    $sourceCommon=(int)($classicSourceCounts['common_count']??0);
+    if($sourceUnresolved>0||$sourceCommon>0){
+        echo '<p class="muted">The file links below are established catalogue provider links, '
+            .'not a count of every serialized import. Source-published references additionally include '
+            .number_format($sourceUnresolved).' unresolved and '
+            .number_format($sourceCommon).' common. '
+            .'<a href="file-examine.php?id='.$id.'&amp;tab=imports">Examine Imports</a>.</p>';
+    }
+}
+echo '<div class="file-relations-map">'
+    . '<div class="file-map-node"><span class="muted">Linked provider files</span><strong>'.count($uses).'</strong><a href="file-examine.php?id='.$id.'&tab=uses">View linked files</a></div>'
     . '<span class="file-map-arrow" aria-hidden="true">←</span>'
     . '<div class="file-map-node file-map-current"><span class="muted">Current package</span><strong>'.catalog_h((string)$file['package_name']).'</strong></div>'
     . '<span class="file-map-arrow" aria-hidden="true">←</span>'
