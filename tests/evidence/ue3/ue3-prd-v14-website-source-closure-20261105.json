@@ -1,0 +1,184 @@
+{
+  "schema": "UE3-source-selected-current-PRD-website-closure-v1",
+  "verified_date": "2026-11-05",
+  "engine": "ue3",
+  "existing_contract_key": "ue3-website-dependency",
+  "contract_ids": [
+    "F17",
+    "F22"
+  ],
+  "result": "PASS",
+  "scope": "Actual six UE3 implemented library/website operations; this batch closes only the previously BLOCKED website case; original UE3 reader/native/source/conditional-mount evidence reused, not rerun.",
+  "engine_policy": "uedb5-dependency-pass-ue3-mount-v14",
+  "game": {
+    "game_id": 6,
+    "name": "Unreal Tournament 3",
+    "engine": "UE3",
+    "original_format": "v512 licensee0",
+    "file_count": 6795,
+    "verified": 6722,
+    "staged": 6722,
+    "current_v14": 6722,
+    "stale_v14": 0,
+    "invalid_staged": 0,
+    "missing_primary_provider_keys": 0,
+    "stats_current": true,
+    "stats_updated_at": "2026-11-04 18:35:31",
+    "source_references": 2591525,
+    "common": 1079968,
+    "unresolved": 1511557,
+    "confirmed_missing": 0,
+    "resolved_provider_links": 0,
+    "package_only": 0
+  },
+  "genuine_original_source_file_checks": [
+    {
+      "file_id": 149701,
+      "original_name": "UTGameContent.u",
+      "original_sha256": "9761e936c609479356c89bfbe9d0ff22f9d2893e4b32029416b0922fae082214",
+      "original_imports": 3134,
+      "unresolved": 2700,
+      "common": 434,
+      "confirmed_missing": 0,
+      "linked_provider_files": 0
+    },
+    {
+      "file_id": 1275854,
+      "original_name": "UTResize.u",
+      "original_sha256": "efb98d9185a885661ce3bc8c1412b7edcb271b01b599570b8add713eed170c63",
+      "original_imports": 1761,
+      "unresolved": 1322,
+      "common": 439,
+      "confirmed_missing": 0,
+      "linked_provider_files": 0
+    },
+    {
+      "file_id": 1292076,
+      "original_name": "HauntedGame.u",
+      "original_sha256": "cc1e241c137c01fa998147a3ddb87877d4a613bb92b1a886db929ad0f085f014",
+      "original_imports": 2312,
+      "unresolved": 1269,
+      "common": 1043,
+      "confirmed_missing": 0,
+      "linked_provider_files": 0
+    }
+  ],
+  "duplicate_source_identity": "Two genuine original UTGameContent.u physical file IDs 112339 and 149701 each report 2700 unresolved and 434 common; no physical candidate treated as mounted without actual native context.",
+  "prd_readonly_check": "DEV PHP actual Uedb5GameDependencyPassService::preflight, Uedb5DependencyPublicationScope::isGameCurrent/isGameStatsCurrent and PdoGameCatalogListQuery against original PRD MySQL in SET TRANSACTION READ ONLY followed by rollback. No source package or metadata modifications.",
+  "prd_readmodels": {
+    "publication_freshness": "6722 verified, 6722 current, 0 stale",
+    "missing_objects": 0,
+    "missing_packages": 0,
+    "missing_file_rows": 0,
+    "missing_package_rows": 0,
+    "cross_game_source_candidates": 0,
+    "cross_game_result_rows": 0,
+    "source_unresolved_not_promoted_to_missing": true
+  },
+  "website_http": {
+    "method": "Real PHP 8.5 built-in DEV server GET endpoints against PRD MySQL/source-selected metadata (not static templates)",
+    "response_count": 18,
+    "http_200_valid": 18,
+    "routes": [
+      "games",
+      "ut3-gamefiles-unresolved",
+      "ut3-gamefiles-missing",
+      "ut3-game-page",
+      "ut3-fileinfo-149701",
+      "ut3-fileinfo-1275854",
+      "ut3-fileinfo-1292076",
+      "ut3-examine-uses",
+      "ut3-examine-imports",
+      "ut3-examine-used-by",
+      "ut3-json-149701",
+      "ut3-json-1275854",
+      "ut3-json-1292076",
+      "ut3-download-info",
+      "ut3-missing-global",
+      "ut3-dashboard",
+      "ue2-regression",
+      "ue1-regression"
+    ],
+    "direct_PRD_authenticated_browser_tested": false,
+    "note": "Authenticated production browser not independently exercised. Direct READ ONLY SQL queries are distinct from DEV web GET requests."
+  },
+  "website_assertions": {
+    "total": 22,
+    "passed": 22,
+    "cases": [
+      "18 real HTTP responses 200 and valid",
+      "games.php original UT3 1,511,557 unresolved and 0 confirmed missing",
+      "legacy game page has both original physical UTGameContent files",
+      "legacy game page exact source counters and no invented resolved",
+      "game files unresolved filter matches both source UTGameContent files",
+      "game files unresolved filter exposes counts",
+      "confirmed missing filter returns zero only",
+      "UTGameContent.u source unresolved/common equal real PRD SQL",
+      "UTGameContent.u physical link selection not invented",
+      "UTGameContent.u imports navigation retained",
+      "UTGameContent.u JSON current and no invented mounted physical provider",
+      "UTResize.u source unresolved/common equal real PRD SQL",
+      "UTResize.u physical link selection not invented",
+      "UTResize.u imports navigation retained",
+      "UTResize.u JSON current and no invented mounted physical provider",
+      "HauntedGame.u source unresolved/common equal real PRD SQL",
+      "HauntedGame.u physical link selection not invented",
+      "HauntedGame.u imports navigation retained",
+      "HauntedGame.u JSON current and no invented mounted physical provider",
+      "UT3 Uses UI limits empty state to resolved provider relationships",
+      "UE2 regression source unresolved/common present",
+      "UE1 File Info regression renders"
+    ]
+  },
+  "observations": [
+    "games.php displays 1,511,557 UT3 unresolved and zero confirmed missing with current game statistics.",
+    "Game Files unresolved filter returns both original UTGameContent.u physical files; confirmed-missing filter returns zero.",
+    "Legacy Game page shows source common 434 and unresolved 2700 for both original UTGameContent.u records.",
+    "Three original File Info pages display exact current common/unresolved counters and clarify that zero linked provider files does not mean zero serialized dependencies.",
+    "Three file-examine-dependencies JSON endpoints HTTP 200 return ok with no fabricated mounted Requires/RequiredBy provider links.",
+    "Uses page is explicitly scoped to published provider links; Import tab preserves full serialized original imports.",
+    "UE1 and UE2 File Info regression routes both HTTP 200; UE2 original source counters remain correct."
+  ],
+  "limitations": [
+    "An unresolved dependency is not a source-confirmed missing dependency or a fully resolved one.",
+    "Unknown original loaded runtime mounts cannot be inferred from catalog candidate presence or arbitrary ordering.",
+    "Original UE3 Unreal Engine Jan-2008 source-selected v512 metadata and prior conditional-provider tests reused; no new native session mount/source proof claimed.",
+    "No new production PHP code change was required for UE3. UE2 shared display corrections already deployed.",
+    "No authenticated production browser session or PRD CLI PHP acceptance run was made."
+  ],
+  "prior_ue3_original_source_parity": {
+    "tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json": "d73d98043bcab6b88bfc12560d8d0307099c4e881e2f50abd7d386487f600f5a"
+  },
+  "epic_ue3_source": {
+    "path": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [01-00-2008]\\epic.jan2008\\UnrealEngine3\\Development\\Src\\Core\\Src\\UnLinker.cpp",
+    "sha256": "e19f04113b7634656af145f8c7bc363e9492a19b819b007328d2a3036407e603",
+    "symbol": "ULinkerLoad::VerifyImport"
+  },
+  "sha256_current_website_and_consumer_source": {
+    "catalog/game-page.php": "e1eedca00844297bf943f1f72271e5395745f46c98572f997cd9b966f4cce34e",
+    "catalog/games.php": "86c4dc0de87d5d277ba492c5b056929a25cbb769ba8a31c1f7f5486f82920260",
+    "catalog/game-files.php": "c7852065223cd3e09e682340d3c8c8d92677e1f7ac0f84349ffbbfa4cbf493f5",
+    "catalog/file-info.php": "9721ddcc1b7907f002ed74b0f368dd603beace84c10cd5622ded2f0321ef462a",
+    "catalog/file-examine-paged-core.php": "e671d94c87752795ceccb881fd98b329aa4f1eb0b5876feb9fa45f0b9671c75a",
+    "catalog/file-examine-dependencies.php": "0e2247018261e18404c2a9c3a35cbbe5364a35b9d63fb9ecfc2fac96f3ffc9aa",
+    "catalog/download-info.php": "f78f12c8b6dc31986daa92e13014316aac96a6adc655b039244613b8e292874d",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php": "b3c6b119811c0a2447129674b62cc18b0e8b92008dc03591d0f8fc60a1d3486c",
+    "catalog/src/Infrastructure/Persistence/PdoGameMissingDependencyQuery.php": "3a079637f7aa03f79b24e182e8883e6525dab55097816ce00d89ed0ed0630189",
+    "catalog/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php": "36b5be8e7b8a1cbc0bf1a5d19123d00a1409714fa1a1efbad82a17c1a53296f4",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d",
+    "catalog/src/Infrastructure/Metadata/Uedb5GameDependencyPassService.php": "4b7acab33f169a410bdf8387431cb46e85659d0921972e68518d440da8af2a70"
+  },
+  "temporary_evidence_on_DEV": [
+    "D:/Temp/UnrealDB/ue3/website-v14/verify-ue3-live-readonly.php",
+    "D:/Temp/UnrealDB/ue3/website-v14/verify-ue3-readmodels-readonly.php",
+    "D:/Temp/UnrealDB/ue3/website-v14/ue3-source-file-samples-readonly.php",
+    "D:/Temp/UnrealDB/ue3/website-v14/exercise-ue3-current-website-http.ps1",
+    "D:/Temp/UnrealDB/ue3/website-v14/assert-ue3-website-source.py",
+    "D:/Temp/UnrealDB/ue3/website-v14/ue3-website-http-results.json",
+    "D:/Temp/UnrealDB/ue3/website-v14/ue3-website-assertions.json"
+  ],
+  "native_engine_tests_run_in_this_batch": 0,
+  "production_database_writes_from_this_batch": 0,
+  "original_package_byte_modifications": 0,
+  "new_contract_ids": 0
+}

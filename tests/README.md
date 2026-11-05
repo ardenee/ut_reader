@@ -2,7 +2,16 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
-## Current acceptance decision — 5 November 2026
+## Current acceptance decision — 5 November 2026: UE3 closure
+
+The fixed 32-operation register is now **31 PASS / 1 BLOCKED**. UE3 is **6/6 PASS** in its selected UT3 v512 source/metadata/provider/publication/website scope. Actual PRD source-current v14 covers UT3 6,722/6,722 verified files and 0 stale, 1,511,557 unresolved and 0 source-confirmed missing. 18 actual DEV PHP HTTP reads against original PRD metadata, 22 source-accurate UI assertions and read-only missing/cross-game source-model verifiers passed. UE3 Jan-2008 Epic source hash matches retained earlier byte/reader/provider evidence. No new native run or PHP production source change was required.
+
+**Only UE4 website-dependency remains BLOCKED.** Unknown UE3 loaded mounts remain unresolved, not falsely missing. Authenticated production browser was not independently tested.
+
+Evidence: [UE3 final website](evidence/ue3/ue3-prd-v14-website-source-closure-20261105.json), [UE3 original source parity](evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json) and [single register](contracts.json).
+
+## Historical UE2 acceptance decision — 5 November 2026
+
 
 The fixed 32-operation register now records **30 PASS / 2 BLOCKED**: UE1 **7/7**, UE2 **7/7**, UE5 **7/7** within their implemented file/header/table/source-publication/website scopes. UE2 source-current PRD data covers Unreal II, UT2003 and UT2004: 79,179/79,179 verified current v14, zero stale, current game stats. DEV real PHP HTTP with production SELECT-only original data, 23 exact website assertions and the UT2004 v99 compatibility case passed. Two shared presentation fixes prevent unlinked physical providers appearing to mean zero source dependencies. Original reader/native evidence reused without rerun.
 

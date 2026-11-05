@@ -1,5 +1,17 @@
 # UnrealDB current project status
 
+## UE3 fully closed — 5 November 2026
+
+**UE3 6/6 PASS, zero remaining UE3 blockers** in the fixed UnrealDB operation register. All engines now show **31 PASS / 1 BLOCKED**; UE4 website dependency remains open. Existing Jan-2008 Epic UE3 original UT3 v512 licensee0 reader, complete table/VerifyImport/provider-conditional evidence reused without native reruns.
+
+**UT3 game #6 production current:** 6,722/6,722 verified and current under independent UE3-mount-v14 policy, 0 stale, 0 invalid staged, 0 missing primary provider keys; game statistics are current. Original UEDB5 source publication has **2,591,525 references: 1,511,557 unresolved and 1,079,968 common**, zero source-confirmed missing. Unresolved is not an authoritative missing or mounted-provider-resolution verdict.
+
+**Final website contract F17/F22:** 18 PHP HTTP 200 GET responses on DEV against original PRD metadata and 22 exact source/UI assertions passed. Seven original UT3 files confirmed source counters; #149701 UTGameContent.u (2,700 unresolved, 434 common), #1275854 UTResize.u (1,322, 439) and #1292076 HauntedGame.u (1,269, 1,043) displayed exact values. Both physical UTGameContent files were shown but never spuriously linked without an actual native mount. Games, Game Files filters, legacy Game page, File Info, Uses/Imports, JSON, download-info and read-only missing/cross-game services were covered. UE1/UE2 website controls passed.
+
+**Scope:** No code changes or new test IDs were necessary. Source-selected native evidence reused; no authenticated PRD browser or new native mounted session tested; no PRD SQL or package changes. Evidence [UE3 current PRD website closure](../tests/evidence/ue3/ue3-prd-v14-website-source-closure-20261105.json), [previous original UE3 parity](../tests/evidence/ue3/ue3-original-ut3-v512-all-six-metadata-codepaths-20261102.json), [operation register](../tests/contracts.json).
+
+---
+
 ## UE2 fully closed — 5 November 2026
 
 **UE2 7/7 PASS, zero blocked within the seven defined UnrealDB operations.** The fixed all-engine register is now **30 PASS / 2 BLOCKED**; only the distinct UE3 and UE4 website dependency contracts remain open. Accepted UE2 reader/table/native-source and UE2-owned UT2004 v99 compatibility evidence were reused, not rerun.
