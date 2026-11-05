@@ -12,7 +12,7 @@ final class Uedb5GameDependencyPassService
 {
     public const DEPENDENCY_POLICY = 'uedb5-dependency-pass-v13';
     public const UE1_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue1-mount-v14';
-    public const UE2_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue2-mount-v14';
+    public const UE2_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue2-mount-no-common-v15';
     public const UE3_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue3-mount-v14';
     public const UE4_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue4-mount-v14';
     public const UE5_DEPENDENCY_POLICY = 'uedb5-dependency-pass-ue5-mount-v14';
@@ -391,7 +391,9 @@ final class Uedb5GameDependencyPassService
             array_map(static fn(mixed $value): string => trim((string)$value), (array)($this->config['common_packages'] ?? [])),
             static fn(string $value): bool => $value !== ''
         ));
-        $options = ['common_packages'=>$common];
+        // UE2 source never treats configured system-package names as verified
+        // imports; the legacy common list is retained only for other engines.
+        $options = ['common_packages'=>$this->gameEngineKey($gameId) === 'UE2' ? [] : $common];
         // The engine's resolution algorithm is global, but its effective mounted-store,
         // identity rewrites and runtime flags belong to a specific game/session.
         // Do not infer authoritative runtime context from a TOC or installation path.

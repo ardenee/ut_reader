@@ -222,7 +222,10 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
 
         $imports = [];
         $importPaths = [];
-        $common = array_map('strtolower', array_values((array)($config['common_packages'] ?? [])));
+        // An assigned UE2 game never bypasses its source import verification
+        // just because the package name appears in a configured base-game list.
+        $common = in_array($sourceKey, ['unreal2','ut2003','ut2004'], true)
+            ? [] : array_map('strtolower', array_values((array)($config['common_packages'] ?? [])));
         foreach (array_values((array)($staging['imports'] ?? [])) as $index => $source) {
             $row = is_array($source) ? $source : [];
             $row['id'] = $this->virtualId($fileId, $index);

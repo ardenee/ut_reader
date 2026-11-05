@@ -97,7 +97,8 @@ try {
         if ($detail) {
             $providers = catalog_all(
                 $db,
-                'SELECT p.*,f.original_name,f.file_size,f.package_guid,f.md5,f.sha1,f.scan_status '
+                'SELECT p.*,f.original_name,f.file_size,f.package_guid,f.md5,f.sha1,f.scan_status,'
+                . 'f.package_version,f.licensee_version,f.source_relative_path '
                 . 'FROM ue_package_provider_coverage_cache p JOIN ue_files f ON f.id=p.file_id '
                 . 'WHERE p.game_id=? AND p.package_name=? '
                 . 'ORDER BY p.fully_satisfies DESC,p.matched_count DESC,p.file_id',
@@ -170,7 +171,7 @@ try {
         if ($providers === []) {
             echo '<p class="muted">No cached provider rows are available.</p>';
         } else {
-            echo '<table><tr><th>File</th><th>Identity</th><th>Size</th><th>Catalogue coverage</th><th>Status</th><th>Missing objects</th></tr>';
+            echo '<table><tr><th>File</th><th>Source location</th><th>Package version</th><th>Identity</th><th>Size</th><th>Catalogue coverage</th><th>Status</th><th>Missing objects</th></tr>';
             foreach ($providers as $provider) {
                 $missing = json_decode((string)($provider['missing_paths_json'] ?? '[]'), true);
                 $missing = is_array($missing) ? array_values(array_filter(array_map('strval', $missing))) : [];
@@ -178,6 +179,8 @@ try {
                 $selected = $selectedFileId > 0 && (int)$provider['file_id'] === $selectedFileId;
                 echo '<tr' . ($selected ? ' class="is-reference-target"' : '') . '><td>' . ($selected ? '<strong>Selected file</strong><br>' : '') . '<a href="file-examine.php?id=' . (int)$provider['file_id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$provider['original_name'])) . '</a>'
                     . '<br><a class="small" href="file-info.php?id=' . (int)$provider['file_id'] . '">File information</a></td>'
+                    . '<td class="small mono">' . catalog_h((string)($provider['source_relative_path'] ?? '')) . '</td>'
+                    . '<td>' . (int)$provider['package_version'] . ' / ' . (int)$provider['licensee_version'] . '</td>'
                     . '<td>' . CatalogUi::identity((string)$provider['package_guid'], (string)$provider['md5'], (string)$provider['sha1']) . '</td>'
                     . '<td style="white-space:nowrap">' . catalog_h(catalog_bytes((int)$provider['file_size'])) . '</td>'
                     . '<td><strong>' . number_format((int)$provider['matched_count']) . ' / ' . number_format((int)$detail['required_object_count']) . '</strong></td>'

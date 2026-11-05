@@ -830,6 +830,11 @@ final class PdoDependencyResolver
 
     private static function isCommonImport(array $import, string $engineKey): bool
     {
+        // Stale legacy projections may still contain is_common=1. UE2 Epic
+        // loaders have no such exemption, regardless of stored flag.
+        if ($engineKey === 'UE2') {
+            return false;
+        }
         if ((int)($import['is_common'] ?? 0) === 1) {
             return true;
         }

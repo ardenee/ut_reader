@@ -252,7 +252,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             ];
         }
 
-        $common = array_map(
+        // UE2 has no Epic-defined common-package import exemption.
+        $common = $engineKey === 'UE2' ? [] : array_map(
             'strtolower',
             array_values((array)($this->config['common_packages'] ?? []))
         );

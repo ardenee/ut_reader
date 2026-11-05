@@ -72,7 +72,10 @@ final class Uedb5ClassicDependencyResolver
         }
 
         $common = [];
-        foreach ((array)($options['common_packages'] ?? []) as $package) {
+        // UE2 has no source-defined 'common dependency' bypass: every import
+        // requires the ordinary package/linker and VerifyImport path. Keep
+        // the unrelated engine policies untouched in this UE2-only change.
+        foreach ($engine === 'ue2' ? [] : (array)($options['common_packages'] ?? []) as $package) {
             $package = trim((string)$package);
             if ($package !== '') {
                 $common[self::key($package)] = true;
@@ -187,7 +190,7 @@ final class Uedb5ClassicDependencyResolver
             }
             // Epic UE1 VerifyImport checks that a version>=50 root import
             // (PackageIndex==0) is exactly Core.Package. Do not let the
-            // wrapper's package_only/common shortcuts promote an invalid
+            // wrapper's package-level shortcuts promote an invalid
             // root or any child dependent on it before source verification.
             if ($engine === 'ue1' && $ue1Profile !== null
                 && self::ue1InvalidRootPackageImport($consumer['imports'], (int)$importIndex)) {

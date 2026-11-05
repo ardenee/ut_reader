@@ -1,0 +1,101 @@
+{
+  "date": "2026-11-05",
+  "scope": "UE2 common-shortcut rejection, true Epic loader's distinct package-version/linker semantics, production game ownership audit",
+  "producer": "Actual DEV source selected Epic Unreal II 2003 + read-only PRD MySQL + original UEDB5 snapshots",
+  "original_epic_unreal2_sources": {
+    "Core/Src/UnObj.cpp": "E6DC57B55B5C81F346E2593D168954F9314C3F3E6D78EE513EAF53877370CC62",
+    "Core/Src/UnMisc.cpp": "1BCB110BACACF8A2435E752D787DF7216F73FC616EC4D9DDC4DCC2A3958535CA",
+    "Core/Src/UnLinker.cpp": "1934E3EF1C4042E33D3AF82D68CD593DBA7635A173BA8435D3D9AEE18FD69A0B"
+  },
+  "new_ue2_policy": "uedb5-dependency-pass-ue2-mount-no-common-v15",
+  "previous_ue2_policy": "uedb5-dependency-pass-ue2-mount-v14",
+  "original_snapshots": [
+    {
+      "file_id": 111205,
+      "sha256": "83FCF0C2CD5C09BBEB65D2A9C522A68FB964A3EA24E706C71EFDFA5ECF2C208A",
+      "source": "Unreal II U2.u",
+      "previous_common_root": "Core",
+      "previous_common": 80,
+      "unresolved_after": 80,
+      "common_after": 0
+    },
+    {
+      "file_id": 1360642,
+      "sha256": "1D5CAE5DF0274862D9E6FFBBB78E07B74DBD97B6E20A6FC4BE15D210E8930C01",
+      "source": "UT2003 UnrealGame.u mistakenly assigned to Unreal II",
+      "previous_common_root": "GamePlay",
+      "previous_common": 27,
+      "unresolved_after": 27,
+      "common_after": 0
+    }
+  ],
+  "original_regression": "tests/tools/verify_ue2_no_common_source_bypass.php",
+  "original_regression_pass": true,
+  "production_baseline": {
+    "game_id": 2,
+    "verified": 1217,
+    "dependencies": 110970,
+    "common_legacy_v14": 39295,
+    "unresolved_legacy_v14": 71675,
+    "GamePlay_legacy_common_references": 219,
+    "GamePlay_consumer_files": 25,
+    "Gameplay_providers_game2": 0,
+    "Gameplay_providers_in_actual_UT2003_UT2004": "present and verified under game IDs 4 and 5",
+    "package_coverage_rebuild": {
+      "attempted": 211,
+      "cached": 197,
+      "pruned": 14
+    }
+  },
+  "read_only_directory_evidence": {
+    "audit_command": "php catalog/bin/diagnose-ue2-game-ownership.php --db-host=192.168.0.55",
+    "UT2003_identified_directories": 88,
+    "UT2004_identified_directories": 303,
+    "total": 391,
+    "all_391_exact_sha_size_matches_already_verified_under_correct_games": true,
+    "additional_top_level_UT2004_named_exact_duplicate": {
+      "file_id": 149679,
+      "filename": "UT2004Weapons.utx",
+      "source": "top-level name only, not directory evidence",
+      "package_version": 127,
+      "licensee_version": 29,
+      "exact_bytes_in_correct_game": true
+    },
+    "excluded_false_positive": {
+      "file_id": 1252898,
+      "filename": "ut2003barrensarc.utx",
+      "source": "Unreal 2/MapPacks/.../REDPLANETpart1beta1.zip/ut2003barrensarc.utx",
+      "package_version": 110,
+      "licensee_version": 2609
+    }
+  },
+  "v15_read_only_preflight": [
+    {
+      "game_id": 2,
+      "verified": 1217,
+      "staged": 1217,
+      "ready": true,
+      "old_v15_complete": 0
+    },
+    {
+      "game_id": 4,
+      "verified": 5082,
+      "staged": 5082,
+      "ready": true,
+      "old_v15_complete": 0
+    },
+    {
+      "game_id": 5,
+      "verified": 72880,
+      "staged": 72880,
+      "ready": true,
+      "old_v15_complete": 0
+    }
+  ],
+  "limitations": [
+    "Source path provenance is evidence but insufficient to blindly rewrite original records.",
+    "Static candidate coverage does not prove which native linker a particular installed game selected.",
+    "Game-owned 391 mis-scoped duplicates not modified; UE2 v15 PRD publication pending operator-side scoped CLI."
+  ],
+  "writes_to_PRD_during_audit": false
+}

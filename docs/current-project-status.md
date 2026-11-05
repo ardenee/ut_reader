@@ -1,5 +1,15 @@
 # UnrealDB current project status
 
+## 5 November 2026 — UE2 v15 common shortcut removed in source; ownership repair/republication pending
+
+Epic UE2's source `VerifyImport` does not contain the configured UnrealDB `common_packages` dependency exemption. The earlier UE2 7/7 path closure was overbroad: tracing executable source paths did not assert that the UnrealDB-only shortcut was absent. UE2 v15 now ignores this shortcut while leaving other engine policies isolated. SHA-pinned genuine Unreal II files #111205 and #1360642 demonstrate 80 Core and 27 GamePlay imports, respectively, no longer incorrectly classified `common`. Production UE2 game IDs 2/4/5 need Pass 2 republication and cached statistic rebuild after deployment; old v14 figures must fail freshness until that occurs. The PRD local resumable scoped wrapper is `catalog/bin/publish-ue2-no-common-v15.ps1`; it requires explicit `-Apply`.
+
+PRD read-only ownership investigation: all 219 GamePlay-labelled references under Unreal II game #2 originate from 25 UT2003/UT2004 files wrongly placed in that game. The correct GamePlay.u providers exist under UT2003/UT2004. An exact-hash + source-directory audit identified 391 wrongly scoped duplicates (88 UT2003, 303 UT2004) that are already present in their correct games. A top-level `UT2004Weapons.utx` adds one separate exact cross-game match; filename-only `ut2003barrensarc.utx` is actually from an Unreal II map pack and is **not** an ownership candidate. Nothing has been migrated or deleted pending a source-safe game-ownership reconciliation. The user separately completed the Unreal II Package Coverage rebuild (211 examined, 197 cached, 14 pruned).
+
+Epic source-specific notes, test evidence and next steps: [UE2 v15 and game ownership](ue2-common-dependency-v15-and-game-ownership-2026-11-05.md).
+
+---
+
 ## 5 November 2026 — UE2 offline package coverage corrected; dependency common-policy gap reopened
 
 The completed Unreal II Full Sync #9525717 rebuilt 1,217/1,217 UEDB5 sources, 13/13 dependency batches and current game statistics, but unchanged counts are expected under current provider-selection rules: 71,675 unresolved and 39,295 config-labelled common; 0 source-confirmed physical resolves. Read-only original-source review found that `common_packages` is an UnrealDB heuristic, **not** a UE2 `VerifyImport` exception: the earlier 7/7 bounded-operation closure does **not** close offline common-versus-resolved semantics. A separately versioned UE2 dependency-policy migration/republication remains outstanding; no policy change or PRD Pass-2 writes in this patch.

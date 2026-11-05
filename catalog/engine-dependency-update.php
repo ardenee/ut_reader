@@ -96,7 +96,7 @@ try{
 
     catalog_head('Engine Dependency Update');
     echo CatalogUi::pageHeader('Engine Dependency Update',
-        'Update all configured games using their own Epic-engine v14 source policy.',
+        'Publish each game using its active engine-specific dependency policy. UE2 v15 no longer treats configured common package names as automatically satisfied.',
         ['Background Jobs'=>'background-jobs.php','Games'=>'games.php']);
     if($success!==[]){
         echo '<div class="card"><h2>Durable jobs queued</h2><p>'
@@ -122,7 +122,7 @@ try{
         .'<th>Game</th><th>Engine</th><th>Verified files</th>'
         .'<th>Dependency publication</th><th>Statistics</th></tr></thead><tbody>';
     foreach($games as $game){
-        $policyState=$game['policy_current']?'Current':'Needs v14 publication';
+        $policyState=$game['policy_current']?'Current':'Needs current policy publication';
         $statsState=$game['stats_current']?'Current':'Unavailable until updated';
         echo '<tr><td>'.catalog_h((string)$game['name']).'</td><td>'
             .catalog_h((string)($game['engine_key']??'No active profile')).'</td><td>'
