@@ -1,0 +1,158 @@
+{
+  "date": "2026-11-05",
+  "purpose": "Correct prior UT3 game-source provenance inventory and select source by genuine retail file class export inventories, not folder dates.",
+  "scope": "source-only inventory plus original installed package metadata; UT3 tables only, no native UObject payloads; do not infer code byte parity from class names",
+  "roots": {
+    "engine_jan2008": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [01-00-2008]\\epic.jan2008\\UnrealEngine3",
+    "engine_mar2008": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [03-00-2008]\\UnrealEngine3",
+    "engine_jul2013": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] [07-22-2013]",
+    "ut3game_mods": "L:\\Source\\Games\\UT3\\ut3-code-r161\\ut3-code-r161\\UTGame",
+    "ut3script15": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] UDKUltimate [05-11-17]\\UDKUltimate\\Development\\Src\\UT3ScriptSource_1.5\\Development\\Src"
+  },
+  "other_source_branches_inspected": [
+    "Unreal Engine 3 (10897)",
+    "Unreal Engine [v3.0] [00-00-2004]",
+    "Unreal Engine [v3.0] [11-00-2006]",
+    "Unreal Engine [v3.0] [05-00-2009]",
+    "Unreal Engine [v3.0] [05-03-2011]",
+    "Unreal Engine [v3.0] UDKUltimate [05-11-17]"
+  ],
+  "ut3_game_source_tree": {
+    "total_files": 1107,
+    "extensions": {
+      "ini": 283,
+      "ut3": 274,
+      "u": 252,
+      "uc": 140,
+      "upk": 133,
+      "int": 9,
+      "txt": 8,
+      "t3d": 4,
+      "demo": 2,
+      "uci": 1,
+      "uc_backup": 1
+    },
+    "area_counts": {
+      "Published": 846,
+      "Src": 113,
+      "Unpublished": 60,
+      "Config": 46,
+      "ExportedScript": 34,
+      "Localization": 6,
+      "Demos": 2
+    },
+    "original_native_cpp_count": 0,
+    "remark": "Large collection of mods and cooked packages; not full original UTGame native source."
+  },
+  "comparison": {
+    "jan2008": {
+      "utgame_uc": 838,
+      "utgame_native_cpp": 32,
+      "utgame_native_headers": 10,
+      "utgamecontent_uc": 276,
+      "installed_utgame_class_match": 838,
+      "installed_utgame_class_total": 908
+    },
+    "mar2008": {
+      "utgame_uc": 838,
+      "classes_byte_identical_to_jan2008": 838,
+      "representative_native_cpp_and_header_sha_identical": true
+    },
+    "jul2013": {
+      "utgame_uc": 411,
+      "installed_utgame_class_match": 358,
+      "installed_utgame_class_total": 908,
+      "engine_has_later_runtime_name_semantics": true,
+      "utgame_cpp_sources": 0
+    },
+    "udk2011": {
+      "utgame_uc": 408
+    },
+    "udkultimate_current": {
+      "utgame_uc": 454
+    },
+    "ut3script15": {
+      "utgame_uc": 908,
+      "utgamecontent_uc": 276,
+      "ut3gold_uc": 20,
+      "ut3goldgame_uc": 14,
+      "utgame_shared_filenames_with_jan2008": 838,
+      "utgame_shared_byte_hashes_with_jan2008": 0,
+      "utgame_new_filenames_vs_jan2008": 70,
+      "script_origin_not_independently_authenticated": true
+    }
+  },
+  "installed_packages": [
+    {
+      "package": "UTGame.u",
+      "sha256": "4afc01d750a21a33d2ab1dcf0cb7b914fb4be11f2c4f265b5aef0d8919a82927",
+      "package_version": 512,
+      "licensee": 0,
+      "name_count": 26070,
+      "import_count": 4037,
+      "export_count": 88221,
+      "exported_class_count": 908,
+      "ut3script15_names_matched": 908,
+      "jan2008_matched": 838,
+      "jul2013_matched": 358
+    },
+    {
+      "package": "UTGameContent.u",
+      "sha256": "144f38e75e3be47eb2d332b8bd798b3cb584573e8777be361e4275f3d5d29647",
+      "package_version": 512,
+      "licensee": 0,
+      "name_count": 5974,
+      "import_count": 3134,
+      "export_count": 4031,
+      "exported_class_count": 276,
+      "ut3script15_names_matched": 276,
+      "jan2008_matched": 276
+    },
+    {
+      "package": "UT3Gold.u",
+      "sha256": "e9fdb8134ec16db4f6130b9dd901620dc54c9c8cb2fb8adc7825c1ca0adc7c5e",
+      "package_version": 512,
+      "licensee": 0,
+      "exported_class_count": 20,
+      "ut3script15_names_matched": 20
+    },
+    {
+      "package": "UT3GoldGame.u",
+      "sha256": "92bab172fbd43f9bb6ba87a8e2479af0f97747c127752f01169850142eb55f2b",
+      "package_version": 512,
+      "licensee": 0,
+      "exported_class_count": 14,
+      "ut3script15_names_matched": 14
+    }
+  ],
+  "overall_original_class_match": {
+    "matched": 1218,
+    "original_class_count": 1218,
+    "comparison_field": "UE3 export ClassIndex=0 and ObjectNameText matches .uc basename, case-insensitive",
+    "limitations": [
+      "Class-name identity does not prove identical bytecode or source implementation",
+      "UDKUltimate 1.5 original source provenance not independently validated"
+    ]
+  },
+  "game_native_source_sites": {
+    "sample": "January 2008 UTGame/Src/UTGame.cpp: UTLevelCheckCommandlet uses GPackageFileCache::GetPackageFileList and GetPackageLinker; not game-specific package-summary serializer.",
+    "native_source_no_custom_summary_import_export_serializer_found_in_query": true
+  },
+  "selection_policy": {
+    "format": "January 2008 Epic UE3 Core v512 serializer + version-gated engine branches; retail original binary remains oracle",
+    "game": "UT3ScriptSource_1.5 is best current 908-class name coverage; Jan08 UTGame native C++ and 276 content scripts add source authority; cross-check direct installed class metadata",
+    "later_engine": "July 2013 should inform late UE3 revision compatibility, not silently overwrite original UT3 v512 loader",
+    "mod_assets": "L:\\Source\\Games\\UT3 contributes add-on and UT3 Gold exported source, not all base-game game source"
+  },
+  "new_tests_approved": 0,
+  "read_only": true,
+  "code_changed": false,
+  "original_binary_changed": false,
+  "prd_db_changed": false,
+  "temporary_probes": [
+    "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\inventory-all-ue3-revisions.py",
+    "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\compare-ut3-class-source.py",
+    "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\compare-installed-ut3-class-exports.php",
+    "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\compare-installed-ut3-gold-exports.php"
+  ]
+}

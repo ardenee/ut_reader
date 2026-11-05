@@ -131,3 +131,46 @@ The later native `appUncompressMemoryLZX` invokes Microsoft `XMemCreateDecompres
 No production source was modified for this supplemental comparison, and none of the existing UT3 six operation contracts was promoted or invalidated by these later UDK-only files. No PRD SQL, imported UEDB5 snapshot or original binary was changed.
 
 Reproducible temporary read-only scripts/results: `D:\Temp\UnrealDB\ue3\spec-review-20261105\probe-three-ue3-corpora.py`, `corpus-probe.jsonl`, `check-installed-compressed.php`, `installed-compressed-results.jsonl`, `check-udk-later-examples.php`, `udk-later-results.jsonl`.
+
+## Correction: original UT3 game-source inventory and July-2013 authority (2026-11-05)
+
+**The previous UT3 game addendum was not source-complete.** Earlier inspection focused on `L:\Source\Games\UT3` (modded/cooked game tree), and did not catalogue the original UTGame/UTGameContent modules embedded in January/March-2008 UE3 or the separate `UT3ScriptSource_1.5` tree nested in UDKUltimate. This correction affects the game-source provenance of the addendum, **not** the previously proven bytes of v512 headers/names/imports/exports.
+
+### Inventory, not inferred from folder dates
+
+| Source tree | UTGame UnrealScript | Native UTGame source | Role |
+|---|---:|---|---|
+| January 2008 UE3 `Development/Src/UTGame` | 838 .uc | 32 .cpp and 10 .h | Original UT3-era game + Core v512 source |
+| March 2008 UE3 `Development/Src/UTGame` | 838 .uc | 32 .cpp and 10 .h | 838/838 class files SHA-256 identical to January; sample C++/header SHA identical |
+| May 2011 UE3 | 408 .uc | No native game .cpp | Later UDK-adapted game classes |
+| July 2013 UE3 | 411 .uc | No native game .cpp | Later UE3 engine/game example; 2013 source is useful for later format revisions |
+| UDKUltimate current `Development/Src/UTGame` | 454 .uc | No native game .cpp | Later game/tool source |
+| UDKUltimate `UT3ScriptSource_1.5/Development/Src/UTGame` | 908 .uc | No native game .cpp | Best exact retail installed class-inventory match |
+| Separate `L:\Source\Games\UT3` | 140 .uc across exported scripts + mods | No .cpp/.h | 1,107 files, primarily cooked maps, packages, mods and config |
+
+January 2008 also contains **276 .uc** files in `Development/Src/UTGameContent/Classes`; the separate 1.5 script source contains **276 UTGameContent + 20 UT3Gold + 14 UT3GoldGame** .uc files. All 838 January class paths appear in the 1.5 UTGame tree, alongside 70 additional classes. None of those 838 corresponding files is byte-identical between January and 1.5, so shared class names cannot be promoted to implementation parity.
+
+### Original installed game class-map differential
+
+On unmodified files under `H:\Epic Games\Unreal Tournament 3\UTGame\CookedPC`, the canonical PHP UE3 reader produced no errors, and source filenames were compared case-insensitively against the actual ClassIndex=0 export ObjectNameText fields.
+
+| Original file / SHA-256 | Actual exported UClass identities | Matching 1.5 source .uc names | January 2008 | July 2013 |
+|---|---:|---:|---:|---:|
+| `UTGame.u` / `4afc01d750a21a33d2ab1dcf0cb7b914fb4be11f2c4f265b5aef0d8919a82927` | 908 | **908/908** | 838/908 | 358/908 |
+| `UTGameContent.u` / `144f38e75e3be47eb2d332b8bd798b3cb584573e8777be361e4275f3d5d29647` | 276 | **276/276** | 276/276 | Not tested |
+| `UT3Gold.u` / `e9fdb8134ec16db4f6130b9dd901620dc54c9c8cb2fb8adc7825c1ca0adc7c5e` | 20 | **20/20** | Not in original Jan UTGame | Not tested |
+| `UT3GoldGame.u` / `92bab172fbd43f9bb6ba87a8e2479af0f97747c127752f01169850142eb55f2b` | 14 | **14/14** | Not in original Jan UTGame | Not tested |
+
+**Total: 1,218 / 1,218 installed UClass export names match the `UT3ScriptSource_1.5` four-module inventory.** This proves a direct version-matched **class-name coverage** relationship, not equivalence of source code, compiled UnrealScript bytecode, or original Epic source-authenticity of the 1.5 distribution.
+
+The installed `UTGame.u` is version 512/licensee 0, with 26,070 names, 4,037 imports and 88,221 exports. `UTGameContent.u` is likewise v512/0 with 5,974 names, 3,134 imports and 4,031 exports.
+
+### Why July 2013 is not the UT3-v512 master
+
+July 2013 `Core/Src/UnLinker.cpp` preserves version-gated UE3 serialization support, but its `SerializeNameMap` **disregards name-context flags**; the January-2008 UT3-era code filters names according to the active load-context mask. July 2013 also adds later import fixups and class-remapping logic not present in the original v512 engine revision. Its UTGame class inventory matches only 358/908 of the installed `UTGame.u` exported classes, versus 908/908 for the 1.5 script tree. The July-2013 Core tree is therefore a better resource for late UE3 branches, **not** automatically more faithful to stock UT3 v512.
+
+January-2008 native `UTGame/Src/UTGame.cpp` contains `UUTLevelCheckCommandlet` using `GPackageFileCache->GetPackageFileList()` and `GetPackageLinker()` to inspect maps. This is a game-specific caller of the engine loader; scanning the 32 native game C++ files and 10 headers did not identify a replacement summary/name/import/export table wire serializer. Therefore this inventory does not prove any new required change in UnrealDB's metadata-only UE3 reader.
+
+The standalone UT3 game addendum from the earlier limited game-folder-only review must be **revised for source completeness**. The active v512 package metadata specification and source-scoped dependency/reader contracts remain valid within their existing accepted evidence. No UE3 PHP source, PRD database, original package or UEDB5 snapshot was changed for this source audit.
+
+Reproducibility: `tests/evidence/ue3/ut3-all-source-revision-provenance-and-installed-class-parity-20261105.json` plus the source-inventory/class-differential scripts under `D:\Temp\UnrealDB\ue3\spec-review-20261105`.

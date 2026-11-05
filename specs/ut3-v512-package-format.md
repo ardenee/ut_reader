@@ -6,15 +6,17 @@ This specification is the package-serialization and pre-dependency authority for
 
 Primary source:
 
-- `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\epic.jan2008\UnrealEngine3`
-- active UT3 package profile: Epic package version 512, licensee version 0
+- `L:\Source\Engine\UE3\Unreal Engine [v3.0] [01-00-2008]\epic.jan2008\UnrealEngine3` — v512 engine Core loader, plus `Development\Src\UTGame` (838 UnrealScript classes, 32 native C++ sources and 10 headers) and `Development\Src\UTGameContent\Classes` (276 game-content classes).
+- Active UT3 package profile: Epic package version 512, licensee version 0.
+- Installed retail package class-identity cross-check: `UTGame.u`, `UTGameContent.u`, `UT3Gold.u`, and `UT3GoldGame.u` against `L:\Source\Engine\UE3\Unreal Engine [v3.0] UDKUltimate [05-11-17]\UDKUltimate\Development\Src\UT3ScriptSource_1.5\Development\Src`; all 1,218 original exported class names match that 1.5 script-source inventory. This is class-name evidence, **not** proof of bytecode/source implementation equality or official provenance.
+- Source-version inventory and exact installed-file evidence: [UT3 all-source provenance and class parity](../tests/evidence/ue3/ut3-all-source-revision-provenance-and-installed-class-parity-20261105.json).
 - `VER_FULL_VERSION_OF_UT3_BUMP = 512`
 - `GPackageFileMinVersion = 491`
 - the checkout continues through `VER_LATEST_ENGINE = 530`
 
 The wider 491-530 engine load range is not treated as permission to apply UT3 game-profile dependency semantics to versions other than 512. The active UnrealDB UT3 profile remains exactly v512/licensee 0.
 
-The March-2008 early UE3 source is supplemental. Later UDK and build 10897 source is used only for explicit comparison and must not be back-ported into this profile.
+The March-2008 UTGame UnrealScript tree matches the January-2008 tree byte-for-byte for all 838 class files. The July-2013 engine source is authoritative for its later UE3 revision, **not** automatically for original retail UT3 v512; its UTGame class inventory matches only 358 of 908 classes in the installed `UTGame.u`. The independently located `UT3ScriptSource_1.5` game scripts provide a stronger **game-class-name** inventory, but do not replace the January-2008 Core package serializer or authorize back-porting later loader rules.
 
 ## Source references
 
