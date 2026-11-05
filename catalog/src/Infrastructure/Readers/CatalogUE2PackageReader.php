@@ -46,12 +46,9 @@ final class CatalogUE2PackageReader
     {
         $reader = new CatalogUE2BinaryStream($this->path);
         $tag = $reader->u32();
-        // Epic UE1 linkers admit only PACKAGE_FILE_TAG (0x9E2A83C1).
-        // The shared UE2 reader also admits the Killing Floor-specific tag,
-        // but that UE2 exception must not leak into UE1 package loading.
-        if (($this->engineKey === 'UE1'
-                && $tag !== \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::STANDARD)
-            || !\UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::isSupportedLittleEndianValue($tag)) {
+        // These three source-selected UE2 game loaders require Epic's
+        // standard package tag. Other games' custom tags are not valid here.
+        if ($tag !== \UnrealDb\Catalog\Domain\Package\CatalogUnrealPackageTag::STANDARD) {
             throw new RuntimeException(sprintf('Bad package tag 0x%08X.', $tag));
         }
         $packed = $reader->u32();
@@ -149,9 +146,7 @@ final class CatalogUE2PackageReader
         $this->readNames($version);
         $this->readImports($version);
         $this->readExports($version);
-        if ($this->engineKey === 'UE1') {
-            $this->validateUE1ObjectReferences($version, $reader->size());
-        }
+        $this->validateUE2ObjectReferences($reader->size());
     }
 
     private function readGuid(CatalogUE2BinaryStream $reader): void
@@ -349,6 +344,45 @@ final class CatalogUE2PackageReader
     }
 
     /**
+     * Check source-defined object-index and export-payload boundaries before
+     * persisting dependency identities. Positive indices address ExportMap;
+     * negative indices address ImportMap; zero is the root/null reference.
+     * Preserve signed compact payload sizes, including negative values,
+     * without inventing a positive span for a nonpositive size.
+     */
+    private function validateUE2ObjectReferences(int $fileSize): void
+    {
+        $importCount = count($this->imports);
+        $exportCount = count($this->exports);
+        foreach ($this->imports as $index => $import) {
+            $outer = (int)$import['outerIndex'];
+            if ($outer > 0 || $outer < -$importCount) {
+                throw new RuntimeException('Invalid UE2 Import[' . $index
+                    . '] PackageIndex=' . $outer . ' (expected zero or an import reference).');
+            }
+        }
+        foreach ($this->exports as $index => $export) {
+            foreach (['ClassIndex' => 'classIndex',
+                      'SuperIndex' => 'superIndex',
+                      'PackageIndex' => 'outerIndex'] as $field => $key) {
+                $reference = (int)$export[$key];
+                if ($reference > $exportCount || $reference < -$importCount) {
+                    throw new RuntimeException('Invalid UE2 Export[' . $index
+                        . '] ' . $field . '=' . $reference . ' (outside import/export maps).');
+                }
+            }
+            $size = (int)$export['serialSize'];
+            $offset = (int)$export['serialOffset'];
+            if ($size > 0 && ($offset < 0 || $offset > $fileSize
+                || $size > $fileSize - $offset)) {
+                throw new RuntimeException('Invalid UE2 Export[' . $index
+                    . '] data span offset=' . $offset . ' size=' . $size
+                    . ' file_size=' . $fileSize . '.');
+            }
+        }
+    }
+
+    /**
      * Source-defined signed package index: >0 is a one-based ExportMap slot;
      * <0 is a minus-one-based ImportMap slot; zero is NULL/root.
      * Epic UT99 v400 ULinkerLoad::IndexToObject fails on invalid indices;
@@ -510,12 +544,12 @@ final class CatalogUE2PackageReader
         return $size === false ? '' : number_format((int)$size) . ' bytes';
     }
 
-    /** Validate UE1's original strict ULinkerLoad FName index contract. */
+    /** The UE2 linker fails on FName references outside the loaded NameMap. */
     private function sourceNameByIndex(int $index, string $field): string
     {
-        if ($this->engineKey === 'UE1' && !array_key_exists($index, $this->names)) {
-            throw new RuntimeException('Invalid UE1 ' . $field . ' name index '
-                . $index . '/' . count($this->names) . ' (Epic NameMap::IsValidIndex).');
+        if (!array_key_exists($index, $this->names)) {
+            throw new RuntimeException('Invalid UE2 ' . $field . ' name index '
+                . $index . '/' . count($this->names) . ' (NameMap::IsValidIndex).');
         }
         return $this->nameByIndex($index);
     }

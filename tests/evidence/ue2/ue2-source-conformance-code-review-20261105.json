@@ -1,0 +1,58 @@
+{
+  "schema": "ue2-source-conformance-code-audit-v1",
+  "date": "2026-11-05",
+  "scope": "UnrealDB UE2 metadata source-selected parser, tables, source-policy, static import verification and dependencies; exclude native object loading and unknown runtime mount order",
+  "game_sources": {
+    "unreal2_v69_2000_sha256": "bf306975bab6819ef50b23e4b6b3ece44c1d5001295a935e45b7180d0dc8994f",
+    "unreal2_v126_2003_sha256": "1934e3ef1c4042e33d3af82d68cd593dba7635a173ba8435d3d9aee18fd69a0b",
+    "ut2003_v120_sha256": "41df04b157a79219e37a9ac48e1f292ba352642c28b6cea2a1bd753576f53fee",
+    "ut2004_v127_sha256": "8211e91df606390cea9e3758e17884c3b41238c6f0195f90a40c55c5ec7252d7",
+    "ut2004_v129_sha256": "171b005d96292a420b64d746ae1669e35e6ac6c953d700a7688bf5cf560fc22f"
+  },
+  "original_files": [
+    149508,
+    149492,
+    149470,
+    148919,
+    148926,
+    111532,
+    159806,
+    111461,
+    111472,
+    167246
+  ],
+  "original_fixture_manifest": "D:/Temp/UnrealDB/UE2/original-wire/manifest.json",
+  "prior_independent_wire_evidence": "D:/Temp/UnrealDB/UE2/original-wire/ue2-independent-original-raw-tables-all-rows.json",
+  "results": {
+    "originals_10_of_10": "PASS",
+    "invalid_ue2_name_index": "REJECTED after fix; previously accepted as empty name",
+    "unrelated_killing_floor_magic": "REJECTED after fix; previously accepted",
+    "utf8_looking_ansi_octets": "SOURCE_ONE_TCHAR_PER_OCTET; corrected",
+    "invalid_import_outer": "REJECTED after fix; previously accepted",
+    "invalid_export_class_ref": "REJECTED after fix; previously accepted",
+    "unreal2_v126_policy": "source-selected game loader now active",
+    "unreal2_v126_nonforgiving_private_export": "RESOLVED exactly in static selected-provider model",
+    "unreal2_v69_ut2003_ut2004_private_export": "PRIVATE_EXPORT retained",
+    "provider_wrong_root_4_profiles": "REJECTED",
+    "ut2004_v127_source_policy_name_cap_63_and_4_imports": "PASS",
+    "reader_routing_independence": "PASS",
+    "ut2004_ue1_wire_owned_by_ue2": "PASS",
+    "historical_four_fixture_frozen_regression": "NOT_RUN_missing_C_Temp_UE1_fixture"
+  },
+  "temporary_dev_checks": [
+    "D:/Temp/UnrealDB/UE2/review-ue2-metadata-gates-20261105.php",
+    "D:/Temp/UnrealDB/UE2/review-ue2-object-index-gates-20261105.php",
+    "D:/Temp/UnrealDB/UE2/review-ue2-original-and-verifyimport-20261105.php",
+    "D:/Temp/UnrealDB/UE2/review-ue2-ut2004-v127-dependency-20261105.php"
+  ],
+  "source_audit_document": "docs/ue2-source-conformance-review-2026-11-05.md",
+  "boundaries": [
+    "No native compiled UE2 runtime executed during this review",
+    "No real physical mount order reconstructed",
+    "No original package edited",
+    "No UEDB5 backups created",
+    "No production DB writes",
+    "Pre-existing UEDB5 snapshots require scoped resnapshot/republication to acquire new source policy and corrected decoded names"
+  ],
+  "new_contract_ids": 0
+}

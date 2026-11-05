@@ -2,6 +2,12 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
+## UE2 game-source conformance review — 5 November 2026
+
+The corrected January 2003 Unreal II source is now used for exact v126/0 provenance and static non-forgiving import verification; UT2004 v127 and v129 source boundaries were repaired. The UE2 reader also rejects foreign magic, invalid names/references/spans and preserves source ANSI byte identity. Ten SHA-pinned original UE2-family files and focused negative tests passed; UE2/UE1 parser ownership and legacy UT2004 compatibility remained independent. The previously accepted native/runtime and website evidence was **not rerun**. Source-policy changes to code do **not** republish existing UEDB5 snapshots; a separate scoped regeneration is required for older persisted provenance or names.
+
+Audit, paths, source SHA-256 anchors, test evidence, remaining runtime/mount gaps and the one missing historical UE1 fixture: [UE2 source-conformance review](../docs/ue2-source-conformance-review-2026-11-05.md). This review adds no contract IDs and makes no claim of complete native asset-payload coverage.
+
 ## UE1 v227 conditional archetype follow-up — 5 November 2026
 
 The UE1 archive decoder and Unreal-specific source selector are **separate components**. `CatalogUE1PackageReader` reads only its explicitly selected layout: the 227k native field rule is `RF_HasArchtype && LicenseeVer>=227`, without re-parsing, searching for ambiguity, or inferring the writer from a package version. `CatalogUE1UnrealExportSourceSelector` separately compares the selected game's conditional archive layout against the alternative, rejects ambiguous or legacy-only unproven cases, and marks verified structural provenance. This selector runs on Unreal's verified intake, unverified staging, UEDB5 snapshot factory, and read-only 227k diagnostic; UT99 remains independent. The UEDB5 builder **rejects** native-raw flagged exports without source validation rather than silently losing them.

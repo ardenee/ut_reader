@@ -12,6 +12,7 @@ final class PdoUe2VerifyImportProjectionResolver
 {
     private const RF_PUBLIC = 0x00000004;
     public const PROFILE_UNREAL2_V69_2000 = 'ue2-unreal2-2000-v69';
+    public const PROFILE_UNREAL2_V126_2003 = 'ue2-unreal2-2003-v126';
     public const PROFILE_UT2003_V2107 = 'ue2-ut2003-v2107';
     public const PROFILE_UT2004_V129 = 'ue2-ut2004-ut2004src-v129';
 
@@ -44,7 +45,7 @@ final class PdoUe2VerifyImportProjectionResolver
         array $providerExports,
         string $providerPackageName
     ): array {
-        if (!in_array($profile,[self::PROFILE_UNREAL2_V69_2000,self::PROFILE_UT2003_V2107,self::PROFILE_UT2004_V129],true)) {
+        if (!in_array($profile,[self::PROFILE_UNREAL2_V69_2000,self::PROFILE_UNREAL2_V126_2003,self::PROFILE_UT2003_V2107,self::PROFILE_UT2004_V129],true)) {
             throw new RuntimeException('Unsupported UE2 VerifyImport source profile: '.$profile);
         }
         $imports=self::indexImports($consumerImports);
@@ -108,6 +109,7 @@ final class PdoUe2VerifyImportProjectionResolver
                 unset($resolving[$index]);
                 $parentReason = match($profile) {
                     self::PROFILE_UNREAL2_V69_2000 => 'parent_source_linker_unavailable',
+                    self::PROFILE_UNREAL2_V126_2003 => 'unreal2_v126_parent_source_linker_unavailable_tolerated',
                     self::PROFILE_UT2003_V2107 => 'ut2003_parent_source_linker_unavailable_tolerated',
                     self::PROFILE_UT2004_V129 => 'ut2004_parent_source_linker_unavailable_tolerated',
                 };
@@ -158,6 +160,7 @@ final class PdoUe2VerifyImportProjectionResolver
             'runtime_only',
             match($profile) {
                 self::PROFILE_UNREAL2_V69_2000 => 'unreal2_v69_runtime_native_transient_safe_replace_or_shareware_hack',
+                self::PROFILE_UNREAL2_V126_2003 => 'unreal2_v126_runtime_native_transient_safe_replace_or_forgiving',
                 self::PROFILE_UT2003_V2107 => 'ut2003_runtime_native_transient_safe_replace_or_forgiving',
                 self::PROFILE_UT2004_V129 => 'ut2004_v129_runtime_native_transient_safe_replace_or_forgiving',
             },
@@ -184,6 +187,12 @@ final class PdoUe2VerifyImportProjectionResolver
             }
             $exportIndex=(int)$export['export_index'];
             if((((int)($export['object_flags']??0))&self::RF_PUBLIC)===0){
+                // January 2003 Unreal II compiles out the non-forgiving
+                // private-export exception; LOAD_Forgiving still logs/breaks.
+                // Static projection models the normal non-forgiving path.
+                if ($profile === self::PROFILE_UNREAL2_V126_2003) {
+                    return self::result('resolved','unreal2_v126_nonforgiving_private_export_match',true,$exportIndex);
+                }
                 return self::result('private_export','private_export',true,null,['candidate_export_index'=>$exportIndex]);
             }
             $reason=$profile===self::PROFILE_UNREAL2_V69_2000

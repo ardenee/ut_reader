@@ -14,15 +14,22 @@ final class Uedb5Ue2VerifyImportSourceProfile
             return null;
         }
         return match (true) {
-            // Source: Unreal II 2000-12-09, Core/Src/UnLinker.cpp.
-            $gameId === 2 && $version === 69 && $licensee === 0
+            // The December 2000 game loader accepts both older licensee-0
+            // packages and its emitted 0x7F form through this VerifyImport path.
+            $gameId === 2 && $version === 69 && in_array($licensee, [0, 0x7F], true)
                 => PdoUe2VerifyImportProjectionResolver::PROFILE_UNREAL2_V69_2000,
+            // The corrected January 2003 Unreal II source has distinct
+            // public/private export handling and no active package-remap alias.
+            $gameId === 2 && $version === 126 && $licensee === 0
+                => PdoUe2VerifyImportProjectionResolver::PROFILE_UNREAL2_V126_2003,
             // Source: UT2003 2107, Core/Src/UnLinker.cpp.
             $gameId === 4 && $version === 120 && $licensee === 28
                 => PdoUe2VerifyImportProjectionResolver::PROFILE_UT2003_V2107,
-            // Sources: UT2004 3369 v128 and UT2004Src v129, Core/Src/UnLinker.cpp.
-            $gameId === 5 && (($version === 128 && $licensee === 29)
-                || ($version === 129 && $licensee === 27))
+            // UT2004 v3186/v127, v3369/v128, v129 source (0x1D),
+            // plus original observed v129/0x1B backwards-compatible import path.
+            $gameId === 5 && (($version === 127 && $licensee === 29)
+                || ($version === 128 && $licensee === 29)
+                || ($version === 129 && in_array($licensee, [27, 29], true)))
                 => PdoUe2VerifyImportProjectionResolver::PROFILE_UT2004_V129,
             default => null,
         };
@@ -43,14 +50,17 @@ final class Uedb5Ue2VerifyImportSourceProfile
         $policy = strtolower(trim((string)($snapshot['source_policy'] ?? '')));
         $schema = strtolower(trim((string)(((array)($snapshot['section_schemas'] ?? []))['imports'] ?? '')));
         $authorized = match ($gameId) {
-            2 => $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000)
-                && str_starts_with($schema, 'ue2.unreal2.'),
+            2 => str_starts_with($schema, 'ue2.unreal2.')
+                && (($version === 69 && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V69_2000))
+                    || ($version === 126 && $policy === strtolower(Uedb5Unreal2SnapshotBuilder::POLICY_V126_GAME))),
             4 => $policy === strtolower(Uedb5Ut2003SnapshotBuilder::SOURCE_POLICY)
                 && str_starts_with($schema, 'ue2.ut2003.'),
-            5 => $policy === strtolower($version === 128
-                    ? Uedb5Ut2004SnapshotBuilder::POLICY_V128
-                    : Uedb5Ut2004SnapshotBuilder::POLICY_V129)
-                && str_starts_with($schema, 'ue2.ut2004.'),
+            5 => str_starts_with($schema, 'ue2.ut2004.')
+                && $policy === strtolower(match ($version) {
+                    127 => Uedb5Ut2004SnapshotBuilder::POLICY_V127,
+                    128 => Uedb5Ut2004SnapshotBuilder::POLICY_V128,
+                    default => Uedb5Ut2004SnapshotBuilder::POLICY_V129,
+                }),
             default => false,
         };
         return $authorized ? $profile : null;

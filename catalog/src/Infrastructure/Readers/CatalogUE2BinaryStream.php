@@ -247,12 +247,15 @@ final class CatalogUE2BinaryStream
      */
     public static function fromSourceAnsi(string $raw): string
     {
-        return \UnrealDb\Catalog\Domain\Package\CatalogUE1AnsiName::fromBytes($raw);
+        // UE2 source FromAnsi treats each input octet as one TCHAR code point.
+        // Keep this conversion UE2-owned; no UE1 reader/utility dependency.
+        return mb_convert_encoding($raw, 'UTF-8', 'ISO-8859-1');
     }
 
     public static function toUtf8(string $raw): string
     {
-        $converted = @mb_convert_encoding($raw, 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
-        return $converted === false ? $raw : $converted;
+        // Never sniff UTF-8 or Windows-1252: serialized UE2 ANSI bytes are
+        // independently widened by the original archive's FromAnsi routine.
+        return self::fromSourceAnsi($raw);
     }
 }
