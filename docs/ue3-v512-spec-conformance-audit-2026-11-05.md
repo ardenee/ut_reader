@@ -33,7 +33,7 @@ Existing accepted source and original-byte evidence reused: `tests/evidence/ue3/
 | Exact class package, name, parent and RF_Public when matching candidate exports | `CatalogCompactIdentityEnricher` and `PdoUe3VerifyImportProjectionResolver` | Previously **source/fixture-verified**; not independently re-executed here |
 | Select actual physical package before declaring resolved | Source-scoped UE3 provider selection; no mount inferred from indexed candidates | **MATCH in prior original-PRD conditional evidence**; native mount order remains unavailable |
 | Export dependency list at `DependsOffset` | Offset retained; list contents not decoded by the parser | **NOT IMPLEMENTED**, and not a current UnrealDB metadata or dependency-publication operation |
-| Compression chunk metadata and zlib/LZO/LZX reconstruction | UE3 parser implements supported methods and strict diagnostics | **PARTIAL**: genuine compressed-package comparison not established in this review |
+| Compression chunk metadata and zlib/LZO/LZX reconstruction | UE3 parser and UDK source comparison | **PARTIAL**: six genuine installed UT3 LZO packages parse; later UDK Xbox LZX examples fail; independent original-native differential remains open |
 | Native object-specific payloads | Only payload spans retained for catalog | **OUT OF CURRENT PRODUCT SCOPE**, not falsely marked parsed |
 
 ## Reproducible new findings and results
@@ -60,7 +60,7 @@ The dedicated regression uses all seven untouched genuine UT3 version-512/licens
 
 - **UE3 225–471:** documented, but not implemented by the current later-family UE3 parser. A source-selected early reader would be needed before advertising full historical UE3 coverage.
 - **Physical mount-order context:** not available from independent metadata; do not silently resolve or mark missing. Existing conservative unresolved handling is correct.
-- **Compression:** original, genuinely compressed UT3 package with known engine behaviour is needed before claiming full ZLIB/LZO/LZX native parity. Avoid synthetic tests unrelated to the current product.
+- **Compression:** the supplemental UDK/installed-UT3 inspection now demonstrates six real compressed UT3 LZO positives (see below). An independent original-native decompression-byte differential is still absent. Later UDK Xbox LZX input demonstrably fails the current PHP path and must not be claimed supported.
 - **DependsOffset:** recorded in summary but export-indexed dependency array not materialized. No current UnrealDB operation consumes it; only implement if an actual consumer is identified.
 - **Object payloads:** outside UnrealDB's metadata and index reading contract.
 - **Source hash drift:** six historic UE3 contracts contain some earlier source hashes from later project iterations. Historical PASS evidence remains scoped to its pinned versions; it must not be silently treated as source-identical certification for every later provider, publisher or website change. This review newly verifies only the changed parser and UT3 snapshot boundary.
@@ -76,3 +76,58 @@ Changed DEV sources:
 Test files and disposable mutations remain under `D:\Temp\UnrealDB\ue3\spec-review-20261105`. No PRD SQL writes, UEDB5 resnapshot, original binary mutation, native gameplay calls or new contracts.
 
 **Conclusion:** The documented UT3 version-512 metadata path is broadly aligned with the previously accepted source/byte evidence. Three concrete safety/provenance defects discovered in this review are corrected and confirmed against positive original cases and negative mutated copies. This is narrower than certification of the complete UE3 file format or all compiled UT3 runtime paths.
+
+## Supplemental source comparison: UDK, UDKUltimate, installed UT3 (2026-11-05)
+
+This supplementary inspection covers the four newly identified UDK/source-and-tool roots and `H:\Epic Games\Unreal Tournament 3`. It does **not** change the original-source priority for UT3: the January 2008 Epic UE3 loader and the game-specific UT3 version-512/licensee-0 evidence remain authoritative. UDKUltimate is a later redistributed/forked source tree, not proof of the byte-for-byte UT3 2008 compiled code.
+
+### Corpus provenance
+
+- `L:\Source\Engine\UDK` contains one Xbox 360 sample build, **engine version 8171, changelist 833356, April 5, 2011**, with XEX and PDB artifacts. Its contents are effectively mirrored under `L:\Source\Engine\UE3\UDK Game Sample (833356 2011-04-05)`: 58 matching relative file paths and lengths, with one additional `build_info.txt` under the UE3-path copy. The sample map `DM-Deck_LOC_INT.xxx` has identical SHA-256 `234d20763fa7c026a2b4fc36191ed3cc52170fd439ef9465624bb0aaf2e9af0c` in both copies.
+- `L:\Source\Engine\UE3\Unreal Engine [v3.0] UDKUltimate [05-11-17]\UDKUltimate\Development\Src\Core` contains complete later UE3 C++ linker, name, version and compression routines alongside compiled assets. The directory holds a mixture of version-820 packages and other historical formats; it is **not** a UT3 build.
+- `L:\Source\Engine\UE3\Unreal Engine [v3.0] Tools [00-00-2010]` contains model viewers, decompilers and console tooling, but no corresponding native UE3 Core linker source suitable as separate format authority.
+- The installed UT3 executable `H:\Epic Games\Unreal Tournament 3\Binaries\UT3.exe` has SHA-256 `097518615da0fe4ed73f104186121a58cd69ff30be1007e770fa2df0473cd70f`; the PE file-version fields were blank. No native UT3 process trace was performed.
+
+### Installed UT3 header and LZO evidence
+
+A read-only header census enumerated **955** `.u`, `.upk` and `.ut3` files with valid UE3 magic in the installed game, all **package version 512 and licensee 0**. There were **500 uncompressed** files and **455 with compression algorithm LZO (flag 2)**. The former uncertainty about whether any genuine compressed UT3 packages were available is therefore resolved.
+
+The exact production `CatalogUE3PackageReader` accepted these six independently installed, genuinely LZO-compressed UT3 files (no file copies altered):
+
+| Real original package | SHA-256 | Compression chunks | Names / imports / exports | Reader |
+|---|---|---:|---|---|
+| Core.u | `1384474da4bed048b1b3df3bdad0d2b9e0a1aa4d6eeadca2dde894b9f9171993` | 1 | 639 / 20 / 1,228 | accepted |
+| Editor.u | `23c59f0924a06aa2ae39c9ace19e27e7432cc4561e514e04d4610f05fcaa329e` | 1 | 447 / 54 / 430 | accepted |
+| GameFramework.u | `f9cd3394916a5c140d106245fd6a7e2974a7fb888ce03ac3bcb973c2607dee82` | 1 | 240 / 103 / 166 | accepted |
+| IpDrv.u | `4515822a2827743cbed81100b6fdbdd2b4e3c8f668c7f00af297727edd0cb390` | 1 | 158 / 27 / 189 | accepted |
+| Engine.u | `5f08a77ea18fc4a84cafd6832066231ad5c230b034d008f964bf4b5047cb8983` | 8 | 15,079 / 145 / 25,138 | accepted |
+| Startup_CZE.upk | `9631438737c4aaf228632c1a0322f87993507438faa061e0838313c97706054a` | 18 | 2,293 / 649 / 6,750 | accepted |
+
+All six report `logicalDecompressed=true`, no reader validation issues, and exact match of decoded table counts to their package summary counts. **These observations do not constitute an independent original compiled-engine decompression byte differential.**
+
+### Versioned native implementation differences
+
+1. **Summary/export wire layout:** January 2008 UE3 and UDKUltimate native routines agree on the order of common header and export fields. The later code adds version-gated summary fields at 516 (additional packages), 584 (thumbnail table), 623 (crosslevel GUIDs), and 767 (texture allocation); 543 removes legacy component-map serialization. This supports the v512 schema but not blanket parity for every later revision.
+2. **Name context filtering differs:** January 2008 `ULinkerLoad::SerializeNameMap` uses serialized name flags to mask nonmatching client/server/editor contexts. UDKUltimate `SerializeNameMap` explicitly ignores those flags at runtime. Its `FNameEntry` serializer still preserves a serialized flags field, using a zero dummy when name flags are compiled out. **Do not replace UT3's early effective-name-map rule with later UDK runtime behaviour.**
+3. **Class identity differs:** January 2008 `GetExportClassPackage` requires the class import's parent to be another import; the later UDK method additionally handles export parents. UnrealDB correctly isolates this distinction through its UT3 v512 source-policy path.
+4. **Class remapping differs:** later `ULinkerLoad::RemapClasses` contains a pre-536 Prefab sequence compatibility conversion. That method is not present in the examined January 2008 UT3-era linker, so it must **not** be applied to UT3 metadata merely because a package reports version 512.
+5. **UE3 dependency sections:** later `SerializeDependsMap` shows one dependent-index array per export, but skips reading it in seek-free runtime contexts. The original table-only UnrealDB contract does not consume export-indexed DependsMap. Its existence is not a requirement to deserialize object payloads.
+
+### New evidence of incomplete **later-UDK LZX** compatibility
+
+The installed 2011 sample includes seven normal v813/licensee-0 packages and eleven other `.xxx` records whose header does not fit the same conventional package profile. The later UDKUltimate tree contains a large v820 family and other versions.
+
+Two original, unmodified Xbox 360 LZX packages fail the **generic** UnrealDB UE3 reader (the reader correctly reports errors and refuses completed table acceptance):
+
+| Genuine later-UDK sample | Version / codec | Observed failure |
+|---|---|---|
+| `UDK\...\CookedXbox360\DM-Deck_LOC_INT.xxx` (SHA-256 `234d20763fa7c026a2b4fc36191ed3cc52170fd439ef9465624bb0aaf2e9af0c`) | 813 / LZX | `Invalid LZX block type=4` |
+| `UDKUltimate\...\CookedXbox360\UDK-UDKUltimate_LOC_INT.xxx` (SHA-256 `579071c90a63196e31bdaeca6b9b04a9b137839f1aa6f61a3e36de9c2313dfe5`) | 820 / LZX | `Invalid or incomplete LZX Huffman table` |
+
+An original version-820 PS3 `ENVYENTRY.XXX` with ZLIB compression (SHA-256 `7140cbd4e4502668902ac11cbae47240cbb57ecc0cbdbd0847c08029d296e8e2`) parses successfully (60 names, 18 imports, 18 exports). A plain v787 UDKUltimate package also parses.
+
+The later native `appUncompressMemoryLZX` invokes Microsoft `XMemCreateDecompressionContext`/`XMemDecompress` using the Xbox LZX codec and accounts for a four-byte padding convention. The current PHP implementation uses its independent raw LZX decoder with a 17-bit window. **The precise reason for the mismatch is not yet proved**, and blindly removing padding or changing the window would be unsupported. Keep v813/v820 Xbox LZX packages **unverified/unsupported** rather than promising full generic UE3 491–867 support.
+
+No production source was modified for this supplemental comparison, and none of the existing UT3 six operation contracts was promoted or invalidated by these later UDK-only files. No PRD SQL, imported UEDB5 snapshot or original binary was changed.
+
+Reproducible temporary read-only scripts/results: `D:\Temp\UnrealDB\ue3\spec-review-20261105\probe-three-ue3-corpora.py`, `corpus-probe.jsonl`, `check-installed-compressed.php`, `installed-compressed-results.jsonl`, `check-udk-later-examples.php`, `udk-later-results.jsonl`.

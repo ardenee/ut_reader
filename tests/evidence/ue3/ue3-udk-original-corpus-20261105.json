@@ -1,0 +1,156 @@
+{
+  "evidence_type": "source_variants_and_original_compiled_game_package_census",
+  "date": "2026-11-05",
+  "project_existing_contracts": [
+    "ue3-dispatch",
+    "ue3-tables"
+  ],
+  "new_contracts_created": 0,
+  "original_source_priority": "UT3 game source + January 2008 UE3 linker version512, licensee0; UDKUltimate later fork only supplemental; Xbox360 2011 debug binaries later compilation",
+  "roots": [
+    {
+      "path": "L:\\Source\\Engine\\UDK",
+      "role": "2011 UDK Xbox360 sample; build 8171 CL833356; XEX/PDB"
+    },
+    {
+      "path": "L:\\Source\\Engine\\UE3\\UDK Game Sample (833356 2011-04-05)",
+      "role": "same sample 58 common relative paths and sizes plus one additional build_info.txt; exact same sample archive SHA"
+    },
+    {
+      "path": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] UDKUltimate [05-11-17]",
+      "role": "later UE3 C++ source and mixed native package corpora; original UT3 compiled engine not established"
+    },
+    {
+      "path": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] Tools [00-00-2010]",
+      "role": "modding tools and console templates; no separate linker source"
+    },
+    {
+      "path": "H:\\Epic Games\\Unreal Tournament 3",
+      "role": "original installed game and cooked package corpus; 955 packages examined"
+    }
+  ],
+  "installed_ut3": {
+    "executable": "H:\\Epic Games\\Unreal Tournament 3\\Binaries\\UT3.exe",
+    "exe_sha256": "097518615da0fe4ed73f104186121a58cd69ff30be1007e770fa2df0473cd70f",
+    "package_count": 955,
+    "all_version_512_licensee_0": true,
+    "compression_flags_histogram": {
+      "0": 500,
+      "2": 455
+    },
+    "sample_positive": [
+      {
+        "file": "Core.u",
+        "sha256": "1384474da4bed048b1b3df3bdad0d2b9e0a1aa4d6eeadca2dde894b9f9171993",
+        "chunks": 1,
+        "names": 639,
+        "imports": 20,
+        "exports": 1228
+      },
+      {
+        "file": "Editor.u",
+        "sha256": "23c59f0924a06aa2ae39c9ace19e27e7432cc4561e514e04d4610f05fcaa329e",
+        "chunks": 1,
+        "names": 447,
+        "imports": 54,
+        "exports": 430
+      },
+      {
+        "file": "GameFramework.u",
+        "sha256": "f9cd3394916a5c140d106245fd6a7e2974a7fb888ce03ac3bcb973c2607dee82",
+        "chunks": 1,
+        "names": 240,
+        "imports": 103,
+        "exports": 166
+      },
+      {
+        "file": "IpDrv.u",
+        "sha256": "4515822a2827743cbed81100b6fdbdd2b4e3c8f668c7f00af297727edd0cb390",
+        "chunks": 1,
+        "names": 158,
+        "imports": 27,
+        "exports": 189
+      },
+      {
+        "file": "Engine.u",
+        "sha256": "5f08a77ea18fc4a84cafd6832066231ad5c230b034d008f964bf4b5047cb8983",
+        "chunks": 8,
+        "names": 15079,
+        "imports": 145,
+        "exports": 25138
+      },
+      {
+        "file": "Startup_CZE.upk",
+        "sha256": "9631438737c4aaf228632c1a0322f87993507438faa061e0838313c97706054a",
+        "chunks": 18,
+        "names": 2293,
+        "imports": 649,
+        "exports": 6750
+      }
+    ],
+    "all_six_positive_reader_no_issues": true,
+    "verification_level": "Original bytes, file SHA256, actual PHP decompression/table counts. NO original compiled UE3 decompression byte comparison."
+  },
+  "later_udk": {
+    "xbox2011": {
+      "conventional_packages_v813_licensee0": 7,
+      "nonstandard_v0_licensee2_records": 11
+    },
+    "udkultimate": {
+      "package_family_v820_licensee0": 374,
+      "other_mixed_versions": true
+    },
+    "lzx_failures": [
+      {
+        "file": "L:\\Source\\Engine\\UDK\\UDK Game Sample (833356 2011-04-05)\\UE3-WLOTT-EPIC\\UDKGame\\CookedXbox360\\DM-Deck_LOC_INT.xxx",
+        "version": 813,
+        "licensee": 0,
+        "method": "LZX",
+        "sha256": "234d20763fa7c026a2b4fc36191ed3cc52170fd439ef9465624bb0aaf2e9af0c",
+        "error": "Invalid LZX block type=4"
+      },
+      {
+        "file": "L:\\Source\\Engine\\UE3\\Unreal Engine [v3.0] UDKUltimate [05-11-17]\\UDKUltimate\\UDKGame Xbox360 Template\\UDKGame\\CookedXbox360\\UDK-UDKUltimate_LOC_INT.xxx",
+        "version": 820,
+        "licensee": 0,
+        "method": "LZX",
+        "sha256": "579071c90a63196e31bdaeca6b9b04a9b137839f1aa6f61a3e36de9c2313dfe5",
+        "error": "Invalid or incomplete LZX Huffman table"
+      }
+    ],
+    "zlib_positive": {
+      "file": "UDKUltimate PS3 Template/Build Package/TEST12345/USRDIR/UDKGAME/COOKEDPS3/ENVYENTRY.XXX",
+      "version": 820,
+      "licensee": 0,
+      "method": "ZLIB",
+      "sha256": "7140cbd4e4502668902ac11cbae47240cbb57ecc0cbdbd0847c08029d296e8e2",
+      "names": 60,
+      "imports": 18,
+      "exports": 18
+    },
+    "source_explanation": "UDKUltimate Core/Src/UnMisc.cpp appUncompressMemoryLZX uses XMem LZX decompression and 4-byte buffer padding; current reader uses PHP raw LZX implementation. Precise mismatch remains unverified."
+  },
+  "source_differences": [
+    "UDKUltimate summary/export common serialization agrees with early version512 wire structure and later version thresholds",
+    "Jan2008 SerializeNameMap filters RF load contexts; later UDKUltimate SerializeNameMap ignores name context flags",
+    "Jan2008 GetExportClassPackage expects import-parent class imports; later supports export-parent",
+    "Later RemapClasses has pre-536 prefab conversion, absent in Jan2008 UT3-era linker",
+    "Later FNameEntry writes serialized 64-bit dummy flags when name flags compiled off",
+    "Later DependsMap one array per export only when runtime demands"
+  ],
+  "methods_not_covered": [
+    "original UT3 native debugger decompression exact-byte differential",
+    "native Xbox360 XMem decompressor trace",
+    "reliable Xbox LZX decoder parity",
+    "historical UE3 early 225–471 dedicated reader"
+  ],
+  "non_changes": [
+    "no canonical Epic source edits",
+    "no original game package edits",
+    "no PRD SQL changes",
+    "no UEDB5 regeneration",
+    "no production reader code changes"
+  ],
+  "analysis_temp": "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105",
+  "result": "UT3 v512 LZO and later UE3 wire layouts corroborated; Xbox UDK v813/v820 LZX not supported by present implementation; keep source-profile isolation"
+}
