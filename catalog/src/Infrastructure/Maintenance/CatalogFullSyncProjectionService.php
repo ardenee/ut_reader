@@ -13,6 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5GameDependencyPassService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageCoverageCache;
@@ -189,6 +190,26 @@ final class CatalogFullSyncProjectionService
 
             $this->emit('game_stats', 90, 'Rebuilding cached game dependency counters.');
             $stats = $this->rebuildStats($gameId);
+
+            // games.php deliberately suppresses dependency counters when any
+            // verified file has stale publication or the aggregate predates
+            // the latest published dependency. Do not mark Full Sync complete
+            // unless the same read gate accepts the newly rebuilt dashboard.
+            $engineQuery = $this->db->prepare(
+                'SELECT p.engine_key FROM ue_games g '
+                . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+                . 'WHERE g.id=? LIMIT 1'
+            );
+            $engineQuery->execute([$gameId]);
+            $engineKey = strtoupper(trim((string)($engineQuery->fetchColumn() ?: '')));
+            if ($engineKey === '' || !Uedb5DependencyPublicationScope::isGameStatsCurrent(
+                $this->db, $gameId, $engineKey
+            )) {
+                throw new RuntimeException(
+                    'Full Sync cannot complete: game #' . $gameId
+                    . ' still has stale UEDB5 dependency publication or dashboard statistics.'
+                );
+            }
 
             $this->emit(
                 'complete',

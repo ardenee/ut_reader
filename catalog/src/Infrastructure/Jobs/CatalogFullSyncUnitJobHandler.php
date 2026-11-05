@@ -77,11 +77,11 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
             }
         );
 
-        // Full Sync is a reconciliation operation, not a destructive validity sweep.
-        // A package which remains byte-for-byte present may be intentionally protected,
-        // obfuscated, licensee-specific, or simply unsupported by the current reader.
-        // Preserve its existing verified identity/metadata and continue the workflow;
-        // the incompatibility remains visible as a System Error for operator review.
+        // Do not destroy a verified package on a reader incompatibility. However,
+        // Full Sync only certifies source-regenerated UEDB5 for each child that
+        // genuinely reimports: retained old metadata is NOT successful reimport.
+        // Record the original failure and leave the child failed so the parent
+        // cannot finalize/report fresh game statistics from unchanged metadata.
         try {
             $result = $maintenance->execute('sync_reimport', [
                 'file_id' => $fileId,
@@ -92,20 +92,15 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
             ]);
             $status = (string)($result['status'] ?? 'reimported');
         } catch (CatalogInvalidPackageException $error) {
-            CatalogSystemErrorRecorder::resolveBackgroundJob(
-                $job->id,
-                'Full Sync retained this present package because the current reader cannot parse it; '
-                    . 'the previous failed-job classification is obsolete.'
-            );
             CatalogSystemErrorRecorder::record([
                 'source_kind' => 'unreal-file-validation',
-                'severity' => 'warning',
+                'severity' => 'error',
                 'error_type' => 'FullSyncReaderIncompatiblePackage',
                 'message' => $name . ': ' . trim($error->getMessage()),
                 'source_file' => $error->getFile(),
                 'source_line' => $error->getLine(),
                 'context' => [
-                    'disposition' => 'retained_reader_incompatible',
+                    'disposition' => 'blocked_reader_incompatible',
                     'job_id' => $job->id,
                     'job_type' => $job->type,
                     'game_id' => $gameId,
@@ -124,27 +119,17 @@ final class CatalogFullSyncUnitJobHandler implements JobHandler
                 ],
             ]);
 
-            $context->checkpoint([
-                'stage' => 'complete',
-                'done' => 1,
-                'total' => 1,
-                'percent' => 100,
-                'file_id' => $fileId,
-                'file_name' => $name,
-                'message' => 'Retained reader-incompatible package ' . $name
-                    . '; existing verified identity and metadata preserved.',
-            ]);
-
-            return [
-                'operation' => 'full_sync_file',
-                'game_id' => $gameId,
-                'file_id' => $fileId,
-                'status' => 'retained_reader_incompatible',
-                'validation_code' => $error->validationCode(),
-                'validation_arguments' => $error->validationArguments(),
-                'message' => 'Current reader could not reparse ' . $name
-                    . '; existing verified identity and metadata were preserved.',
-            ];
+            // Preserve the previous verified identity and metadata, but fail
+            // this child. Only a successful new parser publication may advance
+            // the parent to providers/dependencies/dashboard finalization.
+            throw new \RuntimeException(
+                'Full Sync cannot regenerate UEDB5 metadata for file #' . $fileId
+                . ' (' . $name . '): ' . trim($error->getMessage())
+                . '. Original package and previous metadata were retained; '
+                . 'resolve this incompatibility and retry the failed child.',
+                0,
+                $error
+            );
         }
         $context->checkpoint([
             'stage' => 'complete',

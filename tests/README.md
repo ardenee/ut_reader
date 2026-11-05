@@ -2,6 +2,10 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
+## Full Sync UEDB5 and Games dashboard completion — 5 November 2026
+
+Full Sync now **fails a reader-incompatible file unit** rather than falsely treating retained old UEDB5 metadata as a successful reimport. Finalization rebuilds game stats and requires the same current-publication freshness gate used by `catalog/games.php` to pass before reporting the parent complete. The detached worker fingerprint includes its Full Sync and source-policy dependencies. Original files and existing metadata are preserved on failed source reparsing; no persistent UEDB5 backups are generated. Focused in-memory failure/recovery and stale/fresh dashboard tests passed; read-only PRD Unreal II baseline is 1,217 verified packages. See [full sync readiness](../docs/full-sync-uedb5-dashboard-readiness-2026-11-05.md).
+
 ## UE2 game-source conformance review — 5 November 2026
 
 The corrected January 2003 Unreal II source is now used for exact v126/0 provenance and static non-forgiving import verification; UT2004 v127 and v129 source boundaries were repaired. The UE2 reader also rejects foreign magic, invalid names/references/spans and preserves source ANSI byte identity. Ten SHA-pinned original UE2-family files and focused negative tests passed; UE2/UE1 parser ownership and legacy UT2004 compatibility remained independent. The previously accepted native/runtime and website evidence was **not rerun**. Source-policy changes to code do **not** republish existing UEDB5 snapshots; a separate scoped regeneration is required for older persisted provenance or names.

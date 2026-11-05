@@ -64,6 +64,7 @@ CSS;
             'Background Jobs' => 'background-jobs.php?queue=' . rawurlencode($queueName),
             'System Errors' => 'system-errors.php',
             'Back to dashboard' => 'dashboard.php',
+            'Game statistics' => 'games.php',
         ]
     );
 
@@ -107,7 +108,7 @@ CSS;
             . '</h2><p>Recorded verified size</p></div>';
         echo '<div class="stat"><h2>Resumable</h2><p>Per-file durable units</p></div>';
         echo '</div>';
-        echo '<p class="full-sync-warning"><strong>Background workflow:</strong> the coordinator snapshots the verified files and queues one durable re-import unit per file. After those units succeed it rebuilds package providers, queues independent dependency units, and finally rebuilds dependency summaries and cached game counters. A successful unit is never replayed because another file failed. If a child reaches dead letter, the parent waits; restart that failed child only and the parent continues automatically. If finalization itself fails, Restart resumes at finalization rather than starting the game over.</p>';
+        echo '<p class="full-sync-warning"><strong>Background workflow:</strong> the coordinator snapshots the verified files and queues one durable re-import unit per file. Every unit reparses the original verified package and regenerates its UEDB5 metadata. Only after all reimports succeed does the workflow rebuild providers and dependencies and refresh the cached figures used by Games. A reader-incompatible file retains its original bytes and prior metadata but blocks completion until that child succeeds; it cannot be counted as successfully resynced. A successful unit is never replayed because another file failed. If a child reaches dead letter, the parent waits; restart that failed child only and the parent continues automatically. If finalization itself fails, Restart resumes at finalization rather than starting the game over.</p>';
         if ($count === 0) {
             echo '<p class="muted">This game has no verified catalog packages to sync.</p>';
         } else {
