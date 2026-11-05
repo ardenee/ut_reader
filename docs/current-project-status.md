@@ -1,6 +1,16 @@
 # UnrealDB current project status
 
-## 5 November 2026 — Games dependency coverage, Graphify-only dashboard
+## 5 November 2026 — Games Resolved correction and UE5 exact catalogue coverage
+
+**Corrected definition:** `Resolved` on `catalog/games.php` is **total dependency references − current unresolved references**. The former field `resolved_dependency_count` only counted uniquely engine-selected physical providers and therefore wrongly displayed zero for every game. For UE1–UE4, the fresh per-game source counts now yield the expected known/common/package-only satisfied totals; e.g. UT99 4,091,838, UT2004 3,260,406, UT3 1,079,968, UT4 413,683. The `Resolved Files` count remains dependency-bearing files with no outstanding source-unresolved/missing references.
+
+**Satisfactory UE5:** Old `823,481 unresolved` was based on source-unknown package summaries, ignoring Zen ScriptImports, already source-resolved load-order edges and independently indexed IoStore targets. Read-only PRD SQL verifies **1,847,870 total Zen dependency edges**, **234,662/234,662 exact ScriptImport matches in pinned `global.utoc`**, **699,069/699,247 exact imported provider/export hashes**, and **124,168/124,234 package-only indexed package IDs**. The remaining **244 references on 51 files** name **26 unique FPackageIds not indexed** in the imported `FactoryGame-WindowsServer.utoc`; the other **1,847,626 references** are catalogue-satisfied and **27,189 of 27,240 files** have no outstanding indexed reference. There are **zero Satisfactory base-game registry rows** in PRD currently. These 26 source IDs may belong to additional, unimported game/base-game containers; do **not** label them missing. There is one FactoryGame container plus companion global.utoc, not a guaranteed all-dependencies-complete native mount.
+
+**Safety/scope:** The site calculates UE5 catalogue coverage from current indexed ready/published package IDs, exact provider public-export hash, and SHA-pinned ScriptObjects identities. Original Epic-source v14 unresolved outcomes stay unchanged and unknown native mount context is not falsified. Cache invalidates on game statistics publication and on indexed container, published-package or ScriptObjects changes. Real DEV PHP HTTP cold/warm and all eight game rows now match read-only PRD data. Existing source-only Game Files filter is not linked for the UE5 adjusted counters, to avoid a misleading subset. No PRD SQL/package writes; 32/32 fixed engine acceptance cases unchanged. Evidence: [Resolved and UE5 exact indexed coverage](../tests/evidence/games-page-resolved-and-ue5-indexed-coverage-20261105.json). The previous Games+Graphify status block below is historical and superseded for the dependency totals.
+
+---
+
+## Historical (superseded): 5 November 2026 Games dependency coverage, Graphify-only dashboard
 
 **Public Games table** now shows `Unresolved` (source-published reference count), `Unresolved Files` (distinct files with one or more unresolved references), `Resolved` (explicit source provider-resolved reference count), and `Resolved Files` (distinct dependency-bearing files with no source-unresolved or source-missing references). The two confirmed-missing columns and the explanatory/admin-link footer are removed. **Maintenance → Update All Game Dependencies** was already registered in the global admin navigation; the duplicate page-bottom link is not repeated.
 

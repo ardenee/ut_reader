@@ -4868,7 +4868,7 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 160
+      "line": 167
     },
     {
       "from": "catalog/games.php",
@@ -4880,7 +4880,7 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 129
+      "line": 136
     },
     {
       "from": "catalog/games.php",
@@ -4904,7 +4904,7 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/TableRegion.php",
       "syntax": "static_or_expression",
-      "line": 149
+      "line": 156
     },
     {
       "from": "catalog/generated-package-download.php",

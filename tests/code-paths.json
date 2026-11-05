@@ -3342,8 +3342,8 @@
     },
     {
       "path": "catalog/games.php",
-      "sha256": "818c0e4d180941bf5ff794fc261526b59871a57bed88a0565bd9f2db8ebf060f",
-      "bytes": 6891,
+      "sha256": "6034bda13ff474731e3786153d6bc0494af86659a55e3fc699f352ba6a55a038",
+      "bytes": 7674,
       "engine_hints": [
         "shared"
       ],
@@ -11281,8 +11281,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
-      "sha256": "265188aa1eb6b5626fffd188391c49d8f7d3020779e4abc4549abb16816a96ae",
-      "bytes": 3628,
+      "sha256": "ac66f1f0b48c7901c17e51e107d25e84ae4195e3a23b9b1de750c5e250261009",
+      "bytes": 3775,
       "engine_hints": [
         "shared"
       ],
@@ -11309,8 +11309,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php",
-      "sha256": "e3b5f91c80c53cd1686dd589bb3be84509f1b7a807e55abae5b9572d23c516be",
-      "bytes": 7577,
+      "sha256": "6de9dcb3e3d42114bb7a4b517e8a83a2f2519d7fc5b6ffe03ceac169968e6e15",
+      "bytes": 15614,
       "engine_hints": [
         "shared"
       ],

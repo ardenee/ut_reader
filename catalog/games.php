@@ -57,18 +57,28 @@ try {
             )
             : null;
 
-        $unresolved = $current ? (int)$game['unresolved_dependency_count'] : null;
-        $resolved = $current ? (int)$game['resolved_dependency_count'] : null;
+        // "Resolved" means every reference not currently unresolved, including
+        // common and package-only references; it is not the old resolved_count
+        // field, which requires a unique engine-selected physical provider.
+        // Zen counts use exact indexed ScriptObjects, packages and exports.
+        $zen = strtoupper($engine) === 'UE5';
+        $unresolved = $current
+            ? ($zen ? ($fileCounts['unresolved_references'] ?? null)
+                : (int)$game['unresolved_dependency_count'])
+            : null;
+        $totalDependencies = $current
+            ? ($zen ? ($fileCounts['dependency_count'] ?? null)
+                : (int)$game['dependency_count'])
+            : null;
+        $resolved = $unresolved !== null && $totalDependencies !== null
+            ? max(0, $totalDependencies - $unresolved)
+            : null;
         $unresolvedFiles = $fileCounts['unresolved_files'] ?? null;
         $resolvedFiles = $fileCounts['resolved_files'] ?? null;
 
         $unresolvedUrl = 'game-files.php?' . http_build_query([
             'id' => $gameId,
             'dep_filter' => 'unresolved',
-        ]);
-        $resolvedUrl = 'game-files.php?' . http_build_query([
-            'id' => $gameId,
-            'dep_filter' => 'resolved',
         ]);
 
         $badge = static function (?int $count, string $positiveTone = 'success'): string {
@@ -97,7 +107,7 @@ try {
             . number_format((int)$game['file_count']) . '</td>';
         $rows .= $numberCell(
             $unresolved,
-            $unresolved !== null
+            $unresolved !== null && !$zen
                 ? '<a href="' . catalog_h($unresolvedUrl)
                     . '" title="Source-published unresolved dependency references">'
                     . $unresolvedBadge . '</a>'
@@ -105,7 +115,7 @@ try {
         );
         $rows .= $numberCell(
             $unresolvedFiles,
-            $unresolvedFiles !== null
+            $unresolvedFiles !== null && !$zen
                 ? '<a href="' . catalog_h($unresolvedUrl)
                     . '" title="Distinct files with at least one current unresolved reference">'
                     . $unresolvedFileBadge . '</a>'
@@ -113,11 +123,8 @@ try {
         );
         $rows .= $numberCell(
             $resolved,
-            $resolved !== null
-                ? '<a href="' . catalog_h($resolvedUrl)
-                    . '" title="Source-published references resolved to a provider">'
-                    . $resolvedBadge . '</a>'
-                : $resolvedBadge
+            '<span title="Total references minus unresolved; includes common and package-only references, and for UE5 exact indexed targets">'
+                . $resolvedBadge . '</span>'
         );
         $rows .= $numberCell(
             $resolvedFiles,
@@ -138,9 +145,9 @@ try {
         . '<thead><tr>'
         . '<th scope="col">Game</th><th scope="col">Profile engine</th>'
         . '<th scope="col">Files</th>'
-        . '<th scope="col" title="Total number of current source-published unresolved references">Unresolved</th>'
+        . '<th scope="col" title="References still unresolved against current source publication; UE5 uses exact indexed catalogue target coverage">Unresolved</th>'
         . '<th scope="col" title="Number of distinct files with at least one unresolved reference">Unresolved Files</th>'
-        . '<th scope="col" title="Total number of references resolved to a provider">Resolved</th>'
+        . '<th scope="col" title="Total dependency references minus unresolved references; includes common and package-only references">Resolved</th>'
         . '<th scope="col" title="Files with at least one dependency and no unresolved/missing references; common and package-only count as met">Resolved Files</th>'
         . '<th scope="col">Total size</th><th scope="col">Open</th>'
         . '</tr></thead><tbody>' . $rows . '</tbody></table>';

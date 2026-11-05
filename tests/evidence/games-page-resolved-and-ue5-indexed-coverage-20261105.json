@@ -1,0 +1,145 @@
+{
+  "schema": "games-page-resolved-v2-and-ue5-catalogue-proven-provider-coverage",
+  "verified_date": "2026-11-05",
+  "result": "PASS",
+  "supersedes": "tests/evidence/games-page-graphify-only-20261105.json",
+  "reason": "Original Games page incorrectly used source-projected strict provider-resolved_count, which was 0 for every game, and read only UE5 source-unknown package summaries, ignoring existing indexed IoStore and global ScriptObjects target identities.",
+  "definition": {
+    "resolved_references": "Current total dependency references MINUS current unresolved references, including common and package-only outcomes",
+    "resolved_files": "Files with >=1 source dependency and no unresolved or source-confirmed missing references; a single file counted at most once",
+    "unresolved_files": "Distinct files with >=1 reference that is still unresolved; for Zen this is after exact catalogue target lookup",
+    "unresolved_ue5": "Exact required target identities not yet matched to the currently indexed ready/published IoStore content and global.utoc ScriptObjects. This is not a source-confirmed missing or mounted-engine runtime failure.",
+    "source_parity": "Original UEDB5 source policy, dependency edges and native loader outcomes retained without mutation. Website catalogue coverage is a distinct read-only metric."
+  },
+  "real_PRD_data_all_games": {
+    "Unreal Gold": {
+      "game_id": 12,
+      "engine": "UE1",
+      "total": 1252635,
+      "unresolved": 711776,
+      "resolved": 540859,
+      "unresolved_files": 6970,
+      "resolved_files": 3818
+    },
+    "Unreal II": {
+      "game_id": 2,
+      "engine": "UE2",
+      "total": 110970,
+      "unresolved": 71675,
+      "resolved": 39295,
+      "unresolved_files": 838,
+      "resolved_files": 376
+    },
+    "UT99": {
+      "game_id": 3,
+      "engine": "UE1",
+      "total": 8137633,
+      "unresolved": 4045795,
+      "resolved": 4091838,
+      "unresolved_files": 49857,
+      "resolved_files": 24438
+    },
+    "UT2003": {
+      "game_id": 4,
+      "engine": "UE2",
+      "total": 462394,
+      "unresolved": 333310,
+      "resolved": 129084,
+      "unresolved_files": 3469,
+      "resolved_files": 1593
+    },
+    "UT2004": {
+      "game_id": 5,
+      "engine": "UE2",
+      "total": 10574533,
+      "unresolved": 7314127,
+      "resolved": 3260406,
+      "unresolved_files": 59415,
+      "resolved_files": 13420
+    },
+    "UT3": {
+      "game_id": 6,
+      "engine": "UE3",
+      "total": 2591525,
+      "unresolved": 1511557,
+      "resolved": 1079968,
+      "unresolved_files": 4264,
+      "resolved_files": 2458
+    },
+    "UT4": {
+      "game_id": 7,
+      "engine": "UE4",
+      "total": 748145,
+      "unresolved": 334462,
+      "resolved": 413683,
+      "unresolved_files": 43777,
+      "resolved_files": 20461
+    },
+    "Satisfactory": {
+      "game_id": 14,
+      "engine": "UE5",
+      "total": 1847870,
+      "unresolved": 244,
+      "resolved": 1847626,
+      "unresolved_files": 51,
+      "resolved_files": 27189
+    }
+  },
+  "verified_ue5": {
+    "game_id": 14,
+    "verified_packages": 27240,
+    "factory_container": "FactoryGame-WindowsServer.utoc",
+    "factory_utoc_sha256": "84d30d56ccbd26cfeb1c0319b92d3274b13dff4406facad267aa582217c51696",
+    "global_container": "global.utoc",
+    "global_utoc_sha256": "0f72c200169b09519ac727d0149ef4f3c35d6234f1326c7efe5ee0bcf04095e6",
+    "number_of_staged_utoc_records": 2,
+    "total_published_dependency_edges": 1847870,
+    "source_published_resolved_load_order_edges": 789727,
+    "source_published_unknown_reference_edges": 1058143,
+    "required_distinct_package_ids": 18626,
+    "indexed_distinct_package_ids": 18600,
+    "unindexed_distinct_package_ids": 26,
+    "unindexed_references": 244,
+    "unindexed_references_distinct_files": 51,
+    "package_export_source_edges": 699247,
+    "package_export_hashes_found_in_index": 699069,
+    "package_only_source_edges": 124234,
+    "package_ids_found_in_index_for_package_only": 124168,
+    "script_import_source_edges": 234662,
+    "script_imports_found_in_pinned_global_script_objects": 234662,
+    "source_confirmed_missing": 0,
+    "base_game_registry_rows": 0,
+    "conclusion": "Cannot assert the remaining 26 missing-from-index IDs are missing from Satisfactory itself; other not-yet-imported UE5/base-game content may contain them. No native mount-order resolution is inferred."
+  },
+  "tests": {
+    "real_PRD_source_mode": "Read-only MySQL transactions and actual DEV PHP GET requests against source-selected PRD metadata",
+    "HTTP_GET_200_cold_and_warm": true,
+    "all_eight_game_rows_exact_source_counts": true,
+    "all_eight_resolved_total_less_unresolved": true,
+    "ue5_exact_indexed_target_SQL_coverage": "1,847,870 references / 244 remaining, 51 files",
+    "cached_ue5_references_preserved_on_warm_load": true,
+    "source_original_ue5_certification_reused_without_rerun": true,
+    "native_engine_tests_executed": 0,
+    "PRD_database_writes": 0
+  },
+  "caveats": [
+    "Previously published source strict-resolved_count=0 expresses unknown native provider mount, not catalogue target coverage.",
+    "For UE5 with missing base-game packages, the 244 references are unverified in the imported dataset, not necessarily missing from a runnable installation.",
+    "The global.utoc is a companion ScriptObjects source, not a member of the 27,240 FactoryGame packages.",
+    "UE5 Games-page catalogue coverage is not a substitute for native UE5 loader/PackageStore mount verification.",
+    "UE5 mixed classic+Zen games conservatively withhold aggregate reference totals until a supported complete current-game index is available."
+  ],
+  "source_sha256": {
+    "catalog/games.php": "6034bda13ff474731e3786153d6bc0494af86659a55e3fc699f352ba6a55a038",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php": "ac66f1f0b48c7901c17e51e107d25e84ae4195e3a23b9b1de750c5e250261009",
+    "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php": "6de9dcb3e3d42114bb7a4b517e8a83a2f2519d7fc5b6ffe03ceac169968e6e15",
+    "catalog/src/Infrastructure/Metadata/CatalogZenCookedScriptLabelLookup.php": "35954b714ec9d8d385e49a40cdef705f9171a8efff0cac1d421097e7383685ca",
+    "catalog/src/Infrastructure/Metadata/CatalogZenStaticDependencyLookup.php": "e82364eb4aa61256a7769e8e230d3606fdcbee981937489f1bfb1e4a48f843be",
+    "catalog/src/Infrastructure/Metadata/Uedb5DependencyPublicationScope.php": "c884a28466ff423e95ff3e26ea05a57efbaeac31df986c4c0e3733ba1c0d620d"
+  },
+  "previous_original_epic_source_evidence": "tests/contracts.json (32/32 PASS unchanged)",
+  "temporary_verification_root": "D:/Temp/UnrealDB/games-page",
+  "production_code_deployment_required": true,
+  "original_unreal_package_edits": 0,
+  "new_engine_contracts": 0
+}
