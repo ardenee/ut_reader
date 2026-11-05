@@ -85,5 +85,4287 @@
   "prd_database_modified": false,
   "live_php_code_modified": false,
   "temporary_copies_only": true,
-  "conclusion": "five PATCH5 packages identical to installed game packages; installed EXE exact GameSpy client match, different from Patch5 executable"
+  "conclusion": "five PATCH5 packages identical to installed game packages; installed EXE exact GameSpy client match, different from Patch5 executable",
+  "full_payload_differential": {
+    "review_date": "2026-11-05",
+    "archive_sha256": "b66b8264a87c3ce63d5d39b18fed593cb40ab62e3cf1fd7df84352d8becd99f5",
+    "archive_size_bytes": 343926484,
+    "archive_validation": "7-Zip 26.05: Everything is Ok; 392 extracted files and 47 directories",
+    "payload_location": "Patch/",
+    "payload_files": 390,
+    "installer_support_only_files": [
+      {
+        "path": "EULA.rtf",
+        "sha256": "deea2f9f37908ecec4ab4bfb31cb8e710d685c77f03ff46b957f1943ac25e152",
+        "bytes": 150821
+      },
+      {
+        "path": "Update.exe",
+        "sha256": "647641777c4b0728b4fe787d10a86cd7186003fe701e937e8888afe9ffc5b33c",
+        "bytes": 12288
+      }
+    ],
+    "total_archive_files": 392,
+    "installed_root": "H:\\Epic Games\\Unreal Tournament 3",
+    "staged_extracted_root": "D:\\Temp\\UnrealDB\\ue3\\spec-review-20261105\\official-patch5-full",
+    "per_file_hash_algorithm": "SHA-256, full contents, per corresponding relative path",
+    "payload_bytes": 685991670,
+    "status_counts": {
+      "identical": 389,
+      "different_same_size": 1
+    },
+    "by_extension": {
+      ".bmp": {
+        "identical": 2
+      },
+      ".cze": {
+        "identical": 29
+      },
+      ".deu": {
+        "identical": 29
+      },
+      ".dll": {
+        "identical": 4
+      },
+      ".esn": {
+        "identical": 29
+      },
+      ".exe": {
+        "different_same_size": 1,
+        "identical": 1
+      },
+      ".fra": {
+        "identical": 29
+      },
+      ".hun": {
+        "identical": 29
+      },
+      ".ini": {
+        "identical": 20
+      },
+      ".int": {
+        "identical": 30
+      },
+      ".ita": {
+        "identical": 29
+      },
+      ".pol": {
+        "identical": 29
+      },
+      ".rtf": {
+        "identical": 9
+      },
+      ".rus": {
+        "identical": 29
+      },
+      ".txt": {
+        "identical": 2
+      },
+      ".u": {
+        "identical": 14
+      },
+      ".upk": {
+        "identical": 73
+      },
+      ".ut3": {
+        "identical": 2
+      }
+    },
+    "by_directory": {
+      "Binaries": {
+        "identical": 6,
+        "different_same_size": 1
+      },
+      "Engine": {
+        "identical": 21
+      },
+      "UTGame": {
+        "identical": 362
+      }
+    },
+    "patch_package_version_counts": {
+      "v512/licensee0": 89
+    },
+    "non_UE3_tag_package_records": [],
+    "all_payload_paths_present_in_install": true,
+    "single_different_payload_path": "Binaries/UT3.exe",
+    "patch5_runtime_content_installed": true,
+    "installed_exe_is_gamespy_client_replacement": true,
+    "full_hash_comparison": [
+      {
+        "relative_path": "Binaries/steam_api.dll",
+        "type": ".dll",
+        "patch_bytes": 87288,
+        "patch_sha256": "7ac1090d725dcbd3580909d05258944aa98a6c13ba4fd3a17bd0e67e54252d06",
+        "patch_package_version": null,
+        "installed_bytes": 87288,
+        "installed_sha256": "7ac1090d725dcbd3580909d05258944aa98a6c13ba4fd3a17bd0e67e54252d06",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Binaries/steam_appid.txt",
+        "type": ".txt",
+        "patch_bytes": 5,
+        "patch_sha256": "4eb3f2ab5abc8cef7d9e7b4ed9a455a9481a9aed0773994003dc7ba919eab8ec",
+        "patch_package_version": null,
+        "installed_bytes": 5,
+        "installed_sha256": "4eb3f2ab5abc8cef7d9e7b4ed9a455a9481a9aed0773994003dc7ba919eab8ec",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Binaries/steamclient.dll",
+        "type": ".dll",
+        "patch_bytes": 2968048,
+        "patch_sha256": "2a5078b01d2a3df54b1109e7d33f3cb03810fd3f8db243df220935feab69d132",
+        "patch_package_version": null,
+        "installed_bytes": 2968048,
+        "installed_sha256": "2a5078b01d2a3df54b1109e7d33f3cb03810fd3f8db243df220935feab69d132",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Binaries/tier0_s.dll",
+        "type": ".dll",
+        "patch_bytes": 263416,
+        "patch_sha256": "6aed87a279ec4558186b043b9bb42e13cac422e3d1be3281e34e9218f378b425",
+        "patch_package_version": null,
+        "installed_bytes": 263416,
+        "installed_sha256": "6aed87a279ec4558186b043b9bb42e13cac422e3d1be3281e34e9218f378b425",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Binaries/UT3.exe",
+        "type": ".exe",
+        "patch_bytes": 28505368,
+        "patch_sha256": "92182d30b254bda3d4f7d71337976964d51568cf8644f96751e64adc3424d021",
+        "patch_package_version": null,
+        "installed_bytes": 28505368,
+        "installed_sha256": "097518615da0fe4ed73f104186121a58cd69ff30be1007e770fa2df0473cd70f",
+        "status": "different_same_size",
+        "installed_package_version": null
+      },
+      {
+        "relative_path": "Binaries/UT3OSHelper.exe",
+        "type": ".exe",
+        "patch_bytes": 24576,
+        "patch_sha256": "a7bdf43a9ada453df798c5c9898b046083c864b59403197fb5237efefe7c692b",
+        "patch_package_version": null,
+        "installed_bytes": 24576,
+        "installed_sha256": "a7bdf43a9ada453df798c5c9898b046083c864b59403197fb5237efefe7c692b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Binaries/vstdlib_s.dll",
+        "type": ".dll",
+        "patch_bytes": 369912,
+        "patch_sha256": "3e552bd8f0b282618e02a3fed8c96bead77b7b3352f5941b1f6d019039723f72",
+        "patch_package_version": null,
+        "installed_bytes": 369912,
+        "installed_sha256": "3e552bd8f0b282618e02a3fed8c96bead77b7b3352f5941b1f6d019039723f72",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Config/BaseEngine.ini",
+        "type": ".ini",
+        "patch_bytes": 15758,
+        "patch_sha256": "afed36b289f4af8a32e6d7246f70a05f72832dab9ae1b9ace38c0afa5e68fbad",
+        "patch_package_version": null,
+        "installed_bytes": 15758,
+        "installed_sha256": "afed36b289f4af8a32e6d7246f70a05f72832dab9ae1b9ace38c0afa5e68fbad",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Config/BaseMapLists.ini",
+        "type": ".ini",
+        "patch_bytes": 78,
+        "patch_sha256": "7ce25ea3f07a01331946e3d8b839f5d928639d1511e920b1e6f539b1ccaef255",
+        "patch_package_version": null,
+        "installed_bytes": 78,
+        "installed_sha256": "7ce25ea3f07a01331946e3d8b839f5d928639d1511e920b1e6f539b1ccaef255",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Config/BaseVote.ini",
+        "type": ".ini",
+        "patch_bytes": 74,
+        "patch_sha256": "5eef654b0f08715c4061dbf95399926e04e3b1bd290ee43fb87830e700d52e9d",
+        "patch_package_version": null,
+        "installed_bytes": 74,
+        "installed_sha256": "5eef654b0f08715c4061dbf95399926e04e3b1bd290ee43fb87830e700d52e9d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/CZE/Engine.cze",
+        "type": ".cze",
+        "patch_bytes": 26632,
+        "patch_sha256": "7635adeffe14c72b81ed23786b023d2d22f41f511c31f9fb53522bc5b94d725e",
+        "patch_package_version": null,
+        "installed_bytes": 26632,
+        "installed_sha256": "7635adeffe14c72b81ed23786b023d2d22f41f511c31f9fb53522bc5b94d725e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/CZE/OnlineSubsystemGamespy.cze",
+        "type": ".cze",
+        "patch_bytes": 222,
+        "patch_sha256": "67afc0133bbd038b00062e27c03f419a5916e8a6fa50ac6d7e61728962a3b2bc",
+        "patch_package_version": null,
+        "installed_bytes": 222,
+        "installed_sha256": "67afc0133bbd038b00062e27c03f419a5916e8a6fa50ac6d7e61728962a3b2bc",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/DEU/Engine.deu",
+        "type": ".deu",
+        "patch_bytes": 13532,
+        "patch_sha256": "49794175acfde41b5a8275938bba4b3ad4ad3871dd8ebe0e53f1ec14b2217206",
+        "patch_package_version": null,
+        "installed_bytes": 13532,
+        "installed_sha256": "49794175acfde41b5a8275938bba4b3ad4ad3871dd8ebe0e53f1ec14b2217206",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/DEU/OnlineSubsystemGamespy.deu",
+        "type": ".deu",
+        "patch_bytes": 286,
+        "patch_sha256": "8aafdb1fdbf0e662f499d6ed632faeb7689b09578c1b0c8562342dd3a9172db0",
+        "patch_package_version": null,
+        "installed_bytes": 286,
+        "installed_sha256": "8aafdb1fdbf0e662f499d6ed632faeb7689b09578c1b0c8562342dd3a9172db0",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/ESN/Engine.esn",
+        "type": ".esn",
+        "patch_bytes": 13490,
+        "patch_sha256": "a529f3bb42eee9b5ea4a31c581a70a4370480d0a3ec4a12e642a42b1e82090b6",
+        "patch_package_version": null,
+        "installed_bytes": 13490,
+        "installed_sha256": "a529f3bb42eee9b5ea4a31c581a70a4370480d0a3ec4a12e642a42b1e82090b6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/ESN/OnlineSubsystemGamespy.esn",
+        "type": ".esn",
+        "patch_bytes": 287,
+        "patch_sha256": "ea82ec735ad59e1c4b576fde4a970806e6d23d3520285d02337cbc3324555b86",
+        "patch_package_version": null,
+        "installed_bytes": 287,
+        "installed_sha256": "ea82ec735ad59e1c4b576fde4a970806e6d23d3520285d02337cbc3324555b86",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/FRA/Engine.fra",
+        "type": ".fra",
+        "patch_bytes": 13181,
+        "patch_sha256": "9e7b6675c40a0d8082e26fb3a1c8ec98ebbcf675e5ba7093502fa42e14d8d644",
+        "patch_package_version": null,
+        "installed_bytes": 13181,
+        "installed_sha256": "9e7b6675c40a0d8082e26fb3a1c8ec98ebbcf675e5ba7093502fa42e14d8d644",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/FRA/OnlineSubsystemGamespy.fra",
+        "type": ".fra",
+        "patch_bytes": 294,
+        "patch_sha256": "071713b99998d557fb1112e510429fcd96b70c3241a492085336dedf06337746",
+        "patch_package_version": null,
+        "installed_bytes": 294,
+        "installed_sha256": "071713b99998d557fb1112e510429fcd96b70c3241a492085336dedf06337746",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/HUN/Engine.hun",
+        "type": ".hun",
+        "patch_bytes": 26764,
+        "patch_sha256": "f0fb9a96eee7291e2fdd6193b60aec0911c12d83d878cf3e9c76a399e238efc5",
+        "patch_package_version": null,
+        "installed_bytes": 26764,
+        "installed_sha256": "f0fb9a96eee7291e2fdd6193b60aec0911c12d83d878cf3e9c76a399e238efc5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/HUN/OnlineSubsystemGamespy.hun",
+        "type": ".hun",
+        "patch_bytes": 242,
+        "patch_sha256": "6311f4673b401c9a19ba200e77fc296749c16980ef0f8d3620af62ac1ab68c58",
+        "patch_package_version": null,
+        "installed_bytes": 242,
+        "installed_sha256": "6311f4673b401c9a19ba200e77fc296749c16980ef0f8d3620af62ac1ab68c58",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/INT/Engine.int",
+        "type": ".int",
+        "patch_bytes": 13534,
+        "patch_sha256": "b42b08611f441787580d054db59cda868225e99658905d288ac50acd14afcf28",
+        "patch_package_version": null,
+        "installed_bytes": 13534,
+        "installed_sha256": "b42b08611f441787580d054db59cda868225e99658905d288ac50acd14afcf28",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/INT/OnlineSubsystemGamespy.int",
+        "type": ".int",
+        "patch_bytes": 286,
+        "patch_sha256": "2e2b6883dbed1e7280e16eda1ab2257635576022e4c51a43f008702d4868d15f",
+        "patch_package_version": null,
+        "installed_bytes": 286,
+        "installed_sha256": "2e2b6883dbed1e7280e16eda1ab2257635576022e4c51a43f008702d4868d15f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/ITA/Engine.ita",
+        "type": ".ita",
+        "patch_bytes": 13786,
+        "patch_sha256": "af57eed90cb712f82be7d9458e68e0be0fefe860f0deff22eff88996be93073f",
+        "patch_package_version": null,
+        "installed_bytes": 13786,
+        "installed_sha256": "af57eed90cb712f82be7d9458e68e0be0fefe860f0deff22eff88996be93073f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/ITA/OnlineSubsystemGamespy.ita",
+        "type": ".ita",
+        "patch_bytes": 290,
+        "patch_sha256": "46ef9ea01e6d90e3ce33e3adf8687cbe25565f069a2fa6b4771e1025975bd974",
+        "patch_package_version": null,
+        "installed_bytes": 290,
+        "installed_sha256": "46ef9ea01e6d90e3ce33e3adf8687cbe25565f069a2fa6b4771e1025975bd974",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/POL/Engine.pol",
+        "type": ".pol",
+        "patch_bytes": 26212,
+        "patch_sha256": "917abbfcc60ff4f10fef79cdb3044af3e0d1a454feb88f05619d7d7e8676261c",
+        "patch_package_version": null,
+        "installed_bytes": 26212,
+        "installed_sha256": "917abbfcc60ff4f10fef79cdb3044af3e0d1a454feb88f05619d7d7e8676261c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/POL/OnlineSubsystemGamespy.pol",
+        "type": ".pol",
+        "patch_bytes": 250,
+        "patch_sha256": "277e5871fe232cd5bbb42b47c7a128c83e6662698be08f66bfd3d7bf5586474e",
+        "patch_package_version": null,
+        "installed_bytes": 250,
+        "installed_sha256": "277e5871fe232cd5bbb42b47c7a128c83e6662698be08f66bfd3d7bf5586474e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/RUS/Engine.rus",
+        "type": ".rus",
+        "patch_bytes": 27000,
+        "patch_sha256": "be7e5ed1e54a6d6ac19d8089ce5a165762b2842165622486ef1a6d1ad2def7f6",
+        "patch_package_version": null,
+        "installed_bytes": 27000,
+        "installed_sha256": "be7e5ed1e54a6d6ac19d8089ce5a165762b2842165622486ef1a6d1ad2def7f6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "Engine/Localization/RUS/OnlineSubsystemGamespy.rus",
+        "type": ".rus",
+        "patch_bytes": 544,
+        "patch_sha256": "b65cd14c28fbf692e59cef838213f93d3932a1dadfd8e7cb7d1e27aa6d2867c8",
+        "patch_package_version": null,
+        "installed_bytes": 544,
+        "installed_sha256": "b65cd14c28fbf692e59cef838213f93d3932a1dadfd8e7cb7d1e27aa6d2867c8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultCompat.ini",
+        "type": ".ini",
+        "patch_bytes": 10563,
+        "patch_sha256": "8f7c6613c8a5b55a0987504be40d68ee6314ad9c7a4644420d50536a1f86cdc5",
+        "patch_package_version": null,
+        "installed_bytes": 10563,
+        "installed_sha256": "8f7c6613c8a5b55a0987504be40d68ee6314ad9c7a4644420d50536a1f86cdc5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultCustomChar.ini",
+        "type": ".ini",
+        "patch_bytes": 60603,
+        "patch_sha256": "8314c81b204701ffd0c95a31581e48104d3ebbddfc42b7da3f19a7fbb8ea9655",
+        "patch_package_version": null,
+        "installed_bytes": 60603,
+        "installed_sha256": "8314c81b204701ffd0c95a31581e48104d3ebbddfc42b7da3f19a7fbb8ea9655",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultDemoCompat.ini",
+        "type": ".ini",
+        "patch_bytes": 2460,
+        "patch_sha256": "b1f0400dd37e9074c5869f7336efdd963cc17c6ea5a5d6b608c78517ae12531a",
+        "patch_package_version": null,
+        "installed_bytes": 2460,
+        "installed_sha256": "b1f0400dd37e9074c5869f7336efdd963cc17c6ea5a5d6b608c78517ae12531a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultEditor.ini",
+        "type": ".ini",
+        "patch_bytes": 701,
+        "patch_sha256": "15a9d402a9b036ce4a2026ecd50ba4c43ba466e5290b23d133b8681e982c7f09",
+        "patch_package_version": null,
+        "installed_bytes": 701,
+        "installed_sha256": "15a9d402a9b036ce4a2026ecd50ba4c43ba466e5290b23d133b8681e982c7f09",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultEditorKeyBindings.ini",
+        "type": ".ini",
+        "patch_bytes": 67,
+        "patch_sha256": "1fb6ef15bc2bcd6d12c33d9e7f876b30629f2339237f89c62eae1099e5021e6e",
+        "patch_package_version": null,
+        "installed_bytes": 67,
+        "installed_sha256": "1fb6ef15bc2bcd6d12c33d9e7f876b30629f2339237f89c62eae1099e5021e6e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultEditorUserSettings.ini",
+        "type": ".ini",
+        "patch_bytes": 72,
+        "patch_sha256": "9418fbc1e3339236318af37d848260e54da309e23797555927dae18a0b4b406a",
+        "patch_package_version": null,
+        "installed_bytes": 72,
+        "installed_sha256": "9418fbc1e3339236318af37d848260e54da309e23797555927dae18a0b4b406a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultEngine.ini",
+        "type": ".ini",
+        "patch_bytes": 10136,
+        "patch_sha256": "fc4587f24b9a8b965025cb1b9b90d6a08e276e9985dc4327ed41f3d1b4317dc3",
+        "patch_package_version": null,
+        "installed_bytes": 10136,
+        "installed_sha256": "fc4587f24b9a8b965025cb1b9b90d6a08e276e9985dc4327ed41f3d1b4317dc3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultGame.ini",
+        "type": ".ini",
+        "patch_bytes": 72652,
+        "patch_sha256": "b5cbb1006e4f382e9a5aa671d8a2ae68954f936d567ef7074a9c6c5a1a73bd49",
+        "patch_package_version": null,
+        "installed_bytes": 72652,
+        "installed_sha256": "b5cbb1006e4f382e9a5aa671d8a2ae68954f936d567ef7074a9c6c5a1a73bd49",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultInput.ini",
+        "type": ".ini",
+        "patch_bytes": 41393,
+        "patch_sha256": "d9b531dbffb146012c87a0bf5323cf24c524ba5ff4cbf09e295d60dcc989b15d",
+        "patch_package_version": null,
+        "installed_bytes": 41393,
+        "installed_sha256": "d9b531dbffb146012c87a0bf5323cf24c524ba5ff4cbf09e295d60dcc989b15d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultInputDefaults.ini",
+        "type": ".ini",
+        "patch_bytes": 137,
+        "patch_sha256": "cc1220a0e1e3d47964cc7c1c7d0fa7b3e8946137bafc008d40598afe11ec0ced",
+        "patch_package_version": null,
+        "installed_bytes": 137,
+        "installed_sha256": "cc1220a0e1e3d47964cc7c1c7d0fa7b3e8946137bafc008d40598afe11ec0ced",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultMapLists.ini",
+        "type": ".ini",
+        "patch_bytes": 6284,
+        "patch_sha256": "e58bb42256f6e0d568769ad93d21809c7d061d8500a384c637a5a017a0d9e1ba",
+        "patch_package_version": null,
+        "installed_bytes": 6284,
+        "installed_sha256": "e58bb42256f6e0d568769ad93d21809c7d061d8500a384c637a5a017a0d9e1ba",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultUI.ini",
+        "type": ".ini",
+        "patch_bytes": 424,
+        "patch_sha256": "c7f51b6078cdd6f78b79ee984420caaf15188f96e38833b9f09075d8091ca7bd",
+        "patch_package_version": null,
+        "installed_bytes": 424,
+        "installed_sha256": "c7f51b6078cdd6f78b79ee984420caaf15188f96e38833b9f09075d8091ca7bd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultVote.ini",
+        "type": ".ini",
+        "patch_bytes": 1490,
+        "patch_sha256": "7616727f4d6d8fc69676f44b62d009b880db0ec641096e6bf69bf0e912aee7fc",
+        "patch_package_version": null,
+        "installed_bytes": 1490,
+        "installed_sha256": "7616727f4d6d8fc69676f44b62d009b880db0ec641096e6bf69bf0e912aee7fc",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultWeapon.ini",
+        "type": ".ini",
+        "patch_bytes": 2478,
+        "patch_sha256": "3d9a2206e3debb4e172d2754963701c03165417faf1c6ad28c19a7b4f3d5b42a",
+        "patch_package_version": null,
+        "installed_bytes": 2478,
+        "installed_sha256": "3d9a2206e3debb4e172d2754963701c03165417faf1c6ad28c19a7b4f3d5b42a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultWeaponDefaults.ini",
+        "type": ".ini",
+        "patch_bytes": 140,
+        "patch_sha256": "d8d035ca5bc29efede09c3fb48485f97d4c002e363d431901898bc53e30130a4",
+        "patch_package_version": null,
+        "installed_bytes": 140,
+        "installed_sha256": "d8d035ca5bc29efede09c3fb48485f97d4c002e363d431901898bc53e30130a4",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultWeb.ini",
+        "type": ".ini",
+        "patch_bytes": 462,
+        "patch_sha256": "52093b998db65a730f488afa763aac31ff49147211775f6362ada08d4f271f10",
+        "patch_package_version": null,
+        "installed_bytes": 462,
+        "installed_sha256": "52093b998db65a730f488afa763aac31ff49147211775f6362ada08d4f271f10",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Config/DefaultWebAdmin.ini",
+        "type": ".ini",
+        "patch_bytes": 812,
+        "patch_sha256": "0bc0655cbe56bf1f2a79d354aa486dc8abe3219181f421c49b03d6c30ed63d44",
+        "patch_package_version": null,
+        "installed_bytes": 812,
+        "installed_sha256": "0bc0655cbe56bf1f2a79d354aa486dc8abe3219181f421c49b03d6c30ed63d44",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Core.u",
+        "type": ".u",
+        "patch_bytes": 70595,
+        "patch_sha256": "1384474da4bed048b1b3df3bdad0d2b9e0a1aa4d6eeadca2dde894b9f9171993",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 70595,
+        "installed_sha256": "1384474da4bed048b1b3df3bdad0d2b9e0a1aa4d6eeadca2dde894b9f9171993",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Editor.u",
+        "type": ".u",
+        "patch_bytes": 73130,
+        "patch_sha256": "23c59f0924a06aa2ae39c9ace19e27e7432cc4561e514e04d4610f05fcaa329e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 73130,
+        "installed_sha256": "23c59f0924a06aa2ae39c9ace19e27e7432cc4561e514e04d4610f05fcaa329e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Engine.u",
+        "type": ".u",
+        "patch_bytes": 2710258,
+        "patch_sha256": "5f08a77ea18fc4a84cafd6832066231ad5c230b034d008f964bf4b5047cb8983",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 2710258,
+        "installed_sha256": "5f08a77ea18fc4a84cafd6832066231ad5c230b034d008f964bf4b5047cb8983",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/GameFramework.u",
+        "type": ".u",
+        "patch_bytes": 16275,
+        "patch_sha256": "f9cd3394916a5c140d106245fd6a7e2974a7fb888ce03ac3bcb973c2607dee82",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 16275,
+        "installed_sha256": "f9cd3394916a5c140d106245fd6a7e2974a7fb888ce03ac3bcb973c2607dee82",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/GlobalPersistentCookerData.upk",
+        "type": ".upk",
+        "patch_bytes": 6118246,
+        "patch_sha256": "ba6fde4fb8edd6ca0402047a6d3c6605884f6d707d5f868b48f28f0d90706595",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 6118246,
+        "installed_sha256": "ba6fde4fb8edd6ca0402047a6d3c6605884f6d707d5f868b48f28f0d90706595",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/IpDrv.u",
+        "type": ".u",
+        "patch_bytes": 14456,
+        "patch_sha256": "4515822a2827743cbed81100b6fdbdd2b4e3c8f668c7f00af297727edd0cb390",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 14456,
+        "installed_sha256": "4515822a2827743cbed81100b6fdbdd2b4e3c8f668c7f00af297727edd0cb390",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/DM-Morbias.ut3",
+        "type": ".ut3",
+        "patch_bytes": 29355273,
+        "patch_sha256": "ddce293039471d7722b441d498410cb4d68ee1b2e3a9c47a015f43495c5711fe",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 29355273,
+        "installed_sha256": "ddce293039471d7722b441d498410cb4d68ee1b2e3a9c47a015f43495c5711fe",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/DM-Morbias_LOC_DEU.upk",
+        "type": ".upk",
+        "patch_bytes": 62834,
+        "patch_sha256": "96baa4314c2a5b090e56236a0ccbd4cd332e1f8b86c975e297d22676364d74e8",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 62834,
+        "installed_sha256": "96baa4314c2a5b090e56236a0ccbd4cd332e1f8b86c975e297d22676364d74e8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/DM-Morbias_LOC_ESN.upk",
+        "type": ".upk",
+        "patch_bytes": 89661,
+        "patch_sha256": "be0a7613172754e6bb21d52f7e8a524bb54f67b9609a085e20b0ace58034aba7",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 89661,
+        "installed_sha256": "be0a7613172754e6bb21d52f7e8a524bb54f67b9609a085e20b0ace58034aba7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/DM-Morbias_LOC_FRA.upk",
+        "type": ".upk",
+        "patch_bytes": 54450,
+        "patch_sha256": "b0ade02deff7b20b1ae6a322c181ab78bbf0f5b0f087597f2b103d31526ec666",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 54450,
+        "installed_sha256": "b0ade02deff7b20b1ae6a322c181ab78bbf0f5b0f087597f2b103d31526ec666",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/DM-Morbias_LOC_int.upk",
+        "type": ".upk",
+        "patch_bytes": 78265,
+        "patch_sha256": "ee0c37e103b132ee6e22d83f57ad9c4bc30c191a86a53f99d72dffcd9e56c075",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 78265,
+        "installed_sha256": "ee0c37e103b132ee6e22d83f57ad9c4bc30c191a86a53f99d72dffcd9e56c075",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/DM-Morbias_LOC_ITA.upk",
+        "type": ".upk",
+        "patch_bytes": 69161,
+        "patch_sha256": "c90a782be7851f66617cc61e32aa4ed4e63f4acca173c3f968cc51448481450e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 69161,
+        "installed_sha256": "c90a782be7851f66617cc61e32aa4ed4e63f4acca173c3f968cc51448481450e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/DM-Morbias_LOC_RUS.upk",
+        "type": ".upk",
+        "patch_bytes": 75528,
+        "patch_sha256": "01fb3bd9022ec1e3be43c75dcb14214b090bc9e3f1e0407543a9b032a0333ea2",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 75528,
+        "installed_sha256": "01fb3bd9022ec1e3be43c75dcb14214b090bc9e3f1e0407543a9b032a0333ea2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend.ut3",
+        "type": ".ut3",
+        "patch_bytes": 66952146,
+        "patch_sha256": "749c3053946ef7ed0951b65b4663eb19c2e148fb0e6f77fc57a141de5ff54017",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 66952146,
+        "installed_sha256": "749c3053946ef7ed0951b65b4663eb19c2e148fb0e6f77fc57a141de5ff54017",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_CZE.upk",
+        "type": ".upk",
+        "patch_bytes": 574854,
+        "patch_sha256": "8277d10af9f97b2df3b51c0e429b48d799f2997d0966afe31e59dc598204f3d5",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 574854,
+        "installed_sha256": "8277d10af9f97b2df3b51c0e429b48d799f2997d0966afe31e59dc598204f3d5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_DEU.upk",
+        "type": ".upk",
+        "patch_bytes": 62826,
+        "patch_sha256": "52bbeea614b45ec360a7823d4f558bd6c208775200618867b8ff1c59fc9a6a3c",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 62826,
+        "installed_sha256": "52bbeea614b45ec360a7823d4f558bd6c208775200618867b8ff1c59fc9a6a3c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_ESN.upk",
+        "type": ".upk",
+        "patch_bytes": 89654,
+        "patch_sha256": "cefa5375238fb71f181e0ae5410b1a1b98419afa3ee02f825b4bf61c553d7fdd",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 89654,
+        "installed_sha256": "cefa5375238fb71f181e0ae5410b1a1b98419afa3ee02f825b4bf61c553d7fdd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_FRA.upk",
+        "type": ".upk",
+        "patch_bytes": 54442,
+        "patch_sha256": "4ea1533657c7ce27986fb51d9cc6d0743bda5fc60ab99061fbf5b521fcf29b4b",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 54442,
+        "installed_sha256": "4ea1533657c7ce27986fb51d9cc6d0743bda5fc60ab99061fbf5b521fcf29b4b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_HUN.upk",
+        "type": ".upk",
+        "patch_bytes": 574757,
+        "patch_sha256": "86a4614477e1e44151083bac1c4054ac84608db8a844b69d238806346d791aa0",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 574757,
+        "installed_sha256": "86a4614477e1e44151083bac1c4054ac84608db8a844b69d238806346d791aa0",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_INT.upk",
+        "type": ".upk",
+        "patch_bytes": 78246,
+        "patch_sha256": "63cebdc376542800e35d9cd92e8eac8e81a3195360125f7de4ae079fcff194c4",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 78246,
+        "installed_sha256": "63cebdc376542800e35d9cd92e8eac8e81a3195360125f7de4ae079fcff194c4",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_ITA.upk",
+        "type": ".upk",
+        "patch_bytes": 69156,
+        "patch_sha256": "03ca84693c0a4fd84dd42a95b7f1bf1587789e6fd66997b30cc1b2e0c6d86c3e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 69156,
+        "installed_sha256": "03ca84693c0a4fd84dd42a95b7f1bf1587789e6fd66997b30cc1b2e0c6d86c3e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_POL.upk",
+        "type": ".upk",
+        "patch_bytes": 574829,
+        "patch_sha256": "11e4254f058e4ede5f6bd44bd2d05ca55951cab0fccf2eec032e03f0c1b34da8",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 574829,
+        "installed_sha256": "11e4254f058e4ede5f6bd44bd2d05ca55951cab0fccf2eec032e03f0c1b34da8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Maps/UTFrontend_LOC_RUS.upk",
+        "type": ".upk",
+        "patch_bytes": 72470,
+        "patch_sha256": "d95914202b44b4c5c8c7e9e8c867f068f5c67d2f4fd32ba442b9bab4e8a4b670",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 72470,
+        "installed_sha256": "d95914202b44b4c5c8c7e9e8c867f068f5c67d2f4fd32ba442b9bab4e8a4b670",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/OnlineSubsystemGamespy.u",
+        "type": ".u",
+        "patch_bytes": 72264,
+        "patch_sha256": "76df0af6eee5b03e71dafad256c676862ceadd5e0e6c88259dc65f1885a5fd2e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 72264,
+        "installed_sha256": "76df0af6eee5b03e71dafad256c676862ceadd5e0e6c88259dc65f1885a5fd2e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Packages/DLC1Frontend.upk",
+        "type": ".upk",
+        "patch_bytes": 179730,
+        "patch_sha256": "14a1436d78697ecc126aad3ab1a608e0be642e7d0d75ee6be88e9cefee50fb5a",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 179730,
+        "installed_sha256": "14a1436d78697ecc126aad3ab1a608e0be642e7d0d75ee6be88e9cefee50fb5a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Packages/LT_Morbias.upk",
+        "type": ".upk",
+        "patch_bytes": 8626466,
+        "patch_sha256": "ba4ab6b43f30050e2e3f89cbd87394901a5c80985f29f0016299b437e5970263",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 8626466,
+        "installed_sha256": "ba4ab6b43f30050e2e3f89cbd87394901a5c80985f29f0016299b437e5970263",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/RefShaderCache-PC-D3D-SM2.upk",
+        "type": ".upk",
+        "patch_bytes": 37278663,
+        "patch_sha256": "9554a9d501f36cb64d7b8120a5f9e1c103b84c39f7a72688cefaf57fbc6fa09e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 37278663,
+        "installed_sha256": "9554a9d501f36cb64d7b8120a5f9e1c103b84c39f7a72688cefaf57fbc6fa09e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/RefShaderCache-PC-D3D-SM3.upk",
+        "type": ".upk",
+        "patch_bytes": 50708833,
+        "patch_sha256": "fe264629659eb7bc92ee33848beda20b18f0bbf8dfcdc702ad3edb6202b2727c",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 50708833,
+        "installed_sha256": "fe264629659eb7bc92ee33848beda20b18f0bbf8dfcdc702ad3edb6202b2727c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/RefShaderCache-PC-D3D-SM4.upk",
+        "type": ".upk",
+        "patch_bytes": 164001195,
+        "patch_sha256": "aa52d29bcc56e7cf76b028567a353f0515292592972ea909ec645ee2a792c90a",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 164001195,
+        "installed_sha256": "aa52d29bcc56e7cf76b028567a353f0515292592972ea909ec645ee2a792c90a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_CZE.upk",
+        "type": ".upk",
+        "patch_bytes": 4385863,
+        "patch_sha256": "9631438737c4aaf228632c1a0322f87993507438faa061e0838313c97706054a",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 4385863,
+        "installed_sha256": "9631438737c4aaf228632c1a0322f87993507438faa061e0838313c97706054a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_DEU.upk",
+        "type": ".upk",
+        "patch_bytes": 5413425,
+        "patch_sha256": "d2f07627467bea279fe035df43f065e12103d3476f3586078c50a367aa2f89fc",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 5413425,
+        "installed_sha256": "d2f07627467bea279fe035df43f065e12103d3476f3586078c50a367aa2f89fc",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_ESN.upk",
+        "type": ".upk",
+        "patch_bytes": 5340756,
+        "patch_sha256": "53d5348968e085fdfeae158caaf08a80a36443b1b94418525df767d57e439fc5",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 5340756,
+        "installed_sha256": "53d5348968e085fdfeae158caaf08a80a36443b1b94418525df767d57e439fc5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_FRA.upk",
+        "type": ".upk",
+        "patch_bytes": 5305861,
+        "patch_sha256": "edea3fa01a55200cd760991f23fb793fea5b3ad143f92d625c6b03ad89f8ac37",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 5305861,
+        "installed_sha256": "edea3fa01a55200cd760991f23fb793fea5b3ad143f92d625c6b03ad89f8ac37",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_HUN.upk",
+        "type": ".upk",
+        "patch_bytes": 4388365,
+        "patch_sha256": "aaf9b5a0db9bf11d61915758c5e32ba490affbecfbf3227a99f8d57cec87216a",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 4388365,
+        "installed_sha256": "aaf9b5a0db9bf11d61915758c5e32ba490affbecfbf3227a99f8d57cec87216a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_INT.upk",
+        "type": ".upk",
+        "patch_bytes": 5419702,
+        "patch_sha256": "512d228eedb924a2c77f1574f0e24a5d1e10dc1d3f61d816d27627861bc4e77c",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 5419702,
+        "installed_sha256": "512d228eedb924a2c77f1574f0e24a5d1e10dc1d3f61d816d27627861bc4e77c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_ITA.upk",
+        "type": ".upk",
+        "patch_bytes": 5393829,
+        "patch_sha256": "e1a4700416bfd66dbf92eca91979158c5103713b5a1612db71d91275661c47c3",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 5393829,
+        "installed_sha256": "e1a4700416bfd66dbf92eca91979158c5103713b5a1612db71d91275661c47c3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_POL.upk",
+        "type": ".upk",
+        "patch_bytes": 4388300,
+        "patch_sha256": "92c1ebe9f70b650dc4c1596c47f877cc964041f8f9d8b36eab5da337d3de771d",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 4388300,
+        "installed_sha256": "92c1ebe9f70b650dc4c1596c47f877cc964041f8f9d8b36eab5da337d3de771d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Startup_RUS.upk",
+        "type": ".upk",
+        "patch_bytes": 6117630,
+        "patch_sha256": "9350cf2ffd8c0735af6512e4bd086e7f4d25a9b7d95ca0e7677224114dbfc9f9",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 6117630,
+        "installed_sha256": "9350cf2ffd8c0735af6512e4bd086e7f4d25a9b7d95ca0e7677224114dbfc9f9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/Textures/PS3Patch.upk",
+        "type": ".upk",
+        "patch_bytes": 2235,
+        "patch_sha256": "b9d43f0d7f958fe2ae402600ed9a05542d1a97c744e7f431b2eeaad811571443",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 2235,
+        "installed_sha256": "b9d43f0d7f958fe2ae402600ed9a05542d1a97c744e7f431b2eeaad811571443",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_HUD.upk",
+        "type": ".upk",
+        "patch_bytes": 1913695,
+        "patch_sha256": "a6def8e61144dabaa36ea5796dce1e2700d78a6684c2549b11ea1f01c41a6eaa",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 1913695,
+        "installed_sha256": "a6def8e61144dabaa36ea5796dce1e2700d78a6684c2549b11ea1f01c41a6eaa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_InGameHud.upk",
+        "type": ".upk",
+        "patch_bytes": 923238,
+        "patch_sha256": "341df036530480a6ce562c23f925dc7bf5c9728b2f59f49c0ce50286ac9ec0ea",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 923238,
+        "installed_sha256": "341df036530480a6ce562c23f925dc7bf5c9728b2f59f49c0ce50286ac9ec0ea",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_Portrait.upk",
+        "type": ".upk",
+        "patch_bytes": 6021633,
+        "patch_sha256": "f02df6c4edb8570959b0af6937bb85cb46d6bba48fa66c39b1b6459684688ded",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 6021633,
+        "installed_sha256": "f02df6c4edb8570959b0af6937bb85cb46d6bba48fa66c39b1b6459684688ded",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_Scenes_Campaign.upk",
+        "type": ".upk",
+        "patch_bytes": 908386,
+        "patch_sha256": "3d88f89c46a7ca884304dcaab33bf16e047dab39fd5250a6fde99c0be791279f",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 908386,
+        "installed_sha256": "3d88f89c46a7ca884304dcaab33bf16e047dab39fd5250a6fde99c0be791279f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_Scenes_ChrisBLayout.upk",
+        "type": ".upk",
+        "patch_bytes": 2427565,
+        "patch_sha256": "10d7789f5b8add1d707c4e692fbc75f0a484cbe169e72b7170d2f169a0439d90",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 2427565,
+        "installed_sha256": "10d7789f5b8add1d707c4e692fbc75f0a484cbe169e72b7170d2f169a0439d90",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_Scenes_Common.upk",
+        "type": ".upk",
+        "patch_bytes": 491253,
+        "patch_sha256": "98667277ac0ed75a0e9cccd963b38dc2b82df955e2ed2a4978d14172981bc838",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 491253,
+        "installed_sha256": "98667277ac0ed75a0e9cccd963b38dc2b82df955e2ed2a4978d14172981bc838",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_Scenes_FrontEnd.upk",
+        "type": ".upk",
+        "patch_bytes": 2686777,
+        "patch_sha256": "2bde7d2717dc0254a52af08a57da1a16a0cd54ee8ebe591520b19a1c1e9d688e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 2686777,
+        "installed_sha256": "2bde7d2717dc0254a52af08a57da1a16a0cd54ee8ebe591520b19a1c1e9d688e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UI/UI_Skins.upk",
+        "type": ".upk",
+        "patch_bytes": 509868,
+        "patch_sha256": "eb3aaee91cfd52fc8f35b4f5c9aea8cd5664fa254cace69e743f41f0972465da",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 509868,
+        "installed_sha256": "eb3aaee91cfd52fc8f35b4f5c9aea8cd5664fa254cace69e743f41f0972465da",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UnrealEd.u",
+        "type": ".u",
+        "patch_bytes": 117067,
+        "patch_sha256": "a3ea3d52033b55d862c713fc800ac75ab0619d025d05c52a337cc539fec7d22e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 117067,
+        "installed_sha256": "a3ea3d52033b55d862c713fc800ac75ab0619d025d05c52a337cc539fec7d22e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UnrealScriptTest.u",
+        "type": ".u",
+        "patch_bytes": 48598,
+        "patch_sha256": "b3919d89fb76ccafc2e836c4113210fb10df3e83ef8c34e4767f1c87328fb7e9",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 48598,
+        "installed_sha256": "b3919d89fb76ccafc2e836c4113210fb10df3e83ef8c34e4767f1c87328fb7e9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Animations/CH_AnimHuman_Hero.upk",
+        "type": ".upk",
+        "patch_bytes": 53155,
+        "patch_sha256": "80387584c41f7a221e079627c6a9d424cb66b2d81b0ab229e53a61155743beb6",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 53155,
+        "installed_sha256": "80387584c41f7a221e079627c6a9d424cb66b2d81b0ab229e53a61155743beb6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Animations/CH_AnimKrall_Hero.upk",
+        "type": ".upk",
+        "patch_bytes": 56184,
+        "patch_sha256": "0253e937ae24b9e662db02be03f623bf302090a9d1370b7b1b99619e1b5c3bc6",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 56184,
+        "installed_sha256": "0253e937ae24b9e662db02be03f623bf302090a9d1370b7b1b99619e1b5c3bc6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Characters/CH_Corrupt_Male2.upk",
+        "type": ".upk",
+        "patch_bytes": 9355169,
+        "patch_sha256": "dd578b4356c3cfd4298ecaefe0a930bf31997e56b7ed9556e470544f9ca70883",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 9355169,
+        "installed_sha256": "dd578b4356c3cfd4298ecaefe0a930bf31997e56b7ed9556e470544f9ca70883",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Characters/CH_Corrupt_Male2_SF.upk",
+        "type": ".upk",
+        "patch_bytes": 1708145,
+        "patch_sha256": "dbb54b9505e7f10e91b3badee43857ad0143c829663f83e13289a043dd54f033",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 1708145,
+        "installed_sha256": "dbb54b9505e7f10e91b3badee43857ad0143c829663f83e13289a043dd54f033",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Characters/CH_RTeam_Female2.upk",
+        "type": ".upk",
+        "patch_bytes": 11763702,
+        "patch_sha256": "973fefa05199631feb979eb64a426870f627333b785c4ea35e8f67da22bf01a3",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 11763702,
+        "installed_sha256": "973fefa05199631feb979eb64a426870f627333b785c4ea35e8f67da22bf01a3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Characters/CH_RTeam_Female2_SF.upk",
+        "type": ".upk",
+        "patch_bytes": 2042005,
+        "patch_sha256": "3fe9b5e3528d86c0b5c8cea41d6b00233ce34367032062063345a0f741b83ceb",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 2042005,
+        "installed_sha256": "3fe9b5e3528d86c0b5c8cea41d6b00233ce34367032062063345a0f741b83ceb",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Characters/CH_RTeam_Male2.upk",
+        "type": ".upk",
+        "patch_bytes": 361454,
+        "patch_sha256": "4751435eb8dbe11de60f51d01d85861e7c5e55631a0668a8366cdc6c5e3ca5aa",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 361454,
+        "installed_sha256": "4751435eb8dbe11de60f51d01d85861e7c5e55631a0668a8366cdc6c5e3ca5aa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Characters/CH_RTeam_Male2_SF.upk",
+        "type": ".upk",
+        "patch_bytes": 235158,
+        "patch_sha256": "bb38c7bbafc596123dd26e9c2f86703d831c054c6f1dae561db9aafb80d6d41b",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 235158,
+        "installed_sha256": "bb38c7bbafc596123dd26e9c2f86703d831c054c6f1dae561db9aafb80d6d41b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Effects/Camera_FX_02.upk",
+        "type": ".upk",
+        "patch_bytes": 38046,
+        "patch_sha256": "1248b592e2df0107989815d1d4720ac4c98e5fe68e437b9979e991bcbc8c6488",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 38046,
+        "installed_sha256": "1248b592e2df0107989815d1d4720ac4c98e5fe68e437b9979e991bcbc8c6488",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Effects/FX_Gametypes.upk",
+        "type": ".upk",
+        "patch_bytes": 381234,
+        "patch_sha256": "73c0cf0e393ca02dd87e059701339b9520738a7940d730e73825bf9c19264dbb",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 381234,
+        "installed_sha256": "73c0cf0e393ca02dd87e059701339b9520738a7940d730e73825bf9c19264dbb",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Effects/UN_HeroEffects.upk",
+        "type": ".upk",
+        "patch_bytes": 796249,
+        "patch_sha256": "8660e257fceb6e8bb8aca5c0f5917d5c5283743dc31178ad6cd454b9305b16d0",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 796249,
+        "installed_sha256": "8660e257fceb6e8bb8aca5c0f5917d5c5283743dc31178ad6cd454b9305b16d0",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Gameplay/GP_Extras.upk",
+        "type": ".upk",
+        "patch_bytes": 82490,
+        "patch_sha256": "6a53256d21deaaee630ad8adb9d3d261c50c0c73b4cd0ef30ba95ab9f8df84d7",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 82490,
+        "installed_sha256": "6a53256d21deaaee630ad8adb9d3d261c50c0c73b4cd0ef30ba95ab9f8df84d7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Pickups/PICKUPS_2.upk",
+        "type": ".upk",
+        "patch_bytes": 4014020,
+        "patch_sha256": "e35334cc9e6597362658fd5434d77b7d5d2572071fcfc653fe161efc88dc2efb",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 4014020,
+        "installed_sha256": "e35334cc9e6597362658fd5434d77b7d5d2572071fcfc653fe161efc88dc2efb",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/A_Gameplay_UT3G.upk",
+        "type": ".upk",
+        "patch_bytes": 192924,
+        "patch_sha256": "0f41c3d8b0e3212f6286e7b9725b7f0b3bcb37d9d9a862b8ca6df20d10c8fe4e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 192924,
+        "installed_sha256": "0f41c3d8b0e3212f6286e7b9725b7f0b3bcb37d9d9a862b8ca6df20d10c8fe4e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/A_Titan_Extras.upk",
+        "type": ".upk",
+        "patch_bytes": 253139,
+        "patch_sha256": "8d98179fcf7a29e1a8ad485c1039504b46704c85b4df4b73044b0ca66d398ffc",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 253139,
+        "installed_sha256": "8d98179fcf7a29e1a8ad485c1039504b46704c85b4df4b73044b0ca66d398ffc",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/DEU/A_Announcer_UT3G_DEU.upk",
+        "type": ".upk",
+        "patch_bytes": 640316,
+        "patch_sha256": "da271dd7db8e403c55fa8ece8d06f0ba29f3deb455ae98b685c0abb932d8e5b2",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 640316,
+        "installed_sha256": "da271dd7db8e403c55fa8ece8d06f0ba29f3deb455ae98b685c0abb932d8e5b2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/ESN/A_Announcer_UT3G_ESN.upk",
+        "type": ".upk",
+        "patch_bytes": 585330,
+        "patch_sha256": "c186ca152669f7793f0138c166e6d01c8b71b8ce14c18973832a7c266ce6757b",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 585330,
+        "installed_sha256": "c186ca152669f7793f0138c166e6d01c8b71b8ce14c18973832a7c266ce6757b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/FRA/A_Announcer_UT3G_FRA.upk",
+        "type": ".upk",
+        "patch_bytes": 650853,
+        "patch_sha256": "d5f67c57b03b61aa04e4f57b50154866c2591667066a368b3927bdfc3fcab013",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 650853,
+        "installed_sha256": "d5f67c57b03b61aa04e4f57b50154866c2591667066a368b3927bdfc3fcab013",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/INT/A_Announcer_UT3G.upk",
+        "type": ".upk",
+        "patch_bytes": 725372,
+        "patch_sha256": "cab17b32c1ebbe80f1cd9e322fcdd2b390ed662c26155330fe40c46e3ac48533",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 725372,
+        "installed_sha256": "cab17b32c1ebbe80f1cd9e322fcdd2b390ed662c26155330fe40c46e3ac48533",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/ITA/A_Announcer_UT3G_ITA.upk",
+        "type": ".upk",
+        "patch_bytes": 601862,
+        "patch_sha256": "e27ea81c5e043f22ddfb762f776ecd7d55bf6ac050e99e7253163761600d1355",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 601862,
+        "installed_sha256": "e27ea81c5e043f22ddfb762f776ecd7d55bf6ac050e99e7253163761600d1355",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/Sounds/RUS/A_Announcer_UT3G_RUS.upk",
+        "type": ".upk",
+        "patch_bytes": 725436,
+        "patch_sha256": "70c78d06cd45727d7c37053b0de31eb3b2197aaa6bd58ef184e707f954480dfe",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 725436,
+        "installed_sha256": "70c78d06cd45727d7c37053b0de31eb3b2197aaa6bd58ef184e707f954480dfe",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/UI/UI_FrontEnd_Art3.upk",
+        "type": ".upk",
+        "patch_bytes": 1482791,
+        "patch_sha256": "03ee35cfc3a5a5324d034f6af854f8d982cc6cf45d9da687b924532314af6c94",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 1482791,
+        "installed_sha256": "03ee35cfc3a5a5324d034f6af854f8d982cc6cf45d9da687b924532314af6c94",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/UI/UI_GoldHud.upk",
+        "type": ".upk",
+        "patch_bytes": 1440220,
+        "patch_sha256": "5efdc5759fdcd4761b31fe8561b78acc407a87297d67c841e172f3cfc12cb267",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 1440220,
+        "installed_sha256": "5efdc5759fdcd4761b31fe8561b78acc407a87297d67c841e172f3cfc12cb267",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/UI/UI_MapImages_2.upk",
+        "type": ".upk",
+        "patch_bytes": 1003126,
+        "patch_sha256": "1d2ddf135b4682ca955e796338aa789291f43ebaa396866077223a555c273e2b",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 1003126,
+        "installed_sha256": "1d2ddf135b4682ca955e796338aa789291f43ebaa396866077223a555c273e2b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3G/UI/UI_Portrait1.upk",
+        "type": ".upk",
+        "patch_bytes": 371581,
+        "patch_sha256": "4e12a2738deac918c1d9805d1e4170c7fec5b060834f4a6902dd9ef72b900ade",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 371581,
+        "installed_sha256": "4e12a2738deac918c1d9805d1e4170c7fec5b060834f4a6902dd9ef72b900ade",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3Gold.u",
+        "type": ".u",
+        "patch_bytes": 86806,
+        "patch_sha256": "e9fdb8134ec16db4f6130b9dd901620dc54c9c8cb2fb8adc7825c1ca0adc7c5e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 86806,
+        "installed_sha256": "e9fdb8134ec16db4f6130b9dd901620dc54c9c8cb2fb8adc7825c1ca0adc7c5e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UT3GoldGame.u",
+        "type": ".u",
+        "patch_bytes": 102659,
+        "patch_sha256": "92bab172fbd43f9bb6ba87a8e2479af0f97747c127752f01169850142eb55f2b",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 102659,
+        "installed_sha256": "92bab172fbd43f9bb6ba87a8e2479af0f97747c127752f01169850142eb55f2b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTEditor.u",
+        "type": ".u",
+        "patch_bytes": 1921,
+        "patch_sha256": "d354f15756407e3ea6e45274e8f9018f5558bdce52cf60763ce6ab1fcf8b135e",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 1921,
+        "installed_sha256": "d354f15756407e3ea6e45274e8f9018f5558bdce52cf60763ce6ab1fcf8b135e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame.u",
+        "type": ".u",
+        "patch_bytes": 37693624,
+        "patch_sha256": "4afc01d750a21a33d2ab1dcf0cb7b914fb4be11f2c4f265b5aef0d8919a82927",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 37693624,
+        "installed_sha256": "4afc01d750a21a33d2ab1dcf0cb7b914fb4be11f2c4f265b5aef0d8919a82927",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_CZE.upk",
+        "type": ".upk",
+        "patch_bytes": 16437123,
+        "patch_sha256": "f7c77b936d7907f7c8c5450e5157b228dbd20110998d11304db95407ac871cee",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 16437123,
+        "installed_sha256": "f7c77b936d7907f7c8c5450e5157b228dbd20110998d11304db95407ac871cee",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_DEU.upk",
+        "type": ".upk",
+        "patch_bytes": 14607842,
+        "patch_sha256": "fbd20acceeb7bfdcd1a07292d489946860c9945565effb46220c947d52329ef9",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 14607842,
+        "installed_sha256": "fbd20acceeb7bfdcd1a07292d489946860c9945565effb46220c947d52329ef9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_ESN.upk",
+        "type": ".upk",
+        "patch_bytes": 16801166,
+        "patch_sha256": "03521b4f19c5a138bbe26773e16cc1bdafa49db94bdcc4775989cb1127036fa8",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 16801166,
+        "installed_sha256": "03521b4f19c5a138bbe26773e16cc1bdafa49db94bdcc4775989cb1127036fa8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_FRA.upk",
+        "type": ".upk",
+        "patch_bytes": 11501812,
+        "patch_sha256": "3aab243a278d81b4f2c4628208900bcaa685a4b0546e29e51df3fe6ddd8f6e9d",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 11501812,
+        "installed_sha256": "3aab243a278d81b4f2c4628208900bcaa685a4b0546e29e51df3fe6ddd8f6e9d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_HUN.upk",
+        "type": ".upk",
+        "patch_bytes": 16430278,
+        "patch_sha256": "2f86f67251027ecc7f74260c7f0e58562f79746b67c29f6a1fbad214fb7e006c",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 16430278,
+        "installed_sha256": "2f86f67251027ecc7f74260c7f0e58562f79746b67c29f6a1fbad214fb7e006c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_INT.upk",
+        "type": ".upk",
+        "patch_bytes": 16271531,
+        "patch_sha256": "ce3cb4ef0e9a238e217e035f7ea324cc9b642e92da9389ca6f554a2bc1be530d",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 16271531,
+        "installed_sha256": "ce3cb4ef0e9a238e217e035f7ea324cc9b642e92da9389ca6f554a2bc1be530d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_ITA.upk",
+        "type": ".upk",
+        "patch_bytes": 11583913,
+        "patch_sha256": "4f832b366309a2d57cbf1ef54e02d731e759a86862b4791bc1d30554d26660fd",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 11583913,
+        "installed_sha256": "4f832b366309a2d57cbf1ef54e02d731e759a86862b4791bc1d30554d26660fd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_POL.upk",
+        "type": ".upk",
+        "patch_bytes": 16433792,
+        "patch_sha256": "4a7b1cf0cf4c8c786b79318316f831ab5be4a8cb6eecac5ee1fa828534d63ef2",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 16433792,
+        "installed_sha256": "4a7b1cf0cf4c8c786b79318316f831ab5be4a8cb6eecac5ee1fa828534d63ef2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGame_LOC_RUS.upk",
+        "type": ".upk",
+        "patch_bytes": 15850229,
+        "patch_sha256": "b09d800be8a8e7f76b545fbfe96fc83298dfb80cc551d56a8a535223e37e8158",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 15850229,
+        "installed_sha256": "b09d800be8a8e7f76b545fbfe96fc83298dfb80cc551d56a8a535223e37e8158",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UTGameContent.u",
+        "type": ".u",
+        "patch_bytes": 1787354,
+        "patch_sha256": "144f38e75e3be47eb2d332b8bd798b3cb584573e8777be361e4275f3d5d29647",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 1787354,
+        "installed_sha256": "144f38e75e3be47eb2d332b8bd798b3cb584573e8777be361e4275f3d5d29647",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/CookedPC/UWeb.u",
+        "type": ".u",
+        "patch_bytes": 31060,
+        "patch_sha256": "ca134e4f4f61cbaab255abdee81a55817774812f0c8f5cd394b1ecaf55ed689f",
+        "patch_package_version": {
+          "epic": 512,
+          "licensee": 0
+        },
+        "installed_bytes": 31060,
+        "installed_sha256": "ca134e4f4f61cbaab255abdee81a55817774812f0c8f5cd394b1ecaf55ed689f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/dm-sentinel.cze",
+        "type": ".cze",
+        "patch_bytes": 664,
+        "patch_sha256": "329d4841c17a3de1f1a7d654d7ad13d3b4c86dae686d1d2002979c243138e091",
+        "patch_package_version": null,
+        "installed_bytes": 664,
+        "installed_sha256": "329d4841c17a3de1f1a7d654d7ad13d3b4c86dae686d1d2002979c243138e091",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 133243,
+        "patch_sha256": "27679c429c512dc01433af1d49703f15d05a73d839b7f5ec912ce2defe6e3682",
+        "patch_package_version": null,
+        "installed_bytes": 133243,
+        "installed_sha256": "27679c429c512dc01433af1d49703f15d05a73d839b7f5ec912ce2defe6e3682",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/Subtitles.cze",
+        "type": ".cze",
+        "patch_bytes": 21364,
+        "patch_sha256": "f6697653dbb280300a5cdb197fc7f894032d24a68beaf318656765632b851276",
+        "patch_package_version": null,
+        "installed_bytes": 21364,
+        "installed_sha256": "f6697653dbb280300a5cdb197fc7f894032d24a68beaf318656765632b851276",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/ut3gold.cze",
+        "type": ".cze",
+        "patch_bytes": 5100,
+        "patch_sha256": "4f5b84fdfd68cd4e1c69da7c1f4ece1ee4ff0b59dd5ae8dfb9c6705014dc86ff",
+        "patch_package_version": null,
+        "installed_bytes": 5100,
+        "installed_sha256": "4f5b84fdfd68cd4e1c69da7c1f4ece1ee4ff0b59dd5ae8dfb9c6705014dc86ff",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/utgame.cze",
+        "type": ".cze",
+        "patch_bytes": 201104,
+        "patch_sha256": "0d27505d887e6d1ecd7b1da4313e39cf926427cd160a722b1febfd7248075398",
+        "patch_package_version": null,
+        "installed_bytes": 201104,
+        "installed_sha256": "0d27505d887e6d1ecd7b1da4313e39cf926427cd160a722b1febfd7248075398",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/UTGameContent.cze",
+        "type": ".cze",
+        "patch_bytes": 32702,
+        "patch_sha256": "e787f46d837c1152d41e0f0915f53b96afc20c9957aac2ad20ad5ac72e941df4",
+        "patch_package_version": null,
+        "installed_bytes": 32702,
+        "installed_sha256": "e787f46d837c1152d41e0f0915f53b96afc20c9957aac2ad20ad5ac72e941df4",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/UTGameCredits.cze",
+        "type": ".cze",
+        "patch_bytes": 22832,
+        "patch_sha256": "74aae564cabeeb28673de74cdaa700a014fa054c3afb940e4a07afe473555c9e",
+        "patch_package_version": null,
+        "installed_bytes": 22832,
+        "installed_sha256": "74aae564cabeeb28673de74cdaa700a014fa054c3afb940e4a07afe473555c9e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/UTGameUI.cze",
+        "type": ".cze",
+        "patch_bytes": 194820,
+        "patch_sha256": "741af1f3c6e4d518138ba191c80ced048f22b73d8efbdd6c0da683a1b7dcac29",
+        "patch_package_version": null,
+        "installed_bytes": 194820,
+        "installed_sha256": "741af1f3c6e4d518138ba191c80ced048f22b73d8efbdd6c0da683a1b7dcac29",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-avalanche.cze",
+        "type": ".cze",
+        "patch_bytes": 2518,
+        "patch_sha256": "61addb3827f46f6610e21f97ee8ff921e8f08b3a25c922c6fb480769acdd4f59",
+        "patch_package_version": null,
+        "installed_bytes": 2518,
+        "installed_sha256": "61addb3827f46f6610e21f97ee8ff921e8f08b3a25c922c6fb480769acdd4f59",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/WAR-ColdHarbor.cze",
+        "type": ".cze",
+        "patch_bytes": 2366,
+        "patch_sha256": "1b19e3b3986afb5adfa9c6b21a800f527a08ff05d4b44597a6482a7c0462be04",
+        "patch_package_version": null,
+        "installed_bytes": 2366,
+        "installed_sha256": "1b19e3b3986afb5adfa9c6b21a800f527a08ff05d4b44597a6482a7c0462be04",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/WAR-Confrontation.cze",
+        "type": ".cze",
+        "patch_bytes": 3148,
+        "patch_sha256": "49e5b133925071f3c6977b367d045ab4cee3cd36b16fcba61849cefcf9358532",
+        "patch_package_version": null,
+        "installed_bytes": 3148,
+        "installed_sha256": "49e5b133925071f3c6977b367d045ab4cee3cd36b16fcba61849cefcf9358532",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-downtown.cze",
+        "type": ".cze",
+        "patch_bytes": 1700,
+        "patch_sha256": "64240deac7c3a4bbd01d579d4a5ee7e148306a592c2903805177555f7a571507",
+        "patch_package_version": null,
+        "installed_bytes": 1700,
+        "installed_sha256": "64240deac7c3a4bbd01d579d4a5ee7e148306a592c2903805177555f7a571507",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-downtown_necris.cze",
+        "type": ".cze",
+        "patch_bytes": 1734,
+        "patch_sha256": "39e5ee2b52183b62c490c7357e819b2e896aaa91abf13145c6cbe6cddd6d8db7",
+        "patch_package_version": null,
+        "installed_bytes": 1734,
+        "installed_sha256": "39e5ee2b52183b62c490c7357e819b2e896aaa91abf13145c6cbe6cddd6d8db7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-dusk.cze",
+        "type": ".cze",
+        "patch_bytes": 2668,
+        "patch_sha256": "db69367083a36382b40c44704bff990f9c10fcec38c9b0c6c2f391c4220584fa",
+        "patch_package_version": null,
+        "installed_bytes": 2668,
+        "installed_sha256": "db69367083a36382b40c44704bff990f9c10fcec38c9b0c6c2f391c4220584fa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-floodgate.cze",
+        "type": ".cze",
+        "patch_bytes": 2094,
+        "patch_sha256": "275794028d4f4872a827caeb9c5785a622011e2a0de1df9c9c4663612923dc93",
+        "patch_package_version": null,
+        "installed_bytes": 2094,
+        "installed_sha256": "275794028d4f4872a827caeb9c5785a622011e2a0de1df9c9c4663612923dc93",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/WAR-Hostile.cze",
+        "type": ".cze",
+        "patch_bytes": 172,
+        "patch_sha256": "69a78a39d74587314b8f3311dbba0d09422333293fffada2222355c799e55cab",
+        "patch_package_version": null,
+        "installed_bytes": 172,
+        "installed_sha256": "69a78a39d74587314b8f3311dbba0d09422333293fffada2222355c799e55cab",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-islander.cze",
+        "type": ".cze",
+        "patch_bytes": 842,
+        "patch_sha256": "015ea808bf83e7603b22e91e2bf712c53dcce2c7e391bfd4f6f9a6ac921c97df",
+        "patch_package_version": null,
+        "installed_bytes": 842,
+        "installed_sha256": "015ea808bf83e7603b22e91e2bf712c53dcce2c7e391bfd4f6f9a6ac921c97df",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-islander_necris.cze",
+        "type": ".cze",
+        "patch_bytes": 842,
+        "patch_sha256": "015ea808bf83e7603b22e91e2bf712c53dcce2c7e391bfd4f6f9a6ac921c97df",
+        "patch_package_version": null,
+        "installed_bytes": 842,
+        "installed_sha256": "015ea808bf83e7603b22e91e2bf712c53dcce2c7e391bfd4f6f9a6ac921c97df",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-marketdistrict.cze",
+        "type": ".cze",
+        "patch_bytes": 1252,
+        "patch_sha256": "8556c224586fbbd09be557f27f447532ca2960ca54069ecf890185a73aa581f4",
+        "patch_package_version": null,
+        "installed_bytes": 1252,
+        "installed_sha256": "8556c224586fbbd09be557f27f447532ca2960ca54069ecf890185a73aa581f4",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-onyxcoast.cze",
+        "type": ".cze",
+        "patch_bytes": 1722,
+        "patch_sha256": "d99940aa79cd154749c09e822f575b2ee6be115116567392b561f0e058ff4dc0",
+        "patch_package_version": null,
+        "installed_bytes": 1722,
+        "installed_sha256": "d99940aa79cd154749c09e822f575b2ee6be115116567392b561f0e058ff4dc0",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-powersurge.cze",
+        "type": ".cze",
+        "patch_bytes": 2138,
+        "patch_sha256": "84ee0dc8a0baf68ae6c8c9686623b959f5890a8c61ef4e5ae88578b18d92701e",
+        "patch_package_version": null,
+        "installed_bytes": 2138,
+        "installed_sha256": "84ee0dc8a0baf68ae6c8c9686623b959f5890a8c61ef4e5ae88578b18d92701e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-serenity.cze",
+        "type": ".cze",
+        "patch_bytes": 1888,
+        "patch_sha256": "da6f957a05f0db13c579114b7e7435f60eafe46cda4a625c705f5593afd04533",
+        "patch_package_version": null,
+        "installed_bytes": 1888,
+        "installed_sha256": "da6f957a05f0db13c579114b7e7435f60eafe46cda4a625c705f5593afd04533",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-serenity_necris.cze",
+        "type": ".cze",
+        "patch_bytes": 1888,
+        "patch_sha256": "da6f957a05f0db13c579114b7e7435f60eafe46cda4a625c705f5593afd04533",
+        "patch_package_version": null,
+        "installed_bytes": 1888,
+        "installed_sha256": "da6f957a05f0db13c579114b7e7435f60eafe46cda4a625c705f5593afd04533",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-sinkhole.cze",
+        "type": ".cze",
+        "patch_bytes": 394,
+        "patch_sha256": "d09001a962f31a0e1602f473818cf80bcb967793075bfdf01382fee240b2a08a",
+        "patch_package_version": null,
+        "installed_bytes": 394,
+        "installed_sha256": "d09001a962f31a0e1602f473818cf80bcb967793075bfdf01382fee240b2a08a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-tankcrossing.cze",
+        "type": ".cze",
+        "patch_bytes": 3160,
+        "patch_sha256": "176b54bf296670ad36bd309d34e0b446d5242dfe16cee521af99b65b16b2deaa",
+        "patch_package_version": null,
+        "installed_bytes": 3160,
+        "installed_sha256": "176b54bf296670ad36bd309d34e0b446d5242dfe16cee521af99b65b16b2deaa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-torlan.cze",
+        "type": ".cze",
+        "patch_bytes": 3188,
+        "patch_sha256": "925e6c5b4ea1f737af26d9339c3c2eff168a8a631b6290475cfa384de6b77af6",
+        "patch_package_version": null,
+        "installed_bytes": 3188,
+        "installed_sha256": "925e6c5b4ea1f737af26d9339c3c2eff168a8a631b6290475cfa384de6b77af6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-torlan_leviathan.cze",
+        "type": ".cze",
+        "patch_bytes": 1318,
+        "patch_sha256": "47db67980fbcc63414b63396680a967bda01ce1692f6206c05dd288dccc46006",
+        "patch_package_version": null,
+        "installed_bytes": 1318,
+        "installed_sha256": "47db67980fbcc63414b63396680a967bda01ce1692f6206c05dd288dccc46006",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/CZE/war-torlan_necris.cze",
+        "type": ".cze",
+        "patch_bytes": 3188,
+        "patch_sha256": "925e6c5b4ea1f737af26d9339c3c2eff168a8a631b6290475cfa384de6b77af6",
+        "patch_package_version": null,
+        "installed_bytes": 3188,
+        "installed_sha256": "925e6c5b4ea1f737af26d9339c3c2eff168a8a631b6290475cfa384de6b77af6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/dm-sentinel.deu",
+        "type": ".deu",
+        "patch_bytes": 341,
+        "patch_sha256": "3a8e435bc8aca156e8326920d2aa3ff73bb121e23ab25520a93667c0eb912be3",
+        "patch_package_version": null,
+        "installed_bytes": 341,
+        "installed_sha256": "3a8e435bc8aca156e8326920d2aa3ff73bb121e23ab25520a93667c0eb912be3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 177195,
+        "patch_sha256": "c989ee6a4581047a96d15d6b2af715c0182ec1bdbad2bedd4459b6b068506dd3",
+        "patch_package_version": null,
+        "installed_bytes": 177195,
+        "installed_sha256": "c989ee6a4581047a96d15d6b2af715c0182ec1bdbad2bedd4459b6b068506dd3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/Subtitles.deu",
+        "type": ".deu",
+        "patch_bytes": 11704,
+        "patch_sha256": "79f235696f91be405309f32df4aeaa76773522086b5750e8ac2bcbfc9727c796",
+        "patch_package_version": null,
+        "installed_bytes": 11704,
+        "installed_sha256": "79f235696f91be405309f32df4aeaa76773522086b5750e8ac2bcbfc9727c796",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/ut3gold.deu",
+        "type": ".deu",
+        "patch_bytes": 701,
+        "patch_sha256": "083886468f873198a87fb4ed31a5f94f9a5021282a328dc858fcc35b9b534fec",
+        "patch_package_version": null,
+        "installed_bytes": 701,
+        "installed_sha256": "083886468f873198a87fb4ed31a5f94f9a5021282a328dc858fcc35b9b534fec",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/utgame.deu",
+        "type": ".deu",
+        "patch_bytes": 104633,
+        "patch_sha256": "57682b666ae84fe18cfd59611c7789530da747bff4dd517eab666f61e9ecf89b",
+        "patch_package_version": null,
+        "installed_bytes": 104633,
+        "installed_sha256": "57682b666ae84fe18cfd59611c7789530da747bff4dd517eab666f61e9ecf89b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/UTGameContent.deu",
+        "type": ".deu",
+        "patch_bytes": 17339,
+        "patch_sha256": "cedc8c5ad1f3a70a778bf06b75b50c160475a73db863eb78425b0b822ee4125e",
+        "patch_package_version": null,
+        "installed_bytes": 17339,
+        "installed_sha256": "cedc8c5ad1f3a70a778bf06b75b50c160475a73db863eb78425b0b822ee4125e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/UTGameCredits.deu",
+        "type": ".deu",
+        "patch_bytes": 11186,
+        "patch_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "patch_package_version": null,
+        "installed_bytes": 11186,
+        "installed_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/UTGameUI.deu",
+        "type": ".deu",
+        "patch_bytes": 104042,
+        "patch_sha256": "3af2feaaa6649f589da54887155a6db82c278531ae0e3ba2c1b605f8f00c3e39",
+        "patch_package_version": null,
+        "installed_bytes": 104042,
+        "installed_sha256": "3af2feaaa6649f589da54887155a6db82c278531ae0e3ba2c1b605f8f00c3e39",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-avalanche.deu",
+        "type": ".deu",
+        "patch_bytes": 1363,
+        "patch_sha256": "d097d1e324d61ca15d76a8ea1731864b213364a8cae75a1f860504f1a23a6939",
+        "patch_package_version": null,
+        "installed_bytes": 1363,
+        "installed_sha256": "d097d1e324d61ca15d76a8ea1731864b213364a8cae75a1f860504f1a23a6939",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/WAR-ColdHarbor.deu",
+        "type": ".deu",
+        "patch_bytes": 1259,
+        "patch_sha256": "a9cdab67d880763d60d9eec8eb3a4ca2871f6d4e79b1d672d7a10a622923cd33",
+        "patch_package_version": null,
+        "installed_bytes": 1259,
+        "installed_sha256": "a9cdab67d880763d60d9eec8eb3a4ca2871f6d4e79b1d672d7a10a622923cd33",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/WAR-Confrontation.deu",
+        "type": ".deu",
+        "patch_bytes": 1594,
+        "patch_sha256": "95ed2486ee0052b802ca1ff938520d80786793abc52c7d1f27d2d040dada1ac8",
+        "patch_package_version": null,
+        "installed_bytes": 1594,
+        "installed_sha256": "95ed2486ee0052b802ca1ff938520d80786793abc52c7d1f27d2d040dada1ac8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-downtown.deu",
+        "type": ".deu",
+        "patch_bytes": 923,
+        "patch_sha256": "efaaaf83242c196ad6a813bd52332fbc561d15a7404358e6799fff27dad508ba",
+        "patch_package_version": null,
+        "installed_bytes": 923,
+        "installed_sha256": "efaaaf83242c196ad6a813bd52332fbc561d15a7404358e6799fff27dad508ba",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-downtown_necris.deu",
+        "type": ".deu",
+        "patch_bytes": 917,
+        "patch_sha256": "0a80f7807e40b3160bdb47bceb6324948745863f4890c8a2879aea676762296c",
+        "patch_package_version": null,
+        "installed_bytes": 917,
+        "installed_sha256": "0a80f7807e40b3160bdb47bceb6324948745863f4890c8a2879aea676762296c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-dusk.deu",
+        "type": ".deu",
+        "patch_bytes": 1487,
+        "patch_sha256": "0759c38c80aba7765cae71cdb143d33ed1699a60e92dbb1e840622a49084c679",
+        "patch_package_version": null,
+        "installed_bytes": 1487,
+        "installed_sha256": "0759c38c80aba7765cae71cdb143d33ed1699a60e92dbb1e840622a49084c679",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-floodgate.deu",
+        "type": ".deu",
+        "patch_bytes": 1120,
+        "patch_sha256": "252453b457f43f6bb044101c0189a5f10de6586a8291e750349de8e150766404",
+        "patch_package_version": null,
+        "installed_bytes": 1120,
+        "installed_sha256": "252453b457f43f6bb044101c0189a5f10de6586a8291e750349de8e150766404",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/WAR-Hostile.deu",
+        "type": ".deu",
+        "patch_bytes": 89,
+        "patch_sha256": "760e058efc53f8ffb75ee5762ee2f4015ed7c9aa9bac737b15a4c39f3df0cb66",
+        "patch_package_version": null,
+        "installed_bytes": 89,
+        "installed_sha256": "760e058efc53f8ffb75ee5762ee2f4015ed7c9aa9bac737b15a4c39f3df0cb66",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-islander.deu",
+        "type": ".deu",
+        "patch_bytes": 446,
+        "patch_sha256": "4b0241bcbac0fb5fc4c6da36e3ede133d47378134ad5c28536b38c4029b4949a",
+        "patch_package_version": null,
+        "installed_bytes": 446,
+        "installed_sha256": "4b0241bcbac0fb5fc4c6da36e3ede133d47378134ad5c28536b38c4029b4949a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-islander_necris.deu",
+        "type": ".deu",
+        "patch_bytes": 424,
+        "patch_sha256": "5876507488baa8a1561b5d65b446e90c51434a73faf7e86014cd656932cd863f",
+        "patch_package_version": null,
+        "installed_bytes": 424,
+        "installed_sha256": "5876507488baa8a1561b5d65b446e90c51434a73faf7e86014cd656932cd863f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-marketdistrict.deu",
+        "type": ".deu",
+        "patch_bytes": 685,
+        "patch_sha256": "d180f5d685c1604ba8579195ae468560b39f43d2eb3527ee6277932602680906",
+        "patch_package_version": null,
+        "installed_bytes": 685,
+        "installed_sha256": "d180f5d685c1604ba8579195ae468560b39f43d2eb3527ee6277932602680906",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-onyxcoast.deu",
+        "type": ".deu",
+        "patch_bytes": 916,
+        "patch_sha256": "1946b1d332ef899b96de6ea19ec633ccd85639700fe58bb7a64d25db0ba6a8f9",
+        "patch_package_version": null,
+        "installed_bytes": 916,
+        "installed_sha256": "1946b1d332ef899b96de6ea19ec633ccd85639700fe58bb7a64d25db0ba6a8f9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-powersurge.deu",
+        "type": ".deu",
+        "patch_bytes": 1179,
+        "patch_sha256": "0d4f94ae31bc66be650f2507501b7d443682997391d84cfb4757e6706a598f14",
+        "patch_package_version": null,
+        "installed_bytes": 1179,
+        "installed_sha256": "0d4f94ae31bc66be650f2507501b7d443682997391d84cfb4757e6706a598f14",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-serenity.deu",
+        "type": ".deu",
+        "patch_bytes": 1033,
+        "patch_sha256": "b9bacc328be22eea896b46c3b038997879663d4d08d9f3f9826d33d0c16e5cfc",
+        "patch_package_version": null,
+        "installed_bytes": 1033,
+        "installed_sha256": "b9bacc328be22eea896b46c3b038997879663d4d08d9f3f9826d33d0c16e5cfc",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-serenity_necris.deu",
+        "type": ".deu",
+        "patch_bytes": 1045,
+        "patch_sha256": "0a9eedcf24c88a5f5ee60b8110397de2794ad522827070dcdd37fc89fad7eae2",
+        "patch_package_version": null,
+        "installed_bytes": 1045,
+        "installed_sha256": "0a9eedcf24c88a5f5ee60b8110397de2794ad522827070dcdd37fc89fad7eae2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-sinkhole.deu",
+        "type": ".deu",
+        "patch_bytes": 212,
+        "patch_sha256": "ffccfe11d9279bb9c3c0352a3abcd8cb8de648e53494f0f71914e8b6205ad161",
+        "patch_package_version": null,
+        "installed_bytes": 212,
+        "installed_sha256": "ffccfe11d9279bb9c3c0352a3abcd8cb8de648e53494f0f71914e8b6205ad161",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-tankcrossing.deu",
+        "type": ".deu",
+        "patch_bytes": 1626,
+        "patch_sha256": "c1206ee10f96c7499fa7df104ca3a0a807c906082afd4b6aef6328557b263631",
+        "patch_package_version": null,
+        "installed_bytes": 1626,
+        "installed_sha256": "c1206ee10f96c7499fa7df104ca3a0a807c906082afd4b6aef6328557b263631",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-torlan.deu",
+        "type": ".deu",
+        "patch_bytes": 1723,
+        "patch_sha256": "c1e55e7b71626d30281e811bfc93eb28237f429d1a76533a51e94eb596d97a27",
+        "patch_package_version": null,
+        "installed_bytes": 1723,
+        "installed_sha256": "c1e55e7b71626d30281e811bfc93eb28237f429d1a76533a51e94eb596d97a27",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-torlan_leviathan.deu",
+        "type": ".deu",
+        "patch_bytes": 695,
+        "patch_sha256": "563b66961463d87c771accc5de125e4145492da6b5f19c8f6657f3c170019eb3",
+        "patch_package_version": null,
+        "installed_bytes": 695,
+        "installed_sha256": "563b66961463d87c771accc5de125e4145492da6b5f19c8f6657f3c170019eb3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/DEU/war-torlan_necris.deu",
+        "type": ".deu",
+        "patch_bytes": 1723,
+        "patch_sha256": "c1e55e7b71626d30281e811bfc93eb28237f429d1a76533a51e94eb596d97a27",
+        "patch_package_version": null,
+        "installed_bytes": 1723,
+        "installed_sha256": "c1e55e7b71626d30281e811bfc93eb28237f429d1a76533a51e94eb596d97a27",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/dm-sentinel.esn",
+        "type": ".esn",
+        "patch_bytes": 336,
+        "patch_sha256": "351efe64b8eb352c59180766ef13f9303d2b8671181ad997edbb44fdfedb13f6",
+        "patch_package_version": null,
+        "installed_bytes": 336,
+        "installed_sha256": "351efe64b8eb352c59180766ef13f9303d2b8671181ad997edbb44fdfedb13f6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 157331,
+        "patch_sha256": "e0cd74577b4fe1376fe7c7d221158d545e84a600f8363016888097421a70187e",
+        "patch_package_version": null,
+        "installed_bytes": 157331,
+        "installed_sha256": "e0cd74577b4fe1376fe7c7d221158d545e84a600f8363016888097421a70187e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/Subtitles.esn",
+        "type": ".esn",
+        "patch_bytes": 11104,
+        "patch_sha256": "8480393655adb6ea4580ee4a720d0653d8343a5fe82aeef6e9c1ac76a2391358",
+        "patch_package_version": null,
+        "installed_bytes": 11104,
+        "installed_sha256": "8480393655adb6ea4580ee4a720d0653d8343a5fe82aeef6e9c1ac76a2391358",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/ut3gold.esn",
+        "type": ".esn",
+        "patch_bytes": 1006,
+        "patch_sha256": "a44168578bd80310e7c9e6be104ce01f1ba6f956c3123a14613776980a5ebb13",
+        "patch_package_version": null,
+        "installed_bytes": 1006,
+        "installed_sha256": "a44168578bd80310e7c9e6be104ce01f1ba6f956c3123a14613776980a5ebb13",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/utgame.esn",
+        "type": ".esn",
+        "patch_bytes": 106217,
+        "patch_sha256": "ff24df84d10d2e2c952de7a5bd24753c08436f33c4693eb7074031627f0ecb29",
+        "patch_package_version": null,
+        "installed_bytes": 106217,
+        "installed_sha256": "ff24df84d10d2e2c952de7a5bd24753c08436f33c4693eb7074031627f0ecb29",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/UTGameContent.esn",
+        "type": ".esn",
+        "patch_bytes": 17599,
+        "patch_sha256": "7bb9b532ff2736767d691c806ec2cea9c92fcd9b3cdeebe90f5bd503945f0270",
+        "patch_package_version": null,
+        "installed_bytes": 17599,
+        "installed_sha256": "7bb9b532ff2736767d691c806ec2cea9c92fcd9b3cdeebe90f5bd503945f0270",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/UTGameCredits.esn",
+        "type": ".esn",
+        "patch_bytes": 11186,
+        "patch_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "patch_package_version": null,
+        "installed_bytes": 11186,
+        "installed_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/UTGameUI.esn",
+        "type": ".esn",
+        "patch_bytes": 104081,
+        "patch_sha256": "6a289238d92371b945baf587b2bad3c709c4990cb3c01bdc3debb2bd8b72875f",
+        "patch_package_version": null,
+        "installed_bytes": 104081,
+        "installed_sha256": "6a289238d92371b945baf587b2bad3c709c4990cb3c01bdc3debb2bd8b72875f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-avalanche.esn",
+        "type": ".esn",
+        "patch_bytes": 1276,
+        "patch_sha256": "7d139554d843c0f05ca215715fd399bedc55a152785e6d95649ff949b490f413",
+        "patch_package_version": null,
+        "installed_bytes": 1276,
+        "installed_sha256": "7d139554d843c0f05ca215715fd399bedc55a152785e6d95649ff949b490f413",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/WAR-ColdHarbor.esn",
+        "type": ".esn",
+        "patch_bytes": 1243,
+        "patch_sha256": "45f52ef3fc020f8559eb2b46bc6025b165456ffa6570c07ae74ef6b4f3192d31",
+        "patch_package_version": null,
+        "installed_bytes": 1243,
+        "installed_sha256": "45f52ef3fc020f8559eb2b46bc6025b165456ffa6570c07ae74ef6b4f3192d31",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/WAR-Confrontation.esn",
+        "type": ".esn",
+        "patch_bytes": 1587,
+        "patch_sha256": "6957b137e8bb4ada0605aed86863f8a82ea6fea77fd6dd6d6259b959a13dbcb7",
+        "patch_package_version": null,
+        "installed_bytes": 1587,
+        "installed_sha256": "6957b137e8bb4ada0605aed86863f8a82ea6fea77fd6dd6d6259b959a13dbcb7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-downtown.esn",
+        "type": ".esn",
+        "patch_bytes": 874,
+        "patch_sha256": "0a8daad993fb414ab277f50552483820a8d7f1b2cb27df4a7e5e2a5c20ffc275",
+        "patch_package_version": null,
+        "installed_bytes": 874,
+        "installed_sha256": "0a8daad993fb414ab277f50552483820a8d7f1b2cb27df4a7e5e2a5c20ffc275",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-downtown_necris.esn",
+        "type": ".esn",
+        "patch_bytes": 904,
+        "patch_sha256": "c2cf43fd877d969dc6541ebb1ec2c5979bc04a88b246d27414f6502ce63f794c",
+        "patch_package_version": null,
+        "installed_bytes": 904,
+        "installed_sha256": "c2cf43fd877d969dc6541ebb1ec2c5979bc04a88b246d27414f6502ce63f794c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-dusk.esn",
+        "type": ".esn",
+        "patch_bytes": 1383,
+        "patch_sha256": "7bfd0c97947924423f7d3824b46200c77fc3fb0ef93e142302f9d2e9dd3ce206",
+        "patch_package_version": null,
+        "installed_bytes": 1383,
+        "installed_sha256": "7bfd0c97947924423f7d3824b46200c77fc3fb0ef93e142302f9d2e9dd3ce206",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-floodgate.esn",
+        "type": ".esn",
+        "patch_bytes": 1073,
+        "patch_sha256": "ec3a62f31c5d2e282fe76d6fbb14f417b991bd1ae1db93e8dc267968bf98a036",
+        "patch_package_version": null,
+        "installed_bytes": 1073,
+        "installed_sha256": "ec3a62f31c5d2e282fe76d6fbb14f417b991bd1ae1db93e8dc267968bf98a036",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/WAR-Hostile.esn",
+        "type": ".esn",
+        "patch_bytes": 95,
+        "patch_sha256": "ed626d8d1d9ba1c2fc9ba80262e5928221e3e06b3aac3bee81f5bc0ebac46d9b",
+        "patch_package_version": null,
+        "installed_bytes": 95,
+        "installed_sha256": "ed626d8d1d9ba1c2fc9ba80262e5928221e3e06b3aac3bee81f5bc0ebac46d9b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-islander.esn",
+        "type": ".esn",
+        "patch_bytes": 428,
+        "patch_sha256": "0fa5a574f13877d064d25dc9ee9ae013ddfa897a6e8d6012fb60faac16786ff2",
+        "patch_package_version": null,
+        "installed_bytes": 428,
+        "installed_sha256": "0fa5a574f13877d064d25dc9ee9ae013ddfa897a6e8d6012fb60faac16786ff2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-islander_necris.esn",
+        "type": ".esn",
+        "patch_bytes": 428,
+        "patch_sha256": "0fa5a574f13877d064d25dc9ee9ae013ddfa897a6e8d6012fb60faac16786ff2",
+        "patch_package_version": null,
+        "installed_bytes": 428,
+        "installed_sha256": "0fa5a574f13877d064d25dc9ee9ae013ddfa897a6e8d6012fb60faac16786ff2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-marketdistrict.esn",
+        "type": ".esn",
+        "patch_bytes": 632,
+        "patch_sha256": "fd2fc820708271be5a95fed402e6fbc8da148122d085f9301618fa4ab1882375",
+        "patch_package_version": null,
+        "installed_bytes": 632,
+        "installed_sha256": "fd2fc820708271be5a95fed402e6fbc8da148122d085f9301618fa4ab1882375",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-onyxcoast.esn",
+        "type": ".esn",
+        "patch_bytes": 885,
+        "patch_sha256": "f9dc2c0ca2f6de54f9dc488a78520bdf1bafb94fff49cbc98c46ea06a950f769",
+        "patch_package_version": null,
+        "installed_bytes": 885,
+        "installed_sha256": "f9dc2c0ca2f6de54f9dc488a78520bdf1bafb94fff49cbc98c46ea06a950f769",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-powersurge.esn",
+        "type": ".esn",
+        "patch_bytes": 1120,
+        "patch_sha256": "ebd87d774fe1ed77407d587657ab6eec88916710874473e3fa0dd3c7574c507c",
+        "patch_package_version": null,
+        "installed_bytes": 1120,
+        "installed_sha256": "ebd87d774fe1ed77407d587657ab6eec88916710874473e3fa0dd3c7574c507c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-serenity.esn",
+        "type": ".esn",
+        "patch_bytes": 983,
+        "patch_sha256": "bbdaac9ea8160287fb2d6e7b882f74c1e55225237647a7423ca1558728766f4c",
+        "patch_package_version": null,
+        "installed_bytes": 983,
+        "installed_sha256": "bbdaac9ea8160287fb2d6e7b882f74c1e55225237647a7423ca1558728766f4c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-serenity_necris.esn",
+        "type": ".esn",
+        "patch_bytes": 1000,
+        "patch_sha256": "79a70b663529b560ae260389c2f9b4d6d67e43b364edc0fbb79e04529987523e",
+        "patch_package_version": null,
+        "installed_bytes": 1000,
+        "installed_sha256": "79a70b663529b560ae260389c2f9b4d6d67e43b364edc0fbb79e04529987523e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-sinkhole.esn",
+        "type": ".esn",
+        "patch_bytes": 201,
+        "patch_sha256": "9b7b1de425a7fb950ae32f430b5d739f24d71658d705b70dd2025fc0bbfb981d",
+        "patch_package_version": null,
+        "installed_bytes": 201,
+        "installed_sha256": "9b7b1de425a7fb950ae32f430b5d739f24d71658d705b70dd2025fc0bbfb981d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-tankcrossing.esn",
+        "type": ".esn",
+        "patch_bytes": 1625,
+        "patch_sha256": "b665fb3af520df1ea1387d58be950796e1a403e1005ab82faf92203e69401d0b",
+        "patch_package_version": null,
+        "installed_bytes": 1625,
+        "installed_sha256": "b665fb3af520df1ea1387d58be950796e1a403e1005ab82faf92203e69401d0b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-torlan.esn",
+        "type": ".esn",
+        "patch_bytes": 1692,
+        "patch_sha256": "333bc0ffb16fc27df573d382d4dec2bd1fde16a21c55b6c9a4ff06e7afc4c7dc",
+        "patch_package_version": null,
+        "installed_bytes": 1692,
+        "installed_sha256": "333bc0ffb16fc27df573d382d4dec2bd1fde16a21c55b6c9a4ff06e7afc4c7dc",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-torlan_leviathan.esn",
+        "type": ".esn",
+        "patch_bytes": 699,
+        "patch_sha256": "a88d8207bc4f6e744444306360702a3dc3c4cef02caba4886e33bc77e19ea16e",
+        "patch_package_version": null,
+        "installed_bytes": 699,
+        "installed_sha256": "a88d8207bc4f6e744444306360702a3dc3c4cef02caba4886e33bc77e19ea16e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ESN/war-torlan_necris.esn",
+        "type": ".esn",
+        "patch_bytes": 1692,
+        "patch_sha256": "f09518127554e96ba428092d9d4bc32f2700812bb53eca0d4163685f5c5e1063",
+        "patch_package_version": null,
+        "installed_bytes": 1692,
+        "installed_sha256": "f09518127554e96ba428092d9d4bc32f2700812bb53eca0d4163685f5c5e1063",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/dm-sentinel.fra",
+        "type": ".fra",
+        "patch_bytes": 323,
+        "patch_sha256": "143c47694451dd8f6860cd8ef8d4e4fa75ee716752d55658d753a358a949d5b8",
+        "patch_package_version": null,
+        "installed_bytes": 323,
+        "installed_sha256": "143c47694451dd8f6860cd8ef8d4e4fa75ee716752d55658d753a358a949d5b8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 205666,
+        "patch_sha256": "7a3b085e91b442ccd4549f7f915ca9c5cd3e21fdcd38d82730dc5454c437ae91",
+        "patch_package_version": null,
+        "installed_bytes": 205666,
+        "installed_sha256": "7a3b085e91b442ccd4549f7f915ca9c5cd3e21fdcd38d82730dc5454c437ae91",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/Subtitles.fra",
+        "type": ".fra",
+        "patch_bytes": 11640,
+        "patch_sha256": "3d5f80b0f7e22f035306a1b36d832fe373f6f83c0da7823149cd4178e304c7a7",
+        "patch_package_version": null,
+        "installed_bytes": 11640,
+        "installed_sha256": "3d5f80b0f7e22f035306a1b36d832fe373f6f83c0da7823149cd4178e304c7a7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/ut3gold.fra",
+        "type": ".fra",
+        "patch_bytes": 720,
+        "patch_sha256": "4fa2a72ab0d3e0ed5924d3e033b2584744855619d4dfb2ceaf1fc85a419430ab",
+        "patch_package_version": null,
+        "installed_bytes": 720,
+        "installed_sha256": "4fa2a72ab0d3e0ed5924d3e033b2584744855619d4dfb2ceaf1fc85a419430ab",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/utgame.fra",
+        "type": ".fra",
+        "patch_bytes": 103110,
+        "patch_sha256": "205193dbcedfffd74c02f3d618d2dccef831428a0b2b329c8973182306abc929",
+        "patch_package_version": null,
+        "installed_bytes": 103110,
+        "installed_sha256": "205193dbcedfffd74c02f3d618d2dccef831428a0b2b329c8973182306abc929",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/UTGameContent.fra",
+        "type": ".fra",
+        "patch_bytes": 16769,
+        "patch_sha256": "94cdad807b99e535c718b2e480c3f13b19921535385425ea92e1b54006c95954",
+        "patch_package_version": null,
+        "installed_bytes": 16769,
+        "installed_sha256": "94cdad807b99e535c718b2e480c3f13b19921535385425ea92e1b54006c95954",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/UTGameCredits.fra",
+        "type": ".fra",
+        "patch_bytes": 11186,
+        "patch_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "patch_package_version": null,
+        "installed_bytes": 11186,
+        "installed_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/UTGameUI.fra",
+        "type": ".fra",
+        "patch_bytes": 102733,
+        "patch_sha256": "da8f66484a6a39c5520391c09eb29bb56a92337127797468db465fefc9b2c61d",
+        "patch_package_version": null,
+        "installed_bytes": 102733,
+        "installed_sha256": "da8f66484a6a39c5520391c09eb29bb56a92337127797468db465fefc9b2c61d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-avalanche.fra",
+        "type": ".fra",
+        "patch_bytes": 1276,
+        "patch_sha256": "9271807c54901d052fc3fbac835b32b7659f02f47a2052fbdac135396a0059b5",
+        "patch_package_version": null,
+        "installed_bytes": 1276,
+        "installed_sha256": "9271807c54901d052fc3fbac835b32b7659f02f47a2052fbdac135396a0059b5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/WAR-ColdHarbor.fra",
+        "type": ".fra",
+        "patch_bytes": 1299,
+        "patch_sha256": "df5471685446db7acb6df6f58ad9bf049a6173345c72cde49c47c418648dea73",
+        "patch_package_version": null,
+        "installed_bytes": 1299,
+        "installed_sha256": "df5471685446db7acb6df6f58ad9bf049a6173345c72cde49c47c418648dea73",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/WAR-Confrontation.fra",
+        "type": ".fra",
+        "patch_bytes": 1629,
+        "patch_sha256": "833b6821b480f6b030f0f0e9d6b3b30ce73325e4e8d7deb4be6c6edefb222cdd",
+        "patch_package_version": null,
+        "installed_bytes": 1629,
+        "installed_sha256": "833b6821b480f6b030f0f0e9d6b3b30ce73325e4e8d7deb4be6c6edefb222cdd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-downtown.fra",
+        "type": ".fra",
+        "patch_bytes": 904,
+        "patch_sha256": "1888633f340246821fde2b65778330fa78ea55c369480df5e9323a0e4555c4f5",
+        "patch_package_version": null,
+        "installed_bytes": 904,
+        "installed_sha256": "1888633f340246821fde2b65778330fa78ea55c369480df5e9323a0e4555c4f5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-downtown_necris.fra",
+        "type": ".fra",
+        "patch_bytes": 903,
+        "patch_sha256": "ae4efdb26c1fa207d5712bf6d782724f5df792adbf02e85e1dc76ceee98289b2",
+        "patch_package_version": null,
+        "installed_bytes": 903,
+        "installed_sha256": "ae4efdb26c1fa207d5712bf6d782724f5df792adbf02e85e1dc76ceee98289b2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-dusk.fra",
+        "type": ".fra",
+        "patch_bytes": 1355,
+        "patch_sha256": "a7bf9b7e41c79b0da37c92180f688dd83786d981a59456c615954efcf12ef688",
+        "patch_package_version": null,
+        "installed_bytes": 1355,
+        "installed_sha256": "a7bf9b7e41c79b0da37c92180f688dd83786d981a59456c615954efcf12ef688",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-floodgate.fra",
+        "type": ".fra",
+        "patch_bytes": 1083,
+        "patch_sha256": "4ed95429a46ab5c2aab2316f57c77aae44d2e32c2d337e647946991218681cec",
+        "patch_package_version": null,
+        "installed_bytes": 1083,
+        "installed_sha256": "4ed95429a46ab5c2aab2316f57c77aae44d2e32c2d337e647946991218681cec",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/WAR-Hostile.fra",
+        "type": ".fra",
+        "patch_bytes": 99,
+        "patch_sha256": "2fb99bc3314f5e0bc3d4fba0d0c33a6e2feb59ad7f044c29fdf26f540aae5925",
+        "patch_package_version": null,
+        "installed_bytes": 99,
+        "installed_sha256": "2fb99bc3314f5e0bc3d4fba0d0c33a6e2feb59ad7f044c29fdf26f540aae5925",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-islander.fra",
+        "type": ".fra",
+        "patch_bytes": 443,
+        "patch_sha256": "9d406af77a63e99aa221ad8e91a340ceba1f3d723c2a3cafc9aae4f1fbbb7d16",
+        "patch_package_version": null,
+        "installed_bytes": 443,
+        "installed_sha256": "9d406af77a63e99aa221ad8e91a340ceba1f3d723c2a3cafc9aae4f1fbbb7d16",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-islander_necris.fra",
+        "type": ".fra",
+        "patch_bytes": 443,
+        "patch_sha256": "9d406af77a63e99aa221ad8e91a340ceba1f3d723c2a3cafc9aae4f1fbbb7d16",
+        "patch_package_version": null,
+        "installed_bytes": 443,
+        "installed_sha256": "9d406af77a63e99aa221ad8e91a340ceba1f3d723c2a3cafc9aae4f1fbbb7d16",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-marketdistrict.fra",
+        "type": ".fra",
+        "patch_bytes": 627,
+        "patch_sha256": "2cadb53cd3c367fefb44884563ecebe676f7e26ad34033d21a093c22ebda2da2",
+        "patch_package_version": null,
+        "installed_bytes": 627,
+        "installed_sha256": "2cadb53cd3c367fefb44884563ecebe676f7e26ad34033d21a093c22ebda2da2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-onyxcoast.fra",
+        "type": ".fra",
+        "patch_bytes": 863,
+        "patch_sha256": "e95577fa096ae77058da9da2303ed07c05a0c69fc36ab7f8ee4ec3fb2338af9a",
+        "patch_package_version": null,
+        "installed_bytes": 863,
+        "installed_sha256": "e95577fa096ae77058da9da2303ed07c05a0c69fc36ab7f8ee4ec3fb2338af9a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-powersurge.fra",
+        "type": ".fra",
+        "patch_bytes": 1129,
+        "patch_sha256": "ed0ffe26c251f73542c636753fb2c7066f4798a12a6787a32b167404617861d6",
+        "patch_package_version": null,
+        "installed_bytes": 1129,
+        "installed_sha256": "ed0ffe26c251f73542c636753fb2c7066f4798a12a6787a32b167404617861d6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-serenity.fra",
+        "type": ".fra",
+        "patch_bytes": 1001,
+        "patch_sha256": "2f717ac65cca8d7e5308b41fe06f6232fb3000c647c4410fe408dbccd89333a9",
+        "patch_package_version": null,
+        "installed_bytes": 1001,
+        "installed_sha256": "2f717ac65cca8d7e5308b41fe06f6232fb3000c647c4410fe408dbccd89333a9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-serenity_necris.fra",
+        "type": ".fra",
+        "patch_bytes": 1002,
+        "patch_sha256": "ce9b91687fec48a80a03c794c88c25d681b877e2020861c21b7fd66e161b738b",
+        "patch_package_version": null,
+        "installed_bytes": 1002,
+        "installed_sha256": "ce9b91687fec48a80a03c794c88c25d681b877e2020861c21b7fd66e161b738b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-sinkhole.fra",
+        "type": ".fra",
+        "patch_bytes": 205,
+        "patch_sha256": "d7990868cb433ae3482a7a241e6f6399f7e2b36865186d7565cdc5dbf6b042aa",
+        "patch_package_version": null,
+        "installed_bytes": 205,
+        "installed_sha256": "d7990868cb433ae3482a7a241e6f6399f7e2b36865186d7565cdc5dbf6b042aa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-tankcrossing.fra",
+        "type": ".fra",
+        "patch_bytes": 1608,
+        "patch_sha256": "4d18c51f48378890d5173d4a9da386235abd71251c84ca420e10bff484d9a5ca",
+        "patch_package_version": null,
+        "installed_bytes": 1608,
+        "installed_sha256": "4d18c51f48378890d5173d4a9da386235abd71251c84ca420e10bff484d9a5ca",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-torlan.fra",
+        "type": ".fra",
+        "patch_bytes": 1573,
+        "patch_sha256": "fd7fe6e863f6fb4588daf2edcb3adec1257953abbfb3ed550353eeea88d0f1e1",
+        "patch_package_version": null,
+        "installed_bytes": 1573,
+        "installed_sha256": "fd7fe6e863f6fb4588daf2edcb3adec1257953abbfb3ed550353eeea88d0f1e1",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-torlan_leviathan.fra",
+        "type": ".fra",
+        "patch_bytes": 702,
+        "patch_sha256": "1bc5f6079425d3e1d00237fc619c0a239760204a8fda111afa444e363c0f7e6d",
+        "patch_package_version": null,
+        "installed_bytes": 702,
+        "installed_sha256": "1bc5f6079425d3e1d00237fc619c0a239760204a8fda111afa444e363c0f7e6d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/FRA/war-torlan_necris.fra",
+        "type": ".fra",
+        "patch_bytes": 1573,
+        "patch_sha256": "fd7fe6e863f6fb4588daf2edcb3adec1257953abbfb3ed550353eeea88d0f1e1",
+        "patch_package_version": null,
+        "installed_bytes": 1573,
+        "installed_sha256": "fd7fe6e863f6fb4588daf2edcb3adec1257953abbfb3ed550353eeea88d0f1e1",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/dm-sentinel.hun",
+        "type": ".hun",
+        "patch_bytes": 652,
+        "patch_sha256": "b10396964f87725c805ba93fc96ed12f4ad2fd560591532d49e47b2c50662186",
+        "patch_package_version": null,
+        "installed_bytes": 652,
+        "installed_sha256": "b10396964f87725c805ba93fc96ed12f4ad2fd560591532d49e47b2c50662186",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 163888,
+        "patch_sha256": "2e6ab4676e176334427ac60a3fef740a5d4771339c71ef936ed6300879895ca7",
+        "patch_package_version": null,
+        "installed_bytes": 163888,
+        "installed_sha256": "2e6ab4676e176334427ac60a3fef740a5d4771339c71ef936ed6300879895ca7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/Subtitles.hun",
+        "type": ".hun",
+        "patch_bytes": 21614,
+        "patch_sha256": "2a7e231d59ccb179e1e398b486a021f2f494ad2d67550522a721a747aa736300",
+        "patch_package_version": null,
+        "installed_bytes": 21614,
+        "installed_sha256": "2a7e231d59ccb179e1e398b486a021f2f494ad2d67550522a721a747aa736300",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/ut3gold.hun",
+        "type": ".hun",
+        "patch_bytes": 1342,
+        "patch_sha256": "5a13eb3c39895e9314cdd29270c7b0b882ca9246c8ac61b0e58b149a9768052f",
+        "patch_package_version": null,
+        "installed_bytes": 1342,
+        "installed_sha256": "5a13eb3c39895e9314cdd29270c7b0b882ca9246c8ac61b0e58b149a9768052f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/utgame.hun",
+        "type": ".hun",
+        "patch_bytes": 205862,
+        "patch_sha256": "5f813dab54ca4a8d56aebc62eeeb6fc4de32d33caa07172ce240bb19e0d6ad48",
+        "patch_package_version": null,
+        "installed_bytes": 205862,
+        "installed_sha256": "5f813dab54ca4a8d56aebc62eeeb6fc4de32d33caa07172ce240bb19e0d6ad48",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/UTGameContent.hun",
+        "type": ".hun",
+        "patch_bytes": 35056,
+        "patch_sha256": "228210976922e3721a98b68bd15de4b92df1422fd65fe422db1b122330d9a6ea",
+        "patch_package_version": null,
+        "installed_bytes": 35056,
+        "installed_sha256": "228210976922e3721a98b68bd15de4b92df1422fd65fe422db1b122330d9a6ea",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/UTGameCredits.hun",
+        "type": ".hun",
+        "patch_bytes": 23858,
+        "patch_sha256": "53d37057e1a6a3ecec1651341be4ca7ccf79e372b3cc70540c0e8ce4953544a2",
+        "patch_package_version": null,
+        "installed_bytes": 23858,
+        "installed_sha256": "53d37057e1a6a3ecec1651341be4ca7ccf79e372b3cc70540c0e8ce4953544a2",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/UTGameUI.hun",
+        "type": ".hun",
+        "patch_bytes": 205148,
+        "patch_sha256": "6c2a150229615bcd3ead7045bbdfc6d202a4e01419f61a92ab3138c8209fd950",
+        "patch_package_version": null,
+        "installed_bytes": 205148,
+        "installed_sha256": "6c2a150229615bcd3ead7045bbdfc6d202a4e01419f61a92ab3138c8209fd950",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-avalanche.hun",
+        "type": ".hun",
+        "patch_bytes": 2682,
+        "patch_sha256": "4472549057ca02041e996c4c3dc2fe25f04536b8f18f8b464551e4584355bbe8",
+        "patch_package_version": null,
+        "installed_bytes": 2682,
+        "installed_sha256": "4472549057ca02041e996c4c3dc2fe25f04536b8f18f8b464551e4584355bbe8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/WAR-ColdHarbor.hun",
+        "type": ".hun",
+        "patch_bytes": 2412,
+        "patch_sha256": "9d94ad541b47d9bf776de4f1ea487eb1ceaa58cacb48b354112200eba5b60a79",
+        "patch_package_version": null,
+        "installed_bytes": 2412,
+        "installed_sha256": "9d94ad541b47d9bf776de4f1ea487eb1ceaa58cacb48b354112200eba5b60a79",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/WAR-Confrontation.hun",
+        "type": ".hun",
+        "patch_bytes": 3106,
+        "patch_sha256": "14cae6132ef2c93778eec047cfed6ed84ff802ae206f66b64c925214975e0f44",
+        "patch_package_version": null,
+        "installed_bytes": 3106,
+        "installed_sha256": "14cae6132ef2c93778eec047cfed6ed84ff802ae206f66b64c925214975e0f44",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-downtown.hun",
+        "type": ".hun",
+        "patch_bytes": 1780,
+        "patch_sha256": "cc6151914dd172a3d341e48ea4435ed0bb9970d723f3ce8bbebd128acc323fcf",
+        "patch_package_version": null,
+        "installed_bytes": 1780,
+        "installed_sha256": "cc6151914dd172a3d341e48ea4435ed0bb9970d723f3ce8bbebd128acc323fcf",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-downtown_necris.hun",
+        "type": ".hun",
+        "patch_bytes": 1734,
+        "patch_sha256": "39e5ee2b52183b62c490c7357e819b2e896aaa91abf13145c6cbe6cddd6d8db7",
+        "patch_package_version": null,
+        "installed_bytes": 1734,
+        "installed_sha256": "39e5ee2b52183b62c490c7357e819b2e896aaa91abf13145c6cbe6cddd6d8db7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-dusk.hun",
+        "type": ".hun",
+        "patch_bytes": 2806,
+        "patch_sha256": "55c98833598132fd5bcfd68f3526a1787a53ddcce1d3907f93e65c755359eb20",
+        "patch_package_version": null,
+        "installed_bytes": 2806,
+        "installed_sha256": "55c98833598132fd5bcfd68f3526a1787a53ddcce1d3907f93e65c755359eb20",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-floodgate.hun",
+        "type": ".hun",
+        "patch_bytes": 2332,
+        "patch_sha256": "45fd882096a61546966c0d781d71a3475d37ed48ce67a21f188bf4e260cd9124",
+        "patch_package_version": null,
+        "installed_bytes": 2332,
+        "installed_sha256": "45fd882096a61546966c0d781d71a3475d37ed48ce67a21f188bf4e260cd9124",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/WAR-Hostile.hun",
+        "type": ".hun",
+        "patch_bytes": 174,
+        "patch_sha256": "340b8aef92b253a6166ea4720e685293a6cf0f74b1c100b181da9923c94ec168",
+        "patch_package_version": null,
+        "installed_bytes": 174,
+        "installed_sha256": "340b8aef92b253a6166ea4720e685293a6cf0f74b1c100b181da9923c94ec168",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-islander.hun",
+        "type": ".hun",
+        "patch_bytes": 882,
+        "patch_sha256": "e3ea439e45a27646b8047414f548c84c1dbe505adfaca72004e6186326f6a861",
+        "patch_package_version": null,
+        "installed_bytes": 882,
+        "installed_sha256": "e3ea439e45a27646b8047414f548c84c1dbe505adfaca72004e6186326f6a861",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-islander_necris.hun",
+        "type": ".hun",
+        "patch_bytes": 882,
+        "patch_sha256": "e3ea439e45a27646b8047414f548c84c1dbe505adfaca72004e6186326f6a861",
+        "patch_package_version": null,
+        "installed_bytes": 882,
+        "installed_sha256": "e3ea439e45a27646b8047414f548c84c1dbe505adfaca72004e6186326f6a861",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-marketdistrict.hun",
+        "type": ".hun",
+        "patch_bytes": 1342,
+        "patch_sha256": "ce6c8d914c6b7f76555a53027d3b8117729e8251af01a998812fbec1bf5a922a",
+        "patch_package_version": null,
+        "installed_bytes": 1342,
+        "installed_sha256": "ce6c8d914c6b7f76555a53027d3b8117729e8251af01a998812fbec1bf5a922a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-onyxcoast.hun",
+        "type": ".hun",
+        "patch_bytes": 1792,
+        "patch_sha256": "be9b391decce98e7db303863c85dbc454e0e6b2cdd91c055e83e6bf1db4fa68c",
+        "patch_package_version": null,
+        "installed_bytes": 1792,
+        "installed_sha256": "be9b391decce98e7db303863c85dbc454e0e6b2cdd91c055e83e6bf1db4fa68c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-powersurge.hun",
+        "type": ".hun",
+        "patch_bytes": 2292,
+        "patch_sha256": "ad8b799a5568bc1070604c1c69383a242a5228af5a97b5c817732ec541cd665a",
+        "patch_package_version": null,
+        "installed_bytes": 2292,
+        "installed_sha256": "ad8b799a5568bc1070604c1c69383a242a5228af5a97b5c817732ec541cd665a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-serenity.hun",
+        "type": ".hun",
+        "patch_bytes": 2002,
+        "patch_sha256": "934b35b05adef963fcb78c8a611c35bd406ffae99ed2d844a1477a98b5f6094d",
+        "patch_package_version": null,
+        "installed_bytes": 2002,
+        "installed_sha256": "934b35b05adef963fcb78c8a611c35bd406ffae99ed2d844a1477a98b5f6094d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-serenity_necris.hun",
+        "type": ".hun",
+        "patch_bytes": 2002,
+        "patch_sha256": "934b35b05adef963fcb78c8a611c35bd406ffae99ed2d844a1477a98b5f6094d",
+        "patch_package_version": null,
+        "installed_bytes": 2002,
+        "installed_sha256": "934b35b05adef963fcb78c8a611c35bd406ffae99ed2d844a1477a98b5f6094d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-sinkhole.hun",
+        "type": ".hun",
+        "patch_bytes": 424,
+        "patch_sha256": "9c35cd20be8d2e49e75967adbcaf45bda1584e3c5302a402e414e64780dfd06f",
+        "patch_package_version": null,
+        "installed_bytes": 424,
+        "installed_sha256": "9c35cd20be8d2e49e75967adbcaf45bda1584e3c5302a402e414e64780dfd06f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-tankcrossing.hun",
+        "type": ".hun",
+        "patch_bytes": 3276,
+        "patch_sha256": "657963494990ab065c992a4c094a19ee0f9236d41fd4fbb0cc3d6f77eb988198",
+        "patch_package_version": null,
+        "installed_bytes": 3276,
+        "installed_sha256": "657963494990ab065c992a4c094a19ee0f9236d41fd4fbb0cc3d6f77eb988198",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-torlan.hun",
+        "type": ".hun",
+        "patch_bytes": 3306,
+        "patch_sha256": "6a37688130b34e4a3eb804c9c14f303a92d809792d0b6ba54ce3fded655ab9de",
+        "patch_package_version": null,
+        "installed_bytes": 3306,
+        "installed_sha256": "6a37688130b34e4a3eb804c9c14f303a92d809792d0b6ba54ce3fded655ab9de",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-torlan_leviathan.hun",
+        "type": ".hun",
+        "patch_bytes": 1356,
+        "patch_sha256": "7f311f7fd27f5421297e979bb50fc45e2288543849e958f83d88ee090076a193",
+        "patch_package_version": null,
+        "installed_bytes": 1356,
+        "installed_sha256": "7f311f7fd27f5421297e979bb50fc45e2288543849e958f83d88ee090076a193",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/HUN/war-torlan_necris.hun",
+        "type": ".hun",
+        "patch_bytes": 3306,
+        "patch_sha256": "6a37688130b34e4a3eb804c9c14f303a92d809792d0b6ba54ce3fded655ab9de",
+        "patch_package_version": null,
+        "installed_bytes": 3306,
+        "installed_sha256": "6a37688130b34e4a3eb804c9c14f303a92d809792d0b6ba54ce3fded655ab9de",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/dm-sentinel.int",
+        "type": ".int",
+        "patch_bytes": 326,
+        "patch_sha256": "73d5d51bafa7da19bfb2a08cdf2f35acfae3d42f117508d9dd633654daa9b80f",
+        "patch_package_version": null,
+        "installed_bytes": 326,
+        "installed_sha256": "73d5d51bafa7da19bfb2a08cdf2f35acfae3d42f117508d9dd633654daa9b80f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/PatchNotes.txt",
+        "type": ".txt",
+        "patch_bytes": 60578,
+        "patch_sha256": "3942a57e80514d1f22c27db3ba60046457e1505f7e2b7bd2ffc7c7b736be13fa",
+        "patch_package_version": null,
+        "installed_bytes": 60578,
+        "installed_sha256": "3942a57e80514d1f22c27db3ba60046457e1505f7e2b7bd2ffc7c7b736be13fa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 163888,
+        "patch_sha256": "2e6ab4676e176334427ac60a3fef740a5d4771339c71ef936ed6300879895ca7",
+        "patch_package_version": null,
+        "installed_bytes": 163888,
+        "installed_sha256": "2e6ab4676e176334427ac60a3fef740a5d4771339c71ef936ed6300879895ca7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/Subtitles.int",
+        "type": ".int",
+        "patch_bytes": 10532,
+        "patch_sha256": "fde7bd73a1074e88e3e7455cf4c60f71f55679135e86a60cc59b95570431e648",
+        "patch_package_version": null,
+        "installed_bytes": 10532,
+        "installed_sha256": "fde7bd73a1074e88e3e7455cf4c60f71f55679135e86a60cc59b95570431e648",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/ut3gold.int",
+        "type": ".int",
+        "patch_bytes": 671,
+        "patch_sha256": "d045ce301fb424cb593be8d92b08a4e1937337766f055215fe79a8fa775f830d",
+        "patch_package_version": null,
+        "installed_bytes": 671,
+        "installed_sha256": "d045ce301fb424cb593be8d92b08a4e1937337766f055215fe79a8fa775f830d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/utgame.int",
+        "type": ".int",
+        "patch_bytes": 98517,
+        "patch_sha256": "77177c9d28c2acaa2763805b9563346182a4d9113531861e1991739df444c328",
+        "patch_package_version": null,
+        "installed_bytes": 98517,
+        "installed_sha256": "77177c9d28c2acaa2763805b9563346182a4d9113531861e1991739df444c328",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/UTGameContent.int",
+        "type": ".int",
+        "patch_bytes": 15717,
+        "patch_sha256": "66c423bd98c5bb04577c2166e888869a6a3c887b7860ffaffdca8283d875ade8",
+        "patch_package_version": null,
+        "installed_bytes": 15717,
+        "installed_sha256": "66c423bd98c5bb04577c2166e888869a6a3c887b7860ffaffdca8283d875ade8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/UTGameCredits.int",
+        "type": ".int",
+        "patch_bytes": 11233,
+        "patch_sha256": "a288de0051243fab05b6e76780471075a44adbf7571780b6026852847df9d013",
+        "patch_package_version": null,
+        "installed_bytes": 11233,
+        "installed_sha256": "a288de0051243fab05b6e76780471075a44adbf7571780b6026852847df9d013",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/UTGameUI.int",
+        "type": ".int",
+        "patch_bytes": 98089,
+        "patch_sha256": "2f724b4a06865c49aba07e97ba12765e425e808c325871e8e3f0c021df71ed94",
+        "patch_package_version": null,
+        "installed_bytes": 98089,
+        "installed_sha256": "2f724b4a06865c49aba07e97ba12765e425e808c325871e8e3f0c021df71ed94",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-avalanche.int",
+        "type": ".int",
+        "patch_bytes": 1254,
+        "patch_sha256": "800d0fb5912ec6353006ac8dced4efb6db2fa84580f190b32402151dbb52af87",
+        "patch_package_version": null,
+        "installed_bytes": 1254,
+        "installed_sha256": "800d0fb5912ec6353006ac8dced4efb6db2fa84580f190b32402151dbb52af87",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/WAR-ColdHarbor.int",
+        "type": ".int",
+        "patch_bytes": 1171,
+        "patch_sha256": "13487951b3b5ded7270c425de7b0516de849239d1a4f91f2780ce5b8f51a3604",
+        "patch_package_version": null,
+        "installed_bytes": 1171,
+        "installed_sha256": "13487951b3b5ded7270c425de7b0516de849239d1a4f91f2780ce5b8f51a3604",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/WAR-Confrontation.int",
+        "type": ".int",
+        "patch_bytes": 1545,
+        "patch_sha256": "589a2e493e761dc7ec84a77df270d0b2d6c659c62c44057fbe3e117bd7f2aebc",
+        "patch_package_version": null,
+        "installed_bytes": 1545,
+        "installed_sha256": "589a2e493e761dc7ec84a77df270d0b2d6c659c62c44057fbe3e117bd7f2aebc",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-downtown.int",
+        "type": ".int",
+        "patch_bytes": 849,
+        "patch_sha256": "3166cb652e9898cfe6cd3879faa1c9b004e22f4c7d0dbe10d23e572b2e3f13c3",
+        "patch_package_version": null,
+        "installed_bytes": 849,
+        "installed_sha256": "3166cb652e9898cfe6cd3879faa1c9b004e22f4c7d0dbe10d23e572b2e3f13c3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-downtown_necris.int",
+        "type": ".int",
+        "patch_bytes": 866,
+        "patch_sha256": "4e4507a330f1ac1d5f6a9501deb13dec0a556abddddb00b0addc075ff2f57d45",
+        "patch_package_version": null,
+        "installed_bytes": 866,
+        "installed_sha256": "4e4507a330f1ac1d5f6a9501deb13dec0a556abddddb00b0addc075ff2f57d45",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-dusk.int",
+        "type": ".int",
+        "patch_bytes": 1289,
+        "patch_sha256": "ef7b9c64ed317517fab2e2ebf3faac05969ffc57c7ed9407046e852a7b2c919f",
+        "patch_package_version": null,
+        "installed_bytes": 1289,
+        "installed_sha256": "ef7b9c64ed317517fab2e2ebf3faac05969ffc57c7ed9407046e852a7b2c919f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-floodgate.int",
+        "type": ".int",
+        "patch_bytes": 1058,
+        "patch_sha256": "8298fe11be6134583e319a6a57b033af5c90e47fef87966c82d1f9f0ebc41a55",
+        "patch_package_version": null,
+        "installed_bytes": 1058,
+        "installed_sha256": "8298fe11be6134583e319a6a57b033af5c90e47fef87966c82d1f9f0ebc41a55",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/WAR-Hostile.int",
+        "type": ".int",
+        "patch_bytes": 86,
+        "patch_sha256": "656756d584d5401084aed0b229520dbedfd3a8b65f02aab1dc7a83aacef376c9",
+        "patch_package_version": null,
+        "installed_bytes": 86,
+        "installed_sha256": "656756d584d5401084aed0b229520dbedfd3a8b65f02aab1dc7a83aacef376c9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-islander.int",
+        "type": ".int",
+        "patch_bytes": 418,
+        "patch_sha256": "bd8c503ce270fe51ddc13f12ba26f2056b0818456674d89a1ba844212876462d",
+        "patch_package_version": null,
+        "installed_bytes": 418,
+        "installed_sha256": "bd8c503ce270fe51ddc13f12ba26f2056b0818456674d89a1ba844212876462d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-islander_necris.int",
+        "type": ".int",
+        "patch_bytes": 418,
+        "patch_sha256": "bd8c503ce270fe51ddc13f12ba26f2056b0818456674d89a1ba844212876462d",
+        "patch_package_version": null,
+        "installed_bytes": 418,
+        "installed_sha256": "bd8c503ce270fe51ddc13f12ba26f2056b0818456674d89a1ba844212876462d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-marketdistrict.int",
+        "type": ".int",
+        "patch_bytes": 618,
+        "patch_sha256": "ad2a330da77d8c4d30cfb5556d47e81fead4ab81e117fbf698b840b95094b4b3",
+        "patch_package_version": null,
+        "installed_bytes": 618,
+        "installed_sha256": "ad2a330da77d8c4d30cfb5556d47e81fead4ab81e117fbf698b840b95094b4b3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-onyxcoast.int",
+        "type": ".int",
+        "patch_bytes": 863,
+        "patch_sha256": "d9d1d12af7010d3dac1e6fd1cf23016244b6b38cfef1de630fb7a96c01684311",
+        "patch_package_version": null,
+        "installed_bytes": 863,
+        "installed_sha256": "d9d1d12af7010d3dac1e6fd1cf23016244b6b38cfef1de630fb7a96c01684311",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-powersurge.int",
+        "type": ".int",
+        "patch_bytes": 1053,
+        "patch_sha256": "92c540a643c6fe7a60d475800c2b0975b560727c0176874e81797e4eb129272c",
+        "patch_package_version": null,
+        "installed_bytes": 1053,
+        "installed_sha256": "92c540a643c6fe7a60d475800c2b0975b560727c0176874e81797e4eb129272c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-serenity.int",
+        "type": ".int",
+        "patch_bytes": 965,
+        "patch_sha256": "0e1e94dfd37e6fa920f4c40e6c8d8ba051b314c1a3cee653cfd0386be7824091",
+        "patch_package_version": null,
+        "installed_bytes": 965,
+        "installed_sha256": "0e1e94dfd37e6fa920f4c40e6c8d8ba051b314c1a3cee653cfd0386be7824091",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-serenity_necris.int",
+        "type": ".int",
+        "patch_bytes": 965,
+        "patch_sha256": "0e1e94dfd37e6fa920f4c40e6c8d8ba051b314c1a3cee653cfd0386be7824091",
+        "patch_package_version": null,
+        "installed_bytes": 965,
+        "installed_sha256": "0e1e94dfd37e6fa920f4c40e6c8d8ba051b314c1a3cee653cfd0386be7824091",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-sinkhole.int",
+        "type": ".int",
+        "patch_bytes": 200,
+        "patch_sha256": "66d6106e2ffdbcbfbd6f1334ff7c42dc7b7401f65e4833b92f0cd217d89abcfd",
+        "patch_package_version": null,
+        "installed_bytes": 200,
+        "installed_sha256": "66d6106e2ffdbcbfbd6f1334ff7c42dc7b7401f65e4833b92f0cd217d89abcfd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-tankcrossing.int",
+        "type": ".int",
+        "patch_bytes": 1596,
+        "patch_sha256": "73747447de2b20636e249d2347d29f4e034dcfa585f01312d6b7580ac494a31b",
+        "patch_package_version": null,
+        "installed_bytes": 1596,
+        "installed_sha256": "73747447de2b20636e249d2347d29f4e034dcfa585f01312d6b7580ac494a31b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-torlan.int",
+        "type": ".int",
+        "patch_bytes": 1556,
+        "patch_sha256": "a8dd18f41c6fec5600905a97cbe2a3eb81d0b5dde958a8a6142a1d65f6843017",
+        "patch_package_version": null,
+        "installed_bytes": 1556,
+        "installed_sha256": "a8dd18f41c6fec5600905a97cbe2a3eb81d0b5dde958a8a6142a1d65f6843017",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-torlan_leviathan.int",
+        "type": ".int",
+        "patch_bytes": 654,
+        "patch_sha256": "e9e9212604783ed6f3206bec77011e7f15a7d4b9ff57c8ebdb1b44073417424e",
+        "patch_package_version": null,
+        "installed_bytes": 654,
+        "installed_sha256": "e9e9212604783ed6f3206bec77011e7f15a7d4b9ff57c8ebdb1b44073417424e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/war-torlan_necris.int",
+        "type": ".int",
+        "patch_bytes": 1556,
+        "patch_sha256": "a8dd18f41c6fec5600905a97cbe2a3eb81d0b5dde958a8a6142a1d65f6843017",
+        "patch_package_version": null,
+        "installed_bytes": 1556,
+        "installed_sha256": "a8dd18f41c6fec5600905a97cbe2a3eb81d0b5dde958a8a6142a1d65f6843017",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/INT/WebAdmin.int",
+        "type": ".int",
+        "patch_bytes": 13131,
+        "patch_sha256": "34473d1fb7c635debfa238a04346d821ad345f022b47cfc8f5426e891825efd8",
+        "patch_package_version": null,
+        "installed_bytes": 13131,
+        "installed_sha256": "34473d1fb7c635debfa238a04346d821ad345f022b47cfc8f5426e891825efd8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/dm-sentinel.ita",
+        "type": ".ita",
+        "patch_bytes": 357,
+        "patch_sha256": "85559f7d25b033f4008d174750ec70380aeb232425b6c6718f1970950fe86790",
+        "patch_package_version": null,
+        "installed_bytes": 357,
+        "installed_sha256": "85559f7d25b033f4008d174750ec70380aeb232425b6c6718f1970950fe86790",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 148935,
+        "patch_sha256": "055b342cf33410159b9594f74aa6cd824e835c6870801012e6a2ac438b1493fa",
+        "patch_package_version": null,
+        "installed_bytes": 148935,
+        "installed_sha256": "055b342cf33410159b9594f74aa6cd824e835c6870801012e6a2ac438b1493fa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/Subtitles.ita",
+        "type": ".ita",
+        "patch_bytes": 11851,
+        "patch_sha256": "4426c440359caab7028e2901057acb7b25012819484ec2c70c8df7b9c16e1a35",
+        "patch_package_version": null,
+        "installed_bytes": 11851,
+        "installed_sha256": "4426c440359caab7028e2901057acb7b25012819484ec2c70c8df7b9c16e1a35",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/ut3gold.ita",
+        "type": ".ita",
+        "patch_bytes": 706,
+        "patch_sha256": "6a2656fa43cd5bc1ce055928e2f12f756d894a87df95f121ff8d8501a8a05752",
+        "patch_package_version": null,
+        "installed_bytes": 706,
+        "installed_sha256": "6a2656fa43cd5bc1ce055928e2f12f756d894a87df95f121ff8d8501a8a05752",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/utgame.ita",
+        "type": ".ita",
+        "patch_bytes": 104187,
+        "patch_sha256": "e96732a35954bbb085e96d65c4ae6bfa63d6ede8e34f58266676df5055a189b9",
+        "patch_package_version": null,
+        "installed_bytes": 104187,
+        "installed_sha256": "e96732a35954bbb085e96d65c4ae6bfa63d6ede8e34f58266676df5055a189b9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/UTGameContent.ita",
+        "type": ".ita",
+        "patch_bytes": 17098,
+        "patch_sha256": "dd143331aee0d1e1244990675b30cec7fc833019cec34136e2e8d1cb6643ae8b",
+        "patch_package_version": null,
+        "installed_bytes": 17098,
+        "installed_sha256": "dd143331aee0d1e1244990675b30cec7fc833019cec34136e2e8d1cb6643ae8b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/UTGameCredits.ita",
+        "type": ".ita",
+        "patch_bytes": 11186,
+        "patch_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "patch_package_version": null,
+        "installed_bytes": 11186,
+        "installed_sha256": "47b59b5e1462be86572cba8578b235d560f4b48fc14d47c40b9a7b0f0bf7470c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/UTGameUI.ita",
+        "type": ".ita",
+        "patch_bytes": 101245,
+        "patch_sha256": "54c82c25ac83ae40938b352f857aa0f959bd74b4f976187d19ca64af5bac8872",
+        "patch_package_version": null,
+        "installed_bytes": 101245,
+        "installed_sha256": "54c82c25ac83ae40938b352f857aa0f959bd74b4f976187d19ca64af5bac8872",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-avalanche.ita",
+        "type": ".ita",
+        "patch_bytes": 1261,
+        "patch_sha256": "a9e0a4f65348bd618902c2d01d9371a68611cde300d2c4f7665adce77bf11bf6",
+        "patch_package_version": null,
+        "installed_bytes": 1261,
+        "installed_sha256": "a9e0a4f65348bd618902c2d01d9371a68611cde300d2c4f7665adce77bf11bf6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/WAR-ColdHarbor.ita",
+        "type": ".ita",
+        "patch_bytes": 1267,
+        "patch_sha256": "3699630b5cd25b2ea7cb031b8dfc9f4057f43183ba1dcbed12811e481eae93bb",
+        "patch_package_version": null,
+        "installed_bytes": 1267,
+        "installed_sha256": "3699630b5cd25b2ea7cb031b8dfc9f4057f43183ba1dcbed12811e481eae93bb",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/WAR-Confrontation.ita",
+        "type": ".ita",
+        "patch_bytes": 1637,
+        "patch_sha256": "b752a269b3ef5162aaa964e419a26b4612f8baf635cc07641aadcf89619da87e",
+        "patch_package_version": null,
+        "installed_bytes": 1637,
+        "installed_sha256": "b752a269b3ef5162aaa964e419a26b4612f8baf635cc07641aadcf89619da87e",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-downtown.ita",
+        "type": ".ita",
+        "patch_bytes": 924,
+        "patch_sha256": "334477613c805d5fd44e3be01e8ac310023703714650a0364ef09b355d48af60",
+        "patch_package_version": null,
+        "installed_bytes": 924,
+        "installed_sha256": "334477613c805d5fd44e3be01e8ac310023703714650a0364ef09b355d48af60",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-downtown_necris.ita",
+        "type": ".ita",
+        "patch_bytes": 918,
+        "patch_sha256": "848efdf9f77ea1d1cf927139a270cb33a461c227997267cf14a7d2023b78d414",
+        "patch_package_version": null,
+        "installed_bytes": 918,
+        "installed_sha256": "848efdf9f77ea1d1cf927139a270cb33a461c227997267cf14a7d2023b78d414",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-dusk.ita",
+        "type": ".ita",
+        "patch_bytes": 1369,
+        "patch_sha256": "5c0cfa7a924f1a5224ab54a1aa59d28b9dadd4c93ad10853814446d21c5f6e7c",
+        "patch_package_version": null,
+        "installed_bytes": 1369,
+        "installed_sha256": "5c0cfa7a924f1a5224ab54a1aa59d28b9dadd4c93ad10853814446d21c5f6e7c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-floodgate.ita",
+        "type": ".ita",
+        "patch_bytes": 1079,
+        "patch_sha256": "e7f0f002254db25998021148bc1f3baf3d0d12231ba83ff078fe05ddc814ee50",
+        "patch_package_version": null,
+        "installed_bytes": 1079,
+        "installed_sha256": "e7f0f002254db25998021148bc1f3baf3d0d12231ba83ff078fe05ddc814ee50",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/WAR-Hostile.ita",
+        "type": ".ita",
+        "patch_bytes": 103,
+        "patch_sha256": "890b960ddb4a5d2a05414a69b42c2c7f6a3759fcf20c42b6d948237b7d7f40be",
+        "patch_package_version": null,
+        "installed_bytes": 103,
+        "installed_sha256": "890b960ddb4a5d2a05414a69b42c2c7f6a3759fcf20c42b6d948237b7d7f40be",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-islander.ita",
+        "type": ".ita",
+        "patch_bytes": 444,
+        "patch_sha256": "a9132f3b2c074a41feb5268fc3b2b32f8cdc34333f7bddcad4e6c924f30fd90f",
+        "patch_package_version": null,
+        "installed_bytes": 444,
+        "installed_sha256": "a9132f3b2c074a41feb5268fc3b2b32f8cdc34333f7bddcad4e6c924f30fd90f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-islander_necris.ita",
+        "type": ".ita",
+        "patch_bytes": 444,
+        "patch_sha256": "a9132f3b2c074a41feb5268fc3b2b32f8cdc34333f7bddcad4e6c924f30fd90f",
+        "patch_package_version": null,
+        "installed_bytes": 444,
+        "installed_sha256": "a9132f3b2c074a41feb5268fc3b2b32f8cdc34333f7bddcad4e6c924f30fd90f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-marketdistrict.ita",
+        "type": ".ita",
+        "patch_bytes": 619,
+        "patch_sha256": "79d36742a9d4493e30b75c074948082ddb88eda838dae1b8bed5729c7e6e02cd",
+        "patch_package_version": null,
+        "installed_bytes": 619,
+        "installed_sha256": "79d36742a9d4493e30b75c074948082ddb88eda838dae1b8bed5729c7e6e02cd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-onyxcoast.ita",
+        "type": ".ita",
+        "patch_bytes": 864,
+        "patch_sha256": "7fe935e85169d8a23dccaf5a292b4a91f6337256aef7a41006eb10d3f022dcb3",
+        "patch_package_version": null,
+        "installed_bytes": 864,
+        "installed_sha256": "7fe935e85169d8a23dccaf5a292b4a91f6337256aef7a41006eb10d3f022dcb3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-powersurge.ita",
+        "type": ".ita",
+        "patch_bytes": 1131,
+        "patch_sha256": "f0b339b9d7c196cee60a5aaba4ecb3e79d384af35bde2a0fb7518283a4f8b61b",
+        "patch_package_version": null,
+        "installed_bytes": 1131,
+        "installed_sha256": "f0b339b9d7c196cee60a5aaba4ecb3e79d384af35bde2a0fb7518283a4f8b61b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-serenity.ita",
+        "type": ".ita",
+        "patch_bytes": 993,
+        "patch_sha256": "2911b3faa42d2abb83a7dafdb7225f8bd773518a7ce1f9becf8ce39a6d837881",
+        "patch_package_version": null,
+        "installed_bytes": 993,
+        "installed_sha256": "2911b3faa42d2abb83a7dafdb7225f8bd773518a7ce1f9becf8ce39a6d837881",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-serenity_necris.ita",
+        "type": ".ita",
+        "patch_bytes": 993,
+        "patch_sha256": "2911b3faa42d2abb83a7dafdb7225f8bd773518a7ce1f9becf8ce39a6d837881",
+        "patch_package_version": null,
+        "installed_bytes": 993,
+        "installed_sha256": "2911b3faa42d2abb83a7dafdb7225f8bd773518a7ce1f9becf8ce39a6d837881",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-sinkhole.ita",
+        "type": ".ita",
+        "patch_bytes": 203,
+        "patch_sha256": "4c5eb9aeae83e9bf9c24210fdb9e729b48f95b5ed66351b43cf28464ca6d2104",
+        "patch_package_version": null,
+        "installed_bytes": 203,
+        "installed_sha256": "4c5eb9aeae83e9bf9c24210fdb9e729b48f95b5ed66351b43cf28464ca6d2104",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-tankcrossing.ita",
+        "type": ".ita",
+        "patch_bytes": 1621,
+        "patch_sha256": "9b58ba0f17544ae6340311805f93ad880e6068056e29f3b9a85b480309216286",
+        "patch_package_version": null,
+        "installed_bytes": 1621,
+        "installed_sha256": "9b58ba0f17544ae6340311805f93ad880e6068056e29f3b9a85b480309216286",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-torlan.ita",
+        "type": ".ita",
+        "patch_bytes": 1671,
+        "patch_sha256": "9fbdade4a44d771ef38481ae64af5a94448497e232d09ca0f7ed731902d408ab",
+        "patch_package_version": null,
+        "installed_bytes": 1671,
+        "installed_sha256": "9fbdade4a44d771ef38481ae64af5a94448497e232d09ca0f7ed731902d408ab",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-torlan_leviathan.ita",
+        "type": ".ita",
+        "patch_bytes": 710,
+        "patch_sha256": "a3a821056a38d000e42e586ff498c63754787152a4c8d97330b297d1e3537a53",
+        "patch_package_version": null,
+        "installed_bytes": 710,
+        "installed_sha256": "a3a821056a38d000e42e586ff498c63754787152a4c8d97330b297d1e3537a53",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/ITA/war-torlan_necris.ita",
+        "type": ".ita",
+        "patch_bytes": 1673,
+        "patch_sha256": "c233add70d0aa35137372cfcd014e074e3713a9b4916c724cb717e59bca5a127",
+        "patch_package_version": null,
+        "installed_bytes": 1673,
+        "installed_sha256": "c233add70d0aa35137372cfcd014e074e3713a9b4916c724cb717e59bca5a127",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/dm-sentinel.pol",
+        "type": ".pol",
+        "patch_bytes": 634,
+        "patch_sha256": "f60ff3a12be6fadceffeebecdc0e401398251b9cea62e084766c1129fba30b21",
+        "patch_package_version": null,
+        "installed_bytes": 634,
+        "installed_sha256": "f60ff3a12be6fadceffeebecdc0e401398251b9cea62e084766c1129fba30b21",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 163888,
+        "patch_sha256": "2e6ab4676e176334427ac60a3fef740a5d4771339c71ef936ed6300879895ca7",
+        "patch_package_version": null,
+        "installed_bytes": 163888,
+        "installed_sha256": "2e6ab4676e176334427ac60a3fef740a5d4771339c71ef936ed6300879895ca7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/Subtitles.pol",
+        "type": ".pol",
+        "patch_bytes": 21192,
+        "patch_sha256": "f01cefd2360d52b1448375ab40a60ea750b310bacee66c7aa284ed5028da1abd",
+        "patch_package_version": null,
+        "installed_bytes": 21192,
+        "installed_sha256": "f01cefd2360d52b1448375ab40a60ea750b310bacee66c7aa284ed5028da1abd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/ut3gold.pol",
+        "type": ".pol",
+        "patch_bytes": 4984,
+        "patch_sha256": "a70f3fbbb23ea801a8d300d83006522b2c828661bac74fa0e5f6c88940919e9c",
+        "patch_package_version": null,
+        "installed_bytes": 4984,
+        "installed_sha256": "a70f3fbbb23ea801a8d300d83006522b2c828661bac74fa0e5f6c88940919e9c",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/utgame.pol",
+        "type": ".pol",
+        "patch_bytes": 201204,
+        "patch_sha256": "13acb5a172d62d15a80eb256c3687a095a2faabca04a89dffb0113129ac644ab",
+        "patch_package_version": null,
+        "installed_bytes": 201204,
+        "installed_sha256": "13acb5a172d62d15a80eb256c3687a095a2faabca04a89dffb0113129ac644ab",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/UTGameContent.pol",
+        "type": ".pol",
+        "patch_bytes": 35532,
+        "patch_sha256": "ea8d0bba9a0abc31b7a39b329e0bb3f67345fb2cc6ab064f8a30ead4d51298c5",
+        "patch_package_version": null,
+        "installed_bytes": 35532,
+        "installed_sha256": "ea8d0bba9a0abc31b7a39b329e0bb3f67345fb2cc6ab064f8a30ead4d51298c5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/UTGameCredits.pol",
+        "type": ".pol",
+        "patch_bytes": 23158,
+        "patch_sha256": "befbf2d409859095a81eebc9b3cdd1cf330c510483febddd15291643ed8fbf42",
+        "patch_package_version": null,
+        "installed_bytes": 23158,
+        "installed_sha256": "befbf2d409859095a81eebc9b3cdd1cf330c510483febddd15291643ed8fbf42",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/UTGameUI.pol",
+        "type": ".pol",
+        "patch_bytes": 201550,
+        "patch_sha256": "2d85b0aa8bfb189fbd4d831f8f4b1a689f02214c63fc8c8132ac900c86a1a00f",
+        "patch_package_version": null,
+        "installed_bytes": 201550,
+        "installed_sha256": "2d85b0aa8bfb189fbd4d831f8f4b1a689f02214c63fc8c8132ac900c86a1a00f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-avalanche.pol",
+        "type": ".pol",
+        "patch_bytes": 2498,
+        "patch_sha256": "a09caa417c3cfe6e6c9341b09acb71ed2f266d452329ed9d9523cb07e2c2cc85",
+        "patch_package_version": null,
+        "installed_bytes": 2498,
+        "installed_sha256": "a09caa417c3cfe6e6c9341b09acb71ed2f266d452329ed9d9523cb07e2c2cc85",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/WAR-ColdHarbor.pol",
+        "type": ".pol",
+        "patch_bytes": 2428,
+        "patch_sha256": "d8be4b87f729930dfc0c38affd089540c93174ca8ba940a719d91a3bd336c070",
+        "patch_package_version": null,
+        "installed_bytes": 2428,
+        "installed_sha256": "d8be4b87f729930dfc0c38affd089540c93174ca8ba940a719d91a3bd336c070",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/WAR-Confrontation.pol",
+        "type": ".pol",
+        "patch_bytes": 3122,
+        "patch_sha256": "ccf783aa75fabfd85443c5c43576b67a94fd3ce043b61f64a408862e8622c291",
+        "patch_package_version": null,
+        "installed_bytes": 3122,
+        "installed_sha256": "ccf783aa75fabfd85443c5c43576b67a94fd3ce043b61f64a408862e8622c291",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-downtown.pol",
+        "type": ".pol",
+        "patch_bytes": 1694,
+        "patch_sha256": "6a0fee50663014691d954897d86b583cd0df6157226525c857db5d931c249b38",
+        "patch_package_version": null,
+        "installed_bytes": 1694,
+        "installed_sha256": "6a0fee50663014691d954897d86b583cd0df6157226525c857db5d931c249b38",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-downtown_necris.pol",
+        "type": ".pol",
+        "patch_bytes": 1734,
+        "patch_sha256": "39e5ee2b52183b62c490c7357e819b2e896aaa91abf13145c6cbe6cddd6d8db7",
+        "patch_package_version": null,
+        "installed_bytes": 1734,
+        "installed_sha256": "39e5ee2b52183b62c490c7357e819b2e896aaa91abf13145c6cbe6cddd6d8db7",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-dusk.pol",
+        "type": ".pol",
+        "patch_bytes": 2752,
+        "patch_sha256": "b393f8c67c24cd5d86435add377a6e6b1391acedaa4295aebaee373be86a8487",
+        "patch_package_version": null,
+        "installed_bytes": 2752,
+        "installed_sha256": "b393f8c67c24cd5d86435add377a6e6b1391acedaa4295aebaee373be86a8487",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-floodgate.pol",
+        "type": ".pol",
+        "patch_bytes": 2064,
+        "patch_sha256": "efc1387ecc6b0323f14159c69fd4d29eb512307bfd5ead79b737662d9ebd12cf",
+        "patch_package_version": null,
+        "installed_bytes": 2064,
+        "installed_sha256": "efc1387ecc6b0323f14159c69fd4d29eb512307bfd5ead79b737662d9ebd12cf",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/WAR-Hostile.pol",
+        "type": ".pol",
+        "patch_bytes": 220,
+        "patch_sha256": "d3abbf318fc7f845de0ef27f77a18f9104220410b54c2e778649e76345969f1d",
+        "patch_package_version": null,
+        "installed_bytes": 220,
+        "installed_sha256": "d3abbf318fc7f845de0ef27f77a18f9104220410b54c2e778649e76345969f1d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-islander.pol",
+        "type": ".pol",
+        "patch_bytes": 848,
+        "patch_sha256": "153fa0b09e32e328e599fa0b82534436adf61f61ed9e48f1f2622bf36ea9cda6",
+        "patch_package_version": null,
+        "installed_bytes": 848,
+        "installed_sha256": "153fa0b09e32e328e599fa0b82534436adf61f61ed9e48f1f2622bf36ea9cda6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-islander_necris.pol",
+        "type": ".pol",
+        "patch_bytes": 848,
+        "patch_sha256": "153fa0b09e32e328e599fa0b82534436adf61f61ed9e48f1f2622bf36ea9cda6",
+        "patch_package_version": null,
+        "installed_bytes": 848,
+        "installed_sha256": "153fa0b09e32e328e599fa0b82534436adf61f61ed9e48f1f2622bf36ea9cda6",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-marketdistrict.pol",
+        "type": ".pol",
+        "patch_bytes": 1248,
+        "patch_sha256": "d17dce474fb6d48bd1791c470988469900a0cf75a7bfa427401501b68559985a",
+        "patch_package_version": null,
+        "installed_bytes": 1248,
+        "installed_sha256": "d17dce474fb6d48bd1791c470988469900a0cf75a7bfa427401501b68559985a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-onyxcoast.pol",
+        "type": ".pol",
+        "patch_bytes": 1712,
+        "patch_sha256": "f5a663ce9e359fe53964f53fa19ac7c10a09f3343024e767ef26c13732dbc56a",
+        "patch_package_version": null,
+        "installed_bytes": 1712,
+        "installed_sha256": "f5a663ce9e359fe53964f53fa19ac7c10a09f3343024e767ef26c13732dbc56a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-powersurge.pol",
+        "type": ".pol",
+        "patch_bytes": 2170,
+        "patch_sha256": "d7f7834dd4713bde756eac389054b02a621174d714abe81c7cac5f4753af59cb",
+        "patch_package_version": null,
+        "installed_bytes": 2170,
+        "installed_sha256": "d7f7834dd4713bde756eac389054b02a621174d714abe81c7cac5f4753af59cb",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-serenity.pol",
+        "type": ".pol",
+        "patch_bytes": 1904,
+        "patch_sha256": "6c42b7a5649f93c730c2ecb0015387fe0699d6e2165a9ce114873e06acc0b64b",
+        "patch_package_version": null,
+        "installed_bytes": 1904,
+        "installed_sha256": "6c42b7a5649f93c730c2ecb0015387fe0699d6e2165a9ce114873e06acc0b64b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-serenity_necris.pol",
+        "type": ".pol",
+        "patch_bytes": 1904,
+        "patch_sha256": "6c42b7a5649f93c730c2ecb0015387fe0699d6e2165a9ce114873e06acc0b64b",
+        "patch_package_version": null,
+        "installed_bytes": 1904,
+        "installed_sha256": "6c42b7a5649f93c730c2ecb0015387fe0699d6e2165a9ce114873e06acc0b64b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-sinkhole.pol",
+        "type": ".pol",
+        "patch_bytes": 384,
+        "patch_sha256": "cb3720e50bf940418f2bcc8d85b7c45f705285396d84254559aee1001065d1f0",
+        "patch_package_version": null,
+        "installed_bytes": 384,
+        "installed_sha256": "cb3720e50bf940418f2bcc8d85b7c45f705285396d84254559aee1001065d1f0",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-tankcrossing.pol",
+        "type": ".pol",
+        "patch_bytes": 3276,
+        "patch_sha256": "29e1d3c4c98a6f24c4406c53fcbe7ed31f80abc27c80940162b1a8226c285e98",
+        "patch_package_version": null,
+        "installed_bytes": 3276,
+        "installed_sha256": "29e1d3c4c98a6f24c4406c53fcbe7ed31f80abc27c80940162b1a8226c285e98",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-torlan.pol",
+        "type": ".pol",
+        "patch_bytes": 3228,
+        "patch_sha256": "285dffd855b524df94c5c4d312c057cf19b7f06afec5c08c080c35602d272e1b",
+        "patch_package_version": null,
+        "installed_bytes": 3228,
+        "installed_sha256": "285dffd855b524df94c5c4d312c057cf19b7f06afec5c08c080c35602d272e1b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-torlan_leviathan.pol",
+        "type": ".pol",
+        "patch_bytes": 1300,
+        "patch_sha256": "4ad710e928cac4aac24bd677215fd5f27a48e4f3e0f15089a61dd709d90dd17d",
+        "patch_package_version": null,
+        "installed_bytes": 1300,
+        "installed_sha256": "4ad710e928cac4aac24bd677215fd5f27a48e4f3e0f15089a61dd709d90dd17d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/POL/war-torlan_necris.pol",
+        "type": ".pol",
+        "patch_bytes": 3228,
+        "patch_sha256": "285dffd855b524df94c5c4d312c057cf19b7f06afec5c08c080c35602d272e1b",
+        "patch_package_version": null,
+        "installed_bytes": 3228,
+        "installed_sha256": "285dffd855b524df94c5c4d312c057cf19b7f06afec5c08c080c35602d272e1b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/dm-sentinel.rus",
+        "type": ".rus",
+        "patch_bytes": 638,
+        "patch_sha256": "ebd71f9b340c99dd9fb7d4cc440ec5ca2d37f1d65ef5dabcee27a61206e7eeaa",
+        "patch_package_version": null,
+        "installed_bytes": 638,
+        "installed_sha256": "ebd71f9b340c99dd9fb7d4cc440ec5ca2d37f1d65ef5dabcee27a61206e7eeaa",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/Readme.rtf",
+        "type": ".rtf",
+        "patch_bytes": 161425,
+        "patch_sha256": "451d4dcefa21bde956b45e4329c8d2997e6b577cc7ebc673578ee6dd458fe826",
+        "patch_package_version": null,
+        "installed_bytes": 161425,
+        "installed_sha256": "451d4dcefa21bde956b45e4329c8d2997e6b577cc7ebc673578ee6dd458fe826",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/Subtitles.rus",
+        "type": ".rus",
+        "patch_bytes": 20448,
+        "patch_sha256": "88eb018009d463e4c03b8e2edf15fdbbd86bc9722939a10b43a90fb253fa1e70",
+        "patch_package_version": null,
+        "installed_bytes": 20448,
+        "installed_sha256": "88eb018009d463e4c03b8e2edf15fdbbd86bc9722939a10b43a90fb253fa1e70",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/ut3gold.rus",
+        "type": ".rus",
+        "patch_bytes": 5232,
+        "patch_sha256": "3823b18410c7588c28faa968ce83f1d3067c24a32a1ce7722f5ce1817fcfc966",
+        "patch_package_version": null,
+        "installed_bytes": 5232,
+        "installed_sha256": "3823b18410c7588c28faa968ce83f1d3067c24a32a1ce7722f5ce1817fcfc966",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/utgame.rus",
+        "type": ".rus",
+        "patch_bytes": 207486,
+        "patch_sha256": "12f20315c8afe1585d30f139a069404c0750c013cc32b61fbe9a0d6746b640a8",
+        "patch_package_version": null,
+        "installed_bytes": 207486,
+        "installed_sha256": "12f20315c8afe1585d30f139a069404c0750c013cc32b61fbe9a0d6746b640a8",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/UTGameContent.rus",
+        "type": ".rus",
+        "patch_bytes": 32596,
+        "patch_sha256": "e6e77e9c023cfca9b626c91dcc8b86f50d8c408f6dd70ccb8a947928be9b0c27",
+        "patch_package_version": null,
+        "installed_bytes": 32596,
+        "installed_sha256": "e6e77e9c023cfca9b626c91dcc8b86f50d8c408f6dd70ccb8a947928be9b0c27",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/UTGameCredits.rus",
+        "type": ".rus",
+        "patch_bytes": 33072,
+        "patch_sha256": "c25e06012ceaf4da3205ba726607f2f294c08f055072c7090e5b7a25aa4c05ec",
+        "patch_package_version": null,
+        "installed_bytes": 33072,
+        "installed_sha256": "c25e06012ceaf4da3205ba726607f2f294c08f055072c7090e5b7a25aa4c05ec",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/UTGameUI.rus",
+        "type": ".rus",
+        "patch_bytes": 203224,
+        "patch_sha256": "779ce22637fb973199389e4cd7b1e09f2930fee482dfd4f3522a92bcd27fee80",
+        "patch_package_version": null,
+        "installed_bytes": 203224,
+        "installed_sha256": "779ce22637fb973199389e4cd7b1e09f2930fee482dfd4f3522a92bcd27fee80",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-avalanche.rus",
+        "type": ".rus",
+        "patch_bytes": 2594,
+        "patch_sha256": "67e17fd4ac4734c444f73d8034364d650b08205a093f003651e8a48877fa70e9",
+        "patch_package_version": null,
+        "installed_bytes": 2594,
+        "installed_sha256": "67e17fd4ac4734c444f73d8034364d650b08205a093f003651e8a48877fa70e9",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/WAR-ColdHarbor.rus",
+        "type": ".rus",
+        "patch_bytes": 2468,
+        "patch_sha256": "773038bd7fda651d36c739ff4f87c0d148130a7fdecb9b0292a86b4fecd3553f",
+        "patch_package_version": null,
+        "installed_bytes": 2468,
+        "installed_sha256": "773038bd7fda651d36c739ff4f87c0d148130a7fdecb9b0292a86b4fecd3553f",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/WAR-Confrontation.rus",
+        "type": ".rus",
+        "patch_bytes": 3208,
+        "patch_sha256": "39311f7f0a1b5d6b2c4f3928e8cc741e58408fee265848e25fae727efb69002a",
+        "patch_package_version": null,
+        "installed_bytes": 3208,
+        "installed_sha256": "39311f7f0a1b5d6b2c4f3928e8cc741e58408fee265848e25fae727efb69002a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-downtown.rus",
+        "type": ".rus",
+        "patch_bytes": 1774,
+        "patch_sha256": "6aec627e517aa536de01d5e151483bd00b269930807df7bf51be99dc27e68b7d",
+        "patch_package_version": null,
+        "installed_bytes": 1774,
+        "installed_sha256": "6aec627e517aa536de01d5e151483bd00b269930807df7bf51be99dc27e68b7d",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-downtown_necris.rus",
+        "type": ".rus",
+        "patch_bytes": 1784,
+        "patch_sha256": "7e66ead978ed75ebedb66fd8dc4aaef376533349118d07a2a229e93fa7c429f3",
+        "patch_package_version": null,
+        "installed_bytes": 1784,
+        "installed_sha256": "7e66ead978ed75ebedb66fd8dc4aaef376533349118d07a2a229e93fa7c429f3",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-dusk.rus",
+        "type": ".rus",
+        "patch_bytes": 2852,
+        "patch_sha256": "2ab2f4c962b87c4b5e4eb7e1224c23ea94ee210ad0eefbe886603bd8a61ce723",
+        "patch_package_version": null,
+        "installed_bytes": 2852,
+        "installed_sha256": "2ab2f4c962b87c4b5e4eb7e1224c23ea94ee210ad0eefbe886603bd8a61ce723",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-floodgate.rus",
+        "type": ".rus",
+        "patch_bytes": 3304,
+        "patch_sha256": "998c3ccf472077686cc0b22909d758122fb61fd24d17fd492c7c5d3a2946fbca",
+        "patch_package_version": null,
+        "installed_bytes": 3304,
+        "installed_sha256": "998c3ccf472077686cc0b22909d758122fb61fd24d17fd492c7c5d3a2946fbca",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/WAR-Hostile.rus",
+        "type": ".rus",
+        "patch_bytes": 186,
+        "patch_sha256": "c83fb41b4cc5daaa9bf0960e73126f6588464c0ac4c6659de60f8fc6686b9b65",
+        "patch_package_version": null,
+        "installed_bytes": 186,
+        "installed_sha256": "c83fb41b4cc5daaa9bf0960e73126f6588464c0ac4c6659de60f8fc6686b9b65",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-islander.rus",
+        "type": ".rus",
+        "patch_bytes": 886,
+        "patch_sha256": "abaeeeca5e8f82fc0b93deefd983a22fc7159fc8d4b256d10f61087c24030d65",
+        "patch_package_version": null,
+        "installed_bytes": 886,
+        "installed_sha256": "abaeeeca5e8f82fc0b93deefd983a22fc7159fc8d4b256d10f61087c24030d65",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-islander_necris.rus",
+        "type": ".rus",
+        "patch_bytes": 886,
+        "patch_sha256": "abaeeeca5e8f82fc0b93deefd983a22fc7159fc8d4b256d10f61087c24030d65",
+        "patch_package_version": null,
+        "installed_bytes": 886,
+        "installed_sha256": "abaeeeca5e8f82fc0b93deefd983a22fc7159fc8d4b256d10f61087c24030d65",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-marketdistrict.rus",
+        "type": ".rus",
+        "patch_bytes": 1296,
+        "patch_sha256": "af9859654418070bc47b47731ead043428c507130068c58be472e30a36ec1f47",
+        "patch_package_version": null,
+        "installed_bytes": 1296,
+        "installed_sha256": "af9859654418070bc47b47731ead043428c507130068c58be472e30a36ec1f47",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-onyxcoast.rus",
+        "type": ".rus",
+        "patch_bytes": 1752,
+        "patch_sha256": "e4a7ed8a17279dac76f281a0f7a825597352ed6c9aa01778ffa10227585be1ef",
+        "patch_package_version": null,
+        "installed_bytes": 1752,
+        "installed_sha256": "e4a7ed8a17279dac76f281a0f7a825597352ed6c9aa01778ffa10227585be1ef",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-powersurge.rus",
+        "type": ".rus",
+        "patch_bytes": 3446,
+        "patch_sha256": "858745b037f5858f5e1f8e66d1d6773747df58f46906335a14c3746e904ab53a",
+        "patch_package_version": null,
+        "installed_bytes": 3446,
+        "installed_sha256": "858745b037f5858f5e1f8e66d1d6773747df58f46906335a14c3746e904ab53a",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-serenity.rus",
+        "type": ".rus",
+        "patch_bytes": 1962,
+        "patch_sha256": "549feb40643e8d99633d6f3aedf5e2086964addcb0db8bfafd835feb95c679d5",
+        "patch_package_version": null,
+        "installed_bytes": 1962,
+        "installed_sha256": "549feb40643e8d99633d6f3aedf5e2086964addcb0db8bfafd835feb95c679d5",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-serenity_necris.rus",
+        "type": ".rus",
+        "patch_bytes": 1960,
+        "patch_sha256": "596b5a270630576c7f3164a595d734257f102f7e39d69def258940fecd422cfe",
+        "patch_package_version": null,
+        "installed_bytes": 1960,
+        "installed_sha256": "596b5a270630576c7f3164a595d734257f102f7e39d69def258940fecd422cfe",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-sinkhole.rus",
+        "type": ".rus",
+        "patch_bytes": 406,
+        "patch_sha256": "25de94ad9c796694d3cbcc9d8a64064ac5f3e9fa8e407540cd08a654a262bcff",
+        "patch_package_version": null,
+        "installed_bytes": 406,
+        "installed_sha256": "25de94ad9c796694d3cbcc9d8a64064ac5f3e9fa8e407540cd08a654a262bcff",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-tankcrossing.rus",
+        "type": ".rus",
+        "patch_bytes": 3080,
+        "patch_sha256": "225ba742e6b70e5bc311237de317d072a9b0175dc03e2ff0396d2125e4f60576",
+        "patch_package_version": null,
+        "installed_bytes": 3080,
+        "installed_sha256": "225ba742e6b70e5bc311237de317d072a9b0175dc03e2ff0396d2125e4f60576",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-torlan.rus",
+        "type": ".rus",
+        "patch_bytes": 3360,
+        "patch_sha256": "e3f567b53cfa994b758c71a2fc5a4ccf100edea8a46c2dde2de35daaea66cd9b",
+        "patch_package_version": null,
+        "installed_bytes": 3360,
+        "installed_sha256": "e3f567b53cfa994b758c71a2fc5a4ccf100edea8a46c2dde2de35daaea66cd9b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-torlan_leviathan.rus",
+        "type": ".rus",
+        "patch_bytes": 1388,
+        "patch_sha256": "bc1a8b185b76e5a519bf335504340ad8fd786f2d1cc0760de195199243cd0228",
+        "patch_package_version": null,
+        "installed_bytes": 1388,
+        "installed_sha256": "bc1a8b185b76e5a519bf335504340ad8fd786f2d1cc0760de195199243cd0228",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Localization/RUS/war-torlan_necris.rus",
+        "type": ".rus",
+        "patch_bytes": 3360,
+        "patch_sha256": "e3f567b53cfa994b758c71a2fc5a4ccf100edea8a46c2dde2de35daaea66cd9b",
+        "patch_package_version": null,
+        "installed_bytes": 3360,
+        "installed_sha256": "e3f567b53cfa994b758c71a2fc5a4ccf100edea8a46c2dde2de35daaea66cd9b",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Splash/PC/EdSplash.bmp",
+        "type": ".bmp",
+        "patch_bytes": 990656,
+        "patch_sha256": "24c17efc90953091deffbe49c9606e7b3af7a5a026b12f34193ed5fd6f16c8bd",
+        "patch_package_version": null,
+        "installed_bytes": 990656,
+        "installed_sha256": "24c17efc90953091deffbe49c9606e7b3af7a5a026b12f34193ed5fd6f16c8bd",
+        "status": "identical"
+      },
+      {
+        "relative_path": "UTGame/Splash/PC/Splash.bmp",
+        "type": ".bmp",
+        "patch_bytes": 1235576,
+        "patch_sha256": "b8a40974f1e655ccbacd6983accafae1a123e37f0737217ac5d24ba8cf4a4899",
+        "patch_package_version": null,
+        "installed_bytes": 1235576,
+        "installed_sha256": "b8a40974f1e655ccbacd6983accafae1a123e37f0737217ac5d24ba8cf4a4899",
+        "status": "identical"
+      }
+    ],
+    "scope_limitations": [
+      "The two top-level installer-support files are not game-install payload and were not compared against game paths.",
+      "This establishes installed files match the local Patch 5 archive, not which files changed relative to the base release ISO.",
+      "The local installer was not independently vendor-signature authenticated.",
+      "The game executable difference is known at byte identity level; no REA/CDB native behaviour comparison was performed."
+    ]
+  }
 }
