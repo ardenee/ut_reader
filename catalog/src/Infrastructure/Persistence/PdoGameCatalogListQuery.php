@@ -29,6 +29,8 @@ final class PdoGameCatalogListQuery
                 . 'COALESCE(s.verified_count,0) verified_count,COALESCE(s.failed_count,0) failed_count,'
                 . 'COALESCE(s.missing_dependency_count,0) missing_dependency_count,'
                 . 'COALESCE(s.missing_base_game_dependency_count,0) missing_base_game_dependency_count,'
+                . 'COALESCE(s.resolved_dependency_count,0) resolved_dependency_count,'
+                . 's.updated_at dependency_stats_updated_at,'
                 . 'GREATEST(0,CAST(COALESCE(s.dependency_count,0) AS SIGNED)'
                 . '-CAST(COALESCE(s.missing_dependency_count,0) AS SIGNED)'
                 . '-CAST(COALESCE(s.resolved_dependency_count,0) AS SIGNED)'
@@ -47,6 +49,7 @@ final class PdoGameCatalogListQuery
                     $game['missing_dependency_count'] = null;
                     $game['missing_base_game_dependency_count'] = null;
                     $game['unresolved_dependency_count'] = null;
+                    $game['resolved_dependency_count'] = null;
                 }
             }
             unset($game);
@@ -59,6 +62,7 @@ final class PdoGameCatalogListQuery
             . 'COALESCE(SUM(f.scan_status="verified"),0) verified_count,'
             . 'COALESCE(SUM(f.scan_status="failed"),0) failed_count,'
             . 'NULL missing_dependency_count,NULL missing_base_game_dependency_count,'
+            . 'NULL resolved_dependency_count,NULL dependency_stats_updated_at,'
             . 'NULL unresolved_dependency_count '
             . 'FROM ue_games g '
             . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '

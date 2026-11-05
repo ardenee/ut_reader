@@ -1,12 +1,17 @@
-# Graphify / UnrealDB cross-engine file-parity dashboard
+# Graphify local source graph dashboard
 
-This read-only DEV Graphify integration at http://127.0.0.1:8765 now displays the ONE live [tests/contracts.json](../../../tests/contracts.json) UE1–UE5 engine/behaviour register and the [code-path index](../../../tests/code-paths.json). It no longer reads UE1-O06 legacy test events, serializer status journals or old project status tables, and it no longer creates test-execution commands.
+The DEV dashboard at http://127.0.0.1:8765/ is now **Graphify-only**: master projects, indexed source graphs, node/edge/size statistics, graph search and sorting, source folder scanning, and HTML viewer node-limit controls.
 
-**Historical G3 and G5 results remain accepted for their exact old scope** and are preserved under [archive/testing-legacy-2026-11-02](../../../archive/testing-legacy-2026-11-02/README.md); they are not automatically promoted to end-to-end UE1–UE5 contracts.
+The old UnrealDB/Epic compliance and acceptance panel is no longer injected into the landing page. The live UnrealDB test register and historic certification evidence remain in the repository under `tests/`; they do not drive Graphify's home page.
 
-Current contract states are NOT_REVIEWED until individually mapped to existing native/Epic proof, or necessary new original parity tests. The Graphify graph is a code navigation aide, not an original-engine oracle.
+## Deployment
 
-## Install and use
-DEV: C:\Users\arden\Graphify, accessible only on loopback. Versioned read-only source files are in this folder. Installer: Install-Graphify-UnrealDB.ps1. It backs up changes and may require a locally running Graphify service to restart; never changes production website or Git originals.
+- Versioned builder: `Build-Dashboard.py`. It reads indexed projects under `C:\Users\arden\Graphify` and generates `index.html` without the old audit extension.
+- Install on DEV with `Install-Graphify-UnrealDB.ps1` (historical installer filename retained for compatibility). It backs up and updates only the Graphify builder, regenerates the landing page, and verifies HTTP if the local dashboard service is available.
+- Existing local Graphify server customizations are preserved. `-ReplaceHostScripts` is an explicit opt-in for replacing the local server with its versioned variant; `-RestartService` is optional, with active indexing jobs protected.
+- The Graphify server binds only to `127.0.0.1:8765`. No source graphs or Epic code are uploaded to the Internet. The install does not modify PRD.
+- Old `UnrealDB-Dashboard.*` and `UnrealDB-Status.py` sources are retained for historical compatibility with the local server's separate diagnostic endpoint, but are not included in the Graphify home page.
 
-No commands run from the dashboard and no Epic source is uploaded anywhere. Dynamic project graph data is distinct from live test status; rebuild Graphify graph only when needed to reflect the reduced active source scope, excluding archived tests.
+## Content
+
+Graphify tracks source nodes, relationships, communities, indexed projects and graph JSON size. It does not certify binary package parsing or native engine behaviour. For engine parity acceptance status, use the separate repository test register rather than the Graphify dashboard.

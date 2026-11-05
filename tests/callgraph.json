@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "warning": "Static lexical PHP class references only; includes false positives and misses dynamic DI/reflection/SQL/job dispatch. Trace real runtime execution before contract acceptance.",
-  "nodes": 1047,
-  "edges_count": 3798,
+  "nodes": 1048,
+  "edges_count": 3800,
   "edge_types": {
-    "use": 1284,
-    "new": 991,
+    "use": 1285,
+    "new": 992,
     "static_or_expression": 1523
   },
   "ambiguous_class_names": {
@@ -4844,55 +4844,67 @@
       "from": "catalog/games.php",
       "to": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
       "syntax": "use",
+      "line": 11
+    },
+    {
+      "from": "catalog/games.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php",
+      "syntax": "new",
+      "line": 18
+    },
+    {
+      "from": "catalog/games.php",
+      "to": "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php",
+      "syntax": "use",
       "line": 12
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/CatalogUi.php",
       "syntax": "static_or_expression",
-      "line": 20
+      "line": 21
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 116
+      "line": 160
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Badge.php",
       "syntax": "static_or_expression",
-      "line": 43
+      "line": 45
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Button.php",
       "syntax": "static_or_expression",
-      "line": 87
+      "line": 129
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/EmptyState.php",
       "syntax": "static_or_expression",
-      "line": 28
+      "line": 29
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/PageHeader.php",
       "syntax": "static_or_expression",
-      "line": 20
+      "line": 21
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/Section.php",
       "syntax": "static_or_expression",
-      "line": 27
+      "line": 28
     },
     {
       "from": "catalog/games.php",
       "to": "catalog/src/Presentation/Ui/Component/TableRegion.php",
       "syntax": "static_or_expression",
-      "line": 100
+      "line": 149
     },
     {
       "from": "catalog/generated-package-download.php",

@@ -1,11 +1,11 @@
 {
   "schema_version": 1,
   "provenance": "SHA of current Git-tracked operational PHP, JavaScript, TypeScript and SQL paths; filename roles and engine hints require runtime call verification",
-  "total_files": 1047,
+  "total_files": 1048,
   "roles": {
     "CONTAINER": 108,
     "DATABASE": 125,
-    "DEPENDENCY": 64,
+    "DEPENDENCY": 65,
     "ERROR": 34,
     "FILE": 7,
     "GENERAL": 152,
@@ -21,7 +21,7 @@
     "UI": 159
   },
   "engine_hints": {
-    "shared": 870,
+    "shared": 871,
     "ue1": 93,
     "ue2": 12,
     "ue3": 4,
@@ -3342,8 +3342,8 @@
     },
     {
       "path": "catalog/games.php",
-      "sha256": "86c4dc0de87d5d277ba492c5b056929a25cbb769ba8a31c1f7f5486f82920260",
-      "bytes": 6261,
+      "sha256": "818c0e4d180941bf5ff794fc261526b59871a57bed88a0565bd9f2db8ebf060f",
+      "bytes": 6891,
       "engine_hints": [
         "shared"
       ],
@@ -11281,8 +11281,8 @@
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php",
-      "sha256": "b3c6b119811c0a2447129674b62cc18b0e8b92008dc03591d0f8fc60a1d3486c",
-      "bytes": 3260,
+      "sha256": "265188aa1eb6b5626fffd188391c49d8f7d3020779e4abc4549abb16816a96ae",
+      "bytes": 3628,
       "engine_hints": [
         "shared"
       ],
@@ -11306,6 +11306,20 @@
       "review_priority": "CORE",
       "trace_status": "UNTRACED_STATIC_CANDIDATE",
       "class": "PdoGameCatalogStats"
+    },
+    {
+      "path": "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php",
+      "sha256": "e3b5f91c80c53cd1686dd589bb3be84509f1b7a807e55abae5b9572d23c516be",
+      "bytes": 7577,
+      "engine_hints": [
+        "shared"
+      ],
+      "path_roles": [
+        "DEPENDENCY"
+      ],
+      "review_priority": "CORE",
+      "trace_status": "UNTRACED_STATIC_CANDIDATE",
+      "class": "PdoGameDependencyFileCountQuery"
     },
     {
       "path": "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php",

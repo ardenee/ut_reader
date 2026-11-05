@@ -1,0 +1,145 @@
+{
+  "schema": "PublicGames-v14-file-coverage-and-Graphify-only-landing-v1",
+  "verified_date": "2026-11-05",
+  "kind": "Existing F17/F22 website presentation follow-up, not a new Epic/native parser contract",
+  "state": "PASS",
+  "games_columns": [
+    "Game",
+    "Profile engine",
+    "Files",
+    "Unresolved",
+    "Unresolved Files",
+    "Resolved",
+    "Resolved Files",
+    "Total size",
+    "Open"
+  ],
+  "removed_columns": [
+    "Missing (confirmed)",
+    "Missing base-game (confirmed)"
+  ],
+  "removed_footer": [
+    "Unresolved source commentary",
+    "Admin: update all game dependency publications"
+  ],
+  "global_admin_navigation": "Maintenance > Update All Game Dependencies already exists in catalog/lib/CatalogNavigation.php; no page-local duplicate retained",
+  "definitions": {
+    "unresolved": "Current source-published unresolved reference total from fresh cached game statistics",
+    "unresolved_files": "Distinct verified files with at least one source-unresolved dependency; UE5 Zen includes ScriptImport edges",
+    "resolved": "Current source-published references with outcome=resolved (physical provider), excludes common/package_only",
+    "resolved_files": "Distinct verified dependency-bearing files with zero unresolved and zero missing source references; common and package-only are treated as satisfied; zero-dependency files are not included",
+    "stale": "Unavailable when engine policy/source payload/aggregate freshness cannot be established"
+  },
+  "original_production_data_http": {
+    "method": "DEV PHP 8.5 actual HTTP GET games.php?nocache=1 using original PRD MySQL source metadata. No PRD database write SQL.",
+    "status_cold": 200,
+    "status_warm": 200,
+    "cold_seconds": 5.958406,
+    "warm_seconds": 1.482155,
+    "games": [
+      {
+        "name_and_slug": "Satisfactory satisfactory",
+        "engine": "UE5",
+        "files": 27240,
+        "unresolved_references": 823481,
+        "unresolved_files": 27240,
+        "resolved_provider_references": 0,
+        "resolved_files": 0
+      },
+      {
+        "name_and_slug": "Unreal unrealgold",
+        "engine": "UE1",
+        "files": 10802,
+        "unresolved_references": 711776,
+        "unresolved_files": 6970,
+        "resolved_provider_references": 0,
+        "resolved_files": 3818
+      },
+      {
+        "name_and_slug": "Unreal II unreal2",
+        "engine": "UE2",
+        "files": 1218,
+        "unresolved_references": 71675,
+        "unresolved_files": 838,
+        "resolved_provider_references": 0,
+        "resolved_files": 376
+      },
+      {
+        "name_and_slug": "Unreal Tournament ut99",
+        "engine": "UE1",
+        "files": 74434,
+        "unresolved_references": 4045795,
+        "unresolved_files": 49857,
+        "resolved_provider_references": 0,
+        "resolved_files": 24438
+      },
+      {
+        "name_and_slug": "Unreal Tournament 2003 ut2003",
+        "engine": "UE2",
+        "files": 5082,
+        "unresolved_references": 333310,
+        "unresolved_files": 3469,
+        "resolved_provider_references": 0,
+        "resolved_files": 1593
+      },
+      {
+        "name_and_slug": "Unreal Tournament 2004 ut2004",
+        "engine": "UE2",
+        "files": 72895,
+        "unresolved_references": 7314127,
+        "unresolved_files": 59415,
+        "resolved_provider_references": 0,
+        "resolved_files": 13420
+      },
+      {
+        "name_and_slug": "Unreal Tournament 3 ut3",
+        "engine": "UE3",
+        "files": 6795,
+        "unresolved_references": 1511557,
+        "unresolved_files": 4264,
+        "resolved_provider_references": 0,
+        "resolved_files": 2458
+      },
+      {
+        "name_and_slug": "Unreal Tournament 4 ut4",
+        "engine": "UE4",
+        "files": 64247,
+        "unresolved_references": 334462,
+        "unresolved_files": 43777,
+        "resolved_provider_references": 0,
+        "resolved_files": 20461
+      }
+    ],
+    "table_count": 8
+  },
+  "live_graphify": {
+    "url": "http://127.0.0.1:8765/",
+    "http_status": 200,
+    "graphify_only": true,
+    "original_audit_compliance_panel_present": false,
+    "source_graph_library_present": true,
+    "builder_deployed_sha256_matches_repo": true,
+    "local_generated_index_sha256": "911084f8722efff36465e5b2943e56ec675084ba91c6a1ec9f673b93f4b05bda",
+    "local_dashboard_server_preserved": true,
+    "no_PRD_Graphify_deployment": true
+  },
+  "cache": {
+    "key": "Per-game source_stats_updated_at, engine, game id, algorithm version",
+    "location": "Existing configured private cache path / game-dependency-files",
+    "invalidation": "New game statistics publication epoch; stale game gates hide all dependency totals",
+    "underlying_read": "Source-published ue_uedb5_dependency_packages, and for UE5 zenpkg full ue_uedb5_dependency_edges",
+    "sqlite_synthetic": "PASS: multiple refs one file counted once, zero-dependency files excluded, missing files excluded from resolved, Zen script-only edge included, epoch invalidation verified"
+  },
+  "product_source_sha256": {
+    "catalog/games.php": "818c0e4d180941bf5ff794fc261526b59871a57bed88a0565bd9f2db8ebf060f",
+    "catalog/src/Infrastructure/Persistence/PdoGameCatalogListQuery.php": "265188aa1eb6b5626fffd188391c49d8f7d3020779e4abc4549abb16816a96ae",
+    "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php": "e3b5f91c80c53cd1686dd589bb3be84509f1b7a807e55abae5b9572d23c516be",
+    "catalog/lib/CatalogNavigation.php": "a6bf952def374e63d65c30e3866fc850937ca48c79dc7667b742c86e45ff89ac",
+    "catalog/tools/graphify-dashboard/Build-Dashboard.py": "591a1ce00aaa5051393cd1bfd488b26767a80e49367ea2c10adf53397a9c4815",
+    "catalog/tools/graphify-dashboard/Install-Graphify-UnrealDB.ps1": "1d4866be632d7f09db1b139aa915e9b14854b4d7f4cf51d43d1b8a53df2bde06"
+  },
+  "prior_epic_source_evidence": "tests/contracts.json retains existing 32 PASS unchanged. No native engine functions/tests rerun.",
+  "new_contracts": 0,
+  "source_package_modifications": 0,
+  "PRD_database_writes_during_this_audit": 0
+}

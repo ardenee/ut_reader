@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 5 November 2026 — Games dependency coverage, Graphify-only dashboard
+
+**Public Games table** now shows `Unresolved` (source-published reference count), `Unresolved Files` (distinct files with one or more unresolved references), `Resolved` (explicit source provider-resolved reference count), and `Resolved Files` (distinct dependency-bearing files with no source-unresolved or source-missing references). The two confirmed-missing columns and the explanatory/admin-link footer are removed. **Maintenance → Update All Game Dependencies** was already registered in the global admin navigation; the duplicate page-bottom link is not repeated.
+
+**Important outcome distinction:** common and package-only references count as *met* for the Resolved Files completeness criterion, even though they do not contribute to the explicit Resolved physical-provider references column. Files with zero references do not inflate Resolved Files. Unknown native mounts remain unresolved. All four columns show **Unavailable**, not zero, until current engine-policy publication and cached statistics are source-fresh.
+
+**Real PRD source data, DEV GET test:** eight game rows displayed with exact source-count equality. UT4 shows 334,462 unresolved references / 43,777 unresolved files / 0 explicit resolved references / 20,461 files with no outstanding source reference; UT3 1,511,557 / 4,264 / 0 / 2,458; Satisfactory (Zen script import edges included) 823,481 / 27,240 / 0 / 0. Cold GET ~5.96 s and cached-metric GET ~1.48 s. File counts use a private, timestamp-invalidated file cache; no database schema migration or production metadata rewrite. Isolated SQLite positive/negative cases passed including mixed multi-reference files, Zen script-only entries, missing and zero-reference exclusions, and update-epoch invalidation. Public response cache is independent and remains protected.
+
+**Graphify DEV:** removed the whole UnrealDB/Epic compliance section, acceptance panel and injected API client from the generated Graphify landing page. The live `http://127.0.0.1:8765/` responds HTTP 200 with the Source Graph Library, project graph metrics, viewer limits and local scanner, without any compliance panel. Versioned builder, installer and documentation updated; local host/server and indexed project data preserved.
+
+**Acceptance scope:** fixed UE1–UE5 contract register stays at **32/32 PASS**. This is a user-facing presentation improvement, not a new native engine parity claim or a new acceptance contract. Evidence: [Games and Graphify HTTP/SQL verification](../tests/evidence/games-page-graphify-only-20261105.json).
+
+---
+
 ## UE4 closeout — 5 November 2026
 
 **UE4 6/6 PASS; fixed UnrealDB contract register 32 PASS / 0 BLOCKED.** This is closure of the defined file/header/table/VerifyImport-classic/provider/dependency/website operations, not a claim to all possible native Unreal Engine runtime behavior.

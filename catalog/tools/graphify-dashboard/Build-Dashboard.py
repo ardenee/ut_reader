@@ -13,9 +13,6 @@ MASTER_SPEC=importlib.util.spec_from_file_location('graphify_masters',ROOT/'Proj
 MASTER_LIB=importlib.util.module_from_spec(MASTER_SPEC)
 MASTER_SPEC.loader.exec_module(MASTER_LIB)
 OUTPUT = ROOT / "index.html"
-STATUS_HTML = (ROOT / "UnrealDB-Dashboard.html").read_text(encoding="utf-8")
-STATUS_CSS = (ROOT / "UnrealDB-Dashboard.css").read_text(encoding="utf-8")
-STATUS_JS = (ROOT / "UnrealDB-Dashboard.js").read_text(encoding="utf-8")
 
 def entries():
     projects=[]
@@ -98,7 +95,7 @@ HTML=r"""<!DOCTYPE html>
 <div class="cards" id="cards"></div><div id="none">No indexed projects match those filters.</div>
 <section id="drawer"><button class="copy" id="copy">Copy command</button><h2>Refresh index</h2><p>Run this command in PowerShell on DEV. Browsers do not have permission to execute local programs.</p><pre id="command"></pre></section>
 <footer>All graphs are stored under <code>C:\Users\arden\Graphify</code>. The HTML views aggregate large graphs; use CLI/MCP for full symbol-level queries.
-Data comes from the last local extraction and may be stale. Graph relationships help discovery but do not prove Epic serialization equivalence.
+Data comes from the last local extraction and may be stale. Graph relationships are an index of source code, not a runtime execution trace.
 <strong>The optional local scanner listens only on DEV loopback (127.0.0.1), not the LAN or Internet.</strong></footer></main>
 <script>
 const projects=__DATA__;
@@ -252,9 +249,7 @@ function draw(){
 
 def main():
     data=entries()
-    output=HTML.replace("__STYLE__",STYLE + "\n" + STATUS_CSS).replace("__STAMP__",html.escape(datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")))
-    output=output.replace("</header>", "</header>\n" + STATUS_HTML, 1)
-    output=output.replace("</script></body></html>", "\n" + STATUS_JS + "\n</script></body></html>", 1)
+    output=HTML.replace("__STYLE__",STYLE).replace("__STAMP__",html.escape(datetime.now().astimezone().strftime("%Y-%m-%d %H:%M %Z")))
     output=output.replace("__DATA__",json.dumps(data,ensure_ascii=False).replace("</","<\\/"))
     output=output.replace("__MASTERS__",json.dumps(MASTER_LIB.read_masters(),ensure_ascii=False).replace("</","<\\/"))
     OUTPUT.write_text(output,encoding="utf-8")
