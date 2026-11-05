@@ -1,0 +1,119 @@
+{
+  "schema": "game-file-dependency-badge-presentation-cleanup-v1",
+  "verified_date": "2026-11-05",
+  "result": "PASS",
+  "requested_change": "Hide package_only presentation from game file lists; retain published UEDB5 dependency evidence and package-level identities.",
+  "affected_file_id": 1390232,
+  "affected_package": "/Engine/BasicShapes/Sphere",
+  "actual_PRD_readonly_records": {
+    "file_id": 1390232,
+    "game_id": 14,
+    "physical_package": "/Engine/BasicShapes/Sphere",
+    "exact_indexed_object_matches": 10,
+    "script_object_matches_in_global_utoc": 8,
+    "exact_export_matches": 2,
+    "matched_package_level_only": 1,
+    "matched_package_level_required_package": "/Engine/EngineMaterials/DefaultMaterial",
+    "matched_package_level_provider_file_id": 1372197,
+    "matched_package_id": "C04E95A76B12D3B4"
+  },
+  "ui_behaviour": {
+    "file_list_page": "catalog/game-files.php",
+    "legacy_list_page": "catalog/game-page.php",
+    "explicit_package_only_badge_removed": true,
+    "explicit_package_only_dropdown_option_removed": true,
+    "other_status_badges_preserved": true,
+    "import_detail_page_unchanged": true,
+    "underlying_dependency_semantics_unchanged": true,
+    "existing_deep_link_filter_package_only_route_supported_for_compatibility": true,
+    "exact_resolved_badge_kept_at_10_to_avoid_falsely_claiming_11_exact_export_or_script_matches": true
+  },
+  "actual_DEV_PHP_HTTP_using_read_only_PRD_metadata": {
+    "http_valid_200_count": 7,
+    "routes": [
+      {
+        "route": "game-files.php?id=14&file_filter=Sphere",
+        "http": "200 0.726165 115585",
+        "ok": true
+      },
+      {
+        "route": "game-files.php?id=14",
+        "http": "200 0.274967 194805",
+        "ok": true
+      },
+      {
+        "route": "game-files.php?id=7",
+        "http": "200 0.356349 160473",
+        "ok": true
+      },
+      {
+        "route": "game-files.php?id=7&dep_filter=resolved",
+        "http": "200 2.166686 161212",
+        "ok": true
+      },
+      {
+        "route": "game-files.php?id=14&dep_filter=fully_resolved",
+        "http": "200 0.536151 195536",
+        "ok": true
+      },
+      {
+        "route": "game-page.php?id=14&file_filter=Sphere",
+        "http": "200 0.203160 39604",
+        "ok": true
+      },
+      {
+        "route": "file-examine.php?id=1390232&tab=imports&page_size=250",
+        "http": "200 0.205520 20390",
+        "ok": true
+      }
+    ],
+    "rendered_checks": {
+      "sphere": {
+        "rows": 58,
+        "resolved_badges": 58,
+        "package_only_badges": 0
+      },
+      "ue5-all": {
+        "rows": 101,
+        "resolved_badges": 100,
+        "package_only_badges": 0
+      },
+      "ue4-all": {
+        "rows": 101,
+        "resolved_badges": 62,
+        "package_only_badges": 0
+      },
+      "ue4-resolved": {
+        "rows": 101,
+        "resolved_badges": 62,
+        "package_only_badges": 0
+      },
+      "ue5-fully-resolved": {
+        "rows": 101,
+        "resolved_badges": 100,
+        "package_only_badges": 0
+      },
+      "legacy": {
+        "rows": 58,
+        "resolved_badges": 19,
+        "package_only_badges": 0
+      },
+      "sphere_file_id": 1390232,
+      "sphere_resolved_exact_matches": 10,
+      "underlying_package_level_outcome_preserved": true,
+      "file_examine_unchanged": true
+    },
+    "file_1390232_exact_resolved10_and_script8_visible": true,
+    "package_only_badge_absent_on_all_tested_lists": true,
+    "package_only_dropdown_option_absent": true,
+    "source_examine_imports_still_available": true
+  },
+  "source_files_sha256": {
+    "catalog/game-files.php": "edb353748a566b0315dae8b124af79068cbff55498bbc2090bd9ecd3103926ff",
+    "catalog/game-page.php": "46fdaf948032a80857528b7a6258f2fda76735ea998468668e9ad0251edd8355"
+  },
+  "new_engine_contracts": 0,
+  "original_UE_package_file_modifications": 0,
+  "production_database_writes": 0,
+  "temporary_test_directory": "D:/Temp/UnrealDB/games-page/package-only-hide"
+}

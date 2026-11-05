@@ -4604,7 +4604,7 @@
       "from": "catalog/game-files.php",
       "to": "catalog/src/Presentation/Ui/Component/Alert.php",
       "syntax": "static_or_expression",
-      "line": 725
+      "line": 728
     },
     {
       "from": "catalog/game-files.php",
@@ -4730,7 +4730,7 @@
       "from": "catalog/game-page.php",
       "to": "catalog/src/Presentation/Ui/Support/Html.php",
       "syntax": "static_or_expression",
-      "line": 224
+      "line": 225
     },
     {
       "from": "catalog/game-paks.php",

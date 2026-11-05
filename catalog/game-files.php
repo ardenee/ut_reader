@@ -587,7 +587,7 @@ try {
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
     echo '<label for="file-filter">Search files <input id="file-filter" class="wide-search" type="search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label>';
     echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
-    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved (has met references)', 'fully_resolved' => 'Resolved Files (all met)', 'package_only' => 'Package only', 'common' => 'Common', 'missing' => 'Missing (confirmed)'] as $value => $label) {
+    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved (has met references)', 'fully_resolved' => 'Resolved Files (all met)', 'common' => 'Common', 'missing' => 'Missing (confirmed)'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
@@ -652,7 +652,10 @@ try {
             $staticResolved = $isZen ? (int)($file['static_resolved_count'] ?? 0) : 0;
             $staticScripts = $isZen ? (int)($file['static_script_count'] ?? 0) : 0;
             $dependencyBadges = [];
-            foreach (['resolved', 'missing', 'package_only', 'common', 'unresolved'] as $key) {
+            // Package-level identities remain stored and resolved as before.
+            // Do not present their internal outcome as a separate warning badge;
+            // it does not indicate a missing dependency.
+            foreach (['resolved', 'missing', 'common', 'unresolved'] as $key) {
                 $count = (int)($file[$key . '_count'] ?? 0);
                 if (!$count) continue;
                 $badge = game_files_status_badge($key, $count);

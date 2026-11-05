@@ -138,7 +138,8 @@ try {
         $deps = '';
         // An authoritative source-unresolved reference is still a dependency.
         // Never show 'none' merely because no mounted provider was selected.
-        foreach (['resolved', 'missing', 'package_only', 'common', 'unresolved'] as $key) {
+        // The legacy list also hides the internal package-only outcome.
+        foreach (['resolved', 'missing', 'common', 'unresolved'] as $key) {
             $count = (int)($file[$key . '_count'] ?? 0);
             if ($count) {
                 $deps .= '<span class="dep ' . $key . '">' . $key . ': ' . $count . '</span>';

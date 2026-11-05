@@ -1,5 +1,15 @@
 # UnrealDB current project status
 
+## 5 November 2026 — Hide package-only badges in file listings
+
+Removed the internal package_only status badge from both catalog/game-files.php and the older catalog/game-page.php; also removed the visible Package only dependency filter option. The underlying publication outcome remains in UEDB5, existing bookmarked dep_filter=package_only URLs remain accepted, and downstream dependency/download closure logic remains untouched. This is a display-only change: do not promote a package-level presence check to an exact export or ScriptObjects match.
+
+**Verified example:** Satisfactory file **1390232** (/Engine/BasicShapes/Sphere) retains **resolved: 10** (8 exact cooked ScriptObjects in global.utoc, 2 indexed export references). Its additional indexed package-level reference to /Engine/EngineMaterials/DefaultMaterial (#1372197) is no longer shown as package_only: 1, since it was not reporting an error. Its source-backed dependency records and file-examine.php are unchanged.
+
+**Acceptance:** 7/7 real DEV HTTP GET routes on PRD read-only metadata, including Sphere, UE5/UE4 general lists, UE4 resolved and UE5 fully resolved filters, legacy game view and unchanged UE5 package examiner. Rendered assertions confirm exact resolution badges and the tooltip survive while package_only badges/selection are absent. No database writes or engine tests needed; fixed UE1–UE5 acceptance register remains 32/32 PASS. Evidence: [package-only display cleanup](../tests/evidence/game-file-package-only-badge-removed-20261105.json).
+
+---
+
 ## 5 November 2026 — Games drilldown and consistent numbered pagination
 
 **Games public header:** removed duplicate Search and admin-only Library action buttons; global nav remains unchanged. All four current dependency counters are links: **Unresolved** and **Unresolved Files** open the `unresolved` game-file filter; **Resolved** opens files containing at least one satisfied dependency; **Resolved Files** opens `fully_resolved` (every dependency met). Reference totals and distinct matching file counts are explicitly shown with their different units. UE5 now shares the Games page's exact indexed-target exception-set; Satisfactory drilldowns match **244 unresolved references / 51 unresolved files**, **1,847,626 satisfied references**, and **27,189 fully satisfied files**. The 26 external-to-current-index package identities remain unresolved, not source-confirmed missing. Native source-policy projections are unchanged.
