@@ -2,6 +2,10 @@
 
 The objective is to make UnrealDB's **observable file handling** match the correctly selected Epic engine and game-loader source: package identity, names, objects, serialized values, imports, dependencies, physical provider selection, database projection, and errors. We do not attempt to reproduce gameplay or rendering.
 
+## UE2 static package coverage / common semantics audit — 5 November 2026
+
+Read-only production evidence after the 1,217-file Unreal II Full Sync shows 71,675 unresolved, 39,295 config-labelled common, zero source-confirmed physical resolutions. Existing `common_packages` bypass is **not** an Epic VerifyImport rule: a further versioned UE2 dependency-policy correction and republish are required before claiming full dependency-classification parity. Package Coverage formerly reconstructed 0 UE2 required object paths; it now follows source-derived import parent paths (no UE2 UEDB5 resnapshot required). Original source file #149516 requires exactly two AutoTurretFX objects; original #149589 matches 2/2 and #111224 matches 0/2. A dedicated read-only original-file test was added. See [UE2 offline coverage/common review](../docs/ue2-offline-coverage-common-policy-review-2026-11-05.md).
+
 ## Full Sync UEDB5 and Games dashboard completion — 5 November 2026
 
 Full Sync now **fails a reader-incompatible file unit** rather than falsely treating retained old UEDB5 metadata as a successful reimport. Finalization rebuilds game stats and requires the same current-publication freshness gate used by `catalog/games.php` to pass before reporting the parent complete. The detached worker fingerprint includes its Full Sync and source-policy dependencies. Original files and existing metadata are preserved on failed source reparsing; no persistent UEDB5 backups are generated. Focused in-memory failure/recovery and stale/fresh dashboard tests passed; read-only PRD Unreal II baseline is 1,217 verified packages. See [full sync readiness](../docs/full-sync-uedb5-dashboard-readiness-2026-11-05.md).

@@ -27,7 +27,8 @@ final class PdoPackageObjectCoverageResolver
         array $requiredObjectPaths,
         int $preferredFileId = 0,
         array $requiredClassesByPath = [],
-        string $engineKey = ''
+        string $engineKey = '',
+        ?string $storageRoot = null
     ): array {
         $engineKey = strtoupper(trim($engineKey));
         $packageName = trim($packageName);
@@ -42,7 +43,9 @@ final class PdoPackageObjectCoverageResolver
             return [];
         }
 
-        $reader = new Uedb5MetadataReader(self::storageRoot());
+        $reader = new Uedb5MetadataReader($storageRoot !== null && trim($storageRoot) !== ''
+            ? $storageRoot
+            : self::storageRoot());
         $matched = [];
         $matchedExports = [];
         foreach (array_keys($providers) as $fileId) {

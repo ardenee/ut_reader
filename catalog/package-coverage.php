@@ -115,11 +115,11 @@ try {
     catalog_head('Package Coverage');
     catalog_page_header(
         'Package Coverage',
-        'Find whether one known package version satisfies every object required by all known catalogue consumers. Coverage results are precomputed during Full Sync.',
+        'Compare each physical package against the indexed import paths requested by known consumers. Export coverage does not prove which version the original engine loads or guarantee VerifyImport success.',
         ['Contribute files' => 'public-upload.php', 'Search files' => 'index.php?page=search']
     );
 
-    echo '<section class="card"><h2>Find a common package</h2>'
+    echo '<section class="card"><h2>Compare package versions</h2>'
         . '<form method="get" action="package-coverage.php"><div class="ui-inline-actions">'
         . '<label>Game <select name="game_id"><option value="0">All games</option>';
     foreach ($games as $game) {
@@ -134,9 +134,9 @@ try {
     if ($query !== '') {
         echo '<section class="card"><h2>Coverage results</h2>';
         if ($coverage === []) {
-            echo '<p class="muted">No cached multi-provider package coverage matched this search. The game may need a Full Sync, or the package may have only one known provider.</p>';
+            echo '<p class="muted">No cached multi-provider coverage matched this search. An administrator may need to rebuild the game-scoped coverage cache after an import-path reader update; a package with only one known provider is not listed here.</p>';
         } else {
-            echo '<table><tr><th>Game</th><th>Package</th><th>Consumers</th><th>Required objects</th><th>Providers</th><th>Best coverage</th><th>Complete common version</th><th>Updated</th></tr>';
+            echo '<table><tr><th>Game</th><th>Package</th><th>Consumers</th><th>Required objects</th><th>Providers</th><th>Best coverage</th><th>All required paths present</th><th>Updated</th></tr>';
             foreach ($coverage as $row) {
                 $required = (int)$row['required_object_count'];
                 $best = (int)$row['best_matched_count'];
@@ -193,7 +193,7 @@ try {
             }
             echo '</table>';
         }
-        echo '<p class="muted small">“Complete” means complete for the combined requirements currently known to UnrealDB; it does not claim that the file contains every object ever distributed under this package name.</p></section>';
+        echo '<p class="muted small">“Complete” compares recorded import paths and export class names only. It does not establish an original mounted-provider choice, a successful engine load or universal compatibility across different game editions.</p></section>';
     }
 
     echo '<section class="card"><h2>Check or contribute one package file</h2>';

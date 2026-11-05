@@ -98,6 +98,8 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Metadata/Uedb5DependencyProjectionBuilder.php',
             $this->catalogRoot . '/src/Infrastructure/Metadata/PdoUedb5DependencyProjectionPublisher.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoPackageCoverageCache.php',
+            $this->catalogRoot . '/src/Infrastructure/Persistence/PdoPackageSupersetAnalyzer.php',
+            $this->catalogRoot . '/src/Infrastructure/Persistence/PdoPackageObjectCoverageResolver.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php',

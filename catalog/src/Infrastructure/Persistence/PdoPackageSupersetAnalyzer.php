@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ClassicDependencyResolver;
 use UnrealDb\Catalog\Infrastructure\Metadata\Uedb5ParityV5ReadService;
 
 /**
@@ -36,6 +37,18 @@ final class PdoPackageSupersetAnalyzer
             ];
         }
 
+        // The UE2 classic dependency row stores the original import identity,
+        // not a preassembled object_path. Reconstruct that path by following the
+        // source import outer chain rather than dropping all UE2 requirements.
+        // Other engines retain their existing coverage behaviour unchanged.
+        $engineStatement = $db->prepare(
+            'SELECT gp.engine_key FROM ue_games g '
+            . 'JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1 '
+            . 'WHERE g.id=? LIMIT 1'
+        );
+        $engineStatement->execute([$gameId]);
+        $isUe2 = strtoupper(trim((string)($engineStatement->fetchColumn() ?: ''))) === 'UE2';
+
         $statement = $db->prepare(
             'SELECT DISTINCT p.file_id FROM ue_uedb5_dependency_packages p '
             . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::joinCurrentPackages('p')
@@ -51,11 +64,33 @@ final class PdoPackageSupersetAnalyzer
         if ($consumerIds !== []) {
             $reader = new Uedb5ParityV5ReadService($db, $config ?? self::catalogConfig());
             foreach ($consumerIds as $consumerFileId) {
+                $ue2SourceImports = [];
+                if ($isUe2) {
+                    foreach (Uedb5ClassicDependencyResolver::importCoverageRows(
+                        $reader->snapshot($gameId, $consumerFileId)
+                    ) as $sourceImport) {
+                        $ue2SourceImports[(int)$sourceImport['import_index']] = $sourceImport;
+                    }
+                }
                 foreach ($reader->dependencies($gameId, $consumerFileId) as $dependency) {
                     if (strcasecmp((string)($dependency['required_package'] ?? ''), $packageName) !== 0) {
                         continue;
                     }
                     $fullPath = trim((string)($dependency['required_object_path'] ?? ''));
+                    $sourceImport = null;
+                    if ($fullPath === '' && $isUe2
+                        && (string)($dependency['source_section'] ?? '') === 'imports') {
+                        $sourceImport = $ue2SourceImports[(int)($dependency['source_index'] ?? -1)] ?? null;
+                        if (is_array($sourceImport)
+                            && strcasecmp((string)($sourceImport['root_package'] ?? ''), $packageName) === 0) {
+                            // Core.Package is a linker root, not a provider export.
+                            // Only nested import objects contribute required paths.
+                            if ((string)($sourceImport['relative_object_path'] ?? '') === '') {
+                                continue;
+                            }
+                            $fullPath = (string)($sourceImport['full_path'] ?? '');
+                        }
+                    }
                     $relativePath = self::relativePath($packageName, $fullPath);
                     if ($relativePath === '') {
                         continue;
@@ -83,7 +118,9 @@ final class PdoPackageSupersetAnalyzer
                 $packageName,
                 $paths,
                 0,
-                $requiredClasses
+                $requiredClasses,
+                $isUe2 ? 'UE2' : '',
+                (string)(($config ?? self::catalogConfig())['storage_path'] ?? '')
             );
 
         return [

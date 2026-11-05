@@ -1,5 +1,13 @@
 # UnrealDB current project status
 
+## 5 November 2026 — UE2 offline package coverage corrected; dependency common-policy gap reopened
+
+The completed Unreal II Full Sync #9525717 rebuilt 1,217/1,217 UEDB5 sources, 13/13 dependency batches and current game statistics, but unchanged counts are expected under current provider-selection rules: 71,675 unresolved and 39,295 config-labelled common; 0 source-confirmed physical resolves. Read-only original-source review found that `common_packages` is an UnrealDB heuristic, **not** a UE2 `VerifyImport` exception: the earlier 7/7 bounded-operation closure does **not** close offline common-versus-resolved semantics. A separately versioned UE2 dependency-policy migration/republication remains outstanding; no policy change or PRD Pass-2 writes in this patch.
+
+Package Coverage had zero Unreal II cached package rows because the UE2 snapshot preserves source import name/parent fields rather than a preconstructed `required_object_path`. The catalogue coverage analyser now derives this path from the existing source-backed UE2 import-parent walk and skips the package-root linker import, without changing other engine logic. Original Unreal II file #149516 requires two `AutoTurretFX` exports; physical candidate #149589 matches 2/2 and #111224 matches 0/2. Coverage evidence is offline **candidate compatibility**, never an engine-selected runtime provider. The independent scoped coverage-cache rebuild CLI can repopulate the PRD display from existing UEDB5, with no full resync. See [UE2 coverage and common-policy review](ue2-offline-coverage-common-policy-review-2026-11-05.md).
+
+---
+
 ## 5 November 2026 — Hide package-only badges in file listings
 
 Removed the internal package_only status badge from both catalog/game-files.php and the older catalog/game-page.php; also removed the visible Package only dependency filter option. The underlying publication outcome remains in UEDB5, existing bookmarked dep_filter=package_only URLs remain accepted, and downstream dependency/download closure logic remains untouched. This is a display-only change: do not promote a package-level presence check to an exact export or ScriptObjects match.
