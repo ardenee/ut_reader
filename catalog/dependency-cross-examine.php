@@ -7,6 +7,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoGameDependencyCrossExamineQuery;
+use UnrealDb\Catalog\Infrastructure\Games\CatalogGameOwnershipEvidence;
+use UnrealDb\Catalog\Presentation\Ui\CatalogGameOwnershipEvidenceUi;
 
 function cross_exam_int(string $key, int $default = 0): int
 {
@@ -47,6 +49,7 @@ try {
 .cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:980px}.cross-package-row td{padding-top:18px;border-top:2px solid var(--line2)}.cross-package-title{font-size:16px}.cross-details summary{cursor:pointer;color:var(--muted);font-size:12px}.cross-details-body{margin-top:7px;font-size:12px;color:var(--muted);line-height:1.5}.cross-result{min-width:300px}.cross-result-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:5px}.cross-result-line strong{display:inline}.cross-object-line{display:block;margin-top:4px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block;margin-top:4px}.cross-coverage small{display:block;margin-top:4px}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-batch{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);margin:0 0 10px}.cross-batch label{display:flex;flex-direction:column;gap:4px;min-width:260px}.cross-batch-note{flex:1 1 340px;color:var(--muted);font-size:12px}.cross-select{width:42px;text-align:center}.cross-select input{width:18px;height:18px}.cross-file-name{display:inline-block;margin-top:2px}.cross-file-size{display:inline-block;margin-top:2px}.cross-game-engine{display:inline-block;margin-top:2px}.cross-target-files{display:inline-block;margin-top:3px}.cross-progress-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.68)}.cross-progress-overlay.is-open{display:flex}.cross-progress-dialog{width:min(720px,96vw);max-height:90vh;overflow:auto;border:1px solid var(--line2);border-radius:12px;background:var(--panel,#101827);box-shadow:0 24px 80px rgba(0,0,0,.5);padding:18px}.cross-progress-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.cross-progress-head h2{margin:0}.cross-progress-close{white-space:nowrap}.cross-progress-track{height:14px;border-radius:999px;overflow:hidden;background:rgba(255,255,255,.08);margin:16px 0 8px}.cross-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,#3f69b8,#6695eb);transition:width .25s ease}.cross-progress-line{display:flex;justify-content:space-between;gap:14px;color:var(--muted);font-size:13px}.cross-progress-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}.cross-progress-stat{padding:9px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-stat strong{display:block;font-size:18px}.cross-progress-current,.cross-progress-message,.cross-progress-error{margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,.025)}.cross-progress-error{display:none;border:1px solid rgba(220,80,80,.4);color:#ffb6b6}.cross-progress-error.is-visible{display:block}.cross-progress-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}.cross-batch{align-items:stretch}.cross-progress-stats{grid-template-columns:1fr 1fr}}
 </style>
 CSS;
+    echo '<style>' . CatalogGameOwnershipEvidenceUi::stylesheet() . '</style>';
 
     echo CatalogUi::pageHeader(
         'Dependency Cross-Examine',
@@ -98,6 +101,7 @@ CSS;
     }
 
     $rows = is_array($model['rows'] ?? null) ? $model['rows'] : [];
+    $ownershipEvidence = (new CatalogGameOwnershipEvidence($db))->assess($rows, $games);
     $target = is_array($model['target'] ?? null) ? $model['target'] : [];
     $diagnostics = is_array($model['diagnostics'] ?? null) ? $model['diagnostics'] : [];
 
@@ -157,6 +161,7 @@ CSS;
         . '<input type="hidden" name="report_target_game_id" value="' . $targetGameId . '">'
         . '<input type="hidden" name="source_game_id" value="' . $sourceGameId . '">'
         . '<input type="hidden" name="limit" value="' . $limit . '">';
+    echo '<p class="game-ownership-guidance"><strong>Original-game clues are separate from dependency compatibility.</strong> A file copied from another game may satisfy imports without originating from the target game. Compare source directory and identical verified copies below; a missing source-path clue is not proof of ownership.</p>';
     echo '<div class="cross-batch">'
         . '<label>Add selected packages to<select name="destination_game_id" required>';
     foreach ($destinationGames as $game) {
@@ -172,10 +177,11 @@ CSS;
 
     echo '<div class="table-wrap"><table class="cross-table"><thead><tr>'
         . '<th class="cross-select"><input type="checkbox" id="cross-select-all" aria-label="Select all full matches"></th>'
-        . '<th>Package / source</th><th>Candidate file</th><th>Result</th></tr></thead><tbody>';
+        . '<th>Package / source</th><th>Candidate file</th><th>Original game clues</th><th>Result</th></tr></thead><tbody>';
     $lastPackageKey = null;
     foreach ($rows as $row) {
         $sourceFileId = (int)$row['id'];
+        $owner = is_array($ownershipEvidence[$sourceFileId] ?? null) ? $ownershipEvidence[$sourceFileId] : [];
         $missing = (int)$row['target_missing_count'];
         $owners = (int)$row['target_owner_count'];
         $completeConsumers = (int)($row['complete_consumer_count'] ?? 0);
@@ -194,8 +200,14 @@ CSS;
             }
         }
         echo '<tr' . ($newPackage ? ' class="cross-package-row"' : '') . '>';
+        $sourceGameIdentityConflict = in_array((string)($owner['kind'] ?? ''), ['directory', 'corroborated'], true)
+            && (int)($owner['suggested_game_id'] ?? 0) > 0
+            && (int)($owner['suggested_game_id'] ?? 0) !== (int)($row['game_id'] ?? 0);
+        $alreadyInTarget = in_array($targetGameId, array_map('intval', (array)($owner['exact_game_ids'] ?? [])), true);
         echo '<td class="cross-select"><input type="checkbox" name="source_file_ids[]" value="' . $sourceFileId
-            . '"' . ($completeConsumers < 1 ? ' disabled' : '')
+            . '" data-ownership-conflict="' . ($sourceGameIdentityConflict ? '1' : '0') . '"'
+            . ' data-destination-duplicate="' . ($alreadyInTarget ? '1' : '0') . '"'
+            . ($completeConsumers < 1 ? ' disabled' : '')
             . ' aria-label="Select ' . catalog_h((string)$row['original_name']) . '"></td>';
         echo '<td>';
         if ($newPackage) echo '<strong class="cross-package-title">' . catalog_h((string)$row['package_name']) . '</strong><br>';
@@ -231,6 +243,7 @@ CSS;
         echo '<br>Old exact-projection diagnostic: '
             . number_format((int)($row['exact_object_matches'] ?? 0)) . ' / ' . number_format($missing)
             . ' missing references</div></details></td>';
+        echo '<td>' . CatalogGameOwnershipEvidenceUi::render($owner, (int)($row['game_id'] ?? 0), $targetGameId) . '</td>';
         echo '<td class="cross-result">';
         if ($completeConsumers > 0) {
             echo '<div class="cross-result-line"><span class="cross-good">FULL MATCH</span><strong>'
@@ -410,6 +423,16 @@ CSS;
             if (selected.length === 0) {
                 event.preventDefault();
                 window.alert('Select at least one package to queue.');
+                return;
+            }
+            const ownerWarnings = selected.filter((box) => box.dataset.ownershipConflict === '1');
+            const redundant = selected.filter((box) => box.dataset.destinationDuplicate === '1');
+            if ((ownerWarnings.length || redundant.length) && !window.confirm(
+                ownerWarnings.length + ' selected source file(s) have acquisition-directory clues pointing to a different original game; ' +
+                redundant.length + ' have identical bytes already in the target game. ' +
+                'Cross-game copy is allowed, but it does not establish original game ownership or add exports to an already identical file. Continue?'
+            )) {
+                event.preventDefault();
                 return;
             }
             if (!window.fetch || !window.FormData) return;
