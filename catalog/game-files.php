@@ -220,7 +220,9 @@ html { scroll-behavior: smooth; }
     width: 1%;
 }
 #game-files-table .identity-cell { white-space: nowrap; padding-right: 26px; }
-#game-files-table .game-files-version { padding-left: 14px; }
+#game-files-table .game-files-version { padding-left: 14px; text-align: center; }
+#game-files-table .game-files-version-heading { text-align: center; }
+#game-files-table .game-files-version-type { display: flex; justify-content: center; align-items: center; }
 #game-files-table .game-files-version,
 #game-files-table .game-files-size,
 #game-files-table .game-files-compression,
@@ -338,7 +340,7 @@ try {
     $dir = strtolower(trim((string)($_GET['dir'] ?? 'asc')));
     $dir = $dir === 'desc' ? 'desc' : 'asc';
 
-    $sortMap = ['package' => true, 'file' => true, 'version' => true, 'size' => true, 'deps' => true, 'uploaded' => true];
+    $sortMap = ['package' => true, 'file' => true, 'version' => true, 'licensee' => true, 'size' => true, 'deps' => true, 'uploaded' => true];
     if ($showCompression) {
         $sortMap['compression'] = true;
     }
@@ -683,16 +685,15 @@ try {
             . game_files_sort_link('sort package', 'package', $sort, $dir)
             . '</div></th>';
         echo '<th scope="col">Identity</th>';
-        echo '<th scope="col">' . game_files_sort_link('Version', 'version', $sort, $dir) . '</th>';
+        echo '<th scope="col" class="game-files-version-heading">'
+            . game_files_sort_link('Version', 'version', $sort, $dir)
+            . ' / ' . game_files_sort_link('Lic', 'licensee', $sort, $dir)
+            . '</th>';
         echo '<th scope="col">' . game_files_sort_link('Size', 'size', $sort, $dir) . '</th>';
         if ($showCompression) {
             echo '<th scope="col">' . game_files_sort_link('Internal Compression', 'compression', $sort, $dir) . '</th>';
         }
-        echo '<th scope="col">Dependencies'
-            . ($engineMajor === 5
-                ? '<div class="small muted" title="Zen catalogue matches are calculated per page; a misleading source-only sort is disabled">source references</div>'
-                : '<div class="small muted">sort '.game_files_sort_link('unresolved', 'deps', $sort, $dir).'</div>')
-            . '</th>';
+        echo '<th scope="col">Dependencies</th>';
         echo '<th scope="col">Actions</th>';
         echo '</tr></thead><tbody>';
 

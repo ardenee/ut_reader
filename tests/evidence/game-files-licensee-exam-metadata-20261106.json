@@ -1,0 +1,62 @@
+{
+  "schema": "unrealdb-game-list-licensee-and-examine-ui-20261106",
+  "date": "2026-11-06",
+  "authority": "Read-only production DB on PRD, genuine existing Unreal II entries, original pre-edit PHP Exports field mapping, browser JS transformer inspection",
+  "changes": {
+    "dependencies_column": "Remove visible sort unresolved text; preserve other filter behavior",
+    "version_column": "Version / Lic header; independent server-side package_version / licensee_version sort and stable cursor",
+    "version_cell": "Centered version/licensee value above file type badge",
+    "exports_table": "Restore exact PHP-produced export fields to browser by stopping legacy client-side column deletion/Package ref relocation for Exports; keep classic and Zen source rows unmodified",
+    "metadata_card": "Append dependency coverage values inside the existing left/right metadata tables so labels/values inherit original table proportions"
+  },
+  "verification": {
+    "pass": true,
+    "read_only": true,
+    "game_id": 2,
+    "version_licensee_order_and_cursor_cases": [
+      {
+        "sort": "version",
+        "direction": "asc",
+        "first_value": 61,
+        "last_value": 110,
+        "first_page_count": 15,
+        "cursor_matches_second_page": true,
+        "example_file_id": 149492
+      },
+      {
+        "sort": "licensee",
+        "direction": "asc",
+        "first_value": 0,
+        "last_value": 0,
+        "first_page_count": 15,
+        "cursor_matches_second_page": true,
+        "example_file_id": 1295420
+      },
+      {
+        "sort": "licensee",
+        "direction": "desc",
+        "first_value": 2609,
+        "last_value": 2609,
+        "first_page_count": 15,
+        "cursor_matches_second_page": true,
+        "example_file_id": 1252964
+      }
+    ],
+    "export_table_original_column_structure_preserved": true,
+    "browser_no_longer_removes_export_columns": true,
+    "metadata_counts_use_existing_two_tables": true,
+    "new_database_records": 0
+  },
+  "updated_files_sha256": {
+    "catalog/game-files.php": "91ff14a55c83daa5a23d3588d6403793e8f936366294b430c1074948c05dafe7",
+    "catalog/src/Infrastructure/Persistence/PdoGameFileListQuery.php": "64c97a676b9bd305c933fa93b712e90b3e1df2ca075c014cbda745d7b91e87aa",
+    "catalog/file-examine-paged-core.php": "46950aa53f3a4dc87f86186d22f8e1f85aef2e11736a296f29b44e0ed817b894",
+    "catalog/assets/catalog-ui.js": "05d3ffdc223ffe69aefde125deaec23c8a8941c8350c9d746719b890c9b58268",
+    "tests/tools/verify_game_file_licensee_sort_and_exam_layout_20261106.php": "baa3f9a7662ec9635b7c03819a221be6dab19fbf1174e039fc06416733735738"
+  },
+  "source_packages_reparsed": false,
+  "production_database_mutated": false,
+  "uedb5_modified": false,
+  "runtime_import_load_asserted": false,
+  "browser_authorized_visual_verified": false
+}

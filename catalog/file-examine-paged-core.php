@@ -612,6 +612,16 @@ try {
         echo '<tr><th>'.catalog_h($label).'</th><td class="mono path">'
             .$htmlValue.'</td></tr>';
     }
+    if ($examDependencyTotals !== null) {
+        echo '<tr><th>Dependencies met</th><td class="mono path">'
+            . number_format((int)$examDependencyTotals['met']) . '</td></tr>';
+        if ((int)$examDependencyTotals['source_matched_script'] > 0
+            || (int)$examDependencyTotals['source_unmatched_script'] > 0) {
+            echo '<tr><th>Native script in source</th><td class="mono path">'
+                . number_format((int)$examDependencyTotals['source_matched_script'])
+                . '</td></tr>';
+        }
+    }
     echo '</table><table>';
     foreach ([
         'Names' => (int)$file['name_count'],
@@ -622,33 +632,19 @@ try {
     ] as $label => $value) {
         echo '<tr><th>' . catalog_h($label) . '</th><td class="mono path">' . catalog_h((string)$value) . '</td></tr>';
     }
-    echo '</table></div>';
-    $coverageColumns = [[], []];
     if ($examDependencyTotals !== null) {
-        $coverageColumns[0]['Dependencies met'] = (int)$examDependencyTotals['met'];
-        $coverageColumns[1]['Dependencies missing'] = (int)$examDependencyTotals['missing'];
+        echo '<tr><th>Dependencies missing</th><td class="mono path">'
+            . number_format((int)$examDependencyTotals['missing']) . '</td></tr>';
         if ((int)$examDependencyTotals['source_matched_script'] > 0
             || (int)$examDependencyTotals['source_unmatched_script'] > 0) {
-            $coverageColumns[0]['Script in source'] =
-                (int)$examDependencyTotals['source_matched_script'];
-            $coverageColumns[1]['Script not in source'] =
-                (int)$examDependencyTotals['source_unmatched_script'];
+            echo '<tr><th>Native script not in source</th><td class="mono path">'
+                . number_format((int)$examDependencyTotals['source_unmatched_script'])
+                . '</td></tr>';
         }
+    } else {
+        echo '<tr><th>Dependency coverage</th><td class="muted">Not evaluated</td></tr>';
     }
-    echo '<div class="two-col">';
-    foreach ($coverageColumns as $column) {
-        echo '<table>';
-        if ($column === [] && $examDependencyTotals === null) {
-            echo '<tr><th>Dependency coverage</th><td class="muted">Not evaluated</td></tr>';
-        } else {
-            foreach ($column as $label => $count) {
-                echo '<tr><th>' . catalog_h($label) . '</th>'
-                    . '<td class="mono">' . number_format($count) . '</td></tr>';
-            }
-        }
-        echo '</table>';
-    }
-    echo '</div><p class="muted small">Met means an indexed catalogue candidate, '
+    echo '</table></div><p class="muted small">Met means an indexed catalogue candidate, '
         . 'not proven native runtime loading. Missing means the required identity '
         . 'has no suitable indexed catalogue match; UT4 source declarations '
         . 'are counted separately.</p></div>';
@@ -903,7 +899,7 @@ try {
                 $zenExternalRefMatches,$fileId,$pageSize,$target
             );
         } else {
-        echo '<h2>Exports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-exports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Local path</th><th>Full path</th><th>Flags</th><th>Serial size</th><th>Serial offset</th></tr></thead><tbody>';
+        echo '<h2>Exports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-exports-table" data-catalog-identity-skip="1"><thead><tr><th>Index</th><th>Package ref</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Local path</th><th>Full path</th><th>Flags</th><th>Serial size</th><th>Serial offset</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $index = (int)$row['export_index'];
             $rowId = 'export-' . $index;

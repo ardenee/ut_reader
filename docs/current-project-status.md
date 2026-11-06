@@ -1,5 +1,19 @@
 # UnrealDB current project status
 
+## 6 November 2026 — Game file Licence sorting, exports source columns and metadata alignment
+
+The game file list's Dependencies column no longer shows the confusing **sort unresolved** link. The **Version / Lic** column has two independent header controls: Version sorts the original package version and Lic sorts the original licensee version. Sorting uses stable SQL ordering and matching original-file cursors, without combining two unrelated version numbers. The value is centred directly above the file-type badge.
+
+The File Examine Exports PHP renderer was already restored after a previous coverage edit, but a separate browser asset (catalog/assets/catalog-ui.js) continued to delete the Package ref column and move it into an Index tooltip. This explains why the visible layout still differed after the PHP-only rollback. The JS formatter now applies only to the legacy Imports table, while the Exports renderer carries an explicit skip marker. Zen raw exports remain unchanged. The original PHP order/index, package-reference, class, object, outer, paths, flags and serial-location columns are preserved on the page rather than being silently mutated after loading.
+
+The dependency metrics at the bottom of the Catalogue metadata & package identity card are no longer two freshly created tables. They are now appended to the two existing metadata tables, inheriting the established label/value column widths and original two-col layout: Dependencies met in the left table, Dependencies missing in the right; where present, native script source matches are likewise paired. This addresses the misaligned label widths shown in the Unreal II #1253000 screenshot.
+
+Read-only acceptance: tests/tools/verify_game_file_licensee_sort_and_exam_layout_20261106.php: real Unreal II version and licence ordering in both directions, numbered pages versus keyset cursors, exports markup and browser protection, and original metadata-table positioning. Evidence: tests/evidence/game-files-licensee-exam-metadata-20261106.json. Previous file-examine and all-engine source/counter tests remain active independently. No UEDB5, original source packages or PRD SQL metadata were modified.
+
+---
+
+
+
 ## 6 November 2026 — Production Games changes, numeric badges and Access Matrix performance
 
 User-edited PRD Games layout was copied to DEV: the Native Script column now precedes Packages Found, and the compact repeated Files headings replace longer captions. Only whitespace-only cleanup was applied for Git. In the game-files table, the visible prefixes found:, script in source:, script not in source: and missing: were removed, retaining separate numeric badges and their detailed tooltip titles.

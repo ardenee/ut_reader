@@ -311,6 +311,7 @@ final class PdoGameFileListQuery
         return match ($sort) {
             'file' => [['f.original_name', 'f.package_name', 'f.id'], [$direction, 'ASC', 'ASC']],
             'version' => [['f.package_version', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
+            'licensee' => [['f.licensee_version', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
             'size' => [['f.file_size', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
             'compression' => [['f.is_compressed', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
             'uploaded' => [['f.uploaded_at', 'f.package_name', 'f.original_name', 'f.id'], [$direction, 'ASC', 'ASC', 'ASC']],
@@ -325,6 +326,7 @@ final class PdoGameFileListQuery
         return match ($sort) {
             'file' => [(string)$row['original_name'], (string)$row['package_name'], (int)$row['id']],
             'version' => [(int)$row['package_version'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
+            'licensee' => [(int)$row['licensee_version'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
             'size' => [(int)$row['file_size'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
             'compression' => [(int)$row['is_compressed'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],
             'uploaded' => [(string)$row['uploaded_at'], (string)$row['package_name'], (string)$row['original_name'], (int)$row['id']],

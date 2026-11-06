@@ -1,5 +1,12 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Game-files Version / Lic and metadata/export rendering acceptance — 6 November 2026
+
+Run php tests/tools/verify_game_file_licensee_sort_and_exam_layout_20261106.php from DEV, read-only against the original production Unreal II corpus. It checks package-version and licensee-version sorts (asc/desc), stable keyset/numbered pagination, numeric version aligned over the type badge, and removal of the obsolete sort unresolved text. File Examine Exports now keep original PHP-rendered Package ref/class/path/flags/size/offset columns: the client-side imports-only formatting must never mutate exports. Dependency metrics are part of the existing two metadata tables rather than a third pair. Evidence: tests/evidence/game-files-licensee-exam-metadata-20261106.json. No runtime VerifyImport proof or content rewrites involved.
+
+---
+
+
 ## Access Matrix speed and UI refinements — 6 November 2026
 
 Run php tests/tools/verify_access_matrix_aggregate_cache_20261106.php --db for read-only live query and cache benchmark, and php tests/tools/verify_file_examine_coverage_ui_20261106.php for original-header/search and restored exports. Access Matrix caches grouped results for five minutes only in system temp; the event list is live, and admin moderation invalidates aggregates. The production Games column reorder is retained and game-files coverage badge labels are hover-only. Evidence: tests/evidence/access-matrix-ui-refinement-20261106.json.
