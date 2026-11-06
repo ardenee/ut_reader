@@ -1,0 +1,96 @@
+{
+  "schema": "unrealdb-retire-common-classification-all-engines-20261106-v1",
+  "date": "2026-11-06",
+  "project_scope": "UnrealDB current dependency resolver, read model, APIs, new snapshots and future projections; does not change Unreal Engine source or game source",
+  "user_requirement": "No common dependency outcome; do not count configured base package names as verified providers",
+  "source_assertion": "An installed package-name list is not authoritative evidence that a package is mounted or an import VerifyImport-satisfied",
+  "original_uedb5_cases": [
+    {
+      "game_id": 3,
+      "original_file_id": 113253,
+      "original_uedb5_sha256": "8ced9a1ced305d7f1133d1fcbeac67a903e83046c93a5be8bd14302305279f0d",
+      "input_original_imports": 4,
+      "prior_persisted_common": 4,
+      "new_unselected_loader_unresolved": 4,
+      "new_unselected_loader_common": 0
+    },
+    {
+      "game_id": 6,
+      "original_file_id": 112300,
+      "original_uedb5_sha256": "20f6e1319622d0298ae34900a624c81cb847125b6e5ea7b1407d4b789e715ff0",
+      "input_original_imports": 5,
+      "prior_persisted_common": 5,
+      "new_unselected_loader_unresolved": 5,
+      "new_unselected_loader_common": 0
+    },
+    {
+      "game_id": 7,
+      "original_file_id": 113526,
+      "original_uedb5_sha256": "2355711bd5226b035a786d1e1f2c1d56656b098c92dd0007fdd01bbaba2df7e9",
+      "input_original_imports": 2,
+      "prior_persisted_common": 2,
+      "new_unselected_loader_unresolved": 2,
+      "new_unselected_loader_common": 0
+    },
+    {
+      "game_id": 12,
+      "original_file_id": 110902,
+      "original_uedb5_sha256": "b8cffa712bf2d1d839442f0c795671577c5490c10702bbc3cd906c0218e3c7de",
+      "input_original_imports": 4,
+      "prior_persisted_common": 4,
+      "new_unselected_loader_unresolved": 4,
+      "new_unselected_loader_common": 0
+    },
+    {
+      "game_id": 2,
+      "original_file_id": 111205,
+      "original_uedb5_sha256": "80e0c1e91c1d6ed578531d9f808ef01d8890273e138b4556bba30cb249b7b775",
+      "input_original_imports": 1314,
+      "prior_persisted_common": 0,
+      "new_unselected_loader_unresolved": 1314,
+      "new_unselected_loader_common": 0
+    }
+  ],
+  "original_uedb5_input_root": "D:/Temp/UnrealDB/all-engines-no-common-fixtures",
+  "original_inputs_are_byte_identical_copies": true,
+  "test_cli": "tests/tools/verify_common_removal_all_engines_20261106.php",
+  "test_cli_sha256": "6d0b513e317c04ff4d7dd6c548e09872e182bd0963b3fa351294a69103d7a2ef",
+  "test_result": "PASS 5 original UEDB5 fixtures across UE1(2 games), UE2, UE3, UE4; all sources unresolved without selected provider; no common outcome; live PRD file-list query overlays historic common as unresolved",
+  "separate_compact_runtime_test": "D:/Temp/UnrealDB/test-common-retirement-compact-ui-20261106.php",
+  "separate_compact_test_sha256": "390d7a97b8c5898a850ac4f5b53c66b27851cb1041ed7e8455074b2d412a679c",
+  "compact_runtime_test_result": "PASS 4 original UEDB5 indexed dependency outcomes mapped to unresolved, reason legacy_common_without_verified_provider, confidence unverified; game12 unresolved_files 10788 resolved_files 0",
+  "existing_production_game_counts_readonly": [
+    {
+      "game_id": 3,
+      "name": "UT99",
+      "historical_common": 4091838,
+      "historical_source_rows": 8137633
+    },
+    {
+      "game_id": 12,
+      "name": "Unreal Gold",
+      "historical_common": 540859,
+      "historical_source_rows": 1252635
+    },
+    {
+      "game_id": 6,
+      "name": "UT3",
+      "historical_common": 1079968,
+      "historical_source_rows": 2591525
+    },
+    {
+      "game_id": 7,
+      "name": "UT4",
+      "historical_common": 413683,
+      "historical_source_rows": 748145
+    }
+  ],
+  "historical_common_reference_total": 6126348,
+  "new_source_writer_may_emit_common": false,
+  "legacy_enum_storage3_remains_readable_only": true,
+  "historical_uedb5_dependency_results_physically_rewritten": false,
+  "historical_db_dependency_edges_physically_rewritten": false,
+  "prdp_sql_writes": 0,
+  "caveat": "The 6,126,348 historical common outcomes remain in original immutable provenance and some SQL projections pending a separate source-correct republish. Current read surfaces normalize those outcomes to unresolved; they do not claim physical provider verification, missing package, or corrupt file.",
+  "production_code_deployment_at_evidence_creation": "NOT_YET_APPLIED"
+}

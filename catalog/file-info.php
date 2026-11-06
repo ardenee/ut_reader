@@ -197,8 +197,7 @@ if($isZen){
 $classicSourceCounts=null;
 if(!$isZen && $dependencyProjectionError===null){
     $classicSourceCounts=catalog_one($db,
-        'SELECT COALESCE(SUM(p.unresolved_count),0) unresolved_count,'
-        .'COALESCE(SUM(p.common_count),0) common_count '
+        'SELECT COALESCE(SUM(p.unresolved_count+p.common_count),0) unresolved_count '
         .'FROM ue_uedb5_dependency_packages p '
         .'WHERE p.file_id=? AND '
         .\UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('p'),
@@ -207,12 +206,10 @@ if(!$isZen && $dependencyProjectionError===null){
 echo '<div class="card"><h2>File connections</h2>';
 if($classicSourceCounts!==null){
     $sourceUnresolved=(int)($classicSourceCounts['unresolved_count']??0);
-    $sourceCommon=(int)($classicSourceCounts['common_count']??0);
-    if($sourceUnresolved>0||$sourceCommon>0){
+    if($sourceUnresolved>0){
         echo '<p class="muted">The file links below are established catalogue provider links, '
             .'not a count of every serialized import. Source-published references additionally include '
-            .number_format($sourceUnresolved).' unresolved and '
-            .number_format($sourceCommon).' common. '
+            .number_format($sourceUnresolved).' unresolved. '
             .'<a href="file-examine.php?id='.$id.'&amp;tab=imports">Examine Imports</a>.</p>';
     }
 }

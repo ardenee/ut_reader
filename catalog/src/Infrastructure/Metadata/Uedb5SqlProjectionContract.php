@@ -86,7 +86,7 @@ final class Uedb5SqlProjectionContract
             'missing' => self::OUTCOME_MISSING,
             'resolved' => self::OUTCOME_RESOLVED,
             'package_only' => self::OUTCOME_PACKAGE_ONLY,
-            'common' => self::OUTCOME_COMMON,
+            'common' => self::OUTCOME_UNRESOLVED,
             'unresolved' => self::OUTCOME_UNRESOLVED,
         ];
     }

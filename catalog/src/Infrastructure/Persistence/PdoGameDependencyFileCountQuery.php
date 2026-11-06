@@ -19,7 +19,7 @@ use Throwable;
 
 final class PdoGameDependencyFileCountQuery
 {
-    private const CACHE_VERSION = 4;
+    private const CACHE_VERSION = 5;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -83,11 +83,11 @@ final class PdoGameDependencyFileCountQuery
     private function aggregate(int $gameId, string $engine, ?array $zenContext): array
     {
         // Current source-only provider selection is verified in the caller.
-        // For classic packages, common/package-only references are satisfied
-        // for catalogue completion, even without a unique mounted provider.
+        // Historical common-name exemptions have no verified provider:
+        // treat them as unresolved until source-backed republishing.
         $sql = 'SELECT COALESCE(SUM(x.unresolved>0),0) unresolved_files,'
             . 'COALESCE(SUM(x.unresolved=0 AND x.missing=0),0) resolved_files '
-            . 'FROM (SELECT p.file_id,SUM(p.unresolved_count) unresolved,'
+            . 'FROM (SELECT p.file_id,SUM(p.unresolved_count+p.common_count) unresolved,'
             . 'SUM(p.missing_count) missing '
             . 'FROM ue_uedb5_dependency_packages p '
             . 'JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id '

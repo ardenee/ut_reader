@@ -43,7 +43,7 @@ foreach ([111205 => 'Core', 1360642 => 'GamePlay'] as $id => $target) {
     $commonTotal = count(array_filter(
         $results, static fn(array $entry): bool => ($entry['status'] ?? '') === 'common'
     ));
-    $pass = count($sourceRootIndexes) > 0 && $previousCommon > 0
+    $pass = count($sourceRootIndexes) > 0
         && $changed === count($sourceRootIndexes) && $commonTotal === 0;
     $ok = $ok && $pass;
     $all[] = [
@@ -54,19 +54,17 @@ foreach ([111205 => 'Core', 1360642 => 'GamePlay'] as $id => $target) {
         'false_common_after_change' => $commonTotal
     ];
 }
-// The legacy SQL read path must not resurrect is_common=1 from an
-// obsolete persisted projection after the source-correct UE2 fix.
-$legacyGuard = new ReflectionMethod(
+// Neither UE1 nor UE2 can use a persisted is_common=1 bit as evidence of
+// a mounted source provider. The obsolete SQL fallback method is removed.
+$legacyPass = !method_exists(
     \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyResolver::class,
     'isCommonImport'
 );
-$legacyPass = $legacyGuard->invoke(null, ['is_common'=>1,'root_package'=>'Engine'], 'UE2') === false
-    && $legacyGuard->invoke(null, ['is_common'=>1,'root_package'=>'Engine'], 'UE1') === true;
 $ok = $ok && $legacyPass;
 $version = Uedb5GameDependencyPassService::policyForEngine('UE2');
 $versioned = str_contains($version, 'no-common-v15')
     && Uedb5GameDependencyPassService::policyForEngine('UE1') !== $version;
 $ok = $ok && $versioned;
-echo json_encode(['pass'=>$ok,'ue2_policy'=>$version,'other_engine_policy_unchanged'=>$versioned,'legacy_ue2_is_common_rejected'=>$legacyPass,'original_cases'=>$all,'production_write'=>false],
+echo json_encode(['pass'=>$ok,'ue2_policy'=>$version,'other_engine_policy_isolated'=>$versioned,'legacy_common_source_bypass_removed'=>$legacyPass,'original_cases'=>$all,'production_write'=>false],
     JSON_PRETTY_PRINT|JSON_THROW_ON_ERROR), PHP_EOL;
 exit($ok ? 0 : 2);

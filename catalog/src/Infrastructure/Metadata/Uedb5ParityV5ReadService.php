@@ -74,7 +74,7 @@ final class Uedb5ParityV5ReadService
                 $requiredObject=$row['required_object_identity']??null;
                 $rows[]=[
                     'source_index'=>(int)($row['source_index']??-1),'source_section'=>(string)($row['source_section']??''),
-                    'outcome'=>(string)($row['outcome']??''),
+                    'outcome'=>(string)($row['outcome']??'')==='common'?'unresolved':(string)($row['outcome']??''),
                     'required_package'=>is_array($requiredPackage)?(string)($requiredPackage['value']??''):(string)($row['required_package_id']??''),
                     'required_object'=>is_array($requiredObject)?(string)($requiredObject['object_name']??''):(string)$requiredObject,
                     'required_object_path'=>is_array($requiredObject)?(string)($requiredObject['object_path']??''):(string)($row['required_object_path']??''),
@@ -82,7 +82,7 @@ final class Uedb5ParityV5ReadService
                     'class_name'=>is_array($requiredObject)?(string)($requiredObject['class_name']??''):'',
                     'resolved_file_id'=>isset($row['selected_provider_file_id'])?(int)$row['selected_provider_file_id']:null,
                     'resolved_object_index'=>array_key_exists('export_index',$selected)?(int)$selected['export_index']:(array_key_exists('cell_export_index',$selected)?(int)$selected['cell_export_index']:null),
-                    'reason_code'=>(string)($row['reason_code']??''),'source_policy'=>(string)($row['source_policy']??$policy),
+                    'reason_code'=>(string)($row['outcome']??'')==='common'?'legacy_common_without_verified_provider':(string)($row['reason_code']??''),'source_policy'=>(string)($row['source_policy']??$policy),
                     'resolver_detail'=>(array)($row['resolver_detail']??[]),'hard'=>(bool)($row['hard']??false),
                 ];
             }
@@ -120,7 +120,7 @@ final class Uedb5ParityV5ReadService
                 $requiredObject=$row['required_object_identity']??null;
                 $out[$sourceIndex]=[
                     'source_index'=>$sourceIndex,'source_section'=>(string)($row['source_section']??''),
-                    'outcome'=>(string)($row['outcome']??''),
+                    'outcome'=>(string)($row['outcome']??'')==='common'?'unresolved':(string)($row['outcome']??''),
                     'required_package'=>is_array($requiredPackage)?(string)($requiredPackage['value']??''):(string)($row['required_package_id']??''),
                     'required_object'=>is_array($requiredObject)?(string)($requiredObject['object_name']??''):(string)$requiredObject,
                     'required_object_path'=>is_array($requiredObject)?(string)($requiredObject['object_path']??''):(string)($row['required_object_path']??''),
@@ -128,7 +128,7 @@ final class Uedb5ParityV5ReadService
                     'class_name'=>is_array($requiredObject)?(string)($requiredObject['class_name']??''):'',
                     'resolved_file_id'=>isset($row['selected_provider_file_id'])?(int)$row['selected_provider_file_id']:null,
                     'resolved_object_index'=>array_key_exists('export_index',$selected)?(int)$selected['export_index']:(array_key_exists('cell_export_index',$selected)?(int)$selected['cell_export_index']:null),
-                    'reason_code'=>(string)($row['reason_code']??''),'source_policy'=>(string)($row['source_policy']??$policy),
+                    'reason_code'=>(string)($row['outcome']??'')==='common'?'legacy_common_without_verified_provider':(string)($row['reason_code']??''),'source_policy'=>(string)($row['source_policy']??$policy),
                     'resolver_detail'=>(array)($row['resolver_detail']??[]),'hard'=>(bool)($row['hard']??false),
                 ];
             }
@@ -142,7 +142,7 @@ final class Uedb5ParityV5ReadService
     public function requiresFileIds(int $gameId,int $fileId):array
     {
         $ids=[];foreach($this->dependencies($gameId,$fileId) as $row){
-            $id=$row['resolved_file_id'];if($id===null||$id===$fileId||($row['outcome']??'')==='common')continue;
+            $id=$row['resolved_file_id'];if($id===null||$id===$fileId)continue;
             $ids[(int)$id]=true;
         }
         $out=array_map('intval',array_keys($ids));sort($out,SORT_NUMERIC);return$out;

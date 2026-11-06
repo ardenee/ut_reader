@@ -252,11 +252,8 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             ];
         }
 
-        // UE2 has no Epic-defined common-package import exemption.
-        $common = $engineKey === 'UE2' ? [] : array_map(
-            'strtolower',
-            array_values((array)($this->config['common_packages'] ?? []))
-        );
+        // The source package-name list is not a mounted-provider verification.
+        // Keep the old schema bit, but never mark imports automatically met.
         $cache = [];
         $importRows = [];
         $importPaths = [];
@@ -346,7 +343,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'outer_root_package' => $outerRootPackage,
                 'root_package' => $rootPackage,
                 'relative_object_path' => $relativeObjectPath,
-                'is_common' => in_array(strtolower($rootPackage), $common, true) ? 1 : 0,
+                'is_common' => 0,
             ];
             $importPaths[(int)$index] = [
                 'full' => $fullPath,
@@ -479,9 +476,9 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'required_object_path' => (string)($import['full_path'] ?? ''),
                 'resolved_file_id' => null,
                 'resolved_export_index' => null,
-                'status' => (int)($import['is_common'] ?? 0) === 1 ? 'common' : 'missing',
-                'resolution_source' => (int)($import['is_common'] ?? 0) === 1 ? 'common_script' : 'none',
-                'resolution_confidence' => (int)($import['is_common'] ?? 0) === 1 ? 'common' : 'missing',
+                'status' => 'unresolved',
+                'resolution_source' => 'source_dependency_pass_pending',
+                'resolution_confidence' => 'source_unresolved',
             ];
         }
         if (count($dependencies) !== count((array)($snapshot['imports'] ?? []))) {

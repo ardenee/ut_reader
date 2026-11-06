@@ -124,7 +124,7 @@ final class PdoGameFileListQuery
         $fetchLimit = $limit + 1;
         if ($sort === 'deps') {
             $sql = 'SELECT f.id,f.package_name,f.original_name,'
-                . 'COALESCE(SUM(s.unresolved_count),0) unresolved_count '
+                . 'COALESCE(SUM(s.unresolved_count+s.common_count),0) unresolved_count '
                 . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
                 . 'AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
                 . $whereSql . ' GROUP BY f.id,f.package_name,f.original_name'
@@ -183,7 +183,7 @@ final class PdoGameFileListQuery
         $having = $cursorSql !== '' ? ' HAVING ' . $cursorSql : '';
         return \catalog_all(
             $this->db,
-            'SELECT f.id,f.package_name,f.original_name,COALESCE(SUM(s.unresolved_count),0) unresolved_count '
+            'SELECT f.id,f.package_name,f.original_name,COALESCE(SUM(s.unresolved_count+s.common_count),0) unresolved_count '
             . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
             . ' AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
             . $whereSql . ' GROUP BY f.id,f.package_name,f.original_name' . $having
@@ -214,7 +214,7 @@ final class PdoGameFileListQuery
             . 'COALESCE(SUM(s.missing_count),0) missing_count,'
             . 'COALESCE(SUM(s.package_only_count),0) package_only_count,'
             . 'COALESCE(SUM(s.common_count),0) common_count,'
-            . 'COALESCE(SUM(s.unresolved_count),0) unresolved_count '
+            . 'COALESCE(SUM(s.unresolved_count+s.common_count),0) unresolved_count '
             . 'FROM ue_files f LEFT JOIN ue_uedb5_dependency_packages s ON s.file_id=f.id '
             . ' AND ' . Uedb5DependencyPublicationScope::currentOwnerPredicate('s') . ' '
             . 'WHERE f.id IN (' . $placeholders . ') GROUP BY f.id',

@@ -107,8 +107,7 @@ final class CatalogCrossGamePackageCopyService
                 $dependencyJobIds,
                 static fn(int $id): bool => $id > 0
             )),
-            'unresolved_dependency_count' => (int)$closure['missing_count'],
-            'common_dependency_count' => (int)$closure['common_count'],
+            'unresolved_dependency_count' => (int)$closure['unresolved_count'] + (int)$closure['missing_count'],
             'package_only_dependency_count' => (int)$closure['package_only_count'],
         ];
     }

@@ -71,16 +71,9 @@ final class Uedb5ClassicDependencyResolver
             ];
         }
 
-        $common = [];
-        // UE2 has no source-defined 'common dependency' bypass: every import
-        // requires the ordinary package/linker and VerifyImport path. Keep
-        // the unrelated engine policies untouched in this UE2-only change.
-        foreach ($engine === 'ue2' ? [] : (array)($options['common_packages'] ?? []) as $package) {
-            $package = trim((string)$package);
-            if ($package !== '') {
-                $common[self::key($package)] = true;
-            }
-        }
+        // No Unreal Engine generation treats a configured package name as
+        // proof that an import has an available mounted physical provider.
+        // Always perform the generation-specific source VerifyImport path.
         $ue2Profile = $engine === 'ue2' ? self::ue2VerifyImportProfile($consumerSnapshot) : null;
         $ue3Profile = $engine === 'ue3' ? self::ue3VerifyImportProfile($consumerSnapshot) : null;
         $ue4Profile = $engine === 'ue4' ? self::ue4VerifyImportProfile($consumerSnapshot) : null;
@@ -200,13 +193,6 @@ final class Uedb5ClassicDependencyResolver
                 );
                 continue;
             }
-            if ($root !== '' && self::isCommon($root, $engine, $common)) {
-                $resolved[(int)$importIndex] = self::result(
-                    'common', $root, null, null, 'common_or_script_package', $engine
-                );
-                continue;
-            }
-
             if ($root === '') {
                 $reason = $engine === 'ue3' && self::hasExportOuter($consumer['imports'], (int)$importIndex)
                     ? 'ue3_cooked_export_outer'
@@ -991,15 +977,6 @@ final class Uedb5ClassicDependencyResolver
         return null;
     }
 
-    /** @param array<string,true> $common */
-    private static function isCommon(string $root, string $engine, array $common): bool
-    {
-        if (isset($common[self::key($root)])) {
-            return true;
-        }
-        return $engine === 'ue4' && strncasecmp($root, '/Script/', 8) === 0;
-    }
-
     private static function packageVersion(array $snapshot): ?int
     {
         $summary = (array)($snapshot['sections']['summary'][0] ?? []);
@@ -1036,7 +1013,7 @@ final class Uedb5ClassicDependencyResolver
                 default => 'classic-source-v1',
             },
             'dependency_class' => $dependencyClass ?? (
-                $status === 'common' && strncasecmp($providerPackage, '/Script/', 8) === 0
+                strncasecmp($providerPackage, '/Script/', 8) === 0
                     ? 'script'
                     : 'hard'
             ),

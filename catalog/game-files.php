@@ -299,11 +299,13 @@ try {
     $limit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
     $filter = trim((string)($_GET['file_filter'] ?? ''));
     $depFilter = trim((string)($_GET['dep_filter'] ?? ''));
+    // Backward-compatible legacy URL; no engine considers 'common' a verified outcome.
+    if ($depFilter === 'common') $depFilter = 'unresolved';
     $gameDependencyCurrent = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::isGameCurrent(
         $db, (int)$gameId, (string)($game['profile_engine'] ?? '')
     );
     $dependencySelectionUnavailable = !$gameDependencyCurrent
-        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','common','unresolved','any'], true);
+        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','unresolved','any'], true);
     // The Games page uses current catalogue target coverage for UE5 Zen
     // (package/export ID and pinned global ScriptObjects). The file filter
     // must consume the identical cached exception-set, not the source-only
@@ -381,25 +383,25 @@ try {
             . 'WHERE e.file_id=f.id)';
         if ($depFilter === 'unresolved') {
             $classic = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
-                . 'WHERE dx.file_id=f.id AND dx.unresolved_count>0 AND ' . $scope . ')';
+                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count+dx.common_count)>0 AND ' . $scope . ')';
             $zen = 'f.id IN (' . $missingIds . ')';
         } elseif ($depFilter === 'fully_resolved') {
             $classic = $hasClassic
                 . ' AND NOT EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
-                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count>0 OR dx.missing_count>0) '
+                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count>0 OR dx.common_count>0 OR dx.missing_count>0) '
                 . 'AND ' . $scope . ')';
             $zen = $hasZen . ' AND f.id NOT IN (' . $missingIds . ')';
         } else {
             $classic = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
                 . 'WHERE dx.file_id=f.id AND dx.dependency_count>'
-                . '(dx.unresolved_count+dx.missing_count) AND ' . $scope . ')';
+                . '(dx.unresolved_count+dx.common_count+dx.missing_count) AND ' . $scope . ')';
             $zen = $hasZen . ' AND f.id NOT IN (' . $unmetIds . ')';
         }
         $where .= ' AND f.scan_status="verified" AND '
             . '((f.extension="zenpkg" AND ' . $zen . ') OR '
             . '(f.extension<>"zenpkg" AND (' . $classic . ')))';
     } elseif (in_array($depFilter,
-        ['resolved', 'fully_resolved', 'missing', 'package_only', 'common', 'unresolved', 'any'], true)) {
+        ['resolved', 'fully_resolved', 'missing', 'package_only', 'unresolved', 'any'], true)) {
         $scope = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx');
         if ($depFilter === 'any') {
             $where .= ' AND (EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND '
@@ -409,26 +411,26 @@ try {
                 . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('de') . ')))';
         } elseif ($depFilter === 'unresolved') {
             $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
-                . 'WHERE dx.file_id=f.id AND dx.unresolved_count>0 AND ' . $scope . ')';
+                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count+dx.common_count)>0 AND ' . $scope . ')';
         } elseif ($depFilter === 'resolved') {
-            // A satisfied reference includes "common" and package-only,
-            // not only a uniquely selected physical source provider.
+            // A satisfied reference must not include legacy, unverified
+            // common-name exemptions: those are now unresolved.
             $where .= ' AND f.scan_status="verified" AND '
                 . 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
                 . 'WHERE dx.file_id=f.id AND dx.dependency_count>'
-                . '(dx.unresolved_count+dx.missing_count) AND ' . $scope . ')';
+                . '(dx.unresolved_count+dx.common_count+dx.missing_count) AND ' . $scope . ')';
         } elseif ($depFilter === 'fully_resolved') {
             $where .= ' AND f.scan_status="verified" AND '
                 . 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
                 . 'WHERE dx.file_id=f.id AND dx.dependency_count>0 AND ' . $scope . ') '
                 . 'AND NOT EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
-                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count>0 OR dx.missing_count>0) '
+                . 'WHERE dx.file_id=f.id AND (dx.unresolved_count>0 OR dx.common_count>0 OR dx.missing_count>0) '
                 . 'AND ' . $scope . ')';
         } else {
             $countColumn = match ($depFilter) {
                 'missing' => 'missing_count',
                 'package_only' => 'package_only_count',
-                default => 'common_count',
+                default => throw new RuntimeException('Unknown dependency filter'),
             };
             $where .= ' AND EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx '
                 . 'WHERE dx.file_id=f.id AND dx.' . $countColumn . '>0 AND ' . $scope . ')';
@@ -558,15 +560,13 @@ try {
                 ? ($depFilter === 'unresolved'
                     ? max(0, (int)$stat['dependency_count']
                         - (int)$stat['resolved_dependency_count']
-                        - (int)$stat['common_dependency_count']
-                        - (int)$stat['package_only_dependency_count']
+                                                - (int)$stat['package_only_dependency_count']
                         - (int)$stat['missing_dependency_count'])
                     : ($depFilter === 'resolved'
                         ? max(0, (int)$stat['dependency_count']
                             - (int)($stat['dependency_count']
                                 - (int)$stat['resolved_dependency_count']
-                                - (int)$stat['common_dependency_count']
-                                - (int)$stat['package_only_dependency_count']
+                                                                - (int)$stat['package_only_dependency_count']
                                 - (int)$stat['missing_dependency_count']))
                         : null))
                 : null;
@@ -587,7 +587,7 @@ try {
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
     echo '<label for="file-filter">Search files <input id="file-filter" class="wide-search" type="search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label>';
     echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
-    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved (has met references)', 'fully_resolved' => 'Resolved Files (all met)', 'common' => 'Common', 'missing' => 'Missing (confirmed)'] as $value => $label) {
+    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved (has met references)', 'fully_resolved' => 'Resolved Files (all met)', 'missing' => 'Missing (confirmed)'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
@@ -615,7 +615,7 @@ try {
             ? 'UE5 filters use exact catalogue-indexed package, export and ScriptObject identities. '
                 . 'Unindexed references may be in another, not-yet-imported container and are not confirmed missing.'
             : 'Unresolved means a source-published reference without a conclusive provider; '
-                . 'it is not confirmed missing. Common and package-only identities count as satisfied.')
+                . 'it is not confirmed missing. Only source-verified and package-only references count as satisfied.')
         . '</p>';
 
     echo $pagination;
@@ -655,7 +655,7 @@ try {
             // Package-level identities remain stored and resolved as before.
             // Do not present their internal outcome as a separate warning badge;
             // it does not indicate a missing dependency.
-            foreach (['resolved', 'missing', 'common', 'unresolved'] as $key) {
+            foreach (['resolved', 'missing', 'unresolved'] as $key) {
                 $count = (int)($file[$key . '_count'] ?? 0);
                 if (!$count) continue;
                 $badge = game_files_status_badge($key, $count);

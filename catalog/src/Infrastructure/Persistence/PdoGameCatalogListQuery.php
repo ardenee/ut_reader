@@ -36,7 +36,7 @@ final class PdoGameCatalogListQuery
                 . '-CAST(COALESCE(s.missing_dependency_count,0) AS SIGNED)'
                 . '-CAST(COALESCE(s.resolved_dependency_count,0) AS SIGNED)'
                 . '-CAST(COALESCE(s.package_only_dependency_count,0) AS SIGNED)'
-                . '-CAST(COALESCE(s.common_dependency_count,0) AS SIGNED)) unresolved_dependency_count '
+                . ') unresolved_dependency_count '
                 . 'FROM ue_games g '
                 . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
                 . 'LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id '

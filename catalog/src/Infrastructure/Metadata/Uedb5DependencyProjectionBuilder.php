@@ -238,7 +238,7 @@ final class Uedb5DependencyProjectionBuilder
             'resolved' => 'resolved_count',
             'missing' => 'missing_count',
             'package_only' => 'package_only_count',
-            'common' => 'common_count',
+            'common' => 'unresolved_count',
             'unresolved' => 'unresolved_count',
             default => throw new RuntimeException('Unknown UEDB5 dependency outcome: ' . $outcome),
         };
@@ -271,9 +271,6 @@ final class Uedb5DependencyProjectionBuilder
         }
         if ((int)$summary['package_only_count'] > 0) {
             return Uedb5SqlProjectionContract::OUTCOME_PACKAGE_ONLY;
-        }
-        if ((int)$summary['common_count'] > 0) {
-            return Uedb5SqlProjectionContract::OUTCOME_COMMON;
         }
         return Uedb5SqlProjectionContract::OUTCOME_RESOLVED;
     }

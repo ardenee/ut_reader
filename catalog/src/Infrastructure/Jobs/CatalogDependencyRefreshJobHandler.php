@@ -876,12 +876,12 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     private function stats(array $fileIds): array
     {
         if ($fileIds === []) {
-            return ['total' => 0, 'resolved' => 0, 'missing' => 0, 'package_only' => 0, 'common' => 0];
+            return ['total' => 0, 'resolved' => 0, 'missing' => 0, 'package_only' => 0, 'unresolved' => 0];
         }
         $placeholders = implode(',', array_fill(0, count($fileIds), '?'));
         $statement = $this->db->prepare(
             'SELECT COUNT(*) total,SUM(outcome=1) resolved,SUM(outcome=0) missing,'
-            . 'SUM(outcome=2) package_only,SUM(outcome=3) common '
+            . 'SUM(outcome=2) package_only,SUM(outcome IN (3,4)) unresolved '
             . 'FROM ue_uedb5_dependency_edges dependencies '
             . 'WHERE dependencies.file_id IN (' . $placeholders . ')'
         );
@@ -894,7 +894,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     {
         $statement = $this->db->prepare(
             'SELECT COUNT(*) total,SUM(d.outcome=1) resolved,SUM(d.outcome=0) missing,'
-            . 'SUM(d.outcome=2) package_only,SUM(d.outcome=3) common '
+            . 'SUM(d.outcome=2) package_only,SUM(d.outcome IN (3,4)) unresolved '
             . 'FROM ue_uedb5_dependency_edges d '
             . 'JOIN ue_files f ON f.id=d.file_id WHERE f.game_id=? AND f.scan_status="verified"'
         );
@@ -910,7 +910,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'resolved' => (int)($row['resolved'] ?? 0),
             'missing' => (int)($row['missing'] ?? 0),
             'package_only' => (int)($row['package_only'] ?? 0),
-            'common' => (int)($row['common'] ?? 0),
+            'unresolved' => (int)($row['unresolved'] ?? 0),
         ];
     }
 

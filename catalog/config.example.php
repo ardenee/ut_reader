@@ -139,7 +139,6 @@ return [
         ],
     ],
     'allowed_extensions' => ['u','unr','utx','umx','uax','ut2','ut3','upk','uasset','umap'],
-    'common_packages' => ['Core','Engine','Editor','Fire','IpDrv','UWindow','Botpack','UnrealShare','UnrealI','Gameplay','UnrealEd'],
     // UE1/UE2 use namespaced streaming readers and UE3 uses the strict catalog
     // parser directly. UE4 remains the only generation backed by a configured
     // external reader path until its root parser is migrated.

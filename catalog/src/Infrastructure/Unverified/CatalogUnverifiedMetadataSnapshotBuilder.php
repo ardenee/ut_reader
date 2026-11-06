@@ -106,7 +106,7 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
             ];
         }
 
-        $common = array_map('strtolower', array_values($commonPackages));
+        // Legacy configured common-package names never establish source certainty.
         $cache = [];
         $importRows = [];
         $importPaths = [];
@@ -142,7 +142,7 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
                 'full_path' => $fullPath,
                 'root_package' => $rootPackage,
                 'relative_object_path' => $relativeObjectPath,
-                'is_common' => in_array(strtolower($rootPackage), $common, true) ? 1 : 0,
+                'is_common' => 0,
             ];
             $importPaths[] = [
                 'full' => $fullPath,
@@ -222,17 +222,14 @@ final class CatalogUnverifiedMetadataSnapshotBuilder
 
         $imports = [];
         $importPaths = [];
-        // An assigned UE2 game never bypasses its source import verification
-        // just because the package name appears in a configured base-game list.
-        $common = in_array($sourceKey, ['unreal2','ut2003','ut2004'], true)
-            ? [] : array_map('strtolower', array_values((array)($config['common_packages'] ?? [])));
+        // No game is allowed to infer a loaded provider from a configured name.
         foreach (array_values((array)($staging['imports'] ?? [])) as $index => $source) {
             $row = is_array($source) ? $source : [];
             $row['id'] = $this->virtualId($fileId, $index);
             $row['file_id'] = $fileId;
             $row['import_index'] = $index;
             $root = (string)($row['root_package'] ?? '');
-            $row['is_common'] = in_array(strtolower($root), $common, true) ? 1 : 0;
+            $row['is_common'] = 0;
             $imports[] = $row;
             $importPaths[] = [
                 'full' => (string)($row['full_path'] ?? ''),

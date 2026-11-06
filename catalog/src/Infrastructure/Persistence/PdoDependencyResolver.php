@@ -401,15 +401,6 @@ final class PdoDependencyResolver
                     'status'=>'unresolved','resolved_file_id'=>null,'resolved_export_id'=>null,'resolved_export_index'=>null,
                     'source'=>'ue4_name_none','confidence'=>'source_irrelevant',
                 ];
-            } elseif (self::isCommonImport($import, $engineKey)) {
-                $result = [
-                    'status' => 'common',
-                    'resolved_file_id' => null,
-                    'resolved_export_id' => null,
-                    'resolved_export_index' => null,
-                    'source' => 'common_script',
-                    'confidence' => 'common',
-                ];
             } elseif ($ue3VerifyImport && isset($ue3SourceUnresolved[$importIndex])) {
                 $result = [
                     'status' => 'unresolved',
@@ -826,20 +817,6 @@ final class PdoDependencyResolver
             }
             $importIndex = -$outerIndex - 1;
         }
-    }
-
-    private static function isCommonImport(array $import, string $engineKey): bool
-    {
-        // Stale legacy projections may still contain is_common=1. UE2 Epic
-        // loaders have no such exemption, regardless of stored flag.
-        if ($engineKey === 'UE2') {
-            return false;
-        }
-        if ((int)($import['is_common'] ?? 0) === 1) {
-            return true;
-        }
-        return $engineKey === 'UE4'
-            && strncasecmp((string)($import['root_package'] ?? ''), '/Script/', 8) === 0;
     }
 
     private static function ue1VerifyImportProfile(int $gameId, int $packageVersion, int $licenseeVersion): ?string

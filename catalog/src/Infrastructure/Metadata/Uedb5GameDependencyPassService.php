@@ -387,13 +387,9 @@ final class Uedb5GameDependencyPassService
     /** @return array{common_packages:list<string>} */
     private function resolverOptions(int $gameId): array
     {
-        $common = array_values(array_filter(
-            array_map(static fn(mixed $value): string => trim((string)$value), (array)($this->config['common_packages'] ?? [])),
-            static fn(string $value): bool => $value !== ''
-        ));
-        // UE2 source never treats configured system-package names as verified
-        // imports; the legacy common list is retained only for other engines.
-        $options = ['common_packages'=>$this->gameEngineKey($gameId) === 'UE2' ? [] : $common];
+        // Retain the serializer option for backward compatibility, but no
+        // engine receives a configured-name bypass in a new dependency pass.
+        $options = ['common_packages'=>[]];
         // The engine's resolution algorithm is global, but its effective mounted-store,
         // identity rewrites and runtime flags belong to a specific game/session.
         // Do not infer authoritative runtime context from a TOC or installation path.

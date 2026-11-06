@@ -24,7 +24,7 @@ final class CatalogCrossGameDependencyClosurePlanner
      * Return dependency files in dependency-first queue order. The selected root
      * is deliberately excluded and must be queued after these files.
      *
-     * @return array{file_ids:list<int>,missing_count:int,common_count:int,package_only_count:int}
+     * @return array{file_ids:list<int>,missing_count:int,unresolved_count:int,package_only_count:int}
      */
     public function plan(int $rootFileId, int $targetGameId): array
     {
@@ -74,7 +74,7 @@ final class CatalogCrossGameDependencyClosurePlanner
         $visited = [];
         $dependencies = [];
         $missingKeys = [];
-        $commonKeys = [];
+        $unresolvedKeys = [];
         $packageOnlyKeys = [];
 
         while ($queue !== []) {
@@ -115,7 +115,7 @@ final class CatalogCrossGameDependencyClosurePlanner
                 $status = match ($outcome) {
                     Uedb5SqlProjectionContract::OUTCOME_RESOLVED => 'resolved',
                     Uedb5SqlProjectionContract::OUTCOME_PACKAGE_ONLY => 'package_only',
-                    Uedb5SqlProjectionContract::OUTCOME_COMMON => 'common',
+                    Uedb5SqlProjectionContract::OUTCOME_COMMON => 'unresolved',
                     Uedb5SqlProjectionContract::OUTCOME_UNRESOLVED => 'unresolved',
                     default => 'missing',
                 };
@@ -125,8 +125,10 @@ final class CatalogCrossGameDependencyClosurePlanner
                     . (int)($row['required_object_key_kind'] ?? 0) . ':'
                     . (string)($row['required_object_key_hex'] ?? '');
 
-                if ($status === 'common') {
-                    $commonKeys[$key] = true;
+                if ($status === 'unresolved') {
+                    // Unknown selected mount is not a verified dependency
+                    // and must not enter the traversable provider closure.
+                    $unresolvedKeys[$key] = true;
                     continue;
                 }
                 if ($status === 'missing' || $resolvedFileId < 1) {
@@ -171,7 +173,7 @@ final class CatalogCrossGameDependencyClosurePlanner
         return [
             'file_ids' => $fileIds,
             'missing_count' => count($missingKeys),
-            'common_count' => count($commonKeys),
+            'unresolved_count' => count($unresolvedKeys),
             'package_only_count' => count($packageOnlyKeys),
         ];
     }

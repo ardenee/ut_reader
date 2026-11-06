@@ -240,7 +240,7 @@ final class CatalogUnverifiedPackageIndexer
                 $names,
                 $imports,
                 $exports,
-                array_values((array)($this->config['common_packages'] ?? []))
+                []
             );
             $stored = $this->metadata->write($snapshot);
             $this->emit(

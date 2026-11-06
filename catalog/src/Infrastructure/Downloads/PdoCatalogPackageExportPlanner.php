@@ -69,7 +69,7 @@ final class PdoCatalogPackageExportPlanner
         $blocked = [];
         $missing = [];
         $packageOnly = [];
-        $common = [];
+        $unresolved = [];
         $provenance = [];
         $totalBytes = 0;
         $transitive = !empty($settings['include_transitive']);
@@ -159,8 +159,10 @@ final class PdoCatalogPackageExportPlanner
                     'status' => $status,
                 ];
 
-                if ($status === 'common') {
-                    $common[$key] = $detail;
+                if ($status === 'common' || $status === 'unresolved') {
+                    // A legacy common-name exemption is not a selected provider.
+                    $detail['status'] = 'unresolved';
+                    $unresolved[$key] = $detail;
                     continue;
                 }
                 if ($status === 'missing' || $resolvedId <= 0) {
@@ -224,7 +226,7 @@ final class PdoCatalogPackageExportPlanner
             'blocked' => array_values($blocked),
             'missing' => array_values($missing),
             'package_only' => array_values($packageOnly),
-            'common' => array_values($common),
+            'unresolved' => array_values($unresolved),
             'conflicts' => array_values($conflicts),
             'include_dependencies' => $includeDependencies,
             'transitive_dependencies' => $includeDependencies && $transitive,

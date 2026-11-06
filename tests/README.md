@@ -1,5 +1,13 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## All-engine no-`common` retirement — 6 November 2026
+
+UnrealDB's configured base-package list no longer authorizes a `common` dependency outcome for any engine. Until a selected physical provider and engine-sourced import check establish a match, those references remain `unresolved`, not `resolved` or `missing`. Historic UEDB5 enum value 3 remains readable for backward compatibility, is never emitted by new writers, and is normalized to unresolved across current read models and JSON APIs without rewriting the original source evidence.
+
+Fresh cross-engine acceptance `tests/tools/verify_common_removal_all_engines_20261106.php`: five SHA-256 verified original UEDB5 samples from UE1 Unreal & UT99, UE2 Unreal II, UE3 UT3 and UE4 UT4; four live read-only production summary cases; zero generated common/false resolved outcomes. Supplemental original PRD compact-detail read verified legacy outcomes are unresolved and remain unverified; game #12 had 10,788 unresolved and 0 resolved files. Retained reproducible fixture directory on DEV `D:\Temp\UnrealDB\all-engines-no-common-fixtures`; source/manifest hashes and audit results in `tests/evidence/retire-common-classification-all-engines-20261106.json`. See `docs/current-project-status.md` for historical reference volumes and the non-destructive migration boundary.
+
+---
+
 ## UT2004 Epic v127/v128 source-loader equivalence (6 November 2026)
 
 Source-only independent verification pins actual v3186/v127, v3369/v128 and later v129 original `Core/Src/UnLinker.cpp` SHA-256 files. The exact v127 and v128 `ULinkerLoad::VerifyImport` token streams are identical (999 tokens), and v129 changes only two error-string dereference operators. `tests/tools/verify_ut2004_v127_v128_core_verifyimport_source.py`; evidence `tests/evidence/ue2/ut2004-v127-v128-loader-source-equivalence-20261106.json`.

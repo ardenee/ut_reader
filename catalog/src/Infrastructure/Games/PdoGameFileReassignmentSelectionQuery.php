@@ -106,7 +106,8 @@ final class PdoGameFileReassignmentSelectionQuery
             $search = mb_substr($search, 0, 200, 'UTF-8');
         }
         $dependency = strtolower(trim((string)($filters['dep_filter'] ?? '')));
-        if (!in_array($dependency, ['', 'resolved', 'missing', 'package_only', 'common', 'any'], true)) {
+        if ($dependency === 'common') $dependency = 'unresolved';
+        if (!in_array($dependency, ['', 'resolved', 'missing', 'package_only', 'unresolved', 'any'], true)) {
             $dependency = '';
         }
         $type = strtolower(trim((string)($filters['type_filter'] ?? '')));
@@ -161,9 +162,12 @@ final class PdoGameFileReassignmentSelectionQuery
                     'resolved' => 'resolved_count',
                     'missing' => 'missing_count',
                     'package_only' => 'package_only_count',
-                    default => 'common_count',
+                    default => 'unresolved_count',
                 };
-                $where[] = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND dx.' . $column . '>0 AND ' . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')';
+                $countPredicate = $dependency === 'unresolved'
+                    ? '(dx.unresolved_count+dx.common_count)>0'
+                    : 'dx.' . $column . '>0';
+                $where[] = 'EXISTS (SELECT 1 FROM ue_uedb5_dependency_packages dx WHERE dx.file_id=f.id AND ' . $countPredicate . ' AND ' . \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::currentOwnerPredicate('dx') . ')';
             }
         }
 

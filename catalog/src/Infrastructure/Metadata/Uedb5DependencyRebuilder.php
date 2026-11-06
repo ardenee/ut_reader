@@ -2,7 +2,8 @@
 /**
  * Rebuilds authoritative UEDB5 dependency-result sections without publishing SQL or touching UEDB4.
  * Provider files are explicitly selected physical UEDB5 snapshots; source-specific resolvers remain responsible
- * for Unreal semantics while this class normalizes their results to the frozen five-state V5 contract.
+ * for Unreal semantics while this class normalizes their results to the legacy V5 contract.
+ * Historic outcome code 3 is read-only compatibility and no longer emitted.
  */
 declare(strict_types=1);
 
@@ -21,7 +22,7 @@ final class Uedb5DependencyRebuilder
         'missing' => 0,
         'resolved' => 1,
         'package_only' => 2,
-        'common' => 3,
+        'common' => 4,
         'unresolved' => 4,
     ];
 

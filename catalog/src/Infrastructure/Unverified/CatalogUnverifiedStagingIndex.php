@@ -432,7 +432,7 @@ final class CatalogUnverifiedStagingIndex
                         $names,
                         $imports,
                         $exports,
-                        array_values((array)($this->config['common_packages'] ?? []))
+                        []
                     );
                 $this->metadata->write($snapshot);
                 $this->db->commit();

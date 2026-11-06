@@ -16,7 +16,7 @@ final class CompactDependencyEncoding
         return match (strtolower(trim($status))) {
             'resolved' => [1, 1, 100],
             'package_only' => [2, 2, 75],
-            'common' => [3, 3, 100],
+            'common' => [4, 4, 0],
             'unresolved' => [4, 4, 0],
             default => [0, 0, 0],
         };

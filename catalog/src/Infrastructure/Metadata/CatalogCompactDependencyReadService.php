@@ -54,7 +54,7 @@ final class CatalogCompactDependencyReadService
         return match($status) {
             Uedb5SqlProjectionContract::OUTCOME_RESOLVED => 'resolved',
             Uedb5SqlProjectionContract::OUTCOME_PACKAGE_ONLY => 'package_only',
-            Uedb5SqlProjectionContract::OUTCOME_COMMON => 'common',
+            Uedb5SqlProjectionContract::OUTCOME_COMMON => 'unresolved',
             Uedb5SqlProjectionContract::OUTCOME_UNRESOLVED => 'unresolved',
             Uedb5SqlProjectionContract::OUTCOME_MISSING => 'missing',
             default => throw new RuntimeException('Unknown UEDB5 dependency outcome code ' . $status),
@@ -83,6 +83,8 @@ final class CatalogCompactDependencyReadService
             $resolvedFileId = $row['resolved_file_id'] ?? null;
             $resolvedRow = $resolvedFileId !== null ? ($resolved[(int)$resolvedFileId] ?? []) : [];
             $detail = (array)($row['resolver_detail'] ?? []);
+            $legacyCommon = (string)($detail['resolution_confidence'] ?? $detail['confidence'] ?? '') === 'common'
+                || (string)($row['reason_code'] ?? '') === 'legacy_common_without_verified_provider';
             $rows[] = [
                 'id' => $i + 1,
                 'file_id' => $fileId,
@@ -97,10 +99,10 @@ final class CatalogCompactDependencyReadService
                 'resolved_file_id' => $resolvedFileId !== null ? (int)$resolvedFileId : null,
                 'resolved_export_id' => null,
                 'resolved_export_index' => $row['resolved_object_index'] !== null ? (int)$row['resolved_object_index'] : null,
-                'status' => (string)($row['outcome'] ?? 'missing'),
+                'status' => (string)($row['outcome'] ?? 'missing') === 'common' ? 'unresolved' : (string)($row['outcome'] ?? 'missing'),
                 'reason_code' => (string)($row['reason_code'] ?? ''),
-                'resolution_source' => (string)($detail['resolution_source'] ?? $detail['source'] ?? 'uedb5'),
-                'resolution_confidence' => (string)($detail['resolution_confidence'] ?? $detail['confidence'] ?? 'source-exact'),
+                'resolution_source' => $legacyCommon ? 'legacy_classification_unverified' : (string)($detail['resolution_source'] ?? $detail['source'] ?? 'uedb5'),
+                'resolution_confidence' => $legacyCommon ? 'unverified' : (string)($detail['resolution_confidence'] ?? $detail['confidence'] ?? 'source-exact'),
                 'resolved_id' => $resolvedRow !== [] ? (int)$resolvedRow['id'] : null,
                 'resolved_package' => (string)($resolvedRow['package_name'] ?? ''),
                 'resolved_file' => (string)($resolvedRow['original_name'] ?? ''),
@@ -112,7 +114,7 @@ final class CatalogCompactDependencyReadService
             ];
         }
 
-        $weights = ['missing'=>0,'unresolved'=>1,'package_only'=>2,'resolved'=>3,'common'=>4];
+        $weights = ['missing'=>0,'unresolved'=>1,'package_only'=>2,'resolved'=>3];
         usort($rows, static function(array $a, array $b) use ($weights): int {
             $cmp = ($weights[(string)($a['status'] ?? 'missing')] ?? 9)
                 <=> ($weights[(string)($b['status'] ?? 'missing')] ?? 9);

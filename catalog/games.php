@@ -56,9 +56,9 @@ try {
             )
             : null;
 
-        // "Resolved" means every reference not currently unresolved, including
-        // common and package-only references; it is not the old resolved_count
-        // field, which requires a unique engine-selected physical provider.
+        // "Resolved" excludes legacy common-name exemptions (unverified).
+        // Package-only source-backed references remain satisfied even when
+        // a uniquely selected physical export provider is unavailable.
         // Zen counts use exact indexed ScriptObjects, packages and exports.
         $zen = strtoupper($engine) === 'UE5';
         $unresolved = $current
@@ -160,8 +160,8 @@ try {
         . '<th scope="col">Files</th>'
         . '<th scope="col" title="References still unresolved against current source publication; UE5 uses exact indexed catalogue target coverage">Unresolved</th>'
         . '<th scope="col" title="Number of distinct files with at least one unresolved reference">Unresolved Files</th>'
-        . '<th scope="col" title="Total dependency references minus unresolved references; includes common and package-only references">Resolved</th>'
-        . '<th scope="col" title="Files with at least one dependency and no unresolved/missing references; common and package-only count as met">Resolved Files</th>'
+        . '<th scope="col" title="Total dependency references minus unresolved references; excludes unverified legacy exemptions">Resolved</th>'
+        . '<th scope="col" title="Files with indexed dependencies and no unresolved or missing references">Resolved Files</th>'
         . '<th scope="col">Total size</th><th scope="col">Open</th>'
         . '</tr></thead><tbody>' . $rows . '</tbody></table>';
 

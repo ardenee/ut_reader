@@ -147,7 +147,7 @@ try {
 
     $unresolvedNames = [];
     foreach ($dependencies as $dependency) {
-        if ((int)($dependency['resolved_id'] ?? 0) === 0 && (string)($dependency['status'] ?? '') !== 'common') {
+        if ((int)($dependency['resolved_id'] ?? 0) === 0 && (string)($dependency['status'] ?? '') !== 'unresolved') {
             $unresolvedNames[] = (string)$dependency['required_package'];
         }
     }
@@ -157,6 +157,7 @@ try {
     $requires = [];
     foreach ($dependencies as $dependency) {
         $status = (string)($dependency['status'] ?? 'missing');
+        if ($status === 'common') $status = 'unresolved';
         $resolved = null;
         $source = (string)($dependency['resolution_source'] ?? 'none');
         $confidence = (string)($dependency['resolution_confidence'] ?? 'missing');
@@ -171,7 +172,7 @@ try {
                 'guid' => (string)$dependency['resolved_guid'],
                 'md5' => (string)$dependency['resolved_md5'],
             ];
-        } elseif ($status !== 'common') {
+        } elseif ($status !== 'unresolved') {
             $candidate = fd_select_candidate(
                 $candidateMap,
                 (string)$dependency['required_package'],
@@ -189,7 +190,7 @@ try {
             }
         }
 
-        if ($resolved !== null && (int)$resolved['id'] !== $fileId && $status !== 'common') {
+        if ($resolved !== null && (int)$resolved['id'] !== $fileId && $status !== 'unresolved') {
             $requires[(int)$resolved['id']] = $resolved;
         }
 
@@ -235,7 +236,7 @@ try {
 
     $reverseNames = [];
     foreach ($reverseRows as $row) {
-        if ((int)($row['resolved_file_id'] ?? 0) === 0 && (string)($row['status'] ?? '') !== 'common') {
+        if ((int)($row['resolved_file_id'] ?? 0) === 0 && !in_array((string)($row['status'] ?? ''), ['unresolved', 'common'], true)) {
             $reverseNames[] = (string)$row['required_package'];
         }
     }
@@ -243,7 +244,7 @@ try {
 
     foreach ($reverseRows as $row) {
         $targetId = (int)($row['resolved_file_id'] ?? 0);
-        if ($targetId === 0 && (string)($row['status'] ?? '') !== 'common') {
+        if ($targetId === 0 && !in_array((string)($row['status'] ?? ''), ['unresolved', 'common'], true)) {
             $candidate = fd_select_candidate(
                 $reverseCandidates,
                 (string)$row['required_package'],
@@ -260,7 +261,7 @@ try {
         }
     }
 
-    $counts = ['all' => count($dependencyPayload), 'missing' => 0, 'object_missing' => 0, 'package_only' => 0, 'resolved' => 0, 'common' => 0];
+    $counts = ['all' => count($dependencyPayload), 'missing' => 0, 'object_missing' => 0, 'package_only' => 0, 'resolved' => 0, 'unresolved' => 0];
     foreach ($dependencyPayload as $dependency) {
         $status = (string)$dependency['status'];
         if (array_key_exists($status, $counts)) {
