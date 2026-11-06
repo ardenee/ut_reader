@@ -111,6 +111,16 @@
       "unmapped": 7302
     }
   },
+  "unprofiled_cohort_ownership_readonly_check": {
+    "source": "PRD source_relative_path and cross-game exact MD5 + SHA1 + file_size for already verified files; read-only SELECT",
+    "ut2003_v121_lic29": {"files": 3409, "also_exactly_in_ut2004": 237, "original_ut2003_maps_path": 1965, "original_ut2003_skins_path": 449, "original_ut2003_models_path": 300, "original_ut2003_mappacks_path": 280},
+    "ut2004_v121_lic29": {"files": 3855, "also_exactly_in_ut2003": 237},
+    "ut2004_v118_lic2": {"files": 2060, "also_exactly_in_ut2003": 41, "third_party_drives_uz3_prefix": 842},
+    "unreal2_v110_lic2481": {"files": 289, "also_exactly_in_ut2004": 31},
+    "unreal2_v110_lic2609": {"files": 142, "also_exactly_in_ut2004": 10},
+    "interpretation": "Cross-game identical packages and original game-folder prefixes do not establish a specific source loader implementation for other version/licensee combinations or automatically justify deletion/reassignment.",
+    "production_changes": false
+  },
   "source_v126_correction": {
     "status": "Already source-backed and implemented in UnrealDB; specification and source-conformance ledger previously incorrect.",
     "game_source": "L:/Source/Games/Unreal II/Unreal II The Awakening [01-07-2003]/Core/Src/UnLinker.cpp",
