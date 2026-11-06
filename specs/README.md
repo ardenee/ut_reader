@@ -51,16 +51,19 @@ Current conformance work must use the local source mirrors below. Historical Git
 
 ### Unreal package formats and readers
 
+**UE2 format scope:** Checked items for the new UE2 master/addenda mean the **classic package binary container and Name/Import/Export table layouts** are source-described. They do not mean every native export object's class-specific bytes, every game-ISO binary build, or every runtime dependency/physical mount order has been reconstructed. Those remaining branches are enumerated separately in `../docs/ue2-format-and-runtime-compliance-gap-register-2026-11-06.md`.
+
 - [x] Unreal / Unreal Gold UE1 v227 package serialization and pre-dependency preprocessing — `unreal-v227-package-format.md` (latest public v227 surface audited independently; missing Core serializer/linker bodies explicitly remain unresolved)
 - [x] UE1 / UT99 package serialization and pre-dependency preprocessing — `ue1-ut99-retail-v1400-package-format.md` (retail v400 complete; v430/v69 summary/import/export inline source confirmed, v69 `FNameEntry` body explicitly unresolved)
 - [x] UE1 / UT99 dependency and import resolution — `ue1-ut99-retail-v1400-dependency-resolution.md`
-- [x] Unreal II / UE2 package serialization and pre-dependency preprocessing — `unreal2-ue2-package-format.md` (Unreal-II v69 authoritative; generic UE2/Warfare v126 independently covers serialization/preprocessing through v126; later Unreal-II VerifyImport remains separate)
+- [x] **UE2 base package binary layout** — `ue2-package-binary-format.md`; 36-byte prefix, v64 names, v68 summary, signed compact types, fixed parent indices, payload spans. **Complete for the shared package summary/tables; individual native export-body formats remain class-specific.**
+- [x] **Unreal II binary format addendum** — `unreal2-package-format-addendum.md`; December 2000 v69 and January 2003 v126 complete game-source authorities, with additional original v110/licensee-2481/2609 structural examples. Historical mixed notes at `unreal2-ue2-package-format.md` (redirect).
 - [x] Unreal II / UE2 dependency and import resolution — `unreal2-ue2-dependency-resolution.md`
-- [x] UE2.5 package format and reading — `ue2.5-unreal-warfare-package-format.md`
+- [x] **Unreal Warfare / UE2.5 engine-format addendum** — `ue2-warfare-package-format-addendum.md` (originally `ue2.5-unreal-warfare-package-format.md`, now a historical redirect).
 - [x] UE2.5 dependency and import resolution — `ue2.5-unreal-warfare-dependency-resolution.md`
-- [x] UT2003 / UE2 package serialization and pre-dependency preprocessing — `ut2003-v2107-package-format.md` (v2107/package v120 independently source-audited; post-v120 admitted packages explicitly unresolved)
+- [x] **UT2003 binary format addendum** — `ut2003-package-format-addendum.md`; v2107 producer v120/licensee28 source, plus independent original v121/licensee29 structural proof. Later **game-native** payload and exact historical `VerifyImport` remain separate gaps; old mixed notes retained at `ut2003-v2107-package-format.md`.
 - [x] UT2003 dependency and import resolution — `ut2003-v2107-dependency-resolution.md`
-- [x] UT2004 / UE2.5 package serialization and pre-dependency preprocessing — `ut2004-package-format.md` (v3186/v127, v3369/v128, and latest v129 cross-checked; post-v129 admitted packages explicitly unresolved)
+- [x] **UT2004 binary format addendum** — `ut2004-package-format-addendum.md`; original v127/v128/v129 revisions and legacy v99/v118/v121 structural evidence, with explicit game-specific QuickMD5 and versioned object payload caveats. Old mixed notes retained at `ut2004-package-format.md`.
 - [x] UT2004 dependency and import resolution — `ut2004-dependency-resolution.md`
 - [x] UT3 / early UE3 package serialization and pre-dependency preprocessing — `ut3-v512-package-format.md` (Jan-2008 v512 source; later build 10897 compared only as a non-inherited supplemental boundary)
 - [x] UT3 package-version-512 dependency resolution — `ut3-v512-dependency-resolution.md`

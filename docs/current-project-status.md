@@ -1,5 +1,15 @@
 # UnrealDB current project status
 
+## 6 November 2026 — UE2 binary-format documents split from loader/UnrealDB workflows; original bytes and reader differential verified
+
+The user completed the PRD two-file Unreal II v61/v68 repair. A fresh DEV read-only check of actual PRD originals and UEDB5 metadata returned **current=2, needs_resnapshot=0, dependency_published_current=true, dashboard_stats_current=true**. Unreal II 808 verified files, with 74,556 dependency rows; package-coverage cache 84 packages (70 cached, 14 pruned). No full resync or further source-policy publication is needed for that defect.
+
+The former UE2 package-format notes mixed serialized byte layouts with source-loader and application-specific paths. Those four documents are now archived verbatim under `archive/ue2-mixed-format-implementation-notes-20261106` with redirects at their former names. Current **format-only, language-independent** documents: `specs/ue2-package-binary-format.md` plus Unreal II, UT2003, UT2004 and Warfare binary-format addenda. These describe actual byte types, count/offset fields, name strings, import/export structures and payload spans, not file-search or UnrealDB processing routes.
+
+A new completely independent original-byte parser (`tests/tools/verify_ue2_source_binary_layout_independent.py`) passed **15 genuine UE2 package files** (10 retained source-hashed originals and 5 new nonempty v110/118/121 original cases), plus **six in-memory malformed-input negative probes**. UnrealDB's actual UE2 reader matches the 5 new originals on game versions/licensees and table counts. Native class-specific payload parsing and some historic game-release `VerifyImport` paths remain unverified, and no source-specific runtime profile was automatically widened. Detailed source/reader evidence and actionable open-work matrix: [UE2 format versus runtime compliance gap register](ue2-format-and-runtime-compliance-gap-register-2026-11-06.md). This audit is documentation/verification-only; it did not rescan or rewrite source packages or UEDB5.
+
+---
+
 ## 6 November 2026 — UE2 source-spec parity review: two source-snapshot files require scoped PRD restage
 
 The actual January 2003 Unreal II UE2 game source (package v126/licensee0) was incorrectly labelled UE4 4.0.2 in older specifications. Its complete game-specific VerifyImport is real; its game-specific v126 branch was already independently tested and implemented on 5 November. The Unreal II and UE2 source-spec documentation is now corrected. Generic Warfare v126 remains a separate source, never a substitute for game-specific behaviour.

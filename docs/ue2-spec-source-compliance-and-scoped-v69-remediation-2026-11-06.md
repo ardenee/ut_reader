@@ -1,5 +1,7 @@
 # UE2 source specification versus UnrealDB — scoped compliance and source-version boundary (6 November 2026)
 
+**PRD postflight update (later on 6 November): the two-file repair was executed successfully on Lelly-pc.** The independently rerun original-hash/UEDB5 diagnostic reports both files current, `needs_resnapshot=0`, `dependency_published_current=true`, `dashboard_stats_current=true`. Any **pending / requires -Apply** wording below describes the historical state *before* this successful PRD run and is superseded. The canonical format-only specifications are now separate from application/source-compliance workflow notes; see [the updated UE2 format vs reader gap register](ue2-format-and-runtime-compliance-gap-register-2026-11-06.md).
+
 ## Scope
 
 Compare only UnrealDB's **actual** classic UE2 header/name/import/export, game source policy, static `VerifyImport`, UEDB5 Pass 1/Pass 2 and dependency/statistics views with independently sourced UE2 and Unreal II/UT2003/UT2004 specifications. This does not certify class-specific asset payload deserialization, native runtime object creation, or the package search/mount order of a particular game installation.
