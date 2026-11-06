@@ -12,8 +12,6 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicUploadTransferStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogPublicIoStoreReviewService;
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedFilesPageQuery;
-use UnrealDb\Catalog\Infrastructure\Games\CatalogGameOwnershipEvidence;
-use UnrealDb\Catalog\Presentation\Ui\CatalogGameOwnershipEvidenceUi;
 
 function uv_list_int(string $key, int $default = 0): int
 {
@@ -185,7 +183,6 @@ try {
     $items = $model['items'];
     $gameMatches = is_array($model['game_matches'] ?? null) ? $model['game_matches'] : [];
     $gameMatchStates = is_array($model['game_match_states'] ?? null) ? $model['game_match_states'] : [];
-    $ownershipEvidence = (new CatalogGameOwnershipEvidence($db))->assess($items, $games);
     $matchCacheSummary = is_array($model['match_cache_summary'] ?? null)
         ? $model['match_cache_summary']
         : ['ready' => 0, 'pending' => 0, 'failed' => 0, 'missing' => 0, 'total' => 0];
@@ -216,7 +213,6 @@ try {
 .uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-public-contribution strong,.uv-public-contribution small{display:block}.uv-public-contribution small{margin-top:4px}.uv-public-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-note.bad{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 CSS;
-    echo '<style>' . CatalogGameOwnershipEvidenceUi::stylesheet() . '</style>';
 
     echo CatalogUi::pageHeader(
         'Unverified Files',
@@ -396,7 +392,6 @@ CSS;
         . '<button name="action" value="delete" class="danger">Delete selected</button>'
         . '<label><input type="checkbox" name="allow_profile_override" value="1"> Allow profile override</label>'
         . '</div>';
-    echo '<p id="uv-ownership-selection-note" class="game-ownership-guidance" role="status"><strong>Before importing:</strong> compare the original directory and exact verified-file clues for the selected files. Header versions and dependency matches do not prove which game owns a file. Mixed selections may need different destinations.</p>';
     echo '<p class="uv-evidence-help"><strong>All exact compatible games</strong> uses full exported-object matches for loose packages only. '
         . 'PAK and IoStore containers require one explicit target game. IoStore .utoc/.ucas parts are selected together as one container, '
         . 'and only complete sets may be imported. <strong>All matching</strong> operates on indexed unverified files, '
@@ -410,7 +405,7 @@ CSS;
     } else {
         echo '<div class="table-wrap"><table class="uv-table"><thead><tr>'
             . '<th></th><th>Physical queue</th><th>File</th><th>Identity</th><th>Database</th>'
-            . '<th>Detected</th><th>Size</th><th>Original game clues</th><th>Dependency evidence</th></tr></thead><tbody>';
+            . '<th>Detected</th><th>Size</th><th>Dependency evidence</th></tr></thead><tbody>';
 
         // A complete public IoStore family is one logical import selection, not
         // one loose package per .utoc/.ucas physical component.
@@ -438,7 +433,6 @@ CSS;
                 . '<small>These components are separate public quarantine copies</small></td>'
                 . '<td class="mono">UE5 / IoStore</td>'
                 . '<td>' . catalog_h(catalog_bytes((int)$review['total_bytes'])) . '</td>'
-                . '<td>IoStore original-game ownership requires retained container or trusted upload provenance.</td>'
                 . '<td>' . ($retained !== null
                     ? 'An identical complete set is already retained for <strong>' . catalog_h((string)$retained['game_name'])
                         . '</strong>. Choose <strong>Delete selected</strong> to remove these redundant quarantine uploads only. '
@@ -465,10 +459,7 @@ CSS;
                 ? $gameMatchStates[$fileId]
                 : ['status' => 'missing'];
 
-            $owner = is_array($ownershipEvidence[$fileId] ?? null) ? $ownershipEvidence[$fileId] : [];
-            echo '<tr data-ownership-kind="' . catalog_h((string)($owner['kind'] ?? 'unknown')) . '"'
-                . ' data-ownership-game="' . (int)($owner['suggested_game_id'] ?? 0) . '"'
-                . ' data-ownership-exact="' . catalog_h(implode(',', array_map('intval', (array)($owner['exact_game_ids'] ?? [])))) . '">';
+            echo '<tr>';
             echo '<td><input class="unverified-select" type="checkbox" name="tokens[]" value="'
                 . catalog_h($token) . '" aria-label="Select ' . catalog_h((string)$item['original_name']) . '"'
                 . ($exists ? '' : ' disabled') . '></td>';
@@ -507,11 +498,10 @@ CSS;
                     . '<small>Package tables could not be read, so exact dependency evidence was not calculated.</small></div>';
             echo '<td class="mono">' . catalog_h(uv_list_detected($item)) . '</td>'
                 . '<td>' . catalog_h(catalog_bytes((int)$item['file_size'])) . '</td>'
-                . '<td>' . CatalogGameOwnershipEvidenceUi::render($owner) . '</td>'
                 . '<td>' . $evidence . '</td></tr>';
 
             if (!$tablesReadable) {
-                echo '<tr class="uv-note-row"><td></td><td colspan="8"><div class="uv-note bad">'
+                echo '<tr class="uv-note-row"><td></td><td colspan="7"><div class="uv-note bad">'
                     . '<strong>Parser issue</strong><br>'
                     . nl2br(catalog_h($parseError))
                     . '<br><a href="' . catalog_h($detailsUrl) . '">Open file details</a>'
@@ -519,7 +509,7 @@ CSS;
                     . '</div></td></tr>';
             }
             if (trim((string)($item['unverified_reason'] ?? '')) !== '') {
-                echo '<tr class="uv-note-row"><td></td><td colspan="8"><div class="uv-note">'
+                echo '<tr class="uv-note-row"><td></td><td colspan="7"><div class="uv-note">'
                     . '<strong>Queue note</strong><br>'
                     . nl2br(catalog_h((string)$item['unverified_reason']))
                     . '</div></td></tr>';
@@ -529,67 +519,6 @@ CSS;
     }
 
     echo '</form>' . $pagination;
-    echo <<<'HTML'
-<script>
-(() => {
-    const form = document.getElementById('unverified-bulk-form');
-    const note = document.getElementById('uv-ownership-selection-note');
-    const target = form?.querySelector('select[name="target_game_id"]');
-    if (!form || !note || !target) return;
-    const selected = () => Array.from(form.querySelectorAll('input.unverified-select:checked'))
-        .map(box => box.closest('tr'))
-        .filter(Boolean);
-    const assess = () => {
-        const rows = selected();
-        const targetId = Number(target.value) || 0;
-        const definite = rows.filter(row => ['corroborated', 'directory'].includes(row.dataset.ownershipKind));
-        const suggested = [...new Set(definite.map(row => Number(row.dataset.ownershipGame)).filter(id => id > 0))];
-        const conflicts = rows.filter(row => row.dataset.ownershipKind === 'conflict');
-        const differs = definite.filter(row => targetId > 0 && targetId !== Number(row.dataset.ownershipGame));
-        const already = rows.filter(row => targetId > 0
-            && (row.dataset.ownershipExact || '').split(',').map(Number).includes(targetId));
-        return { rows, targetId, suggested, conflicts, differs, already };
-    };
-    const describe = () => {
-        const s = assess();
-        if (!s.rows.length) {
-            note.textContent = 'Select files and a target game to compare acquisition-directory and identical-file clues before importing. No game is assigned automatically.';
-            return;
-        }
-        let description = s.rows.length + ' selected. ';
-        if (s.suggested.length > 1) {
-            description += 'Different original-game directories are represented; split the selection by game. ';
-        } else if (s.suggested.length === 1) {
-            const option = [...target.options].find(opt => Number(opt.value) === s.suggested[0]);
-            description += 'Directory clue: ' + (option?.textContent || ('game #' + s.suggested[0])) + '. ';
-        }
-        if (s.conflicts.length) description += s.conflicts.length + ' have conflicting ownership evidence. ';
-        if (s.differs.length) description += s.differs.length + ' appear to originate from another game than the selected destination. ';
-        if (s.already.length) description += s.already.length + ' are already indexed with identical MD5/SHA1/size in the destination. ';
-        if (s.targetId === -1) description += 'All exact compatible games is not an original-game ownership decision. ';
-        note.textContent = description + 'Review individual evidence; no package is reassigned by this suggestion.';
-    };
-    form.addEventListener('change', describe);
-    form.addEventListener('submit', event => {
-        const action = event.submitter?.value || 'import';
-        if (action === 'delete') return;
-        const s = assess();
-        if (!s.rows.length) return;
-        const risky = s.conflicts.length > 0 || s.suggested.length > 1 || s.differs.length > 0
-            || (s.targetId === -1 && s.suggested.length > 0);
-        if (risky && !window.confirm(
-            'The selected packages have mixed, conflicting or different original-game evidence. ' +
-            'Package versions and dependency matches do not establish ownership. ' +
-            'Review the Original game clues column. Continue with this explicit target anyway?'
-        )) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }
-    }, true);
-    describe();
-})();
-</script>
-HTML;
     catalog_foot();
 } catch (Throwable $error) {
     catalog_head('Unverified Files Error');

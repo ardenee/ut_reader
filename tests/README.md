@@ -1,9 +1,5 @@
 # UnrealDB file-behaviour parity — current testing authority
 
-## Admin original-game identification (Unverified Files / Dependency Cross-Examine) — 5 November 2026
-
-The two import selection pages now share read-only acquisition-directory and verified-file fingerprint evidence via `CatalogGameOwnershipEvidence`. The historical 409-file Unreal II game-ownership correction is the motivating defect. Original ownership is explicitly **not inferred from compatibility alone**; the helper only suggests a game when a known source-directory segment or unique indexed identity supports it and keeps ambiguous reuse visible. `tests/tools/verify_game_ownership_advisory_ui.php` checks the source-path false positives, real-world Unreal II reuse in UT2004, dynamically configured game slugs, multiple identical-game matches, browser warning and both page integration points. Additional PRD read-only check on 100 verified Unreal II files passed in ~26 ms. No original file or DB changes in this view-only test. [Explanation and limitations](../docs/catalog-game-ownership-advisory-2026-11-05.md).
-
 ## UE2 production 409-file game-ownership reconciliation — 5 November 2026
 
 The independently audited **391 original source-directory-provable wrong-game files** were physically SHA-256-equal to a unique verified UT2003/UT2004 target. Live PRD canonical deletion removed the game #2 records/physical package bytes/UEDB5 provider projections; a further **15** exact UT2004 duplicates were deleted and **3 distinct original UT2004 files** moved by canonical verified import into game #5, retaining original file-byte backups. Both old queued external mirror jobs (#88 and #453) were remapped to valid destination IDs. Read-only PRD postflights verify no old identity/projection/storage remains; all correct game records remain. Final verified totals Unreal II **808**, UT2003 **5,082**, UT2004 **72,883**.

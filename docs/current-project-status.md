@@ -1,13 +1,5 @@
 # UnrealDB current project status
 
-## 5 November 2026 — original-game identity guidance deployed in the import selection UI
-
-`catalog/unverified-files.php` and `catalog/dependency-cross-examine.php` now share read-only original-game ownership evidence: explicit original source-directory segments mapped to configured game slugs, MD5/SHA1/size-exact verified file matches, and non-authoritative UE2 version-family clues. The original-game provenance is separate from target-game import/export compatibility. The UI warns about mixed directories, mismatched selected destinations and existing identical destination files. No automatic game assignment, engine reader change, original package rescan, or new Epic loader assumptions. Full details: [catalogue original-game identification](catalog-game-ownership-advisory-2026-11-05.md). Focused tests in `tests/tools/verify_game_ownership_advisory_ui.php` and a read-only original-production corpus sample (100 Unreal II source files, 26 ms).
-
-The externally completed PRD UE2 v15 dependency publication was checked: Unreal II **808/808**, UT2003 **5,082/5,082**, UT2004 **72,883/72,883**, and all game-stats freshness gates are current. This supersedes the earlier historical status describing UT2004 as pending.
-
----
-
 ## 5 November 2026 — Unreal II wrong-game ownership repaired in PRD (409 files)
 
 The earlier UE2 Full Sync faithfully regenerated original packages but did not audit source game ownership, leaving Unreal II with UT2003/UT2004 content and 219 false common `GamePlay` dependencies. **Actual PRD repair completed:** 391 wrong-game files with original UT2003/UT2004 directory provenance and exact byte-identical verified counterparts removed; a second provenance/UE2-version check identified 15 more exact UT2004 duplicates removed and **3 distinct UT2004 originals imported/verified into game #5 first**, then retired from game #2. Overall **406 canonical duplicate deletions + 3 canonical verified moves** = **409 wrong-game records removed**. A total of 391+18 original source UEDB5 containers were SHA-256 backed up to PRD `L:\\UnrealDB\\maintenance-audit\\ue2-owner-fix-20261105`, together with complete preflight manifests, a backup of the old game2 coverage cache and durable action logs; three unique moved package bytes have a separate backup. Queued mirror jobs #88 and #453 were redirected to their valid surviving game5 files and retained.

@@ -482,7 +482,7 @@ final class PdoGameDependencyCrossExamineQuery
             $packagePlaceholders = implode(',', array_fill(0, count($packageChunk), '?'));
             $chunkRows = \catalog_all(
                 $this->db,
-                'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.source_relative_path,f.extension,f.file_size,'
+                'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.extension,f.file_size,'
                 . 'f.md5,f.sha1,f.package_guid,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
                 . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine,v.format_version metadata_format_version '
                 . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
