@@ -1,5 +1,31 @@
 # UnrealDB current project status
 
+## 6 November 2026 — PRD UE2 supported UEDB5 source-policy postflight PASS
+
+A read-only SQL transaction from DEV against PRD checked all **78,773 verified UE2 game-file rows** (Unreal II 808, UT2003 5,082, UT2004 72,883) against their persisted UEDB5 `ue_uedb5_files` metadata registration and stored source-loader policy. **All 78,773 have a UEDB5 file record; 66,796 records belong to currently source-authorized exact game/version/licensee cohorts, and all 66,796 have an accepted stored source policy; zero mismatches.** The other **11,977** retain deliberately unverified historical/custom-native source profiles—**not** a failed header/table decoder, missing UEDB5 file, or permission to assign a different game's VerifyImport semantics. This directly closes the current-source cohort's stale-source-policy concern; it does **not** hash every physical UEDB5 container or execute every native import.
+
+Evidence: `tests/evidence/ue2/ue2-production-supported-uedb5-source-policy-postflight-20261106.json`, SHA-256 pinned read-only audit and raw output at `D:\Temp\UnrealDB\UE2`. Prior Unreal II two-file and UT2004 v127/v128 scoped PRD repairs remain complete. No new SQL writes, UEDB5 generation, original package modifications or deployment.
+
+---
+
+## 6 November 2026 — UE2 v118 original native dependency investigation finished at demonstrated class mismatch
+
+The original UT2004 v118/licensee2 `SuperWeapons.u` #1289524 load was advanced using **all twelve** related original v118 `t/` script packages read-only from the PRD file catalogue, placed in an isolated DEV-only search path, with each MD5, size and SHA-256 pinned. The genuine, byte-identical UT2004 patch-3369 v128.29 compiled loader then reported **missing `Engine.HUD.TextMessages`, `Engine.Actor.PostLoadGame`, `Engine.HUD.MessageLife` and `Engine.GameInfo.bIsSingleplayer`**, and ultimately lacked a `MiscSounds` package. This is concrete **runtime class/member incompatibility for this selected original file and mount configuration**, *not* evidence that the generic UE2 headers/tables are decoded incorrectly or that all historical v118 files are incompatible.
+
+The separate original v121/licensee29 `spaceship.u` native-load **PASS** remains valid. Neither one native success nor the v118 controlled failure authorizes changing source-selected import-profile gates for entire historical cohorts. SHA-pinned inputs, original native UCC/CDB logs, and twelve-source manifest are registered at `tests/evidence/ue2/ue2-original-native-v121-v118-loader-observations-20261106.json`; test harness and logs are retained under `D:\Temp\UnrealDB\UE2\native-ut2004-v128-legacy-load`. No PRD SQL writes, deployed code changes or UEDB5 rescans were performed.
+
+---
+
+## 6 November 2026 — UE2 original compiled v128 loader tested against historical packages
+
+A new CDB-assisted, **original-file/native-engine** acceptance attempt used authenticated **UT2004 patch 3369 / package loader v128.29**, with installed `Core.dll`, `Engine.dll` and `UCC.exe` SHA-256 matching the original archived patch byte-for-byte. The original `spaceship.u` #1282344 (v121/licensee29, 30 import entries) loaded successfully with zero native errors and warnings; CDB only changed the commandlet argument string in the running process, not game binaries or files. Exact native UCC and debugger logs are retained and hashed under `D:\Temp\UnrealDB\UE2\native-ut2004-v128-legacy-load`. This certifies **one real v121 native load**, not all matching versions or per-import loader outcomes.
+
+The original v118/licensee2 `SuperWeapons.u` #1289524 reached `Inventory`; after mounting the exact original catalogued `Inventory.u` #1360855 through an isolated test INI, the next genuine loader error was absent `Postal2Game`. The original UT2004 Mutators acquisition path remains valid metadata; external mod dependencies are **not** evidence of a wrong-game file or malformed v118 format. Original package and compiled native SHA-256 values were unchanged. No PRD SQL, UEDB5, deployment or original files were modified.
+
+Read-only source-profile totals remain **Unreal II 326/808, UT2003 889/5,082, UT2004 65,581/72,883**. Previously corrected Unreal II v69 and UT2004 v127/v128 production cutovers remain closed. No global historical source-profile expansion or resnapshot was undertaken from a single success; remaining original v110/v121/v118 loader cases need a matching first-party/native per-entry test and explicit mount context before that is justified. Audit and evidence: [UE2 gap register](ue2-format-and-runtime-compliance-gap-register-2026-11-06.md); `tests/evidence/ue2/ue2-original-native-v121-v118-loader-observations-20261106.json`.
+
+---
+
 ## 6 November 2026 — UT4 historical binaries preserved, but downloaded distribution is mod-bearing
 
 **DEV-only UE4/UT4 debugging evidence:** `D:\Temp\UnrealDB\UE4\native-version-archive\` now preserves **96 selectively recovered files / 263.64 MiB**, independently rehashed with zero errors, from 4 strictly separated sources: packaged UT4 client **25 files**, packaged UT4 WindowsServer **25**, installed UT4 Editor **24**, and separate **UT4UU v10.1.6 mod overlay 22**. Original source ZIP hashes and per-file SHA-256, locations, build metadata and a differential comparison are in `manifest.json` / `comparison-audit.json`. Reproducible scripts and a README are in `D:\Temp\UnrealDB\UE4`. No original game PAKs, maps, other content, full installations, source files or production UEDB5/DB files were copied or modified; no installer executed or Sandbox session disturbed.

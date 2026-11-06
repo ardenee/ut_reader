@@ -1,0 +1,236 @@
+{
+  "schema": "ue2-ut2004-authenticated-original-compiled-legacy-loader-observation-v1",
+  "date": "2026-11-06",
+  "source_authority": "UT2004 v3369 original local game source; original archived patch3369 compiled modules",
+  "scope": "Native package load under UT2004 v3369/v128.29 with exact original package bytes, no game execution/asset parsing claim for UnrealDB",
+  "original_game_source_unchanged": true,
+  "original_packages_unchanged": true,
+  "production_database_writes": 0,
+  "uedb5_snapshots_regenerated": 0,
+  "production_files_deployed": 0,
+  "compiled_loader": {
+    "version": "UT2004 Build 3369 (128.29)",
+    "exe": "H:/Epic Games/UT2004/System/UCC.exe",
+    "exe_sha256": "a29db6920d71776b74e8c5356405da1322fc09a19ccfe4f532f9037309e9bca4",
+    "core_dll_sha256": "4d40639061756ee2885ad839719d4f3bc67dfb3d4cbc4d73be3b13d06683d82f",
+    "engine_dll_sha256": "a61171005bbc3e3fbf9ba5348d361ed7d37a7ff802b28bd3fbb15b8aa3180239",
+    "matches_retained_original_patch3369_archive": true
+  },
+  "source_symbols": [
+    {
+      "method": "UCC main commandlet dispatch/Main(appCmdLine())",
+      "file": "UCC/Src/UCC.cpp",
+      "sha256": "2d411127c2902236b2d79fd7556ad54a548d733adf3cff82abe6abb214e98a1e"
+    },
+    {
+      "method": "UPackageFlagCommandlet::Main (GetPackageLinker LOAD_NoVerify, LoadPackage)",
+      "file": "Editor/Src/UConformCommandlet.cpp",
+      "sha256": "f289721b7f9fa6322e455ee4ae9c24af31737a8033279f302dbeb37426d0ca69"
+    }
+  ],
+  "native_commandlet_intervention": {
+    "method": "CDB, one-shot breakpoint on exported appCmdLine or UObject::ParseParms; adjust mutable commandlet argument in process memory only (no DLL/script file/source changes)",
+    "file_input_source": "Original exact original-file path; no copy renamed or patched",
+    "test_controlled_mount_context": true,
+    "script_paths": [
+      "D:/Temp/UnrealDB/UE2/native-ut2004-v128-legacy-load/verify-native-v121-repro.py",
+      "D:/Temp/UnrealDB/UE2/native-ut2004-v128-legacy-load/probe-native-v118-with-provider.py"
+    ]
+  },
+  "cases": [
+    {
+      "original_catalogue_file_id": 1282344,
+      "game_id": 5,
+      "game_source_relative_path": "Unreal Tournament 2004/Maps/Bombing Run/S/c/9/2c117f/br-spaceship_b1.zip/System/spaceship.u",
+      "name": "spaceship.u",
+      "version": 121,
+      "licensee": 29,
+      "imports": 30,
+      "sha256": "408f1f148d742dff782835dfd97e32c9badf13704dcf9ae28078c64d0d57781f",
+      "expected_outcome": "LoadPackage succeeds in the tested native mount context",
+      "observed_outcome": "LOAD_SUCCESS_ZERO_ERRORS_ZERO_WARNINGS",
+      "module_files_and_input_unchanged": true,
+      "CDB_exit_code": 0,
+      "original_native_log_sha256": "5a720e67364f1273f64e36a8bb27a432aa0e3c9c5029ea90b24481da7d7bf7ba",
+      "debugger_log_sha256": "f0baf8495ffa69f98d987c0cbd168d9bc6507f8c5ab79fcfa432d65a997cd94e",
+      "native_engine_log": "D:\\Temp\\UnrealDB\\UE2\\native-ut2004-v128-legacy-load\\ut2004-v121-original-pinned-native-oracle.ucc.log",
+      "debugger_log": "D:\\Temp\\UnrealDB\\UE2\\native-ut2004-v128-legacy-load\\ut2004-v121-original-pinned-native-oracle.debugger.log",
+      "limitations": "Package load is proven for this exact original and mount context; no proof of each individual VerifyImport, or all v121/licensee29 packages"
+    },
+    {
+      "original_catalogue_file_id": 1289524,
+      "game_id": 5,
+      "game_source_relative_path": "Unreal Tournament 2004/Mutators/W/a/7/001053/SuperWeapons.zip/System/SuperWeapons.u",
+      "name": "SuperWeapons.u",
+      "version": 118,
+      "licensee": 2,
+      "imports": 245,
+      "sha256": "4c7e622a8fad487c440941ae8255f322e179472751eb09e4bff7f5bcf8915a84",
+      "expected_outcome": "Attempt LoadPackage with exact original Inventory.u from catalogue added to controlled search Paths",
+      "observed_outcome": "LOAD_BLOCKED_MISSING_POSTAL2GAME_DEPENDENCY",
+      "native_engine_log": "D:\\Temp\\UnrealDB\\UE2\\native-ut2004-v128-legacy-load\\ut2004-v118-native-v128-original-inventory-mounted.ucc.log",
+      "engine_log_sha256": "d52bd2cb3261d53d764bca26e6359b41f5bb87884be77790a7baeee2df14a815",
+      "debugger_log_sha256": "ca2e3cb6b2e2ac9aeab5b72408cc8ddccee92448ae45296876b91e8be84db3f4",
+      "debugger_exit_code": 1,
+      "original_native_loader_reached": true,
+      "source_bytes_unchanged": true,
+      "Inventory_loaded_enough_to_reach_next_import": true,
+      "Inventory_catalogue_game5_id": 1360855,
+      "Inventory_original_sha256": "7fcd244a78e3f4cb1dba66342fdd117684acd0ebbf71d94fac5dcd71d682dfe5",
+      "Inventory_original_md5": "17936307f4ec6675d46911d8cc8c2ce8",
+      "Inventory_catalogue_game4_identical_id": 149396,
+      "remaining_missing_root": "Postal2Game",
+      "limitations": "External-mod dependency closure not satisfied; cannot infer v118 format incompatibility, incorrect game ownership, or full v118 source parity"
+    },
+    {
+      "original_catalogue_file_id": 1289524,
+      "game_id": 5,
+      "name": "SuperWeapons.u",
+      "version": 118,
+      "licensee": 2,
+      "sha256": "4c7e622a8fad487c440941ae8255f322e179472751eb09e4bff7f5bcf8915a84",
+      "original_unchanged": true,
+      "controlled_mount_file_count": 12,
+      "controlled_mount_files_original_hashes": [
+        {
+          "package": "Postal2Game",
+          "catalogue_file_id": 1360850,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/71b23c5a073b54ccf5552e92948ba466.u",
+          "original_md5": "71b23c5a073b54ccf5552e92948ba466",
+          "original_sha256": "d3b5c79349772cc5153fcebcf49baa47e85472e83865c6223cf8bb5d88881f39",
+          "bytes": 2796733
+        },
+        {
+          "package": "1409Xtras",
+          "catalogue_file_id": 1362996,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/2fbc72d9b51b5c23dc3f928c3d5b6366.u",
+          "original_md5": "2fbc72d9b51b5c23dc3f928c3d5b6366",
+          "original_sha256": "05475e13d6c1b35f06210862bf8cb826a0b16c16a492a8e2402d0c201d5424aa",
+          "bytes": 788661
+        },
+        {
+          "package": "Inventory",
+          "catalogue_file_id": 1360855,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/17936307f4ec6675d46911d8cc8c2ce8.u",
+          "original_md5": "17936307f4ec6675d46911d8cc8c2ce8",
+          "original_sha256": "7fcd244a78e3f4cb1dba66342fdd117684acd0ebbf71d94fac5dcd71d682dfe5",
+          "bytes": 778561
+        },
+        {
+          "package": "Shell",
+          "catalogue_file_id": 1360848,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/0b2a826360771b23a457b3b7e7a1a46f.u",
+          "original_md5": "0b2a826360771b23a457b3b7e7a1a46f",
+          "original_sha256": "9e6c1647d6685c876304ddc9e452bc8c08dc8dc31d51a82fc2dd46b3e601778b",
+          "bytes": 683755
+        },
+        {
+          "package": "MultiBase",
+          "catalogue_file_id": 1360853,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/a831cd05f65efbc793b21293f4e5001c.u",
+          "original_md5": "a831cd05f65efbc793b21293f4e5001c",
+          "original_sha256": "a015ed87d580176b025e7d71b2d8ab125c8634822621ba1deb215f8194b5b459",
+          "bytes": 546617
+        },
+        {
+          "package": "FPSGame",
+          "catalogue_file_id": 1360856,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/af12e4abc77675f77c911057ba6ceceb.u",
+          "original_md5": "af12e4abc77675f77c911057ba6ceceb",
+          "original_sha256": "401b8107685c642c4989a3432aed1f22dceb8f1ff735c7d5682e1212388cbb7c",
+          "bytes": 416810
+        },
+        {
+          "package": "1409XGame",
+          "catalogue_file_id": 1362987,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/cb5a345f3cf4fba2480d77dc4ba583ef.u",
+          "original_md5": "cb5a345f3cf4fba2480d77dc4ba583ef",
+          "original_sha256": "af03df7de356ed21d170357f5082a460f68d3e82504f89da411a9601d1a566aa",
+          "bytes": 266836
+        },
+        {
+          "package": "MultiGame",
+          "catalogue_file_id": 1360852,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/45f5928f8bdbf2da2d67b852b70e60c1.u",
+          "original_md5": "45f5928f8bdbf2da2d67b852b70e60c1",
+          "original_sha256": "598413d167d1ae1453442dc861c258d3dcf50f5ecbcd17f966d5e7c9a7e08a8a",
+          "bytes": 243725
+        },
+        {
+          "package": "1409XStuff",
+          "catalogue_file_id": 1360862,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/acc58d44a3be9eb12b3cf2d22902066b.u",
+          "original_md5": "acc58d44a3be9eb12b3cf2d22902066b",
+          "original_sha256": "f29d0f00e41c9610ae8b80110b97215be908d42588896544c1801807b7a7b4e8",
+          "bytes": 219102
+        },
+        {
+          "package": "BaseFX",
+          "catalogue_file_id": 1360860,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/a9744f5fac4316b02d1d2aed8c15a445.u",
+          "original_md5": "a9744f5fac4316b02d1d2aed8c15a445",
+          "original_sha256": "67d009f66815764acd50cfcf5e0d056942011627bb199629c564af71ab7fc767",
+          "bytes": 117202
+        },
+        {
+          "package": "MultiStuff",
+          "catalogue_file_id": 1360851,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/049d65587b8385695b5f35c60da31067.u",
+          "original_md5": "049d65587b8385695b5f35c60da31067",
+          "original_sha256": "f61475ecf286c427dea10321e86a54705679909645b374874cd21ed589b57e6a",
+          "bytes": 76732
+        },
+        {
+          "package": "Inventory2",
+          "catalogue_file_id": 1363012,
+          "original_catalogue_relative_path": "storage/games/ut2004/verified/103ba04e96fe3f5e043b9c4f49c9fd81.u",
+          "original_md5": "103ba04e96fe3f5e043b9c4f49c9fd81",
+          "original_sha256": "70850cc036b6526e56e4035bba5e2d1c690792ee3f8f5dddbb170077bba856fd",
+          "bytes": 5024
+        }
+      ],
+      "controlled_mount_manifest_path": "D:\\Temp\\UnrealDB\\UE2\\native-ut2004-v128-legacy-load\\postal-provider-mount-12-scripts.json",
+      "controlled_mount_manifest_sha256": "891fb97eb4ffae69fba7aa4978d30099071419f7103a47a79c4b41c20ccd3b77",
+      "original_runtime": "UT2004 3369 v128.29 original patch loader (see compiled_loader hashes)",
+      "observed_outcome": "LOADER_REPORTS_MISSING_ENGINE_MEMBERS_AND_UNMOUNTED_MISCSOUNDS",
+      "native_source_lookup_result": "One original v118 with first-party game loader reaches class members absent from current runtime context and an external dependency; no all-v118 format parity or proof of wrong-game attribution",
+      "native_member_warnings": [
+        "Engine.HUD.TextMessages",
+        "Engine.Actor.PostLoadGame",
+        "Engine.HUD.MessageLife",
+        "Engine.GameInfo.bIsSingleplayer"
+      ],
+      "missing_package": "MiscSounds",
+      "original_native_log": "D:\\Temp\\UnrealDB\\UE2\\native-ut2004-v128-legacy-load\\ut2004-v118-native-v128-all-12-t-provider-scripts.ucc.log",
+      "original_native_log_sha256": "5936bad869c1c900f4627fcb53482d57a227eb1d898528ff42b8a252089ec4be",
+      "debugger_log": "D:\\Temp\\UnrealDB\\UE2\\native-ut2004-v128-legacy-load\\ut2004-v118-native-v128-all-12-t-provider-scripts.debugger.log",
+      "debugger_log_sha256": "6bb53fef6a931acc020aa700fce8f9c39cc4ad3be1ee4fe0eeade690cc630058",
+      "debugger_exit_code": 1,
+      "native_load_succeeded": false,
+      "all_imports_verified_individually": false,
+      "user_mounted_unrelated_packages_to_installed_game": false,
+      "temporary_mount_only": true,
+      "production_state_modified": false
+    }
+  ],
+  "current_unattributed_profile_counts_from_readonly_live_prd": {
+    "unreal2": 482,
+    "ut2003": 4193,
+    "ut2004": 7302
+  },
+  "decision": "NO_GLOBAL_SOURCE_PROFILE_WIDENING_FROM_NATIVE_SINGLE_FILE_OR_EXTERNAL_MOD_CONTENT",
+  "reason": "One v121 package loads with an exact 3369 binary, while a v118 mutator package requires external Postal2Game class and package dependencies and reports absent native Engine members. Neither result authorizes generic v121/v118 native VerifyImport equivalence.",
+  "scope_exclusions": [
+    "class-specific meshes/textures/sounds/payload decoding (not used by UnrealDB)",
+    "QuickMD5 computed helper (not a current reader dependency)"
+  ],
+  "next_required_native_oracle": [
+    "Unreal II original 110/2481 and 110/2609 game loader on matched installations",
+    "UT2003 original 121/29 loader with exact original runtime input",
+    "UT2004 v118/2 with original Postal2Game/root dependencies in controlled mount context and source provenance"
+  ],
+  "verification_scripts_sha256": {
+    "verify-native-v121-repro.py": "f3c773956789dbdcfc0f22d95b3476a0311b34de201539318a96087b1e73eee0",
+    "probe-native-v118-with-provider.py": "bb40a0cecbe99b2f50c9e1c85d68d210cc3371b35606abfc4fc5ef18bdc5ede1"
+  }
+}

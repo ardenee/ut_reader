@@ -1,0 +1,45 @@
+{
+  "schema": "ue2-current-eligible-source-policy-production-postflight-v1",
+  "date": "2026-11-06",
+  "meaning": "Checks stored UEDB5 file metadata row existence and accepted source-selected loader attribution across all three UE2 games, not original byte/asset payload or per-import native runtime verification",
+  "source_authority": "UnrealDB accepted Epic game-source loader policies for Unreal II, UT2003 and UT2004, selected by game/version/licensee",
+  "production_query_mode": "DEV -> PRD 192.168.0.55 MySQL read-only transaction; one group query; original package bytes unchanged",
+  "audit_script_on_dev": "D:\\Temp\\UnrealDB\\UE2\\audit-explicit-ue2-snapshot-policies-20261106.php",
+  "audit_script_sha256": "6d3391cab2eb0782dfc5820cb12f24ea2e952e5e0b2bb77576281f8241f934d2",
+  "raw_query_result_on_dev": "D:\\Temp\\UnrealDB\\UE2\\prdpinned-ue2-explicit-snapshot-coverage-20261106.json",
+  "raw_query_result_sha256": "b2024c194038de51a576c6de1ffe5a8272528a5efecc1bdc329860f89611f7dd",
+  "summary": {
+    "schema": "ue2-prd-eligible-snapshot-source-policy-readonly-v1",
+    "date": "2026-11-06",
+    "mode": "READ_ONLY",
+    "verified_totals": {
+      "2": 808,
+      "5": 72883,
+      "4": 5082
+    },
+    "accepted_exact_profile_snapshot_rows": 66796,
+    "not_exact_profile_rows": 11977,
+    "without_snapshot_rows": 0,
+    "accepted_cohorts": {
+      "5:127/29": 10315,
+      "5:128/29": 55234,
+      "4:120/28": 889,
+      "2:126/0": 323,
+      "2:61/0": 1,
+      "2:69/0": 1,
+      "5:129/27": 32,
+      "2:68/0": 1
+    },
+    "eligible_policy_mismatch_rows": [],
+    "eligible_policy_mismatch_total": 0,
+    "profile_definition": "source-selected loader policy, not original package producer"
+  },
+  "accepted_current_profiles": "Unreal II v60-69/0 or127 and v126/0; UT2003 v120/28; UT2004 v127/29 under v127 or v128 loader, v128/29 under v128, v129/27 or29 under v129",
+  "limitations": [
+    "UEDB5 metadata registration and source-policy rows are checked, not physical container byte hashes or individual persisted section-schema records",
+    "Unsupported/historical file versions remain deliberately without source-certified VerifyImport; a source loader policy stored in UEDB5 is not proof of producer identity",
+    "No native VerifyImport trace for every individual import",
+    "No original files staged/rescanned or database/storage rows modified"
+  ],
+  "status": "PASS_SUPPORTED_UE2_SNAPSHOT_SOURCE_POLICY_NO_MISMATCHES"
+}
