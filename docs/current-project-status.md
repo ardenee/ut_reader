@@ -1,5 +1,15 @@
 # UnrealDB current project status
 
+## 6 November 2026 — UT3 original update binaries statically archived for UE3 source parity
+
+**DEV-only native evidence archive:** `D:\Temp\UnrealDB\UE3\native-version-archive\` contains the directly extracted original UE3/UT3 patch-binary sets from **12 patches (beta builds through patch 5)**: **22 EXE/DLL files and 152 cooked UnrealScript `.u` packages**, **174 files / 802.24 MiB**, preserving every source-archive and extracted-file SHA-256 in `manifest.json`. Original patch installers were never executed, all original L: files are unchanged, and no maps, textures, sounds, `.upk` or full game installs were copied. An independent full-source rehash with `D:\Temp\UnrealDB\UE3\verify-ut3-native-archive.py --full-source-hashes` passed with **zero mismatches**. Extraction is repeatable from `D:\Temp\UnrealDB\UE3\extract-ut3-native-updates.py`. No new live UE3 reader/UEDB5/code/DB operations were performed.
+
+The 12 patch archives represent only **7 byte-distinct complete native/script file sets**. Patch1 Beta4, 1.1 (RAR and 7z), and `ut3_patch1.exe` contain the same selected binaries; likewise Patch2 1.2 (RAR/7z) and `ut3_patch2.exe`. All 12 extracted `Core.u` headers have **package version 512/licensee 0**, so binary hashes and patch provenance, not package-version alone, distinguish historical releases. For UT3, `UT3.exe` is the primary native executable; do **not** expect UE1/UE2-style standalone `Core.dll` or `Engine.dll` inside these updates. Patch4/5 include additional `UT3OSHelper.exe` and Steam DLL dependencies. This is original native evidence only; it does **not** certify every UnrealDB UE3 loader/`VerifyImport` behaviour. Engine/game source under `L:\Source\Engine\UE3` and `L:\Source\Games\UT3` remains authoritative.
+
+**Two localized exceptions:** `UT3Russian_update_1.1.exe` and `_1.2.exe` are PE InstallShield-wrapped packages with inaccessible archive payloads under 7-Zip. They are **excluded from the 12 extracted updates** and may require installer-specific unpacking or a separate disposable Windows Sandbox; the existing active Sandbox was not reset. Complete local archive notes at `D:\Temp\UnrealDB\UE3\native-version-archive\README.md`.
+
+---
+
 ## 6 November 2026 — UE1 native debugging revision archive assembled from original Epic game media and updates
 
 **DEV-only retained native oracle:** `D:\Temp\UnrealDB\UE1\native-version-archive\` now contains **20 separately labelled builds, 127 SHA-256 verified DLL/EXE/Core/Engine script files, and 13 complete Core.dll/Engine.dll/Core.u/Engine.u sets (113.23 MiB)**. Verification: `D:\Temp\UnrealDB\UE1\verify-native-version-archive.py` independently rehashed all 127 bytesets; **zero mismatches**. The version list, actual package version/licensee decoded from each available `Core.u`, source paths and SHA-256 hashes are in `native-version-archive/manifest.json`; `README.md` describes scope and gaps. No maps, sound, textures or full-game installations are in the curated archive. Original source/update/ISO files are unchanged, and no site/reader/DB/UEDB5 operations were performed.
