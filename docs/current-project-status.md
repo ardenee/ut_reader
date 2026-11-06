@@ -1,5 +1,16 @@
 # UnrealDB current project status
 
+## 6 November 2026 — Games catalogue coverage counts repaired across UE1–UE5
+
+The Games page previously showed zero resolved references for UE1–UE4 because no authoritative native runtime mount was supplied. Earlier inflated totals came from the disproved common-name bypass. Neither extreme tells users how many package identities are indexed in the catalogue.
+
+The replacement view reports separate categories: **Indexed Packages** (verified same-game physical package candidates, or exact Zen indexed coverage); **Native Script** (UE4 /Script/ module identities, not physical packages); **Not Indexed** (no indexed physical candidate and not a native module); and **Files Without Gaps** (all required package names have a candidate or native-module identity). This is not an assertion that any classic import passed native VerifyImport or that any specific physical provider is mounted. UT4 has **413,683** native script references and **2,028** non-native references without a catalogue candidate, not 415,711 missing physical packages.
+
+Read-only production acceptance passed for all eight games, original file-level cases, current page filters for Unreal and UT4, and cold/warm cache consistency. Satisfactory retains **1,847,626** indexed and **244** not-indexed Zen references. Evidence: tests/evidence/games-package-indexed-coverage-20261106.json; acceptance: tests/tools/verify_games_indexed_package_coverage.php. The source evidence, UEDB5 bytes and production SQL dependency records were not changed by this display correction; legacy common remains prohibited.
+
+---
+
+
 ## 6 November 2026 — all-game legacy `common` dependency exemption retired
 
 The configured-name `common` shortcut is eliminated from new UE1, UE2, UE3 and UE4 classic import resolution and future unverified/parsed dependency staging. Source-selected real provider and engine VerifyImport rules remain separate by engine. No default names (Core/Engine/Editor/Botpack, etc.) are automatically treated as successfully loaded. UE5 has no `common` records in its current catalogue source counts. The historical outcome value 3 is retained only as an **old-data decoder**, not an outcome that new writers emit.

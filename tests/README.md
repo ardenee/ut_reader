@@ -1,5 +1,14 @@
 # UnrealDB file-behaviour parity — current testing authority
 
+## Games-page indexed-package coverage — 6 November 2026
+
+Classic source-only dependency publication cannot select the original mounted linker without original mount evidence. Its zero runtime-resolved count is not a useful measure of available catalogue packages. The Games page now counts verified same-game indexed package identities independently of native VerifyImport outcomes, with a separate UE4 /Script/ intrinsic-module classification. No native loads are invented.
+
+Read-only acceptance: UE_COVERAGE_DB_HOST=<db-host> php tests/tools/verify_games_indexed_package_coverage.php. Validates all eight game totals, seven live filtering counts, four original files, and warm-cache cardinality. Evidence: tests/evidence/games-package-indexed-coverage-20261106.json. Neither production SQL nor UEDB5 source files are changed.
+
+---
+
+
 ## All-engine no-`common` retirement — 6 November 2026
 
 UnrealDB's configured base-package list no longer authorizes a `common` dependency outcome for any engine. Until a selected physical provider and engine-sourced import check establish a match, those references remain `unresolved`, not `resolved` or `missing`. Historic UEDB5 enum value 3 remains readable for backward compatibility, is never emitted by new writers, and is normalized to unresolved across current read models and JSON APIs without rewriting the original source evidence.

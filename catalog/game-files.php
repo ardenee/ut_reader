@@ -15,6 +15,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameFileListQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameDependencyFileCountQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameIndexedPackageCoverageQuery;
 
 catalog_start_session();
 require_once __DIR__ . '/lib/FederationAuth.php';
@@ -301,11 +302,13 @@ try {
     $depFilter = trim((string)($_GET['dep_filter'] ?? ''));
     // Backward-compatible legacy URL; no engine considers 'common' a verified outcome.
     if ($depFilter === 'common') $depFilter = 'unresolved';
+    // Legacy bookmarks for the initial package-only coverage prototype.
+    if ($depFilter === 'fully_indexed') $depFilter = 'no_gaps';
     $gameDependencyCurrent = \UnrealDb\Catalog\Infrastructure\Metadata\Uedb5DependencyPublicationScope::isGameCurrent(
         $db, (int)$gameId, (string)($game['profile_engine'] ?? '')
     );
     $dependencySelectionUnavailable = !$gameDependencyCurrent
-        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','unresolved','any'], true);
+        && in_array($depFilter, ['resolved','fully_resolved','missing','package_only','unresolved','any','indexed','unindexed','no_gaps','native_script'], true);
     // The Games page uses current catalogue target coverage for UE5 Zen
     // (package/export ID and pinned global ScriptObjects). The file filter
     // must consume the identical cached exception-set, not the source-only
@@ -365,7 +368,13 @@ try {
         $like = '%' . $filter . '%';
         array_push($args, $like, $like, $like, $like, $like);
     }
-    if ($engineMajor === 5 && $zenCoverage !== null
+    if ($engineMajor !== 5 && in_array($depFilter,
+        ['indexed','unindexed','no_gaps','native_script'], true)) {
+        // Catalogue package availability is separate from runtime VerifyImport.
+        $where .= ' AND f.scan_status="verified" AND '
+            . PdoGameIndexedPackageCoverageQuery::fileFilterPredicate(
+                $depFilter, $engineMajor === 4);
+    } elseif ($engineMajor === 5 && $zenCoverage !== null
         && in_array($depFilter, ['unresolved','resolved','fully_resolved'], true)) {
         // All ID lists are internal integers generated from verified/current
         // SQL, never client-provided identifiers. Exception sets are small
@@ -495,6 +504,14 @@ try {
         $files = $page['rows'];
     }
 
+    // Read package identity availability only for this bounded visible page.
+    // It must not turn unknown runtime mounts into source-verified imports.
+    $pagePackageCoverage = $gameDependencyCurrent && $engineMajor !== 5 && $files !== []
+        ? (new PdoGameIndexedPackageCoverageQuery($db))->forFiles(
+            $gameId, array_map(static fn(array $f): int => (int)$f['id'], $files),
+            $engineMajor === 4)
+        : [];
+
     $previousCursor = is_array($page['first_cursor'])
         ? CatalogKeysetPaginator::encode($config, $cursorContext, $page['first_cursor'])
         : '';
@@ -536,9 +553,9 @@ try {
     }
 
     $filterDescriptions = [
-        'unresolved' => 'unresolved dependency references',
-        'resolved' => 'satisfied dependency references',
-        'fully_resolved' => 'files with all indexed references met',
+        'unresolved' => 'runtime-unverified dependency references',
+        'resolved' => 'native-verified dependency references',
+        'fully_resolved' => 'files with all native-verified references',
     ];
     $countDescription = '';
     if (isset($filterDescriptions[$depFilter]) && $filter === '' && $typeFilter === ''
@@ -553,21 +570,18 @@ try {
                     : null);
         } elseif ($engineMajor !== 5) {
             $stat = catalog_one($db,
-                'SELECT dependency_count,resolved_dependency_count,common_dependency_count,'
+                'SELECT dependency_count,resolved_dependency_count,'
                 . 'package_only_dependency_count,missing_dependency_count '
                 . 'FROM ue_game_catalog_stats WHERE game_id=?', [$gameId]);
             $references = $stat !== null
                 ? ($depFilter === 'unresolved'
                     ? max(0, (int)$stat['dependency_count']
                         - (int)$stat['resolved_dependency_count']
-                                                - (int)$stat['package_only_dependency_count']
+                        - (int)$stat['package_only_dependency_count']
                         - (int)$stat['missing_dependency_count'])
                     : ($depFilter === 'resolved'
-                        ? max(0, (int)$stat['dependency_count']
-                            - (int)($stat['dependency_count']
-                                - (int)$stat['resolved_dependency_count']
-                                                                - (int)$stat['package_only_dependency_count']
-                                - (int)$stat['missing_dependency_count']))
+                        ? (int)$stat['resolved_dependency_count']
+                            + (int)$stat['package_only_dependency_count']
                         : null))
                 : null;
         } else {
@@ -587,7 +601,19 @@ try {
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
     echo '<label for="file-filter">Search files <input id="file-filter" class="wide-search" type="search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label>';
     echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
-    foreach (['' => 'All', 'any' => 'Has dependencies', 'unresolved' => 'Unresolved', 'resolved' => 'Resolved (has met references)', 'fully_resolved' => 'Resolved Files (all met)', 'missing' => 'Missing (confirmed)'] as $value => $label) {
+    $dependencyOptions = $engineMajor === 5
+        ? ['' => 'All', 'any' => 'Has dependencies',
+            'unresolved' => 'Not indexed', 'resolved' => 'Indexed',
+            'fully_resolved' => 'Fully indexed files',
+            'missing' => 'Missing (confirmed)']
+        : ['' => 'All', 'any' => 'Has dependencies',
+            'indexed' => 'Has indexed package', 'unindexed' => 'Package not indexed',
+            'native_script' => 'Native script-module references',
+            'no_gaps' => 'No unindexed package identities',
+            'unresolved' => 'Runtime unresolved',
+            'resolved' => 'Native confirmed', 'fully_resolved' => 'Native complete',
+            'missing' => 'Missing (confirmed)'];
+    foreach ($dependencyOptions as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
@@ -614,8 +640,10 @@ try {
         . ($engineMajor === 5
             ? 'UE5 filters use exact catalogue-indexed package, export and ScriptObject identities. '
                 . 'Unindexed references may be in another, not-yet-imported container and are not confirmed missing.'
-            : 'Unresolved means a source-published reference without a conclusive provider; '
-                . 'it is not confirmed missing. Only source-verified and package-only references count as satisfied.')
+            : 'Indexed package means an exact same-game package identity exists in the catalogue, '
+                . 'not that its imported object or original runtime mount was verified. '
+                . 'UE4 /Script/ modules are marked native script rather than missing disk packages. '
+                . 'Not indexed does not prove a game dependency is missing.')
         . '</p>';
 
     echo $pagination;
@@ -674,6 +702,33 @@ try {
                     ? '<span class="muted" title="Package metadata is published; its engine-specific dependency pass has not completed">Dependencies not evaluated</span>'
                     : '<span class="muted" title="Source-correct dependency publication is not current">unknown — pending recheck</span>')
                 : ($dependencyBadges !== [] ? '<div class="game-files-dependency-list">' . implode('', $dependencyBadges) . '</div>' : '<span class="muted">none</span>');
+            if (!$isZen && $gameDependencyCurrent) {
+                $availability = $pagePackageCoverage[(int)$file['id']] ?? null;
+                if (is_array($availability)) {
+                    $indexed = (int)$availability['indexed'];
+                    $notIndexed = (int)$availability['unindexed'];
+                    $nativeScript = (int)$availability['native_script'];
+                    $coverageBadges = [];
+                    if ($indexed > 0) {
+                        $coverageBadges[] = '<div><span class="dep resolved" '
+                            . 'title="Indexed package candidate, not native VerifyImport or a proven runtime mount">'
+                            . 'indexed: ' . number_format($indexed) . '</span></div>';
+                    }
+                    if ($nativeScript > 0) {
+                        $coverageBadges[] = '<div><span class="dep package_only" '
+                            . 'title="UE4 native /Script/ module identity, not a physical package; runtime registration unverified">'
+                            . 'native script: ' . number_format($nativeScript) . '</span></div>';
+                    }
+                    if ($notIndexed > 0) {
+                        $coverageBadges[] = '<div><span class="dep unresolved" '
+                            . 'title="No verified candidate for the required package identity in this catalogue; not confirmed missing">'
+                            . 'not indexed: ' . number_format($notIndexed) . '</span></div>';
+                    }
+                    $deps = $coverageBadges !== []
+                        ? '<div class="game-files-dependency-list">' . implode('', $coverageBadges) . '</div>'
+                        : '<span class="muted">none</span>';
+                }
+            }
             $compressed = (int)($file['is_compressed'] ?? 0) === 1;
             $compression = CatalogUi::badge($compressed ? 'compressed chunks' : 'none', $compressed ? 'warning' : 'success');
             [$fileType, $fileTypeClass] = game_files_type_from_extension((string)($file['extension'] ?? ''));

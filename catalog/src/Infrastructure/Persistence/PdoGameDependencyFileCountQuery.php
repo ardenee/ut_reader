@@ -19,7 +19,7 @@ use Throwable;
 
 final class PdoGameDependencyFileCountQuery
 {
-    private const CACHE_VERSION = 5;
+    private const CACHE_VERSION = 7;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -51,7 +51,8 @@ final class PdoGameDependencyFileCountQuery
 
         $path = $directory . DIRECTORY_SEPARATOR . 'game-' . $gameId . '.json';
         $cached = $this->readCache($path, $signature);
-        if ($cached !== null) {
+        if ($cached !== null
+            && ($engine === 'UE5' || isset($cached['indexed_references'], $cached['no_gaps_files']))) {
             return $cached;
         }
 
@@ -64,7 +65,8 @@ final class PdoGameDependencyFileCountQuery
                 return $this->aggregate($gameId, $engine, $zenContext);
             }
             $cached = $this->readCache($path, $signature);
-            if ($cached !== null) {
+            if ($cached !== null
+                && ($engine === 'UE5' || isset($cached['indexed_references'], $cached['no_gaps_files']))) {
                 return $cached;
             }
             $counts = $this->aggregate($gameId, $engine, $zenContext);
@@ -102,7 +104,8 @@ final class PdoGameDependencyFileCountQuery
             'resolved_files' => max(0, (int)($row['resolved_files'] ?? 0)),
         ];
         if ($engine !== 'UE5') {
-            return $counts;
+            return array_merge($counts,
+                (new PdoGameIndexedPackageCoverageQuery($this->db))->forGame($gameId, $engine === 'UE4'));
         }
 
         // Unlike classic files, Zen's original source v14 publication does not
@@ -221,6 +224,21 @@ final class PdoGameDependencyFileCountQuery
         $counts['unresolved_references'] = max(0, (int)($zen['unresolved_references'] ?? 0));
         $counts['unresolved_file_ids'] = $unresolvedIds;
         $counts['no_satisfied_file_ids'] = $noSatisfiedIds;
+        // Zen's existing indexed ScriptObjects/package/export coverage is
+        // exact at the catalogue level. Keep it comparable with classic
+        // *package-name only* candidate coverage without claiming native mounts.
+        $counts['indexed_references'] =
+            max(0, $expected - (int)$zen['unresolved_references']);
+        $counts['unindexed_references'] = (int)$zen['unresolved_references'];
+        $counts['indexed_files'] = max(0, (int)($zen['unresolved_files'] ?? 0)
+            + (int)($zen['resolved_files'] ?? 0) - count($noSatisfiedIds));
+        $counts['no_gaps_files'] = (int)($zen['resolved_files'] ?? 0);
+        $counts['native_script_references'] = 0;
+        $counts['native_script_files'] = 0;
+        $counts['unindexed_files'] = (int)($zen['unresolved_files'] ?? 0);
+        $counts['files_with_dependencies'] =
+            (int)($zen['unresolved_files'] ?? 0) + (int)($zen['resolved_files'] ?? 0);
+        $counts['total_references'] = $expected;
         return $counts;
     }
 
@@ -347,6 +365,17 @@ final class PdoGameDependencyFileCountQuery
             }
             if (count($result['unresolved_file_ids']) !== $result['unresolved_files']) {
                 return null;
+            }
+        }
+        // The v6 cache must retain indexed-package reference/file counts on
+        // warm reads. Older versions silently dropped extra fields, which
+        // previously caused all available counts to disappear after refresh.
+        foreach (['indexed_references','unindexed_references','indexed_files',
+            'no_gaps_files','unindexed_files','native_script_references','native_script_files','files_with_dependencies',
+            'total_references'] as $field) {
+            if (array_key_exists($field, $counts)) {
+                if (!is_int($counts[$field]) || $counts[$field] < 0) return null;
+                $result[$field] = $counts[$field];
             }
         }
         return $result;

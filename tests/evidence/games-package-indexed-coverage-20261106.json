@@ -1,0 +1,192 @@
+{
+  "pass": true,
+  "database_read_only": true,
+  "no_runtime_mount_assumed": true,
+  "game_counts": [
+    {
+      "game_id": 14,
+      "game": "Satisfactory",
+      "engine": "UE5",
+      "total": 1847870,
+      "indexed": 1847626,
+      "native_script": 0,
+      "not_indexed": 244,
+      "files_with_gaps": 51,
+      "files_without_gaps": 27189
+    },
+    {
+      "game_id": 12,
+      "game": "Unreal",
+      "engine": "UE1",
+      "total": 1252635,
+      "indexed": 1236276,
+      "native_script": 0,
+      "not_indexed": 16359,
+      "files_with_gaps": 798,
+      "files_without_gaps": 9990
+    },
+    {
+      "game_id": 2,
+      "game": "Unreal II",
+      "engine": "UE2",
+      "total": 74556,
+      "indexed": 74546,
+      "native_script": 0,
+      "not_indexed": 10,
+      "files_with_gaps": 2,
+      "files_without_gaps": 803
+    },
+    {
+      "game_id": 3,
+      "game": "Unreal Tournament",
+      "engine": "UE1",
+      "total": 8137633,
+      "indexed": 8085434,
+      "native_script": 0,
+      "not_indexed": 52199,
+      "files_with_gaps": 2888,
+      "files_without_gaps": 71407
+    },
+    {
+      "game_id": 4,
+      "game": "Unreal Tournament 2003",
+      "engine": "UE2",
+      "total": 462394,
+      "indexed": 453214,
+      "native_script": 0,
+      "not_indexed": 9180,
+      "files_with_gaps": 466,
+      "files_without_gaps": 4596
+    },
+    {
+      "game_id": 5,
+      "game": "Unreal Tournament 2004",
+      "engine": "UE2",
+      "total": 10575176,
+      "indexed": 10337233,
+      "native_script": 0,
+      "not_indexed": 237943,
+      "files_with_gaps": 3594,
+      "files_without_gaps": 69244
+    },
+    {
+      "game_id": 6,
+      "game": "Unreal Tournament 3",
+      "engine": "UE3",
+      "total": 2591525,
+      "indexed": 2587512,
+      "native_script": 0,
+      "not_indexed": 4013,
+      "files_with_gaps": 67,
+      "files_without_gaps": 6655
+    },
+    {
+      "game_id": 7,
+      "game": "Unreal Tournament 4",
+      "engine": "UE4",
+      "total": 748145,
+      "indexed": 332434,
+      "native_script": 413683,
+      "not_indexed": 2028,
+      "files_with_gaps": 521,
+      "files_without_gaps": 63717
+    }
+  ],
+  "filter_counts": [
+    {
+      "game_id": 12,
+      "kind": "indexed",
+      "files": 10788
+    },
+    {
+      "game_id": 12,
+      "kind": "unindexed",
+      "files": 798
+    },
+    {
+      "game_id": 12,
+      "kind": "no_gaps",
+      "files": 9990
+    },
+    {
+      "game_id": 7,
+      "kind": "indexed",
+      "files": 43590
+    },
+    {
+      "game_id": 7,
+      "kind": "unindexed",
+      "files": 521
+    },
+    {
+      "game_id": 7,
+      "kind": "native_script",
+      "files": 64238
+    },
+    {
+      "game_id": 7,
+      "kind": "no_gaps",
+      "files": 63717
+    }
+  ],
+  "original_file_cases": [
+    {
+      "game_id": 12,
+      "file_id": 110902,
+      "counts": {
+        "total": 4,
+        "indexed": 4,
+        "native_script": 0,
+        "unindexed": 0
+      }
+    },
+    {
+      "game_id": 3,
+      "file_id": 113253,
+      "counts": {
+        "total": 4,
+        "indexed": 4,
+        "native_script": 0,
+        "unindexed": 0
+      }
+    },
+    {
+      "game_id": 7,
+      "file_id": 113526,
+      "counts": {
+        "total": 2,
+        "indexed": 0,
+        "native_script": 2,
+        "unindexed": 0
+      }
+    },
+    {
+      "game_id": 5,
+      "file_id": 111460,
+      "counts": {
+        "total": 4,
+        "indexed": 4,
+        "native_script": 0,
+        "unindexed": 0
+      }
+    }
+  ],
+  "schema": "unrealdb-catalogue-package-availability-all-games-v1",
+  "date": "2026-11-06",
+  "source_prd_database": "DEV read-only queries against PRD MySQL",
+  "source_scope": "UEDB5 required package identities, verified same-game indexed provider-key candidates, UE4 intrinsic script identity and Zen indexed lookup",
+  "native_verifyimport_executed": false,
+  "selected_runtime_mount_assumed": false,
+  "physical_package_identity_only_for_classic": true,
+  "native_script_runtime_registration_verified": false,
+  "original_sql_dependency_projections_modified": false,
+  "uedb5_containers_modified": false,
+  "source_test": "tests/tools/verify_games_indexed_package_coverage.php",
+  "source_test_sha256": "73e0bbd542e3e966848f42485f5e27481b5a768eb9688c100cce0af95ccf4367",
+  "implementation_sha256": {
+    "catalog/src/Infrastructure/Persistence/PdoGameIndexedPackageCoverageQuery.php": "fa974cb15d8a352157071f5e4f4cf5a90c12657d263cae1eb8c2637c101f3427",
+    "catalog/src/Infrastructure/Persistence/PdoGameDependencyFileCountQuery.php": "ac43905946862b07ceca421dc70ef6e8b707da5c6be48e93bebbcae5cb57c326",
+    "catalog/games.php": "e5fecec5df43c383a4087a73615eaa0380419303e05edfad8a553afc206d96c1",
+    "catalog/game-files.php": "073cfb41c9bd2bbbe2988ce3eb2e5cedde45ebd9d2aac6296620bda4005bbbbe"
+  }
+}

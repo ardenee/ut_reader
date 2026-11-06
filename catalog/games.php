@@ -56,36 +56,35 @@ try {
             )
             : null;
 
-        // "Resolved" excludes legacy common-name exemptions (unverified).
-        // Package-only source-backed references remain satisfied even when
-        // a uniquely selected physical export provider is unavailable.
-        // Zen counts use exact indexed ScriptObjects, packages and exports.
+        // Display indexed catalogue package availability, NOT unproven
+        // engine VerifyImport or the historical common-name bypass.
+        // Classic: an indexed, verified same-game candidate for the required
+        // package identity; Zen: exact registered package/object/ScriptObjects.
         $zen = strtoupper($engine) === 'UE5';
-        $unresolved = $current
-            ? ($zen ? ($fileCounts['unresolved_references'] ?? null)
-                : (int)$game['unresolved_dependency_count'])
-            : null;
-        $totalDependencies = $current
-            ? ($zen ? ($fileCounts['dependency_count'] ?? null)
-                : (int)$game['dependency_count'])
-            : null;
-        $resolved = $unresolved !== null && $totalDependencies !== null
-            ? max(0, $totalDependencies - $unresolved)
-            : null;
-        $unresolvedFiles = $fileCounts['unresolved_files'] ?? null;
-        $resolvedFiles = $fileCounts['resolved_files'] ?? null;
+        $unresolved = $current && isset($fileCounts['unindexed_references'])
+            ? (int)$fileCounts['unindexed_references'] : null;
+        $totalDependencies = $current && isset($fileCounts['total_references'])
+            ? (int)$fileCounts['total_references'] : null;
+        $resolved = $current && isset($fileCounts['indexed_references'])
+            ? (int)$fileCounts['indexed_references'] : null;
+        $unresolvedFiles = $current && isset($fileCounts['unindexed_files'])
+            ? (int)$fileCounts['unindexed_files'] : null;
+        $resolvedFiles = $current && isset($fileCounts['no_gaps_files'])
+            ? (int)$fileCounts['no_gaps_files'] : null;
+        $nativeScriptRefs = $current && isset($fileCounts['native_script_references'])
+            ? (int)$fileCounts['native_script_references'] : null;
 
         $unresolvedUrl = 'game-files.php?' . http_build_query([
             'id' => $gameId,
-            'dep_filter' => 'unresolved',
+            'dep_filter' => $zen ? 'unresolved' : 'unindexed',
         ]);
         $resolvedUrl = 'game-files.php?' . http_build_query([
             'id' => $gameId,
-            'dep_filter' => 'resolved',
+            'dep_filter' => $zen ? 'resolved' : 'indexed',
         ]);
         $completeUrl = 'game-files.php?' . http_build_query([
             'id' => $gameId,
-            'dep_filter' => 'fully_resolved',
+            'dep_filter' => $zen ? 'fully_resolved' : 'no_gaps',
         ]);
 
         $badge = static function (?int $count, string $positiveTone = 'success'): string {
@@ -104,6 +103,11 @@ try {
         $unresolvedFileBadge = $badge($unresolvedFiles, 'warning');
         $resolvedBadge = $badge($resolved);
         $resolvedFileBadge = $badge($resolvedFiles);
+        $nativeScriptBadge = $badge($nativeScriptRefs, 'warning');
+        $nativeScriptUrl = 'game-files.php?' . http_build_query([
+            'id' => $gameId,
+            'dep_filter' => 'native_script',
+        ]);
 
         $rows .= '<tr>';
         $rows .= '<td><strong>' . catalog_h((string)$game['name'])
@@ -116,7 +120,7 @@ try {
             $unresolved,
             $unresolved !== null
                 ? '<a href="' . catalog_h($unresolvedUrl)
-                    . '" title="Source-published unresolved dependency references">'
+                    . '" title="References without a verified same-game indexed candidate for the required package identity; not confirmed missing">'
                     . $unresolvedBadge . '</a>'
                 : $unresolvedBadge
         );
@@ -124,7 +128,7 @@ try {
             $unresolvedFiles,
             $unresolvedFiles !== null
                 ? '<a href="' . catalog_h($unresolvedUrl)
-                    . '" title="Distinct files with at least one current unresolved reference">'
+                    . '" title="Distinct files with at least one required package identity not indexed in this catalogue">'
                     . $unresolvedFileBadge . '</a>'
                 : $unresolvedFileBadge
         );
@@ -132,15 +136,23 @@ try {
             $resolved,
             $resolved !== null
                 ? '<a href="' . catalog_h($resolvedUrl)
-                    . '" title="Browse files with at least one satisfied reference (' . number_format($resolved) . ' references game-wide)">'
+                    . '" title="Browse files with at least one indexed package candidate (' . number_format($resolved) . ' references game-wide; native mount not asserted)">'
                     . $resolvedBadge . '</a>'
                 : $resolvedBadge
+        );
+        $rows .= $numberCell(
+            $nativeScriptRefs,
+            $nativeScriptRefs !== null && $nativeScriptRefs > 0
+                ? '<a href="' . catalog_h($nativeScriptUrl)
+                    . '" title="References to native /Script/ module identities; compiled/runtime registration not proven">'
+                    . $nativeScriptBadge . '</a>'
+                : $nativeScriptBadge
         );
         $rows .= $numberCell(
             $resolvedFiles,
             $resolvedFiles !== null
                 ? '<a href="' . catalog_h($completeUrl)
-                    . '" title="Browse ' . number_format($resolvedFiles) . ' files with all indexed dependencies met">'
+                    . '" title="Browse ' . number_format($resolvedFiles) . ' files without unidentified package dependencies (physical candidates or native script module identities); runtime load not asserted">'
                     . $resolvedFileBadge . '</a>'
                 : $resolvedFileBadge
         );
@@ -158,10 +170,11 @@ try {
         . '<thead><tr>'
         . '<th scope="col">Game</th><th scope="col">Profile engine</th>'
         . '<th scope="col">Files</th>'
-        . '<th scope="col" title="References still unresolved against current source publication; UE5 uses exact indexed catalogue target coverage">Unresolved</th>'
-        . '<th scope="col" title="Number of distinct files with at least one unresolved reference">Unresolved Files</th>'
-        . '<th scope="col" title="Total dependency references minus unresolved references; excludes unverified legacy exemptions">Resolved</th>'
-        . '<th scope="col" title="Files with indexed dependencies and no unresolved or missing references">Resolved Files</th>'
+        . '<th scope="col" title="Required package identities with no indexed verified same-game candidate. Not confirmed missing from a runtime installation.">Not Indexed</th>'
+        . '<th scope="col" title="Files with at least one required package identity absent from this indexed catalogue">Files With Gaps</th>'
+        . '<th scope="col" title="References to package identities having a verified same-game catalogue candidate; not a claim of native VerifyImport, mounted provider or matching export">Indexed Packages</th>'
+        . '<th scope="col" title="Native /Script/ module references, which are not ordinary physical package files; no claim of runtime registration">Native Script</th>'
+        . '<th scope="col" title="Files with every required package identity either indexed or recognised as a native script-module reference; no claim of successful native loading">Files Without Gaps</th>'
         . '<th scope="col">Total size</th><th scope="col">Open</th>'
         . '</tr></thead><tbody>' . $rows . '</tbody></table>';
 
@@ -170,7 +183,12 @@ try {
         [
             'title' => 'Catalog games',
             'description' => number_format(count($games)) . ' configured game'
-                . (count($games) === 1 ? '' : 's') . '.',
+                . (count($games) === 1 ? '' : 's') . '. '
+                . 'Indexed Packages means a matching physical package identity '
+                . 'is present in the catalogue. Native Script identifies UE4 '
+                . '/Script/ module references (not physical packages). '
+                . 'Neither proves successful runtime import verification. '
+                . 'Not Indexed is not confirmed missing from the game.',
         ]
     );
     // Maintenance -> Update All Game Dependencies is in the global admin navigation.
