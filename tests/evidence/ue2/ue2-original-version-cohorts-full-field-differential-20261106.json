@@ -1,0 +1,77 @@
+{
+  "schema": "ue2-native-source-wire-vs-actual-reader-all-fields-v1",
+  "purpose": "Exact serialized fields AND entry offsets, not merely table counts",
+  "source": "standalone Python decoder independently implemented from original UE2 C++ table operators",
+  "originals_unchanged": true,
+  "read_only": true,
+  "cases": [
+    {
+      "file_id": 1277117,
+      "game_id": 4,
+      "version": 121,
+      "licensee": 29,
+      "original_sha256": "55ec6c7e232078e30c6bc2fea8b5bebfc8007dcbb59acc3fcb150b8a3fbc1a0b",
+      "name_rows": 17,
+      "import_rows": 5,
+      "export_rows": 2,
+      "names_all_fields_sha256": "c2efa6acb63ff933e3b45cb93f3a5b64dadce545a3ded2d236a9dde2db5a0041",
+      "imports_all_fields_sha256": "62a35bc97869d20034ef96a6f13a1f3f7fc2e88cd2ce0cf5af40199fbcc5434c",
+      "exports_all_fields_sha256": "f71b4d2107b0024b6bf91b59c98ea5ccb56271ecd80c0143168e22bce4d8fdef"
+    },
+    {
+      "file_id": 1282344,
+      "game_id": 5,
+      "version": 121,
+      "licensee": 29,
+      "original_sha256": "408f1f148d742dff782835dfd97e32c9badf13704dcf9ae28078c64d0d57781f",
+      "name_rows": 58,
+      "import_rows": 30,
+      "export_rows": 23,
+      "names_all_fields_sha256": "c121f161487238d42fb50d4ac31388cc306434f8bddfdeb3f3c2887647bc3e58",
+      "imports_all_fields_sha256": "76f2e3226e1419cc586a1d7299e3cff4665e1034ca333d604fbd8db488f201cf",
+      "exports_all_fields_sha256": "cb4a4c12246620e788a681bd4a99def7f8a9b0d104589993a088812eac3eef6a"
+    },
+    {
+      "file_id": 1289524,
+      "game_id": 5,
+      "version": 118,
+      "licensee": 2,
+      "original_sha256": "4c7e622a8fad487c440941ae8255f322e179472751eb09e4bff7f5bcf8915a84",
+      "name_rows": 513,
+      "import_rows": 245,
+      "export_rows": 276,
+      "names_all_fields_sha256": "3018171bd74945221177bbdfc5fa52d9ffebc3ef53994e53f934d0b0c2c6b283",
+      "imports_all_fields_sha256": "2ab05c13a4c3fb315bf33762be157d81192575bd68827844b440553a8f835b7f",
+      "exports_all_fields_sha256": "f6e6546cfafadcd92da106336c34aeb0a76520a64dc1f93d40b5916934b1d56f"
+    },
+    {
+      "file_id": 111284,
+      "game_id": 2,
+      "version": 110,
+      "licensee": 2481,
+      "original_sha256": "d71c6fea53cd5951ab70baeabf6e945593a1eecf44d43e9d96672290f3bb4462",
+      "name_rows": 111,
+      "import_rows": 14,
+      "export_rows": 25,
+      "names_all_fields_sha256": "12f203ebc5212e4ec38493d9f8351d5edff5a8654b6e66835afe09714bb18472",
+      "imports_all_fields_sha256": "af176342ae2353d207545e1b429cae0547167f21ad7862d188501a301691ef94",
+      "exports_all_fields_sha256": "041968d7e4aa47060e451a6a2f09e5e1376d59c4fffd7d8acebc6f7966f5967c"
+    },
+    {
+      "file_id": 111218,
+      "game_id": 2,
+      "version": 110,
+      "licensee": 2609,
+      "original_sha256": "3860383351456e66ef1ac88093a0bdd26345c3e0a16cd8ab9e28c6a14556344b",
+      "name_rows": 30,
+      "import_rows": 12,
+      "export_rows": 16,
+      "names_all_fields_sha256": "b545f1ed9dd1ed3cd689b5f10017166a819d811100a2f665ec8ecdc2b96393cc",
+      "imports_all_fields_sha256": "1e39391bb0a8aa4a10f5459624cda8409e6fb8e9f44a1b0a1324a344c73df89a",
+      "exports_all_fields_sha256": "4be42f18d839b93cdef3bb497b2f03a45b68aa47976940a348e39e6917e26566"
+    }
+  ],
+  "total_name_rows": 729,
+  "total_import_rows": 306,
+  "total_export_rows": 342
+}

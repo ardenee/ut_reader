@@ -118,10 +118,13 @@ def inspect(raw: bytes) -> dict:
     header_end = f.at
     f.at = n_off
     names = []
+    name_rows = []
     for _ in range(n_count):
+        entry_offset = f.at
         text = f.ansi_z() if version < 64 else f.fstring()
         flags32 = f.u32()
         names.append((text,flags32))
+        name_rows.append([entry_offset,text,flags32])
     names_end = f.at
 
     def fname():
@@ -132,17 +135,22 @@ def inspect(raw: bytes) -> dict:
 
     f.at = i_off
     imports = []
+    import_rows = []
     for _ in range(i_count):
+        entry_offset = f.at
         cls_pkg, cls_name = fname(), fname()
         outer, obj_name = f.i32(), fname()
         if outer > 0 or outer < -i_count:
             raise WireError("Invalid UE2 import parent")
         imports.append((cls_pkg,cls_name,outer,obj_name))
+        import_rows.append([entry_offset,cls_pkg,cls_name,outer,obj_name])
     imports_end = f.at
 
     f.at = e_off
     exports = []
+    export_rows = []
     for _ in range(e_count):
+        entry_offset = f.at
         klass, superclass, outer = f.ci(), f.ci(), f.i32()
         obj_name, obj_flags, serial_size = fname(), f.u32(), f.ci()
         serial_offset = f.ci() if serial_size else 0
@@ -152,12 +160,20 @@ def inspect(raw: bytes) -> dict:
         if serial_size > 0 and (serial_offset < 0 or serial_offset+serial_size > len(raw)):
             raise WireError("Export payload span outside original package")
         exports.append((klass,superclass,outer,obj_name,obj_flags,serial_size,serial_offset))
+        export_rows.append([entry_offset,klass,superclass,outer,obj_name,obj_flags,serial_size,serial_offset])
     exports_end = f.at
+    def canonical_sha(rows):
+        serialized=json.dumps(rows,ensure_ascii=False,separators=(",",":")).encode("utf-8")
+        return hashlib.sha256(serialized).hexdigest()
     return dict(version=version,licensee=licensee,tag=f"{magic:08X}",
                 package_flags=f"{flags:08X}",summary_bytes=header_end,
                 guid_bytes=len(guid),generations=len(generation_rows),
                 heritage=heritage,name_count=len(names),import_count=len(imports),
-                export_count=len(exports),name_end=names_end,
+                export_count=len(exports),
+                all_name_fields_sha256=canonical_sha(name_rows),
+                all_import_fields_sha256=canonical_sha(import_rows),
+                all_export_fields_sha256=canonical_sha(export_rows),
+                name_end=names_end,
                 import_end=imports_end,export_end=exports_end,
                 distinct_name_flags=len({x[1] for x in names}),
                 names_non_ascii=sum(any(ord(ch)>127 for ch in x[0]) for x in names),
